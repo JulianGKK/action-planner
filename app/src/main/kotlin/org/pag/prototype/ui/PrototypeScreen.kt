@@ -21,7 +21,7 @@ fun PrototypeScreen(model: PrototypeViewModel) {
     MaterialTheme {
         Column(Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Prototyp B0 / historischer A-Pfad · ausschließlich synthetische Tests")
+            Text("Prototyp B0 / B1.5 / historischer A-Pfad · ausschließlich synthetische Tests")
             Text("B0-Testpolicy: absolut 60 s / READY-Inaktivität 15 s; keine Produktwerte")
             Text("Session: ${snapshot.state} · Generation: ${snapshot.generation}")
             Text("Variante: ${snapshot.experiment ?: "keine"}")
@@ -29,6 +29,12 @@ fun PrototypeScreen(model: PrototypeViewModel) {
             Text("Konkrete Schlüsseloperation: ${snapshot.keyOperation}")
             Text("Test-ID: ${snapshot.technicalId}")
             Text("Schlüsseleigenschaften: ${snapshot.keyProperties}")
+            Button(onClick = { model.authenticate(Experiment.STORAGE_INITIALIZE) }, enabled = snapshot.state == SessionState.LOCKED) {
+                Text("B1.5 · leeren Namensraum ausdrücklich initialisieren + authentifizieren")
+            }
+            Button(onClick = { model.authenticate(Experiment.STORAGE_UNWRAP) }, enabled = snapshot.state == SessionState.LOCKED) {
+                Text("B1.5 · bestehenden Schlüssel authentifizieren")
+            }
             Button(onClick = { model.authenticate(Experiment.PER_OPERATION) }, enabled = snapshot.state == SessionState.LOCKED) {
                 Text("Authentifizieren · operationsgebunden")
             }

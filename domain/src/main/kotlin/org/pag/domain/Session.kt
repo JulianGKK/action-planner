@@ -1,7 +1,7 @@
 package org.pag.domain
 
 enum class SessionState { LOCKED, AUTHENTICATING, MAINTENANCE, READY, BLOCKED }
-enum class Experiment { PER_OPERATION, TIME_WINDOW }
+enum class Experiment { PER_OPERATION, TIME_WINDOW, STORAGE_INITIALIZE, STORAGE_UNWRAP }
 enum class Observation { NOT_TESTED, SUCCEEDED, DENIED, FAILED, CONSUMED }
 
 data class SessionSnapshot(

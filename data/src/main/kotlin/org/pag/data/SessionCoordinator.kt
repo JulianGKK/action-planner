@@ -129,6 +129,8 @@ class SessionCoordinator(
         val mode = when (experiment) {
             Experiment.PER_OPERATION -> KeyExperiment.PER_OPERATION
             Experiment.TIME_WINDOW -> KeyExperiment.TIME_WINDOW
+            Experiment.STORAGE_INITIALIZE -> KeyExperiment.STORAGE_INITIALIZE
+            Experiment.STORAGE_UNWRAP -> KeyExperiment.STORAGE_UNWRAP
         }
         val cancellation = try {
             authentication.start(mode) { outcome -> authenticationCompleted(generation, outcome) }
@@ -157,8 +159,10 @@ class SessionCoordinator(
             authCancellation = null
             when (outcome) {
                 is AuthenticationOutcome.Rejected -> {
-                    if (outcome.reason == SecurityFailure.CANCELLED) invalidate("A-AUTH-CANCEL")
-                    else block("A-AUTH-${outcome.reason.name}")
+                    if (outcome.reason == SecurityFailure.CANCELLED)
+                        invalidate(outcome.diagnostic?.testId ?: "A-AUTH-CANCEL",
+                            observation = if (outcome.diagnostic != null) Observation.DENIED else Observation.NOT_TESTED)
+                    else block(outcome.diagnostic?.testId ?: "A-AUTH-${outcome.reason.name}")
                     return
                 }
                 is AuthenticationOutcome.Granted -> {
@@ -213,11 +217,12 @@ class SessionCoordinator(
     override fun testAccess() {
         val work = synchronized(this) {
             if (!valid(current.generation, SessionState.READY) || accessInProgress) return
+            val context = acquire(AccessScope.READY) ?: return
             accessInProgress = true
-            Pair(current.generation, operation)
+            Triple(current.generation, operation, context)
         }
         // Native work is outside the coordinator monitor; locking can revoke it.
-        val result = try { work.second?.perform() ?: OperationResult.FAILED }
+        val result = try { work.second?.performAuthorized { work.third.check(AccessPoint.STEP) } ?: OperationResult.FAILED }
         catch (_: RuntimeException) { OperationResult.FAILED }
         synchronized(this) {
             accessInProgress = false
@@ -225,9 +230,10 @@ class SessionCoordinator(
             when (result) {
                 OperationResult.SUCCEEDED -> publish(current.copy(
                     platformAuthorization = Observation.SUCCEEDED, keyOperation = Observation.SUCCEEDED,
-                    technicalId = "A-ACCESS-OK", marker = "PAG_STAGE_A_SYNTHETIC_ONLY"))
-                OperationResult.NOT_AUTHORIZED -> block("A-KEY-AUTHORIZATION-DENIED", Observation.DENIED)
-                OperationResult.FAILED -> block("A-KEY-OPERATION-FAILED", Observation.FAILED)
+                    technicalId = if (isWrapping()) "B15-UNWRAP-SUCCEEDED" else "A-ACCESS-OK",
+                    marker = if (isWrapping()) "PAG_B15_SYNTHETIC_UNWRAP_ONLY" else "PAG_STAGE_A_SYNTHETIC_ONLY"))
+                OperationResult.NOT_AUTHORIZED -> block(if (isWrapping()) work.second?.diagnostic?.testId ?: "B15-UNWRAP-AUTH-REQUIRED" else "A-KEY-AUTHORIZATION-DENIED", Observation.DENIED)
+                OperationResult.FAILED -> block(if (isWrapping()) work.second?.diagnostic?.testId ?: "B15-UNWRAP-FAILED" else "A-KEY-OPERATION-FAILED", Observation.FAILED)
                 OperationResult.CONSUMED -> publish(current.copy(marker = null,
                     keyOperation = Observation.CONSUMED, technicalId = "A-OPERATION-CONSUMED"))
             }
@@ -239,6 +245,8 @@ class SessionCoordinator(
         return foregroundAllowed && accessEnvironmentAllowed() &&
             current.generation == generation && current.state == state
     }
+
+    private fun isWrapping() = current.experiment == Experiment.STORAGE_INITIALIZE || current.experiment == Experiment.STORAGE_UNWRAP
 
     private fun block(id: String, observation: Observation = Observation.NOT_TESTED) {
         invalidate(id, SessionState.BLOCKED, observation)

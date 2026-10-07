@@ -39,6 +39,11 @@ class PlatformCredentialExperiment(
     }
 
     override fun start(mode: KeyExperiment, complete: (AuthenticationOutcome) -> Unit): Cancellation {
+        // Never route a B1.5 experiment through a historical Stage-A key configuration.
+        if (mode != KeyExperiment.PER_OPERATION && mode != KeyExperiment.TIME_WINDOW) {
+            complete(AuthenticationOutcome.Rejected(SecurityFailure.PLATFORM_ERROR))
+            return Cancellation { }
+        }
         val signal = CancellationSignal()
         var completed = false
         fun finish(outcome: AuthenticationOutcome) {

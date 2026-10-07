@@ -25,12 +25,20 @@ import org.pag.domain.Subscription
 import org.pag.prototype.ui.PrototypeScreen
 import org.pag.prototype.ui.PrototypeViewModel
 import org.pag.security.PlatformCredentialExperiment
+import org.pag.security.AuthenticationExperiment
+import org.pag.security.KeyExperiment
+import org.pag.security.RsaWrappingFixture
+import org.pag.security.WrappingCredentialExperiment
+import java.io.File
+import java.util.concurrent.Executors
 
 /** Composition root and lifecycle adapter only; no operative product data. */
 class MainActivity : ComponentActivity() {
     private lateinit var lifecyclePort: SessionLifecycle
     private lateinit var model: PrototypeViewModel
     private lateinit var authentication: PlatformCredentialExperiment
+    private lateinit var wrappingAuthentication: WrappingCredentialExperiment
+    private val wrappingWorker = Executors.newSingleThreadExecutor()
     private var resumed = false
     private val expiryHandler = Handler(Looper.getMainLooper())
     private val expiryCheck = object : Runnable {
@@ -66,7 +74,17 @@ class MainActivity : ComponentActivity() {
                 !getSystemService(KeyguardManager::class.java).isDeviceLocked
         }
         authentication = PlatformCredentialExperiment(this, environmentAllowed)
-        val coordinator = SessionCoordinator(authentication, maintenance,
+        // Explicitly reserved namespace: every entry is considered, including future DB/assets/work files.
+        // Context's trusted private base can contain Android's /data/user/0 path alias.
+        // Normalize that base; never canonicalize away a symlink at the reserved child.
+        val fixture = RsaWrappingFixture(File(noBackupFilesDir.canonicalFile, "p15"), "pag.prototype.b15.storage.v1")
+        wrappingAuthentication = WrappingCredentialExperiment(this, fixture, wrappingWorker, environmentAllowed)
+        val authPort = object : AuthenticationExperiment {
+            override fun start(mode: KeyExperiment, complete: (org.pag.security.AuthenticationOutcome) -> Unit) =
+                if (mode == KeyExperiment.STORAGE_INITIALIZE || mode == KeyExperiment.STORAGE_UNWRAP)
+                    wrappingAuthentication.start(mode, complete) else authentication.start(mode, complete)
+        }
+        val coordinator = SessionCoordinator(authPort, maintenance,
             MonotonicTime { SystemClock.elapsedRealtime() },
             // Synthetic prototype policy only. Not product durations.
             SessionPolicy(60_000, 15_000), environmentAllowed)
@@ -91,6 +109,7 @@ class MainActivity : ComponentActivity() {
         resumed = true
         lifecyclePort.foreground(!getSystemService(KeyguardManager::class.java).isDeviceLocked)
         authentication.foregroundAvailable()
+        wrappingAuthentication.foregroundAvailable()
         expiryHandler.removeCallbacks(expiryCheck)
         expiryHandler.post(expiryCheck)
     }
@@ -123,12 +142,14 @@ class MainActivity : ComponentActivity() {
         if (hasFocus && resumed) {
             lifecyclePort.foreground(!getSystemService(KeyguardManager::class.java).isDeviceLocked)
             authentication.foregroundAvailable()
+            wrappingAuthentication.foregroundAvailable()
         }
     }
 
     override fun onDestroy() {
         expiryHandler.removeCallbacks(expiryCheck)
         lifecyclePort.foreground(false)
+        wrappingWorker.shutdownNow()
         unregisterReceiver(screenOff)
         viewModelStore.clear()
         super.onDestroy()
