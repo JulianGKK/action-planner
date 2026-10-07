@@ -20,13 +20,15 @@ Primär werden möglichst wenige Daten benötigt. Verschlüsselung ergänzt Date
 | Sicherheitszustand | Authentifizierungsdaten, Schlüssel und Sitzungsfreigabe |
 | Lebenszyklus | Fristen, Löschaufträge und deren Integrität |
 
-Schutzziele sind Vertraulichkeit, Integrität und kontrollierte Verfügbarkeit. Normale Neustarts sollen den gültigen Bestand erhalten; Schlüsselverlust kann dagegen endgültigen Datenverlust bedeuten. Nachvollziehbarkeit rechtfertigt keine dauerhafte detaillierte Löschhistorie.
+Schutzziele sind Vertraulichkeit, Integrität und kontrollierte Verfügbarkeit. Normale Neustarts sollen den gültigen Bestand erhalten; Geräteverlust, Schlüsselverlust oder bestimmte nicht sicher reparierbare Fehler können dagegen endgültigen Datenverlust bedeuten. Im MVP kein Backup, Device-to-Device-Transfer, Recovery-Key, Export operativer Daten oder Recovery-Mechanismus. Unklare Fehler erlauben keine automatische Löschung oder Neuinitialisierung. Nachvollziehbarkeit rechtfertigt keine dauerhafte detaillierte Löschhistorie.
 
 ## 3. Vertrauensgrenzen und Annahmen
 
 Die normale Schutzannahme ist ein nicht vollständig kompromittiertes Android-System mit funktionierender App-Isolation. Mindest-Android-Version, erforderliche Gerätesperre und Hardware-Keystore-Anforderungen sind noch offen.
 
-Vertrauensgrenzen verlaufen zwischen App und Betriebssystem/Keystore, App und anderen Apps, App und Dokumentanbietern sowie Entwicklung/Build und eingebundenen Abhängigkeiten. Importierte Daten sind nicht vertrauenswürdig. Eine Dependency im App-Prozess ist keine isolierte andere App.
+DEVICE_CREDENTIAL + Keystore-Bindung ist der bevorzugte Security-Prototyp; keine Biometrie oder eigene PaG-Passphrase im ersten Prototyp. Kenntnis des Gerätecredentials kann voraussichtlich auch PaG-Authentifizierung erfüllen; dieses Restrisiko ist akzeptiert. Konkrete Keystore-Bindung bleibt offen.
+
+Vertrauensgrenzen verlaufen zwischen App und Betriebssystem/Keystore, App und anderen Apps, App und Dokumentanbietern sowie Entwicklung/Build und eingebundenen Abhängigkeiten. Importierte Daten sind nicht vertrauenswürdig. Kameraimport nutzt den begrenzten CameraX-In-Memory-Prototyp innerhalb der App; kein automatischer externer Kamera-Fallback. Ohne Nachweis eines appseitigen Pfads ohne persistente Klartext-Zwischendatei und Gate-Umgehung wird Kameraimport verschoben. Externe Klartextöffnung und externe Viewerübergabe sind im MVP ausgeschlossen; siehe ARCH-17 bis ARCH-22 und ARCH-28. Eine Dependency im App-Prozess ist keine isolierte andere App.
 
 | Zustand | Angestrebter Schutz und Grenze |
 |---|---|
@@ -50,7 +52,7 @@ Ein entsperrtes Gerät ist nicht automatisch kompromittiert. Ein nicht exportier
 | TM-07 | Benutzerfehler | Zweckgebundene Felder, Löschfolgen und Importgrenzen erklären; unnötige Freitexte und externe Kopien bleiben Risiken |
 | TM-08 | Bösartige/defekte Datei | Begrenzte Formate, Größenprüfung, keine automatischen aktiven Inhalte; Parser- und Rendererfehler bleiben möglich |
 | TM-09 | Absturz, Stromverlust, Speicherknappheit | Konsistente Speicherung und wiederanlauffähige Bereinigung; Verfügbarkeit kann vorübergehend eingeschränkt sein |
-| TM-10 | Wiederholtes Raten oder Zustandsmanipulation | Progressive Wartezeiten; Neustart- und Zeitverhalten testen; App-Zähler sind kein garantierter Schutz vor Offline-Angriffen oder privilegiertem Rollback |
+| TM-10 | Wiederholtes Raten oder Zustandsmanipulation | Falsche Gerätecredential-Eingaben behandelt die Plattform; keine PaG-Zählung im Systemdialog. PaG verhindert parallele Flüsse, Prompt-Schleifen, verspätete Ergebnisse und alte Sitzungen. Eigene Retry-Strategie nur bei späterer PaG-Passphrase separat spezifizieren |
 
 Technische Anforderungen stehen in security.md; Frist- und Wiederanlaufregeln in data-retention.md. Die IDs ermöglichen später die Zuordnung von Tests zu Bedrohungen.
 

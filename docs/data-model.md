@@ -8,9 +8,9 @@
 
 Dieses Dokument beschreibt das konzeptionelle Datenmodell des lokal betriebenen Android-MVP: Entitäten, Attribute, Beziehungen, Lebenszyklus und fachliche Löschbeziehungen.
 
-Die ausdrücklich bestätigten Entscheidungen konkretisieren beziehungsweise korrigieren die vorläufigen Darstellungen in PRODUCT.md. Insbesondere werden keine Organisation, keine globale Personenkartei, keine E-Mail und kein persistierter Action-Status `DELETED` eingeführt. PRODUCT.md selbst wurde dabei nicht verändert.
+Der freigegebene Modellstand enthält keine Organisation, keine globale Personenkartei, keine E-Mail und keinen persistierten Action-Status `DELETED`. Für Entitäten und Beziehungen ist dieses Dokument maßgeblich; technische Speicherung und Zugriff folgen architecture.md.
 
-Es werden keine Datenbankbibliothek, Dependencies, konkrete Tabellenstruktur oder kryptografischen Verfahren festgelegt. Die Speicherstruktur wird erst nach Abschluss des Threat Models bestimmt. Retention-Fristen, Schlüsselverwaltung und Löschgarantien bleiben ausdrücklich offen und werden in den vorgesehenen Dokumenten festgelegt.
+Es werden keine Datenbankbibliothek, Dependencies, konkrete Tabellenstruktur oder kryptografischen Verfahren festgelegt. Die Architektur der Speicherung und des Zugriffs steht in [architecture.md](architecture.md). Konkrete Speicherlösung, Schlüsselverfahren und Löschgarantien werden im Security-/Storage-Prototyp nachgewiesen; Retention-Fristen bleiben in data-retention.md offen.
 
 ## 2. Grundsätze
 
@@ -322,7 +322,7 @@ Verbindliche Klassen:
 
 Die Klassen sind Produkt-Schutzkategorien, keine abschließende rechtliche Klassifizierung. Alle operativen Daten werden unabhängig von der Klasse verschlüsselt gespeichert.
 
-Für die konkrete Anwendung werden folgende Regeln empfohlen; ihre Standardwerte und Auswirkungen bleiben unter OD-09 zu bestätigen:
+Personenbezogene Daten, ungeprüfte Freitexte und Importe sind gemäß PRIV-06 verbindlich standardmäßig SENSITIVE. Weitere Klassifizierungsänderungen bleiben unter OD-09 offen. Für die Anwendung gilt beziehungsweise wird empfohlen:
 
 - `Person`, `PersonRole` und personenbezogene Notes sind `SENSITIVE`.
 - Personenreferenzen in Aufgaben und Material machen die Zuordnung sensibel.
@@ -370,7 +370,7 @@ Jedes operative Kindobjekt gehört genau einer Action. Jedes FileAsset besitzt g
 
 ### 15.3 Fachliche Löschbeziehungen
 
-Diese Tabelle beschreibt die fachliche Zielwirkung des grundsätzlich freigegebenen Modells. Sie legt weder technische Löschgarantien noch eine Vorrangregel bei kollidierenden Retention-Fristen fest.
+Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, keine technische Löschgarantie. Vollständige Action-Löschung ist die Obergrenze für untergeordnete Daten (RET-02, ARCH-24).
 
 | Gelöschtes Objekt | Fachliche Folge |
 |---|---|
@@ -402,7 +402,7 @@ Löschgarantien, Wiederanlauf, Fehlermeldung, mögliche minimale Löschprotokoll
 - Keine gespeicherte Organisation und keine globale Personenkartei im MVP.
 - Kategorien bleiben getrennt je Fachbereich. Es gibt keine zentrale Taxonomie. Die einfache Darstellung erfolgt zunächst als Kategorieangabe am Objekt.
 - Der lokale Admin ist ein technischer Akteur, keine Teilnehmerperson. Kein persönliches Adminprofil wird eingeführt.
-- Authentifizierungsdaten, Fehlversuchszähler, Sperrfristen und Schlüsselreferenzen gehören in ein separates Sicherheitsmodell. Biometrie bleibt gemäß PRODUCT.md ausgeschlossen.
+- Authentifizierungsabläufe und Schlüsselreferenzen gehören in ein separates Sicherheitsmodell. PaG zählt keine falschen DEVICE_CREDENTIAL-Eingaben im Systemdialog; eigene Fehlversuchszähler/Sperrfristen wären erst bei einer späteren PaG-Passphrase separat zu spezifizieren. Biometrie bleibt gemäß PRODUCT.md ausgeschlossen.
 - Suche und Dashboard erzeugen keine zusätzlichen fachlichen Stammdaten. Eventuelle persistierte Indizes müssen Schutz und Löschung ihrer Ausgangsdaten berücksichtigen.
 - Eine dauerhafte organisatorische Änderungs- oder Löschhistorie wird nicht automatisch eingeführt.
 - Dateninventar, Zweck, Speicherort und konkrete Schutzmaßnahmen werden ergänzend in `privacy.md`, `architecture.md` und `security.md` dokumentiert.
@@ -445,23 +445,21 @@ Löschgarantien, Wiederanlauf, Fehlermeldung, mögliche minimale Löschprotokoll
 
 **Empfehlung:** In data-retention.md Objekterstellung und tatsächlichen Action-Abschluss als mögliche Anker prüfen. Für abschlussabhängige Regeln eine maximale Lebensdauer vorsehen. Verwendete Regeln versionieren; keine stillschweigende Verlängerung bestehender Termine. Die Attribute in Abschnitten 5 und 13 bleiben bis dahin konzeptionell.
 
-### OD-07 — Elternlöschung und längere Kinderfristen
+### OD-07 — Elternlöschung und längere Kinderfristen: entschieden
 
-**Offen:** Vorrang von Action-Löschung gegenüber längeren Fristen einzelner Ausgaben, Dokumente oder Belege sowie mögliche Aufbewahrungsausnahmen.
-
-**Empfehlung:** Vollständige Action-Löschung als obere Grenze verwenden und Folgen vorab darstellen. Falls Kostenunterlagen länger benötigt werden, zunächst die Action-Frist passend festlegen. Keine versteckt verbleibenden verwaisten Datensätze. Eine unabhängige Aufbewahrung benötigt eine ausdrückliche fachliche Entscheidung in data-retention.md und privacy.md.
+Vollständige Action-Löschung ist die Obergrenze für untergeordnete Daten. Keine unabhängigen Restbestände oder Aufbewahrungsausnahmen im MVP. Falls Kostenunterlagen länger benötigt werden, muss dies vor Action-Löschung sichtbar mit passenden Fristen gelöst werden; konkrete Fristen bleiben unter OD-06 offen.
 
 ### OD-08 — Schlüsselverwaltung, Kryptografie und Löschgarantien
 
-**Offen:** Schlüsselhierarchie, Authentifizierung, Schlüsselverlust, Dateischlüssel, technische Löschzustände, Wiederanlauf und die nachweisbaren Grenzen der Löschung.
+**Offen:** Endgültige Schlüsselhierarchie, konkrete DEVICE_CREDENTIAL-/Keystore-Bindung, technische Behandlung von Schlüsselverlust, Dateischlüssel, technische Löschzustände und Wiederanlaufdetails sowie die nachweisbaren Grenzen der Löschung. DEVICE_CREDENTIAL ist bevorzugter erster Prototyp; keine Biometrie oder eigene PaG-Passphrase darin, keine Recovery im MVP.
 
 **Empfehlung:** In threat-model.md und security.md ein getrenntes Sicherheitsmodell festlegen; etablierte Verfahren verwenden. Fehlgeschlagene Bereinigung nicht als erfolgreich melden. Minimal erforderliche Arbeitsdaten schützen und begrenzen. Verhalten bei fehlendem Schlüsselzugriff, ausgeschaltetem Gerät und Zeitmanipulation ausdrücklich behandeln. Hier werden keine konkreten Verfahren oder Bibliotheken ausgewählt.
 
 ### OD-09 — Anwendung der Sensitivitätsklassen
 
-**Offen:** Standardklassifizierung, erlaubte Herabstufung und Auswirkungen auf Darstellung, Weitergabe und Retention.
+**Offen:** Erlaubte Herabstufung und weitere Auswirkungen auf Darstellung und Retention. Personenbezogene Daten, ungeprüfte Freitexte und Importe sind verbindlich standardmäßig SENSITIVE; alle operativen Daten werden verschlüsselt. Keine externe Dateiöffnung im MVP.
 
-**Empfehlung:** Personen und personenbezogene Zuordnungen als SENSITIVE behandeln. Ungeprüfte Importe konservativ klassifizieren; keine automatische Herabstufung nach Entfernung einer Referenz. In privacy.md und security.md Schutzregeln festlegen. Die drei Klassen und Verschlüsselung unabhängig von der Klasse sind bereits verbindlich.
+**Empfehlung:** Keine automatische Herabstufung nach Entfernung einer Referenz. Weitere Klassifizierungsregeln in privacy.md und security.md konkretisieren; die Standardklassifizierung und Verschlüsselung unabhängig von der Klasse bleiben verbindlich.
 
 ### OD-10 — Verbleibender Personenbezug nach Löschung
 
@@ -483,9 +481,9 @@ Löschgarantien, Wiederanlauf, Fehlermeldung, mögliche minimale Löschprotokoll
 
 ### OD-13 — Nachvollziehbarkeit und technische Sicherheitsdaten
 
-**Offen:** Ob eine dauerhafte Änderungshistorie oder ein Löschprotokoll erforderlich ist; Umfang der technischen Authentifizierungsdaten.
+**Offen:** Bedarf einer dauerhaften organisatorischen Änderungshistorie und genauer Umfang technischer Arbeits-/Authentifizierungsdaten. Keine dauerhafte detaillierte Löschhistorie im MVP; nur minimaler geschützter Arbeitsstatus für Wiederanlauf (RET-07, ARCH-25).
 
-**Empfehlung:** Nur nachgewiesenen Bedarf dokumentieren und eigene Retention festlegen. Keine sensiblen Inhalte in Löschprotokollen erhalten. Authentifizierung und Verschlüsselung getrennt in security.md spezifizieren; keine Klartext-Credentials oder persönlichen Admindaten in Fachentitäten aufnehmen.
+**Empfehlung:** Nur nachgewiesenen Bedarf dokumentieren und eigene Retention festlegen. Keine gelöschten Inhalte als Wiederanlaufhilfe erhalten. Authentifizierung und Verschlüsselung getrennt in security.md spezifizieren; keine Klartext-Credentials oder persönlichen Admindaten in Fachentitäten aufnehmen.
 
 ## 18. Nächste Spezifikationen
 

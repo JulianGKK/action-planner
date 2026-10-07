@@ -205,7 +205,8 @@ Eine Aktion besitzt einen Status:
 * Aktiv
 * Abgeschlossen
 * Löschung ausstehend
-* Gelöscht
+
+„Gelöscht“ ist ausschließlich das terminale Ergebnis; kein persistierter Action-Status und kein verbleibender Datensatz. Abgeschlossene Actions werden im MVP nicht wiedereröffnet.
 
 ### FR-004 — Aktionsübersicht
 
@@ -465,7 +466,7 @@ Die Anwendung berechnet:
 
 ## FR-082 — Belege
 
-Belege können optional verschlüsselt gespeichert werden.
+Ein Beleg ist optional; gespeicherte Belege werden wie alle operativen Daten verschlüsselt.
 
 ---
 
@@ -592,7 +593,7 @@ Sensible Daten sollen nicht ohne ausdrückliche Benutzeraktion in die Zwischenab
 
 ## SEC-014 — Sichere Dateischnittstellen
 
-Beim Öffnen oder Exportieren von Dateien müssen Androids sichere Datei- und URI-Mechanismen verwendet werden.
+Im MVP keine externe Klartextöffnung, externe Viewerübergabe oder Exporte operativer Daten. Intern unterstützte Formate werden im Viewer-/Storage-Prototyp festgelegt; falls sichere interne Darstellung nicht vertretbar möglich ist, ist keine Vorschau zulässig.
 
 ## SEC-015 — Kryptografische Standardverfahren
 
@@ -686,7 +687,7 @@ Vor produktivem Einsatz soll eine fachkundige datenschutzrechtliche Prüfung erf
 
 ## INT-001 — Konsistente Daten
 
-Änderungen müssen atomar und konsistent gespeichert werden.
+Strukturierte Änderungen müssen transaktional und konsistent gespeichert werden. Über Datenbank, Dateisystem und Keystore wird keine atomare Gesamttransaktion behauptet; übergreifende Abläufe müssen definiert wiederanlauffähig sein (docs/architecture.md).
 
 ## INT-002 — Keine halbfertigen Schreibvorgänge
 
@@ -698,7 +699,7 @@ Die Anwendung soll erkennen können, wenn interne Datenstrukturen beschädigt wu
 
 ## INT-004 — Transaktionen
 
-Mehrteilige Datenänderungen müssen über Datenbanktransaktionen abgesichert werden.
+Mehrteilige strukturierte Datenänderungen müssen über Datenbanktransaktionen abgesichert werden. Datei- und Schlüsseloperationen werden durch die wiederanlauffähigen Abläufe der Architektur koordiniert.
 
 ---
 

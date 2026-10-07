@@ -37,7 +37,7 @@ Die Retention-Attribute aus data-model.md bleiben konzeptionell, bis Anker, Daue
 
 ## 4. Fachliche Kaskaden
 
-Die vollständige Beziehungstabelle steht in [data-model.md, Abschnitt 15](data-model.md#15-beziehungen-integrität-und-löschung) und wird hier nicht dupliziert. RET-02 konkretisiert die dort zuvor offene Vorrangregel zugunsten vollständiger Action-Löschung.
+Die vollständige Beziehungstabelle steht in [data-model.md, Abschnitt 15](data-model.md#15-beziehungen-integrität-und-löschung) und wird hier nicht dupliziert. Vollständige Action-Löschung begrenzt gemäß RET-02 die Aufbewahrung aller Kinder.
 
 Personenlöschung entfernt PersonRole und personenbezogene Notes; Aufgaben-/Materialreferenzen werden entfernt, die sachlichen Objekte bleiben. Dokumentlöschung entfernt dessen FileAsset, Ausgabenlöschung den optionalen Beleg. Frühere Beleglöschung lässt die Ausgabe ohne Beleg bestehen. Keine persistierte Action mit Status DELETED und keine Wiedereröffnung abgeschlossener Actions.
 
@@ -52,7 +52,7 @@ Freitext und Dateien können indirekte Personenbezüge behalten. Referenzlöschu
 | Gerät ausgeschaltet oder vor erforderlicher Geräteentsperrung | Keine garantierte Ausführung; später nachholen |
 | App zwangsbeendet oder Hintergrundarbeit verzögert | Keine Termingarantie; Prüfung beim nächsten zulässigen Start/Zugriff |
 | Löschung unterbrochen/fehlgeschlagen | Betroffene Inhalte nicht wieder regulär freigeben; Arbeitsstatus erhalten und fortsetzen |
-| Schlüssel dauerhaft verloren | Keine erfolgreiche vollständige Bereinigung behaupten, solange Nachweis fehlt; Verfahren noch offen |
+| Schlüssel dauerhaft verloren | Keine erfolgreiche vollständige Bereinigung behaupten, solange Nachweis fehlt; keine Recovery; technische Verlustbehandlung offen, keine automatische Löschung/Neuinitialisierung bei unklarem Fehler |
 
 Nach Authentifizierung kann eine neutrale Wartungsansicht erscheinen, während fällige Bereinigung läuft. Sie darf betroffene Inhalte nicht anzeigen. Nicht betroffene Daten dürfen nur bei nachgewiesener Abgrenzung verfügbar bleiben; bei unklarem Umfang ist der betroffene Bereich zu sperren.
 
@@ -64,9 +64,9 @@ Hintergrundarbeit ist nur eine zusätzliche Ausführungsmöglichkeit und setzt z
 
 Der Ablauf muss wiederholbar sein. Schon entfernte Bestandteile dürfen bei Wiederholung keinen neuen Inhalt erzeugen oder die übrige Bereinigung verhindern.
 
-Fachliche Schritte sind Umfang feststellen, minimalen geschützten Arbeitszustand sichern, Inhalte vom regulären Zugriff ausschließen, strukturierte Daten/Referenzen und Dateien/Ableitungen bereinigen sowie den Abschluss prüfen. Die technische Reihenfolge ist offen: Datenbank, Dateien und Schlüsselverwaltung bilden keine gemeinsame einfache Transaktion.
+Fachliche Schritte sind Umfang feststellen, minimalen geschützten Arbeitszustand sichern, Inhalte vom regulären Zugriff ausschließen, strukturierte Daten/Referenzen und Dateien/Ableitungen bereinigen sowie den Abschluss prüfen. Die technische Reihenfolge ist offen: strukturierte Änderungen bleiben transaktional, aber über Datenbank, Dateisystem und Keystore wird keine atomare Gesamttransaktion behauptet. ARCH-19/25 verlangen definierte wiederanlauffähige Übergänge.
 
-Der Arbeitsstatus darf nur notwendige interne Zielreferenzen, Fortschritt und unkritische Fehlerkategorien enthalten; genaue Attribute und Aufbewahrung sind noch festzulegen. Interne IDs und Fristen werden ebenfalls geschützt. Keine Kopie des zu löschenden Inhalts als Wiederanlaufhilfe.
+Der Arbeitsstatus darf nur notwendige interne Zielreferenzen, Fortschritt und unkritische Fehlerkategorien enthalten; genaue Attribute und Aufbewahrung sind noch festzulegen. Interne IDs und Fristen werden ebenfalls geschützt. Keine Kopie des zu löschenden Inhalts als Wiederanlaufhilfe. Unklare Schlüssel-, Schema-, Integritäts- oder Datenzustände erlauben keine vorsorgliche Löschung oder Neuinitialisierung; eine nicht zuordenbare Datei wird nicht wegen eines gescheiterten DB-Opens gelöscht (ARCH-26).
 
 Erfolgskriterien müssen vor Implementierung mindestens das Fehlen regulärer Inhaltszugriffe, die konsistente Entfernung von Beziehungen und die Bereinigung verwalteter Dateien, Suchdaten, Vorschauen und temporärer Inhalte abdecken. Zusätzliche kryptografische Löschbehauptungen brauchen einen separaten Nachweis.
 

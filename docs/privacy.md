@@ -35,7 +35,7 @@ Die Speicherbereiche sind konzeptionell. Konkrete Pfade und technische Verfahren
 | Authentifizierungsdaten, Schlüsselreferenzen/-material | Zugriffsschutz | Sicherheitskritisch; keine fachliche Herabstufung | Separater Sicherheitsbereich/Keystore nach Prototyp | Lebenszyklus offen; niemals Klartext-Credentials |
 | Löscharbeitsstatus | Wiederanlauf | Geschützte minimale technische Daten | Privater geschützter Bereich | Nur für Bereinigung erforderlich; keine dauerhafte detaillierte Historie |
 | Suchindizes, Vorschauen, UI-Ableitungen | Suche/Anzeige | Schutz mindestens entsprechend Ausgangsdaten | Speicher oder geschützter privater Bereich | Mit Ausgangsdaten bereinigen; keine ungeschützten persistenten Kopien |
-| Temporärer entschlüsselter Inhalt | Notwendige Verarbeitung/Anzeige | Entsprechend Ausgangsdaten | Vorzugsweise Arbeitsspeicher; Ausnahme SEC-07 | Kürzest mögliche Nutzung; Abschluss-/Wiederanlaufbereinigung |
+| Temporärer entschlüsselter Inhalt | Notwendige Verarbeitung/Anzeige | Entsprechend Ausgangsdaten | Kontrollierte Streams/Arbeitsspeicher; keine freigegebene Klartext-Dateiausnahme | Kürzest mögliche Nutzung; Abschluss-/Wiederanlaufbereinigung |
 
 Ausgaben- und Belegzwecke rechtfertigen keine zusätzliche Erfassung von Teilnehmeridentitäten. Kosten können sachlich bleiben; Freitext und Belege können trotzdem Personenbezüge enthalten.
 
@@ -49,13 +49,13 @@ PUBLIC_CONTENT bezeichnet zur Veröffentlichung geeigneten Inhalt, INTERNAL inte
 
 ## 5. Importierte Dateien und externe Grenzen
 
-**PRIV-08:** Import nur nach ausdrücklicher Auswahl über Android-Systemmechanismen. Es entsteht eine appverwaltete verschlüsselte Kopie mit genau einem Eigentümer gemäß Datenmodell. Das externe Original bleibt außerhalb der Kontrolle der App. Eine dauerhafte Quell-URI wird nicht als Fachdatum eingeführt.
+**PRIV-08:** System-Dateiimport nach ausdrücklicher Auswahl über Android-Systemmechanismen; zusätzlich bewusst ausgelöster Kameraimport über den bevorzugten CameraX-In-Memory-Prototyp. Beide verwenden denselben kontrollierten Import-Anwendungsfall (ARCH-17 bis ARCH-22). CAMERA ausschließlich für den Kamera-Workflow in READY; kein automatischer externer Kamera-Fallback. Der appseitige Pfad muss ohne persistente Klartext-Zwischendatei und ohne Gate-Umgehung nachgewiesen werden, andernfalls wird Kameraimport verschoben. Es entsteht eine appverwaltete verschlüsselte Kopie mit genau einem Eigentümer gemäß Datenmodell. Bei System-Dateiimport bleibt das externe Original außerhalb der Kontrolle der App; Kameraaufnahme erzeugt keine Galerie-/MediaStore-Kopie. Eine dauerhafte Quell-URI wird nicht als Fachdatum eingeführt.
 
 **PRIV-09:** Importablauf und Benutzerinformation müssen klar unterscheiden zwischen der verwalteten Kopie und dem externen Original. App-Löschung darf nicht als Löschung des Originals dargestellt werden.
 
 Dateinamen, EXIF-Daten, PDF-Metadaten und eingebettete Inhalte können Personenbezüge enthalten. Systempicker können auch Dokumentanbieter mit externem Netzwerkverhalten anbieten. Die App selbst erhält keine INTERNET-Berechtigung, behauptet aber nicht, alle angebotenen Quellen seien lokal. Siehe [Android-Dateiauswahl](https://developer.android.com/training/data-storage/shared/documents-files).
 
-Automatische Metadatenbereinigung ist nicht beschlossen. Externe Dateiöffnung ist ebenfalls offen; ihre Schutzanforderungen stehen in SEC-13. Bereits an andere Apps übergebene Kopien können nicht verlässlich zurückgenommen werden.
+Automatische Metadatenbereinigung ist nicht beschlossen. Im MVP keine externe Klartextöffnung und keine automatische Übergabe an externe Viewer. Intern unterstützte Formate werden im Viewer-/Storage-Prototyp festgelegt; keine Vorschau ist zulässig, wenn sichere interne Darstellung nicht vertretbar möglich ist (SEC-13, ARCH-28). Keine Cloud-Backups, Device-to-Device-Transfers, Recovery-Keys, Exporte operativer Daten oder Recovery-Mechanismen; endgültiger Datenverlust ist akzeptiert, automatische Löschung/Neuinitialisierung bei Fehlern ausgeschlossen (ARCH-26/29).
 
 ## 6. Offene Entscheidungen
 
@@ -72,4 +72,4 @@ Offene Schlüssel-, Authentifizierungs- und Hardwareentscheidungen werden in sec
 
 ## 7. Ableitbare Prüfungen
 
-PRIV-01 bis PRIV-09 benötigen später Prüfungen für optional leere Personenfelder, actiongebundene Referenzen, Standardklassifizierung, fehlende verbotene Datentypen, fehlende Telemetrie und korrekte Original/Kopie-Information. Speicherinventar und manuelle Personenbezugsprüfung benötigen zusätzlich dokumentierte Reviews; deren Vollständigkeit lässt sich nicht allein durch Unit Tests beweisen.
+PRIV-01 bis PRIV-09 benötigen später Prüfungen für optional leere Personenfelder, actiongebundene Referenzen, Standardklassifizierung, fehlende verbotene Datentypen, fehlende Telemetrie und korrekte Original/Kopie-Information beim Systemimport sowie Kamera ohne Galerie-/Klartext-Zwischendatei oder externen Fallback und fehlende externe Viewerübergabe. Speicherinventar und manuelle Personenbezugsprüfung benötigen zusätzlich dokumentierte Reviews; deren Vollständigkeit lässt sich nicht allein durch Unit Tests beweisen.
