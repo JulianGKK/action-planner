@@ -1,0 +1,43 @@
+package org.pag.prototype.ui
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import org.pag.domain.Experiment
+import org.pag.domain.SessionState
+
+@Composable
+fun PrototypeScreen(model: PrototypeViewModel) {
+    val snapshot = model.snapshot
+    MaterialTheme {
+        Column(Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Prototyp A · ausschließlich synthetische Tests")
+            Text("Session: ${snapshot.state} · Generation: ${snapshot.generation}")
+            Text("Variante: ${snapshot.experiment ?: "keine"}")
+            Text("Keystore-Autorisierung: ${snapshot.platformAuthorization} (nur Operationsbeobachtung)")
+            Text("Konkrete Schlüsseloperation: ${snapshot.keyOperation}")
+            Text("Test-ID: ${snapshot.technicalId}")
+            Text("Schlüsseleigenschaften: ${snapshot.keyProperties}")
+            Button(onClick = { model.authenticate(Experiment.PER_OPERATION) }, enabled = snapshot.state == SessionState.LOCKED) {
+                Text("Authentifizieren · operationsgebunden")
+            }
+            Button(onClick = { model.authenticate(Experiment.TIME_WINDOW) }, enabled = snapshot.state == SessionState.LOCKED) {
+                Text("Authentifizieren · Testfenster 15 Sekunden")
+            }
+            Button(onClick = model::testAccess, enabled = snapshot.state == SessionState.READY) { Text("Testzugriff") }
+            Button(onClick = model::lock) { Text("Sperren") }
+            snapshot.marker?.let { Text(it) }
+            Text("MAINTENANCE ist nur ein Dummy. Kein Nachweis für Storage oder produktive Sicherheit.")
+        }
+    }
+}

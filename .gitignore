@@ -30,7 +30,7 @@ local.properties
 
 # Sensitive / real-world data
 
-data/
+# :data is a source module; do not blanket-ignore its directory.
 test-data/
 production-data/
 
@@ -38,3 +38,8 @@ production-data/
 
 .DS_Store
 Thumbs.db
+
+# Project-local prototype toolchain and caches
+.prototype-tools/
+.prototype-cache/
+.kotlin/
