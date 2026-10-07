@@ -1,0 +1,40 @@
+# Android / Gradle
+
+.gradle/
+build/
+*/build/
+
+# Android Studio
+
+.idea/
+*.iml
+
+# Local configuration
+
+local.properties
+
+# Secrets and private keys
+
+*.key
+*.pem
+*.p12
+*.jks
+.env
+.env.*
+
+# Local databases / test data
+
+*.db
+*.sqlite
+*.sqlite3
+
+# Sensitive / real-world data
+
+data/
+test-data/
+production-data/
+
+# OS files
+
+.DS_Store
+Thumbs.db
