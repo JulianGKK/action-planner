@@ -14,6 +14,14 @@ Die App startet immer gesperrt. Sie sperrt sofort bei Gerätesperre und beim Ver
 
 Die Sperre schützt fachliche Datenzugriffe unterhalb der UI. Deep Links, interne Schnittstellen und Hintergrundabläufe dürfen sie nicht umgehen. Bei Sperrung werden Inhaltsanzeige und neue unzulässige Zugriffe beendet; nicht mehr benötigte Klartextreferenzen werden freigegeben. Technische Behandlung laufender Operationen und genaue Lifecycle-Ereignisse sind im Prototyp nachzuweisen.
 
+Zwei unabhängige Grenzen gelten gemäß ARCH-31/32: Die unveränderliche absolute Deadline beginnt unmittelbar nach erfolgreicher expliziter PaG-Authentifizierung und läuft während MAINTENANCE und READY. UI-Aktivität, Navigation, Scrollen, Tippen, I/O oder Wartung verlängern sie nie. Die Inaktivitätsgrenze gilt zusätzlich in READY; nur qualifizierte tatsächliche Vordergrundinteraktion aktualisiert den Aktivitätszeitpunkt. Renderzyklen, Timer, I/O, Flows, Animationen, Lifecycle-Callbacks, Hintergrundarbeit und Maintenance sind keine Nutzeraktivität. In MAINTENANCE läuft keine Inaktivitätsgrenze allein wegen fehlender Interaktionsmöglichkeit; es bleibt absolute Deadline ohne Fachinhaltsanzeige.
+
+Ablauf einer anwendbaren Grenze führt zu LOCKED und invalidiert die Generation. Eine bereits abgelaufene Sitzung darf auch durch nachträgliche Interaktion nicht wiederbelebt werden. Neue Freigabe nur nach einem neuen explizit gestarteten DEVICE_CREDENTIAL-Flow und dem Gate; Geräteentsperrung und verbleibende Keystore-Autorisierung reichen nicht aus. Kein automatischer Prompt-Loop. Die konkreten Dauern bleiben offen.
+
+Injizierbare monotone Zeit muss Sleep einschließen; elapsedRealtime() ist der Android-Kandidat. Keine Wanduhr für Sessiondauer. Timer dienen nur zeitnaher UI-Reaktion; die Deadline entscheidet unabhängig davon über Zugriff. Resume prüft vor Anzeige; Activity Recreation verwirft die Sitzung konservativ, Process Death startet LOCKED. Callbacks prüfen Generation und Zeitgültigkeit. Storage verwendet keinen parallelen Unlock-State und prüft zentralen Zustand, Generation, Lifecycle/Foreground, absolute und in READY zusätzliche Inaktivitätsdeadline vor Operation, relevantem Arbeitsschritt, Commit-Zulassung und Veröffentlichung (ARCH-33/34).
+
+Laufende native Arbeit kann physisch noch enden; nach Ablauf keine neue Operation oder Ergebnisveröffentlichung. Alte DB-/Stream-Handles bleiben trotz existierendem nativen Objekt fachlich unzulässig. Abbruch, Schließung und Wiederanlauf sind praktisch nachzuweisen; sofortige Löschung aller JVM-/nativen Puffer wird nicht garantiert. Sessionablauf löst keine automatische Datenlöschung aus.
+
 **Empfehlung:** Manuelle Sperrmöglichkeit und neutrale gesperrte Oberfläche. Nach Dateiauswahl erneute Authentifizierung verlangen; Import erst bei zulässiger Sitzung fortsetzen. Keine Picker-Ausnahme von der sofortigen Sperre.
 
 ### SEC-02 — Lokale Authentifizierung
@@ -108,6 +116,16 @@ Kein Klartext-Fallback bei Authentifizierungs-, Schlüssel- oder Integritätsfeh
 
 Löschfehler werden nicht als Erfolg gemeldet. Wiederanlauf und fällige Inhalte richten sich nach RET-03 bis RET-07. Die App-Sperre wird nicht für Hintergrundbereinigung geschwächt. Minimale technische Löschdaten sind keine dauerhafte detaillierte Historie.
 
+### SEC-16 — Keine Notifications oder operativen Außenoberflächen
+
+Im MVP keine lokalen PaG-Notifications, Push Notifications, Push-Infrastruktur, Benachrichtigungsberechtigung oder Foreground Services. Keine eigenen Notification Channels ohne später nachgewiesene technische Notwendigkeit; diese wäre keine Freigabe von Notifications. Keine operativen Widgets, operativen dynamischen/persistenten Shortcuts oder sensiblen Lockscreen-Inhalte. Retention-/Ablaufwarnungen ausschließlich innerhalb einer zulässigen entsperrten PaG-Sitzung. Manifest, Dependency-Komponenten und Laufzeitverhalten sind entsprechend zu prüfen.
+
+### SEC-17 — Auffindbarkeit und forensische Grenzen
+
+Die installierte App gilt als auffindbar. Kein versteckter Launcher, geheime Start-/Dialer-Codes, Tarnung als andere App oder versteckte Komponenten zur Umgehung normaler App-Erkennung. Zurückhaltendes Branding ist zulässig, kein Sicherheitsmechanismus. Ressourcenstarke staatliche/forensische Akteure und Zustandswechsel bis zur OS-/Kernel-Kompromittierung gehören zum threat-model.md; das bedeutet keine Schutzgarantie gegen ein vollständig kompromittiertes laufendes OS.
+
+Verschlüsselung ruhender Daten schützt keine bereits in READY verfügbaren Klartexte. Freigabezeit, Schlüssel-/Cache-Lebensdauer und Nebenbestände werden minimiert und geprüft. Fremde IME/Tastaturen können Eingaben verarbeiten; Clipboard, Fotografien, Logs, Backupreste und privilegierte Speicherkopien lassen sich nicht zuverlässig zurückholen. Keine vollständige RAM- oder physische Flash-Löschgarantie.
+
 ## 3. Offene Entscheidungen
 
 | ID | Entscheidung | Empfehlung/Prüfauftrag | Zeitpunkt |
@@ -121,11 +139,14 @@ Löschfehler werden nicht als Erfolg gemeldet. Wiederanlauf und fällige Inhalte
 | SEC-OD-07 | Formatumfang, Größen, Parser und temporäre Klartextanforderungen | Begrenzen; keine stillen Klartextausnahmen | Vor Import/Anzeige |
 | SEC-OD-08 | Konkreter Screenshot-/Recent-Apps-Schutz und Clipboard-UI | Verbindlichen Oberflächenschutz nachweisen; Clipboard nur nach ausdrücklicher Benutzeraktion; keine externe Dateiöffnung | Vor jeweiliger UI-Funktion |
 | SEC-OD-09 | Konkrete Backupregeln, Speicherorte und Testmatrix | Ausschlüsse praktisch prüfen | Vor Speicherung/Freigabe |
+| SEC-OD-10 | Absolute und Inaktivitätsdauer; konkrete Qualifikation von Vordergrundinteraktion | Keine realen Zeitwerte hier festlegen; keine technischen Ereignisse als Aktivität | Dauern als spätere Produktentscheidung; Interaktionsabbildung in B0 |
 
-Fristen und Zeitrechnung sind ausschließlich in data-retention.md offen geführt; Klassifizierungsänderungen und indirekte Personenbezüge in privacy.md. Verbindlich geklärte Punkte werden nicht erneut zur Disposition gestellt.
+Retention-Fristen und deren Kalender-/Zeitrechnung sind in data-retention.md offen geführt; Sessiondauer und monotone Sessionzeit sind davon getrennt. Klassifizierungsänderungen und indirekte Personenbezüge stehen in privacy.md. Verbindlich geklärte Punkte werden nicht erneut zur Disposition gestellt.
 
 ## 4. Ableitbare Testanforderungen
 
-SEC-01 bis SEC-15 bilden Referenzen für das spätere testing.md. Erforderlich sind insbesondere Start-/Lifecycle-/Picker-Tests, Authentifizierung nach Prozesswiederherstellung, Verhinderung paralleler Authentifizierungsflüsse, Prompt-Schleifen, alter Authentifizierungsergebnisse und wiederverwendeter Sitzungen, Zugriffsversuche unterhalb der UI, Klartextprüfung aller kontrollierten Speicherbereiche, Logs und Vorschauen, Manifestprüfung, Backup/Transfer, bösartige/überlange Imports, Kamera-Gate/ImageProxy-Lifecycle, fehlende persistente Klartext-Zwischendateien, fehlender externer Fallback sowie Ausfälle bei Schlüsselzugriff und Migration.
+SEC-01 bis SEC-17 bilden Referenzen für das spätere testing.md. Erforderlich sind insbesondere Start-/Lifecycle-/Picker-Tests, Authentifizierung nach Prozesswiederherstellung, Verhinderung paralleler Authentifizierungsflüsse, Prompt-Schleifen, alter Authentifizierungsergebnisse und wiederverwendeter Sitzungen, Zugriffsversuche unterhalb der UI, Klartextprüfung aller kontrollierten Speicherbereiche, Logs und Vorschauen, Manifestprüfung, Backup/Transfer, bösartige/überlange Imports, Kamera-Gate/ImageProxy-Lifecycle, fehlende persistente Klartext-Zwischendateien, fehlender externer Fallback sowie Ausfälle bei Schlüsselzugriff und Migration.
+
+SEC-01, SEC-16 und SEC-17 ergänzen Tests für absolute Grenze trotz kontinuierlicher Bedienung, Inaktivität ausschließlich in READY, Maintenance ohne künstliche Aktivität, Sleep/Resume, Wanduhränderung, Recreation/Process Death, verzögerte Timer, alte Callbacks und Ablauf zwischen Prüfung und Commit-Zulassung. SQL-Zugriffe, Streams, Import/Delete und Wartung müssen denselben Vertrag durchsetzen; keine alten Handle-Zugriffe oder Ergebnisemissionen. Fehlende Notifications, Foreground Services, operative Widgets/Shortcuts und Verbergungsmechanismen statisch und dynamisch prüfen. Die B0/B1–B5-Reihenfolge und Nachweise stehen in ARCH-35.
 
 Tests nutzen ausschließlich synthetische Daten. Hardware-, Hersteller- und Flash-Grenzen lassen sich nicht vollständig durch Unit Tests belegen. Prüfergebnisse müssen Gerät, Plattform, Konfiguration und verbleibende Grenzen nennen. Vor echten sensiblen Daten sind unabhängiges Security Review und fachkundige Datenschutzprüfung erforderlich.

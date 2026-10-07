@@ -85,6 +85,8 @@ Sicherheitsanforderungen werden bereits bei Architektur und Datenmodell berücks
 
 Die Anwendung soll standardmäßig möglichst wenige personenbezogene Daten speichern.
 
+Die Schutzmaßnahmen haben folgende Priorität: Daten möglichst nicht erheben; nicht mehr benötigte Daten früh löschen; Persistenz minimieren; Freigabezeit minimieren; Authentifizierung erzwingen; persistenten Bestand verschlüsseln; Metadaten- und UI-Leaks reduzieren. Verschlüsselung ruhender Daten schützt keine Inhalte, die in einer gültigen READY-Sitzung bereits als Klartext verarbeitet oder angezeigt werden.
+
 ## P-006 — Purpose Limitation
 
 Daten sollen einem konkreten organisatorischen Zweck zugeordnet werden.
@@ -119,6 +121,9 @@ Folgende Funktionen sind ausdrücklich **nicht Bestandteil von Version 0.1**:
 * GPS-Tracking
 * kontinuierliche Standortüberwachung
 * Push Notifications
+* lokale PaG-Notifications und Push-Infrastruktur
+* Foreground Services
+* operative Widgets und operative dynamische/persistente Shortcuts
 * öffentliches Teilnehmer:innenportal
 * automatischer Datenabgleich zwischen Geräten
 * zentrale Benutzerverwaltung
@@ -129,6 +134,10 @@ Folgende Funktionen sind ausdrücklich **nicht Bestandteil von Version 0.1**:
 * Täuschungs- oder Tarnfunktionen bei Beschlagnahmung
 
 Diese Funktionen können gegebenenfalls in späteren Produktphasen separat bewertet werden.
+
+Im MVP keine Benachrichtigungsberechtigung, keine sensiblen Lockscreen-Inhalte und keine eigenen Notification Channels ohne später nachgewiesene technische Notwendigkeit. Eine solche Notwendigkeit hebt das Verbot von PaG-Notifications nicht auf.
+
+Keine Sicherheitsmechanismen zur Verbergung der installierten App: kein versteckter Launcher, keine geheimen Start- oder Dialer-Codes, keine Tarnung als andere App und keine versteckten Komponenten zur Umgehung normaler App-Erkennung. Zurückhaltendes Branding ist zulässig, kein Schutzversprechen. Die installierte App gilt bei Geräteanalyse als auffindbar.
 
 ---
 
@@ -490,6 +499,8 @@ Der Admin kann die Speicherfrist, soweit organisatorisch und rechtlich zulässig
 
 Die Anwendung informiert vor Ablauf einer Speicherfrist.
 
+Warnungen erfolgen ausschließlich innerhalb einer zulässigen entsperrten PaG-Sitzung, nicht als Systembenachrichtigung. Das Verpassen einer Warnung verlängert keine Frist.
+
 ## FR-094 — Automatische Löschung
 
 Nach Ablauf der Speicherfrist werden die betreffenden Daten automatisch aus dem logischen Datenbestand entfernt.
@@ -610,6 +621,10 @@ Das Projekt implementiert keine eigenen kryptografischen Primitive.
 ## SEC-020 — App-Sperre
 
 Die Anwendung besitzt eine lokale Entsperrfunktion.
+
+Sie startet LOCKED und sperrt bei Gerätesperre, Verlassen der App sowie Ablauf einer ihrer Sitzungsgrenzen. Die absolute Grenze beginnt unmittelbar nach erfolgreicher expliziter PaG-Authentifizierung, läuft während MAINTENANCE und READY und ist unveränderlich. Aktivität, I/O und Maintenance verlängern sie nicht. Die zusätzliche Inaktivitätsgrenze gilt für READY; nur qualifizierte tatsächliche Vordergrundinteraktion mit PaG aktualisiert den Aktivitätszeitpunkt. MAINTENANCE zeigt keine Fachinhalte und bleibt durch die absolute Grenze begrenzt.
+
+Sessiondauer verwendet injizierbare monotone, Sleep einschließende Zeit, keine Wanduhr. Ablauf führt zu LOCKED und invalidiert die Generation. Eine neue Sitzung benötigt einen neuen explizit gestarteten DEVICE_CREDENTIAL-Flow; Geräteentsperrung oder verbleibende Keystore-Autorisierung allein genügt nicht. Keine automatischen Prompt-Schleifen. Storage erzwingt denselben Gültigkeitsvertrag wie die UI; Einzelheiten und Prüfpunkte in docs/architecture.md, ARCH-31 bis ARCH-34. Konkrete Sessiondauern bleiben offen.
 
 ## SEC-021 — PIN
 
@@ -874,6 +889,8 @@ Das Gerät geht verloren.
 ### T-002 — Physischer Zugriff
 
 Eine dritte Person erhält physischen Zugriff auf das Gerät.
+
+Ein ressourcenstarker staatlicher/forensischer Akteur mit Zeit und Werkzeugen ist ausdrücklich eingeschlossen. Er kann ein bereits entsperrtes Gerät mit PaG in READY übernehmen, das Gerätecredential zunächst nicht kennen und die Sitzung durch Bedienung offen zu halten versuchen. Android-Bildschirmtimeout ist keine ausreichende Sicherheitsgrenze. Beschlagnahmung in LOCKED, später bekannte Credentials, Offline-Dateisystemanalyse, RAM-/Debuggerzugriff, OEM-/forensische Schwachstellen und späterer OS-/Kernel-Zugriff werden in docs/threat-model.md getrennt bewertet. Gegen ein vollständig kompromittiertes laufendes Betriebssystem wird keine zuverlässige Kontrolle oder Vertraulichkeitsgarantie behauptet. Sessionablauf ist keine beschlagnahmeabhängige Löschung.
 
 ### T-003 — Bösartige Anwendung
 

@@ -26,6 +26,10 @@ Schutzziele sind Vertraulichkeit, Integrität und kontrollierte Verfügbarkeit. 
 
 Die normale Schutzannahme ist ein nicht vollständig kompromittiertes Android-System mit funktionierender App-Isolation. Mindest-Android-Version, erforderliche Gerätesperre und Hardware-Keystore-Anforderungen sind noch offen.
 
+Ein ressourcenstarker staatlicher/forensischer Akteur mit Zeit, Werkzeugen und möglicherweise späterem OS-/Kernel-Zugriff gehört ausdrücklich zum Angreifermodell. Er kann ein bereits entsperrtes Android-Gerät übernehmen, während PaG READY ist, das Credential zunächst nicht kennen und durch Bedienung die offene Sitzung künstlich am Leben halten. Android-Bildschirmtimeout ist keine ausreichende Sicherheitsgrenze. Die absolute PaG-Deadline begrenzt regulären Zugriff unabhängig von Aktivität; Inaktivität begrenzt zusätzlich READY (ARCH-31 bis ARCH-34). Während der verbleibenden gültigen Sitzung können Inhalte bereits eingesehen oder kopiert werden.
+
+Das nicht kompromittierte System ist eine Voraussetzung für die angestrebte Durchsetzung, kein Ausschluss späterer Kompromittierung aus der Risikoanalyse. Ein vollständig kompromittiertes laufendes OS/Kernel kann PaG-Zeitmessung, Prozess und Datenzugriff beeinflussen; dafür keine Kontroll- oder Vertraulichkeitsgarantie. Die installierte App gilt als auffindbar, unabhängig von zurückhaltendem Branding.
+
 DEVICE_CREDENTIAL + Keystore-Bindung ist der bevorzugte Security-Prototyp; keine Biometrie oder eigene PaG-Passphrase im ersten Prototyp. Kenntnis des Gerätecredentials kann voraussichtlich auch PaG-Authentifizierung erfüllen; dieses Restrisiko ist akzeptiert. Konkrete Keystore-Bindung bleibt offen.
 
 Vertrauensgrenzen verlaufen zwischen App und Betriebssystem/Keystore, App und anderen Apps, App und Dokumentanbietern sowie Entwicklung/Build und eingebundenen Abhängigkeiten. Importierte Daten sind nicht vertrauenswürdig. Kameraimport nutzt den begrenzten CameraX-In-Memory-Prototyp innerhalb der App; kein automatischer externer Kamera-Fallback. Ohne Nachweis eines appseitigen Pfads ohne persistente Klartext-Zwischendatei und Gate-Umgehung wird Kameraimport verschoben. Externe Klartextöffnung und externe Viewerübergabe sind im MVP ausgeschlossen; siehe ARCH-17 bis ARCH-22 und ARCH-28. Eine Dependency im App-Prozess ist keine isolierte andere App.
@@ -56,9 +60,38 @@ Ein entsperrtes Gerät ist nicht automatisch kompromittiert. Ein nicht exportier
 
 Technische Anforderungen stehen in security.md; Frist- und Wiederanlaufregeln in data-retention.md. Die IDs ermöglichen später die Zuordnung von Tests zu Bedrohungen.
 
+### Forensische Szenarien und getrennte Nachweisgrenzen
+
+A beschreibt angestrebten Schutz, B den erforderlichen Nachweis, C verbleibendes Risiko und D die technische Garantiegrenze. Die Tabelle enthält Prüfaufträge, keine bereits bestandenen Tests.
+
+| ID / Szenario | A: Angestrebter Schutz | B: Erforderlicher praktischer Nachweis | C: Restrisiko | D: Technische Grenze |
+|---|---|---|---|---|
+| TM-F01: Beschlagnahmt während PaG LOCKED | Keine regulären Inhalte; geschützter persistenter Bestand | Start/Gate, gespeicherte Zustände, Speicherinventar | Frühere Kopien oder Laufzeitreste | LOCKED beweist keine vollständige RAM-/Flash-Bereinigung |
+| TM-F02: Android entsperrt, PaG LOCKED, Credential unbekannt | Neue explizite PaG-Authentifizierung erforderlich | Prompt trotz Geräteentsperrung und verbleibender Autorisierung; kein Handle-Bypass | Plattform-/OEM-Lücken | Gerätezustand allein ist kein Kompromittierungsnachweis und keine PaG-Freigabe |
+| TM-F03: PaG bereits READY | Absolute Grenze trotz fortgesetzter Bedienung; zusätzliche Inaktivitätsgrenze | B0/B5, UI und Storage, lange I/O, Deadline-Rennen | Abschöpfung bis zum Ablauf möglich | Keine Geheimhaltung bereits angezeigter/verarbeiteter Klartexte |
+| TM-F04: Credential später bekannt | Kontrollierte Authentifizierung und Schlüsselzugriff | Auth-/Keystore-Verhalten | Credential kann PaG-Authentifizierung erfüllen | Keine unabhängige PaG-Geheimnisgrenze zugesagt |
+| TM-F05: Offline-Dateisystemanalyse | Verschlüsselung aller operativen Bestände; opaque Namen | DB, Dateien und Schlüsselartefakte untersuchen | Größen und technische Metadaten | Keine vollständige Metadaten- oder Rollback-Garantie |
+| TM-F06: RAM-/Prozessspeicherzugriff | Klartext-/Schlüssel-Lebensdauer reduzieren | Cache-/Handle-Freigabe bei Lock, Speicherreview mit synthetischen Daten | JVM/native/OS-Kopien | Keine garantierte vollständige Überschreibung; Verarbeitung nicht insgesamt in TEE |
+| TM-F07: Debugger/ADB | Testangriffsfläche von Produktbetrieb abgrenzen | Debug-/Release-Konfiguration und zulässige Diagnosepfade prüfen | Bereits freigegebene Debug-/privilegierte Zugriffe | ADB-Fähigkeiten hängen von Gerätezustand ab; kein pauschaler ADB-Schutz |
+| TM-F08: Kompromittiertes OS/Kernel | Vorherige Datensammlung und Freigabezeit minimieren | Grenzen dokumentieren, keine Kompromittierungserkennung als Sicherheitsbasis | Prozess-/Zeit-/Schlüsseloperationsmanipulation | Keine zuverlässige Kontrolle des laufenden kompromittierten Systems |
+| TM-F09: OEM-/forensische Schwachstellen | Kleine geprüfte Plattformmatrix und minimale Angriffsfläche | Reale Plattform-/Keystore-/Lifecycle-Tests | Unbekannte Exploits | Kein Nachweis der Abwesenheit aller Plattformlücken |
+| TM-F10: Backup-/Transferreste | Keine appseitigen Replikate | Speicherbereiche, echte Backup-/Transferläufe | Frühere oder privilegiert erzeugte Kopien | Keine Rücknahme externer Kopien |
+| TM-F11: WAL/Journal/Temp/Staging | Keine persistenten operativen Klartext-Nebenbestände | B1/B4, Last, Crash, offene Dateien und Wiederanlauf | Technische Header, historische Seiten und Schlüsselreste | Verschlüsselung der Hauptdatei beweist nicht Schutz jedes Nebenbestands |
+| TM-F12: Logs/Exceptions | Keine Inhalte, Credentials, Schlüssel oder sensiblen Pfade | Dependency-Ausgaben, Logcat und Fehlerpfade prüfen | Plattform-/privilegierte Diagnosen | Keine Kontrolle sämtlicher OS-Dumps |
+| TM-F13: Screenshots/Recents | Fensterschutz und neutrale Sperransicht | Screenshot-/Recent-/Lifecycle-Tests | Externe Fotografie | Kein Schutzversprechen gegen kompromittierte Bildschirmerfassung |
+| TM-F14: Clipboard | Keine unaufgeforderte Kopie | Kopierabläufe und Lock-Grenzen prüfen | Ausdrücklich kopierte Inhalte verlassen Sitzung | Bereits gelesene Kopien nicht zuverlässig rückholbar |
+| TM-F15: Fremde IME/Tastatur | Unnötige Eingaben und Weitergabe minimieren | Eingabepfade und Hinweise prüfen; Credential nur im Systemdialog | Tastatur kann fachliche Eingaben verarbeiten | Keine Kontrolle fremder IME oder deren externer Kopien |
+| TM-F16: Import-/CameraX-Zwischenzustände | Kontrollierter sessiongebundener Pfad ohne persistente Klartextdatei | Importabbruch; später ImageProxy, Puffer und Deadline-Callbacks | Quelloriginale und Laufzeitkopien | Keine vollständige Kontrolle interner OS-/Hardwarepuffer |
+| TM-F17: Supply Chain/Dependencies | Herkunft, feste Versionen und minimaler Umfang | Dependency-/Build-/Quellreview | Schadcode im App-Prozess | Module sind keine Runtime-Sandbox |
+| TM-F18: Physische Flash-Reste | Nichterhebung, frühe logische Löschung, wenig Persistenz | Kontrollierte Löschkaskaden und Schlüsselzustände | Alte Zellen, Seiten oder Verpackungen | Keine zuverlässige physische Überschreibung einzelner Flash-Zellen |
+
+Nie erhobene Daten sind stärker geschützt als später gelöschte Daten: Löschung kann historische Kopien und Flash-Reste hinterlassen. Verschlüsselung ruhender Daten schützt keine bereits in gültigem READY verfügbaren Klartexte. Die Maßnahmenpriorität steht verbindlich in PRIV-10; technische Freigabegrenzen in SEC-01 und ARCH-31 bis ARCH-34.
+
 ## 5. Verbindliche Abgrenzung und Grenzen
 
 **TM-REQ-01:** Keine Zwangs-/Duress-PIN, Fake-Daten, beschlagnahmeabhängige Löschung oder sonstige Täuschungs-, Verschleierungs- und Umgehungsfunktionen. Löschung folgt gewöhnlichen Benutzeraktionen oder festgelegten Fristen, nicht einem vermuteten Ermittlungsereignis.
+
+**TM-REQ-02:** Keine App-Verbergung als Sicherheitsmechanismus: kein versteckter Launcher, geheime Start-/Dialer-Codes, Tarnung als andere App oder versteckte Erkennungsausweichkomponenten. Keine Notifications, Foreground Services, operativen Widgets/Shortcuts oder sensiblen Lockscreen-Inhalte gemäß SEC-16. Sessionablauf sperrt gewöhnlich und löscht nicht automatisch Daten.
 
 Keine Garantie wird behauptet für:
 
@@ -76,6 +109,6 @@ Keine Garantie wird behauptet für:
 |---|---|---|
 | Unterstützte Android-/Gerätematrix | Begrenzte, real getestete Matrix; sichere Gerätesperre prüfen | Ja, vor Security Foundation |
 | Hardware-Keystore und Fallback | Tatsächliche Fähigkeiten prüfen; keinen stillen schwächeren Fallback | Ja, nach Security-Prototyp |
-| Akzeptiertes Restrisiko | Offene Sitzung, privilegierte Apps und kompromittiertes OS ausdrücklich dokumentieren | Ja, vor Freigabe der Sicherheitsarchitektur |
+| Konkrete absolute/Inaktivitätsdauer | Kurze begrenzte Freigabe; keine realen Zeitwerte hier | Spätere Produktentscheidung; Vertrag in B0 verbindlich |
 
 Der Security-Prototyp prüft insbesondere Authentifizierung, Schlüsselverfügbarkeit und Retention bei Sperrung. Vor Echtdatenbetrieb sind die in PRODUCT.md geforderten unabhängigen Sicherheits- und Datenschutzprüfungen erforderlich. Dieses Threat Model ist keine Zertifizierung.

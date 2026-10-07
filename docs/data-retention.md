@@ -17,6 +17,8 @@ Anforderungen sind verbindlich. Fristanker, konkrete Standardfristen, maximale D
 - **RET-07:** Keine dauerhafte detaillierte Löschhistorie. Arbeitsstatus enthält keine gelöschten Inhalte, Namen oder sensiblen Dateinamen und wird nach erfolgreichem Abschluss entfernt, sobald nicht mehr notwendig.
 - **RET-08:** Vor irreversibler manueller Löschung werden Umfang und Folgen eindeutig erklärt und bestätigt. Automatische Löschung nach bestätigter Regel benötigt keine erneute Bestätigung. Warnungen verlängern keine Frist.
 - **RET-09:** Keine zuverlässige physische Überschreibung einzelner Flash-Zellen behaupten. Erfolgsaussagen beziehen sich auf definierte, überprüfte Bereinigung kontrollierter Speicherbereiche.
+- **RET-10:** Retention-/Ablaufwarnungen ausschließlich innerhalb einer zulässigen entsperrten PaG-Sitzung. Keine lokalen oder Push-Notifications, Benachrichtigungsberechtigung, Push-Infrastruktur oder Foreground Services; Außenoberflächen richten sich nach SEC-16.
+- **RET-11:** Maintenance und Löschung verwenden denselben zentralen Session-/Storage-Vertrag wie andere Zugriffe (ARCH-31 bis ARCH-34). Absolute Deadline begrenzt auch MAINTENANCE ohne Fachinhaltsanzeige; dort keine Inaktivitätssperre allein wegen fehlender sinnvoller Nutzerinteraktion. Neue Operations-/Schritt-/Commit-Zulassung endet bei Ablauf; physisch laufende native Arbeit kann noch enden, darf aber kein altes Ergebnis fachlich veröffentlichen. Minimalen geschützten Arbeitsstatus erhalten und beim nächsten zulässigen Unlock nachholen. Keine Verlängerung der Deadline und keine zusätzliche Datenlöschung allein aufgrund Sessionablaufs.
 
 ## 3. Empfohlenes Fristmodell; noch offen
 
@@ -54,11 +56,13 @@ Freitext und Dateien können indirekte Personenbezüge behalten. Referenzlöschu
 | Löschung unterbrochen/fehlgeschlagen | Betroffene Inhalte nicht wieder regulär freigeben; Arbeitsstatus erhalten und fortsetzen |
 | Schlüssel dauerhaft verloren | Keine erfolgreiche vollständige Bereinigung behaupten, solange Nachweis fehlt; keine Recovery; technische Verlustbehandlung offen, keine automatische Löschung/Neuinitialisierung bei unklarem Fehler |
 
-Nach Authentifizierung kann eine neutrale Wartungsansicht erscheinen, während fällige Bereinigung läuft. Sie darf betroffene Inhalte nicht anzeigen. Nicht betroffene Daten dürfen nur bei nachgewiesener Abgrenzung verfügbar bleiben; bei unklarem Umfang ist der betroffene Bereich zu sperren.
+Nach Authentifizierung kann eine neutrale Wartungsansicht erscheinen, während fällige Bereinigung läuft. In MAINTENANCE dürfen keine Fachinhalte angezeigt werden. Nicht betroffene Daten dürfen nur in einer gültigen READY-Sitzung bei nachgewiesener Abgrenzung verfügbar bleiben; bei unklarem Umfang ist der betroffene Bereich zu sperren.
 
-**Empfehlung:** Warnungen zunächst im entsperrten Dashboard, ohne sensible Systembenachrichtigungen. Vorlauf ist offen. Das Verpassen einer Warnung hält automatische Löschung nicht auf.
+Warnungen verbindlich nur innerhalb zulässiger entsperrter Sitzung, keine Systembenachrichtigungen. **Empfehlung:** Anzeige im Dashboard; Vorlauf bleibt offen. Das Verpassen einer Warnung hält automatische Löschung nicht auf.
 
 Hintergrundarbeit ist nur eine zusätzliche Ausführungsmöglichkeit und setzt zulässigen Schlüsselzugriff voraus. Android kann sie verschieben; siehe [Doze und App Standby](https://developer.android.com/training/monitoring-device-state/doze-standby). Bei Sperrung einer laufenden Bereinigung muss der Ablauf sicher pausieren beziehungsweise ohne Inhaltsfreigabe wiederanlaufen; genaue Umsetzung ist offen.
+
+Ein technischer Hintergrundablauf benötigt zusätzlich die zentrale Session-/Lifecycle-Zulässigkeit; Schlüsselverfügbarkeit allein reicht nicht. Kein eigener Unlock-State und kein Foreground Service zur Verlängerung. Resume prüft vor Anzeige; bekannte unterbrochene Aufträge werden geschützt abgeglichen, unbekannte Dateien nicht vorsorglich gelöscht. Retention-Kalenderzeit und ihre offenen Fristen sind von der monotonen Sessionzeit getrennt.
 
 ## 6. Wiederanlauf und Erfolgskriterien
 

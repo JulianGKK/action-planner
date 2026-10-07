@@ -6,6 +6,8 @@ Stage A untersucht ausschließlich DEVICE_CREDENTIAL, Android Keystore und die t
 
 Der Marker `PAG_STAGE_A_SYNTHETIC_ONLY` ist ein öffentlicher Testwert, kein Geheimnis und kein Verschlüsselungsnachweis. Er erscheint erst nach ausdrücklich gestarteter Credential-Authentifizierung, gültiger Generation, synthetischer Maintenance und erfolgreicher synthetischer Schlüsseloperation. Unit Tests beweisen keine Sicherheit des Plattformdialogs, Keystores oder Geräts.
 
+**Ergänzende B0-Abgrenzung:** Stage A bleibt ein bestandener historischer Prototypnachweis im dokumentierten Testumfang. Absolute Sessiondeadline und Inaktivitätsdeadline wurden dort noch NICHT getestet und gehören zu B0 / Stage B nach ARCH-31 bis ARCH-35. Der Versuch mit 15 Sekunden Keystore-Autorisierung ist kein Nachweis einer PaG-Sessiondeadline. Diese Ergänzung ändert weder Implementierung noch Hypothesen, bisherige Testergebnisse oder offene Nachweise; historische Abschluss-/Nachweisangaben unten bleiben erhalten. Sie belegen keine Erfüllung der später ergänzten Anforderungen und keine allgemeine Sicherheitsfreigabe.
+
 ## Toolchain und Dependencies
 
 Offizieller Versionsstand geprüft am 2026-10-07:

@@ -16,6 +16,22 @@ Grundlage sind [PRODUCT.md](../PRODUCT.md), [AGENTS.md](../AGENTS.md), das freig
 - **PRIV-06:** Personenbezogene Daten, ungeprüfte Freitexte und importierte Dateien sind standardmäßig SENSITIVE. Alle operativen Daten werden unabhängig von ihrer Klasse verschlüsselt.
 - **PRIV-07:** Keine unkontrollierten Kopien erzeugen. Appverwaltete abgeleitete Daten müssen Schutz und Löschung ihrer Ausgangsdaten berücksichtigen.
 
+**PRIV-10 — Maßnahmenpriorität:**
+
+1. Daten möglichst nicht erheben.
+2. Nicht mehr benötigte Daten früh löschen.
+3. Persistenz minimieren.
+4. Freigabezeit minimieren.
+5. Authentifizierung erzwingen.
+6. Persistenten Bestand verschlüsseln.
+7. Metadaten- und UI-Leaks reduzieren.
+
+Verschlüsselung ruhender Daten schützt keine Daten, die während einer gültigen READY-Sitzung bereits als Klartext verarbeitet oder angezeigt werden. Bereits offengelegte Inhalte werden durch Lock nicht wieder geheim. Nichterhebung vermeidet Risiken, die spätere Löschung wegen externer Kopien, Journal-/Schlüssel- und Flash-Resten nicht zuverlässig beseitigt.
+
+**PRIV-11 — Freigabezeit:** Absolute Sessiongrenze während MAINTENANCE und READY sowie Inaktivitätsgrenze in READY minimieren reguläre Freigabezeit. Nur qualifizierte tatsächliche Vordergrundinteraktion zählt als Aktivität; keine technischen Ereignisse und keine Verlängerung der absoluten Deadline. Vertrag und offene Dauern in SEC-01 und ARCH-31 bis ARCH-34. Kein vollständiger RAM-Löschnachweis durch Referenzfreigabe.
+
+**PRIV-12 — Keine operativen Außenoberflächen:** Keine lokalen oder Push-Notifications, Push-Infrastruktur, Benachrichtigungsberechtigung oder Foreground Services. Keine eigenen Notification Channels ohne später nachgewiesene technische Notwendigkeit und keine implizite Notification-Freigabe. Keine operativen Widgets, operativen dynamischen/persistenten Shortcuts oder sensiblen Lockscreen-Inhalte. Retention-/Ablaufwarnungen nur innerhalb zulässiger entsperrter Sitzung. Installierte App gilt als auffindbar; keine Verbergungsmechanismen nach SEC-17.
+
 **Empfehlung:** Pseudonyme bevorzugen, wenn sie für den Zweck genügen. Kurze feldbezogene Hinweise sollen unnötige personenbezogene Freitexte vermeiden. Pseudonyme sind nicht automatisch anonym.
 
 ## 3. Dateninventar
@@ -38,6 +54,8 @@ Die Speicherbereiche sind konzeptionell. Konkrete Pfade und technische Verfahren
 | Temporärer entschlüsselter Inhalt | Notwendige Verarbeitung/Anzeige | Entsprechend Ausgangsdaten | Kontrollierte Streams/Arbeitsspeicher; keine freigegebene Klartext-Dateiausnahme | Kürzest mögliche Nutzung; Abschluss-/Wiederanlaufbereinigung |
 
 Ausgaben- und Belegzwecke rechtfertigen keine zusätzliche Erfassung von Teilnehmeridentitäten. Kosten können sachlich bleiben; Freitext und Belege können trotzdem Personenbezüge enthalten.
+
+Das technische Inventar muss auch WAL/Journal/Temp/Staging, RAM-/Stream-/Flow-/UI-Caches, Logs/Exceptions und mögliche Backup-/Transferreste erfassen. Screenshots/Recents, Clipboard, fremde IME/Tastatur und Import-/CameraX-Puffer sind eigene Offenlegungsgrenzen. Eine fremde Tastatur kann fachliche Eingaben verarbeiten; PaG kontrolliert weder deren Verarbeitung noch bereits erzeugte externe Kopien. Forensische Szenarien und Garantiegrenzen stehen in TM-F01 bis TM-F18.
 
 ## 4. Sensitivitätsklassen
 
@@ -73,3 +91,5 @@ Offene Schlüssel-, Authentifizierungs- und Hardwareentscheidungen werden in sec
 ## 7. Ableitbare Prüfungen
 
 PRIV-01 bis PRIV-09 benötigen später Prüfungen für optional leere Personenfelder, actiongebundene Referenzen, Standardklassifizierung, fehlende verbotene Datentypen, fehlende Telemetrie und korrekte Original/Kopie-Information beim Systemimport sowie Kamera ohne Galerie-/Klartext-Zwischendatei oder externen Fallback und fehlende externe Viewerübergabe. Speicherinventar und manuelle Personenbezugsprüfung benötigen zusätzlich dokumentierte Reviews; deren Vollständigkeit lässt sich nicht allein durch Unit Tests beweisen.
+
+PRIV-10 bis PRIV-12 ergänzen Review der Erforderlichkeit/Persistenz, Deadline-/Cache-Entzugstests nach ARCH-35 und Prüfungen auf fehlende operative Notifications, Widgets, Shortcuts und Lockscreen-Inhalte. Externe Kopien und vollständige RAM-/Flash-Bereinigung sind keine durch Unit Tests behauptbare Garantie.
