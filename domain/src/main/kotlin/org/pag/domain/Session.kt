@@ -23,12 +23,14 @@ interface SessionPort {
     fun observe(observer: (SessionSnapshot) -> Unit): Subscription
     fun authenticate(experiment: Experiment)
     fun testAccess()
+    fun userInteraction()
     fun lock()
 }
 
 /** Only the Activity composition/lifecycle boundary receives this additional port. */
 interface SessionLifecycle {
     fun foreground(allowed: Boolean)
+    fun checkExpiry()
 }
 
 fun interface Maintenance {

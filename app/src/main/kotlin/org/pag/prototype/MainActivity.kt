@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.SystemClock
 import android.os.Looper
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -16,6 +17,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import org.pag.data.SessionCoordinator
 import org.pag.data.SyntheticMaintenance
+import org.pag.domain.MonotonicTime
+import org.pag.domain.SessionPolicy
 import org.pag.domain.SessionLifecycle
 import org.pag.domain.SessionState
 import org.pag.domain.Subscription
@@ -29,6 +32,18 @@ class MainActivity : ComponentActivity() {
     private lateinit var model: PrototypeViewModel
     private lateinit var authentication: PlatformCredentialExperiment
     private var resumed = false
+    private val expiryHandler = Handler(Looper.getMainLooper())
+    private val expiryCheck = object : Runnable {
+        override fun run() {
+            if (!resumed) return
+            lifecyclePort.checkExpiry()
+            if (resumed) expiryHandler.postDelayed(this, 250)
+        }
+    }
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        if (::model.isInitialized && resumed) model.userInteraction()
+    }
     private val screenOff = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             lifecyclePort.foreground(false)
@@ -51,7 +66,10 @@ class MainActivity : ComponentActivity() {
                 !getSystemService(KeyguardManager::class.java).isDeviceLocked
         }
         authentication = PlatformCredentialExperiment(this, environmentAllowed)
-        val coordinator = SessionCoordinator(authentication, maintenance, environmentAllowed)
+        val coordinator = SessionCoordinator(authentication, maintenance,
+            MonotonicTime { SystemClock.elapsedRealtime() },
+            // Synthetic prototype policy only. Not product durations.
+            SessionPolicy(60_000, 15_000), environmentAllowed)
         lifecyclePort = coordinator
         // Activity-owned VM: intentionally no retained unlock/controller after recreation.
         model = ViewModelProvider(this, object : ViewModelProvider.Factory {
@@ -73,10 +91,13 @@ class MainActivity : ComponentActivity() {
         resumed = true
         lifecyclePort.foreground(!getSystemService(KeyguardManager::class.java).isDeviceLocked)
         authentication.foregroundAvailable()
+        expiryHandler.removeCallbacks(expiryCheck)
+        expiryHandler.post(expiryCheck)
     }
 
     override fun onPause() {
         resumed = false
+        expiryHandler.removeCallbacks(expiryCheck)
         // AUTHENTICATING has no released content; an own system dialog can pause us.
         // onStop is always invalidating, including during authentication.
         if (model.snapshot.state != SessionState.AUTHENTICATING) lifecyclePort.foreground(false)
@@ -106,6 +127,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        expiryHandler.removeCallbacks(expiryCheck)
         lifecyclePort.foreground(false)
         unregisterReceiver(screenOff)
         viewModelStore.clear()

@@ -12,7 +12,7 @@ interface SyntheticOperation {
 }
 enum class OperationResult { SUCCEEDED, NOT_AUTHORIZED, FAILED, CONSUMED }
 sealed interface AuthenticationOutcome {
-    data class Granted(val operation: SyntheticOperation) : AuthenticationOutcome
+    data class Granted(val operation: SyntheticOperation, val authenticatedAtMillis: Long) : AuthenticationOutcome
     data class Rejected(val reason: SecurityFailure) : AuthenticationOutcome
 }
 interface AuthenticationExperiment {

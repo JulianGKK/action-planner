@@ -1,0 +1,18 @@
+package org.pag.domain
+
+/** Monotonic milliseconds, including device sleep. Never wall-clock time. */
+fun interface MonotonicTime { fun nowMillis(): Long }
+
+data class SessionPolicy(val absoluteMillis: Long, val inactivityMillis: Long) {
+    init { require(absoluteMillis > 0 && inactivityMillis > 0) }
+}
+enum class AccessScope { READY, MAINTENANCE }
+enum class AccessPoint { OPERATION, STEP, COMMIT, PUBLICATION }
+interface StorageAccess { fun acquire(scope: AccessScope = AccessScope.READY): StorageContext? }
+/** Revocable context, not a key or a native-handle ownership grant. */
+interface StorageContext {
+    val scope: AccessScope
+    fun check(point: AccessPoint): Boolean
+    /** Only a short in-memory publication. Never execute I/O in this callback. */
+    fun publish(result: () -> Unit): Boolean
+}

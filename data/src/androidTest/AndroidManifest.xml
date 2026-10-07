@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Test APK only. Keep even synthetic DB/sidecar data out of backup/transfer. -->
+    <application android:allowBackup="false"
+        android:fullBackupContent="@xml/b1_backup_rules"
+        android:dataExtractionRules="@xml/b1_data_extraction_rules" />
+</manifest>

@@ -29,14 +29,14 @@ class SessionCoordinatorTest {
     }
     private val auth = Auth()
     private val work = Work()
-    private val session = SessionCoordinator(auth, work)
+    private val session = SessionCoordinator(auth, work, MonotonicTime { 0 }, SessionPolicy(1000, 1000))
     private fun start() {
         session.foreground(true)
         session.authenticate(Experiment.PER_OPERATION)
     }
     private fun ready(operation: Operation = Operation()): Operation {
         start()
-        auth.callbacks.last()(AuthenticationOutcome.Granted(operation))
+        auth.callbacks.last()(AuthenticationOutcome.Granted(operation, 0))
         work.callbacks.last()(true)
         return operation
     }
@@ -48,7 +48,7 @@ class SessionCoordinatorTest {
     @Test fun validTransitionsAndMarkerRequireExplicitAccess() {
         start()
         assertEquals(SessionState.AUTHENTICATING, session.snapshot().state)
-        auth.callbacks.last()(AuthenticationOutcome.Granted(Operation()))
+        auth.callbacks.last()(AuthenticationOutcome.Granted(Operation(), 0))
         assertEquals(SessionState.MAINTENANCE, session.snapshot().state)
         assertNull(session.snapshot().marker)
         work.callbacks.last()(true)
@@ -81,7 +81,7 @@ class SessionCoordinatorTest {
         start()
         session.lock()
         val operation = Operation()
-        auth.callbacks.first()(AuthenticationOutcome.Granted(operation))
+        auth.callbacks.first()(AuthenticationOutcome.Granted(operation, 0))
         assertTrue(operation.released)
         assertEquals(SessionState.LOCKED, session.snapshot().state)
         assertTrue(work.callbacks.isEmpty())
@@ -98,7 +98,7 @@ class SessionCoordinatorTest {
     @Test fun lockingMaintenanceRejectsLateReady() {
         start()
         val operation = Operation()
-        auth.callbacks.last()(AuthenticationOutcome.Granted(operation))
+        auth.callbacks.last()(AuthenticationOutcome.Granted(operation, 0))
         session.lock()
         work.callbacks.last()(true)
         assertTrue(operation.released)
@@ -107,9 +107,9 @@ class SessionCoordinatorTest {
     @Test fun duplicateAuthResultCannotRunMaintenanceTwice() {
         start()
         val callback = auth.callbacks.last()
-        callback(AuthenticationOutcome.Granted(Operation()))
+        callback(AuthenticationOutcome.Granted(Operation(), 0))
         val extra = Operation()
-        callback(AuthenticationOutcome.Granted(extra))
+        callback(AuthenticationOutcome.Granted(extra, 0))
         assertTrue(extra.released)
         assertEquals(1, work.callbacks.size)
     }
@@ -128,7 +128,7 @@ class SessionCoordinatorTest {
         start()
         session.testAccess()
         val operation = Operation()
-        auth.callbacks.last()(AuthenticationOutcome.Granted(operation))
+        auth.callbacks.last()(AuthenticationOutcome.Granted(operation, 0))
         session.testAccess()
         work.callbacks.last()(false)
         session.testAccess()
@@ -177,7 +177,7 @@ class SessionCoordinatorTest {
         auth.callbacks.last()(AuthenticationOutcome.Granted(object : SyntheticOperation {
             override fun perform(): OperationResult { session.lock(); return OperationResult.SUCCEEDED }
             override fun release() { }
-        }))
+        }, 0))
         work.callbacks.last()(true)
         session.testAccess()
         assertEquals(SessionState.LOCKED, session.snapshot().state)
@@ -185,11 +185,11 @@ class SessionCoordinatorTest {
     }
     @Test fun liveEnvironmentCheckRejectsAccessBeforeLifecycleNotification() {
         var allowed = true
-        val coordinator = SessionCoordinator(auth, work) { allowed }
+        val coordinator = SessionCoordinator(auth, work, MonotonicTime { 0 }, SessionPolicy(1000, 1000)) { allowed }
         coordinator.foreground(true)
         coordinator.authenticate(Experiment.TIME_WINDOW)
         val operation = Operation()
-        auth.callbacks.last()(AuthenticationOutcome.Granted(operation))
+        auth.callbacks.last()(AuthenticationOutcome.Granted(operation, 0))
         work.callbacks.last()(true)
         coordinator.testAccess()
         allowed = false

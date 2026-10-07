@@ -63,6 +63,7 @@ class PlatformCredentialExperiment(
                 .build()
             val callback = object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    val authenticatedAt = android.os.SystemClock.elapsedRealtime()
                     if (result.authenticationType != BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL) {
                         finish(AuthenticationOutcome.Rejected(SecurityFailure.PLATFORM_ERROR))
                         return
@@ -79,10 +80,10 @@ class PlatformCredentialExperiment(
                     }
                     // The dialog can return its result just before Activity focus/resume.
                     // No gate/content release until the matching Activity is foreground.
-                    if (canPublishInForeground()) finish(AuthenticationOutcome.Granted(operation))
+                    if (canPublishInForeground()) finish(AuthenticationOutcome.Granted(operation, authenticatedAt))
                     else {
                         pendingOperation = operation
-                        pendingForegroundResult = { finish(AuthenticationOutcome.Granted(operation)) }
+                        pendingForegroundResult = { finish(AuthenticationOutcome.Granted(operation, authenticatedAt)) }
                     }
                 }
 

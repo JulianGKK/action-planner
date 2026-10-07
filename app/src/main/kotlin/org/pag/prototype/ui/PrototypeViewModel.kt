@@ -12,7 +12,8 @@ class PrototypeViewModel(private val session: SessionPort) : ViewModel() {
         private set
     private val subscription = session.observe { snapshot = it }
     fun authenticate(experiment: Experiment) = session.authenticate(experiment)
-    fun testAccess() = session.testAccess()
+    fun userInteraction() = session.userInteraction()
+    fun testAccess() { session.userInteraction(); session.testAccess() }
     fun lock() = session.lock()
     override fun onCleared() {
         session.lock()

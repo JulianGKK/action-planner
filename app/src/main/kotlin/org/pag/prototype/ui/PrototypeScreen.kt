@@ -21,7 +21,8 @@ fun PrototypeScreen(model: PrototypeViewModel) {
     MaterialTheme {
         Column(Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Prototyp A · ausschließlich synthetische Tests")
+            Text("Prototyp B0 / historischer A-Pfad · ausschließlich synthetische Tests")
+            Text("B0-Testpolicy: absolut 60 s / READY-Inaktivität 15 s; keine Produktwerte")
             Text("Session: ${snapshot.state} · Generation: ${snapshot.generation}")
             Text("Variante: ${snapshot.experiment ?: "keine"}")
             Text("Keystore-Autorisierung: ${snapshot.platformAuthorization} (nur Operationsbeobachtung)")
