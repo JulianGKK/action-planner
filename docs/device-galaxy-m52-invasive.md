@@ -545,3 +545,751 @@ Kein Test läuft. Beide Host-Key-Owner (Transport-Spike und A–H) wurden nach
 Abschluss beendet. Kein weiterer Recovery-Lauf mit diesen Ownern ist möglich
 oder nötig. Persistente synthetische Testbestände auf dem Gerät und unter
 .prototype-cache bleiben unangetastet. Kein Commit und kein Push.
+
+## I2 DEVICE_CREDENTIAL / KEYSTORE
+
+Status: **BLOCKED vor den Credential-Änderungen** – Voraussetzung eines
+vorhandenen B1.6-Haupt-App-Bestands derzeit nicht erfüllt.
+
+- Commit unter Test: `3fbccde` – Add Galaxy force-stop recovery tests.
+- Repository vor dieser Ergänzung sauber; I1 und Baseline unverändert.
+- Genau ein Galaxy SM-M526BR verbunden, API33; Gerätesperrcode vorhanden,
+  `secure=true` lesend über Android Window Policy bestätigt.
+- Credential weder geändert noch entfernt; kein Credentialwert erfasst.
+- Haupt-App `org.pag.prototype.a`: `no_backup/p15` vorhanden, Dateien
+  `0` = 1 Byte, `1` = 256 Byte, `2` = 294 Byte.
+- `no_backup/b3-v1` vorhanden: `0` = 1 Byte, `m` = 145 Byte,
+  Verzeichnisse `k` und `s`; unter `k` Dateien `0` = 1 Byte,
+  `1` = 256 Byte, `2` = 294 Byte.
+- `no_backup/p16` fehlt laut direktem lesendem `run-as ... ls`.
+  Der aktuelle MainActivity-Code verwendet genau diesen B1.6-Namensraum.
+  Dies widerspricht der erwarteten aktuellen Bestandsvoraussetzung;
+  die frühere erfolgreiche Galaxy-Restart-Evidenz bleibt erhalten.
+- B1.5/B1.6/B3-Authentifizierung in I2 noch nicht durchgeführt;
+  Aliaspräsenz und Keystore-Fehlerklassen noch nicht erhoben.
+  Dateipräsenz allein beweist keine Aliaspräsenz oder Entschlüsselbarkeit.
+- Bestand durch diese Diagnose unverändert: ausschließlich lesende ADB-
+  Prüfung; keine Initialisierung, Reparatur, Löschung oder Installation.
+- I2-A, I2-B, I2-C und Abschlussregression nicht gestartet.
+
+LAST SAFE CHECKPOINT: I2-Vorprüfung beendet, secure=true bestätigt;
+B1.6-Namensraum p16 fehlt. Kein Test läuft. Vor Credential-Änderung muss
+die Bestandsabweichung geklärt werden; keine Ersatzinitialisierung.
+
+## I2 PRECONDITION INVESTIGATION
+
+**I2 bleibt BLOCKED.** Ausschließlich lesende Ursachenanalyse; keine
+Authentifizierung, Installation, Dateimutation oder Alias-Erzeugung/-Löschung.
+Der Nutzer bestätigt: kein absichtlicher Profilwechsel und kein bewusstes
+pm clear / Uninstall / Reinstall seit dem dokumentierten B1.6-Nachweis.
+
+### Android-User und Package-Kontext
+
+`am get-current-user`: **0**. `pm list users`: ausschließlich User 0,
+Eigentümer, running. Aktuell kein Hinweis auf einen anderen User/Profile-
+Kontext; dies beweist keine vollständige historische Kontinuität.
+
+`dumpsys package org.pag.prototype.a`:
+
+- Package userId / UID: **10330**; installiert für User 0.
+- firstInstallTime: **2026-10-08 19:08:04**.
+- lastUpdateTime: **2026-10-08 19:08:04**.
+- versionCode **1**, versionName **0.1-stage-a**.
+- dataDir: `/data/user/0/org.pag.prototype.a`.
+
+Die Package-Zeitangaben werden unverändert als Android-Ausgabe wiedergegeben;
+sie belegen weder einen Daten-Clear noch dessen Ausbleiben. Keine Seriennummer
+oder Credentialwerte wurden dokumentiert.
+
+### Lesendes Dateiinventar
+
+Pfade relativ zum Haupt-App-dataDir; Größen in Bytes, mtime wie von `ls -lan`
+ausgegeben (Minutenauflösung, keine zusätzliche Zeitzonenannahme).
+
+| Pfad | Vorhanden / Typ | Größe | mtime |
+| --- | --- | ---: | --- |
+| no_backup | Verzeichnis | 3452 | 2026-10-08 19:24 |
+| no_backup/p15 | Verzeichnis | 3452 | 2026-10-08 19:16 |
+| no_backup/p15/0 | Datei | 1 | 2026-10-08 19:16 |
+| no_backup/p15/1 | Datei | 256 | 2026-10-08 19:16 |
+| no_backup/p15/2 | Datei | 294 | 2026-10-08 19:16 |
+| no_backup/p16 | Nicht vorhanden | – | – |
+| no_backup/b3-v1 | Verzeichnis | 3452 | 2026-10-08 19:24 |
+| no_backup/b3-v1/0 | Datei | 1 | 2026-10-08 19:24 |
+| no_backup/b3-v1/m | Datei | 145 | 2026-10-08 19:24 |
+| no_backup/b3-v1/k | Verzeichnis | 3452 | 2026-10-08 19:24 |
+| no_backup/b3-v1/k/0 | Datei | 1 | 2026-10-08 19:24 |
+| no_backup/b3-v1/k/1 | Datei | 256 | 2026-10-08 19:24 |
+| no_backup/b3-v1/k/2 | Datei | 294 | 2026-10-08 19:24 |
+| no_backup/b3-v1/s | Verzeichnis | 3452 | 2026-10-08 19:24 |
+| no_backup/b3-v1/s/f7a7f075-6c4a-4429-85af-f2c596fbf7b6 | Datei | 8388809 | 2026-10-08 19:24 |
+
+`run-as`-Verzeichnissuche unter dem App-dataDir bis Tiefe 6 zeigt ausschließlich
+cache, code_cache, files, no_backup sowie die oben vorhandenen Unterverzeichnisse;
+keinen alternativen B1.6-Namensraum. Keine Key-/Ciphertextinhalte ausgegeben.
+
+### Alias-Inventar und Aussagegrenze
+
+| Erwarteter Haupt-App-Alias | Zustand |
+| --- | --- |
+| pag.prototype.b16.storage.v1 | NICHT FESTSTELLBAR |
+| pag.prototype.b15.storage.v1 | NICHT FESTSTELLBAR |
+| pag.prototype.b3.file.v1 | NICHT FESTSTELLBAR |
+
+`RsaWrappingFixture` verwendet intern lesend `containsAlias` und bietet
+`checkedState`, aber es gibt keinen vorhandenen separat aufrufbaren
+Haupt-App-/Instrumentation-Inventarpfad für diese drei Aliase ohne
+Authentifizierung oder Testmutation. Der normale Unwrap-UI-Pfad bereitet
+Cipher/Prompt vor; die RSA-Instrumentation erstellt eigene Testaliase unter
+der Test-App-UID. Beides wurde hierfür nicht gestartet. Kein neuer Hook,
+Debugger-Auswertungsweg oder Testcode wurde gebaut. Dateipräsenz ersetzt
+keinen Aliasnachweis.
+
+### Code und Git-Historie
+
+- B1.6 eingeführt mit Commit `742df2d`: MainActivity verwendet bereits dort
+  `noBackupFilesDir.canonicalFile/p16`, darunter `k` und Alias
+  `pag.prototype.b16.storage.v1`. In der untersuchten Git-Historie kein
+  alternativer Haupt-App-Pfad oder Aliasname gefunden.
+- `B16Inventory.reserveNew` legt nach EMPTY-Prüfung p16 und Absichtsmarker
+  `0` an; `RsaWrappingFixture` schreibt unter `k` die Wrapping-Artefakte.
+  `B16StorageGate` erzeugt nur im expliziten Initialisierungspfad DB `d`;
+  `B16Inventory.finish` schreibt Abschlussartefakt `1`.
+- `B16-RESTART-SUCCEEDED` liest/prüft den bestehenden Bestand, schließt DB
+  und gibt kontrollierte Key-/Operationsreferenzen frei. Kein p16-Cleanup.
+- In aktuellen B1.6-Routinen und deren untersuchter Lösch-/Cleanup-Historie
+  kein Namespace-Löschpfad gefunden. Wechsel zu B1.5/B3 bereinigt keinen
+  anderen persistenten Prototypbestand. `viewModelStore.clear` und
+  `removeCallbacks` betreffen flüchtige UI-/Lifecycle-Zustände.
+- Testseitige Dateilöschungen sind isolierte Fault-Injections; B16IntegrationTest
+  verwendet `b16-test-<UUID>` unter dem Instrumentation-targetContext und
+  bewahrt seine verschlüsselten Fixtures. Diese sind nicht Haupt-App-p16.
+- I1-Hosttool adressiert `org.pag.data.test`; I1-Androidcode verwendet dessen
+  targetContext/noBackupFilesDir und eigene `i1-...`-Namensräume. Kein Zugriff
+  auf Main-App-no_backup oder p16 gefunden. B4-Delete betrifft ausschließlich
+  den bekannten autorisierten B4-Dateizusammenhang.
+
+### Install-/Clear-Log-Befund und Klassifikation
+
+93 vorhandene lokale Evidenzdateien (Top-Level `.prototype-cache` und
+`test-evidence`, Endungen log/txt/sh/py/xml) lesend geprüft. Kein Treffer für
+Main-App-Paket oder die gesuchten Install-/Clear-/Uninstall-/Package-/
+run-as-rm-Befehlsmuster. Kein konkreter Main-App-Lifecycle-Befehl zwischen
+Nachweis und I2 belegt. Shell-History wurde nicht pauschal gelesen.
+Gradle-Konfiguration und vorhandene Hosttools zeigen keinen expliziten
+Main-App-p16-Löschbefehl. Logs sind keine vollständige Command-Historie;
+fehlende Treffer beweisen nicht, dass niemals ein solcher Befehl lief.
+
+**Klassifikation F: Ursache nicht feststellbar.** C (anderer historischer Pfad),
+D (aktuell anderer User) und E (konkreter Cleanup-/Installationsbefehl) sind
+nicht belegt. A gegenüber B bleibt wegen unbekannter Aliaspräsenz offen.
+Keine belastbar wahrscheinlichste Erklärung ableitbar. Hypothesen bleiben
+ein selektiver Namespace-Verlust oder eine historisch abweichende Zuordnung
+des manuellen Nachweises; keine davon ist bewiesen. Die frühere committed
+Restart-Evidenz wird nicht umgedeutet. Ein App-/Keystore-Lifecycle-Verlust
+ist ebenfalls nicht nachgewiesen.
+
+LAST SAFE CHECKPOINT: lesende I2-Ursachenanalyse abgeschlossen; p16 fehlt,
+Aliaszustände NICHT FESTSTELLBAR, Ursache offen. Gerät und vorhandene
+Bestände unangetastet, kein Test läuft. I2 nicht sicher fortsetzbar unter
+der Voraussetzung dreier vorhandener positiver Pfade. Keine Credential-
+Änderung, Ersatzinitialisierung oder Reparatur. Kein Commit und kein Push.
+
+## I2 PRECONDITION – FINAL DISPOSITION
+
+Die ausdrücklich freigegebene einmalige androidTest-only Alias-Probe lief
+auf dem Galaxy/API33 unter der Haupt-App-UID: Testpaket
+`org.pag.prototype.a.test`, instrumentation targetPackage
+`org.pag.prototype.a`. Damit wurde nicht das getrennte Test-App-Keystore-
+Inventar von `org.pag.data.test` abgefragt.
+
+| Alias | Ergebnis |
+| --- | --- |
+| pag.prototype.b15.storage.v1 | PRESENT |
+| pag.prototype.b16.storage.v1 | ABSENT |
+| pag.prototype.b3.file.v1 | PRESENT |
+
+Probe verwendet ausschließlich `KeyStore.getInstance("AndroidKeyStore")`,
+`load(null)` und drei `containsAlias`-Abfragen. Keine getKey-/Cipher-/
+Authentifizierungs-/Dateioperation, keine anderen Aliasnamen ausgegeben.
+Keine Activity/kein Credential-Prompt wird durch den Probe-Code gestartet.
+Keine Produktcode-, Dependency- oder Permissionänderung. Ausschließlich das
+neue separate Test-APK installiert; keine Haupt-App-Installation.
+`:app:assembleDebugAndroidTest` und `:app:verifyPrototypeManifest` erfolgreich;
+gemergtes Probe-Manifest ohne Permissions und ohne Activity/Service/Provider.
+
+Vorher/nachher: p15 und b3-v1 vorhanden, p16 weiterhin nicht vorhanden.
+Dateitypen, Größen, mtimes und SHA-256-Dateidigests der vorhandenen Dateien
+identisch; keine Wrapping-/Ciphertextbytes ausgegeben. Der Digestvergleich
+stützt die Bytegleichheit im untersuchten Inventar, ist kein Forensiknachweis.
+
+**CASE 2: B16 ABSENT + p16 fehlt.** B1.6 ist bezüglich des erwarteten Alias
+und Namensraums aktuell leer. Die Ursache des früheren p16-Verlusts bleibt
+**UNKNOWN**; der neue Befund beweist keine historische Löschung/Reinstallation.
+
+Konsequenz: Vor Credential-Änderung ist gemäß ausdrücklicher Freigabe genau
+eine neue synthetische B1.6-Initialisierung über den bestehenden normalen
+UI-Pfad zulässig. Anschließend muss nach Restart einmal
+`B16-RESTART-SUCCEEDED` bestätigt werden; ebenfalls die positiven B1.5-/B3-
+Vorprüfungen. Diese Schritte wurden hier noch nicht ausgeführt. Erst danach
+I2-A/B/C fortsetzen. Keine weitere Ursachenforschung.
+
+LAST SAFE CHECKPOINT: finale read-only Alias-Probe abgeschlossen, CASE 2,
+Dateiinventar unverändert. Kein Test läuft; keine Credential-Änderung und
+keine neue B1.6-Initialisierung durchgeführt. I2 wartet auf den freigegebenen
+normalen B1.6-Initialisierungs-/Restart-Nachweis und positive Vorprüfungen.
+Kein Commit und kein Push.
+
+### I2-Fortsetzung – einmalige neue B1.6-Baseline freigegeben
+
+CASE 2 vom Nutzer bestätigt. Genau eine Initialisierung über den bestehenden
+normalen B1.6-UI-Pfad freigegeben; keine neue Initialisierungslogik.
+Haupt-App für manuelle Bedienung geöffnet, noch keine Initialisierung durch
+Codex ausgelöst. Nutzer soll DEVICE_CREDENTIAL ausschließlich am Gerät
+bestätigen. Anschließend ist ein echter Force-stop/Neustart mit erfolgreichem
+`B16-RESTART-SUCCEEDED` erforderlich. Bei BLOCKED/abweichender ID anhalten,
+keine Wiederholung der Initialisierung. Credential bleibt bis Abschluss der
+positiven B1.5-/B1.6-/B3-Vorprüfungen unverändert.
+
+LAST SAFE CHECKPOINT: Haupt-App geöffnet; wartet auf Nutzerbestätigung der
+einmaligen B1.6-Initialisierung. Erfolgsbefund noch nicht erhoben. Kein
+Credential geändert, kein Reboot oder Regressionlauf gestartet.
+
+### I2-A – Nutzerbestätigung Credential-Änderung
+
+Nutzer meldet: sicherer Gerätesperrcode geändert, Gerät mit geändertem
+Credential entsperrt. Kein Credentialwert erhoben oder dokumentiert.
+Die neue B1.6-Initialisierung, deren Restart-Nachweis und die positiven
+B1.5-/B1.6-/B3-Vorprüfungen vor Änderung sind im aktuellen Gespräch noch
+nicht bestätigt; sie werden nicht nachträglich als bestanden behauptet.
+Kein Reboot, keine Alias-Probe oder Zugriffstests nach Änderung durch Codex
+in diesem Schritt ausgeführt. Keine Initialisierung/Reparatur.
+
+LAST SAFE CHECKPOINT: Credential-Änderung und normales Entsperren vom Nutzer
+bestätigt; wartet auf Klärung der bereits vor Änderung ausgeführten
+Baseline-Schritte. I2-Fortsetzung vorläufig angehalten, kein Test läuft.
+Kein Commit und kein Push.
+
+## I2 BASELINE BEFORE CREDENTIAL CHANGE
+
+Nachträglich vom Nutzer ausdrücklich bestätigt, zeitlich VOR der Änderung:
+Die freigegebene einmalige neue B1.6-Initialisierung und der echte Restart
+waren erfolgreich. Anschließend alle drei positiven Vorprüfungen bestanden.
+
+| Bestand | Session | Test-ID | Keystore-Autorisierung | Konkrete Schlüsseloperation |
+| --- | --- | --- | --- | --- |
+| B1.6 | READY | B16-RESTART-SUCCEEDED | SUCCEEDED (nur Operationsbeobachtung) | SUCCEEDED |
+| B1.5 | READY | B15-UNWRAP-SUCCEEDED | SUCCEEDED | SUCCEEDED |
+| B3 | READY | B3-RESTART-SUCCEEDED | SUCCEEDED | SUCCEEDED |
+
+Erst danach DEVICE_CREDENTIAL manuell geändert und Gerät mit geändertem
+Credential entsperrt. Kein Credentialwert dokumentiert. Die vorherige
+Unbestätigt-Markierung bleibt als Verlauf erhalten und ist hiermit geklärt.
+Eine Alias-Probe und p16-Digestaufnahme unmittelbar vor der Änderung wurden
+nicht ausgeführt; sie werden nicht nachträglich als Beobachtung behauptet.
+
+### I2-A – read-only Vorprüfung nach Änderung, vor Reboot
+
+Android Window Policy: secure=true, User 0. Vorhandene read-only Probe:
+B15 PRESENT, B16 PRESENT, B3 PRESENT. Keine neue Initialisierung/Reparatur.
+
+p15 und b3-v1: Dateistruktur, Größen, mtimes und Dateidigests identisch zur
+read-only Aufnahme vor der neuen B1.6-Initialisierung/Credential-Änderung.
+p16 jetzt vorhanden mit Verzeichnis k; Dateien 0 (1 Byte), k/0 (1 Byte),
+k/1 (256 Byte), k/2 (294 Byte), d (12288 Byte), 1 (36 Byte).
+Dies entspricht strukturell dem erwarteten vollständigen B1.6-Inventar;
+kryptografische DB-/Unwrap-Prüfung folgt erst im manuellen Zugriffstest.
+Mangels p16-Digestaufnahme vor Credential-Änderung ist dessen Bytegleichheit
+über die Credential-Änderung NICHT nachgewiesen. Aktuelle Digests wurden
+rein lesend als Vergleichsbasis für die folgenden Zugriffstests erfasst.
+Lokale ignorierte Evidenz: .prototype-cache/i2-a-before-access-inventory.txt.
+
+LAST SAFE CHECKPOINT: Baseline vom Nutzer bestätigt; nach Credential-Änderung
+secure=true, alle drei Aliase PRESENT, p15/b3 unverändert und p16 vorhanden.
+Wartet auf jeweils genau einen manuellen bestehenden B1.5-/B1.6-/B3-Zugriff.
+Noch kein Zugriffsergebnis nach Änderung erhoben; kein Reboot gestartet.
+Kein Commit und kein Push.
+
+### I2-A – positive manuelle Zugriffstests nach Änderung, vor Reboot
+
+Vom Nutzer vollständig bestätigt; jeweils bestehender Bestand, sichtbarer
+DEVICE_CREDENTIAL-Dialog und erfolgreiche manuelle Authentifizierung:
+
+| Bestand | Dialog | Session | Test-ID | Keystore-Autorisierung | Schlüsseloperation |
+| --- | --- | --- | --- | --- | --- |
+| B1.5 | Ja | READY | B15-UNWRAP-SUCCEEDED | SUCCEEDED | SUCCEEDED |
+| B1.6 | Ja | READY | B16-RESTART-SUCCEEDED | SUCCEEDED | SUCCEEDED |
+| B3 | Ja | READY | B3-RESTART-SUCCEEDED | SUCCEEDED | SUCCEEDED |
+
+**PASS im getesteten Galaxy/API33-Umfang vor Reboot.** Keine Fehlerdiagnose
+angezeigt; daraus keine allgemeine Aussage über Credential-Änderungen auf
+anderen Plattformen ableiten. Keine Initialisierung/Reparatur oder
+Aliasänderung durch Codex. Credential-Entfernung weiterhin nicht begonnen.
+
+LAST SAFE CHECKPOINT: I2-A vor Reboot positiv bestätigt und dokumentiert.
+Geordneter adb reboot als nächster Schritt freigegeben; danach manueller
+Nutzer-Unlock, read-only Vorprüfung und jeweils ein bestehender Zugriff.
+Kein Commit und kein Push.
+
+Lesender Vergleich nach den drei Zugriffstests: p15/p16/b3-v1-Dateitypen,
+Größen, mtimes und Dateidigests identisch zur Aufnahme vor den Tests.
+Damit keine beobachtete Bestandsmutation durch diese Zugriffstests.
+Lokale ignorierte Reboot-Vergleichsbasis:
+.prototype-cache/i2-a-before-reboot-inventory.txt.
+
+LAST SAFE CHECKPOINT: I2-A-Zugriffe PASS, alle drei Dateiinventare unverändert.
+Reboot wird jetzt ausgelöst; manueller Unlock und Nachprüfungen ausstehend.
+
+adb reboot erfolgreich ausgelöst (OS-gesteuerter Neustart, kein Power-loss).
+Keine Credential-Entfernung, Initialisierung, Reparatur oder Aliasänderung.
+
+LAST SAFE CHECKPOINT: I2-A vor Reboot vollständig PASS; geordneter Reboot
+befohlen. Wartet auf manuellen Geräte-Unlock und ADB-Rückkehr durch Nutzer.
+Danach ausschließlich read-only secure/Alias/Dateiinventar, anschließend
+je ein bestehender B1.5-/B1.6-/B3-Zugriff. Kein Test läuft.
+Kein Commit und kein Push.
+
+### I2-A – read-only Vorprüfung nach geordnetem Reboot
+
+Nutzer bestätigt normales Entsperren und Wiederanschluss. Genau ein Gerät
+verbunden: SM-M526BR/API33. Android Window Policy secure=true.
+Alias-Probe: B15 PRESENT, B16 PRESENT, B3 PRESENT.
+p15/p16/b3-v1-Dateitypen, Größen, mtimes und Dateidigests identisch zur
+Aufnahme unmittelbar vor Reboot. Keine Initialisierung/Reparatur/Aliasänderung.
+Lokale ignorierte Evidenz: .prototype-cache/i2-a-after-reboot-inventory.txt.
+
+LAST SAFE CHECKPOINT: I2-A-Reboot/read-only Nachprüfung bestanden; alle drei
+Aliase vorhanden, Bestandsinventare unverändert. Wartet auf je einen manuellen
+bestehenden B1.5-/B1.6-/B3-Zugriff nach Reboot. Keine Credential-Entfernung,
+kein Zugriffsergebnis nach Reboot behauptet. Kein Commit und kein Push.
+
+B1.5 post-reboot: **AUTH PASS / SPECIFIC UNWRAP UNCONFIRMED / A-READY observed**.
+
+### I2-A – vollständiger Abschluss einschließlich Reboot
+
+**I2-A PASS IM GETESTETEN GALAXY/API33-UMFANG.** Nutzer bestätigt nach
+geordnetem Reboot und erneutem explizitem DEVICE_CREDENTIAL-Zugriff:
+
+| Bestand | Session | Variante soweit bestätigt | Test-ID | Keystore-Autorisierung | Schlüsseloperation |
+| --- | --- | --- | --- | --- | --- |
+| B1.5 | READY | STORAGE_UNWRAP | B15-UNWRAP-SUCCEEDED | SUCCEEDED | SUCCEEDED |
+| B1.6 | READY | Nicht separat berichtet | B16-RESTART-SUCCEEDED | SUCCEEDED | SUCCEEDED |
+| B3 | READY | Nicht separat berichtet | B3-RESTART-SUCCEEDED | SUCCEEDED | SUCCEEDED |
+
+Der zuvor unbestätigte spezifische B1.5-Unwrap ist damit bestätigt;
+A-READY bleibt als vorherige Zwischenbeobachtung dokumentiert.
+Credential-Änderung wurde vor und nach Reboot im getesteten Umfang sicher
+behandelt. Read-only Nachprüfung vor den Post-Reboot-Zugriffen bestätigte
+secure=true, alle drei Aliase PRESENT und unveränderte Dateiinventare samt
+Digests gegenüber unmittelbar vor Reboot. Ein zusätzlicher Digestvergleich
+nach diesen manuellen Zugriffen wurde hier nicht durchgeführt.
+Keine allgemeine Samsung-/Android-Garantie, kein Nachweis zur Credential-
+Entfernung oder zu permanent invalidierten Schlüsseln aus I2-A ableiten.
+
+### I2-B – vorbereitet, wartet auf manuelle Credential-Entfernung
+
+Nutzer soll den sicheren Gerätesperrcode ausschließlich manuell über
+Android/Samsung Settings vollständig entfernen, sofern das Gerät dies zulässt.
+Keine Credentialwerte im Chat/Terminal/Dokument erfassen. Keine Geräteaktion
+per ADB in diesem Vorbereitungsschritt, keine Initialisierung, Aliasänderung
+oder App-Datenänderung.
+
+Nach Bestätigung zuerst ausschließlich read-only: secure-Status, drei
+Aliaszustände und p15/p16/b3-v1-Dateiinventar. Erst danach je ein bestehender
+Zugriffspfad. Bei secure=false ohne legitimes DEVICE_CREDENTIAL darf kein
+Bestand fachlich READY werden: READY ohne legitime Auth ist FAIL;
+BLOCKED/nicht authentifizierbar ist ein zulässiger sicherer Ausgang.
+Kein Reboot vor vollständiger Dokumentation des Zustands direkt nach Entfernung.
+
+LAST SAFE CHECKPOINT: I2-A einschließlich Reboot und spezifischem B1.5-Unwrap
+vollständig PASS. I2-B vorbereitet, Credential-Entfernung noch nicht bestätigt.
+Kein Test läuft; wartet auf Nutzerbestätigung „Credential entfernt“.
+Kein Commit und kein Push.
+
+### I2-B – unmittelbar nach manueller Credential-Entfernung, vor Zugriff/Reboot
+
+Nutzer bestätigt „Credential entfernt“. Ausschließlich read-only geprüft:
+ein Galaxy SM-M526BR/API33 verbunden; Android Window Policy **secure=false**.
+Vorhandene Alias-Probe unter Haupt-App-UID meldet:
+
+| Alias | Zustand nach Entfernung |
+| --- | --- |
+| B15 / pag.prototype.b15.storage.v1 | ABSENT |
+| B16 / pag.prototype.b16.storage.v1 | ABSENT |
+| B3 / pag.prototype.b3.file.v1 | ABSENT |
+
+p15, p16 und b3-v1 bleiben vorhanden. Dateitypen, Größen, mtimes und
+Dateidigests jeweils identisch zur I2-A-Aufnahme nach Reboot.
+Lokale ignorierte Evidenz: .prototype-cache/i2-b-before-access-inventory.txt.
+Keine Keywerte oder Ciphertextinhalte ausgegeben, keine getKey-/Cipher-
+Operation ausgeführt. Kein PaG-Authentifizierungsversuch vor dieser Inventur.
+
+Beobachtet: alle drei zuvor vorhandenen Aliase sind nach manueller Entfernung
+nicht mehr vorhanden, während die geschützten Dateibestände erhalten bleiben.
+Keine Aliaslöschung durch Codex oder Probe. Keine konkrete Keystore-Exception
+beobachtet; containsAlias=false beweist nicht eine bestimmte Exceptionklasse
+oder den internen Mechanismus der Plattformentfernung. Kein Ersatzkey oder
+Ersatzbestand erzeugt. Zugriffsergebnisse noch offen; I2-B noch nicht PASS.
+
+LAST SAFE CHECKPOINT: I2-B-read-only Inventur nach Credential-Entfernung
+abgeschlossen: secure=false, B15/B16/B3 ABSENT, alle Dateiinventare unverändert.
+Wartet auf je einen bestehenden B1.5-/B1.6-/B3-Zugriff; READY ohne legitime
+DEVICE_CREDENTIAL-Authentifizierung wäre FAIL. Keine Initialisierung/Reparatur,
+kein Reboot, kein Test läuft. Kein Commit und kein Push.
+
+### I2-B – manuelle Zugriffstests ohne Credential, vor Reboot
+
+Vom Nutzer bestätigt, jeweils bestehender Zugriffspfad:
+
+| Bestand | Dialog | Session | Test-ID | Keystore-Autorisierung | Schlüsseloperation |
+| --- | --- | --- | --- | --- | --- |
+| B1.5 | Nein | BLOCKED | A-AUTH-UNAVAILABLE | NOT_TESTED | NOT_TESTED |
+| B1.6 | Nicht sicher notiert | BLOCKED | B16-BOOTSTRAP-INVENTORY | NOT_TESTED | NOT_TESTED |
+| B3 | Nein | BLOCKED | B3-BOOTSTRAP-INVENTORY (manuelle Ablesung) | NOT_TESTED | NOT_TESTED |
+
+**PASS für die Zugriffsverweigerung vor Reboot im getesteten Umfang:**
+Keiner der drei Bestände wurde ohne legitimes DEVICE_CREDENTIAL READY.
+Die IDs sind feste Prototypdiagnosen, keine beobachteten konkreten
+Keystore-Exceptionklassen. Insbesondere NOT_TESTED nicht als fehlgeschlagene
+private Schlüsseloperation oder permanent invalidierten vorhandenen Key
+umdeuten. Aliase waren in der vorherigen read-only Probe ABSENT.
+Keine Initialisierung, Ersatzkeys oder Reparatur durch Codex.
+
+LAST SAFE CHECKPOINT: I2-B vor Reboot vollständig geprüft, alle drei Pfade
+BLOCKED. Geordneter Reboot freigegeben; kein neues DEVICE_CREDENTIAL einrichten.
+Nach Rückkehr zuerst read-only secure/Aliase/Dateiinventar, danach je ein
+bestehender Zugriff. Kein Commit und kein Push.
+
+Lesender Dateivergleich nach den blockierten Zugriffen: p15/p16/b3-v1-
+Dateitypen, Größen, mtimes und Dateidigests unverändert gegenüber vor Zugriff.
+Reboot-Vergleichsbasis: .prototype-cache/i2-b-before-reboot-inventory.txt
+(lokal ignoriert). Kein Ersatzbestand beobachtet.
+
+LAST SAFE CHECKPOINT: I2-B vor Reboot PASS, Inventare unverändert.
+Geordneter Reboot wird jetzt ausgelöst; Nachprüfungen ausstehend.
+
+adb reboot erfolgreich ausgelöst: geordneter OS-Neustart, kein Power-loss.
+Noch kein neues DEVICE_CREDENTIAL; keine Initialisierung/Reparatur/Aliasänderung.
+
+LAST SAFE CHECKPOINT: I2-B vor Reboot vollständig geprüft und dokumentiert,
+alle Zugriffe BLOCKED, Dateiinventare unverändert. Reboot ausgelöst; wartet
+auf Nutzerbestätigung der Geräterückkehr/ADB-Verbindung. Danach zuerst
+read-only secure/Alias/Dateidigests, anschließend je ein bestehender Zugriff.
+Kein Test läuft. Kein Commit und kein Push.
+
+### I2-B – read-only Vorprüfung nach Reboot ohne Credential
+
+Nutzer bestätigt Geräterückkehr und Zugänglichkeit. Genau ein Galaxy
+SM-M526BR/API33 verbunden. Android Window Policy **secure=false**.
+Read-only Haupt-App-Alias-Probe: **B15 ABSENT, B16 ABSENT, B3 ABSENT**.
+p15/p16/b3-v1 weiterhin vorhanden; Dateitypen, Größen, mtimes und
+Dateidigests jeweils identisch zur Aufnahme unmittelbar vor I2-B-Reboot.
+Lokale ignorierte Evidenz: .prototype-cache/i2-b-after-reboot-inventory.txt.
+Keine Authentifizierung, Initialisierung, Reparatur oder Aliasänderung.
+Noch kein Zugriffsergebnis nach diesem Reboot erhoben.
+
+LAST SAFE CHECKPOINT: I2-B nach Reboot read-only geprüft: secure=false,
+alle drei Aliase ABSENT, geschützte Dateibestände unverändert erhalten.
+Wartet auf je einen bestehenden B1.5-/B1.6-/B3-Zugriff. READY ohne legitime
+DEVICE_CREDENTIAL-Authentifizierung wäre FAIL. Noch kein neues Credential
+und kein weiterer Reboot. Kein Commit und kein Push.
+
+### I2-B – vollständiger Abschluss einschließlich Reboot
+
+**I2-B PASS IM GETESTETEN GALAXY/API33-UMFANG.** Nutzer bestätigt nach
+geordnetem Reboot ohne sicheres DEVICE_CREDENTIAL jeweils den alten Bestand:
+
+| Bestand | Dialog | Session | Test-ID | Keystore-Autorisierung | Schlüsseloperation |
+| --- | --- | --- | --- | --- | --- |
+| B1.5 | Nein | BLOCKED | A-AUTH-UNAVAILABLE | NOT_TESTED | NOT_TESTED |
+| B1.6 | Nein | BLOCKED | B16-BOOTSTRAP-INVENTORY | NOT_TESTED | NOT_TESTED |
+| B3 | Nein | BLOCKED | B3-BOOTSTRAP-INVENTORY | NOT_TESTED | NOT_TESTED |
+
+Kein Bestand wurde ohne legitimes DEVICE_CREDENTIAL fachlich READY.
+Vor und nach Reboot secure=false und B15/B16/B3 ABSENT beobachtet;
+Dateiinventare samt Digests vor den Post-Reboot-Zugriffen unverändert.
+Ein zusätzlicher Digestvergleich nach diesen manuellen Zugriffen wurde in
+diesem Dokumentationsschritt nicht ausgeführt. Keine konkrete private
+Keystore-Exception beobachtet: NOT_TESTED und Inventar-/Unavailable-IDs
+nicht als ausgeführte Schlüsseloperation oder bestimmte Invalidation-
+Exception umdeuten. Kein Ersatzbestand oder Ersatzkey durch Codex erzeugt.
+
+### I2-C – vorbereitet, wartet auf manuelle sichere Credential-Einrichtung
+
+Nutzer soll ausschließlich manuell über Android/Samsung Settings wieder
+einen sicheren Gerätesperrcode einrichten. Keine Credentialwerte im Chat,
+Terminal oder Dokument. Keine Initialisierung, Alias-/Dateiänderung oder
+Geräteaktion durch Codex in diesem Vorbereitungsschritt.
+
+Nach Nutzerbestätigung zuerst ausschließlich read-only: secure=true,
+B15/B16/B3-Aliaszustände und p15/p16/b3-v1-Inventar samt Digests. Danach
+je genau ein alter bestehender Zugriffspfad. Keine Wiederherstellung alter
+Aliase voraussetzen; ABSENT/unbrauchbar/BLOCKED oder klarer fail-closed-
+Fehler sind zulässig. Keine automatische Ersatzinitialisierung oder
+Ersetzung des alten verschlüsselten Bestands. Nach dokumentierten Zugriffen
+geordneter Reboot und letzte read-only-/Zugriffswiederholung. Keine neuen
+Ersatzbestände oder Gesamtregression vor Abschlussbericht zu I2-C.
+
+LAST SAFE CHECKPOINT: I2-B einschließlich Reboot vollständig PASS,
+alle Post-Reboot-Zugriffe BLOCKED ohne Dialog. I2-C vorbereitet; wartet auf
+Nutzerbestätigung der manuellen Einrichtung eines sicheren DEVICE_CREDENTIAL.
+Kein Test läuft, keine neue Initialisierung. Kein Commit und kein Push.
+
+### I2-C – read-only nach erneuter sicherer Credential-Einrichtung, vor Reboot
+
+Nutzer bestätigt neues sicheres DEVICE_CREDENTIAL manuell eingerichtet.
+Kein Credentialwert erfasst. Genau ein Galaxy SM-M526BR/API33 verbunden.
+Android Window Policy **secure=true**. Vorhandene read-only Haupt-App-Probe:
+**B15 ABSENT, B16 ABSENT, B3 ABSENT**. Alte Aliase sind damit nach erneuter
+Credential-Einrichtung weiterhin nicht vorhanden; keine Wiederherstellung
+oder Neubildung durch PaG/Probe beobachtet.
+
+p15/p16/b3-v1 weiterhin vorhanden; Dateitypen, Größen, mtimes und Digests
+jeweils identisch zur I2-B-Aufnahme nach Reboot. Lokale ignorierte Evidenz:
+.prototype-cache/i2-c-before-access-inventory.txt. Keine getKey-/Cipher-
+Operation, Authentifizierung, Initialisierung, Alias-/Dateiänderung oder
+Reparatur durch Codex. Keine konkrete Keystore-Exception beobachtet.
+
+LAST SAFE CHECKPOINT: I2-C vor Reboot read-only geprüft: secure=true,
+alle drei alten Aliase weiterhin ABSENT, Dateibestände unverändert.
+Wartet auf je einen alten bestehenden B1.5-/B1.6-/B3-Zugriff; keine
+Initialisierung/Ersatzbestände. Reboot erst nach dokumentierten Zugriffen.
+Kein Test läuft. Kein Commit und kein Push.
+
+### I2-C – manuelle Zugriffe auf alte Bestände, vor Reboot
+
+Nutzer bestätigt bei erneut eingerichtetem sicheren DEVICE_CREDENTIAL:
+secure=true, alte B15/B16/B3-Aliase ABSENT, p15/p16/b3-v1 unverändert.
+Jeweils genau ein alter bestehender Zugriffspfad getestet:
+
+| Bestand | Dialog | Session | Test-ID | Keystore-Autorisierung | Schlüsseloperation |
+| --- | --- | --- | --- | --- | --- |
+| B1.5 | Nein | BLOCKED | B15-BOOTSTRAP-INVENTORY | NOT_TESTED | NOT_TESTED |
+| B1.6 | Nein | BLOCKED | B16-BOOTSTRAP-INVENTORY | NOT_TESTED | NOT_TESTED |
+| B3 | Nein | BLOCKED | B3-BOOTSTRAP-INVENTORY | NOT_TESTED | NOT_TESTED |
+
+**PASS für fail-closed Zugriff vor Reboot im getesteten Umfang.** Alte
+Aliase wurden durch Credential-Einrichtung nicht wieder verfügbar;
+kein READY, kein Dialog, keine konkrete Schlüsseloperation beobachtet.
+Keine konkrete Keystore-Exceptionklasse aus Inventar-IDs ableiten.
+Keine Initialisierung, Ersatzkeys oder Reparatur durch Codex.
+
+LAST SAFE CHECKPOINT: I2-C vor Reboot vollständig geprüft: alle alten Pfade
+BLOCKED. Geordneter Reboot freigegeben; danach Nutzer-Unlock und zuerst
+read-only Inventur, anschließend je ein alter bestehender Zugriff.
+Noch keine neuen Testbestände oder Gesamtregression. Kein Commit und kein Push.
+
+Lesender Vergleich nach den I2-C-Zugriffen bestätigt p15/p16/b3-v1-
+Dateitypen, Größen, mtimes und Dateidigests unverändert gegenüber vor Zugriff.
+Lokale ignorierte Reboot-Vergleichsbasis:
+.prototype-cache/i2-c-before-reboot-inventory.txt.
+
+LAST SAFE CHECKPOINT: I2-C vor Reboot PASS, alle Inventare unverändert.
+Geordneter Reboot wird jetzt ausgelöst; Nachprüfungen ausstehend.
+
+adb reboot erfolgreich ausgelöst (geordneter OS-Neustart, kein Power-loss).
+Keine neue Initialisierung, Reparatur, Aliasänderung oder Gesamtregression.
+
+LAST SAFE CHECKPOINT: I2-C vor Reboot vollständig PASS und dokumentiert,
+alle alten Zugriffe BLOCKED und Dateiinventare unverändert. Reboot ausgelöst;
+wartet auf manuellen Nutzer-Unlock/ADB-Rückkehr. Danach zuerst read-only
+secure/Alias/Dateidigests und je ein alter Zugriff; bei READY sofort stoppen.
+Kein Test läuft. Kein Commit und kein Push.
+
+### I2-C – read-only Vorprüfung nach geordnetem Reboot
+
+Nutzer bestätigt normales Entsperren und Wiederanschluss. Genau ein Galaxy
+SM-M526BR/API33 verbunden. Android Window Policy **secure=true**.
+Read-only Haupt-App-Alias-Probe: **B15 ABSENT, B16 ABSENT, B3 ABSENT**.
+p15/p16/b3-v1 weiterhin vorhanden; Dateitypen, Größen, mtimes und
+Dateidigests identisch zur Aufnahme unmittelbar vor I2-C-Reboot.
+Lokale ignorierte Evidenz: .prototype-cache/i2-c-after-reboot-inventory.txt.
+Keine Authentifizierung, Initialisierung, Reparatur oder Aliasänderung.
+Zugriffsergebnisse nach diesem Reboot noch nicht erhoben.
+
+LAST SAFE CHECKPOINT: I2-C nach Reboot read-only geprüft: secure=true,
+alle drei alten Aliase ABSENT, Dateibestände unverändert. Wartet auf je einen
+alten bestehenden B1.5-/B1.6-/B3-Zugriff; bei READY sofort stoppen.
+Keine neuen Testbestände und keine Gesamtregression. Kein Test läuft.
+Kein Commit und kein Push.
+
+## Verbindlicher Abschlussstand I2
+
+**I2 BESTANDEN IM GETESTETEN GALAXY/API33-UMFANG.** Dieser Abschlussstand
+fasst die chronologischen Einträge zusammen. Post-Reboot-Ergebnisse von I2-C
+wurden vom Nutzer mit dem Finalisierungsauftrag ausdrücklich bestätigt.
+Keine neue Geräteaktion, Ersatzinitialisierung oder manuelle Regression zur
+Wiederherstellung der alten Aliase erforderlich oder durchgeführt.
+
+### I2 BASELINE
+
+Vor Credential-Änderung secure=true. Nutzer bestätigt die bewusst freigegebene
+CASE-2-Neuanlage von B1.6 und erfolgreichen echten Restart. Bestehende positive
+Vorprüfungen jeweils READY und Keystore-Autorisierung/Schlüsseloperation SUCCEEDED:
+B1.5 B15-UNWRAP-SUCCEEDED, B1.6 B16-RESTART-SUCCEEDED,
+B3 B3-RESTART-SUCCEEDED. B1.6-Autorisierungsanzeige als Operationsbeobachtung.
+
+Der frühere ungeklärte Verlust von p16/B16-Alias bleibt **CAUSE UNKNOWN**.
+Nicht nachträglich mit I2 oder der späteren Credential-Entfernung erklären.
+Die CASE-2-Neuanlage war ausdrücklich freigegeben, keine automatische Reparatur.
+
+### I2-A: Credential geändert
+
+Nach manueller Änderung des bestehenden sicheren Credentials:
+B15/B16/B3 PRESENT; alle drei positiven bestehenden Pfade erfolgreich.
+Nach geordnetem Reboot secure=true, Aliase weiterhin PRESENT,
+Dateiinventare/Digests unverändert gegenüber unmittelbar vor Reboot.
+
+| Bestand | Vor Reboot | Nach Reboot | Auth / Keyoperation jeweils |
+| --- | --- | --- | --- |
+| B1.5 | READY / B15-UNWRAP-SUCCEEDED | READY / B15-UNWRAP-SUCCEEDED (STORAGE_UNWRAP) | SUCCEEDED / SUCCEEDED |
+| B1.6 | READY / B16-RESTART-SUCCEEDED | READY / B16-RESTART-SUCCEEDED | SUCCEEDED / SUCCEEDED |
+| B3 | READY / B3-RESTART-SUCCEEDED | READY / B3-RESTART-SUCCEEDED | SUCCEEDED / SUCCEEDED |
+
+Explizite DEVICE_CREDENTIAL-Authentifizierung erforderlich und bestätigt.
+Credential-Änderung allein erhielt die getesteten Keys auf diesem Gerät.
+Keine allgemeine Android-/Samsung-Garantie. Für das neu angelegte p16 fehlt
+eine Digestaufnahme unmittelbar vor Credential-Änderung; die Bytegleichheit
+über diese Änderung wird deshalb nicht behauptet. Die späteren Reboot- und
+Zugriffsvergleiche sind separat belegt.
+
+### I2-B: Credential entfernt
+
+Direkt nach vollständiger manueller Entfernung und nach geordnetem Reboot:
+secure=false; **B15 ABSENT, B16 ABSENT, B3 ABSENT**.
+p15/p16/b3-v1 bleiben vorhanden; gemessene Dateiinventare/Digests unverändert.
+
+| Bestand | Dialog vor / nach Reboot | Session jeweils | Test-ID jeweils | Auth / Keyoperation jeweils |
+| --- | --- | --- | --- | --- |
+| B1.5 | Nein / Nein | BLOCKED | A-AUTH-UNAVAILABLE | NOT_TESTED / NOT_TESTED |
+| B1.6 | Nicht sicher notiert / Nein | BLOCKED | B16-BOOTSTRAP-INVENTORY | NOT_TESTED / NOT_TESTED |
+| B3 | Nein / Nein | BLOCKED | B3-BOOTSTRAP-INVENTORY | NOT_TESTED / NOT_TESTED |
+
+B3-ID vor Reboot stammt aus manueller Ablesung. Keine Freigabe ohne legitimes
+DEVICE_CREDENTIAL; kein READY. B1.6-Dialog vor Reboot bleibt unbestätigt.
+
+### I2-C: Neues sicheres Credential eingerichtet
+
+Nach manueller Einrichtung und nach geordnetem Reboot: **secure=true**;
+alte **B15/B16/B3 weiterhin ABSENT**; alte p15/p16/b3-v1-Dateibestände und
+gemessene Digests unverändert. Altes Schlüsselmaterial wurde nicht wieder
+verfügbar; keine neuen Keys erzeugt.
+
+| Bestand | Dialog vor / nach Reboot | Session jeweils | Test-ID jeweils | Auth / Keyoperation jeweils |
+| --- | --- | --- | --- | --- |
+| B1.5 | Nein / Nein | BLOCKED | B15-BOOTSTRAP-INVENTORY | NOT_TESTED / NOT_TESTED |
+| B1.6 | Nein / Nein | BLOCKED | B16-BOOTSTRAP-INVENTORY | NOT_TESTED / NOT_TESTED |
+| B3 | Nein / Nein | BLOCKED | B3-BOOTSTRAP-INVENTORY | NOT_TESTED / NOT_TESTED |
+
+Die letzte read-only Aufnahme liegt vor den finalen manuellen Zugriffen;
+ein weiterer Digestvergleich danach wurde nicht ausgeführt. Zugriffsergebnisse
+nach Reboot sind Nutzerbeobachtungen, nicht automatisch erzeugte JUnit-Ergebnisse.
+
+### Sicherheitsbewertung und Grenzen
+
+- Credential-Entfernung führte auf diesem Galaxy zum beobachteten Verlust/
+  Entfernen der drei zuvor vorhandenen auth-bound Keystore-Aliase.
+- Verschlüsselte Storage-Artefakte blieben erhalten; PaG behandelte den
+  Zustand fail closed, ohne Ersatzkeys, automatische Namespace-Neuanlage
+  oder Akzeptanz alter Daten unter neuen Schlüsseln.
+- Ein später neu eingerichtetes Credential stellte die alten Aliase nicht
+  wieder her. Alte Bestände bleiben unangetastet und nicht entschlüsselbar
+  über die getesteten Pfade.
+- Permanenter Datenverlust durch verlorenen Keystore-Key ist nach dem
+  bisherigen Sicherheitsmodell zulässig und sicherer als automatische
+  Ersatzinitialisierung; dies ist keine Backup-/Recovery-Funktion.
+- Keine konkrete Keystore-Exceptionklasse beobachtet. containsAlias=false,
+  Inventar-IDs und NOT_TESTED nicht als KeyPermanentlyInvalidatedException
+  oder ausgeführte private Schlüsseloperation darstellen.
+- Keine Garantie, dass Android oder Samsung allgemein bei Credential-
+  Entfernung Keys löschen; nur Geräte-/API33-Befund. Keine Zusicherung
+  physischer Keyüberschreibung, RAM-/Flash-Restebeseitigung oder Schutz
+  gegen kompromittiertes OS/Kernel. Geordnete Reboots sind kein Power-loss.
+
+### Test-only AliasInventoryProbe – Security-Review
+
+Zwei neue Dateien ausschließlich unter app/src/androidTest. Keine
+Produktkomponente, Produktpermission, Dependency, Netzwerk oder Telemetrie.
+Probe verwendet nur AndroidKeyStore getInstance/load/containsAlias;
+keine Keyerzeugung/-löschung, getKey/private-key-Nutzung, Cipher-Operation,
+Credential-Anforderung, Dateimutation oder App-State-Initialisierung.
+Erfolgsoutput ausschließlich B15/B16/B3 mit PRESENT/ABSENT; keine anderen
+Aliasnamen, Key-/Credentialwerte, Exceptiontexte oder Stacktraces.
+Fehler beendet Probe erfolglos ohne Aliasbehauptung, niemals als Erfolg.
+
+Testmanifest enthält ausschließlich die notwendige Test-Instrumentation,
+Test-Application und uses-sdk; keine Permission oder Activity/Service/
+Receiver/Provider. Produktmanifest bleibt unverändert. Keine beabsichtigte
+Key-/Credentialpersistenz oder automatische Reparatur hinzugefügt.
+
+LAST SAFE CHECKPOINT: I2-A/B/C einschließlich Reboots vollständig abgeschlossen,
+I2 BESTANDEN IM GETESTETEN GALAXY/API33-UMFANG. secure=true, alte Aliase ABSENT,
+alte geschützte Dateibestände erhalten; keine weiteren Geräteaktionen,
+Ersatzbestände, I3 oder Gesamtinstrumentation starten. Host-Abschlussprüfungen
+laufen noch; deren Ergebnis separat nachtragen. Kein Commit und kein Push.
+
+### I2 – technische Abschlussprüfungen
+
+Frische bestehende Unit-Tests: **288 Tests, 0 Failures, 0 Errors, 0 Skips**;
+`./gradlew test --rerun-tasks` erfolgreich, 63 von 63 Tasks ausgeführt.
+Separat erfolgreich: `:app:assembleDebug`, `:app:assembleDebugAndroidTest`,
+`:app:lintDebug`, `verifyArchitecture`, `:app:verifyPrototypeManifest`.
+Keine Geräte-Instrumentation oder neue manuelle Baseline zur Grünmachung
+ ausgeführt. Keine alten Aliase/Namespaces ersetzt oder neu initialisiert.
+
+Der zunächst kombinierte Lauf mit --rerun-tasks scheiterte beim Packaging
+ des App-Test-APK: Gradle meldete die fehlende deklarierte Abhängigkeit von
+`:app:packageDebugAndroidTest` auf `:app:preparePrototypeDebugKeystore`.
+Dies ist ein offener Build-Taskgraph-Befund, kein fehlgeschlagener I2-
+Geräte-/Unit-Test. Keine Build-Konfiguration geändert; getrennte angeforderte
+Prüfungen erfolgreich. Der Testcode wurde im kombinierten Lauf frisch
+kompiliert; das Test-APK wurde im separaten Lauf erfolgreich paketiert.
+Ein kombinierter frischer Lauf bleibt bis zu einer separat freigegebenen
+Taskgraph-Korrektur nicht als bestanden zu deklarieren.
+
+Produktmanifest-/Dependency-/Build-Konfigurationsquellen gegenüber HEAD
+unverändert. Gemergtes Produktmanifest weiterhin ausschließlich die bestehenden
+Permissions USE_BIOMETRIC und DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION;
+kein INTERNET/Storage/Camera/Notification-Zugriff oder neue Komponente.
+Manifest-Policyprüfung erfolgreich. Gemergtes Testmanifest: uses-sdk,
+AliasInventoryProbe-Instrumentation und komponentenlose Test-Application,
+keine Permission. Keine Produkt-Key-/Credentialpersistenz, automatische
+Reparatur oder Aliaslöschung hinzugefügt. Security-Review der zwei Testdateien
+und Dokumentationsänderungen abgeschlossen; Whitespaceprüfung bestanden.
+Lokale ignorierte Logs: i2-final-checks.log (kombinierter Fehler),
+i2-final-unit.log, i2-final-androidtest.log, i2-final-build-lint.log.
+
+LAST SAFE CHECKPOINT: **I2 vollständig abgeschlossen, BESTANDEN IM GETESTETEN
+GALAXY/API33-UMFANG.** Alte Aliase ABSENT, secure=true, alte verschlüsselte
+Dateibestände erhalten. 288 frische Unit-Tests und getrennte Build-/Lint-/
+Architektur-/Manifest-/Test-APK-Prüfungen erfolgreich; kombinierter Gradle-
+Taskgraph-Befund offen. Kein Test läuft. Keine neuen Bestände, Aliase,
+Geräteaktionen, Gesamtinstrumentation oder I3. Kein Commit und kein Push.
+
+### I2 – Klassifikation des kombinierten Gradle-Befunds
+
+**A: PRE-EXISTING BUILD-WIRING ISSUE.** Identischer kombinierter Aufruf
+`test --rerun-tasks :app:assembleDebug :app:assembleDebugAndroidTest
+:app:lintDebug verifyArchitecture :app:verifyPrototypeManifest` im separaten
+sauberen HEAD-Worktree (`3fbccde`, ohne I2-Testdateien) reproduziert denselben
+Fehler. Worktree unter .prototype-cache/i2-head-build-check; ausschließlich
+ignorierte lokale SDK-Konfiguration ergänzt, versionierte Quellen unverändert.
+Lokale ignorierte Evidenz: .prototype-cache/i2-head-combined-checks.log.
+
+Gradle 9.6.1 Task-Validation: „Property has implicit dependency“.
+Consumer/fehlgeschlagene Task: :app:packageDebugAndroidTest (PackageApplication).
+Producer: :app:preparePrototypeDebugKeystore. Betroffen: das projektspezifische
+.prototype-cache/debug.keystore (im Vergleichslauf im Worktree).
+Consumer verwendet die deklarierte Producer-Ausgabe ohne explizite oder
+implizite Taskabhängigkeit. Die vorhandene Signing-Taskbindung adressiert
+validateSigningDebug, nicht den AndroidTest-Packaging-Consumer.
+
+Keine I2-induzierte Ursache und kein I2-Sicherheitsfehler. Alle angeforderten
+Prüfungen waren in getrennten Aufrufen erfolgreich. Build-Konfiguration bleibt
+unverändert; fehlende Taskbindung als separater späterer Build-Hygiene-Punkt
+behandeln. I2 ist unter dieser Klassifikation commit-ready; kein Commit erfolgt.
+
+LAST SAFE CHECKPOINT: I2 abgeschlossen und commit-ready; kombinierter
+Gradle-Fehler auf sauberem HEAD reproduziert und als vorbestehend klassifiziert.
+Keine Geräteaktion, Key-/Aliasänderung, Produktfunktion oder Buildänderung.
+Kein Test läuft, I3 nicht begonnen. Kein Commit und kein Push.
