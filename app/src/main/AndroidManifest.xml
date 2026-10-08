@@ -10,6 +10,8 @@
         <!-- Lint checks removal markers as if they registered classes; merged manifest must contain neither. -->
         <provider android:name="androidx.startup.InitializationProvider" tools:node="remove" tools:ignore="MissingClass" />
         <receiver android:name="androidx.profileinstaller.ProfileInstallReceiver" tools:node="remove" tools:ignore="MissingClass" />
+        <!-- B2 has one process and no observable queries; never enable Room multi-instance invalidation. -->
+        <service android:name="androidx.room3.MultiInstanceInvalidationService" tools:node="remove" tools:ignore="MissingClass" />
         <activity android:name="org.pag.prototype.MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

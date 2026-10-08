@@ -18,6 +18,9 @@ import androidx.lifecycle.ViewModelProvider
 import org.pag.data.prototype.B16Inventory
 import org.pag.data.prototype.B16StorageGate
 import org.pag.data.prototype.B16AuthenticationExperiment
+import org.pag.data.prototype.b2.B2Inventory
+import org.pag.data.prototype.b2.B2Variant
+import org.pag.data.prototype.b2.B2AuthenticationExperiment
 import org.pag.data.SessionCoordinator
 import org.pag.data.SyntheticMaintenance
 import org.pag.domain.MonotonicTime
@@ -42,6 +45,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var authentication: PlatformCredentialExperiment
     private lateinit var wrappingAuthentication: WrappingCredentialExperiment
     private lateinit var databaseAuthentication: WrappingCredentialExperiment
+    private val comparisonAuthentication = mutableListOf<WrappingCredentialExperiment>()
     private val wrappingWorker = Executors.newSingleThreadExecutor()
     private var resumed = false
     private val expiryHandler = Handler(Looper.getMainLooper())
@@ -89,9 +93,22 @@ class MainActivity : ComponentActivity() {
         databaseAuthentication = WrappingCredentialExperiment(this, databaseFixture, wrappingWorker, environmentAllowed)
         val databaseAdapter = B16AuthenticationExperiment(inventory, databaseAuthentication,
             B16StorageGate(inventory), wrappingWorker, mainExecutor)
+        val comparisonAdapters = B2Variant.entries.associateWith { variant ->
+            val suffix = variant.name.lowercase(java.util.Locale.ROOT)
+            val root = File(noBackupFilesDir.canonicalFile, "p2-$suffix-v1")
+            val keyFixture = RsaWrappingFixture(File(root, "k"), "pag.prototype.b2.$suffix.v1")
+            val credential = WrappingCredentialExperiment(this, keyFixture, wrappingWorker, environmentAllowed)
+            comparisonAuthentication.add(credential)
+            B2AuthenticationExperiment(applicationContext, B2Inventory(root, keyFixture::checkedState, variant),
+                credential, variant, wrappingWorker, mainExecutor)
+        }
         val authPort = object : AuthenticationExperiment {
             override fun start(mode: KeyExperiment, complete: (org.pag.security.AuthenticationOutcome) -> Unit) =
-                if (mode == KeyExperiment.DATABASE_INITIALIZE || mode == KeyExperiment.DATABASE_REOPEN)
+                if (mode == KeyExperiment.B2_DIRECT_INITIALIZE || mode == KeyExperiment.B2_DIRECT_REOPEN)
+                    comparisonAdapters.getValue(B2Variant.DIRECT).start(mode, complete)
+                else if (mode == KeyExperiment.B2_ROOM_INITIALIZE || mode == KeyExperiment.B2_ROOM_REOPEN)
+                    comparisonAdapters.getValue(B2Variant.ROOM).start(mode, complete)
+                else if (mode == KeyExperiment.DATABASE_INITIALIZE || mode == KeyExperiment.DATABASE_REOPEN)
                     databaseAdapter.start(mode, complete)
                 else if (mode == KeyExperiment.STORAGE_INITIALIZE || mode == KeyExperiment.STORAGE_UNWRAP)
                     wrappingAuthentication.start(mode, complete) else authentication.start(mode, complete)
@@ -123,6 +140,7 @@ class MainActivity : ComponentActivity() {
         authentication.foregroundAvailable()
         wrappingAuthentication.foregroundAvailable()
         databaseAuthentication.foregroundAvailable()
+        comparisonAuthentication.forEach { it.foregroundAvailable() }
         expiryHandler.removeCallbacks(expiryCheck)
         expiryHandler.post(expiryCheck)
     }
@@ -157,6 +175,7 @@ class MainActivity : ComponentActivity() {
             authentication.foregroundAvailable()
             wrappingAuthentication.foregroundAvailable()
             databaseAuthentication.foregroundAvailable()
+            comparisonAuthentication.forEach { it.foregroundAvailable() }
         }
     }
 

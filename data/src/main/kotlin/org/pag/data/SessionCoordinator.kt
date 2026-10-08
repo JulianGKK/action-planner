@@ -135,6 +135,10 @@ class SessionCoordinator(
             Experiment.STORAGE_UNWRAP -> KeyExperiment.STORAGE_UNWRAP
             Experiment.DATABASE_INITIALIZE -> KeyExperiment.DATABASE_INITIALIZE
             Experiment.DATABASE_REOPEN -> KeyExperiment.DATABASE_REOPEN
+            Experiment.B2_DIRECT_INITIALIZE -> KeyExperiment.B2_DIRECT_INITIALIZE
+            Experiment.B2_DIRECT_REOPEN -> KeyExperiment.B2_DIRECT_REOPEN
+            Experiment.B2_ROOM_INITIALIZE -> KeyExperiment.B2_ROOM_INITIALIZE
+            Experiment.B2_ROOM_REOPEN -> KeyExperiment.B2_ROOM_REOPEN
         }
         val cancellation = try {
             authentication.start(mode) { outcome -> authenticationCompleted(generation, outcome) }
@@ -166,7 +170,7 @@ class SessionCoordinator(
                     if (outcome.reason == SecurityFailure.CANCELLED)
                         invalidate(outcome.diagnostic?.testId ?: "A-AUTH-CANCEL",
                             observation = if (outcome.diagnostic != null) Observation.DENIED else Observation.NOT_TESTED)
-                    else block(if (isDatabase()) outcome.diagnostic?.testId?.replace("B15-", "B16-") ?: "B16-AUTH-${outcome.reason.name}"
+                    else block(if (isDatabase()) outcome.diagnostic?.testId?.replace("B15-", databasePrefix()) ?: "${databasePrefix()}AUTH-${outcome.reason.name}"
                         else outcome.diagnostic?.testId ?: "A-AUTH-${outcome.reason.name}")
                     return
                 }
@@ -202,19 +206,19 @@ class SessionCoordinator(
                 databaseWork.first.run(databaseWork.second, { id ->
                     synchronized(this) {
                         if (valid(generation, SessionState.MAINTENANCE))
-                            publish(current.copy(technicalId = id.testId))
+                            publish(current.copy(technicalId = databaseWork.first.diagnosticId(id)))
                     }
                 }, { id ->
                     synchronized(this) {
                         if (valid(generation, SessionState.MAINTENANCE)) {
                             if (id == B16Id.CREATED && databaseWork.first.initializes)
-                                invalidate(id.testId, observation = Observation.SUCCEEDED)
+                                invalidate(databaseWork.first.diagnosticId(id), observation = Observation.SUCCEEDED)
                             else if (id == B16Id.RESTART && !databaseWork.first.initializes) {
                                 idleDeadline = deadline(clock.nowMillis(), policy.inactivityMillis)
-                                publish(current.copy(state = SessionState.READY, technicalId = id.testId,
+                                publish(current.copy(state = SessionState.READY, technicalId = databaseWork.first.diagnosticId(id),
                                     platformAuthorization = Observation.SUCCEEDED, keyOperation = Observation.SUCCEEDED,
-                                    marker = "PAG_B16_SYNTHETIC_DATABASE_ONLY"))
-                            } else block(id.testId, Observation.DENIED)
+                                    marker = databaseWork.first.publicMarker))
+                            } else block(databaseWork.first.diagnosticId(id), Observation.DENIED)
                         }
                     }
                 })
@@ -285,7 +289,9 @@ class SessionCoordinator(
             current.generation == generation && current.state == state
     }
 
-    private fun isDatabase() = current.experiment == Experiment.DATABASE_INITIALIZE || current.experiment == Experiment.DATABASE_REOPEN
+    private fun isDatabase() = current.experiment in setOf(Experiment.DATABASE_INITIALIZE, Experiment.DATABASE_REOPEN,
+        Experiment.B2_DIRECT_INITIALIZE, Experiment.B2_DIRECT_REOPEN, Experiment.B2_ROOM_INITIALIZE, Experiment.B2_ROOM_REOPEN)
+    private fun databasePrefix() = if (current.experiment?.name?.startsWith("B2_") == true) "B2-" else "B16-"
 
     private fun isWrapping() = current.experiment == Experiment.STORAGE_INITIALIZE || current.experiment == Experiment.STORAGE_UNWRAP
 

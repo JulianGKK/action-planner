@@ -10,6 +10,8 @@ import java.util.UUID
 /** Internal maintenance work, never a second session controller. */
 interface StorageGateOperation : SyntheticOperation {
     val initializes: Boolean
+    fun diagnosticId(id: B16Id): String = id.testId
+    val publicMarker: String get() = B16StorageGate.MARKER
     fun run(context: StorageContext, progress: (B16Id) -> Unit, complete: (B16Id) -> Unit)
 }
 class B16Hooks(
