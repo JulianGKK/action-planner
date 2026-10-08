@@ -1,5 +1,7 @@
 package org.pag.data
 
+import org.pag.data.prototype.B16Id
+import org.pag.data.prototype.StorageGateOperation
 import org.pag.domain.AccessPoint
 import org.pag.domain.AccessScope
 import org.pag.domain.MonotonicTime
@@ -131,6 +133,8 @@ class SessionCoordinator(
             Experiment.TIME_WINDOW -> KeyExperiment.TIME_WINDOW
             Experiment.STORAGE_INITIALIZE -> KeyExperiment.STORAGE_INITIALIZE
             Experiment.STORAGE_UNWRAP -> KeyExperiment.STORAGE_UNWRAP
+            Experiment.DATABASE_INITIALIZE -> KeyExperiment.DATABASE_INITIALIZE
+            Experiment.DATABASE_REOPEN -> KeyExperiment.DATABASE_REOPEN
         }
         val cancellation = try {
             authentication.start(mode) { outcome -> authenticationCompleted(generation, outcome) }
@@ -162,7 +166,8 @@ class SessionCoordinator(
                     if (outcome.reason == SecurityFailure.CANCELLED)
                         invalidate(outcome.diagnostic?.testId ?: "A-AUTH-CANCEL",
                             observation = if (outcome.diagnostic != null) Observation.DENIED else Observation.NOT_TESTED)
-                    else block(outcome.diagnostic?.testId ?: "A-AUTH-${outcome.reason.name}")
+                    else block(if (isDatabase()) outcome.diagnostic?.testId?.replace("B15-", "B16-") ?: "B16-AUTH-${outcome.reason.name}"
+                        else outcome.diagnostic?.testId ?: "A-AUTH-${outcome.reason.name}")
                     return
                 }
                 is AuthenticationOutcome.Granted -> {
@@ -183,6 +188,40 @@ class SessionCoordinator(
                         technicalId = "A-SYNTHETIC-MAINTENANCE", keyProperties = outcome.operation.properties))
                 }
             }
+        }
+        val databaseWork = synchronized(this) {
+            if (!isDatabase()) null else {
+                val context = acquire(AccessScope.MAINTENANCE) ?: return
+                val work = operation as? StorageGateOperation
+                if (work == null) { block("B16-BOOTSTRAP-BLOCKED"); return }
+                work to context
+            }
+        }
+        if (databaseWork != null) {
+            try {
+                databaseWork.first.run(databaseWork.second, { id ->
+                    synchronized(this) {
+                        if (valid(generation, SessionState.MAINTENANCE))
+                            publish(current.copy(technicalId = id.testId))
+                    }
+                }, { id ->
+                    synchronized(this) {
+                        if (valid(generation, SessionState.MAINTENANCE)) {
+                            if (id == B16Id.CREATED && databaseWork.first.initializes)
+                                invalidate(id.testId, observation = Observation.SUCCEEDED)
+                            else if (id == B16Id.RESTART && !databaseWork.first.initializes) {
+                                idleDeadline = deadline(clock.nowMillis(), policy.inactivityMillis)
+                                publish(current.copy(state = SessionState.READY, technicalId = id.testId,
+                                    platformAuthorization = Observation.SUCCEEDED, keyOperation = Observation.SUCCEEDED,
+                                    marker = "PAG_B16_SYNTHETIC_DATABASE_ONLY"))
+                            } else block(id.testId, Observation.DENIED)
+                        }
+                    }
+                })
+            } catch (_: RuntimeException) {
+                synchronized(this) { if (valid(generation, SessionState.MAINTENANCE)) block("B16-BOOTSTRAP-BLOCKED") }
+            }
+            return
         }
         // Adapters schedule work outside the coordinator monitor. Actual storage steps
         // additionally need a MAINTENANCE context; starting this dummy is no storage grant.
@@ -216,7 +255,7 @@ class SessionCoordinator(
 
     override fun testAccess() {
         val work = synchronized(this) {
-            if (!valid(current.generation, SessionState.READY) || accessInProgress) return
+            if (!valid(current.generation, SessionState.READY) || accessInProgress || isDatabase()) return
             val context = acquire(AccessScope.READY) ?: return
             accessInProgress = true
             Triple(current.generation, operation, context)
@@ -245,6 +284,8 @@ class SessionCoordinator(
         return foregroundAllowed && accessEnvironmentAllowed() &&
             current.generation == generation && current.state == state
     }
+
+    private fun isDatabase() = current.experiment == Experiment.DATABASE_INITIALIZE || current.experiment == Experiment.DATABASE_REOPEN
 
     private fun isWrapping() = current.experiment == Experiment.STORAGE_INITIALIZE || current.experiment == Experiment.STORAGE_UNWRAP
 

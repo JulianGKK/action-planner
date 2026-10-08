@@ -21,7 +21,7 @@ fun PrototypeScreen(model: PrototypeViewModel) {
     MaterialTheme {
         Column(Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Prototyp B0 / B1.5 / historischer A-Pfad · ausschließlich synthetische Tests")
+            Text("Prototyp B0 / B1.6 / B1.5 / historischer A-Pfad · ausschließlich synthetische Tests")
             Text("B0-Testpolicy: absolut 60 s / READY-Inaktivität 15 s; keine Produktwerte")
             Text("Session: ${snapshot.state} · Generation: ${snapshot.generation}")
             Text("Variante: ${snapshot.experiment ?: "keine"}")
@@ -29,6 +29,12 @@ fun PrototypeScreen(model: PrototypeViewModel) {
             Text("Konkrete Schlüsseloperation: ${snapshot.keyOperation}")
             Text("Test-ID: ${snapshot.technicalId}")
             Text("Schlüsseleigenschaften: ${snapshot.keyProperties}")
+            Button(onClick = { model.authenticate(Experiment.DATABASE_INITIALIZE) }, enabled = snapshot.state == SessionState.LOCKED) {
+                Text("B1.6 · neuen Testbestand ausdrücklich initialisieren")
+            }
+            Button(onClick = { model.authenticate(Experiment.DATABASE_REOPEN) }, enabled = snapshot.state == SessionState.LOCKED) {
+                Text("B1.6 · bestehende Testdatenbank authentifizieren")
+            }
             Button(onClick = { model.authenticate(Experiment.STORAGE_INITIALIZE) }, enabled = snapshot.state == SessionState.LOCKED) {
                 Text("B1.5 · leeren Namensraum ausdrücklich initialisieren + authentifizieren")
             }
@@ -41,10 +47,10 @@ fun PrototypeScreen(model: PrototypeViewModel) {
             Button(onClick = { model.authenticate(Experiment.TIME_WINDOW) }, enabled = snapshot.state == SessionState.LOCKED) {
                 Text("Authentifizieren · Testfenster 15 Sekunden")
             }
-            Button(onClick = model::testAccess, enabled = snapshot.state == SessionState.READY) { Text("Testzugriff") }
+            Button(onClick = model::testAccess, enabled = snapshot.state == SessionState.READY && snapshot.experiment != Experiment.DATABASE_REOPEN) { Text("Testzugriff") }
             Button(onClick = model::lock) { Text("Sperren") }
             snapshot.marker?.let { Text(it) }
-            Text("MAINTENANCE ist nur ein Dummy. Kein Nachweis für Storage oder produktive Sicherheit.")
+            Text("B1.6 prüft die Testdatenbank während MAINTENANCE. Andere Pfade verwenden den historischen Dummy. Keine produktive Storage-Architektur.")
         }
     }
 }

@@ -26,7 +26,8 @@ class EngineException(val failure: EngineFailure) : RuntimeException(failure.nam
 class EngineTestHooks(
     val afterQuery: () -> Unit = {},
     val beforeCommit: () -> Unit = {},
-    val afterWrite: () -> Unit = {}
+    val afterWrite: () -> Unit = {},
+    val afterOpen: () -> Unit = {}
 )
 data class SyntheticRow(val id: String, val marker: String, val status: Int)
 
@@ -37,15 +38,16 @@ data class SyntheticRow(val id: String, val marker: String, val status: Int)
 class SqlCipherEngine private constructor(
     private val db: SQLiteDatabase,
     private val context: StorageContext,
-    private val hooks: EngineTestHooks
+    private val hooks: EngineTestHooks,
+    private val accessScope: AccessScope
 ) : AutoCloseable {
     private var closed = false
     private var blocked = false
     fun read(deliver: (List<SyntheticRow>) -> Unit): Boolean = operation {
-        context.require(AccessPoint.OPERATION)
+        context.require(AccessPoint.OPERATION, accessScope)
         val rows = db.rawQuery("SELECT id, marker, status FROM synthetic ORDER BY id", emptyArray<String>()).use { cursor ->
             buildList { while (cursor.moveToNext()) {
-                context.require(AccessPoint.STEP)
+                context.require(AccessPoint.STEP, accessScope)
                 add(SyntheticRow(cursor.getString(0), cursor.getString(1), cursor.getInt(2)))
             } }
         }
@@ -55,16 +57,16 @@ class SqlCipherEngine private constructor(
     }
 
     fun write(row: SyntheticRow, commit: Boolean = true, deliver: () -> Unit = {}): Boolean = operation {
-        context.require(AccessPoint.OPERATION)
+        context.require(AccessPoint.OPERATION, accessScope)
         db.beginTransaction()
         try {
-            context.require(AccessPoint.STEP)
+            context.require(AccessPoint.STEP, accessScope)
             db.execSQL("INSERT INTO synthetic(id, marker, status) VALUES (?, ?, ?)",
                 arrayOf<Any>(row.id, row.marker, row.status))
             hooks.afterWrite()
             if (commit) {
                 hooks.beforeCommit()
-                context.require(AccessPoint.COMMIT)
+                context.require(AccessPoint.COMMIT, accessScope)
                 db.setTransactionSuccessful()
             }
         } finally {
@@ -75,12 +77,12 @@ class SqlCipherEngine private constructor(
     }
 
     fun configuration(deliver: (Map<String, String>) -> Unit): Boolean = operation {
-        context.require(AccessPoint.OPERATION)
+        context.require(AccessPoint.OPERATION, accessScope)
         val values = linkedMapOf<String, String>()
         for ((name, query) in listOf("cipherVersion" to "PRAGMA cipher_version",
             "journalMode" to "PRAGMA journal_mode", "tempStore" to "PRAGMA temp_store",
             "sqliteVersion" to "SELECT sqlite_version()")) {
-            context.require(AccessPoint.STEP)
+            context.require(AccessPoint.STEP, accessScope)
             values[name] = db.rawQuery(query, emptyArray<String>()).use {
                 if (!it.moveToFirst()) throw EngineException(EngineFailure.BLOCKED)
                 it.getString(0)
@@ -105,48 +107,52 @@ class SqlCipherEngine private constructor(
          * A failed attempt remains on disk and is never retried as a new database.
          */
         fun createNew(file: File, key: ByteArray?, context: StorageContext,
-            hooks: EngineTestHooks = EngineTestHooks()): SqlCipherEngine = sanitized {
-            context.require(AccessPoint.OPERATION)
+            hooks: EngineTestHooks = EngineTestHooks(),
+            accessScope: AccessScope = AccessScope.READY): SqlCipherEngine = sanitized {
+            context.require(AccessPoint.OPERATION, accessScope)
             requireKey(key)
             if (!file.parentFile.isDirectory || !file.createNewFile()) throw EngineException(EngineFailure.BLOCKED)
-            val db = open(file, key!!, context, SQLiteDatabase.CREATE_IF_NECESSARY)
+            val db = open(file, key!!, context, SQLiteDatabase.CREATE_IF_NECESSARY, accessScope)
             try {
-                context.require(AccessPoint.STEP)
+                context.require(AccessPoint.STEP, accessScope)
                 db.beginTransaction()
                 try {
-                    context.require(AccessPoint.STEP)
+                    context.require(AccessPoint.STEP, accessScope)
                     db.execSQL("CREATE TABLE synthetic(id TEXT PRIMARY KEY NOT NULL, marker TEXT NOT NULL, status INTEGER NOT NULL)")
-                    context.require(AccessPoint.STEP)
+                    context.require(AccessPoint.STEP, accessScope)
                     db.execSQL("PRAGMA user_version = 1")
-                    context.require(AccessPoint.COMMIT)
+                    context.require(AccessPoint.COMMIT, accessScope)
                     db.setTransactionSuccessful()
                 } finally { db.endTransaction() }
-                verify(db, context)
-                SqlCipherEngine(db, context, hooks)
+                verify(db, context, accessScope)
+                SqlCipherEngine(db, context, hooks, accessScope)
             } catch (failure: RuntimeException) { db.close(); throw failure }
         }
 
         /** Read-only preflight before opening any existing database for writing. No create flag. */
         fun openExisting(file: File, key: ByteArray?, context: StorageContext,
-            hooks: EngineTestHooks = EngineTestHooks()): SqlCipherEngine = sanitized {
-            context.require(AccessPoint.OPERATION)
+            hooks: EngineTestHooks = EngineTestHooks(),
+            accessScope: AccessScope = AccessScope.READY): SqlCipherEngine = sanitized {
+            context.require(AccessPoint.OPERATION, accessScope)
             requireKey(key)
             if (!file.exists()) throw EngineException(EngineFailure.MISSING_DATABASE)
             if (!file.isFile || file.length() == 0L) throw EngineException(EngineFailure.DATABASE_UNREADABLE)
-            open(file, key!!, context, SQLiteDatabase.OPEN_READONLY).use { verify(it, context) }
-            context.require(AccessPoint.STEP)
-            val db = open(file, key, context, SQLiteDatabase.OPEN_READWRITE)
+            open(file, key!!, context, SQLiteDatabase.OPEN_READONLY, accessScope).use {
+                hooks.afterOpen(); verify(it, context, accessScope)
+            }
+            context.require(AccessPoint.STEP, accessScope)
+            val db = open(file, key, context, SQLiteDatabase.OPEN_READWRITE, accessScope)
             try {
-                verify(db, context)
-                SqlCipherEngine(db, context, hooks)
+                verify(db, context, accessScope)
+                SqlCipherEngine(db, context, hooks, accessScope)
             } catch (failure: RuntimeException) { db.close(); throw failure }
         }
 
         private fun requireKey(key: ByteArray?) {
             if (key == null || key.isEmpty()) throw EngineException(EngineFailure.MISSING_KEY)
         }
-        private fun open(file: File, key: ByteArray, context: StorageContext, flags: Int): SQLiteDatabase {
-            context.require(AccessPoint.STEP)
+        private fun open(file: File, key: ByteArray, context: StorageContext, flags: Int, accessScope: AccessScope): SQLiteDatabase {
+            context.require(AccessPoint.STEP, accessScope)
             // Disable wrapper SQL/exception logging before loading/opening the engine.
             Logger.setTarget(object : LogTarget {
                 override fun isLoggable(tag: String?, priority: Int) = false
@@ -156,14 +162,14 @@ class SqlCipherEngine private constructor(
             return SQLiteDatabase.openDatabase(file.absolutePath, key, null,
                 flags or SQLiteDatabase.NO_LOCALIZED_COLLATORS, noDeletion, object : SQLiteDatabaseHook {
                     override fun preKey(connection: SQLiteConnection) {
-                        context.require(AccessPoint.STEP)
+                        context.require(AccessPoint.STEP, accessScope)
                         connection.executeForLong("PRAGMA cipher_log_level = NONE", null, null)
                     }
                     override fun postKey(connection: SQLiteConnection) {
-                        context.require(AccessPoint.STEP)
+                        context.require(AccessPoint.STEP, accessScope)
                         if (connection.executeForLong("PRAGMA cipher_status", null, null) != 1L)
                             throw EngineException(EngineFailure.BLOCKED)
-                        context.require(AccessPoint.STEP)
+                        context.require(AccessPoint.STEP, accessScope)
                         // Per-connection, also for connections opened later by the pool.
                         connection.execute("PRAGMA temp_store = MEMORY", null, null)
                         if (connection.executeForLong("PRAGMA temp_store", null, null) != 2L)
@@ -171,26 +177,26 @@ class SqlCipherEngine private constructor(
                     }
                 })
         }
-        private fun verify(db: SQLiteDatabase, context: StorageContext) {
-            context.require(AccessPoint.STEP)
+        private fun verify(db: SQLiteDatabase, context: StorageContext, accessScope: AccessScope) {
+            context.require(AccessPoint.STEP, accessScope)
             if (db.version != SCHEMA) throw EngineException(EngineFailure.UNKNOWN_SCHEMA)
             db.rawQuery("PRAGMA cipher_integrity_check", emptyArray<String>()).use {
                 if (it.moveToFirst()) throw EngineException(EngineFailure.INTEGRITY_FAILED)
             }
-            context.require(AccessPoint.STEP)
+            context.require(AccessPoint.STEP, accessScope)
             db.rawQuery("PRAGMA integrity_check", emptyArray<String>()).use {
                 if (!it.moveToFirst() || it.getString(0) != "ok" || it.moveToNext())
                     throw EngineException(EngineFailure.INTEGRITY_FAILED)
             }
-            context.require(AccessPoint.STEP)
+            context.require(AccessPoint.STEP, accessScope)
             // Unknown shape is blocked, not migrated or repaired.
             val columns = db.rawQuery("PRAGMA table_info(synthetic)", emptyArray<String>()).use {
                 buildList { while (it.moveToNext()) add(it.getString(1)) }
             }
             if (columns != listOf("id", "marker", "status")) throw EngineException(EngineFailure.UNKNOWN_SCHEMA)
         }
-        private fun StorageContext.require(point: AccessPoint) {
-            if (scope != AccessScope.READY || !check(point)) throw EngineException(EngineFailure.SESSION_INVALID)
+        private fun StorageContext.require(point: AccessPoint, accessScope: AccessScope) {
+            if (scope != accessScope || !check(point)) throw EngineException(EngineFailure.SESSION_INVALID)
         }
         private inline fun <T> sanitized(work: () -> T): T = try { work() }
         catch (failure: EngineException) { throw failure }

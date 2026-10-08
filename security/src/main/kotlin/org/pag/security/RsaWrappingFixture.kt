@@ -72,7 +72,8 @@ class RsaWrappingFixture(val directory: File, private val alias: String) {
                 override var diagnostic: WrappingFailure? = null
                     private set
                 override fun perform() = OperationResult.NOT_AUTHORIZED
-                override fun performAuthorized(allowed: () -> Boolean): OperationResult {
+                override fun performAuthorized(allowed: () -> Boolean): OperationResult = useUnwrappedKey(allowed) { }
+                override fun useUnwrappedKey(allowed: () -> Boolean, consume: (ByteArray) -> Unit): OperationResult {
                     val work = synchronized(this) { active.also { active = null } } ?: return OperationResult.CONSUMED
                     var decoded: ByteArray? = null
                     return try {
@@ -80,7 +81,11 @@ class RsaWrappingFixture(val directory: File, private val alias: String) {
                         diagnostic = WrappingFailure.UNWRAP
                         decoded = work.doFinal(wrapped)
                         if (!allowed()) return OperationResult.NOT_AUTHORIZED
-                        if (decoded.size == 32) { diagnostic = null; OperationResult.SUCCEEDED } else OperationResult.FAILED
+                        if (decoded.size != 32) return OperationResult.FAILED
+                        consume(decoded)
+                        if (!allowed()) return OperationResult.NOT_AUTHORIZED
+                        diagnostic = null
+                        OperationResult.SUCCEEDED
                     } catch (_: UserNotAuthenticatedException) { diagnostic = WrappingFailure.AUTH_REQUIRED; OperationResult.NOT_AUTHORIZED }
                     catch (failure: GeneralSecurityException) {
                         if (authenticationRequired(failure)) { diagnostic = WrappingFailure.AUTH_REQUIRED; OperationResult.NOT_AUTHORIZED } else OperationResult.FAILED

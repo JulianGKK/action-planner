@@ -1,6 +1,6 @@
 package org.pag.security
 
-enum class KeyExperiment { PER_OPERATION, TIME_WINDOW, STORAGE_INITIALIZE, STORAGE_UNWRAP }
+enum class KeyExperiment { PER_OPERATION, TIME_WINDOW, STORAGE_INITIALIZE, STORAGE_UNWRAP, DATABASE_INITIALIZE, DATABASE_REOPEN }
 enum class SecurityFailure { CANCELLED, UNAVAILABLE, INVALID_KEY, NOT_AUTHORIZED, PLATFORM_ERROR }
 fun interface Cancellation { fun cancel() }
 
@@ -12,6 +12,8 @@ interface SyntheticOperation {
     /** Each relevant native step rechecks the central revocable context; no I/O in its monitor. */
     fun performAuthorized(allowed: () -> Boolean): OperationResult =
         if (allowed()) perform() else OperationResult.NOT_AUTHORIZED
+    /** Synchronous, non-retaining consumer; implementation wipes its owned plaintext afterwards. */
+    fun useUnwrappedKey(allowed: () -> Boolean, consume: (ByteArray) -> Unit): OperationResult = OperationResult.NOT_AUTHORIZED
     fun release()
 }
 enum class OperationResult { SUCCEEDED, NOT_AUTHORIZED, FAILED, CONSUMED }
