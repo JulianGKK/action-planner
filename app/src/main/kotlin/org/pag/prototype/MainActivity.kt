@@ -21,6 +21,8 @@ import org.pag.data.prototype.B16AuthenticationExperiment
 import org.pag.data.prototype.b2.B2Inventory
 import org.pag.data.prototype.b2.B2Variant
 import org.pag.data.prototype.b2.B2AuthenticationExperiment
+import org.pag.data.prototype.b3.B3Inventory
+import org.pag.data.prototype.b3.B3AuthenticationExperiment
 import org.pag.data.SessionCoordinator
 import org.pag.data.SyntheticMaintenance
 import org.pag.domain.MonotonicTime
@@ -102,9 +104,17 @@ class MainActivity : ComponentActivity() {
             B2AuthenticationExperiment(applicationContext, B2Inventory(root, keyFixture::checkedState, variant),
                 credential, variant, wrappingWorker, mainExecutor)
         }
+        val fileRoot = File(noBackupFilesDir.canonicalFile, "b3-v1")
+        val fileFixture = RsaWrappingFixture(File(fileRoot, "k"), "pag.prototype.b3.file.v1")
+        val fileCredential = WrappingCredentialExperiment(this, fileFixture, wrappingWorker, environmentAllowed)
+        comparisonAuthentication.add(fileCredential)
+        val fileAdapter = B3AuthenticationExperiment(B3Inventory(fileRoot, fileFixture::checkedState),
+            fileCredential, wrappingWorker, mainExecutor)
         val authPort = object : AuthenticationExperiment {
             override fun start(mode: KeyExperiment, complete: (org.pag.security.AuthenticationOutcome) -> Unit) =
-                if (mode == KeyExperiment.B2_DIRECT_INITIALIZE || mode == KeyExperiment.B2_DIRECT_REOPEN)
+                if (mode == KeyExperiment.B3_INITIALIZE || mode == KeyExperiment.B3_REOPEN)
+                    fileAdapter.start(mode, complete)
+                else if (mode == KeyExperiment.B2_DIRECT_INITIALIZE || mode == KeyExperiment.B2_DIRECT_REOPEN)
                     comparisonAdapters.getValue(B2Variant.DIRECT).start(mode, complete)
                 else if (mode == KeyExperiment.B2_ROOM_INITIALIZE || mode == KeyExperiment.B2_ROOM_REOPEN)
                     comparisonAdapters.getValue(B2Variant.ROOM).start(mode, complete)

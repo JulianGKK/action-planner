@@ -9,3 +9,6 @@ android {
     }
 }
 kotlin { jvmToolchain(17) }
+dependencies {
+    implementation("com.google.crypto.tink:tink-android:1.23.0")
+}

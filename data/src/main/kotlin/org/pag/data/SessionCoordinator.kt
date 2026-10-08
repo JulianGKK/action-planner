@@ -139,6 +139,8 @@ class SessionCoordinator(
             Experiment.B2_DIRECT_REOPEN -> KeyExperiment.B2_DIRECT_REOPEN
             Experiment.B2_ROOM_INITIALIZE -> KeyExperiment.B2_ROOM_INITIALIZE
             Experiment.B2_ROOM_REOPEN -> KeyExperiment.B2_ROOM_REOPEN
+            Experiment.B3_INITIALIZE -> KeyExperiment.B3_INITIALIZE
+            Experiment.B3_REOPEN -> KeyExperiment.B3_REOPEN
         }
         val cancellation = try {
             authentication.start(mode) { outcome -> authenticationCompleted(generation, outcome) }
@@ -290,8 +292,13 @@ class SessionCoordinator(
     }
 
     private fun isDatabase() = current.experiment in setOf(Experiment.DATABASE_INITIALIZE, Experiment.DATABASE_REOPEN,
-        Experiment.B2_DIRECT_INITIALIZE, Experiment.B2_DIRECT_REOPEN, Experiment.B2_ROOM_INITIALIZE, Experiment.B2_ROOM_REOPEN)
-    private fun databasePrefix() = if (current.experiment?.name?.startsWith("B2_") == true) "B2-" else "B16-"
+        Experiment.B2_DIRECT_INITIALIZE, Experiment.B2_DIRECT_REOPEN, Experiment.B2_ROOM_INITIALIZE, Experiment.B2_ROOM_REOPEN,
+        Experiment.B3_INITIALIZE, Experiment.B3_REOPEN)
+    private fun databasePrefix() = when {
+        current.experiment?.name?.startsWith("B3_") == true -> "B3-"
+        current.experiment?.name?.startsWith("B2_") == true -> "B2-"
+        else -> "B16-"
+    }
 
     private fun isWrapping() = current.experiment == Experiment.STORAGE_INITIALIZE || current.experiment == Experiment.STORAGE_UNWRAP
 
