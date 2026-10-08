@@ -30,7 +30,7 @@ internal class B2Driver(private val file: File, key: ByteArray,
         val delegate = SQLCipherConnection(native)
         val connection = object : SQLiteConnection by delegate {
             private val released = AtomicBoolean(false)
-            override fun prepare(sql: String): SQLiteStatement {
+            override fun prepare(sql: String): SQLiteStatement = sanitizedB2 {
                 if (released.get() || closed) throw B2Exception(B2Failure.CLOSED)
                 val command = sql.trimStart().uppercase(java.util.Locale.ROOT)
                 // Rollback is resource cleanup, not a new authorized application operation.
@@ -38,7 +38,7 @@ internal class B2Driver(private val file: File, key: ByteArray,
                 val commit = command.startsWith("COMMIT") || command.startsWith("END TRANSACTION") || command.startsWith("RELEASE")
                 if (!rollback) context.requireB2()
                 val statement = delegate.prepare(sql)
-                return object : SQLiteStatement by statement {
+                object : SQLiteStatement by statement {
                     override fun step(): Boolean = sanitizedB2 {
                         if (released.get() || closed) throw B2Exception(B2Failure.CLOSED)
                         if (!rollback) {
@@ -54,8 +54,8 @@ internal class B2Driver(private val file: File, key: ByteArray,
                         }
                         statement.step()
                     }
-                    override fun getText(index: Int): String { context.requireB2(); return statement.getText(index) }
-                    override fun getLong(index: Int): Long { context.requireB2(); return statement.getLong(index) }
+                    override fun getText(index: Int): String = sanitizedB2 { context.requireB2(); statement.getText(index) }
+                    override fun getLong(index: Int): Long = sanitizedB2 { context.requireB2(); statement.getLong(index) }
                 }
             }
             override fun close() { if (released.compareAndSet(false, true)) delegate.close() }

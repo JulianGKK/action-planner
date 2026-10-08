@@ -9,13 +9,15 @@ import java.nio.file.Files
 /** Technical prototype only: no DB/DAO/key escapes to Domain/UI. */
 enum class B2Variant { DIRECT, ROOM }
 enum class B2Failure { SESSION, INVENTORY, MISSING, NOT_EMPTY, KEY_MISSING, KEY_OR_UNREADABLE, INTEGRITY, SCHEMA, MIGRATION, CONSTRAINT, IO, SPACE, CLOSED, BLOCKED }
-class B2Exception(val failure: B2Failure) : RuntimeException("B2-${failure.name}")
+open class B2Exception(val failure: B2Failure) : RuntimeException("B2-${failure.name}")
+/** Exact access-denial type. No message parsing or Room coroutine-name classification. */
+class StorageAccessRevoked : B2Exception(B2Failure.SESSION)
 data class B2Record(val id: String, val value: String, val revision: Int = 0)
 class B2Hooks(val afterOpen: () -> Unit = {}, val afterQuery: () -> Unit = {},
     val beforeCommit: () -> Unit = {}, val duringMigration: () -> Unit = {})
 
 internal fun StorageContext.requireB2(point: AccessPoint = AccessPoint.STEP) {
-    if (scope != AccessScope.MAINTENANCE || !check(point)) throw B2Exception(B2Failure.SESSION)
+    if (scope != AccessScope.MAINTENANCE || !check(point)) throw StorageAccessRevoked()
 }
 
 /** No recovery/cleanup: includes all entries, not merely the expected main file. */
