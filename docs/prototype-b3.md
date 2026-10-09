@@ -92,7 +92,7 @@ Keine eigenen Crypto-Header, Chunkformate oder manuell erzeugten Protobufs.
 Asset-AAD ist ausschließlich eine zufällige opaque synthetische UUID. Die
 verschlüsselte technische Metadatei verwendet eine feste öffentliche opaque
 synthetische Manifest-UUID als AAD. **AAD wird authentifiziert, nicht
-verschlüsselt**; keine fachlichen Namen, Personen-, Action- oder MIME-Angaben.
+verschlüsselt**; keine fachlichen Namen, Personen-, Aktion- oder MIME-Angaben.
 Verschiedene Asset-ID/AAD verhindern unbemerkte Übernahme von Ciphertext A als B.
 Eine vollständige Wiedereinspielung eines früher gültigen Bestands ist damit
 nicht generell erkannt; Anti-Rollback gegen externe Bestandsmanipulation ist

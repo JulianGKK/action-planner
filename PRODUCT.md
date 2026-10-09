@@ -1,4 +1,4 @@
-# PaG Action Organizer
+# PaG Aktionsplaner
 
 **Version:** 0.1
 **Status:** Product Definition / MVP Specification
@@ -11,7 +11,9 @@
 
 ## 1. Produktvision
 
-Der **PaG Action Organizer** ist eine lokal betriebene Android-Anwendung zur organisatorischen Durchführung zeitlich begrenzter Aktionen.
+**Verbindliche Terminologie:** Technische Bezeichner verwenden `Action`. In der deutschsprachigen Produktoberfläche und fachlichen Dokumentation heißt das Konzept konsequent „Aktion“, in der Mehrzahl „Aktionen“. Die Domain-Entität `Action` repräsentiert eine Aktion. Die App ist ein Aktionsplaner; technische Klassen, APIs, Datenbanknamen und historische Test-IDs werden nicht sprachlich umbenannt.
+
+Der **PaG Aktionsplaner** ist eine lokal betriebene Android-Anwendung zur organisatorischen Durchführung zeitlich begrenzter Aktionen.
 
 Die Anwendung soll insbesondere die organisatorische Arbeit vor, während und nach einer Aktion unterstützen:
 
@@ -215,7 +217,7 @@ Eine Aktion besitzt einen Status:
 * Abgeschlossen
 * Löschung ausstehend
 
-„Gelöscht“ ist ausschließlich das terminale Ergebnis; kein persistierter Action-Status und kein verbleibender Datensatz. Abgeschlossene Actions werden im MVP nicht wiedereröffnet.
+„Gelöscht“ ist ausschließlich das terminale Ergebnis; kein persistierter Aktionsstatus und kein verbleibender Datensatz. Abgeschlossene Aktionen werden im MVP nicht wiedereröffnet.
 
 ### FR-004 — Aktionsübersicht
 

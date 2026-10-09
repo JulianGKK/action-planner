@@ -34,7 +34,7 @@ import java.util.Locale
                     SessionState.READY -> {
                         TextButton(onClick = model::lock) { Text("Sperren") }
                         when {
-                            model.creating -> ActionForm(model)
+                            model.creating || model.editing != null -> ActionForm(model)
                             model.selected != null -> {
                                 val action = model.selected!!
                                 Text(action.title, style = MaterialTheme.typography.headlineMedium)
@@ -42,17 +42,33 @@ import java.util.Locale
                                 Text(action.description)
                                 Text("Beginn: ${formattedTime(action.startAt)}")
                                 Text("Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}")
-                                TextButton(onClick = model::back) { Text("Zur Action-Liste") }
+                                action.completedAt?.let { Text("Abgeschlossen: ${formattedTime(it)}") }
+                                model.changeError?.let { Text(changeErrorLabel(it)) }
+                                if (model.confirming != null) {
+                                    Text(if (action.status == ActionStatus.ACTIVE)
+                                        "Aktion endgültig abschließen? Danach sind Bearbeitung und Wiedereröffnung ausgeschlossen."
+                                        else "${advanceLabel(action.status)}? Dieser Statusschritt kann nicht rückgängig gemacht werden.")
+                                    Button(onClick = model::confirmAdvance, enabled = !model.saving) { Text("Bestätigen") }
+                                    TextButton(onClick = model::cancelAdvance, enabled = !model.saving) { Text("Abbrechen") }
+                                } else {
+                                    if (ActionLifecycle.mayEdit(action.status)) {
+                                        OutlinedButton(onClick = model::edit) { Text("Bearbeiten") }
+                                    }
+                                    if (ActionLifecycle.next(action.status) != null) {
+                                        Button(onClick = model::requestAdvance) { Text(advanceLabel(action.status)) }
+                                    }
+                                }
+                                TextButton(onClick = model::back, enabled = !model.saving) { Text("Zur Aktionsliste") }
                             }
                             else -> {
-                                Text("Actions", style = MaterialTheme.typography.headlineMedium)
-                                if (model.actions.isEmpty()) Text("Noch keine Actions vorhanden.")
+                                Text("Aktionsliste", style = MaterialTheme.typography.headlineMedium)
+                                if (model.actions.isEmpty()) Text("Noch keine Aktionen vorhanden.")
                                 model.actions.forEach { action ->
                                     OutlinedButton(onClick = { model.detail(action.id) }, modifier = Modifier.fillMaxWidth()) {
                                         Column { Text(action.title); Text(statusLabel(action.status)) }
                                     }
                                 }
-                                Button(onClick = model::createScreen) { Text("Action anlegen") }
+                                Button(onClick = model::createScreen) { Text("Aktion planen") }
                             }
                         }
                     }
@@ -62,23 +78,27 @@ import java.util.Locale
     }
 }
 @Composable private fun ActionForm(model: ProductViewModel) {
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    val existing = model.editing
+    var title by remember(existing?.id) { mutableStateOf(existing?.title ?: "") }
+    var description by remember(existing?.id) { mutableStateOf(existing?.description ?: "") }
     val zone = remember { ZoneId.systemDefault() }
-    var start by remember { mutableStateOf<LocalDateTime?>(null) }
-    var end by remember { mutableStateOf<LocalDateTime?>(null) }
+    var start by remember(existing?.id) { mutableStateOf(existing?.startAt?.let { Instant.ofEpochMilli(it).atZone(zone).toLocalDateTime() }) }
+    var end by remember(existing?.id) { mutableStateOf(existing?.expectedEndAt?.let { Instant.ofEpochMilli(it).atZone(zone).toLocalDateTime() }) }
     var error by remember { mutableStateOf<String?>(null) }
-    Text("Action anlegen", style = MaterialTheme.typography.headlineMedium)
+    Text(if (existing == null) "Aktion planen" else "Aktion bearbeiten", style = MaterialTheme.typography.headlineMedium)
     OutlinedTextField(title, { model.interaction(); title = it }, label = { Text("Titel") }, modifier = Modifier.fillMaxWidth())
     OutlinedTextField(description, { model.interaction(); description = it }, label = { Text("Beschreibung") }, modifier = Modifier.fillMaxWidth())
     Text("Zeitzone: ${zone.id}")
     DateTimeField("Beginn", start, zone, model::interaction) { start = it }
     DateTimeField("Voraussichtliches Ende", end, zone, model::interaction) { end = it }
     error?.let { Text(it) }
+    model.changeError?.let { Text(changeErrorLabel(it)) }
     Button(onClick = {
         model.interaction()
-        val startMillis = selectedInstant(start, zone)
-        val endMillis = selectedInstant(end, zone)
+        val startMillis = if (existing != null && start == Instant.ofEpochMilli(existing.startAt).atZone(zone).toLocalDateTime())
+            existing.startAt else selectedInstant(start, zone)
+        val endMillis = if (existing != null && end == Instant.ofEpochMilli(existing.expectedEndAt).atZone(zone).toLocalDateTime())
+            existing.expectedEndAt else selectedInstant(end, zone)
         val input = if (startMillis != null && endMillis != null) NewAction(title, description, startMillis, endMillis) else null
         error = when {
             title.isBlank() || description.isBlank() -> "Bitte Titel und Beschreibung angeben."
@@ -88,8 +108,8 @@ import java.util.Locale
             else -> null
         }
         if (error == null) model.save(input!!)
-    }) { Text("Speichern") }
-    TextButton(onClick = model::back) { Text("Abbrechen") }
+    }, enabled = !model.saving) { Text("Speichern") }
+    TextButton(onClick = { if (existing == null) model.back() else model.cancelEdit() }, enabled = !model.saving) { Text("Abbrechen") }
 }
 
 /** Inline selectors keep the existing foreground/focus contract; no secondary window.
@@ -141,4 +161,18 @@ private fun statusLabel(status: ActionStatus) = when (status) {
     ActionStatus.ACTIVE -> "Aktiv"
     ActionStatus.COMPLETED -> "Abgeschlossen"
     ActionStatus.DELETION_PENDING -> "Löschung ausstehend"
+}
+
+private fun advanceLabel(status: ActionStatus): String = when (ActionLifecycle.next(status)) {
+    ActionStatus.PREPARATION -> "Vorbereitung beginnen"
+    ActionStatus.ACTIVE -> "Aktion starten"
+    ActionStatus.COMPLETED -> "Aktion abschließen"
+    else -> ""
+}
+private fun changeErrorLabel(reason: ActionChangeRejection) = when (reason) {
+    ActionChangeRejection.NOT_FOUND -> "Die Aktion ist nicht mehr vorhanden."
+    ActionChangeRejection.STALE -> "Die Aktion wurde zwischenzeitlich geändert. Bitte erneut aus der Liste öffnen."
+    ActionChangeRejection.NOT_EDITABLE -> "In diesem Status kann die Aktion nicht bearbeitet werden."
+    ActionChangeRejection.INVALID_TRANSITION -> "Dieser Statusschritt ist nicht möglich."
+    ActionChangeRejection.INVALID_FIELDS -> "Bitte die eingegebenen Felder prüfen."
 }

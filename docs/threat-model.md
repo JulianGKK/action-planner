@@ -13,7 +13,7 @@ Primär werden möglichst wenige Daten benötigt. Verschlüsselung ergänzt Date
 | Schutzgut | Beispiele und Risiko |
 |---|---|
 | Identität und Kontakt | Name, Pseudonym, Telefonnummer; Pseudonyme können identifizierbar bleiben |
-| Teilnahme und Beziehungen | Personenstatus, Rollen, Zuständigkeiten und Action-Zuordnung |
+| Teilnahme und Beziehungen | Personenstatus, Rollen, Zuständigkeiten und Aktionszuordnung |
 | Organisation | Titel, Zeiträume, Aufgaben, Materialstandorte und interne Hinweise |
 | Inhalte | Notes, Protokolle, Dokumente, Belege und Kosten |
 | Metadaten | Dateinamen, Größen, Zeitpunkte, Suchdaten und Vorschauen |

@@ -1,9 +1,9 @@
-# P1 – DB-only Action Vertical Slice
+# P1 – DB-only Aktion Vertical Slice
 
 ## Umfang
 
 Produkt-Launcher: LOCKED → explizite DEVICE_CREDENTIAL → MAINTENANCE → READY →
-Action-Liste → Action anlegen → Action-Detail. Keine Demo-/Seed-Daten. Die bisherige
+Aktionsliste → Aktion anlegen → Aktionsdetails. Keine Demo-/Seed-Daten. Die bisherige
 PrototypeActivity ist unregistrierte historische Evidenz unter androidTest, kein normaler Bildschirm.
 Keine Files, Kamera, Imports, weitere Fachentitäten, Retention-Jobs, Export,
 Backup, Netzwerk oder DB+File-Key-Orchestrierung. Kein weiterer invasiver Testblock.
@@ -78,11 +78,11 @@ bei COMMIT-step allein genügte nicht. Beide Pfade rollbacken nun auf derselben
 Connection; der verweigerte Commit wird nie ausgeführt. Bestehende B2-/Room-
 Regressionen wurden deshalb erneut geprüft, keine Assertion gelockert.
 
-## Tatsächlich implementiertes Action-Modell
+## Tatsächlich implementiertes Aktionsmodell
 
 P1 verwendet nur id, title, description, start_at, expected_end_at, created_at,
 status und SENSITIVE-Klassifizierung. Titel/Beschreibung nicht leer, Ende >= Beginn.
-IDs werden einmal erzeugt. Neue Actions sind DRAFT; alle fünf spezifizierten
+IDs werden einmal erzeugt. Neue Aktionen sind DRAFT; alle fünf spezifizierten
 Statuswerte sind im Modell vorhanden. Keine Statuswechsel-/Wiedereröffnungs-UI.
 Unbekannte ID ergibt kein Objekt. Kein DELETED-Datensatz.
 
@@ -94,7 +94,7 @@ Die beim Öffnen des Formulars erfasste Gerätezeitzone wird sichtbar angezeigt;
 gespeichert werden weiterhin eindeutige Zeitpunkte. Nicht existente oder doppelte
 Ortszeiten an Zeitumstellungen werden ausdrücklich abgewiesen, statt still
 verschoben oder mit geratenem Offset gespeichert zu werden. Eine beliebige
-Action-Zeitzonenauswahl bleibt außerhalb P1. Keine zusätzliche Freitext-Notiz
+Aktionszeitzonenauswahl bleibt außerhalb P1. Keine zusätzliche Freitext-Notiz
 oder fachliche Entität. Detailwerte werden lokalisiert mit Zeitzone angezeigt.
 
 Drafts ausschließlich remember, kein rememberSaveable, SavedState, DataStore oder
@@ -112,7 +112,7 @@ Gezielte Instrumentation auf Galaxy M52 / Android 13 / API33: **76 bestanden**:
 7 ProductActionsTest, vollständige B2ComparisonTest-Suite mit 58 Fällen
 (29 Direct, 29 Room) und 11 B4RoomBlockerTest. Kein Failure/Error/Skip.
 Dies ist der vollständige ausgewählte Regressionslauf, keine vollständige
-B1–B4-Gesamtsuite. Abgedeckt sind insbesondere persistierte Actions,
+B1–B4-Gesamtsuite. Abgedeckt sind insbesondere persistierte Aktionen,
 unbekannte ID, fehlende DB, falscher Key, abgelaufene/stale Zugriffe,
 Result-Widerruf und Rollback nach Widerruf vor COMMIT-prepare.
 
@@ -161,8 +161,8 @@ Status: **P1 MANUAL PRODUCT SMOKE BESTANDEN IM GETESTETEN GALAXY/API33-UMFANG**.
   Produktnamespace ABSENT. Keine automatische Initialisierung beobachtet.
 - Explizite Einrichtung: Benutzer bestätigt erschienenen Android-
   DEVICE_CREDENTIAL-Systemdialog, sichtbare Speicherprüfung (MAINTENANCE)
-  und anschließend Action-Liste mit „Noch keine Actions vorhanden“.
-  DEVICE_CREDENTIAL **PASS**, READY/leer **PASS**, keine Seed-Action beobachtet.
+  und anschließend Aktionsliste mit „Noch keine Aktionen vorhanden“.
+  DEVICE_CREDENTIAL **PASS**, READY/leer **PASS**, keine Seed-Aktion beobachtet.
 - Lesende Dateiinventur nach Einrichtung: `intent`/`complete` je 1 Byte,
   `public` 294 Byte, `envelope` 256 Byte, `store/d` 16384 Byte;
   `d-journal` und `d.lck` jeweils leer. Erwartete Produktstruktur vorhanden,
@@ -172,16 +172,16 @@ Status: **P1 MANUAL PRODUCT SMOKE BESTANDEN IM GETESTETEN GALAXY/API33-UMFANG**.
   ist kein kryptografischer Nachweis der Verschlüsselung.
 - Benutzer beobachtet anschließend automatische Sperre nach etwa 30 Sekunden.
   Positive vorläufige Inaktivitätsbeobachtung; gezielter ≥35-Sekunden-Test
-  mit gespeicherten Actions und anschließendem Unlock folgt weiter unten
+  mit gespeicherten Aktionen und anschließendem Unlock folgt weiter unten
   als bestanden dokumentiert.
-- Action Alpha **Create/List/Detail PASS**: Nach Aktualisierung der
+- Aktion Alpha **Create/List/Detail PASS**: Nach Aktualisierung der
   Datum-/Uhrzeitauswahl bestätigt der Benutzer erfolgreiche Speicherung,
   korrekte Detailwerte, Status „Entwurf“ (DRAFT) und Alpha genau einmal
   in der Liste. Ausschließlich synthetische Testdaten.
-- Action Beta **Create/List/Detail PASS**: Benutzer bestätigt exakt Alpha
+- Aktion Beta **Create/List/Detail PASS**: Benutzer bestätigt exakt Alpha
   und Beta in der Liste, jeweils Status „Entwurf“, richtige getrennte
   Detailwerte und keine Vermischung oder Duplikate.
-- Gezielte ≥35-Sekunden-Inaktivität mit gespeicherten Actions **PASS**:
+- Gezielte ≥35-Sekunden-Inaktivität mit gespeicherten Aktionen **PASS**:
   Benutzer bestätigt Sperre, verschwundene Inhalte, keinen automatischen
   Authdialog und keine Wiederfreigabe. Nach bewusstem Unlock sind Alpha
   und Beta weiterhin genau einmal vorhanden. Owner-Invalidierung wird
@@ -190,10 +190,10 @@ Status: **P1 MANUAL PRODUCT SMOKE BESTANDEN IM GETESTETEN GALAXY/API33-UMFANG**.
 - Aktivitätsreset und Entwurfsabbruch **PASS**: Benutzer bestätigt frische
   Session, über 30 Sekunden echte Bedienung mit Abständen unter 30 Sekunden
   und weiterhin entsperrte App. Dritter synthetischer Entwurf abgebrochen;
-  danach weiterhin exakt Alpha und Beta, keine dritte Action gespeichert.
+  danach weiterhin exakt Alpha und Beta, keine dritte Aktion gespeichert.
   Dieser Schritt prüft nicht die absolute 3-Minuten-Grenze.
 - App-Verlassen **PASS**: Benutzer bestätigt während READY Home und
-  direkte Rückkehr zu PaG: sofort gesperrt, keine Action-Inhalte und kein
+  direkte Rückkehr zu PaG: sofort gesperrt, keine Aktionsinhalte und kein
   automatischer Authdialog. Nach bewusstem DEVICE_CREDENTIAL-Unlock
   weiterhin exakt Alpha und Beta mit korrekten Details.
 - Normaler Prozessneustart ausgeführt: einmal `am force-stop` für
@@ -228,7 +228,7 @@ Status: **P1 MANUAL PRODUCT SMOKE BESTANDEN IM GETESTETEN GALAXY/API33-UMFANG**.
 
 ### Ergebnis und Grenzen
 
-Explizite Einrichtung/Auth/MAINTENANCE/READY, beide synthetischen Actions,
+Explizite Einrichtung/Auth/MAINTENANCE/READY, beide synthetischen Aktionen,
 Inaktivität, Aktivitätsreset, Entwurfsabbruch, App-Verlassen, Prozessneustart
 und absolute Sessiongrenze sind im beobachteten Umfang bestanden.
 Produkt-UI statt Prototype-UI bestätigt. Der ursprüngliche ISO-Eingabefluss
@@ -259,3 +259,7 @@ B2-Suite umfasst damit 58 statt 56 Fälle. Keine Fixture gelöscht.
 Der langsame unvollständige Teillauf wurde beim normalen Test-APK-Update beendet;
 er ist ausdrücklich kein vollständiger Regressionnachweis. Maßgeblich ist der
 anschließende frische vollständige ausgewählte Lauf.
+
+Sprachliche Präzisierung vor P2: Fachliche Texte und historische UI-Beschreibungen
+verwenden nun „Aktion“. Diese sprachliche Vereinheitlichung verändert weder
+damalige Testresultate noch technische Testnamen/IDs.

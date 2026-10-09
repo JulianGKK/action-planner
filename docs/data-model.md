@@ -1,6 +1,6 @@
 # Datenmodell des MVP
 
-**Projekt:** PaG Action Organizer / action-planner  
+**Projekt:** PaG Aktionsplaner / `action-planner`\
 **Status:** Fachlicher Modellstand freigegeben; ausdrücklich offene Entscheidungen siehe Abschnitt 17  
 **Grundlage:** PRODUCT.md (Version 0.1), AGENTS.md und die anschließenden verbindlichen Modellentscheidungen des Projektverantwortlichen
 
@@ -8,20 +8,20 @@
 
 Dieses Dokument beschreibt das konzeptionelle Datenmodell des lokal betriebenen Android-MVP: Entitäten, Attribute, Beziehungen, Lebenszyklus und fachliche Löschbeziehungen.
 
-Der freigegebene Modellstand enthält keine Organisation, keine globale Personenkartei, keine E-Mail und keinen persistierten Action-Status `DELETED`. Für Entitäten und Beziehungen ist dieses Dokument maßgeblich; technische Speicherung und Zugriff folgen architecture.md.
+Der freigegebene Modellstand enthält keine Organisation, keine globale Personenkartei, keine E-Mail und keinen persistierten Aktionsstatus `DELETED`. Für Entitäten und Beziehungen ist dieses Dokument maßgeblich; technische Speicherung und Zugriff folgen architecture.md.
 
 Es werden keine Datenbankbibliothek, Dependencies, konkrete Tabellenstruktur oder kryptografischen Verfahren festgelegt. Die Architektur der Speicherung und des Zugriffs steht in [architecture.md](architecture.md). Konkrete Speicherlösung, Schlüsselverfahren und Löschgarantien werden im Security-/Storage-Prototyp nachgewiesen; Retention-Fristen bleiben in data-retention.md offen.
 
 ## 2. Grundsätze
 
-- `Action` ist die zentrale fachliche Einheit. Mehrere Actions können gleichzeitig bestehen.
-- Personen und operative Inhalte sind ausschließlich actiongebunden. Es gibt keine gespeicherte Organisation und keine globale Personenkartei.
-- Referenzen zwischen operativen Objekten unterschiedlicher Actions sind unzulässig.
+- `Action` ist die zentrale fachliche Einheit. Mehrere Aktionen können gleichzeitig bestehen.
+- Personen und operative Inhalte sind ausschließlich aktionsgebunden. Es gibt keine gespeicherte Organisation und keine globale Personenkartei.
+- Referenzen zwischen operativen Objekten unterschiedlicher Aktionen sind unzulässig.
 - Personenbezogene Felder werden nur für einen definierten organisatorischen Zweck befüllt.
 - Organisatorische Rollen verleihen keine technischen App-Berechtigungen.
 - Alle operativen Daten werden verschlüsselt gespeichert. Die Sensitivitätsklasse entscheidet nicht über die Verschlüsselung.
 - Sensible Inhalte benötigen nachvollziehbare Aufbewahrungs- und Löschregeln.
-- IDs, Metadaten und Action-Zuordnungen können ebenfalls sensibel sein.
+- IDs, Metadaten und Aktionszuordnungen können ebenfalls sensibel sein.
 - Dashboard, Kostenübersichten und Suchergebnisse sind abgeleitete Ansichten, keine zusätzlichen fachlichen Stammdaten.
 
 ## 3. Notation und Datentypen
@@ -51,9 +51,9 @@ Pflichtfelder sind nicht zwangsläufig Eingabefelder. Für ausdrücklich offene 
 | Entität | Zweck |
 |---|---|
 | `Action` | Organisatorischer Rahmen |
-| `Person` | Personeneintrag innerhalb genau einer Action |
-| `PersonStatusDefinition` | Konfigurierbarer Personenstatus einer Action |
-| `Role` | Organisatorische Rolle einer Action |
+| `Person` | Personeneintrag innerhalb genau einer Aktion |
+| `PersonStatusDefinition` | Konfigurierbarer Personenstatus einer Aktion |
+| `Role` | Organisatorische Rolle einer Aktion |
 | `PersonRole` | Person-Rollen-Zuordnung |
 | `Task` | Aufgabe |
 | `Material` | Materialposition |
@@ -81,11 +81,11 @@ Die folgenden Retention-Attribute sind ein konzeptioneller Vorschlag. Fristen, F
 | `effective_delete_at` | Zeitpunkt | A | Wirksamer Termin nach noch festzulegenden Frist- und Elternregeln |
 | `deletion_state` | Enum | P | Technischer Zustand eines Löschvorgangs; noch zu spezifizieren |
 
-Als technische Löschzustände kommen beispielsweise `NONE`, `PENDING`, `IN_PROGRESS` und `FAILED_RETRYABLE` infrage. Diese Werte sind keine beschlossene Sicherheitsarchitektur und keine zusätzlichen Action-Statuswerte.
+Als technische Löschzustände kommen beispielsweise `NONE`, `PENDING`, `IN_PROGRESS` und `FAILED_RETRYABLE` infrage. Diese Werte sind keine beschlossene Sicherheitsarchitektur und keine zusätzlichen Aktionsstatuswerte.
 
 Ein noch nicht bestimmter Fristbeginn erlaubt keine unbegrenzte Speicherung. Ein nach erfolgreicher Löschung weiterhin bestehender Inhaltsdatensatz wird nicht vorgesehen.
 
-## 6. Action
+## 6. Aktion (`Action`)
 
 ### 6.1 Attribute
 
@@ -102,21 +102,21 @@ Ein noch nicht bestimmter Fristbeginn erlaubt keine unbegrenzte Speicherung. Ein
 | `default_retention_policy_id` | Referenz | P | Standardregel für zugehörige Inhalte; Details noch offen |
 | gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und konzeptionelle Retention-Metadaten |
 
-Die eigene Aufbewahrung einer Action und ihre Standardregel für Inhalte erfüllen unterschiedliche Aufgaben. `expected_end_at` darf nicht vor `start_at` liegen. Regeln für unvollständige Entwürfe bleiben unter OD-02 offen.
+Die eigene Aufbewahrung einer Aktion und ihre Standardregel für Inhalte erfüllen unterschiedliche Aufgaben. `expected_end_at` darf nicht vor `start_at` liegen. Regeln für unvollständige Entwürfe bleiben unter OD-02 offen.
 
 ### 6.2 Verbindliche Statuswerte
 
 | Wert | Anzeige | Bedeutung |
 |---|---|---|
-| `DRAFT` | Entwurf | Action wird konkretisiert |
+| `DRAFT` | Entwurf | Aktion wird konkretisiert |
 | `PREPARATION` | Vorbereitung | Organisatorische Vorbereitung läuft |
-| `ACTIVE` | Aktiv | Action läuft |
+| `ACTIVE` | Aktiv | Aktion läuft |
 | `COMPLETED` | Abgeschlossen | Durchführung beendet; Nachbereitung und Aufbewahrung |
-| `DELETION_PENDING` | Löschung ausstehend | Vollständige Action-Löschung angefordert oder fällig |
+| `DELETION_PENDING` | Löschung ausstehend | Vollständige Aktionslöschung angefordert oder fällig |
 
-`DELETED` ist ausschließlich das terminale Ergebnis der Löschung. Es ist kein persistierter Statuswert und kein verbleibender Action-Datensatz.
+`DELETED` ist ausschließlich das terminale Ergebnis der Löschung. Es ist kein persistierter Statuswert und kein verbleibender Aktionsdatensatz.
 
-„Archiviert“ und „Aufbewahrung / Review“ bezeichnen die Phase `COMPLETED`, keinen weiteren Status. Abgeschlossene Actions werden im MVP nicht wiedereröffnet.
+„Archiviert“ und „Aufbewahrung / Review“ bezeichnen die Phase `COMPLETED`, keinen weiteren Status. Abgeschlossene Aktionen werden im MVP nicht wiedereröffnet.
 
 ### 6.3 Lebenszyklus
 
@@ -124,9 +124,9 @@ Die eigene Aufbewahrung einer Action und ihre Standardregel für Inhalte erfüll
 DRAFT → PREPARATION → ACTIVE → COMPLETED → DELETION_PENDING → Löschung abgeschlossen
 ```
 
-Der Abschluss setzt `completed_at`. Welche Retention-Regeln daran anknüpfen, bleibt offen. Die Löschung einzelner Inhalte bedeutet nicht die vollständige Löschung der Action.
+Der Abschluss setzt `completed_at`. Welche Retention-Regeln daran anknüpfen, bleibt offen. Die Löschung einzelner Inhalte bedeutet nicht die vollständige Löschung der Aktion.
 
-Statuswechsel erfolgen fachlich; geplante Zeiten allein lösen keinen automatischen Wechsel aus. Direkter Abschluss nicht durchgeführter Actions, Rückwärtsübergänge vor Abschluss und Abbruchverhalten bleiben unter OD-01 zu konkretisieren.
+Statuswechsel erfolgen fachlich; geplante Zeiten allein lösen keinen automatischen Wechsel aus. Direkter Abschluss nicht durchgeführter Aktionen, Rückwärtsübergänge vor Abschluss und Abbruchverhalten bleiben unter OD-01 zu konkretisieren.
 
 ## 7. Personen und Rollen
 
@@ -135,7 +135,7 @@ Statuswechsel erfolgen fachlich; geplante Zeiten allein lösen keinen automatisc
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
 | `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Genau eine Action |
+| `action_id` | Referenz | P | Genau eine Aktion |
 | `name` | Text | O | Name, sofern erforderlich |
 | `pseudonym` | Text | O | Alternative Bezeichnung |
 | `phone` | Text | O | Telefonnummer, sofern erforderlich |
@@ -156,16 +156,16 @@ Ein Löschzeitpunkt wird nicht durch Erhaltung eines gelöschten Personendatensa
 | `label` | Text | P | Nicht leere Bezeichnung |
 | `sort_order` | Ganzzahl | O | Auswahlreihenfolge |
 
-Statusdefinitionen gelten pro Action. Ausgangsbeispiele: angefragt, zugesagt, anwesend, abwesend, zurück, unbekannt. Es wird nur der aktuelle Status gespeichert, keine Statushistorie und kein Standortverlauf.
+Statusdefinitionen gelten pro Aktion. Ausgangsbeispiele: angefragt, zugesagt, anwesend, abwesend, zurück, unbekannt. Es wird nur der aktuelle Status gespeichert, keine Statushistorie und kein Standortverlauf.
 
-Definitionen werden spätestens mit ihrer Action gelöscht. Das Verhalten beim Entfernen verwendeter Definitionen ist in Abschnitt 15 beschrieben. „Nicht gesetzt“ und ein ausdrücklich gewählter Status „unbekannt“ sind unterscheidbar.
+Definitionen werden spätestens mit ihrer Aktion gelöscht. Das Verhalten beim Entfernen verwendeter Definitionen ist in Abschnitt 15 beschrieben. „Nicht gesetzt“ und ein ausdrücklich gewählter Status „unbekannt“ sind unterscheidbar.
 
 ### 7.3 Role
 
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
 | `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Genau eine Action |
+| `action_id` | Referenz | P | Genau eine Aktion |
 | `name` | Text | P | Nicht leere Rollenbezeichnung |
 | gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und Retention |
 
@@ -178,14 +178,14 @@ Eine Person kann mehrere organisatorische Rollen besitzen. Diese Rollen sind kei
 | `person_id` | Referenz | P | Person |
 | `role_id` | Referenz | P | Rolle |
 
-Das Paar ist eindeutig. Beide Bezugspunkte gehören derselben Action an. Die Zuordnung ist mindestens so schutzbedürftig wie die Person und endet spätestens mit der Löschung eines Bezugspunkts.
+Das Paar ist eindeutig. Beide Bezugspunkte gehören derselben Aktion an. Die Zuordnung ist mindestens so schutzbedürftig wie die Person und endet spätestens mit der Löschung eines Bezugspunkts.
 
 ## 8. Task
 
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
 | `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Action |
+| `action_id` | Referenz | P | Aktion |
 | `title` | Text | P | Nicht leerer Titel |
 | `description` | Text | P | Beschreibung gemäß FR-030 |
 | `assigned_person_id` | Referenz | O | Höchstens eine verantwortliche Person |
@@ -198,7 +198,7 @@ Das Paar ist eindeutig. Beide Bezugspunkte gehören derselben Action an. Die Zuo
 
 Statuswerte: `OPEN` (offen), `IN_PROGRESS` (in Arbeit), `DONE` (erledigt), `DISCARDED` (verworfen).
 
-Aufgaben dürfen ohne verantwortliche Person und ohne Fälligkeit bestehen. Eine zugewiesene Person muss derselben Action angehören.
+Aufgaben dürfen ohne verantwortliche Person und ohne Fälligkeit bestehen. Eine zugewiesene Person muss derselben Aktion angehören.
 
 „Überfällig“ wird abgeleitet: Fälligkeit überschritten und Status `OPEN` oder `IN_PROGRESS`. Ohne Fälligkeit ist eine Aufgabe nicht überfällig.
 
@@ -207,12 +207,12 @@ Aufgaben dürfen ohne verantwortliche Person und ohne Fälligkeit bestehen. Eine
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
 | `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Action |
+| `action_id` | Referenz | P | Aktion |
 | `name` | Text | P | Nicht leere Bezeichnung |
 | `category` | Text | O | Kategorie im Fachbereich Material |
 | `quantity` | Ganzzahl | P | Anzahl, mindestens null |
 | `location` | Text | O | Manuell erfasster Materialstandort |
-| `responsible_person_id` | Referenz | O | Zuständige Person derselben Action |
+| `responsible_person_id` | Referenz | O | Zuständige Person derselben Aktion |
 | `status` | Enum | P | Materialstatus |
 | `note` | Text | O | Materialbezogene Anmerkung |
 | gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und Retention |
@@ -228,7 +228,7 @@ Materialmengen sind ganzzahlig. Es gibt keine Einheitenverwaltung und keine Ausl
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
 | `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Action |
+| `action_id` | Referenz | P | Aktion |
 | `title` | Text | P | Anzeigename |
 | `kind` | Enum | P | `DOCUMENT` oder `INFORMATION_MATERIAL` |
 | `category` | Text | O | Kategorie im Fachbereich Dokumente |
@@ -243,7 +243,7 @@ Die Bibliothek ist eine kategorisierte Sicht auf importierte Dokumente. Sie erze
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
 | `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Action des Eigentümers |
+| `action_id` | Referenz | P | Aktion des Eigentümers |
 | `storage_locator` | Undurchsichtige Referenz | P | Interner Speicherbezug ohne sprechenden Dateinamen |
 | `original_filename` | Text | O | Ursprünglicher Dateiname, sofern benötigt |
 | `mime_type` | Text | P | Geprüfter Inhaltstyp |
@@ -251,7 +251,7 @@ Die Bibliothek ist eine kategorisierte Sicht auf importierte Dokumente. Sie erze
 | `created_at` | Zeitpunkt | P | Import |
 | gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und Retention |
 
-Ein `FileAsset` hat genau einen fachlichen Eigentümer: entweder ein `Document` oder eine `Expense`. Die Eigentümerbeziehung wird über deren Dateireferenz dargestellt und muss exklusiv sein. Es gibt keine actionübergreifende Datei-Deduplizierung.
+Ein `FileAsset` hat genau einen fachlichen Eigentümer: entweder ein `Document` oder eine `Expense`. Die Eigentümerbeziehung wird über deren Dateireferenz dargestellt und muss exklusiv sein. Es gibt keine aktionsübergreifende Datei-Deduplizierung.
 
 Dateinamen und Datei-Metadaten können personenbezogen sein. Der lokale Import schützt oder löscht die externe Quelldatei nicht automatisch. Eine dauerhafte Quell-URI ist im Modell nicht vorgesehen.
 
@@ -262,7 +262,7 @@ Kryptografisches Schlüsselmaterial ist kein Fachattribut. Erforderliche Schlüs
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
 | `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Action |
+| `action_id` | Referenz | P | Aktion |
 | `person_id` | Referenz | O | Zusätzliche Personenzuordnung |
 | `kind` | Enum | P | `NOTE` oder `MINUTES` |
 | `title` | Text | O | Überschrift |
@@ -270,7 +270,7 @@ Kryptografisches Schlüsselmaterial ist kein Fachattribut. Erforderliche Schlüs
 | `created_at` | Zeitpunkt | P | Erstellung |
 | gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und Retention |
 
-Ohne Personenzuordnung ist eine Note actionbezogen. Mit Personenzuordnung ist sie personenbezogen; die Person gehört derselben Action an.
+Ohne Personenzuordnung ist eine Note aktionsbezogen. Mit Personenzuordnung ist sie personenbezogen; die Person gehört derselben Aktion an.
 
 Protokolle sind typisierte Notes. Teilnehmerlisten, Autorenprofile und Versionshistorien gehören nicht zum MVP. Personenbezogene Notizen werden nicht zusätzlich in `Person` gespeichert.
 
@@ -279,7 +279,7 @@ Protokolle sind typisierte Notes. Teilnehmerlisten, Autorenprofile und Versionsh
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
 | `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Action |
+| `action_id` | Referenz | P | Aktion |
 | `amount` | Geldbetrag | P | Ausgabenbetrag |
 | `currency_code` | Währungscode | P | Währung; Umfang noch offen |
 | `expense_date` | Datum | P | Fachliches Ausgabedatum |
@@ -306,9 +306,9 @@ Die Entität beschreibt eine konzeptionelle Regel. Die folgende Struktur ist bis
 | `max_duration_from_creation` | Dauer | O | Mögliche maximale Lebensdauer |
 | `warning_lead_time` | Dauer | O | Möglicher Vorlauf für Ablaufwarnungen |
 
-Fristanker wie Objekterstellung oder Action-Abschluss, Regelversionierung, individuelle Termine und die Fristauflösung sind Empfehlungen unter OD-06, keine bereits beschlossenen Regeln.
+Fristanker wie Objekterstellung oder Aktionsabschluss, Regelversionierung, individuelle Termine und die Fristauflösung sind Empfehlungen unter OD-06, keine bereits beschlossenen Regeln.
 
-Regeln sollen keine Personennamen, Action-Titel oder sensiblen Freitextbegründungen enthalten. Warnungen ersetzen keine Löschung und dürfen nicht stillschweigend Fristen verlängern.
+Regeln sollen keine Personennamen, Aktionstitel oder sensiblen Freitextbegründungen enthalten. Warnungen ersetzen keine Löschung und dürfen nicht stillschweigend Fristen verlängern.
 
 ## 14. Sensitivitätsklassen
 
@@ -327,7 +327,7 @@ Personenbezogene Daten, ungeprüfte Freitexte und Importe sind gemäß PRIV-06 v
 - `Person`, `PersonRole` und personenbezogene Notes sind `SENSITIVE`.
 - Personenreferenzen in Aufgaben und Material machen die Zuordnung sensibel.
 - Ungeprüfte Importe und Freitext starten konservativ als `SENSITIVE`.
-- Öffentlich geeigneter Inhalt kann durch seine Action-Zuordnung sensible Metadaten besitzen.
+- Öffentlich geeigneter Inhalt kann durch seine Aktionszuordnung sensible Metadaten besitzen.
 - Entfernen einer Personenreferenz führt nicht automatisch zu einer Herabstufung.
 - Klassifizierung erlaubt keine Umgehung von App-Sperre, Backup-Ausschluss oder Retention.
 
@@ -339,28 +339,28 @@ Zunächst erfolgt die Klassifizierung auf Objektebene; keine zusätzliche Feldkl
 
 | Beziehung | Kardinalität |
 |---|---|
-| Action → Person | 1 : 0..n |
-| Action → PersonStatusDefinition | 1 : 0..n |
+| `Action` → Person | 1 : 0..n |
+| `Action` → PersonStatusDefinition | 1 : 0..n |
 | PersonStatusDefinition → Person | 1 : 0..n; Person hat 0..1 aktuellen Status |
-| Action → Role | 1 : 0..n |
+| `Action` → Role | 1 : 0..n |
 | Person ↔ Role | n : m über PersonRole |
-| Action → Task | 1 : 0..n |
+| `Action` → Task | 1 : 0..n |
 | Person → zugewiesene Task | 1 : 0..n; Task hat 0..1 verantwortliche Person |
-| Action → Material | 1 : 0..n |
+| `Action` → Material | 1 : 0..n |
 | Person → verantwortetes Material | 1 : 0..n; Material hat 0..1 verantwortliche Person |
-| Action → Document | 1 : 0..n |
+| `Action` → Document | 1 : 0..n |
 | Document → FileAsset | 1 : 1 |
-| Action → Note | 1 : 0..n |
+| `Action` → Note | 1 : 0..n |
 | Person → Note | 1 : 0..n; Note hat 0..1 Person |
-| Action → Expense | 1 : 0..n |
+| `Action` → Expense | 1 : 0..n |
 | Expense → FileAsset als Beleg | 1 : 0..1 |
 | RetentionPolicy → zugeordnete Objekte | 1 : 0..n |
 
-Jedes operative Kindobjekt gehört genau einer Action. Jedes FileAsset besitzt genau einen Eigentümer; die Beziehung zu Dokument und Ausgabe ist exklusiv.
+Jedes operative Kindobjekt gehört genau einer Aktion. Jedes FileAsset besitzt genau einen Eigentümer; die Beziehung zu Dokument und Ausgabe ist exklusiv.
 
 ### 15.2 Integritätsregeln
 
-- Referenzen zeigen auf vorhandene Objekte derselben Action.
+- Referenzen zeigen auf vorhandene Objekte derselben Aktion.
 - PersonRole-Paare sind eindeutig.
 - Ein fertiger Dokumentimport besitzt einen verfügbaren verwalteten Dateiinhalt.
 - Unvollständige Imports erscheinen nicht als fertige Dokumente.
@@ -370,18 +370,18 @@ Jedes operative Kindobjekt gehört genau einer Action. Jedes FileAsset besitzt g
 
 ### 15.3 Fachliche Löschbeziehungen
 
-Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, keine technische Löschgarantie. Vollständige Action-Löschung ist die Obergrenze für untergeordnete Daten (RET-02, ARCH-24).
+Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, keine technische Löschgarantie. Vollständige Aktionslöschung ist die Obergrenze für untergeordnete Daten (RET-02, ARCH-24).
 
 | Gelöschtes Objekt | Fachliche Folge |
 |---|---|
-| Action | Zugehörige Personen, Rollen, Statusdefinitionen, Zuordnungen, Aufgaben, Material, Dokumente, Dateien, Notes und Ausgaben entfernen |
+| `Action` | Zugehörige Personen, Rollen, Statusdefinitionen, Zuordnungen, Aufgaben, Material, Dokumente, Dateien, Notes und Ausgaben entfernen |
 | Person | PersonRole und personenbezogene Notes entfernen; Personenreferenzen in Aufgaben und Material entfernen |
 | Role | PersonRole entfernen; Personen erhalten |
 | PersonStatusDefinition | Statusreferenzen entfernen; Personen erhalten |
 | Task | Aufgabe und abgeleitete Kopien entfernen; Person erhalten |
 | Material | Materialposition und abgeleitete Kopien entfernen; Person erhalten |
 | Document | Dokument und zugehöriges FileAsset entfernen |
-| Note | Note entfernen; Action und Person erhalten |
+| Note | Note entfernen; `Action` und Person erhalten |
 | Expense | Ausgabe und optionalen Beleg entfernen |
 | FileAsset eines Dokuments | Dokument ebenfalls entfernen, damit kein funktionsloser Eintrag verbleibt |
 | FileAsset eines Belegs | Belegreferenz entfernen; Ausgabe bleibt bis zu ihrer eigenen Löschung bestehen |
@@ -409,13 +409,13 @@ Löschgarantien, Wiederanlauf, Fehlermeldung, mögliche minimale Löschprotokoll
 
 ## 17. Offene Entscheidungen
 
-### OD-01 — Weitere Action-Übergänge
+### OD-01 — Weitere Aktionsübergänge
 
-**Offen:** Direkter Abschluss aus DRAFT/PREPARATION, Rückwärtsübergänge vor Abschluss, Behandlung nicht durchgeführter Actions und Abbruch eines noch nicht abgeschlossenen Löschvorgangs.
+**Offen:** Direkter Abschluss aus DRAFT/PREPARATION, Rückwärtsübergänge vor Abschluss, Behandlung nicht durchgeführter Aktionen und Abbruch eines noch nicht abgeschlossenen Löschvorgangs.
 
-**Empfehlung:** Nicht durchgeführte Actions direkt abschließen, ohne neuen Status. Rückwärtsübergänge vor Abschluss eng begrenzen. Keine Wiedereröffnung nach COMPLETED; dies ist bereits verbindlich. Verhalten von DELETION_PENDING erst zusammen mit dem Löschablauf festlegen.
+**Empfehlung:** Nicht durchgeführte Aktionen direkt abschließen, ohne neuen Status. Rückwärtsübergänge vor Abschluss eng begrenzen. Keine Wiedereröffnung nach COMPLETED; dies ist bereits verbindlich. Verhalten von DELETION_PENDING erst zusammen mit dem Löschablauf festlegen.
 
-### OD-02 — Pflichtangaben beim Anlegen einer Action
+### OD-02 — Pflichtangaben beim Anlegen einer Aktion
 
 **Offen:** FR-001 verlangt Beschreibung und Zeitraum, während der einfache User Flow weniger Eingaben nennt. Für Aufgaben ist die Beschreibung nicht ausdrücklich optional.
 
@@ -431,23 +431,23 @@ Löschgarantien, Wiederanlauf, Fehlermeldung, mögliche minimale Löschprotokoll
 
 **Offen:** Konkrete erlaubte Formate, Inhaltsprüfung, maximale Dateigrößen sowie Import-, Fehler- und Bereinigungszustände.
 
-**Empfehlung:** Einen begrenzten Formatumfang nach der Produktpriorität festlegen. Unvollständige Dateien bis zur erfolgreichen Übernahme nicht fachlich sichtbar machen. Technische Zustände in architecture.md und security.md spezifizieren. Exklusives Eigentum, höchstens ein Beleg und keine actionübergreifende Deduplizierung sind bereits verbindlich.
+**Empfehlung:** Einen begrenzten Formatumfang nach der Produktpriorität festlegen. Unvollständige Dateien bis zur erfolgreichen Übernahme nicht fachlich sichtbar machen. Technische Zustände in architecture.md und security.md spezifizieren. Exklusives Eigentum, höchstens ein Beleg und keine aktionsübergreifende Deduplizierung sind bereits verbindlich.
 
 ### OD-05 — Geldbeträge und Währungen
 
 **Offen:** Währungsumfang, Rundung, null beziehungsweise negative Beträge und Erstattungen.
 
-**Empfehlung:** Eine festgelegte Währung je Action und positive Ausgaben verwenden. Beträge exakt speichern. Erstattungen und Umrechnung erst nach eigener fachlicher Spezifikation einführen.
+**Empfehlung:** Eine festgelegte Währung je Aktion und positive Ausgaben verwenden. Beträge exakt speichern. Erstattungen und Umrechnung erst nach eigener fachlicher Spezifikation einführen.
 
 ### OD-06 — Retention-Regeln und Metadaten
 
-**Offen:** Standardfristen, Einheiten, Fristanker, maximale Aufbewahrung nicht abgeschlossener Actions, individuelle Termine, Vererbung, Regelversionierung und Neuberechnung.
+**Offen:** Standardfristen, Einheiten, Fristanker, maximale Aufbewahrung nicht abgeschlossener Aktionen, individuelle Termine, Vererbung, Regelversionierung und Neuberechnung.
 
-**Empfehlung:** In data-retention.md Objekterstellung und tatsächlichen Action-Abschluss als mögliche Anker prüfen. Für abschlussabhängige Regeln eine maximale Lebensdauer vorsehen. Verwendete Regeln versionieren; keine stillschweigende Verlängerung bestehender Termine. Die Attribute in Abschnitten 5 und 13 bleiben bis dahin konzeptionell.
+**Empfehlung:** In data-retention.md Objekterstellung und tatsächlichen Aktionsabschluss als mögliche Anker prüfen. Für abschlussabhängige Regeln eine maximale Lebensdauer vorsehen. Verwendete Regeln versionieren; keine stillschweigende Verlängerung bestehender Termine. Die Attribute in Abschnitten 5 und 13 bleiben bis dahin konzeptionell.
 
 ### OD-07 — Elternlöschung und längere Kinderfristen: entschieden
 
-Vollständige Action-Löschung ist die Obergrenze für untergeordnete Daten. Keine unabhängigen Restbestände oder Aufbewahrungsausnahmen im MVP. Falls Kostenunterlagen länger benötigt werden, muss dies vor Action-Löschung sichtbar mit passenden Fristen gelöst werden; konkrete Fristen bleiben unter OD-06 offen.
+Vollständige Aktionslöschung ist die Obergrenze für untergeordnete Daten. Keine unabhängigen Restbestände oder Aufbewahrungsausnahmen im MVP. Falls Kostenunterlagen länger benötigt werden, muss dies vor Aktionslöschung sichtbar mit passenden Fristen gelöst werden; konkrete Fristen bleiben unter OD-06 offen.
 
 ### OD-08 — Schlüsselverwaltung, Kryptografie und Löschgarantien
 
@@ -469,9 +469,9 @@ Vollständige Action-Löschung ist die Obergrenze für untergeordnete Daten. Kei
 
 ### OD-11 — Zeitmodell
 
-**Offen:** Zeitzonen der Action-Planung, Kalenderdauer gegenüber fester Zeitdauer, Sommerzeit und veränderte Gerätezeit.
+**Offen:** Zeitzonen der Aktionsplanung, Kalenderdauer gegenüber fester Zeitdauer, Sommerzeit und veränderte Gerätezeit.
 
-**Empfehlung:** Erstellungs- und Löschzeiten als eindeutige Zeitpunkte, Ausgabedaten als Kalendertage behandeln. Eine explizite Zeitzonenregel für Action-Planung festlegen. Fristberechnung und Zeitmanipulation im Retention-Konzept berücksichtigen.
+**Empfehlung:** Erstellungs- und Löschzeiten als eindeutige Zeitpunkte, Ausgabedaten als Kalendertage behandeln. Eine explizite Zeitzonenregel für Aktionsplanung festlegen. Fristberechnung und Zeitmanipulation im Retention-Konzept berücksichtigen.
 
 ### OD-12 — Grenzen und Validierung
 

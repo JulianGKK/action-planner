@@ -10,7 +10,7 @@ Grundlage sind [PRODUCT.md](../PRODUCT.md), [AGENTS.md](../AGENTS.md), das freig
 
 - **PRIV-01:** Für jeden gespeicherten Datentyp sind Zweck, Sensitivität, Speicherort, Frist und Löschverfahren zu dokumentieren. Auch temporäre und abgeleitete Daten zählen dazu.
 - **PRIV-02:** Nur für den konkreten organisatorischen Zweck benötigte Angaben erfassen. Name, Pseudonym und Telefonnummer bleiben optional. Kein Pflichtname für ansonsten gültige Personeneinträge.
-- **PRIV-03:** Keine globale Personenkartei, E-Mail, automatische actionübergreifende Personenverknüpfung, Standortverfolgung oder Statushistorie. Personenbezogene Notes werden über Note modelliert. Protokolle erhalten keine Teilnehmerlisten, Autorenprofile oder Versionshistorie.
+- **PRIV-03:** Keine globale Personenkartei, E-Mail, automatische aktionsübergreifende Personenverknüpfung, Standortverfolgung oder Statushistorie. Personenbezogene Notes werden über Note modelliert. Protokolle erhalten keine Teilnehmerlisten, Autorenprofile oder Versionshistorie.
 - **PRIV-04:** Keine Telemetrie, Tracking-, Werbe-, Cloud-, Synchronisations- oder externen Crash-Reporting-Dienste im MVP. Lokale Kernfunktionen funktionieren ohne Netzwerk. Berechtigungen siehe SEC-10.
 - **PRIV-05:** Keine echten personenbezogenen Daten in Entwicklung, Tests, Beispielen, Screenshots oder Repository-Dokumentation; keine Secrets im Repository.
 - **PRIV-06:** Personenbezogene Daten, ungeprüfte Freitexte und importierte Dateien sind standardmäßig SENSITIVE. Alle operativen Daten werden unabhängig von ihrer Klasse verschlüsselt.
@@ -40,11 +40,11 @@ Die Speicherbereiche sind konzeptionell. Konkrete Pfade und technische Verfahren
 
 | Datentyp | Zweck | Schutzklasse | Geplanter Speicherbereich | Frist und Löschung |
 |---|---|---|---|---|
-| Action | Planung, Durchführung, Nachbereitung | SENSITIVE bei ungeprüftem Freitext; sonst inhaltsabhängig | Privater verschlüsselter strukturierter Speicher | Eigene Frist offen; vollständige Kaskade |
-| Person, PersonRole | Personengebundene Koordination | Standard SENSITIVE | Wie Action | Frist offen; Personenkaskade |
-| Role, PersonStatusDefinition | Actiongebundene Konfiguration | SENSITIVE bei ungeprüftem Freitext; sonst inhaltsabhängig | Wie Action | Spätestens mit Action; Definition/Zuordnung bereinigen |
-| Task, Material | Arbeits- und Materialkoordination | SENSITIVE bei Personenbezug/ungeprüftem Freitext | Wie Action | Frist offen; Referenzen und Ableitungen bereinigen |
-| Note, typisiertes Protokoll | Organisatorische Dokumentation | Standard SENSITIVE bei ungeprüftem Inhalt/Personenbezug | Wie Action | Eigene Frist offen; personenbezogene Kaskade |
+| `Action` | Planung, Durchführung, Nachbereitung | SENSITIVE bei ungeprüftem Freitext; sonst inhaltsabhängig | Privater verschlüsselter strukturierter Speicher | Eigene Frist offen; vollständige Kaskade |
+| Person, PersonRole | Personengebundene Koordination | Standard SENSITIVE | Wie Aktion | Frist offen; Personenkaskade |
+| Role, PersonStatusDefinition | Aktionsgebundene Konfiguration | SENSITIVE bei ungeprüftem Freitext; sonst inhaltsabhängig | Wie Aktion | Spätestens mit Aktion; Definition/Zuordnung bereinigen |
+| Task, Material | Arbeits- und Materialkoordination | SENSITIVE bei Personenbezug/ungeprüftem Freitext | Wie Aktion | Frist offen; Referenzen und Ableitungen bereinigen |
+| Note, typisiertes Protokoll | Organisatorische Dokumentation | Standard SENSITIVE bei ungeprüftem Inhalt/Personenbezug | Wie Aktion | Eigene Frist offen; personenbezogene Kaskade |
 | Document, FileAsset, Beleg | Offline-Unterlagen, Nachweise | Standard SENSITIVE | Verschlüsselte Metadaten und private verschlüsselte Dateien | Eigene Frist offen; Eigentümerbeziehung beachten |
 | Expense | Ausgaben und Summen | SENSITIVE bei ungeprüftem Freitext/Personenbezug | Verschlüsselter strukturierter Speicher | Frist offen; optionalen Beleg mitlöschen |
 | RetentionPolicy, Fristmetadaten | Aufbewahrung steuern | Geschützt; keine sensiblen Freitextbegründungen | Privater geschützter technischer/strukturierter Speicher | Verwendete Regeln nicht ersatzlos löschen; Details offen |
@@ -61,7 +61,7 @@ Das technische Inventar muss auch WAL/Journal/Temp/Staging, RAM-/Stream-/Flow-/U
 
 PUBLIC_CONTENT bezeichnet zur Veröffentlichung geeigneten Inhalt, INTERNAL interne Organisation, SENSITIVE personenbezogene oder besonders vertrauliche Angaben. Die Klassen sind keine abschließende rechtliche Klassifizierung.
 
-Öffentlicher Inhalt kann durch seine Action-Zuordnung sensible Metadaten erhalten. Das Entfernen einer Personenreferenz anonymisiert Freitext oder Dateien nicht.
+Öffentlicher Inhalt kann durch seine Aktionszuordnung sensible Metadaten erhalten. Das Entfernen einer Personenreferenz anonymisiert Freitext oder Dateien nicht.
 
 **Empfehlung:** Keine automatische Herabstufung nach Referenzlöschung. Eine ausdrückliche Klassifizierungsprüfung soll Inhalt und Kontext berücksichtigen. Klassifizierung darf App-Sperre, Verschlüsselung und Backup-Ausschluss nicht abschwächen.
 
@@ -90,6 +90,6 @@ Offene Schlüssel-, Authentifizierungs- und Hardwareentscheidungen werden in sec
 
 ## 7. Ableitbare Prüfungen
 
-PRIV-01 bis PRIV-09 benötigen später Prüfungen für optional leere Personenfelder, actiongebundene Referenzen, Standardklassifizierung, fehlende verbotene Datentypen, fehlende Telemetrie und korrekte Original/Kopie-Information beim Systemimport sowie Kamera ohne Galerie-/Klartext-Zwischendatei oder externen Fallback und fehlende externe Viewerübergabe. Speicherinventar und manuelle Personenbezugsprüfung benötigen zusätzlich dokumentierte Reviews; deren Vollständigkeit lässt sich nicht allein durch Unit Tests beweisen.
+PRIV-01 bis PRIV-09 benötigen später Prüfungen für optional leere Personenfelder, aktionsgebundene Referenzen, Standardklassifizierung, fehlende verbotene Datentypen, fehlende Telemetrie und korrekte Original/Kopie-Information beim Systemimport sowie Kamera ohne Galerie-/Klartext-Zwischendatei oder externen Fallback und fehlende externe Viewerübergabe. Speicherinventar und manuelle Personenbezugsprüfung benötigen zusätzlich dokumentierte Reviews; deren Vollständigkeit lässt sich nicht allein durch Unit Tests beweisen.
 
 PRIV-10 bis PRIV-12 ergänzen Review der Erforderlichkeit/Persistenz, Deadline-/Cache-Entzugstests nach ARCH-35 und Prüfungen auf fehlende operative Notifications, Widgets, Shortcuts und Lockscreen-Inhalte. Externe Kopien und vollständige RAM-/Flash-Bereinigung sind keine durch Unit Tests behauptbare Garantie.

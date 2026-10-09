@@ -2,6 +2,8 @@ package org.pag.data.product
 
 import android.content.Context
 import androidx.room3.*
+import androidx.room3.migration.Migration
+import androidx.sqlite.SQLiteConnection
 import kotlinx.coroutines.*
 import org.pag.data.prototype.b2.*
 import org.pag.data.prototype.b4.B4RoomLifecycle
@@ -11,20 +13,30 @@ import java.io.File
 @Entity(tableName = "actions")
 internal data class ActionRow(@PrimaryKey val id: String, val title: String, val description: String,
     val startAt: Long, val expectedEndAt: Long, val createdAt: Long, val status: String,
-    val sensitivity: String = "SENSITIVE") {
+    val sensitivity: String = "SENSITIVE", @ColumnInfo(defaultValue = "NULL") val completedAt: Long? = null) {
     fun model(): Action {
         if (title.isBlank() || description.isBlank() || expectedEndAt < startAt || sensitivity != "SENSITIVE")
             throw ProductStorageFailure()
-        return Action(id, title, description, startAt, expectedEndAt, createdAt, ActionStatus.valueOf(status))
+        val parsed = ActionStatus.valueOf(status)
+        if ((parsed == ActionStatus.COMPLETED && completedAt == null) ||
+            (parsed != ActionStatus.COMPLETED && parsed != ActionStatus.DELETION_PENDING && completedAt != null))
+            throw ProductStorageFailure()
+        return Action(id, title, description, startAt, expectedEndAt, createdAt, parsed, completedAt)
     }
 }
 @Dao internal interface ActionDao {
     @Query("SELECT * FROM actions ORDER BY createdAt DESC, id") suspend fun list(): List<ActionRow>
     @Query("SELECT * FROM actions WHERE id = :id") suspend fun get(id: String): ActionRow?
     @Insert suspend fun insert(row: ActionRow)
+    @Update suspend fun update(row: ActionRow): Int
 }
-@Database(entities = [ActionRow::class], version = 1, exportSchema = true)
+@Database(entities = [ActionRow::class], version = 2, exportSchema = true)
 internal abstract class ActionDatabase : RoomDatabase() { abstract fun actions(): ActionDao }
+internal val ACTION_MIGRATION_1_2 = object : Migration(1, 2) {
+    override suspend fun migrate(connection: SQLiteConnection) {
+        connection.prepare("ALTER TABLE actions ADD COLUMN completedAt INTEGER DEFAULT NULL").use { it.step() }
+    }
+}
 
 /** Reuses the accepted B2 low-level driver, not the synthetic schema or repositories.
  * The scope adapter preserves ALL checks/publication on the original READY/MAINTENANCE
@@ -57,7 +69,7 @@ internal class ActionDatabaseAccess(private val app: Context,
             try {
                 preflight.completed(ActionPreflightStep.OPEN)
                 driverContext.requireB2(AccessPoint.STEP)
-                if (native.version != 1) throw ProductStorageFailure()
+                if (native.version !in 1..2) throw ProductStorageFailure()
                 preflight.completed(ActionPreflightStep.VERSION)
                 driverContext.requireB2(AccessPoint.STEP)
                 native.rawQuery("PRAGMA cipher_integrity_check", emptyArray<String>()).use {
@@ -89,6 +101,7 @@ internal class ActionDatabaseAccess(private val app: Context,
         try {
             room = Room.databaseBuilder(app, ActionDatabase::class.java, file.path).setDriver(driver)
                 .setQueryCoroutineContext(Dispatchers.IO + parent + lifecycle.handler { parent.cancel() })
+                .addMigrations(ACTION_MIGRATION_1_2)
                 .setJournalMode(RoomDatabase.JournalMode.TRUNCATE).build()
             result = runBlocking {
                 lifecycle.requireOpen()

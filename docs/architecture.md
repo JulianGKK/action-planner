@@ -58,7 +58,7 @@ Der Authentifizierungsdialog und die Kamera benötigen Android-UI-Adapter. Das e
 
 ## 5. Session-State-Machine und Authentifizierung
 
-**ARCH-08 — Technische Zustände:** Genau folgende Zustände beschreiben die Zugriffsfreigabe. Sie sind keine fachlichen Action-Statuswerte.
+**ARCH-08 — Technische Zustände:** Genau folgende Zustände beschreiben die Zugriffsfreigabe. Sie sind keine fachlichen Aktionsstatuswerte.
 
 | Zustand | Bedeutung und erlaubtes Verhalten |
 |---|---|
@@ -117,7 +117,7 @@ Bereits B1 bis B4 verwenden den B0-Vertrag beziehungsweise kontrollierte Fakes, 
 
 ## 7. Strukturierter Bestand und verschlüsselter FileAsset-Speicher
 
-**ARCH-14 — Single Source of Truth:** Eine verschlüsselte lokale strukturierte Datenquelle ist Single Source of Truth für operative strukturierte Daten. Das Datenmodell bleibt maßgeblich: actiongebundene Personen, genau ein Eigentümer je fertigem FileAsset, höchstens ein Beleg je Expense und keine actionübergreifende Datei-Deduplizierung. Organisatorische Rollen verleihen keine technischen Zugriffsrechte. Bibliothek, Suche und Dashboard sind geschützte Ableitungen.
+**ARCH-14 — Single Source of Truth:** Eine verschlüsselte lokale strukturierte Datenquelle ist Single Source of Truth für operative strukturierte Daten. Das Datenmodell bleibt maßgeblich: aktionsgebundene Personen, genau ein Eigentümer je fertigem FileAsset, höchstens ein Beleg je Expense und keine aktionsübergreifende Datei-Deduplizierung. Organisatorische Rollen verleihen keine technischen Zugriffsrechte. Bibliothek, Suche und Dashboard sind geschützte Ableitungen.
 
 Mehrteilige strukturierte Änderungen erfolgen transaktional. Metadaten, Indizes, Journale, Migrationen und temporäre Datenbankartefakte sind in das Schutzinventar einzubeziehen. Die Domain kennt keine konkrete Datenbank oder Kryptografiebibliothek.
 
@@ -154,7 +154,7 @@ Allgemeiner Import erfolgt durch ausdrückliche Auswahl über Android-Systemmech
 | 5. Fachlich strukturiert committen | FileAsset, genau einen Eigentümer und Freigabestatus konsistent speichern | Commit erkennen; weder Doppelimport noch widersprüchliche Eigentümer erzeugen |
 | 6. Technischen Auftrag entfernen | Arbeitsstatus nach bestätigtem Abschluss entfernen | Restauftrag bei bereits bestätigtem Commit ohne Löschung des gültigen Assets entfernen können |
 
-Technischer Importstatus ist kein zusätzlicher fachlicher Action-Status und kein dauerhaftes Inhaltsprotokoll. Vor Schritt 5 bleibt das Ergebnis außerhalb regulärer Repository-/Viewer-Zugriffe. Beim Commit muss die Sitzung noch zulässig sein. Der Eigentümer wird innerhalb derselben strukturierten Transaktion angelegt oder als vorhandener Eigentümer geprüft; bei erfolgreichem Commit müssen Eigentümer und exklusive Dateireferenz konsistent bestehen. Die zugehörige Action und ein bereits vorhandener Eigentümer dürfen nicht zur Löschung gesperrt sein.
+Technischer Importstatus ist kein zusätzlicher fachlicher Aktionsstatus und kein dauerhaftes Inhaltsprotokoll. Vor Schritt 5 bleibt das Ergebnis außerhalb regulärer Repository-/Viewer-Zugriffe. Beim Commit muss die Sitzung noch zulässig sein. Der Eigentümer wird innerhalb derselben strukturierten Transaktion angelegt oder als vorhandener Eigentümer geprüft; bei erfolgreichem Commit müssen Eigentümer und exklusive Dateireferenz konsistent bestehen. Die zugehörige Aktion und ein bereits vorhandener Eigentümer dürfen nicht zur Löschung gesperrt sein.
 
 **ARCH-19 — Keine DB-/Filesystem-Atomizität behaupten:** Eine Datenbanktransaktion umfasst nicht automatisch Dateisystem und Schlüsselzustände. Jeder Übergang benötigt einen definierten Wiederanlauf und Ausfalltests. Nach Process Death darf ein unvollständiger Versuch verloren gehen; das rechtfertigt nur die Bereinigung eindeutig zugeordneter Versuchsreste. Unbekannte Dateien werden nicht allein aufgrund fehlender Zuordnung oder eines gescheiterten DB-Opens gelöscht. Unklare Zustände führen zur geschützten Blockierung. Konkretes Auftragschema, Veröffentlichungstechnik und Haltbarkeits-/Flush-Strategie bleiben offen.
 
@@ -190,7 +190,7 @@ Sensitive UI wird erst nach erfolgreichem Gate rekonstruiert. Klartextreferenzen
 
 ## 11. Retention und Löschkoordination
 
-**ARCH-24 — Fachliche Regeln und Zugriffsobergrenze:** Fristen und Kaskaden folgen data-retention.md und data-model.md. Vollständige Action-Löschung ist die Obergrenze für untergeordnete Daten; keine versteckten Restbestände. Die Action-Statuswerte bleiben DRAFT, PREPARATION, ACTIVE, COMPLETED und DELETION_PENDING; DELETED ist nur das Ergebnis, kein persistierter Datensatz. Keine Wiedereröffnung abgeschlossener Actions.
+**ARCH-24 — Fachliche Regeln und Zugriffsobergrenze:** Fristen und Kaskaden folgen data-retention.md und data-model.md. Vollständige Aktionslöschung ist die Obergrenze für untergeordnete Daten; keine versteckten Restbestände. Die Aktionsstatuswerte bleiben DRAFT, PREPARATION, ACTIVE, COMPLETED und DELETION_PENDING; DELETED ist nur das Ergebnis, kein persistierter Datensatz. Keine Wiedereröffnung abgeschlossener Aktionen.
 
 **ARCH-25 — Wiederanlauffähige Bereinigung:** Löschkoordination sperrt betroffene Zugriffe, sichert minimal notwendige geschützte Ziel-/Fortschrittsreferenzen und koordiniert strukturierte Beziehungen, Dateien und Ableitungen. Zielreferenzen dürfen nicht vorzeitig verloren gehen, wenn Dateien noch zu bereinigen sind. Wiederholung darf keinen Inhalt wiederherstellen oder fehlgeschlagene Teilschritte als Erfolg melden. Arbeitsstatus wird nach belegtem Abschluss entfernt; keine dauerhafte detaillierte Löschhistorie.
 
@@ -261,7 +261,7 @@ Reale Keystore-, Kamera-, Lifecycle-, Backup- und Herstellerprüfungen ergänzen
 
 Die Auswahl SQLCipher direkt versus Room ist mit ARCH-36/37 entschieden. Gemeinsame versus per-Asset FileAsset-Keysets, endgültige Schlüsselhierarchie, Keystore-Operationsbindung versus Autorisierungsfenster, Android-/Hardwareanforderungen und Retention-Fristen bleiben offen. Der B0-Vertrag entscheidet diese übrigen Alternativen nicht.
 
-Weitere fachliche Entscheidungen bleiben in den zuständigen Grundlagen offen: Fristanker/-werte, maximale Lebensdauer, individuelle Fristen, Zeitmodell und Regelversionierung in data-retention.md; Klassifizierungsänderungen, indirekte Personenbezüge und Importmetadatenbehandlung in privacy.md; weitere Action-Übergänge, Pflichtangaben, Materialstatus und Währungen in data-model.md. Die Architektur entscheidet sie nicht stillschweigend.
+Weitere fachliche Entscheidungen bleiben in den zuständigen Grundlagen offen: Fristanker/-werte, maximale Lebensdauer, individuelle Fristen, Zeitmodell und Regelversionierung in data-retention.md; Klassifizierungsänderungen, indirekte Personenbezüge und Importmetadatenbehandlung in privacy.md; weitere Aktionsübergänge, Pflichtangaben, Materialstatus und Währungen in data-model.md. Die Architektur entscheidet sie nicht stillschweigend.
 
 ## 17. Präzisierungen und ausdrücklich abgelöste ältere Anforderungen
 
@@ -273,7 +273,7 @@ Weitere fachliche Entscheidungen bleiben in den zuständigen Grundlagen offen: F
 | PRIV-09, SEC-13 / SEC-OD-08: externe Öffnung offen | Im MVP ausgeschlossen; keine automatische externe Viewerübergabe |
 | SEC-07: mögliche private Klartext-Renderausnahme empfohlen | Keine solche Ausnahme mit dieser Architektur freigegeben; ungeeignete Vorschau kann entfallen |
 | SEC-09 / SEC-OD-08: Screenshotumfang noch offen | Schutz sensibler Oberflächen verbindlich; konkrete Plattform-/Lifecycle-Nachweise bleiben erforderlich |
-| Datenmodell OD-07 und OD-09 | Action-Löschung begrenzt Kinder; personenbezogene Daten, ungeprüfte Freitexte und Importe standardmäßig SENSITIVE gemäß späteren Privacy-/Retention-Entscheidungen |
+| Datenmodell OD-07 und OD-09 | Aktionslöschung begrenzt Kinder; personenbezogene Daten, ungeprüfte Freitexte und Importe standardmäßig SENSITIVE gemäß späteren Privacy-/Retention-Entscheidungen |
 | PRODUCT.md: vorläufige Technologien und Datenmodellbeispiele | Relationale DB-Auswahl nach B2 gemäß ARCH-36/37; weitere Kryptobibliotheken offen, keine deprecated Security-Crypto-Architektur; fachliche Korrekturen aus data-model.md gelten weiter |
 | PRODUCT.md INT-001: atomare Änderungen | Strukturierte Änderungen bleiben transaktional. Über DB, Dateisystem und Schlüssel wird keine gemeinsame atomare Transaktion behauptet; die ausdrücklich bestätigten Wiederanlaufregeln aus ARCH-18/19/25 konkretisieren diese Grenze |
 

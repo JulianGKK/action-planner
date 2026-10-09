@@ -4,7 +4,7 @@
 
 `action-planner` ist eine private, offline-first Android-Anwendung für die Organisation und Dokumentation von Aktionen.
 
-Die zentrale fachliche Einheit ist eine **Action**. Eine Action kann unter anderem Personen, Rollen, Aufgaben, Material, Dokumente, Notizen/Protokolle, Kosten und Aufbewahrungsregeln enthalten.
+Die zentrale fachliche Einheit ist eine **Aktion**. Eine Aktion kann unter anderem Personen, Rollen, Aufgaben, Material, Dokumente, Notizen/Protokolle, Kosten und Aufbewahrungsregeln enthalten.
 
 Die vollständige fachliche Zielsetzung steht in `PRODUCT.md`. Diese Datei ist vor größeren fachlichen oder architektonischen Entscheidungen zu lesen.
 

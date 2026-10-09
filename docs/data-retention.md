@@ -9,7 +9,7 @@ Anforderungen sind verbindlich. Fristanker, konkrete Standardfristen, maximale D
 ## 2. Verbindliche Anforderungen
 
 - **RET-01:** Sensible Daten besitzen eine zweckgebundene Aufbewahrungsregel. Nicht benötigte Daten dürfen manuell vor Fristablauf entfernt werden. Eine technische Abhängigkeit ist konsistent aufzulösen, keine automatische Erlaubnis unbegrenzter Aufbewahrung.
-- **RET-02:** Vollständige Action-Löschung ist die Obergrenze für alle untergeordneten Daten. Eine längere Kinderfrist verhindert die Kaskade nicht. Kein verwaister Bestand darf verdeckt weiterbestehen.
+- **RET-02:** Vollständige Aktionslöschung ist die Obergrenze für alle untergeordneten Daten. Eine längere Kinderfrist verhindert die Kaskade nicht. Kein verwaister Bestand darf verdeckt weiterbestehen.
 - **RET-03:** Fällige Löschungen werden bei nächster zulässiger Ausführung nachgeholt, bevor betroffene Inhalte wieder angezeigt oder regulär gesucht, geöffnet beziehungsweise weitergegeben werden. Betroffene Ableitungen zählen dazu.
 - **RET-04:** Die App-Sperre wird für Hintergrundlöschung nicht geschwächt. Fehlende Schlüssel werden nicht durch einen ungeschützten Ersatzpfad umgangen.
 - **RET-05:** Keine exakte Löschung zu einem Zeitpunkt versprechen, wenn Gerät, Ausführung oder notwendige Schlüssel nicht verfügbar sind. Fristablauf, Ausführung und bestätigter Abschluss werden unterschieden.
@@ -22,26 +22,26 @@ Anforderungen sind verbindlich. Fristanker, konkrete Standardfristen, maximale D
 
 ## 3. Empfohlenes Fristmodell; noch offen
 
-Empfohlen sind die Anker Objekterstellung und tatsächlicher Action-Abschluss. Für abschlussabhängige Regeln ist eine maximale Lebensdauer ab Erstellung erforderlich, damit nie abgeschlossene Actions keine unbegrenzte Speicherung verursachen. Ihre konkrete Dauer ist offen.
+Empfohlen sind die Anker Objekterstellung und tatsächlicher Aktionsabschluss. Für abschlussabhängige Regeln ist eine maximale Lebensdauer ab Erstellung erforderlich, damit nie abgeschlossene Aktionen keine unbegrenzte Speicherung verursachen. Ihre konkrete Dauer ist offen.
 
 Ein vorgeschlagener wirksamer Termin ist der früheste zutreffende Termin aus:
 
 1. Regeltermin oder ausdrücklich gewähltem individuellen Termin;
 2. maximaler Lebensdauer;
-3. Action-Löschtermin;
+3. Aktionslöschtermin;
 4. Eigentümer-Löschtermin bei abhängigen Objekten.
 
 Ein individueller Termin ersetzt nach dieser Empfehlung den normalen Regeltermin, nicht die Obergrenzen. Verwendete Regeln sollen versioniert werden. Bearbeitung eines Inhalts soll keine Frist neu starten; Änderungen sollen bestehende Termine nicht stillschweigend verlängern. Diese Details sind vor Implementierung zu bestätigen.
 
-Standardregeln sollen personenbezogene Daten, allgemeine Organisation, Dokumente und Kosten/Belege nach Zweck unterscheiden. Es werden keine rechtlichen Fristen pauschal aus Datentypen abgeleitet. Vor Kostenaufbewahrung sind tatsächliche Pflichten zu prüfen. Falls Kostenunterlagen länger benötigt werden, ist dies vor vollständiger Action-Löschung sichtbar zu lösen; der MVP erhält keinen unabhängigen Restbestand.
+Standardregeln sollen personenbezogene Daten, allgemeine Organisation, Dokumente und Kosten/Belege nach Zweck unterscheiden. Es werden keine rechtlichen Fristen pauschal aus Datentypen abgeleitet. Vor Kostenaufbewahrung sind tatsächliche Pflichten zu prüfen. Falls Kostenunterlagen länger benötigt werden, ist dies vor vollständiger Aktionslöschung sichtbar zu lösen; der MVP erhält keinen unabhängigen Restbestand.
 
 Die Retention-Attribute aus data-model.md bleiben konzeptionell, bis Anker, Dauerrechnung, Obergrenzen und Überschreibungen konkretisiert sind.
 
 ## 4. Fachliche Kaskaden
 
-Die vollständige Beziehungstabelle steht in [data-model.md, Abschnitt 15](data-model.md#15-beziehungen-integrität-und-löschung) und wird hier nicht dupliziert. Vollständige Action-Löschung begrenzt gemäß RET-02 die Aufbewahrung aller Kinder.
+Die vollständige Beziehungstabelle steht in [data-model.md, Abschnitt 15](data-model.md#15-beziehungen-integrität-und-löschung) und wird hier nicht dupliziert. Vollständige Aktionslöschung begrenzt gemäß RET-02 die Aufbewahrung aller Kinder.
 
-Personenlöschung entfernt PersonRole und personenbezogene Notes; Aufgaben-/Materialreferenzen werden entfernt, die sachlichen Objekte bleiben. Dokumentlöschung entfernt dessen FileAsset, Ausgabenlöschung den optionalen Beleg. Frühere Beleglöschung lässt die Ausgabe ohne Beleg bestehen. Keine persistierte Action mit Status DELETED und keine Wiedereröffnung abgeschlossener Actions.
+Personenlöschung entfernt PersonRole und personenbezogene Notes; Aufgaben-/Materialreferenzen werden entfernt, die sachlichen Objekte bleiben. Dokumentlöschung entfernt dessen FileAsset, Ausgabenlöschung den optionalen Beleg. Frühere Beleglöschung lässt die Ausgabe ohne Beleg bestehen. Keine persistierte Aktion mit Status DELETED und keine Wiedereröffnung abgeschlossener Aktionen.
 
 Freitext und Dateien können indirekte Personenbezüge behalten. Referenzlöschung ist keine garantierte Anonymisierung; der ergänzende Prüfablauf bleibt in privacy.md offen.
 
@@ -94,4 +94,4 @@ Externe Originale, Empfängerkopien und Fotografien liegen außerhalb der Kaskad
 | Arbeitsstatus, Reihenfolge und Retry | Minimal, geschützt, wiederanlauffähig; keine Erfolgsmeldung bei Teilfehler | Ja, nach Prototyp |
 | Löschen bei Schlüsselverlust | Keine unbewiesene Erfolgszusage; kontrollierte Bereinigung prüfen | Ja, mit SEC-OD-04 |
 
-Für testing.md abzuleiten: Fristablauf mit kontrollierbarer Zeit, maximale Lebensdauer, Action-Obergrenze, Kaskaden, fehlende Warnbestätigung, Neustart/Force-Stop, fehlende Schlüssel, Wiederholung nach jedem Abbruchpunkt, Speicherknappheit und kein Zugriff auf fällige Inhalte vor Nachholung. Physische Flash-Löschung ist kein automatisiert behauptbarer Testnachweis.
+Für testing.md abzuleiten: Fristablauf mit kontrollierbarer Zeit, maximale Lebensdauer, Aktionsobergrenze, Kaskaden, fehlende Warnbestätigung, Neustart/Force-Stop, fehlende Schlüssel, Wiederholung nach jedem Abbruchpunkt, Speicherknappheit und kein Zugriff auf fällige Inhalte vor Nachholung. Physische Flash-Löschung ist kein automatisiert behauptbarer Testnachweis.

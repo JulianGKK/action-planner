@@ -58,7 +58,7 @@ Mehrteilige strukturierte Änderungen erfolgen konsistent und transaktional. Bes
 
 Importierte Inhalte werden als private appverwaltete verschlüsselte Kopien gespeichert; Eigentümer und Kardinalitäten entsprechen data-model.md. Externe Originale bleiben außerhalb der Kontrolle. Verfahren müssen Vertraulichkeit und geeignete Integritätsprüfung leisten; Auswahl bleibt offen.
 
-Große Dateien dürfen nicht unnötig vollständig in Arbeitsspeicher geladen werden. Vorschaubilder und Dateimetadaten erhalten den Schutz ihrer Ausgangsdaten. Keine actionübergreifende Deduplizierung.
+Große Dateien dürfen nicht unnötig vollständig in Arbeitsspeicher geladen werden. Vorschaubilder und Dateimetadaten erhalten den Schutz ihrer Ausgangsdaten. Keine aktionsübergreifende Deduplizierung.
 
 ### SEC-07 — Temporärer Klartext
 
