@@ -36,7 +36,15 @@ internal class B2Driver(private val file: File, key: ByteArray,
                 // Rollback is resource cleanup, not a new authorized application operation.
                 val rollback = command.startsWith("ROLLBACK")
                 val commit = command.startsWith("COMMIT") || command.startsWith("END TRANSACTION") || command.startsWith("RELEASE")
-                if (!rollback) context.requireB2()
+                if (!rollback) {
+                    try { context.requireB2() }
+                    catch (failure: B2Exception) {
+                        // Revocation can precede statement preparation, not only step().
+                        // The denied commit must never leave a transaction holding the connection.
+                        if (commit) delegate.prepare("ROLLBACK TRANSACTION").use { it.step() }
+                        throw failure
+                    }
+                }
                 val statement = delegate.prepare(sql)
                 object : SQLiteStatement by statement {
                     override fun step(): Boolean = sanitizedB2 {

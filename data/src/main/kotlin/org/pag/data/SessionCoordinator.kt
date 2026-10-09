@@ -34,8 +34,14 @@ class SessionCoordinator(
     private val maintenance: Maintenance,
     private val clock: MonotonicTime,
     private val policy: SessionPolicy,
-    private val accessEnvironmentAllowed: () -> Boolean = { true }
+    private val accessEnvironmentAllowed: () -> Boolean = { true },
+    private val authorizedMaintenance: ((StorageContext, SyntheticOperation, (Boolean) -> Unit) -> Subscription)? = null
 ) : SessionPort, SessionLifecycle, StorageAccess {
+    // Preserve the original trailing foreground-lambda API used by prototype evidence/tests.
+    constructor(authentication: AuthenticationExperiment, maintenance: Maintenance,
+        clock: MonotonicTime, policy: SessionPolicy, environment: () -> Boolean) :
+        this(authentication, maintenance, clock, policy, environment, null)
+
     private var absoluteDeadline: Long? = null
     private var idleDeadline: Long? = null
     private var attemptStarted = 0L
@@ -88,6 +94,7 @@ class SessionCoordinator(
         if (!valid(current.generation, expected)) return null
         val generation = current.generation
         return object : StorageContext {
+            override val generation = generation
             override val scope = scope
             override fun check(point: AccessPoint): Boolean = synchronized(this@SessionCoordinator) {
                 valid(generation, expected)
@@ -97,6 +104,8 @@ class SessionCoordinator(
             }
         }
     }
+
+    @Synchronized fun storageFailure() = block("P1-STORAGE-BLOCKED")
 
     @Synchronized override fun lock() = invalidate("A-LOCK")
 
@@ -194,6 +203,25 @@ class SessionCoordinator(
                         technicalId = "A-SYNTHETIC-MAINTENANCE", keyProperties = outcome.operation.properties))
                 }
             }
+        }
+        if (authorizedMaintenance != null) {
+            val work = synchronized(this) {
+                val context = acquire(AccessScope.MAINTENANCE) ?: return
+                val keyOperation = operation ?: return
+                context to keyOperation
+            }
+            val cancellation = try {
+                authorizedMaintenance.invoke(work.first, work.second) { maintenanceCompleted(generation, it) }
+            } catch (_: RuntimeException) {
+                synchronized(this) { if (valid(generation, SessionState.MAINTENANCE)) block("P1-MAINTENANCE") }
+                return
+            }
+            synchronized(this) {
+                if (valid(generation, SessionState.MAINTENANCE)) maintenanceCancellation = cancellation
+                else if (!valid(generation, SessionState.READY)) cancellation.cancel()
+                // A synchronous successful callback has already finished maintenance.
+            }
+            return
         }
         val databaseWork = synchronized(this) {
             if (!isDatabase()) null else {

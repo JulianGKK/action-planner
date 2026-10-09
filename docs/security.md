@@ -16,7 +16,7 @@ Die Sperre schützt fachliche Datenzugriffe unterhalb der UI. Deep Links, intern
 
 Zwei unabhängige Grenzen gelten gemäß ARCH-31/32: Die unveränderliche absolute Deadline beginnt unmittelbar nach erfolgreicher expliziter PaG-Authentifizierung und läuft während MAINTENANCE und READY. UI-Aktivität, Navigation, Scrollen, Tippen, I/O oder Wartung verlängern sie nie. Die Inaktivitätsgrenze gilt zusätzlich in READY; nur qualifizierte tatsächliche Vordergrundinteraktion aktualisiert den Aktivitätszeitpunkt. Renderzyklen, Timer, I/O, Flows, Animationen, Lifecycle-Callbacks, Hintergrundarbeit und Maintenance sind keine Nutzeraktivität. In MAINTENANCE läuft keine Inaktivitätsgrenze allein wegen fehlender Interaktionsmöglichkeit; es bleibt absolute Deadline ohne Fachinhaltsanzeige.
 
-Ablauf einer anwendbaren Grenze führt zu LOCKED und invalidiert die Generation. Eine bereits abgelaufene Sitzung darf auch durch nachträgliche Interaktion nicht wiederbelebt werden. Neue Freigabe nur nach einem neuen explizit gestarteten DEVICE_CREDENTIAL-Flow und dem Gate; Geräteentsperrung und verbleibende Keystore-Autorisierung reichen nicht aus. Kein automatischer Prompt-Loop. Die konkreten Dauern bleiben offen.
+Ablauf einer anwendbaren Grenze führt zu LOCKED und invalidiert die Generation. Eine bereits abgelaufene Sitzung darf auch durch nachträgliche Interaktion nicht wiederbelebt werden. Neue Freigabe nur nach einem neuen explizit gestarteten DEVICE_CREDENTIAL-Flow und dem Gate; Geräteentsperrung und verbleibende Keystore-Autorisierung reichen nicht aus. Kein automatischer Prompt-Loop. Für P1 gelten 3 Minuten absolute Dauer ab erfolgreicher Authentifizierung und 30 Sekunden READY-Inaktivität. Spätere Anpassbarkeit ist vorgesehen; Änderungen benötigen eine bewusste Produkt-/Securityentscheidung.
 
 Injizierbare monotone Zeit muss Sleep einschließen; elapsedRealtime() ist der Android-Kandidat. Keine Wanduhr für Sessiondauer. Timer dienen nur zeitnaher UI-Reaktion; die Deadline entscheidet unabhängig davon über Zugriff. Resume prüft vor Anzeige; Activity Recreation verwirft die Sitzung konservativ, Process Death startet LOCKED. Callbacks prüfen Generation und Zeitgültigkeit. Storage verwendet keinen parallelen Unlock-State und prüft zentralen Zustand, Generation, Lifecycle/Foreground, absolute und in READY zusätzliche Inaktivitätsdeadline vor Operation, relevantem Arbeitsschritt, Commit-Zulassung und Veröffentlichung (ARCH-33/34).
 
@@ -139,7 +139,7 @@ Verschlüsselung ruhender Daten schützt keine bereits in READY verfügbaren Kla
 | SEC-OD-07 | Formatumfang, Größen, Parser und temporäre Klartextanforderungen | Begrenzen; keine stillen Klartextausnahmen | Vor Import/Anzeige |
 | SEC-OD-08 | Konkreter Screenshot-/Recent-Apps-Schutz und Clipboard-UI | Verbindlichen Oberflächenschutz nachweisen; Clipboard nur nach ausdrücklicher Benutzeraktion; keine externe Dateiöffnung | Vor jeweiliger UI-Funktion |
 | SEC-OD-09 | Konkrete Backupregeln, Speicherorte und Testmatrix | Ausschlüsse praktisch prüfen | Vor Speicherung/Freigabe |
-| SEC-OD-10 | Absolute und Inaktivitätsdauer; konkrete Qualifikation von Vordergrundinteraktion | Keine realen Zeitwerte hier festlegen; keine technischen Ereignisse als Aktivität | Dauern als spätere Produktentscheidung; Interaktionsabbildung in B0 |
+| SEC-OD-10 — P1 entschieden | 3 Minuten absolut / 30 Sekunden READY-Inaktivität | elapsedRealtime; nur echte Benutzerinteraktion erneuert Inaktivität; App-Verlassen sperrt sofort | Produktwerte freigegeben; spätere Anpassbarkeit separat |
 
 Retention-Fristen und deren Kalender-/Zeitrechnung sind in data-retention.md offen geführt; Sessiondauer und monotone Sessionzeit sind davon getrennt. Klassifizierungsänderungen und indirekte Personenbezüge stehen in privacy.md. Verbindlich geklärte Punkte werden nicht erneut zur Disposition gestellt.
 
@@ -150,3 +150,34 @@ SEC-01 bis SEC-17 bilden Referenzen für das spätere testing.md. Erforderlich s
 SEC-01, SEC-16 und SEC-17 ergänzen Tests für absolute Grenze trotz kontinuierlicher Bedienung, Inaktivität ausschließlich in READY, Maintenance ohne künstliche Aktivität, Sleep/Resume, Wanduhränderung, Recreation/Process Death, verzögerte Timer, alte Callbacks und Ablauf zwischen Prüfung und Commit-Zulassung. SQL-Zugriffe, Streams, Import/Delete und Wartung müssen denselben Vertrag durchsetzen; keine alten Handle-Zugriffe oder Ergebnisemissionen. Fehlende Notifications, Foreground Services, operative Widgets/Shortcuts und Verbergungsmechanismen statisch und dynamisch prüfen. Die B0/B1–B5-Reihenfolge und Nachweise stehen in ARCH-35.
 
 Tests nutzen ausschließlich synthetische Daten. Hardware-, Hersteller- und Flash-Grenzen lassen sich nicht vollständig durch Unit Tests belegen. Prüfergebnisse müssen Gerät, Plattform, Konfiguration und verbleibende Grenzen nennen. Vor echten sensiblen Daten sind unabhängiges Security Review und fachkundige Datenschutzprüfung erforderlich.
+
+
+## P1 – Session-resident product DB key
+
+Freigegebene Produktentscheidung ausschließlich für den DB-only-Slice:
+Nach einer frischen expliziten per-operation DEVICE_CREDENTIAL-Authentifizierung
+wird der produktive DB-Key einmal per RSA-OAEP entpackt. Ein instanzlokaler
+SessionDbKeyOwner hält eine kontrollierte Kopie ausschließlich für dieselbe
+PaG-Sessiongeneration im RAM. Dies ist kein Keystore-Autorisierungsfenster.
+
+Der zentrale Storage-Vertrag bleibt autoritativ: READY bzw. ausdrücklich
+zugelassenes MAINTENANCE, identische Generation, zulässiger Vordergrund,
+absolute Deadline und in READY zusätzlich Inaktivität. Key-Präsenz ist kein
+Zugriffsrecht. Kein Key-Getter, persistentes Login, globale Registry, Key in
+SavedState/Preferences/DataStore oder Key-Fingerprint. Consumer erhalten eine
+kurze kontrollierte Kopie, die nach Verbrauch bestmöglich überschrieben wird.
+
+LOCKED, BLOCKED, Generationwechsel, Ablauf, App-Verlassen, Fehler in Auth oder
+Maintenance und explizites Session-Ende invalidieren den Owner. Ein invalidierter
+Owner kann nicht reaktiviert werden; die nächste Sitzung benötigt erneut
+Authentifizierung, Unwrap und einen neuen Owner. Room bleibt pro Operation kurz
+geöffnet und wird vor Result-Publication geschlossen. Bereits laufende native
+Arbeit kann enden; keine neue Zulassung oder fachliche Veröffentlichung nach
+Widerruf. Interne JVM/JCA/SQLCipher-Kopien und physische RAM-Löschung sind nicht
+garantiert. Kein File-Key- oder Multi-Key-Vertrag wird dadurch entschieden.
+
+Produktive Sessionparameter: 180000 ms absolut, ab dem tatsächlichen erfolgreichen
+Auth-Callback; 30000 ms Inaktivität ausschließlich in READY. MAINTENANCE zählt
+gegen absolut und erhält keine künstliche Aktivität. Timer prüfen nur nach;
+elapsedRealtime ist maßgeblich, nicht Wanduhr. Werte sind derzeit bewusst fest,
+spätere Anpassbarkeit ist noch kein implementiertes Einstellungsfeature.

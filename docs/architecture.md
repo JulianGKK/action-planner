@@ -101,9 +101,9 @@ Interne Maintenance-Zugriffe sind nur für die notwendigen Prüf-/Bereinigungssc
 
 ### B0: Zentraler zeitbegrenzter Session-/Storage-Vertrag
 
-**ARCH-31 — Absolute Grenze:** Unmittelbar nach erfolgreicher expliziter PaG-Authentifizierung beginnt eine absolute Deadline. Sie ist innerhalb dieser Sitzung unveränderlich, läuft während MAINTENANCE und READY und wird weder durch UI-Aktivität, Navigation, Scrollen, Tippen noch durch I/O oder Maintenance verlängert. Der Übergang nach READY startet sie nicht neu. Nach Ablauf gilt LOCKED und die Generation wird invalidiert. Eine neue Sitzung benötigt einen neuen explizit gestarteten DEVICE_CREDENTIAL-Flow und das Gate. Geräteentsperrung oder verbleibende Keystore-Autorisierung darf keine Sitzung erzeugen. Kein automatischer Prompt-Loop; konkrete Dauer offen.
+**ARCH-31 — Absolute Grenze:** Unmittelbar nach erfolgreicher expliziter PaG-Authentifizierung beginnt eine absolute Deadline. Sie ist innerhalb dieser Sitzung unveränderlich, läuft während MAINTENANCE und READY und wird weder durch UI-Aktivität, Navigation, Scrollen, Tippen noch durch I/O oder Maintenance verlängert. Der Übergang nach READY startet sie nicht neu. Nach Ablauf gilt LOCKED und die Generation wird invalidiert. Eine neue Sitzung benötigt einen neuen explizit gestarteten DEVICE_CREDENTIAL-Flow und das Gate. Geräteentsperrung oder verbleibende Keystore-Autorisierung darf keine Sitzung erzeugen. Kein automatischer Prompt-Loop; für P1 beträgt die absolute Dauer 3 Minuten.
 
-**ARCH-32 — Inaktivität in READY:** Zusätzlich gilt in READY eine Inaktivitätsdeadline. Nur qualifizierte tatsächliche Vordergrundinteraktion mit PaG kann den Aktivitätszeitpunkt aktualisieren. Renderzyklen, Timer, I/O, Flows, Animationen, Lifecycle-Callbacks, Hintergrundarbeit und Maintenance zählen nicht als Nutzeraktivität. Aktivität darf eine bereits abgelaufene Sitzung nicht wiederbeleben und die absolute Deadline niemals verschieben. Die Inaktivitätsgrenze soll nicht allein wegen fehlender sinnvoller Interaktion in MAINTENANCE ablaufen; dort gilt die absolute Grenze ohne Fachinhaltsanzeige. Die Initialisierung bei erster READY-Freigabe ist keine Nutzeraktivität. Die konkrete Interaktionsabbildung und Behandlung erneuter READY-Übergänge sind in B0 zu prüfen, ohne technische Ereignisse als Nutzeraktivität oder eine absolute Verlängerung einzuführen. Konkrete Inaktivitätsdauer offen.
+**ARCH-32 — Inaktivität in READY:** Zusätzlich gilt in READY eine Inaktivitätsdeadline. Nur qualifizierte tatsächliche Vordergrundinteraktion mit PaG kann den Aktivitätszeitpunkt aktualisieren. Renderzyklen, Timer, I/O, Flows, Animationen, Lifecycle-Callbacks, Hintergrundarbeit und Maintenance zählen nicht als Nutzeraktivität. Aktivität darf eine bereits abgelaufene Sitzung nicht wiederbeleben und die absolute Deadline niemals verschieben. Die Inaktivitätsgrenze soll nicht allein wegen fehlender sinnvoller Interaktion in MAINTENANCE ablaufen; dort gilt die absolute Grenze ohne Fachinhaltsanzeige. Die Initialisierung bei erster READY-Freigabe ist keine Nutzeraktivität. Die konkrete Interaktionsabbildung und Behandlung erneuter READY-Übergänge sind in B0 zu prüfen, ohne technische Ereignisse als Nutzeraktivität oder eine absolute Verlängerung einzuführen. Für P1 beträgt die READY-Inaktivitätsdauer 30 Sekunden.
 
 **ARCH-33 — Zeit und Wiederaufnahme:** Eine injizierbare monotone, Sleep einschließende Zeitquelle entscheidet über Sessiondauer; auf Android ist elapsedRealtime() der Kandidat. Keine Wanduhr. Timer dienen nur zeitnaher UI-Reaktion, nicht als alleinige Zugriffskontrolle. Sleep verlängert keine Deadline; Resume prüft vor Anzeige. Activity Recreation verwirft die Sitzung konservativ; Process Death startet LOCKED. Alte Callbacks und asynchrone Ergebnisse prüfen Generation und Zeitgültigkeit. Ist nach erfolgreicher Authentifizierung deren Weiterverarbeitung verzögert, darf diese Verzögerung den Beginn der absoluten Deadline nicht nach hinten verschieben. Eine suspendierte oder vollständig kompromittierte Laufzeit erlaubt keine Garantie sekundengenauer Callback-Ausführung oder vollständiger Pufferlöschung.
 
@@ -257,7 +257,7 @@ Reale Keystore-, Kamera-, Lifecycle-, Backup- und Herstellerprüfungen ergänzen
 | ARCH-OD-06 | CameraX-Version, Auflösung, Standard-Bildpfad, Rotation/Header/Metadaten, Speicherbedarf und persistenzfreier appseitiger Callback-Pfad | Kamera-Prototyp; bei fehlendem Nachweis verschieben |
 | ARCH-OD-07 | Interne Viewerbibliothek, unterstützte Dokumentformate, Größenlimits und sichere Parser-/Cache-Verarbeitung | Viewer-/Storage-Prototyp; keine Vorschau zulässig |
 | ARCH-OD-08 | Konkrete Speicherorte und Backup-/Transferregeln auf der Gerätematrix | Storage-Prototyp, vor persistenter Speicherung |
-| ARCH-OD-09 | Absolute und Inaktivitätsdauer; konkrete Interaktionsabbildung und READY-Initialisierung/-Wiederaufnahme nach ARCH-32 | Dauern als spätere Produktentscheidung; technische Abbildung in B0 |
+| ARCH-OD-09 — P1 entschieden | 3 Minuten absolut / 30 Sekunden READY-Inaktivität; nur echte Vordergrundinteraktion erneuert Inaktivität | elapsedRealtime; App-Verlassen invalidiert sofort; spätere Anpassbarkeit separat |
 
 Die Auswahl SQLCipher direkt versus Room ist mit ARCH-36/37 entschieden. Gemeinsame versus per-Asset FileAsset-Keysets, endgültige Schlüsselhierarchie, Keystore-Operationsbindung versus Autorisierungsfenster, Android-/Hardwareanforderungen und Retention-Fristen bleiben offen. Der B0-Vertrag entscheidet diese übrigen Alternativen nicht.
 
@@ -278,3 +278,36 @@ Weitere fachliche Entscheidungen bleiben in den zuständigen Grundlagen offen: F
 | PRODUCT.md INT-001: atomare Änderungen | Strukturierte Änderungen bleiben transaktional. Über DB, Dateisystem und Schlüssel wird keine gemeinsame atomare Transaktion behauptet; die ausdrücklich bestätigten Wiederanlaufregeln aus ARCH-18/19/25 konkretisieren diese Grenze |
 
 Diese Präzisierungen, Erweiterungen und Ablösungen dokumentieren ausdrücklich bestätigte Entscheidungen, keine stillen Änderungen der Grundlagen. Die älteren Retry- und Systemauswahlformulierungen sind isoliert gelesen mit dem neuen Stand nicht vereinbar; maßgeblich ist an diesen Stellen die hier dokumentierte spätere Benutzerentscheidung. Ältere Dateien bleiben unverändert und müssen vor der späteren Testableitung an diesen Stellen gemeinsam gelesen werden. Noch ausstehende Sicherheitsverfahren werden nicht vorweggenommen; die ausdrücklich freigegebene B2-Auswahl ist unter ARCH-36/37 dokumentiert.
+
+
+## P1 – DB-only-Produktruntime
+
+Session-resident product DB key ist ausdrücklich freigegeben: ein instanzlokaler,
+generationsgebundener SessionDbKeyOwner innerhalb der Activity-eigenen Runtime,
+keine persistente oder globale Schlüsselregistry. Dies ergänzt ARCH-36: kurze
+Key-Leases pro Room-Operation; der Owner darf den produktiven DB-Key während der
+zulässigen Session halten. Room selbst bleibt kurzlebig. Scope ausschließlich DB;
+keine Entscheidung zur späteren DB+File-Orchestrierung.
+
+Für P1 sind ARCH-OD-09 und SEC-OD-10 hinsichtlich Dauer entschieden: 3 Minuten
+absolute Grenze ab erfolgreicher Authentifizierung, 30 Sekunden READY-Inaktivität,
+MAINTENANCE nur absolut begrenzt, immediate Lock beim Verlassen der App.
+Benutzerinteraktion verlängert niemals absolut; Lifecycle, Recomposition,
+Storage und Publication verlängern auch die Inaktivität nicht. Zeitbasis ist
+monoton und sleep-inclusive. Spätere Parameteränderungen sind Securityentscheidungen.
+
+Die Launcher-Activity ist Produkt-Composition-Root; die frühere PrototypeActivity
+bleibt unregistrierte Evidenz unter androidTest. Produkt-Views/ViewModel verwenden nur Domain-Ports.
+Produktnamespace pag-db-v1 unter noBackupFilesDir, Alias
+org.pag.product.database.rsa.v1; keine Interpretation/Migration von Prototypdaten.
+EMPTY erfordert vollständig leeren Namespace plus fehlenden Alias. Jede partielle
+oder unbekannte Struktur blockiert ohne Reparatur. READY_TO_OPEN beschreibt nur
+strukturelle Vollständigkeit; authentifizierter Integritäts-/Room-Schemacheck in
+MAINTENANCE ist zusätzlich notwendig.
+
+Bestehender kontrollierter B2-Driver und typisierte Room-Background-Fault-Behandlung
+werden wiederverwendet. Ein Scope-Adapter reicht die ursprünglichen READY- bzw.
+MAINTENANCE-Prüfungen unverändert durch und adaptiert lediglich die historische
+Maintenance-Typassertion des Drivers. Kein Gate-Bypass. Widerruf bereits vor
+COMMIT-prepare sowie bei COMMIT-step führt zu Rollback auf derselben Connection.
+Neue Produkt-Repositories bekommen weder freie DAO- noch DB-/Key-Referenzen.

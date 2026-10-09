@@ -11,6 +11,7 @@ enum class AccessPoint { OPERATION, STEP, COMMIT, PUBLICATION }
 interface StorageAccess { fun acquire(scope: AccessScope = AccessScope.READY): StorageContext? }
 /** Revocable context, not a key or a native-handle ownership grant. */
 interface StorageContext {
+    val generation: Long get() = -1L
     val scope: AccessScope
     fun check(point: AccessPoint): Boolean
     /** Only a short in-memory publication. Never execute I/O in this callback. */

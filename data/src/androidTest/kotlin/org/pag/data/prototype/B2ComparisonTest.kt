@@ -51,9 +51,34 @@ class B2ComparisonTest(private val variant: B2Variant) {
         File(app.applicationInfo.dataDir).walkTopDown().filter { it.isFile }.forEach { stored ->
             val bytes = stored.readBytes()
             assertFalse("B2-MARKER-STOP", patterns.any { pattern ->
-                (0..bytes.size - pattern.size).any { start -> pattern.indices.all { bytes[start + it] == pattern[it] } }
+                containsPattern(bytes, pattern)
             })
         }
+    }
+    // Same exact substring predicate, avoiding per-byte iterator/boxing overhead on retained fixtures.
+    private fun containsPattern(bytes: ByteArray, pattern: ByteArray): Boolean {
+        var start = 0
+        while (start <= bytes.size - pattern.size) {
+            var offset = 0
+            while (offset < pattern.size && bytes[start + offset] == pattern[offset]) offset++
+            if (offset == pattern.size) return true
+            start++
+        }
+        return false
+    }
+    @Test fun markerPredicateMatchesPreviousExactScan() {
+        val random = kotlin.random.Random(17)
+        repeat(100) {
+            val bytes = random.nextBytes(it)
+            val pattern = random.nextBytes(it % 9 + 1)
+            if (it > pattern.size && it % 2 == 0) pattern.copyInto(bytes, it - pattern.size)
+            val reference = (0..bytes.size - pattern.size).any { start ->
+                pattern.indices.all { offset -> bytes[start + offset] == pattern[offset] }
+            }
+            assertEquals(reference, containsPattern(bytes, pattern))
+        }
+        assertTrue(containsPattern(byteArrayOf(1,2,1,2,3), byteArrayOf(1,2,3)))
+        assertFalse(containsPattern(byteArrayOf(1,2), byteArrayOf(1,2,3)))
     }
     private fun open(creates: Boolean = false, version: Int = 2, migration: Boolean = true,
         hooks: B2Hooks = B2Hooks(), bytes: ByteArray = key) = B2Database.open(app, file, bytes, access, variant, creates, version, migration, hooks)

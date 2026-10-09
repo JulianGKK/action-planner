@@ -26,7 +26,7 @@ val verifyArchitecture = tasks.register("verifyArchitecture") {
             }.filter { it != project.path }.toSet() // AGP adds self-variant edges for its test/lint wiring.
             check(actual == allowed.getValue(project.path)) { "Forbidden module graph: ${project.path}: $actual" }
         }
-        fileTree("app/src/main/kotlin/org/pag/prototype/ui").matching { include("**/*.kt") }.forEach {
+        fileTree("app/src/main/kotlin/org/pag/prototype").matching { include("ui/**/*.kt", "product/**/*.kt") }.forEach {
             check(!Regex("import (org\\.pag\\.(data|security)|android\\.(security|database|hardware\\.biometrics)|javax\\.crypto|java\\.security)").containsMatchIn(it.readText())) {
                 "Implementation import in UI: $it"
             }

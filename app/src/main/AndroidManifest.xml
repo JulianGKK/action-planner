@@ -2,11 +2,11 @@
     xmlns:tools="http://schemas.android.com/tools">
     <!-- Required by the platform API, even when only DEVICE_CREDENTIAL is enabled. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <application android:label="PaG Prototype A" android:theme="@style/PrototypeTheme"
+    <application android:label="PaG" android:theme="@style/PrototypeTheme"
         android:icon="@android:drawable/ic_lock_lock"
         android:allowBackup="false" android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules" android:usesCleartextTraffic="false">
-        <!-- Stage A needs neither automatic font/profile work nor process-global initializers. -->
+        <!-- No automatic process-global initialization or profile background work. -->
         <!-- Lint checks removal markers as if they registered classes; merged manifest must contain neither. -->
         <provider android:name="androidx.startup.InitializationProvider" tools:node="remove" tools:ignore="MissingClass" />
         <receiver android:name="androidx.profileinstaller.ProfileInstallReceiver" tools:node="remove" tools:ignore="MissingClass" />
