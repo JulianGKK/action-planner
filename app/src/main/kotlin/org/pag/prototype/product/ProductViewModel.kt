@@ -9,6 +9,7 @@ import org.pag.domain.*
 /** Only domain ports; no DB, DAO, Cipher, key, saved state or retained unlock runtime. */
 class ProductViewModel(private val session: SessionPort, private val repository: ActionRepository,
     initialBootstrap: ProductStorageState, private val personRepository: PersonRepository,
+    private val leadership: LeadershipRepository? = null,
     private val begin: (Boolean) -> Unit) : ViewModel() {
     var bootstrap by mutableStateOf(initialBootstrap); private set
     fun updateBootstrap(state: ProductStorageState) { bootstrap = state }
@@ -31,7 +32,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     val personsVisible get() = snapshot.state == SessionState.READY && selected?.let { PersonRules.mayRead(it.status) } == true
     val personsEditable get() = snapshot.state == SessionState.READY && selected?.let { PersonRules.mayManage(it.status) } == true
     private fun clearPersons() {
-        personRequest++; persons = emptyList(); personsLoading = false; selectedPerson = null
+        clearSensitive(); personRequest++; persons = emptyList(); personsLoading = false; selectedPerson = null
         personForm = false; editingPerson = null; personError = null; personSaving = false
     }
     private fun loadPersons() {
@@ -50,7 +51,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     fun addPerson() {
         interaction()
-        if (personsEditable && !personSaving && !saving) { selectedPerson = null; editingPerson = null; personForm = true; personError = null }
+        if (personsEditable && !personSaving && !saving) { clearSensitive(); selectedPerson = null; editingPerson = null; personForm = true; personError = null }
     }
     fun personDetail(id: String) {
         interaction()
@@ -59,22 +60,22 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         personRepository.getPerson(action.id, id) { result ->
             if (request != personRequest || selected?.id != action.id || !personsVisible) return@getPerson
             when (result) {
-                is PersonResult.Value -> { selectedPerson = result.value; personError = if (result.value == null) PersonRejection.NOT_FOUND else null }
+                is PersonResult.Value -> { clearSensitive(); selectedPerson = result.value; personError = if (result.value == null) PersonRejection.NOT_FOUND else null; refreshSensitive() }
                 is PersonResult.Rejected -> personError = result.reason
             }
         }
     }
     fun editPerson() {
         interaction()
-        if (personsEditable && !personSaving) selectedPerson?.let { editingPerson = it; personForm = true; personError = null }
+        if (personsEditable && !personSaving) selectedPerson?.let { clearSensitive(); editingPerson = it; personForm = true; personError = null }
     }
     fun cancelPerson() {
         interaction()
-        if (!personSaving) { personForm = false; editingPerson = null; personError = null }
+        if (!personSaving) { personForm = false; editingPerson = null; personError = null; refreshSensitive() }
     }
     fun backToPersons() {
         interaction()
-        if (!personSaving) { selectedPerson = null; personError = null }
+        if (!personSaving) { clearSensitive(); selectedPerson = null; personError = null }
     }
     fun savePerson(pseudonym: String) {
         interaction()
@@ -94,6 +95,104 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val existing = editingPerson
         if (existing == null) personRepository.createPerson(action.id, pseudonym, publish)
         else personRepository.updatePerson(action.id, existing.id, pseudonym, publish)
+    }
+    var sensitiveInventory by mutableStateOf<SensitiveInventory?>(null); private set
+    var sensitiveSetup by mutableStateOf(false); private set
+    var sensitiveArea by mutableStateOf<SensitiveArea?>(null); private set
+    var sensitiveOpened by mutableStateOf<SensitiveOpened?>(null); private set
+    var sensitiveBusy by mutableStateOf(false); private set
+    var sensitiveError by mutableStateOf<SensitiveFailure?>(null); private set
+    private var sensitiveRequest = 0L
+    private fun clearSensitive() {
+        sensitiveRequest++; leadership?.revoke(); sensitiveOpened?.grant?.cancel()
+        sensitiveInventory = null; sensitiveSetup = false; sensitiveArea = null
+        sensitiveOpened = null; sensitiveBusy = false; sensitiveError = null
+    }
+    private fun refreshSensitive() {
+        val action = selected ?: return; val person = selectedPerson ?: return
+        val request = sensitiveRequest
+        leadership?.inventory(action.id, person.id) { result ->
+            if (request != sensitiveRequest || !personsVisible || selectedPerson?.id != person.id) return@inventory
+            when(result) {
+                is SensitiveResult.Value -> sensitiveInventory = result.value
+                is SensitiveResult.Rejected -> sensitiveError = result.reason
+            }
+        }
+    }
+    fun requestSensitiveSetup() {
+        interaction()
+        if (personsEditable && sensitiveInventory?.state == SensitiveState.UNINITIALIZED && !sensitiveBusy) {
+            sensitiveSetup = true; sensitiveError = null
+        }
+    }
+    fun setupSensitive(passphrase: CharArray, confirmation: CharArray) {
+        interaction()
+        val action = selected
+        if (action == null || !personsEditable || !sensitiveSetup || sensitiveBusy || leadership == null) {
+            passphrase.fill('\u0000'); confirmation.fill('\u0000'); return
+        }
+        sensitiveBusy = true; val request = sensitiveRequest
+        leadership.setup(action.id, passphrase, confirmation) { result ->
+            if (request != sensitiveRequest || !personsVisible) return@setup
+            sensitiveBusy = false
+            when(result) {
+                is SensitiveResult.Value -> { sensitiveSetup = false; sensitiveError = null }
+                is SensitiveResult.Rejected -> sensitiveError = result.reason
+            }
+            refreshSensitive()
+        }
+    }
+    fun requestSensitive(area: SensitiveArea) {
+        interaction()
+        if (!personsVisible || sensitiveBusy || sensitiveInventory?.state != SensitiveState.READY) return
+        if (!personsEditable && area !in sensitiveInventory!!.areas) return
+        sensitiveRequest++; leadership?.revoke(); sensitiveOpened?.grant?.cancel()
+        sensitiveOpened = null; sensitiveArea = area; sensitiveError = null
+    }
+    fun openSensitive(passphrase: CharArray) {
+        interaction()
+        val action=selected; val person=selectedPerson; val area=sensitiveArea
+        if (action==null || person==null || area==null || !personsVisible || sensitiveBusy || leadership==null) {
+            passphrase.fill('\u0000'); return
+        }
+        sensitiveBusy=true; val request=sensitiveRequest
+        leadership.open(action.id,person.id,area,passphrase) { result ->
+            if (request!=sensitiveRequest || !personsVisible || selectedPerson?.id!=person.id) {
+                if(result is SensitiveResult.Value) result.value.grant.cancel()
+                return@open
+            }
+            sensitiveBusy=false
+            when(result) {
+                is SensitiveResult.Value -> if(result.value.grant.valid()) { sensitiveOpened=result.value; sensitiveError=null }
+                is SensitiveResult.Rejected -> sensitiveError=result.reason
+            }
+        }
+    }
+    fun saveSensitive(data: SensitiveData) {
+        interaction()
+        val opened=sensitiveOpened ?: return
+        if(!personsEditable || sensitiveBusy || !opened.grant.valid()) { checkSensitiveExpiry(); return }
+        sensitiveBusy=true; val request=sensitiveRequest
+        leadership?.save(opened.grant,data) { result ->
+            if(request!=sensitiveRequest || !personsVisible) return@save
+            sensitiveBusy=false
+            sensitiveOpened=null
+            when(result) {
+                is SensitiveResult.Value -> { sensitiveArea=null; sensitiveError=null; refreshSensitive() }
+                is SensitiveResult.Rejected -> sensitiveError=result.reason
+            }
+        }
+    }
+    fun closeSensitive() {
+        interaction()
+        clearSensitive(); refreshSensitive()
+    }
+    fun checkSensitiveExpiry() {
+        val opened=sensitiveOpened ?: return
+        if(!opened.grant.valid()) {
+            leadership?.revoke(); sensitiveRequest++; sensitiveOpened=null; sensitiveBusy=false
+            sensitiveError=SensitiveFailure.DENIED
+        }
     }
     private val subscription = session.observe { next ->
         val entered = next.state == SessionState.READY && snapshot.state != SessionState.READY
@@ -158,5 +257,5 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             repository.listActions { actions = it }
         }
     }
-    override fun onCleared() { subscription.cancel(); session.lock() }
+    override fun onCleared() { clearSensitive(); subscription.cancel(); session.lock() }
 }

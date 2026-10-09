@@ -11,4 +11,6 @@ android {
 kotlin { jvmToolchain(17) }
 dependencies {
     implementation("com.google.crypto.tink:tink-android:1.23.0")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.86")
+    testImplementation("junit:junit:4.13.2")
 }

@@ -30,10 +30,11 @@ internal data class ActionRow(@PrimaryKey val id: String, val title: String, val
     @Insert suspend fun insert(row: ActionRow)
     @Update suspend fun update(row: ActionRow): Int
 }
-@Database(entities = [ActionRow::class, PersonRow::class], version = 3, exportSchema = true)
+@Database(entities = [ActionRow::class, PersonRow::class, LeadershipRow::class, SensitiveRow::class], version = 4, exportSchema = true)
 internal abstract class ActionDatabase : RoomDatabase() {
     abstract fun actions(): ActionDao
     abstract fun persons(): PersonDao
+    abstract fun leadership(): LeadershipDao
 }
 internal val ACTION_MIGRATION_1_2 = object : Migration(1, 2) {
     override suspend fun migrate(connection: SQLiteConnection) {
@@ -72,7 +73,7 @@ internal class ActionDatabaseAccess(private val app: Context,
             try {
                 preflight.completed(ActionPreflightStep.OPEN)
                 driverContext.requireB2(AccessPoint.STEP)
-                if (native.version !in 1..3) throw ProductStorageFailure()
+                if (native.version !in 1..4) throw ProductStorageFailure()
                 preflight.completed(ActionPreflightStep.VERSION)
                 driverContext.requireB2(AccessPoint.STEP)
                 native.rawQuery("PRAGMA cipher_integrity_check", emptyArray<String>()).use {
@@ -104,7 +105,7 @@ internal class ActionDatabaseAccess(private val app: Context,
         try {
             room = Room.databaseBuilder(app, ActionDatabase::class.java, file.path).setDriver(driver)
                 .setQueryCoroutineContext(Dispatchers.IO + parent + lifecycle.handler { parent.cancel() })
-                .addMigrations(ACTION_MIGRATION_1_2, ACTION_MIGRATION_2_3)
+                .addMigrations(ACTION_MIGRATION_1_2, ACTION_MIGRATION_2_3, ACTION_MIGRATION_3_4)
                 .setJournalMode(RoomDatabase.JournalMode.TRUNCATE).build()
             result = runBlocking {
                 lifecycle.requireOpen()

@@ -63,9 +63,14 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
         initializing = initialize
         session.authenticate(if (initialize) Experiment.STORAGE_INITIALIZE else Experiment.STORAGE_UNWRAP)
     }
-    fun close() { session.lock(); keyLifetime.cancel(); owner.getAndSet(null)?.invalidate() }
+    fun close() { session.lock(); keyLifetime.cancel(); leadershipLifetime.cancel(); leadership.revoke(); owner.getAndSet(null)?.invalidate() }
     val actions: ActionRepository = ProductActionRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
     val persons: PersonRepository = ProductPersonRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
+    val leadership: LeadershipRepository = ProductLeadershipRepository(activity.applicationContext, session, inventory,
+        { owner.get() }, worker, main, MonotonicTime { SystemClock.elapsedRealtime() })
+    private val leadershipLifetime = session.observe { state ->
+        if (state.state != SessionState.READY) leadership.revoke()
+    }
 }

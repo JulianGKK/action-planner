@@ -21,6 +21,7 @@ dependencies {
     ksp("androidx.room3:room3-compiler:3.0.3")
     androidTestImplementation("androidx.test:runner:1.7.0")
     androidTestImplementation("junit:junit:4.13.2")
+    androidTestImplementation("org.bouncycastle:bcprov-jdk18on:1.86")
     testImplementation("junit:junit:4.13.2")
 }
 ksp { arg("room.schemaLocation", layout.projectDirectory.dir("schemas").asFile.path) }

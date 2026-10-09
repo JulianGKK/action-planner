@@ -1,6 +1,6 @@
 # Personen: Daten- und Zugriffsmatrix
 
-## Verbindlicher P3a-Umfang
+## BASIC: verbindlicher P3a-Umfang
 
 Eine Person gehört ausschließlich zu genau einer Aktion. P3a speichert nur die
 technischen IDs, das verpflichtende Pseudonym und den Erstellungszeitpunkt.
@@ -8,8 +8,9 @@ technischen IDs, das verpflichtende Pseudonym und den Erstellungszeitpunkt.
 aktionsgebundene Eindeutigkeit. Kein Name, Kontaktfeld oder Platzhalter für spätere
 sensible Daten wird angelegt.
 
-Die nachfolgenden Zugriffsklassen sind fachliche Kategorien, keine neuen Schlüssel,
-Verschlüsselungsschichten oder Authentifizierungszustände. Sie ersetzen nicht die
+Die nachfolgenden Zugriffsklassen sind fachliche Kategorien; sie legen für sich
+allein keine Schlüsselanzahl oder Authentifizierungszustände fest. P3b verwendet
+für LEADERSHIP_SENSITIVE den separat freigegebenen kryptografischen Vertrag. Sie ersetzen nicht die
 Sensitivitätsklassen aus privacy.md: Pseudonyme und Aktionszugehörigkeit bleiben
 personenbezogen, standardmäßig SENSITIVE und verschlüsselt. BASIC bedeutet keine
 öffentliche oder ungeschützte Freigabe.
@@ -17,7 +18,7 @@ personenbezogen, standardmäßig SENSITIVE und verschlüsselt. BASIC bedeutet ke
 | Zugriffsklasse | Bedeutung | Umsetzung |
 | --- | --- | --- |
 | BASIC | Operative Identität innerhalb der zulässigen PaG-Sitzung | Nur Pseudonym in P3a |
-| LEADERSHIP_SENSITIVE | Später gesondert zugängliche sensible Identitäts-/Supportdaten | Noch kein Feld, Zugriffspfad oder Keyvertrag; P3b muss Step-up separat entscheiden |
+| LEADERSHIP_SENSITIVE | Gesondert zugängliche sensible Identitäts-/Kontaktdaten | P3b: zusätzlich verschlüsselte Bereichspayloads mit Leitungs-Passphrase und Gerätebindung |
 | PARTICIPANT_CONTROLLED | Daten, welche die Leitung ohne die betreffende Person grundsätzlich nicht lesen können soll | Aktuell kein konkreter Datentyp; keine Teilnehmer-PIN |
 
 ## Erfasste und ausdrücklich nicht erfasste Daten
@@ -25,10 +26,10 @@ personenbezogen, standardmäßig SENSITIVE und verschlüsselt. BASIC bedeutet ke
 | Datentyp | Zugriffsklasse / Planung | Stand |
 | --- | --- | --- |
 | Pseudonym | BASIC | In P3a implementiert |
-| Vollständiger Name | Voraussichtlich LEADERSHIP_SENSITIVE | Nicht implementiert |
-| Geburtsdatum | Voraussichtlich LEADERSHIP_SENSITIVE | Nicht implementiert |
-| Eigene Telefonnummer | Voraussichtlich LEADERSHIP_SENSITIVE | Nicht implementiert |
-| Notfallkontakt: Name/Pseudonym, Telefonnummer, Beziehung | Voraussichtlich LEADERSHIP_SENSITIVE | Nicht implementiert |
+| Vollständiger Name | LEADERSHIP_SENSITIVE | In P3b optional implementiert |
+| Geburtsdatum | LEADERSHIP_SENSITIVE | In P3b optional implementiert |
+| Eigene Telefonnummer | LEADERSHIP_SENSITIVE | In P3b optional implementiert |
+| Notfallkontakt: Name/Pseudonym, Telefonnummer, Beziehung | LEADERSHIP_SENSITIVE | In P3b optional implementiert |
 | Zweite Kontaktperson | Ggf. LEADERSHIP_SENSITIVE, Bedarf offen | Nicht implementiert |
 | Individueller Rechtskontakt | Ggf. LEADERSHIP_SENSITIVE, Bedarf offen | Nicht implementiert |
 | Bevorzugte Supportsprache | Ggf. LEADERSHIP_SENSITIVE, Bedarf offen | Nicht implementiert |
@@ -48,7 +49,7 @@ COMPLETED erlauben aktionsgebundene Lesezugriffe innerhalb READY. ACTIVE und
 COMPLETED sind read-only; DRAFT und DELETION_PENDING bieten in P3a keinen Zugriff.
 Keine globale Liste, aktionsübergreifende Suche oder automatische Zusammenführung.
 
-Alle Felder und Indizes liegen in der bestehenden SQLCipher-Produktdatenbank unter
+Alle BASIC-Felder und Indizes liegen in der bestehenden SQLCipher-Produktdatenbank unter
 `noBackupFilesDir/pag-db-v1`. Die generationsgebundene Session und der bestehende
 DB-Key-Vertrag bleiben autoritativ. UI-Inhalte und Eingaben bleiben flüchtig,
 werden bei Lock freigegeben und nicht in SavedState, Prefs oder DataStore gesichert.
@@ -66,3 +67,25 @@ implementiert; deshalb besteht noch keine Freigabe für Echtdatenbetrieb.
 Die technische Fremdschlüssel-Kaskade ist mit der bestehenden fachlichen
 Aktionsgesamtlöschung vereinbar. Sie ist kein Benutzer-Löschpfad, keine
 Retentionimplementierung und kein Nachweis physischer Flash-Löschung.
+
+## P3b: getrennte sensible Bereiche
+
+P3b ergänzt ausschließlich die optionalen Bereiche IDENTITY (vollständiger Name,
+Geburtsdatum), CONTACT (eigene Telefonnummer) und EMERGENCY_CONTACT
+(Name/Pseudonym, Telefonnummer, Beziehung). Sie liegen als zusätzlich
+AES-GCM-verschlüsselte Payloads in der SQLCipher-DB, nicht als normal lesbare
+Room-Felder. Ein starkes Leitungsgeheimnis pro Aktion und ein gerätegebundenes
+Keystore-Envelope schützen den separaten Aktions-Root-Key.
+
+BASIC-READY allein genügt nicht. Die bereichsbezogene Freigabe bindet Aktion,
+Person und Sessiongeneration und endet spätestens nach 60 Sekunden, Navigation
+oder einer normalen Session-Sperrgrenze. PREPARATION erlaubt Schreiben;
+ACTIVE/COMPLETED nur Lesen vorhandener Bereiche. Teilfehler blockieren nur das
+sensible Subsystem. Keine Teilnehmer-PIN, kein Recovery und keine weiteren Felder.
+
+Logische sensible Löschoperationen sind unabhängig von BASIC technisch möglich;
+ein automatischer Retentionzeitplan und dessen Benutzeroberfläche bleiben offen.
+Keine neue Frist. Row-Löschung garantiert weder individuelles Crypto-Shredding noch
+Flashüberschreibung. Aktionsweites Entfernen des Geräte-Keys entzieht dessen
+Keystore-Nutzbarkeit, ohne physische Löschung zu beweisen. Maßgeblich sind
+[Security-Design](product-p3b-security-design.md) und [P3b-Stand](product-p3b.md).

@@ -8,7 +8,7 @@ import org.pag.domain.PersonRules
 
 @Entity(tableName = "persons", foreignKeys = [ForeignKey(entity = ActionRow::class,
     parentColumns = ["id"], childColumns = ["actionId"], onDelete = ForeignKey.CASCADE)],
-    indices = [Index(value = ["actionId"]), Index(value = ["actionId", "pseudonymNormalized"], unique = true)])
+    indices = [Index(value = ["actionId"]), Index(value = ["actionId", "id"], unique = true), Index(value = ["actionId", "pseudonymNormalized"], unique = true)])
 internal data class PersonRow(@PrimaryKey val id: String, val actionId: String,
     val pseudonym: String, val pseudonymNormalized: String, val createdAt: Long) {
     fun model(): Person {
