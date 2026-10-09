@@ -43,6 +43,7 @@ import java.util.Locale
                                 Text("Beginn: ${formattedTime(action.startAt)}")
                                 Text("Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}")
                                 action.completedAt?.let { Text("Abgeschlossen: ${formattedTime(it)}") }
+                                if (model.personsVisible && model.confirming == null) PersonsSection(model)
                                 model.changeError?.let { Text(changeErrorLabel(it)) }
                                 if (model.confirming != null) {
                                     Text(if (action.status == ActionStatus.ACTIVE)
@@ -50,7 +51,7 @@ import java.util.Locale
                                         else "${advanceLabel(action.status)}? Dieser Statusschritt kann nicht rückgängig gemacht werden.")
                                     Button(onClick = model::confirmAdvance, enabled = !model.saving) { Text("Bestätigen") }
                                     TextButton(onClick = model::cancelAdvance, enabled = !model.saving) { Text("Abbrechen") }
-                                } else {
+                                } else if (!model.personForm && model.selectedPerson == null && !model.personSaving) {
                                     if (ActionLifecycle.mayEdit(action.status)) {
                                         OutlinedButton(onClick = model::edit) { Text("Bearbeiten") }
                                     }
@@ -58,7 +59,7 @@ import java.util.Locale
                                         Button(onClick = model::requestAdvance) { Text(advanceLabel(action.status)) }
                                     }
                                 }
-                                TextButton(onClick = model::back, enabled = !model.saving) { Text("Zur Aktionsliste") }
+                                TextButton(onClick = model::back, enabled = !model.saving && !model.personSaving) { Text("Zur Aktionsliste") }
                             }
                             else -> {
                                 Text("Aktionsliste", style = MaterialTheme.typography.headlineMedium)
@@ -76,6 +77,44 @@ import java.util.Locale
             }
         }
     }
+}
+@Composable private fun PersonsSection(model: ProductViewModel) {
+    Text("Personen", style = MaterialTheme.typography.titleLarge)
+    model.personError?.let { Text(personErrorLabel(it)) }
+    when {
+        model.personForm -> {
+            val existing = model.editingPerson
+            var pseudonym by remember(existing?.id) { mutableStateOf(existing?.pseudonym ?: "") }
+            Text(if (existing == null) "Person hinzufügen" else "Person bearbeiten")
+            OutlinedTextField(pseudonym, { model.interaction(); pseudonym = it },
+                label = { Text("Pseudonym") }, modifier = Modifier.fillMaxWidth(), enabled = !model.personSaving)
+            Button(onClick = { model.savePerson(pseudonym) }, enabled = !model.personSaving) { Text("Speichern") }
+            TextButton(onClick = model::cancelPerson, enabled = !model.personSaving) { Text("Abbrechen") }
+        }
+        model.selectedPerson != null -> {
+            Text(model.selectedPerson!!.pseudonym, style = MaterialTheme.typography.titleMedium)
+            if (model.personsEditable) OutlinedButton(onClick = model::editPerson) { Text("Bearbeiten") }
+            TextButton(onClick = model::backToPersons) { Text("Zur Personenliste") }
+        }
+        else -> {
+            if (model.personsLoading) Text("Personen werden geladen …")
+            else {
+                Text("Anzahl: ${model.persons.size}")
+                if (model.persons.isEmpty()) Text("Noch keine Personen erfasst.")
+                model.persons.forEach { person ->
+                    OutlinedButton(onClick = { model.personDetail(person.id) }, enabled = !model.saving) { Text(person.pseudonym) }
+                }
+                if (model.personsEditable) Button(onClick = model::addPerson, enabled = !model.saving) { Text("Person hinzufügen") }
+            }
+        }
+    }
+}
+private fun personErrorLabel(reason: PersonRejection) = when (reason) {
+    PersonRejection.ACTION_NOT_FOUND -> "Die Aktion ist nicht mehr vorhanden."
+    PersonRejection.NOT_FOUND -> "Die Person ist in dieser Aktion nicht vorhanden."
+    PersonRejection.NOT_ALLOWED -> "In diesem Status ist dieser Personenzugriff nicht möglich."
+    PersonRejection.INVALID_PSEUDONYM -> "Bitte ein Pseudonym eingeben."
+    PersonRejection.DUPLICATE_PSEUDONYM -> "Dieses Pseudonym ist in dieser Aktion bereits vergeben."
 }
 @Composable private fun ActionForm(model: ProductViewModel) {
     val existing = model.editing

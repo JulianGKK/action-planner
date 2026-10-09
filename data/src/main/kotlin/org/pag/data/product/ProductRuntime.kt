@@ -66,4 +66,6 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
     fun close() { session.lock(); keyLifetime.cancel(); owner.getAndSet(null)?.invalidate() }
     val actions: ActionRepository = ProductActionRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
+    val persons: PersonRepository = ProductPersonRepository(activity.applicationContext, session, inventory,
+        { owner.get() }, worker, main, session::storageFailure)
 }

@@ -147,6 +147,16 @@ Name, Pseudonym und Telefonnummer sind unabhängig voneinander optional. Es gibt
 
 Ein Löschzeitpunkt wird nicht durch Erhaltung eines gelöschten Personendatensatzes dokumentiert.
 
+**P3a-Präzisierung:** Der ausdrücklich freigegebene erste Produktslice speichert
+ausschließlich IDs, Erstellungszeitpunkt und ein verpflichtendes Pseudonym, keine
+anderen optionalen Personenfelder oder Platzhalter. Innerhalb einer Aktion ist
+`trim().lowercase(Locale.ROOT)` als Vergleichswert eindeutig; die sichtbare Eingabe
+bleibt erhalten. Dies konkretisiert für P3a die ältere optionale Pseudonymregel und
+den offenen Eindeutigkeitsbedarf aus OD-12. Die neue Zugriffsklasse BASIC ist keine
+Herabstufung von SENSITIVE. Statuszugriffe, spätere sensible Felder und offene
+Retention sind in [product-p3a.md](product-p3a.md) und
+[person-data-access.md](person-data-access.md) abgegrenzt.
+
 ### 7.2 PersonStatusDefinition
 
 | Attribut | Typ | Pflicht | Bedeutung |

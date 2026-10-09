@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
         }
         val state = runtime.inventory.state()
         if (state == ProductStorageState.PARTIAL_OR_INVALID) runtime.session.storageFailure()
-        model = ProductViewModel(runtime.session, runtime.actions, state, runtime::start)
+        model = ProductViewModel(runtime.session, runtime.actions, state, runtime.persons, runtime::start)
         val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenOff, filter, Context.RECEIVER_NOT_EXPORTED)
         else registerReceiver(screenOff, filter)
