@@ -1293,3 +1293,584 @@ LAST SAFE CHECKPOINT: I2 abgeschlossen und commit-ready; kombinierter
 Gradle-Fehler auf sauberem HEAD reproduziert und als vorbestehend klassifiziert.
 Keine Geräteaktion, Key-/Aliasänderung, Produktfunktion oder Buildänderung.
 Kein Test läuft, I3 nicht begonnen. Kein Commit und kein Push.
+
+## I3 APP DATA / INSTALL LIFECYCLE
+
+Status: **NICHT HINREICHEND NACHGEWIESEN – Vorbereitung**.
+Commit unter Test: 3443ce5. Repository zu Beginn sauber. Galaxy M52/API33.
+I1/I2-Evidenz bleibt unverändert. I2-Endzustand: secure=true, alte B15/B16/B3
+ABSENT, alte p15/p16/b3-v1 verschlüsselt vorhanden; kein Reparaturversuch.
+Der frühere p16-Verlust bleibt CAUSE UNKNOWN.
+
+Plan: ausschließlich app/androidTest-Fixture unter Haupt-App-UID, getrennte
+versionierte no_backup-Namensräume i3-preclear-db-v1 / i3-preclear-file-v1,
+später i3-postclear-db-v1 / i3-postclear-file-v1. Eigene gleichnamig zugeordnete
+I3-Aliase. Bestehende B1.6- und B3-Authentifizierungs-/Storageadapter und
+zentraler SessionCoordinator werden testintern wiederverwendet; keine
+Produktfunktion oder neue Key-Hierarchie. DB-/File-Verantwortlichkeiten bleiben
+getrennt, jede Fixture hat ihren eigenen expliziten DEVICE_CREDENTIAL-Flow;
+kein neuer Multi-Key-Produktvertrag. Keine persistente Klartextquelle/-keys.
+
+Keine pm-clear-/Uninstall-Aktion vor erfolgreicher Erstellung und Inventur
+des separaten synthetischen Ausgangsbestands. Nach jeder Lifecycle-Aktion
+zuerst read-only Inventur, danach normaler Appstart ohne Initialisierung.
+Nach Uninstall Aliaszustand unter entfernter UID gegebenenfalls NICHT DIREKT
+FESTSTELLBAR; keine fremde UID als Ersatzinventar verwenden.
+
+LAST SAFE CHECKPOINT: I3-Vorbereitung begonnen; noch keine I3-Fixture angelegt,
+keine Geräte-Löschaktion, kein Test läuft. Alte I2-Bestände unangetastet.
+Kein Commit und kein Push.
+
+### I3 Vorbereitung – alte Bestände / test-only Infrastruktur
+
+Lesend bestätigt: SM-M526BR/API33, secure=true, Haupt-App UID 10330.
+Alte B15/B16/B3 ABSENT; alte p15/p16/b3-v1-Dateiinventare und Digests identisch
+zur letzten I2-C-Aufnahme. Keine Reparatur. Lokale ignorierte Aufnahme:
+.prototype-cache/i3-old-i2-inventory.txt.
+
+Neue Fixture ausschließlich app/src/androidTest/I3LifecycleProbe:
+getrennte DB-/File-Namensräume und Aliase, feste phase/action-Auswahl,
+keine dynamischen Zielpfade. Bestehende RsaWrappingFixture,
+WrappingCredentialExperiment, B16AuthenticationExperiment/B16StorageGate und
+B3AuthenticationExperiment wiederverwendet. Je Instrumentationaufruf ein
+neuer testinterner SessionCoordinator mit echter elapsedRealtime und
+synthetischer Policy (60 s absolut / 15 s READY-Inaktivität); reale Activity-
+Lifecycle-Callbacks widerrufen den Testkontext. Kein Produkt-Gate ersetzt.
+Test erzeugt keine Keystrings/Keydateien und gibt nur feste technische IDs aus.
+
+Test-Runner-Registrierung ersetzt im Testmanifest die bisherige einzelne
+AliasInventoryProbe-Registrierung; deren I2-Quellcode/Evidenz bleibt erhalten.
+I3 inventory und legacy-inventory sind isolierte containsAlias-Abfragen ohne
+getKey/Cipher/Auth/Dateioperation. Gemergtes Testmanifest enthält genau eine
+Instrumentation, keine Permission und keine Produktkomponente.
+Test-APK als Update installiert; Haupt-App unverändert.
+Compile und Produktmanifestprüfung bestanden. Vor Creation: I3-db ABSENT,
+I3-file ABSENT; no_backup enthält weiterhin ausschließlich p15 und b3-v1
+sowie p16, keine I3-Namensräume.
+
+LAST SAFE CHECKPOINT: alte I2-Bestände erhalten; I3-Testcode kompiliert,
+separate I3-Aliase/Namensräume leer. Noch keine Fixture erstellt oder
+pm clear/uninstall ausgeführt. Wartet auf Bereitschaft zur manuellen
+DEVICE_CREDENTIAL-Bestätigung für den I3-DB-Erstlauf. Kein Commit und kein Push.
+
+I3 preclear DB-CREATE STARTED: Nutzer bereit zur manuellen Authentifizierung.
+Einmaliger Aufruf phase=preclear/action=db-create wird jetzt gestartet.
+LAST SAFE CHECKPOINT: Vorprüfung leer; DB-Erstellung möglicherweise läuft.
+Nicht erneut db-create starten; Ergebnis zuerst prüfen. Keine Löschaktion.
+
+I3 preclear DB-CREATE PASS: LOCKED / B16-DB-CREATE-SUCCEEDED.
+Bestehender per-operation DEVICE_CREDENTIAL-/RSA-OAEP-/B16-Pfad verwendet;
+separate verschlüsselte synthetische DB erstellt, Ressourcen vor Ende freigegeben.
+Lokale Evidenz: .prototype-cache/i3-preclear-db-create.log.
+
+I3 preclear FILE-CREATE STARTED: separater B3-/File-Key-Flow, keine
+Wiederverwendung des DB-Keys. Nicht erneut file-create starten.
+LAST SAFE CHECKPOINT: DB-CREATE abgeschlossen; File-Erstellung möglicherweise
+läuft und wartet auf manuelle Authentifizierung. Noch keine Löschaktion.
+
+### I3 Vorbereitung – File-Erstlauf fehlgeschlagen, STOPP
+
+**I3 BLOCKIERT vor pm clear.** File-Erstlauf lieferte unmittelbar
+`INSTRUMENTATION_RESULT: shortMsg=Process crashed.` / Code 0,
+keine erfolgreiche Auth-/Storage-Test-ID. Lokale Evidenz:
+.prototype-cache/i3-preclear-file-create.log. Keine Wiederholung ausgelöst.
+Ursache derzeit nicht nachgewiesen: begrenzte lesende Logcat-Auswertung
+lieferte keine zuordenbare Projekt-Exception/Stackframe; generische
+ServiceSpecificException/DeadObjectException-Zeilen sind kein Ursachenbeweis.
+Keine Vermutung als Diagnose übernommen.
+
+Read-only Inventur nach Fehler: I3-db PRESENT, I3-file ABSENT.
+no_backup/i3-preclear-db-v1 vorhanden mit 0 (1 Byte), 1 (36 Byte),
+d (12288 Byte) und Verzeichnis k; k/0 (1 Byte), k/1 (256 Byte), k/2 (294 Byte).
+no_backup/i3-preclear-file-v1 nicht vorhanden. DB-Erstlauf bleibt als
+B16-DB-CREATE-SUCCEEDED nachgewiesen; echter positiver I3-Restart noch offen.
+Alte I2-Dateiinventare einschließlich Digests weiterhin unverändert.
+
+Keine Dateien/Aliase gelöscht, ersetzt oder repariert, kein pm clear,
+Uninstall/Reinstall, Power-loss oder Credentialwechsel durchgeführt.
+Kein Erfolg für I3-A/B/C oder die gesamte I3-Serie behauptet.
+
+LAST SAFE CHECKPOINT: I3-DB-Erstellung erfolgreich; File-Erstlauf mit
+Instrumentation-Prozessfehler beendet, File-Alias/Namensraum fehlen.
+Kein Test läuft. Vor Fortsetzung Fehlerursache klären; vorhandene I3-DB und
+alte I2-Bestände erhalten. Keine Wiederinitialisierung, Reparatur oder
+Löschaktion. Kein Commit und kein Push.
+
+## I3 PRE-CLEAR FILE CRASH TRIAGE
+
+**Klassifikation A – TEST-HARNESS-FEHLER. I3 bleibt BLOCKED vor pm clear.**
+Keine Wiederholung des File-Flows, keine Codekorrektur oder Geräte-Reparatur.
+
+### Exakte Crash-Evidenz
+
+Vorhandener Runnerlog: Process crashed / INSTRUMENTATION_CODE 0.
+Host-log-mtime: 2026-10-09 10:06:51 +0200. Logcat im eingegrenzten Zeitbereich
+10:06:00–10:07:10 enthielt bei dieser Triage keine relevante Crashzeile mehr.
+Stattdessen vorhandene Android-DropBox-Aufzeichnung data_app_crash aus
+10:06 und ApplicationExitInfo lesend ausgewertet, kein neuer Testlauf.
+
+- Prozess: **org.pag.prototype.a**, PID **24032**, UID **10330**.
+- Exit-Zeit: **2026-10-09 10:06:51.156**.
+- Exit reason: **4 / APP CRASH(EXCEPTION)**, status 0.
+- Exception: **java.lang.IllegalStateException**.
+- Relevante Message: **Check failed.**
+- Oberste relevante Frames:
+  - I3LifecycleProbe.authenticate$lambda$1 (I3LifecycleProbe.kt:120)
+  - I3LifecycleProbe$$ExternalSyntheticLambda5.run (synthetischer D8-Frame)
+  - android.app.Instrumentation$SyncRunnable.run (Instrumentation.java:2353)
+  - android.os.Handler.handleCallback (Handler.java:942)
+  - android.os.Handler.dispatchMessage (Handler.java:99)
+  - android.os.Looper.loopOnce (Looper.java:226)
+  - android.os.Looper.loop (Looper.java:313)
+  - android.app.ActivityThread.main (ActivityThread.java:8762)
+
+Keine vollständige Logcat-/DropBox-Datei in Projektdokumentation übernommen.
+DB-Vorgängerprozess PID 23866 endete um 10:06:10.184 laut ExitInfo mit
+USER REQUESTED / FORCE STOP / „due to finished inst“; nicht als derselbe
+Exception-Crash klassifizieren.
+
+### Ursache und Vergleich mit bestehendem B3-Pfad
+
+Zeile 120 ist `check(allowed())` im über runOnMainSync ausgeführten
+Main-thread-Block. Mindestens ein Teil der Konjunktion war false:
+Activity resumed, Window-Fokus oder Gerät nicht gesperrt. Welcher Einzelwert
+false war, ist nicht protokolliert und bleibt offen. Der Harness warf deshalb
+ungefangen auf dem UI-Thread IllegalStateException. Der äußere Catch auf
+dem Instrumentationthread verhinderte den dokumentierten Main-thread-Crash nicht.
+
+**Vor DEVICE_CREDENTIAL:** Die Exception tritt vor Auswahl/Erstellung der
+File-Fixture (Zeilen 121–123), vor WrappingCredentialExperiment/B3-Adapter-
+Konstruktion und vor SessionCoordinator.authenticate auf. Kein B3-
+Bootstrap, Cipher, Prompt oder private Schlüsseloperation erreicht.
+Damit ist der konkrete Crash kein Fehler der bestehenden B3-Primitive.
+
+Bestehender Apppfad: MainActivity ist ComponentActivity, übernimmt reale
+Lifecycle-/Fokusereignisse; B3-Button startet aus zulässigem Vordergrund.
+Harness: startActivitySync mit NEW_TASK/CLEAR_TASK, waitForIdleSync, sofortiger
+Main-thread-Check. Beobachtet wurde, dass dieser Ablauf im File-Versuch die
+benötigte Bereitschaft noch nicht erreicht hatte. Kein Nachweis dafür,
+dass allein Window-Fokus die Ursache war.
+Der Plattform-BiometricPrompt wird in beiden Pfaden über activity.mainExecutor
+gestartet und benötigt hier keine zusätzliche FragmentActivity. Im Crash
+wurde er jedoch überhaupt nicht aufgerufen; kein verlorener Credential-
+Callback oder zu frühes Ende eines laufenden B3-Streams belegt.
+Produkt-Sicherheits-/Session-/Generation-/Storage-Verträge unverändert.
+
+### Minimaler vorgeschlagener test-only Fix – NICHT umgesetzt
+
+Vor Erzeugung der Fixture auf echte Activity-Bereitschaft begrenzt warten:
+resumed + Window-Fokus + Gerät nicht gesperrt, wiederholt auf Main abfragen.
+Nicht Main blockierend warten. Bei Timeout feste I3-ACTIVITY-NOT-READY-ID,
+fail closed ohne Dateimutationen/Authentifizierung. Main-thread-Prüfungen
+kontrolliert an den Instrumentationthread zurückmelden statt dort ungefangen
+`check` zu werfen; kein pauschales Ignorieren von Exceptions.
+Vor tatsächlichem Authstart Bereitschaft erneut prüfen, alle bestehenden
+Session-/Generation-/Storage-Gates unverändert lassen. Keine Produktausnahme,
+Fristverlängerung oder Fokus-Umgehung. Änderung nur nach Freigabe.
+
+### Read-only Mutationsprüfung
+
+- I3-DB-Alias: **PRESENT**.
+- I3-File-Alias: **ABSENT**.
+- DB-Namensraum weiterhin vorhanden, gleiche erfasste Struktur/Größen/mtimes:
+  0 (1 Byte), 1 (36 Byte), d (12288 Byte), k/0 (1 Byte), k/1 (256 Byte),
+  k/2 (294 Byte). Der gescheiterte File-Aufruf erreichte keinen Storage-Code.
+- File-Namensraum: **weiterhin ABSENT**; kein erkennbarer halber File-Bestand.
+- Alte I2-p15/p16/b3-v1-Dateiinventare samt Digests **unverändert**.
+- Vor dem File-Aufruf wurde kein Digest-Baselineinventar der neuen I3-DB
+  gespeichert. Ihre Bytegleichheit über diesen Aufruf daher nicht separat
+  per Vorher-/Nachher-Hash bewiesen; keine stärkere Aussage ableiten.
+  Aktuelle lokale ignorierte Vergleichsbasis:
+  .prototype-cache/i3-crash-triage-inventory.txt.
+
+Sicherheitsauswirkung: Test-Orchestrierung brach vor File-Initialisierung ab;
+kein Freigabe-/Publish-/Key-Ersatz oder Gate-Bypass beobachtet.
+
+LAST SAFE CHECKPOINT: Crash-Triage abgeschlossen, Klasse A belegt.
+DB-Alias/DB-Bestand erhalten, File-Alias/Namensraum ABSENT, alte I2-Digests
+unverändert. Keine Codekorrektur oder Wiederholung ausgeführt. I3 bleibt
+BLOCKED; als nächstes nur ausdrücklich freigegebene test-only Bereitschafts-
+Korrektur erwägen. Kein pm clear/Uninstall/Reinstall, kein Test läuft.
+Kein Commit und kein Push.
+
+### I3 test-only Bereitschafts-Fix – vor dem einzigen File-Retry
+
+Freigegebener Fix ausschließlich I3LifecycleProbe.kt umgesetzt: statt sofortigem
+UI-thread-check(allowed()) begrenzte wiederholte Main-thread-Bereitschaftsabfrage
+vom Instrumentationthread aus. SystemClock.elapsedRealtime; Obergrenze 5 s,
+kurze Warteintervalle blockieren nicht Main. Separat geprüft: Activity vorhanden,
+resumed, Gerät nicht locked, DecorView attached und Window-Fokus vorhanden.
+Feste Timeout-IDs: I3-ACTIVITY-TIMEOUT, I3-ACTIVITY-NOT-RESUMED,
+I3-DEVICE-LOCKED, I3-WINDOW-NOT-READY. Erst READY_FOR_AUTH gestattet Setup;
+vor Aufnahme erneut prüfen. Setup-Exception führt zu erfolglosem
+I3-AUTH-SETUP-BLOCKED ohne Exceptionpayload, nicht zu unbedingtem Proceed.
+SessionPolicy, zentraler Coordinator, Storage-/Generationchecks, Keystore-/
+B3-/B16-Code unverändert. Welche Einzelbereitschaft im ersten Crash fehlte,
+bleibt mangels damaliger Einzelwerte weiterhin nicht belegt.
+
+AndroidTest kompiliert und Produktmanifestprüfung erfolgreich, Diff/Whitespace
+geprüft. Keine neue Permission/Dependency/exportierte Produktkomponente und
+keine Produktdatei geändert. Testmanifest in diesem Fix nicht weiter geändert.
+Vor Retry read-only: I3-db PRESENT / DB-Namespace vorhanden, I3-file ABSENT /
+File-Namespace nicht vorhanden. DB-create nicht wiederholt.
+
+LAST SAFE CHECKPOINT: Bereitschafts-Fix gebaut/geprüft; File-Retry noch NICHT
+ gestartet. Wartet auf manuelle DEVICE_CREDENTIAL-Bereitschaft des Nutzers.
+Genau ein Retry freigegeben; danach bei Erfolg Digest-Baseline und je ein
+DB-/File-Reopen. Kein pm clear/Uninstall/Reinstall, kein Test läuft.
+Kein Commit und kein Push.
+
+I3 FILE-RETRY STARTED (einzige freigegebene Wiederholung): Nutzer bereit;
+korrigiertes Test-APK aktualisiert. Direkt vorher read-only: DB PRESENT,
+File ABSENT, File-Namespace ABSENT. Keine DB-Erstellung wiederholt.
+LAST SAFE CHECKPOINT: File-Retry jetzt gestartet bzw. möglicherweise laufend;
+keine automatische Wiederholung, kein pm clear. Ergebnis zuerst prüfen.
+
+I3 FILE-RETRY PASS: READY_FOR_AUTH erreicht, danach LOCKED /
+B3-PUBLISH-SUCCEEDED. Genau eine Wiederholung; keine weitere Erstellung.
+LAST SAFE CHECKPOINT: File-Ausgangsbestand erfolgreich erstellt; Pre-clear-
+Inventur und getrennte positive Reopens noch abzuschließen. Kein pm clear.
+
+I3 DB-REOPEN PASS: neuer Instrumentationlauf, READY_FOR_AUTH, legitime
+DEVICE_CREDENTIAL-Bestätigung, READY / B16-RESTART-SUCCEEDED.
+Beide I3-Aliase PRESENT. Vollständige Dateimetadaten und SHA-256-Baseline
+nach DB+File-Erstellung erfasst; alte I2-Inventare einschließlich Digests
+unverändert. File-Reopen folgt als separater Lauf, kein Multi-Key-Vertrag.
+LAST SAFE CHECKPOINT: File-Retry und DB-Reopen PASS; File-Reopen noch offen.
+
+## I3 PRE-CLEAR BASELINE READY
+
+File-Retry genau einmal PASS: LOCKED / B3-PUBLISH-SUCCEEDED.
+DB-Reopen in neuem Lauf PASS: READY / B16-RESTART-SUCCEEDED.
+File-Reopen in neuem Lauf PASS: READY / B3-RESTART-SUCCEEDED.
+Jeweils READY_FOR_AUTH und legitime DEVICE_CREDENTIAL-Bestätigung.
+Beide Aliase PRESENT; beide Namespaces vollständig. Keine DB-Erstellung wiederholt.
+
+Maßgebliche Baseline nach vollständiger DB+File-Erstellung:
+relative Pfade, Typ, Bytes, Unix-mtime und SHA-256 (keine Inhalte):
+
+    i3-preclear-db-v1|directory|3452|1791533170
+    i3-preclear-db-v1/0|regular file|1|1791533146
+    i3-preclear-db-v1/k|directory|3452|1791533146
+    i3-preclear-db-v1/k/0|regular file|1|1791533146
+    i3-preclear-db-v1/k/1|regular file|256|1791533146
+    i3-preclear-db-v1/k/2|regular file|294|1791533146
+    i3-preclear-db-v1/d|regular file|12288|1791533170
+    i3-preclear-db-v1/1|regular file|36|1791533170
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-preclear-db-v1/0
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-preclear-db-v1/k/0
+    47956659da7701eadad838fc76125bee3e31e1d04f135e88158d7a8733e7dd2f  i3-preclear-db-v1/k/1
+    7b75f47b3ea927f7af9dd760600dfde6e9d34b61473b9bb98b32ec9f733b3be2  i3-preclear-db-v1/k/2
+    e47b793f8d8109053af96f2eb23185c3b0848598f99d043ed4cb3d7f8a713ed2  i3-preclear-db-v1/d
+    641e164c64707bd7de326f4cfaf8bbda1bd5287a26053d2d7a812f8e3b8f0c90  i3-preclear-db-v1/1
+    i3-preclear-file-v1|directory|3452|1791534890
+    i3-preclear-file-v1/0|regular file|1|1791534879
+    i3-preclear-file-v1/k|directory|3452|1791534880
+    i3-preclear-file-v1/k/0|regular file|1|1791534879
+    i3-preclear-file-v1/k/1|regular file|256|1791534880
+    i3-preclear-file-v1/k/2|regular file|294|1791534880
+    i3-preclear-file-v1/s|directory|3452|1791534889
+    i3-preclear-file-v1/s/706b4a53-5e80-47fe-b37e-337591275866|regular file|8388809|1791534889
+    i3-preclear-file-v1/m|regular file|145|1791534890
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-preclear-file-v1/0
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-preclear-file-v1/k/0
+    30a263db9cb696dbc3af39ba23a48f722290825d1e325e72f77828cab18f0ef9  i3-preclear-file-v1/k/1
+    d311b9d3b957e645e47fa600a589ad0281b394d6743f74108a740f0cbe4c7936  i3-preclear-file-v1/k/2
+    2774cf26511c4a759db9c44b5903af5088416f82ebb16856610e8cd563841d4b  i3-preclear-file-v1/s/706b4a53-5e80-47fe-b37e-337591275866
+    3182824732c674236086387d54d35320fa848c6c945a710f121a05cd0c613959  i3-preclear-file-v1/m
+
+Nach beiden Reopens gesamtes Inventar einschließlich Digests/mtimes unverändert.
+Alte I2-Bestände p15/p16/b3-v1 einschließlich Digests unverändert.
+B3 erzeugt die synthetische Quelle im RAM; kein Klartext-Tempdateipfad.
+Ein zusätzlicher physischer Markercheck wurde hier nicht durchgeführt;
+keine forensische Klartextfreiheitsgarantie.
+
+Welche Einzelbedingung beim ursprünglichen Crash fehlte bleibt UNKNOWN;
+der erfolgreiche Retry rekonstruiert diese nicht. Test-only Fix wartet
+monoton begrenzt auf explizite Activity-/Fenster-/Gerätebereitschaft.
+Produktcode/-manifest, Permissions, Dependencies und Gates unverändert.
+Keine Produkt-Multi-Key-Orchestrierung aus getrennten Testflows abgeleitet.
+
+LAST SAFE CHECKPOINT: I3 PRE-CLEAR BASELINE READY. File-Retry, DB-Reopen
+und File-Reopen PASS. Digest-Baseline erfasst und danach unverändert.
+Kein Test läuft; STOPP vor pm clear. Kein Uninstall/Reinstall, Commit oder Push.
+
+## I3-A PM CLEAR
+
+Letzte dokumentarische Referenz: org.pag.prototype.a, Android-User 0,
+UID/appId 10330, secure=true. I3-db und I3-file Alias PRESENT, beide
+preclear-Namespaces vorhanden. Vollständige SHA-256-/Metadatenbaseline
+oben und lokal in i3-preclear-baseline-inventory.txt vorhanden.
+DB-Reopen PASS / B16-RESTART-SUCCEEDED; File-Reopen PASS /
+B3-RESTART-SUCCEEDED. Keine erneute Authentifizierung.
+LAST SAFE CHECKPOINT: I3 PRE-CLEAR vollständig; pm clear als nächster destruktiver Schritt.
+
+pm clear genau einmal ausgeführt: exakte Rückgabe `Success`, Host-Exitcode 0.
+Keine App und keine Instrumentation vor unmittelbarer Dateiinventur gestartet.
+
+Unmittelbare Inventur VOR Instrumentation: Package weiterhin installiert,
+package path endet auf org.pag.prototype.a-85Qzs8JxfEx7-ervTZr_zg==/base.apk
+unter /data/app; Android-User 0, UID/appId unverändert 10330,
+dataDir /data/user/0/org.pag.prototype.a vorhanden.
+files, no_backup, databases, cache, code_cache: ABSENT.
+Alte I2 p15/p16/b3-v1 und beide I3-preclear-Namespaces: ABSENT.
+Android entfernte diese logischen Dateibestände; keine Flashrest-Garantie.
+
+Read-only containsAlias nach Dateiinventur: I3-db ABSENT, I3-file ABSENT.
+CASE A: App-Dateien und beide I3-Aliase entfernt; sicherer vollständig leerer
+Zielbestand. App danach genau einmal normal geöffnet, kein Button gedrückt,
+keine Authentifizierung und keine Initialisierung ausgelöst. Erneute
+Aliasprobe nach Start: beide weiterhin ABSENT.
+Screenshot erfasste nur die Startanimation; sichtbarer Session-/Diagnosewert
+noch NICHT bestätigt. Benutzer um reine Ablesung gebeten.
+LAST SAFE CHECKPOINT: pm clear erfolgreich, unmittelbare Inventur abgeschlossen,
+CASE A, App einmal ohne Initialisierung gestartet; UI-Ablesung noch offen.
+Kein neuer Post-clear-Testbestand, kein Uninstall/Reinstall.
+
+Inventur nach Appstart/Aliasprobe: files, no_backup und cache vorhanden,
+aber leer; databases und code_cache ABSENT. Keine neue DB, kein Ciphertext,
+kein I2-/I3-Namespace. Nur gewöhnliche leere Runtime-Verzeichnisse entstanden;
+dies ist keine Storage-Ersatzinitialisierung. Beide I3-Aliase ABSENT.
+Sicherheitsbefund bisher: keine automatische geschützte Artefakt-/Key-Erzeugung,
+kein zurückgekehrter alter Bestand. UI-Session/Test-ID bleibt bis manueller
+Ablesung UNCONFIRMED; I3-A-Endbewertung nicht vorwegnehmen.
+LAST SAFE CHECKPOINT: CASE A bestätigt, Nachstart-Inventur ohne DB/File/Key;
+STOPP und auf reine UI-Ablesung warten. Keine neue Initialisierung freigegeben.
+
+### I3-A Abschluss
+
+**I3-A BESTANDEN IM GETESTETEN GALAXY/API33-UMFANG.**
+Benutzer bestätigt ersten normalen Start: Session LOCKED, Test-ID A-START.
+Keine Initialisierung ausgelöst. CASE A, keine automatische DB-/File-/Alias-
+Erzeugung; nur gewöhnliche leere Runtime-Verzeichnisse. Keine physische
+Flash-/RAM-Löschgarantie abgeleitet.
+
+I3-B/C freigegeben: ausschließlich neue postclear-Namespaces und Aliase.
+Vor Uninstall erst DB Create, File Publish, beide getrennten Reopens und
+vollständige Digest-Baseline. Kein Restore alter Bestände.
+LAST SAFE CHECKPOINT: I3-A abgeschlossen; Post-clear-Erstellung als nächster Schritt.
+
+Postclear-Aliasinventur: DB ABSENT, File ABSENT.
+POSTCLEAR DB-CREATE STARTED; separater neuer Testbestand.
+LAST SAFE CHECKPOINT: I3-A PASS; Postclear-DB-Erstellung möglicherweise läuft;
+keine automatische Wiederholung bei Fehler, kein Uninstall vor Baseline.
+
+POSTCLEAR DB-CREATE PASS: LOCKED / B16-DB-CREATE-SUCCEEDED.
+POSTCLEAR FILE-CREATE STARTED; separater File-Key und Namespace.
+LAST SAFE CHECKPOINT: Postclear-DB erstellt; File-Erstellung möglicherweise läuft.
+
+POSTCLEAR FILE-CREATE PASS: LOCKED / B3-PUBLISH-SUCCEEDED.
+POSTCLEAR DB-REOPEN STARTED, ausschließlich bestehender Bestand.
+LAST SAFE CHECKPOINT: beide Postclear-Bestände erstellt; DB-Reopen möglicherweise läuft.
+
+POSTCLEAR DB-REOPEN PASS: READY / B16-RESTART-SUCCEEDED.
+POSTCLEAR FILE-REOPEN STARTED, ausschließlich bestehender Ciphertext.
+LAST SAFE CHECKPOINT: DB-Reopen PASS; File-Reopen möglicherweise läuft.
+
+### I3-B Pre-Uninstall-Baseline
+
+Postclear File-Reopen PASS: READY / B3-RESTART-SUCCEEDED.
+DB Create/Reopen und File Publish/Reopen jeweils separat mit manueller
+DEVICE_CREDENTIAL-Bestätigung bestanden. Neue test-only Aliase
+pag.prototype.i3.postclear.db.v1 und pag.prototype.i3.postclear.file.v1
+PRESENT; Namespaces vorhanden. Package installiert, User 0, UID 10330,
+secure=true. Alte I2-Bestände durch den freigegebenen pm clear entfernt;
+kein Erhalt dieser Bestände nach clear behauptet. Keine Wiederherstellung.
+
+Referenz (relative Namen, Typ, Bytes, Unix-mtime; SHA-256):
+
+    i3-postclear-db-v1|directory|3452|1791535530
+    i3-postclear-db-v1/0|regular file|1|1791535524
+    i3-postclear-db-v1/k|directory|3452|1791535524
+    i3-postclear-db-v1/k/0|regular file|1|1791535524
+    i3-postclear-db-v1/k/1|regular file|256|1791535524
+    i3-postclear-db-v1/k/2|regular file|294|1791535524
+    i3-postclear-db-v1/d|regular file|12288|1791535530
+    i3-postclear-db-v1/1|regular file|36|1791535530
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-postclear-db-v1/0
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-postclear-db-v1/k/0
+    47d0b1d90dd78b1bf3a8186eb606079f8af832c0a44635c41136f9dd32d95b20  i3-postclear-db-v1/k/1
+    574635699f3b27be3bec87ed16340fff0f52cab5a43cdd41808fd939a5639c0e  i3-postclear-db-v1/k/2
+    ebe4d0a5c7436eda1a4d1573fe782fe16d4d7d7fa2ad88f71fb9e939b984563a  i3-postclear-db-v1/d
+    b5efb76c6fd05228c68ef51d24bec4e75cb08851b1c371bbcbbc09246233a92d  i3-postclear-db-v1/1
+    i3-postclear-file-v1|directory|3452|1791535549
+    i3-postclear-file-v1/0|regular file|1|1791535542
+    i3-postclear-file-v1/k|directory|3452|1791535543
+    i3-postclear-file-v1/k/0|regular file|1|1791535542
+    i3-postclear-file-v1/k/1|regular file|256|1791535543
+    i3-postclear-file-v1/k/2|regular file|294|1791535543
+    i3-postclear-file-v1/s|directory|3452|1791535549
+    i3-postclear-file-v1/s/c7d5eb4e-212d-4799-8633-75a55158260f|regular file|8388809|1791535549
+    i3-postclear-file-v1/m|regular file|145|1791535549
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-postclear-file-v1/0
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-postclear-file-v1/k/0
+    f537bd2872cfd48f580e97fad792ce1df87687448c2c2bf81f6ee95cabed33e0  i3-postclear-file-v1/k/1
+    64a766edd0e529ff473d23992d463f75db780d498e824f8376854d7635561326  i3-postclear-file-v1/k/2
+    6b500421dce376a09591d344f17011c94ee6c26849dec7387e18f724940c8cad  i3-postclear-file-v1/s/c7d5eb4e-212d-4799-8633-75a55158260f
+    38c22b924b452d8e393aaa0ff6243bcdcb29691ab9b2edd3581202d63121c2b7  i3-postclear-file-v1/m
+
+LAST SAFE CHECKPOINT: vollständige Pre-Uninstall-Baseline erfasst;
+Uninstall genau einmal als nächster freigegebener Schritt.
+
+### I3-B UNINSTALL
+
+Genau einmal adb uninstall org.pag.prototype.a: exakte Rückgabe `Success`.
+Unmittelbar danach: pm path ohne Ausgabe, Package ABSENT.
+/data/user/0/org.pag.prototype.a: No such file or directory;
+run-as: unknown package. Ehemalige private Dateien nicht mehr erreichbar,
+App-data-Verzeichnis ABSENT. Test-APK weiter installiert, Runner weiterhin
+registriert mit nicht mehr installiertem Zielpaket; keine Ausführung.
+Aliaszustand direkt nach Uninstall: NICHT DIREKT FESTSTELLBAR.
+Keine Abfrage über andere UID und keine Keystore-Löschgarantie behauptet.
+Keine Dateien zurückkopiert, kein Restore, keine Key-/Dateierzeugung.
+LAST SAFE CHECKPOINT: I3-B Uninstall erfolgreich und unmittelbare Inventur
+abgeschlossen; frische Installation derselben Debug-App als nächster Schritt.
+
+### I3-C REINSTALL – unmittelbare Inventur
+
+Frische Installation derselben aktuellen Debug-APK: `Success`.
+APK SHA-256 ea83ad1c82499aaddc71b1ed9f3a6550b5b6112fbe4d29d9b428cdb5aa495d28.
+Kein Restore, kein Transfer, keine manuelle Dateiwiederherstellung.
+User 0, neue UID/appId 10332 (vorher 10330), dataDir gleicher logischer Pfad,
+neue ceDataInode 29387. VOR App-/Probe-Start: files/no_backup/databases ABSENT;
+cache und code_cache leer vorhanden. Beide postclear-Namespaces ABSENT.
+Read-only Aliasprobe im neuen App-Kontext: alte postclear-db und -file ABSENT.
+App danach einmal normal gestartet; kein Initialisierungsbutton gedrückt.
+LAST SAFE CHECKPOINT: Reinstall frisch und alte Aliase/Dateien ABSENT;
+erster sichtbarer Session-/Test-ID-Wert noch vom Benutzer abzulesen.
+
+### I3 Abschlussprüfungen (vor UI-Endbestätigung)
+
+Frisch ./gradlew test --rerun-tasks: 288 Tests, 0 Failures, 0 Errors, 0 Skips;
+63 Tasks ausgeführt. Sandbox verhinderte zunächst Gradles lokalen Lock-Dienst;
+außerhalb Sandbox erfolgreich, kein Projekt-/Security-Fehler.
+Getrennte Aufrufe erfolgreich: :app:assembleDebug, :app:assembleDebugAndroidTest,
+:app:lintDebug, verifyArchitecture, :app:verifyPrototypeManifest.
+Bekannter kombinierter Task-Wiring-Befund nicht verändert.
+Merged Produktmanifest geprüft: allowBackup=false, bestehende Backup-/
+Transfer-Ausschlüsse, nur Launcher exportiert, keine neue Produktkomponente
+oder Permission. Bestehende USE_BIOMETRIC und AndroidX-interne Permission,
+kein INTERNET. Keine neue Dependency, kein Restore-Pfad.
+Nach Reinstall-Appstart: files/no_backup/cache/code_cache leer, databases ABSENT;
+keine DB-/File-Erzeugung. Alte postclear-Aliase in neuem UID-Kontext ABSENT.
+Test-only Harness und Test-Runner-Manifest bilden gesamten Code-Diff;
+Produktcode/-manifest unverändert. Kein Key/Credential in Ausgabe/Persistenz,
+keine Reparatur oder Gate-Abschwächung hinzugefügt.
+I3-B: Uninstall erfolgreich; direkte Aliasprüfung unmittelbar danach nicht möglich.
+I3-C: frische Installation und Read-only-Befunde erfolgreich, sichtbare UI-End-
+bestätigung noch offen. Optionaler Postreinstall-Positivtest noch NICHT gestartet.
+LAST SAFE CHECKPOINT: Reinstall frisch, alte Dateien/Aliase ABSENT, alle Host-
+Prüfungen grün; reine Benutzer-Ablesung Session/Test-ID ausstehend.
+Kein weiterer destruktiver Schritt, kein Commit oder Push.
+
+### I3-C erster Start bestätigt / letzte Positivkontrolle
+
+Benutzer bestätigt ersten Start nach Reinstall: LOCKED / A-START;
+kein alter Bestand sichtbar. I3-B Uninstall PASS, I3-C Reinstall PASS.
+Letzte Positivkontrolle ausschließlich neue postreinstall-Namespaces/Aliase;
+keine Recovery alter Daten, keine weitere invasive Phase danach.
+LAST SAFE CHECKPOINT: Reinstall-UI bestätigt; neue Positivkontrolle noch offen.
+
+Postreinstall-Aliasprobe: DB ABSENT, File ABSENT.
+DB-CREATE STARTED. LAST SAFE CHECKPOINT: letzter DB-Erstlauf möglicherweise läuft;
+keine automatische Wiederholung bei Fehler.
+
+Postreinstall DB-CREATE PASS: LOCKED / B16-DB-CREATE-SUCCEEDED.
+DB-Digestreferenz vor Reopen erfasst. DB-REOPEN STARTED in neuem Prozess.
+LAST SAFE CHECKPOINT: neue DB erstellt; DB-Reopen möglicherweise läuft.
+
+Postreinstall DB-REOPEN PASS: READY / B16-RESTART-SUCCEEDED.
+Neuer Prozess, erneute manuelle DEVICE_CREDENTIAL-Bestätigung.
+FILE-CREATE STARTED. LAST SAFE CHECKPOINT: DB Create/Reopen PASS;
+File-Erstlauf möglicherweise läuft.
+
+Postreinstall FILE-CREATE PASS: LOCKED / B3-PUBLISH-SUCCEEDED.
+Ciphertext-Digestreferenz vor Reopen erfasst. DB-Digests nach DB-Reopen unverändert.
+FILE-REOPEN STARTED. LAST SAFE CHECKPOINT: DB Create/Reopen und File Publish PASS;
+letzter File-Reopen möglicherweise läuft. Keine weitere invasive Phase danach.
+
+## I3 FINAL – APP DATA / INSTALL LIFECYCLE
+
+**I3 BESTANDEN IM GETESTETEN GALAXY/API33-UMFANG.**
+
+- I3-A pm clear: PASS. Success; Package installiert, UID 10330 unverändert;
+  alte Dateien und I3-Aliase entfernt, erster Start LOCKED / A-START.
+- I3-B Uninstall: PASS. Success; Package/dataDir entfernt. Aliaszustand
+  unmittelbar danach NICHT DIREKT FESTSTELLBAR unter weggefallener UID.
+- I3-C Reinstall: PASS. Success, UID 10332, alte Dateien und alte postclear-
+  Aliase ABSENT; erster Start vom Benutzer LOCKED / A-START bestätigt,
+  kein alter Bestand sichtbar und keine automatische Initialisierung.
+
+### Letzte Post-Reinstall-Positivkontrolle
+
+Neue Namespaces i3-postreinstall-db-v1 / i3-postreinstall-file-v1,
+neue test-only Aliase pag.prototype.i3.postreinstall.db.v1 /
+pag.prototype.i3.postreinstall.file.v1. Keine alten Namen wiederverwendet.
+
+- DB Create PASS: LOCKED / B16-DB-CREATE-SUCCEEDED.
+- DB Reopen PASS: READY / B16-RESTART-SUCCEEDED.
+- File Publish PASS: LOCKED / B3-PUBLISH-SUCCEEDED.
+- File Reopen PASS: READY / B3-RESTART-SUCCEEDED.
+
+Vier getrennte Instrumentationprozesse, jeweils READY_FOR_AUTH und manuelle
+DEVICE_CREDENTIAL-Bestätigung. Keine Produkt-Multi-Key-Orchestrierung.
+Vor/nach DB-Reopen vollständiges Inventar einschließlich SHA-256 und mtime
+unverändert. Vor/nach File-Reopen ebenso vollständiges Inventar unverändert.
+Damit keine Ersatz-DB, kein Ersatzciphertext oder neue Identität beim Reopen.
+Abschließende read-only Probe: beide neuen Aliase PRESENT; beide Namespaces
+vorhanden. Alte p15/p16/b3-v1 sowie preclear- und postclear-Namespaces ABSENT.
+Keine automatische Wiederherstellung. Dies ist ausdrücklich KEINE Recovery
+alter Daten, sondern Funktionskontrolle neuer legitimer Initialisierung.
+
+Abschlussinventar (relative Pfade, Typ, Bytes, Unix-mtime / SHA-256):
+
+    i3-postreinstall-db-v1|directory|3452|1791535883
+    i3-postreinstall-db-v1/0|regular file|1|1791535875
+    i3-postreinstall-db-v1/k|directory|3452|1791535876
+    i3-postreinstall-db-v1/k/0|regular file|1|1791535875
+    i3-postreinstall-db-v1/k/1|regular file|256|1791535876
+    i3-postreinstall-db-v1/k/2|regular file|294|1791535876
+    i3-postreinstall-db-v1/d|regular file|12288|1791535883
+    i3-postreinstall-db-v1/1|regular file|36|1791535883
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-postreinstall-db-v1/0
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-postreinstall-db-v1/k/0
+    5b304f76ecd51ca897074065d2c161f084fb164334d054294f5198e644140739  i3-postreinstall-db-v1/k/1
+    4108a3ba184951925222201b2cc5d92e0f096f12a6294f5b38fd7a3b6b485aed  i3-postreinstall-db-v1/k/2
+    fd45ce63275bc0de0f1eaaaea342a801bbc6a6eb696d7f62074eb39c861b4f7c  i3-postreinstall-db-v1/d
+    117a2f8d843cdd3ea7f469f9666cd3e1a2c88b989ddec5d3129d08e322c38735  i3-postreinstall-db-v1/1
+    i3-postreinstall-file-v1|directory|3452|1791535954
+    i3-postreinstall-file-v1/0|regular file|1|1791535948
+    i3-postreinstall-file-v1/k|directory|3452|1791535948
+    i3-postreinstall-file-v1/k/0|regular file|1|1791535948
+    i3-postreinstall-file-v1/k/1|regular file|256|1791535948
+    i3-postreinstall-file-v1/k/2|regular file|294|1791535948
+    i3-postreinstall-file-v1/s|directory|3452|1791535954
+    i3-postreinstall-file-v1/s/caa69301-f63c-4b41-9080-33d4f1462271|regular file|8388809|1791535954
+    i3-postreinstall-file-v1/m|regular file|145|1791535954
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-postreinstall-file-v1/0
+    4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a  i3-postreinstall-file-v1/k/0
+    382a850eed2199da51b71d8043a9749103ec6698e7ac6f14d23abf6ab8dda8ac  i3-postreinstall-file-v1/k/1
+    bd05f3e322cb7ec607535a46885f5492cb16cc79b63f14fdcd41914736ce0beb  i3-postreinstall-file-v1/k/2
+    402bdc7a3f5c28d4fe1b246150f1ed28d1ebc781881f48bd036ba1d7d5e9389f  i3-postreinstall-file-v1/s/caa69301-f63c-4b41-9080-33d4f1462271
+    c957335f4479e56e430eea4bffbab14a1ca7e8aa37d3d0038f23a4adcaecaf41  i3-postreinstall-file-v1/m
+
+### Sicherheitsbewertung und Grenzen
+
+PaG initialisierte nicht automatisch, stellte keine alten Bestände wieder her
+und akzeptierte keinen alten Ciphertext unter einem neuen Schlüssel. Neue
+Bestände funktionieren nach frischer Installation mit legitimer Authentifizierung.
+Kein Produktcode, Gate, Dependency oder Produktmanifest für diese Kontrolle
+geändert. Bestehende Backup-/Transfer-Ausschlüsse bleiben erhalten.
+Kein vollständiger OEM-/Cloud-Backup-Test, kein Power-loss, kein RAM-/Flash-
+Forensiknachweis und keine allgemeine Android-/Samsung-Garantie. Logische
+Dateientfernung bzw. Alias-Abwesenheit beweist kein physisches Überschreiben.
+
+Unmittelbar zuvor erfolgreich: 288 frische Unit-Tests, 0 Failures/Errors/Skips;
+App-/AndroidTest-Build, Lint, Architektur und Produktmanifestprüfung. Für die
+letzte Positivkontrolle nur Geräte-Testdaten und Dokumentation geändert, daher
+keine unnötige Wiederholung dieser Prüfungen. git diff --check erneut geprüft.
+
+LAST SAFE CHECKPOINT: I3 vollständig abgeschlossen. I3-A/B/C und letzte
+Post-Reinstall-Kontrolle PASS; beide neuen geschützten Bestände vorhanden,
+Reopen-Digests unverändert, keine alten Namespaces wiederhergestellt.
+Kein Test läuft. Keine weitere invasive Testphase beginnen. Kein Commit/Push.

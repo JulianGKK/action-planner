@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <instrumentation
-        android:name="org.pag.prototype.AliasInventoryProbe"
+        android:name="org.pag.prototype.I3LifecycleProbe"
         android:targetPackage="org.pag.prototype.a"
         tools:replace="android:name" />
 </manifest>
