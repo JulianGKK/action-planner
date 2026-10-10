@@ -1324,3 +1324,14 @@ Vor Beginn der Implementierung müssen insbesondere folgende Dokumente erstellt 
 6. `data-retention.md`
 
 Erst danach wird die konkrete Android-Architektur festgelegt.
+
+## P4 — freigegebener Produktumfang
+
+P4 konkretisiert FR-013 und FR-020 bis FR-022: Rollenplanung und optionale
+Hauptfunktion ausschließlich in PREPARATION; aktuelle Funktion, acht feste
+Lagewerte und kurzer manueller Ort/Ziel während ACTIVE. Planung bleibt ab ACTIVE
+unverändert, während operative Snapshots aktualisierbar sind. Kein Verlauf, GPS
+oder automatisches Tracking. Vorlagen sind Auswahlhilfen, keine Pflichtrollen.
+Normale gültige PaG-Session genügt für diesen ausdrücklich freigegebenen INTERNAL-
+Zugriff; sensible Identitäts-/Kontaktbereiche bleiben unter P3b-Step-up.
+Details, Grenzen und Tests: [product-p4.md](docs/product-p4.md).

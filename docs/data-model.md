@@ -386,7 +386,7 @@ Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, ke
 |---|---|
 | `Action` | Zugehörige Personen, Rollen, Statusdefinitionen, Zuordnungen, Aufgaben, Material, Dokumente, Dateien, Notes und Ausgaben entfernen |
 | Person | PersonRole und personenbezogene Notes entfernen; Personenreferenzen in Aufgaben und Material entfernen |
-| Role | PersonRole entfernen; Personen erhalten |
+| Role | P4: einzelne Rolle nur ohne geplante/operative Referenzen entfernen; kein stilles Entfernen von Zuordnungen |
 | PersonStatusDefinition | Statusreferenzen entfernen; Personen erhalten |
 | Task | Aufgabe und abgeleitete Kopien entfernen; Person erhalten |
 | Material | Materialposition und abgeleitete Kopien entfernen; Person erhalten |
@@ -498,3 +498,28 @@ Vollständige Aktionslöschung ist die Obergrenze für untergeordnete Daten. Kei
 ## 18. Nächste Spezifikationen
 
 Der freigegebene fachliche Modellstand dient als Grundlage für threat-model.md, privacy.md, data-retention.md, security.md und architecture.md. Die offenen Entscheidungen müssen vor ihrer jeweiligen Implementierung geklärt werden. Dieses Dokument gibt keine Android-Implementierung oder Auswahl von Dependencies frei.
+
+## P4-Präzisierung: Planung und aktuelle Lage
+
+Schema 5 ergänzt `Role` (id, actionId, name, normalizedName, createdAt),
+`PersonPlannedRole` (actionId, personId, roleId), `PersonRolePlan` mit optionaler
+primaryRoleId und `PersonOperationalState` (actionId, personId, currentRoleId,
+operationalStatus, currentPlaceLabel, updatedAt). Genau eine Hauptfunktion, nur aus
+der geplanten Menge; genau ein aktueller Snapshot pro Person ab Aktionsstart.
+Sämtliche Referenzen sind aktionsgebunden, inklusive zusammengesetzter Foreign Keys.
+Keine JSON-Relation, globale Bibliothek, Historie oder zusätzlichen sensiblen Felder.
+
+P4 v1 verwendet NO_STATUS, ON_SITE, IDENTITY_CHECK, IN_CUSTODY, NOT_REACHABLE,
+RELEASED, LEFT und UNCLEAR statt konfigurierbarer Statusdefinitionen. Planung
+bleibt ab ACTIVE read-only, operative Änderungen sind ausschließlich in ACTIVE
+zulässig. COMPLETED erhält den letzten Snapshot read-only. Hauptfunktion wird beim
+atomaren Start übernommen, ohne Anwesenheit zu behaupten. Ort/Ziel ist optional,
+manuell und auf 80 Unicode-Codepoints begrenzt. Rollenname ist aktionslokal nach
+Trim/Locale.ROOT eindeutig. Keine Zeitfristen werden neu festgelegt.
+
+Die P4-INTERNAL-Einordnung ist eine ausdrücklich freigegebene Ausnahme für diesen
+schnellen operativen Zugriff; Pseudonyme und P3b-Bereiche behalten ihre bisherigen
+Verträge. Alle Daten bleiben verschlüsselt und sitzungsgebunden. Einzelne Rollen
+werden nur unreferenziert gelöscht, nicht mit stiller Zuordnungskaskade. Ein
+späterer Gesamtlöschpfad muss abhängige Plan-/Snapshot-Rows geordnet entfernen.
+Details: [product-p4.md](product-p4.md).

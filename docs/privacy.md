@@ -97,3 +97,22 @@ Offene Schlüssel-, Authentifizierungs- und Hardwareentscheidungen werden in sec
 PRIV-01 bis PRIV-09 benötigen später Prüfungen für optional leere Personenfelder, aktionsgebundene Referenzen, Standardklassifizierung, fehlende verbotene Datentypen, fehlende Telemetrie und korrekte Original/Kopie-Information beim Systemimport sowie Kamera ohne Galerie-/Klartext-Zwischendatei oder externen Fallback und fehlende externe Viewerübergabe. Speicherinventar und manuelle Personenbezugsprüfung benötigen zusätzlich dokumentierte Reviews; deren Vollständigkeit lässt sich nicht allein durch Unit Tests beweisen.
 
 PRIV-10 bis PRIV-12 ergänzen Review der Erforderlichkeit/Persistenz, Deadline-/Cache-Entzugstests nach ARCH-35 und Prüfungen auf fehlende operative Notifications, Widgets, Shortcuts und Lockscreen-Inhalte. Externe Kopien und vollständige RAM-/Flash-Bereinigung sind keine durch Unit Tests behauptbare Garantie.
+
+## P4-Inventar und ausdrücklicher operativer Trade-off
+
+Rollen, geplante Zuordnungen/Hauptfunktion und aktueller Lage-Snapshot dienen
+ausschließlich der Koordination eigener aktionsgebundener Personen. P4 klassifiziert
+sie ausdrücklich als operative INTERNAL-Daten für normale gültige READY-Sitzungen.
+Der Personenbezug bleibt sensibel: ein Angreifer in der offenen Sitzung kann diese
+Informationen sehen. Kein zusätzlicher P3b-Step-up pro Live-Änderung; die schnelle
+Kernfunktion begründet diese bewusste Grenze. P3b-Identitäts-/Kontaktfelder bleiben
+getrennt geschützt und erscheinen nicht im Lagebild.
+
+Speicher: vier relationale Tabellen in der bestehenden SQLCipher-DB unter
+`no_backup/pag-db-v1`, ausschließlich aktueller Snapshot und technischer Zeitstempel.
+Ort/Ziel: manuell, kurze Bezeichnung, maximal 80 Codepoints, keine freien Notizen,
+GPS oder Historie. Suggestions ausschließlich aus aktuellen Rows derselben Aktion.
+Keine persistente globale Ortsliste, Außenoberfläche oder Netzwerkkopie. Frist offen;
+kein neuer Retentionjob oder Personenlöschpfad. Einzelne unbenutzte Rollen sind in
+PREPARATION nach Bestätigung logisch löschbar, ohne physische Löschgarantie.
+Fokus-/Keyboard- und flüchtige UI-State-Regeln bleiben verbindlich.

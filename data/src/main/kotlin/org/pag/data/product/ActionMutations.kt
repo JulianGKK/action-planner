@@ -32,6 +32,20 @@ internal suspend fun ActionDatabase.advanceAction(id: String, expected: ActionSt
     if (!context.check(AccessPoint.STEP)) throw StorageAccessRevoked()
     val updated = stored.copy(status = next.name,
         completedAt = if (next == ActionStatus.COMPLETED) System.currentTimeMillis() else null)
+    if (next == ActionStatus.ACTIVE) {
+        val timestamp = System.currentTimeMillis()
+        if (!context.check(AccessPoint.STEP)) throw StorageAccessRevoked()
+        val plans = operations().plans(id).associateBy { it.personId }
+        if (!context.check(AccessPoint.STEP)) throw StorageAccessRevoked()
+        val persons = persons().list(id)
+        for (person in persons) {
+            person.model()
+            if (!context.check(AccessPoint.STEP)) throw StorageAccessRevoked()
+            operations().insertState(OperationalRow(id, person.id, plans[person.id]?.primaryRoleId,
+                OperationalStatus.NO_STATUS.name, null, timestamp))
+        }
+        if (!context.check(AccessPoint.STEP)) throw StorageAccessRevoked()
+    }
     if (actions().update(updated) != 1) throw ProductStorageFailure()
     if (!context.check(AccessPoint.COMMIT)) throw StorageAccessRevoked()
     ActionChangeResult.Applied(updated.model())

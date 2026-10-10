@@ -16,7 +16,7 @@ import java.util.Locale
 @Composable fun ProductScreen(model: ProductViewModel) {
     MaterialTheme {
         val screen=listOf(model.snapshot.state,model.snapshot.generation,model.selected?.id,model.selectedPerson?.id,
-            model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant)
+            model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId)
         ProductInputScope(screen) {
         Surface(Modifier.fillMaxSize()) {
             Column(Modifier.padding(24.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -42,10 +42,14 @@ import java.util.Locale
                                 val action = model.selected!!
                                 Text(action.title, style = MaterialTheme.typography.headlineMedium)
                                 Text(statusLabel(action.status))
+                                var showActionFields by remember(action.id, action.status) { mutableStateOf(action.status != ActionStatus.ACTIVE) }
+                                if (action.status == ActionStatus.ACTIVE) FormTextButton({ model.interaction(); showActionFields = !showActionFields }) { Text("Aktionsdetails") }
+                                if (showActionFields) {
                                 Text(action.description)
                                 Text("Beginn: ${formattedTime(action.startAt)}")
                                 Text("Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}")
                                 action.completedAt?.let { Text("Abgeschlossen: ${formattedTime(it)}") }
+                                }
                                 if (model.personsVisible && model.confirming == null) PersonsSection(model)
                                 model.changeError?.let { Text(changeErrorLabel(it)) }
                                 if (model.confirming != null) {
@@ -54,7 +58,7 @@ import java.util.Locale
                                         else "${advanceLabel(action.status)}? Dieser Statusschritt kann nicht rückgängig gemacht werden.")
                                     FormButton(onClick = model::confirmAdvance, enabled = !model.saving) { Text("Bestätigen") }
                                     FormTextButton(onClick = model::cancelAdvance, enabled = !model.saving) { Text("Abbrechen") }
-                                } else if (!model.personForm && model.selectedPerson == null && !model.personSaving) {
+                                } else if (!model.personForm && model.selectedPerson == null && !model.personSaving && model.operations.screen == OperationsScreen.OVERVIEW) {
                                     if (ActionLifecycle.mayEdit(action.status)) {
                                         FormOutlinedButton(onClick = model::edit) { Text("Bearbeiten") }
                                     }
@@ -84,7 +88,8 @@ import java.util.Locale
 }
 
 @Composable private fun PersonsSection(model: ProductViewModel) {
-    Text("Personen", style = MaterialTheme.typography.titleLarge)
+    if (model.operations.screen != OperationsScreen.OVERVIEW) { OperationsSection(model); return }
+    if (model.selected?.status != ActionStatus.ACTIVE) Text("Personen", style = MaterialTheme.typography.titleLarge)
     model.personError?.let { Text(personErrorLabel(it)) }
     when {
         model.personForm -> {
@@ -99,6 +104,7 @@ import java.util.Locale
         model.selectedPerson != null -> {
             Text(model.selectedPerson!!.pseudonym, style = MaterialTheme.typography.titleMedium)
             if (model.personsEditable) FormOutlinedButton(onClick = model::editPerson) { Text("Bearbeiten") }
+            if (model.personsEditable) FormOutlinedButton({ model.operations.plan(model.selectedPerson!!.id) }) { Text("Rollen planen") }
             SensitiveSection(model)
             FormTextButton(onClick = model::backToPersons) { Text("Zur Personenliste") }
         }
@@ -107,7 +113,8 @@ import java.util.Locale
             else {
                 Text("Anzahl: ${model.persons.size}")
                 if (model.persons.isEmpty()) Text("Noch keine Personen erfasst.")
-                model.persons.forEach { person ->
+                if (model.operations.board != null) OperationsSection(model)
+                else model.persons.forEach { person ->
                     FormOutlinedButton(onClick = { model.personDetail(person.id) }, enabled = !model.saving) { Text(person.pseudonym) }
                 }
                 if (model.personsEditable) FormButton(onClick = model::addPerson, enabled = !model.saving) { Text("Person hinzufügen") }

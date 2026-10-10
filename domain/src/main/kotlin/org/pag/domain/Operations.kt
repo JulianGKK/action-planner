@@ -1,0 +1,50 @@
+package org.pag.domain
+
+import java.util.Locale
+
+/** Organisational roles grant no application permissions. All references are action-local. */
+data class Role(val id: String, val actionId: String, val name: String, val createdAt: Long)
+enum class OperationalStatus {
+    NO_STATUS, ON_SITE, IDENTITY_CHECK, IN_CUSTODY, NOT_REACHABLE, RELEASED, LEFT, UNCLEAR
+}
+data class PersonRolePlan(val roleIds: Set<String>, val primaryRoleId: String?)
+data class PersonOperationalState(val actionId: String, val personId: String, val currentRoleId: String?,
+    val status: OperationalStatus, val currentPlaceLabel: String?, val updatedAt: Long)
+data class OperationalPerson(val person: Person, val plan: PersonRolePlan, val state: PersonOperationalState?)
+data class OperationalBoard(val actionId: String, val status: ActionStatus, val roles: List<Role>, val persons: List<OperationalPerson>) {
+    fun count(status: OperationalStatus) = persons.count { it.state?.status == status }
+    fun roleCount(roleId: String?) = persons.count { it.state?.status == OperationalStatus.ON_SITE && it.state.currentRoleId == roleId }
+    val placeSuggestions get() = persons.mapNotNull { it.state?.currentPlaceLabel }.distinct().sorted()
+    fun preferredRoles(personId: String): List<Role> {
+        val ids = persons.singleOrNull { it.person.id == personId }?.plan?.roleIds.orEmpty()
+        return roles.filter { it.id in ids } + roles.filter { it.id !in ids }
+    }
+}
+object OperationalRules {
+    val templates = listOf("Blockierende", "Support", "Hummel", "Gesa-Support", "Presse", "Aktionsleitung")
+    fun normalizedName(name: String) = name.trim().lowercase(Locale.ROOT)
+    fun validName(name: String) = name.trim().isNotEmpty()
+    fun mayRead(status: ActionStatus) = status in setOf(ActionStatus.PREPARATION, ActionStatus.ACTIVE, ActionStatus.COMPLETED)
+    fun mayPlan(status: ActionStatus) = status == ActionStatus.PREPARATION
+    fun mayCreateRole(status: ActionStatus) = mayPlan(status) || status == ActionStatus.ACTIVE
+    fun mayUpdateSnapshot(status: ActionStatus) = status == ActionStatus.ACTIVE
+    fun placeRelevant(status: OperationalStatus) = status in setOf(OperationalStatus.IDENTITY_CHECK, OperationalStatus.IN_CUSTODY, OperationalStatus.UNCLEAR)
+    fun roleAllowed(status: OperationalStatus) = status == OperationalStatus.ON_SITE || status == OperationalStatus.NO_STATUS
+    fun validPlace(value: String) = Character.codePointCount(value.trim(), 0, value.trim().length) <= 80
+    fun place(value: String, status: OperationalStatus): String? = if (placeRelevant(status)) value.trim().takeIf { it.isNotEmpty() } else null
+    fun validPlan(roleIds: Set<String>, primaryRoleId: String?) = primaryRoleId == null || primaryRoleId in roleIds
+}
+enum class OperationsFailure { NOT_FOUND, NOT_ALLOWED, INVALID, DUPLICATE, IN_USE, STALE }
+sealed interface OperationsResult<out T> {
+    data class Value<T>(val value: T): OperationsResult<T>
+    data class Rejected(val reason: OperationsFailure): OperationsResult<Nothing>
+}
+interface OperationsRepository {
+    fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit)
+    fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit)
+    fun renameRole(actionId: String, roleId: String, name: String, publish: (OperationsResult<Role>) -> Unit)
+    fun deleteRole(actionId: String, roleId: String, publish: (OperationsResult<Unit>) -> Unit)
+    fun planRoles(actionId: String, personId: String, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit)
+    fun updateSnapshot(actionId: String, personId: String, expected: PersonOperationalState,
+        status: OperationalStatus, roleId: String?, place: String, publish: (OperationsResult<Unit>) -> Unit)
+}
