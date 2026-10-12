@@ -36,6 +36,10 @@ sealed interface SensitiveResult<out T> {
 }
 data class SensitiveOpened(val grant: SensitiveGrant, val data: SensitiveData)
 interface LeadershipRepository {
+    /** Protected action metadata only: no person, payload or grant. Unsupported providers deny. */
+    fun actionState(actionId: String, publish: (SensitiveResult<SensitiveState>) -> Unit) {
+        publish(SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE))
+    }
     fun inventory(actionId: String, personId: String, publish: (SensitiveResult<SensitiveInventory>) -> Unit)
     /** Consumers take ownership of arrays and wipe them, including on refusal. */
     fun setup(actionId: String, passphrase: CharArray, confirmation: CharArray, publish: (SensitiveResult<Unit>) -> Unit)

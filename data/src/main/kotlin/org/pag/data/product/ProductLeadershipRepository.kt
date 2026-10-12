@@ -39,20 +39,10 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
     private fun rootAad(row:LeadershipRow)=SensitiveCodec.context("P3b-root",row.actionId,row.epoch,row.cryptoVersion.toString(),row.algorithm,row.kdfVersion.toString(),row.memoryKiB.toString(),row.iterations.toString(),row.parallelism.toString(),java.util.Base64.getEncoder().encodeToString(row.salt))
     private fun areaAad(row:LeadershipRow,personId:String,area:SensitiveArea,revision:Long)=SensitiveCodec.context("P3b-area",row.actionId,personId,area.name,row.cryptoVersion.toString(),row.epoch,revision.toString())
     private fun keyAad(row:LeadershipRow,personId:String,area:SensitiveArea)=SensitiveCodec.context("P3b-DEK",row.actionId,personId,area.name,row.cryptoVersion.toString(),row.epoch)
-    private fun validate(row:LeadershipRow){
-        if(row.state!="READY" || row.cryptoVersion!=1 || row.epoch.isBlank() || row.salt.size!=16 || row.envelope.size!=88)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
-        LeadershipKdfParameters(row.algorithm,row.kdfVersion,row.memoryKiB,row.iterations,row.parallelism).validate()
-    }
-    private fun validateArea(row:SensitiveRow,actionId:String) {
-        if(row.actionId!=actionId || row.personId.isBlank() || row.cryptoVersion!=1 || row.revision<=0 ||
-            row.keyEnvelope.size!=60 || row.payload.size<33 ||
-            SensitiveArea.entries.none{it.name==row.area})throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
-    }
-    private fun classification(row:LeadershipRow?,rows:List<SensitiveRow>,present:Boolean,usable:Boolean):SensitiveState {
-        if(row==null)return if(rows.isEmpty()&&!present)SensitiveState.UNINITIALIZED else SensitiveState.PARTIAL_OR_INVALID
-        return try{validate(row);if(!present||!usable)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE);rows.forEach{validateArea(it,row.actionId)};SensitiveState.READY}
-        catch(_:Exception){SensitiveState.PARTIAL_OR_INVALID}
-    }
+    private fun validate(row:LeadershipRow)=LeadershipMetadata.validate(row)
+    private fun validateArea(row:SensitiveRow,actionId:String)=LeadershipMetadata.validateArea(row,actionId)
+    private fun classification(row:LeadershipRow?,rows:List<SensitiveRow>,present:Boolean,usable:Boolean)=
+        LeadershipMetadata.classification(row,rows,present,usable)
     private data class SensitiveSnapshot(val state:SensitiveState,val root:LeadershipRow?,val rows:List<SensitiveRow>,val present:Boolean,val usable:Boolean)
     /** Current transaction view, never a cached UI inventory or grant-derived authority. */
     private suspend fun sensitiveSnapshot(db:ActionDatabase,c:StorageContext,actionId:String):SensitiveSnapshot {
@@ -96,6 +86,14 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
             try { main.execute {if(!publicationAllowed() || (result is SensitiveResult.Value && result.value is SensitiveOpened && !(result.value as SensitiveOpened).grant.valid()) || !c.publish{publish(result)}){(result as? SensitiveResult.Value)?.value.let{if(it is SensitiveOpened)it.grant.cancel()}}} }
             catch(_:java.util.concurrent.RejectedExecutionException){(result as? SensitiveResult.Value)?.value.let{if(it is SensitiveOpened)it.grant.cancel()}}
         } } catch(_:java.util.concurrent.RejectedExecutionException){release.run()}
+    }
+    override fun actionState(actionId:String,publish:(SensitiveResult<SensitiveState>)->Unit) {
+        val ticket=request.get()
+        // Recheck the request inside the existing generation-gated publication too.
+        run({result->if(request.get()==ticket)publish(result)},publicationAllowed={request.get()==ticket}){base->
+            val c=bounded(base){request.get()==ticket}
+            db(c){d->d.withReadTransaction{parent(d,c,actionId);sensitiveSnapshot(d,c,actionId).state}}
+        }
     }
     override fun inventory(actionId:String,personId:String,publish:(SensitiveResult<SensitiveInventory>)->Unit)=run(publish){c->
         val snapshot=db(c){d->d.withReadTransaction{parent(d,c,actionId,personId);sensitiveSnapshot(d,c,actionId)}}

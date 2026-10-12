@@ -22,6 +22,7 @@ class LeadershipStorageTest {
     private val real=AndroidLeadershipDeviceKey()
     private val devices=mutableListOf<LeadershipDeviceKey>()
     private var allowed=true;private var generation=1L;private var now=0L;private var denyCommit=false
+    private var beforePublication:()->Unit={}
     private fun pass()="synthetic leadership fixture only".toCharArray()
     private fun context(scopeValue:AccessScope=AccessScope.READY):StorageContext=object:StorageContext {
         private val captured:Long=this@LeadershipStorageTest.generation
@@ -29,24 +30,27 @@ class LeadershipStorageTest {
         override fun check(point:AccessPoint):Boolean {if(denyCommit&&point==AccessPoint.COMMIT)allowed=false;return allowed&&captured==this@LeadershipStorageTest.generation}
         override fun <T> admitKey(validUntilMillis:Long,acquire:(()->Boolean)->T?):T? =
             synchronized(this){acquire{scope==AccessScope.READY && check(AccessPoint.STEP) && now<validUntilMillis}}
-        override fun publish(result:()->Unit):Boolean{if(!check(AccessPoint.PUBLICATION))return false;result();return true}
+        override fun publish(result:()->Unit):Boolean{beforePublication();if(!check(AccessPoint.PUBLICATION))return false;result();return true}
     }
     private val direct=Executor{it.run()}
-    private fun inv():ProductInventory {
+    private fun inv(withPersons:Boolean=true):ProductInventory {
         val root=File(app.noBackupFilesDir.canonicalFile,"p3b-test-${UUID.randomUUID()}");check(root.mkdirs());check(root.resolve("store").mkdir())
         listOf("intent","complete","public").forEach{root.resolve(it).writeBytes(byteArrayOf(1))};root.resolve("envelope").writeBytes(ByteArray(256))
         return ProductInventory(root,{true},{true}).also { i->ActionDatabaseAccess(app).use(i.database,key,context(AccessScope.MAINTENANCE),true){d->d.withWriteTransaction{
             d.actions().insert(ActionRow(id,"synthetic","synthetic",1,2,0,"PREPARATION"));d.actions().insert(ActionRow(other,"synthetic other","synthetic",1,2,0,"PREPARATION"))
+            if(withPersons){
             d.persons().insert(PersonRow(person,id,"synthetic-01","synthetic-01",0));d.persons().insert(PersonRow(second,id,"synthetic-02","synthetic-02",0))
             d.persons().insert(PersonRow("synthetic-other-action-person",other,"synthetic-01","synthetic-01",0))
+            }
         }}}
     }
     private class Device:LeadershipDeviceKey {
         val keys=mutableMapOf<String,ByteArray>();var failCreate=false;var failDelete=false
-        override fun present(alias:String)=keys.containsKey(alias)
+        var onPresent:()->Unit={};var encryptions=0;var decryptions=0
+        override fun present(alias:String):Boolean {onPresent();return keys.containsKey(alias)}
         override fun create(alias:String){if(failCreate)throw LeadershipCryptoFailure();check(!present(alias));keys[alias]=LeadershipCrypto.random(32)}
-        override fun encrypt(alias:String,bytes:ByteArray,aad:ByteArray)=LeadershipCrypto.encrypt(keys[alias]!!,bytes,aad)
-        override fun decrypt(alias:String,bytes:ByteArray,aad:ByteArray)=LeadershipCrypto.decrypt(keys[alias]!!,bytes,aad)
+        override fun encrypt(alias:String,bytes:ByteArray,aad:ByteArray):ByteArray {encryptions++;return LeadershipCrypto.encrypt(keys[alias]!!,bytes,aad)}
+        override fun decrypt(alias:String,bytes:ByteArray,aad:ByteArray):ByteArray {decryptions++;return LeadershipCrypto.decrypt(keys[alias]!!,bytes,aad)}
         override fun delete(alias:String){if(failDelete)throw LeadershipCryptoFailure();keys.remove(alias)?.fill(0)}
     }
     private fun repo(i:ProductInventory,device:LeadershipDeviceKey=Device(),main:Executor=direct,worker:Executor=direct,afterWrite:()->Unit={}):LeadershipRepository {
@@ -64,6 +68,73 @@ class LeadershipStorageTest {
     private fun alter(i:ProductInventory,row:SensitiveRow)=ActionDatabaseAccess(app).use(i.database,key,context()){it.leadership().updateArea(row)}
     private fun assertPreserved(i:ProductInventory,expected:SensitiveRow){val actual=existingRow(i,expected.personId,SensitiveArea.valueOf(expected.area));assertEquals(expected.cryptoVersion,actual.cryptoVersion);assertEquals(expected.revision,actual.revision);assertTrue(expected.keyEnvelope.contentEquals(actual.keyEnvelope));assertTrue(expected.payload.contentEquals(actual.payload))}
     private fun otherArea(r:LeadershipRepository){var opened:SensitiveOpened?=null;r.open(id,second,SensitiveArea.EMERGENCY_CONTACT,pass()){opened=(it as SensitiveResult.Value).value};save(r,opened!!,SensitiveData.EmergencyContact("synthetic other"))}
+    private fun actionState(r:LeadershipRepository,action:String=id):SensitiveState {
+        var result:SensitiveResult<SensitiveState>?=null
+        r.actionState(action){result=it}
+        assertTrue(result is SensitiveResult.Value)
+        return (result as SensitiveResult.Value).value
+    }
+    @Test fun actionStateUninitializedWithoutAnyPerson() {
+        val i=inv(false);val d=Device();val r=repo(i,d)
+        assertEquals(SensitiveState.UNINITIALIZED,actionState(r))
+        assertTrue(ActionDatabaseAccess(app).use(i.database,key,context()){it.persons().list(id)}.isEmpty())
+        assertTrue(d.keys.isEmpty());assertEquals(0,d.encryptions);assertEquals(0,d.decryptions)
+    }
+    @Test fun actionStateReadyAfterExistingSetupWithoutAnyPerson() {
+        val i=inv(false);val d=Device();val r=repo(i,d);setup(r)
+        val encryptions=d.encryptions;val decryptions=d.decryptions
+        assertEquals(SensitiveState.READY,actionState(r))
+        assertTrue(ActionDatabaseAccess(app).use(i.database,key,context()){it.persons().list(id)}.isEmpty())
+        assertEquals(encryptions,d.encryptions);assertEquals(decryptions,d.decryptions)
+    }
+    @Test fun actionStatePartialWithoutPersonDoesNotPretendUninitialized() {
+        val i=inv(false);val d=Device();val r=repo(i,d)
+        d.create("org.pag.product.leadership.aes.v1.$id")
+        assertEquals(SensitiveState.PARTIAL_OR_INVALID,actionState(r))
+        assertEquals(0,d.encryptions);assertEquals(0,d.decryptions)
+    }
+    @Test fun actionStateMatchesPersonInventoryForAllThreeStates() {
+        val i=inv();val d=Device();val r=repo(i,d)
+        fun same(expected:SensitiveState) {assertEquals(expected,actionState(r));assertEquals(expected,inventory(r).state)}
+        same(SensitiveState.UNINITIALIZED);setup(r);same(SensitiveState.READY)
+        d.delete("org.pag.product.leadership.aes.v1.$id");same(SensitiveState.PARTIAL_OR_INVALID)
+    }
+    @Test fun actionStateMissingActionDeniedAndOtherActionNotBorrowed() {
+        val i=inv(false);val r=repo(i);setup(r)
+        assertEquals(SensitiveState.READY,actionState(r))
+        assertEquals(SensitiveState.UNINITIALIZED,actionState(r,other))
+        var result:SensitiveResult<SensitiveState>?=null
+        r.actionState("synthetic-missing-action"){result=it}
+        assertEquals(SensitiveResult.Rejected(SensitiveFailure.DENIED),result)
+    }
+    @Test fun actionStateOldGenerationQueuedReadCannotPublish() {
+        val i=inv(false);val queue=mutableListOf<Runnable>();val r=repo(i,worker=Executor{queue.add(it)})
+        r.actionState(id){fail("Stale metadata publication")};generation++;queue.single().run()
+    }
+    @Test fun actionStateLockDuringMetadataReadCannotPublish() {
+        val i=inv(false);val d=Device();val r=repo(i,d)
+        d.onPresent={allowed=false;generation++}
+        r.actionState(id){fail("Locked metadata publication")}
+    }
+    @Test fun actionStateRepositoryRevokeDuringReadCannotPublish() {
+        val i=inv(false);val d=Device();val r=repo(i,d)
+        d.onPresent={r.revoke()}
+        r.actionState(id){fail("Revoked metadata publication")}
+    }
+    @Test fun actionStateLockBeforeQueuedPublicationCannotPublish() {
+        val i=inv(false);val queue=mutableListOf<Runnable>();val r=repo(i,main=Executor{queue.add(it)})
+        r.actionState(id){fail("Late metadata publication")};allowed=false;generation++;queue.single().run()
+    }
+    @Test fun actionStateRevokeBeforeQueuedPublicationCannotPublish() {
+        val i=inv(false);val queue=mutableListOf<Runnable>();val r=repo(i,main=Executor{queue.add(it)})
+        r.actionState(id){fail("Late revoked metadata publication")};r.revoke();queue.single().run()
+    }
+    @Test fun actionStateRevokeBetweenOuterCheckAndPublicationCannotPublish() {
+        val i=inv(false);val r=repo(i)
+        beforePublication={r.revoke()}
+        r.actionState(id){fail("Request changed at publication boundary")}
+    }
+
     @Test fun realCoordinatorAndRepositoryConcurrentLockAndBackgroundCleanup() {
         val inventory = inv()
         var authResult: ((AuthenticationOutcome) -> Unit)? = null
@@ -89,6 +160,7 @@ class LeadershipStorageTest {
             val context = coordinator.acquire(AccessScope.READY)!!
             currentOwner = SessionDbKeyOwner.bind(context, key).also { owners.add(it) }
             if (!background) setup(repository)
+            assertEquals(SensitiveState.READY, actionState(repository))
             val grant = open(repository).grant as LeadershipGrant
             assertEquals(context.generation, grant.context.generation)
             var admittedLease: ByteArray? = null
@@ -131,6 +203,7 @@ class LeadershipStorageTest {
             assertFalse(grant.valid()); assertNull(keyField.get(grant)); assertTrue(ownedKey.all { it == 0.toByte() })
             assertNull(currentOwner); assertFalse(context.check(AccessPoint.COMMIT))
             assertFalse(context.publish { fail("Old generation publication") })
+            repository.actionState(id) { fail("Metadata publication after coordinator lock") }
         }
     }
 

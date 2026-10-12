@@ -15,8 +15,51 @@ LEADERSHIP_SENSITIVE ergänzt drei unabhängig angezeigte Bereiche:
 
 Keine Pflichtangaben, freien sensiblen Notizen, Kontakteintegration, Files,
 Teilnehmer-PIN oder globale Personenkartei. Keine zusätzlichen Zukunftsspalten.
-Alle normalen Repositoryzugriffe benötigen Aktion und Person. Persistierter Status
+Personengebundene Repositoryzugriffe benötigen Aktion und Person. Persistierter Status
 und Zugehörigkeit werden in kontrollierten Datenbankoperationen geprüft.
+
+### P3b-META: aktionsweiter Leitungsschutzstatus
+
+`LeadershipRepository.actionState(actionId, publish)` liefert ausschließlich
+`SensitiveResult<SensitiveState>`, ohne Personvoraussetzung. Es dient unter anderem
+der frühen Statusanzeige in PREPARATION; dieser Slice implementiert keine UX2-UI.
+UNINITIALIZED, READY und PARTIAL_OR_INVALID verwenden dieselbe bestehende
+strukturelle Klassifizierung wie das personengebundene Inventory. Sie wurde ohne
+Verhaltensänderung nach `LeadershipMetadata` extrahiert. Ein fehlender oder nicht
+lesbarer Aktionsbestand wird nicht als UNINITIALIZED ausgegeben.
+
+Der Pfad verwendet READY, Generation, Aktionsbindung, kurze Read-Transaktion,
+DB-Key-Owner und die bestehenden Storage-/Publication-Gates. Das vorhandene
+atomare Requestticket verhindert Ergebnisse über Repository-Revoke hinweg,
+einschließlich einer Prüfung innerhalb der generationgebundenen Publication.
+Unbekannte Provider verweigern die neue API mit UNAVAILABLE.
+
+Das bestehende Setup kann bereits ohne Personen provisionieren. Auch ein solcher
+Bestand wird READY erkannt. Es werden keine Personen/Pseudonyme gelesen und
+keine Bereiche, Payloads, Passphrases, Keys oder Grants an den Caller gegeben.
+Intern liest die unveränderte Klassifizierung Root-/Area-Metadaten einschließlich
+verschlüsselter Blobs zur Struktur-/Längenprüfung und nutzt die bestehenden
+Key-Präsenz-/Nutzbarkeitsprobes. Keine sensitive Entschlüsselung, neue Keystore-
+Operation, Grantanlage oder Key-Admission; der normale verschlüsselte DB-Read
+benötigt weiterhin den bestehenden DB-Key-Owner.
+
+Regressionen: `LeadershipMetadataTest` prüft die gemeinsame Klassifizierung;
+`LeadershipStorageTest` prüft null Personen vor/nach echtem bestehendem Setup,
+alle drei Zustände, Konsistenz mit Inventory, fehlende/fremde Aktion,
+Generation-/Lock-/Revoke-Gates und verzögerte Publication. Der vorhandene echte
+Coordinator-/Repositorytest prüft zusätzlich Statuszugriff und Revoke.
+
+Nachweis auf Baseline `6a94ac1`: 517 Unit-Tests grün (darunter sieben neue
+Klassifizierungs-/API-Fälle), App- und beide AndroidTest-Builds, Architektur und
+Merged-Manifest-/Permissionsprüfung erfolgreich. Galaxy SM-M526BR/API33:
+vollständige LeadershipStorage-Klasse mit 35 Fällen grün; nach finalem
+Publicationguard und zusätzlicher Grenzregression gezielt elf Metadatenfälle plus
+echter Coordinator-/Repositoryfall auf finaler APK grün (12 Tests, 51,432 s).
+Logs: `.prototype-cache/p3b-meta-checks.log`, `p3b-meta-galaxy.log`,
+`p3b-meta-final-androidtest.log` und `p3b-meta-galaxy-final.log`.
+Keine Credentialänderung, kein pm clear/Uninstall; ausschließlich install -r
+der isolierten Test-APK. Session/StorageAccess/LeadershipGrant/Key-Admission,
+Crypto-/Keystore-Code, Schema, Dependencies und Manifest unverändert.
 
 ## Zugang und Zustände
 
