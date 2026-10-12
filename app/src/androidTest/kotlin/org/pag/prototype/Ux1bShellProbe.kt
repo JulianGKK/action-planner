@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.Density
 import org.pag.domain.*
 import org.pag.prototype.product.ProductScreen
 import org.pag.prototype.product.ProductViewModel
+import org.pag.prototype.product.PreparationArea
 
 /** Synthetic UI only: no authentication, product DB write or system setting change. */
 class Ux1bShellProbe : Instrumentation() {
@@ -47,7 +48,7 @@ class Ux1bShellProbe : Instrumentation() {
         override fun getAction(id:String,publish:(Action?)->Unit)=publish(row)
         override fun createAction(action:NewAction,publish:(Action)->Unit){}
         override fun updateAction(expected:Action,changes:NewAction,publish:(ActionChangeResult)->Unit){}
-        override fun advanceActionStatus(id:String,expected:ActionStatus,publish:(ActionChangeResult)->Unit){}
+        override fun advanceActionStatus(id:String,expected:ActionStatus,publish:(ActionChangeResult)->Unit){row=row.copy(status=ActionLifecycle.next(expected)!!);publish(ActionChangeResult.Applied(row))}
     }
     private class People:PersonRepository {
         override fun listPersons(actionId:String,publish:(PersonResult<List<Person>>)->Unit)=publish(PersonResult.Value(emptyList()))
@@ -79,6 +80,11 @@ class Ux1bShellProbe : Instrumentation() {
     private class NavigationMetadata:LeadershipRepository {
         var pending:((SensitiveResult<SensitiveInventory>)->Unit)?=null
         var reads=0;var opens=0;var defer=true
+        var actionReads=0;var actionStatus=SensitiveState.READY;var deferAction=false
+        var pendingAction:((SensitiveResult<SensitiveState>)->Unit)?=null
+        override fun actionState(actionId:String,publish:(SensitiveResult<SensitiveState>)->Unit) {
+            actionReads++;pendingAction=publish;if(!deferAction)publish(SensitiveResult.Value(actionStatus))
+        }
         fun complete(state:SensitiveState=SensitiveState.READY){pending!!(SensitiveResult.Value(SensitiveInventory(state,setOf(SensitiveArea.IDENTITY))))}
         override fun inventory(actionId:String,personId:String,publish:(SensitiveResult<SensitiveInventory>)->Unit){reads++;pending=publish;if(!defer)complete()}
         override fun setup(actionId:String,passphrase:CharArray,confirmation:CharArray,publish:(SensitiveResult<Unit>)->Unit){passphrase.fill('\u0000');confirmation.fill('\u0000')}
@@ -190,6 +196,118 @@ class Ux1bShellProbe : Instrumentation() {
         check(restartNode(awaitNodes{it.any{n->n.contentDescription?.toString()?.startsWith("Sitzung:")==true}})==null)
         runOnMainSync {session.lock()}
     }
+    private fun verifyPreparation(activity:MainActivity,density:Float,scale:Float) {
+        val session=Session();val actions=Actions();val ops=NavigationOps(actions);val tasks=NavigationTasks();val metadata=NavigationMetadata()
+        lateinit var model:ProductViewModel
+        fun sameLabel(text:String?,label:String)=text==label || text=="✓ $label"
+        fun visible(label:String):AccessibilityNodeInfo {
+            repeat(40) {
+                val tree=nodes()
+                val found=tree.find{sameLabel(it.text?.toString(),label)}
+                if(found!=null && bounds(found).height()>0)return found
+                // Accessibility can still expose the previous short, non-scrollable
+                // frame after Compose/main is idle. Wait boundedly for that transition.
+                tree.firstOrNull{it.isScrollable}?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                waitForIdleSync();SystemClock.sleep(80)
+            }
+            error("Synthetic control not reachable")
+        }
+        fun top() {
+            repeat(20) {val scroll=nodes().firstOrNull{it.isScrollable} ?: return
+                if(!scroll.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD))return
+                waitForIdleSync();SystemClock.sleep(40)}
+        }
+        fun click(label:String) {
+            repeat(40) {
+                val tree=nodes()
+                for(node in tree.filter{sameLabel(it.text?.toString(),label)}) {
+                    var candidate:AccessibilityNodeInfo?=node
+                    while(candidate!=null && !candidate.isClickable)candidate=candidate.parent
+                    if(candidate!=null && bounds(candidate).height()>0) {
+                        check(candidate.performAction(AccessibilityNodeInfo.ACTION_CLICK));waitForIdleSync();return
+                    }
+                }
+                val backward=label.startsWith("‹") || PreparationArea.entries.any{it.label==label}
+                tree.firstOrNull{it.isScrollable}?.performAction(if(backward)AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                waitForIdleSync();SystemClock.sleep(160)
+            }
+            error("Synthetic clickable control not reachable")
+        }
+        fun area(area:PreparationArea) {
+            top()
+            var already=false
+            runOnMainSync{already=model.preparationArea==area}
+            if(!already)click(area.label)
+            val tree=awaitNodes{it.any{n->n.text?.toString()=="✓ ${area.label}"}}
+            // Android exposes selected tabs as selected, not clickable. Measure the
+            // selected semantic ancestor without forcing a redundant activation.
+            var tab=checkNotNull(tree.find{it.text?.toString()=="✓ ${area.label}"})
+            while(!tab.isSelected)tab=checkNotNull(tab.parent)
+            check(tab.isSelected)
+            val rectangle=bounds(tab)
+            check(rectangle.height()>=48*density && rectangle.width()>=48*density)
+            check(rectangle.left>=0 && rectangle.right<=targetContext.resources.displayMetrics.widthPixels)
+        }
+        runOnMainSync {
+            actions.row=actions.row.copy(status=ActionStatus.DRAFT)
+            metadata.actionStatus=SensitiveState.UNINITIALIZED
+            model=ProductViewModel(session,actions,ProductStorageState.READY_TO_OPEN,People(),metadata,ops,tasks){}
+            session.ready();model.detail("synthetic")
+            activity.setContent{CompositionLocalProvider(LocalDensity provides Density(density,scale)){ProductScreen(model)}}
+            check(ops.reads==0 && tasks.reads==0 && metadata.actionReads==0)
+        }
+        waitForIdleSync()
+        val draft=awaitNodes{it.any{n->n.text?.toString()=="ENTWURF"}}
+        check(draft.none{it.text?.toString() in PreparationArea.entries.map{it.label}})
+        click("Vorbereitung beginnen");click("Bestätigen")
+        runOnMainSync{check(model.selected?.status==ActionStatus.PREPARATION && metadata.actionReads==1 && metadata.reads==0 && metadata.opens==0)}
+        top();area(PreparationArea.OVERVIEW)
+        visible("Leitungsschutz noch nicht eingerichtet")
+        check(control(visible("Leitungsschutz einrichten")).isEnabled)
+        runOnMainSync {metadata.actionStatus=SensitiveState.READY;model.loadWorkspace()}
+        waitForIdleSync();visible("Leitungsschutz eingerichtet")
+        runOnMainSync {metadata.actionStatus=SensitiveState.PARTIAL_OR_INVALID;model.loadWorkspace()}
+        waitForIdleSync();visible("Leitungsschutz nicht verfügbar. Es erfolgt keine Reparatur oder Ersatzanlage.")
+        runOnMainSync{model.requestActionProtectionSetup();check(!model.sensitiveSetup && metadata.reads==0 && metadata.opens==0)}
+        val taskReads=tasks.reads;val actionReads=metadata.actionReads
+        area(PreparationArea.PERSONS)
+        runOnMainSync{check(tasks.reads==taskReads && metadata.actionReads==actionReads)}
+        val personTree=awaitNodes{it.any{n->n.text?.toString()=="synthetic person"}}
+        check(personTree.none{it.text?.toString()?.contains("Keine geplanten Rollen")==true})
+        click("Person hinzufügen")
+        awaitNodes{it.any{n->n.isEditable && n.isFocused}}
+        area(PreparationArea.ROLES)
+        runOnMainSync{check(!model.personForm && tasks.reads==taskReads && metadata.actionReads==actionReads)}
+        click("Rolle anlegen")
+        awaitNodes{it.any{n->n.isEditable && n.isFocused}}
+        area(PreparationArea.TASKS)
+        visible("Noch keine Aufgaben.");click("+ Aufgabe")
+        awaitNodes{it.any{n->n.isEditable && n.isFocused}}
+        area(PreparationArea.OVERVIEW)
+        runOnMainSync{check(!model.tasks.form && model.tasks.input.title.isEmpty())}
+        click("Aktionsdetails bearbeiten")
+        val displayed=java.time.Instant.ofEpochMilli(actions.row.startAt).atZone(java.time.ZoneId.systemDefault())
+        visible("Datum · ${displayed.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))}")
+        visible("Uhrzeit · ${displayed.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))}")
+        top();click("‹ Zur Aktion")
+        // Initial load waits for metadata as well, unlike a refresh with valid old content.
+        runOnMainSync {metadata.deferAction=true;model.detail("synthetic");check(model.workspace==null)}
+        waitForIdleSync()
+        val loading=awaitNodes{it.any{n->n.text?.toString()=="Geschützter Speicher wird geprüft"}}
+        check(loading.none{it.text?.toString()=="Vorbereitung im Überblick"})
+        runOnMainSync{metadata.pendingAction!!(SensitiveResult.Value(SensitiveState.READY));check(model.workspace!=null)}
+        waitForIdleSync();visible("Vorbereitung im Überblick")
+        runOnMainSync{metadata.deferAction=false;model.loadWorkspace()}
+        waitForIdleSync();click("Aktion starten");click("Bestätigen")
+        runOnMainSync{check(model.selected?.status==ActionStatus.ACTIVE)}
+        waitForIdleSync()
+        runOnMainSync{actions.row=actions.row.copy(status=ActionStatus.PREPARATION);model.detail("synthetic");model.preparationArea(PreparationArea.TASKS);model.tasks.add()}
+        waitForIdleSync();awaitNodes{it.any{n->n.isEditable && n.isFocused}}
+        runOnMainSync{session.lock();check(model.workspace==null && !model.tasks.form && model.preparationArea==PreparationArea.OVERVIEW)}
+        waitForIdleSync();awaitNodes{it.any{n->n.text?.toString()=="PaG"}}
+        runOnMainSync{session.ready();metadata.deferAction=true;model.detail("synthetic");val old=metadata.pendingAction!!;session.lock();old(SensitiveResult.Value(SensitiveState.READY));check(model.workspace==null && model.selected==null)}
+        waitForIdleSync();awaitNodes{it.any{n->n.text?.toString()=="PaG"}}
+    }
     override fun onCreate(arguments:Bundle?){super.onCreate(arguments);start()}
     override fun onStart(){
         var activity:MainActivity?=null
@@ -272,13 +390,14 @@ class Ux1bShellProbe : Instrumentation() {
                 waitForIdleSync();SystemClock.sleep(200)
                 check(before==anchor)
             }
+            for(scale in listOf(1f,2f)) { scaleUnderTest=scale;verifyPreparation(launched,density,scale) }
             verifyMinorNavigation(launched,density)
             for(scale in listOf(1f,2f)) verifySessionRestart(launched,density,scale)
             runOnMainSync{launched.finish()}
-            finish(-1,Bundle().apply{putString("stream","UX1b/UX1-S synthetic header, font scales 1/2, touch/non-overlap, banner/no reflow, entry focus, lock cleanup, inventory navigation, restart threshold/button click/lock before single auth/non-READY exclusion/new countdown: OK\n")})
+            finish(-1,Bundle().apply{putString("stream","UX1b/UX1-S synthetic header, font scales 1/2, touch/non-overlap, banner/no reflow, entry focus, lock cleanup, inventory navigation, restart threshold/button click/lock before single auth/non-READY exclusion/new countdown; UX2 DRAFT/lifecycle/four areas/actionState/isolated reads/forms/atomic loading/stale cleanup/font scales 1/2: OK\n")})
         }catch(failure:Exception){
             activity?.let{runOnMainSync{it.finish()}}
-            finish(0,Bundle().apply{putString("stream","UX1b synthetic shell probe failed at test line ${failure.stackTrace.firstOrNull{it.className==Ux1bShellProbe::class.java.name}?.lineNumber}; fontScale=$scaleUnderTest; no operational payload logged\n")})
+            finish(0,Bundle().apply{putString("stream","UX1b synthetic shell probe failed at test line ${failure.stackTrace.filter{it.className==Ux1bShellProbe::class.java.name}.take(5).joinToString{it.lineNumber.toString()}}; fontScale=$scaleUnderTest; no operational payload logged\n")})
         }
     }
 }

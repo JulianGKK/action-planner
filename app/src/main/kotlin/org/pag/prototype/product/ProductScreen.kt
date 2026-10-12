@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -19,7 +20,7 @@ import java.util.Locale
 @Composable fun ProductScreen(model: ProductViewModel) {
     MaterialTheme {
         val screen=listOf(model.snapshot.state,model.snapshot.generation,model.selected?.id,model.selectedPerson?.id,
-            model.actionListState::class,model.personDetailLoading,model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter)
+            model.actionListState::class,model.preparationArea,model.personDetailLoading,model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter)
         ProductInputScope(screen) {
             LaunchedEffect(model.snapshot.state, model.snapshot.generation) {
                 if (model.snapshot.state == SessionState.READY) while (true) {
@@ -50,7 +51,7 @@ import java.util.Locale
                         PagWorkspace(model.feedback.takeIf { model.snapshot.state == SessionState.READY },
                             model::dismissFeedback, Modifier.fillMaxWidth().weight(1f)) {
                         val scroll=rememberScrollState()
-                        LaunchedEffect(model.tasks.form,model.tasks.selected?.id,model.tasks.filter){scroll.scrollTo(0)}
+                        LaunchedEffect(model.preparationArea,model.tasks.form,model.tasks.selected?.id,model.tasks.filter){scroll.scrollTo(0)}
                         Column(Modifier.padding(24.dp).verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             when (model.snapshot.state) {
                                 SessionState.BLOCKED -> PagErrorState()
@@ -60,7 +61,10 @@ import java.util.Locale
                                 SessionState.READY -> {
                                     when {
                                         model.creating || model.editing != null -> ActionForm(model)
-                                        model.detailLoading || model.personDetailLoading -> PagLoadingState()
+                                        model.detailLoading -> PagLoadingState()
+                                        model.selected?.status == ActionStatus.DRAFT -> DraftWorkspace(model)
+                                        model.selected?.status == ActionStatus.PREPARATION -> PreparationWorkspace(model)
+                                        model.personDetailLoading -> PagLoadingState()
                                         model.selected != null && model.workspaceError -> PagErrorState()
                                         model.selected != null && model.personsVisible && model.workspace == null -> PagLoadingState()
                                         model.selected != null -> {
@@ -120,7 +124,7 @@ import java.util.Locale
 }
 
 
-@Composable private fun PersonsSection(model: ProductViewModel) {
+@Composable internal fun PersonsSection(model: ProductViewModel) {
     if (model.operations.screen != OperationsScreen.OVERVIEW) { OperationsSection(model); return }
     if (model.selected?.status != ActionStatus.ACTIVE) Text("Personen", style = MaterialTheme.typography.titleLarge)
     model.personError?.let { Text(personErrorLabel(it)) }
@@ -128,14 +132,19 @@ import java.util.Locale
         model.personForm -> {
             val existing = model.editingPerson
             var pseudonym by remember(existing?.id) { mutableStateOf(existing?.pseudonym ?: "") }
-            Text(if (existing == null) "Person hinzufügen" else "Person bearbeiten")
+            PreparationHeading(if (existing == null) "Person hinzufügen" else "Person bearbeiten")
             FormTextField(pseudonym, { model.interaction(); pseudonym = it },
                 label = { Text("Pseudonym") }, autoFocus=existing==null, keyboardOptions=productKeyboard(ProductTextKind.PERSON), modifier = Modifier.fillMaxWidth(), enabled = !model.personSaving)
             FormButton(onClick = { model.savePerson(pseudonym) }, enabled = !model.personSaving) { Text("Speichern") }
             FormOutlinedButton(onClick = model::cancelPerson, enabled = !model.personSaving) { Text("Abbrechen") }
         }
         model.selectedPerson != null -> {
-            Text(model.selectedPerson!!.pseudonym, style = MaterialTheme.typography.titleMedium)
+            PreparationHeading(model.selectedPerson!!.pseudonym)
+            if (model.selected?.status == ActionStatus.PREPARATION) model.workspace?.operations?.let { board ->
+                board.persons.find { it.person.id == model.selectedPerson!!.id }?.let { person ->
+                    Text(plannedRoles(person, board) ?: "Noch keine Rolle")
+                }
+            }
             if (model.personsEditable) FormOutlinedButton(onClick = model::editPerson) { Text("Bearbeiten") }
             if (model.personsEditable) FormOutlinedButton({ model.operations.plan(model.selectedPerson!!.id) }) { Text("Rollen planen") }
             SensitiveSection(model)
@@ -170,8 +179,11 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
     var start by remember(existing?.id) { mutableStateOf(existing?.startAt?.let { Instant.ofEpochMilli(it).atZone(zone).toLocalDateTime() }) }
     var end by remember(existing?.id) { mutableStateOf(existing?.expectedEndAt?.let { Instant.ofEpochMilli(it).atZone(zone).toLocalDateTime() }) }
     var error by remember { mutableStateOf<String?>(null) }
-    Text(if (existing == null) "Aktion planen" else "Aktion bearbeiten", style = MaterialTheme.typography.headlineMedium)
-    FormTextField(title, { model.interaction(); title = it }, label = { Text("Titel") }, keyboardOptions=productKeyboard(ProductTextKind.ACTION_TITLE), imeAction = androidx.compose.ui.text.input.ImeAction.Next, modifier = Modifier.fillMaxWidth())
+    FormOutlinedButton({ if (existing == null) model.back() else model.cancelEdit() }, enabled = !model.saving) {
+        Text(if (existing == null) "‹ Aktionen" else "‹ Zur Aktion")
+    }
+    Text(if (existing == null) "Aktion planen" else "Aktion bearbeiten", modifier = Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineMedium)
+    FormTextField(title, { model.interaction(); title = it }, label = { Text("Titel") }, autoFocus=existing==null, keyboardOptions=productKeyboard(ProductTextKind.ACTION_TITLE), imeAction = androidx.compose.ui.text.input.ImeAction.Next, modifier = Modifier.fillMaxWidth())
     FormTextField(description, { model.interaction(); description = it }, label = { Text("Beschreibung") }, keyboardOptions=productKeyboard(ProductTextKind.DESCRIPTION), modifier = Modifier.fillMaxWidth())
     Text("Zeitzone: ${zone.id}")
     DateTimeField("Beginn", start, zone, model::interaction) { start = it }
@@ -197,43 +209,55 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
     FormOutlinedButton(onClick = { if (existing == null) model.back() else model.cancelEdit() }, enabled = !model.saving) { Text("Abbrechen") }
 }
 
-/** Inline selectors keep the existing foreground/focus contract; no secondary window.
- * Explicit state construction with remember, never rememberSaveable for draft values.
+/** Compact inline Android/Material selectors retain foreground/focus and RAM-only drafts.
+ * Date and time are explicitly selected; selecting only a date creates no instant.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable private fun DateTimeField(label: String, value: LocalDateTime?, zone: ZoneId,
     interaction: () -> Unit, chosen: (LocalDateTime) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    Text(label, style = MaterialTheme.typography.titleMedium)
-    FormOutlinedButton(onClick = { interaction(); expanded = !expanded }) {
-        Text(value?.format(localTimeFormat()) ?: "Datum und Uhrzeit auswählen")
+    var part by remember { mutableStateOf<String?>(null) }
+    var day by remember { mutableStateOf(value?.toLocalDate()) }
+    var time by remember { mutableStateOf(value?.toLocalTime()) }
+    PreparationHeading(label)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FormOutlinedButton({ interaction(); part = if (part == "date") null else "date" }) {
+            Text("Datum · ${day?.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) ?: "auswählen"}")
+        }
+        FormOutlinedButton({ interaction(); part = if (part == "time") null else "time" }) {
+            Text("Uhrzeit · ${time?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: "auswählen"}")
+        }
     }
-    if (expanded) {
-        val initial = remember { value ?: LocalDateTime.now(zone).withSecond(0).withNano(0) }
-        val date = remember { DatePickerState(Locale.getDefault(),
-            initialSelectedDateMillis = initial.toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()) }
-        val time = remember { TimePickerState(initial.hour, initial.minute, true) }
-        DatePicker(state = date, showModeToggle = false)
-        TimePicker(state = time)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FormOutlinedButton(onClick = {
+    key(part) {
+        if (part == "date") {
+            val date = remember { DatePickerState(Locale.getDefault(),
+                initialSelectedDateMillis = day?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()) }
+            DatePicker(state = date, showModeToggle = false)
+            FormOutlinedButton({
                 interaction()
                 date.selectedDateMillis?.let { millis ->
-                    val day = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
-                    chosen(day.atTime(time.hour, time.minute))
-                    expanded = false
+                    day = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                    time?.let { chosen(day!!.atTime(it)) }
+                    part = null
                 }
-            }, enabled = date.selectedDateMillis != null) { Text("Übernehmen") }
-            FormOutlinedButton(onClick = { interaction(); expanded = false }) { Text("Abbrechen") }
+            }, enabled = date.selectedDateMillis != null) { Text("Datum übernehmen") }
+        } else if (part == "time") {
+            val initial = time ?: LocalTime.now(zone)
+            val clock = remember { TimePickerState(initial.hour, initial.minute, true) }
+            TimePicker(state = clock)
+            FormOutlinedButton({
+                interaction(); time = LocalTime.of(clock.hour, clock.minute)
+                day?.let { chosen(it.atTime(time)) }; part = null
+            }) { Text("Uhrzeit übernehmen") }
         }
+        if (part != null) FormOutlinedButton({ interaction(); part = null }) { Text("Abbrechen") }
     }
 }
 private fun localTimeFormat() = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-private fun formattedTime(millis: Long): String {
+internal fun formattedTime(millis: Long): String {
     val zone = ZoneId.systemDefault()
     return "${Instant.ofEpochMilli(millis).atZone(zone).format(localTimeFormat())} (${zone.id})"
 }
-private fun statusLabel(status: ActionStatus) = when (status) {
+internal fun statusLabel(status: ActionStatus) = when (status) {
     ActionStatus.DRAFT -> "Entwurf"
     ActionStatus.PREPARATION -> "Vorbereitung"
     ActionStatus.ACTIVE -> "Aktiv"
@@ -241,13 +265,13 @@ private fun statusLabel(status: ActionStatus) = when (status) {
     ActionStatus.DELETION_PENDING -> "Löschung ausstehend"
 }
 
-private fun advanceLabel(status: ActionStatus): String = when (ActionLifecycle.next(status)) {
+internal fun advanceLabel(status: ActionStatus): String = when (ActionLifecycle.next(status)) {
     ActionStatus.PREPARATION -> "Vorbereitung beginnen"
     ActionStatus.ACTIVE -> "Aktion starten"
     ActionStatus.COMPLETED -> "Aktion abschließen"
     else -> ""
 }
-private fun changeErrorLabel(reason: ActionChangeRejection) = when (reason) {
+internal fun changeErrorLabel(reason: ActionChangeRejection) = when (reason) {
     ActionChangeRejection.NOT_FOUND -> "Die Aktion ist nicht mehr vorhanden."
     ActionChangeRejection.STALE -> "Die Aktion wurde zwischenzeitlich geändert. Bitte erneut aus der Liste öffnen."
     ActionChangeRejection.NOT_EDITABLE -> "In diesem Status kann die Aktion nicht bearbeitet werden."

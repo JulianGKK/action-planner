@@ -134,7 +134,7 @@ internal fun operationalLabel(status:OperationalStatus)=when(status){
     OperationalStatus.LEFT->"Nicht mehr vor Ort";OperationalStatus.UNCLEAR->"Unklar"
 }
 private fun updatedLabel(time:Long)=if(time==0L)"Aktualisierungszeit unbekannt" else "Aktualisiert: "+Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))
-private fun operationsError(failure:OperationsFailure)=when(failure){
+internal fun operationsError(failure:OperationsFailure)=when(failure){
     OperationsFailure.NOT_FOUND->"Die Person oder Rolle ist in dieser Aktion nicht vorhanden."
     OperationsFailure.NOT_ALLOWED->"Diese Änderung ist im aktuellen Aktionsstatus nicht möglich."
     OperationsFailure.INVALID->"Bitte Rollenname, Hauptfunktion oder Ort prüfen (maximal 80 Zeichen)."

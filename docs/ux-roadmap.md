@@ -82,26 +82,17 @@ Aktuelle Prüfungen und menschlicher Smoke: [UX1-S](ux1s-session-restart.md).
 
 ## UX2 — Preparation Workspace
 
-**Ziel:** Planungsbereich mit Header, großen Reitern Übersicht/Personen/Aufgaben/
-Rollen, knapper Vorbereitungssummary und sichtbarem nächsten Lifecycle-Schritt.
-DRAFT bleibt reduzierter Entwurf, ohne unzulässige P4/P5a-Controls.
+**Implementiert, automatisch grün; manueller UX-Smoke ausstehend:** DRAFT bleibt Entwurf/Stammdaten mit „Vorbereitung beginnen“.
+PREPARATION hat fachlichen Header und vier große Bereiche Übersicht/Personen/
+Aufgaben/Rollen. Kompakte Summary, frühes actionState-Metadata ohne Person,
+bewusste Einrichtung, Planrollenkarten, bestehende Tasks/Vorlagen, Rollen mit
+geplanter Nutzung und primäres „Aktion starten“. Mobile inline Datum-/Zeitwahl,
+gezielte Bereichsreads, Atomic Reveal und RAM-only Navigation/Cleanup.
 
-Kleine Schritte: Workspace/Navigation → Bereichsübersichten → Formularfokus und
-mobile Action-/Task-Zeitauswahl → frühe Leitungsschutz-Anzeige.
-Für Leitungsschutz einen aktionsweiten Setup-Metadatenpfad separat prüfen:
-heutiges Inventory ist personengebunden. Keine sensitive Payload zur Übersicht
-laden, keine neue Freigabe oder Recovery. Zustand unavailable nicht als
-„Noch nicht eingerichtet“ darstellen.
-
-**Nicht enthalten:** neue Bereitschaftspflichten, Planungsstatus, Änderungen an
-Lifecycle, P3b-Crypto, dueAt-Datentyp, Retention oder persistente Navigation/Drafts.
-
-**Abnahme:** Die Vorbereitungssummary führt direkt in Details, keine vollständige
-Datenduplikation. Große nächste Aktion mit bestehender Konsequenzbestätigung;
-Person/Task/Rolle anlegen fokussiert primäres Feld. Cancel ohne Mutation,
-Navigation/Lock verwirft Entwürfe. Time-Regression mit normaler Zeit, ungültigem
-Kalenderdatum, Berlin-Gap/Overlap und unverändertem bestehenden Action-Instant.
-Role-IN_USE, exklusive Task-Zuständigkeit, unabhängige Betroffenheit bleiben korrekt.
+P3b-META (`4ba8f5a`) liefert bereits den geschützten aktionsweiten Zustand;
+UX2 erweitert weder diesen Port noch Security-/Storagecode. Keine Readiness-
+Pflicht, neue Fachregel, Migration oder ACTIVE-Hub-Vorwegnahme. Umsetzung,
+Prüfnachweise und menschlicher UX-Smoke: [UX2](ux2-preparation-workspace.md).
 
 ## UX3 — ACTIVE-Hub und fokussierte Bereiche
 

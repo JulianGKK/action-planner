@@ -54,6 +54,36 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     var personDetailLoading by mutableStateOf(false); private set
     var workspace by mutableStateOf<WorkspaceSnapshot?>(null); private set
     var workspaceError by mutableStateOf(false); private set
+    var preparationArea by mutableStateOf(PreparationArea.OVERVIEW); private set
+    var workspaceRefreshing by mutableStateOf(false); private set
+    val preparationAvailable get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.PREPARATION
+    val preparationNavigationEnabled get() = preparationAvailable && !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy
+    val preparationContentState: PreparationContentState get() {
+        val content = workspace ?: return if (workspaceError) PreparationContentState.ERROR else PreparationContentState.LOADING
+        if ((preparationArea == PreparationArea.TASKS && (content.tasks == null || content.operations == null)) ||
+            (preparationArea == PreparationArea.ROLES && content.operations == null)) return PreparationContentState.ERROR
+        val empty = when (preparationArea) {
+            PreparationArea.OVERVIEW -> false
+            PreparationArea.PERSONS -> content.persons.isEmpty()
+            PreparationArea.TASKS -> content.tasks?.tasks?.isEmpty() == true
+            PreparationArea.ROLES -> content.operations?.roles?.isEmpty() == true
+        }
+        return if (empty) PreparationContentState.EMPTY else PreparationContentState.CONTENT
+    }
+    fun preparationArea(area: PreparationArea) {
+        val before = snapshot
+        val action = selected ?: return
+        if (!preparationNavigationEnabled) return
+        interaction()
+        if (!preparationNavigationEnabled || snapshot.generation != before.generation || selected?.id != action.id) return
+        if (area == preparationArea && !personForm && selectedPerson == null && !sensitiveSetup &&
+            !tasks.form && tasks.selected == null && operations.screen == OperationsScreen.OVERVIEW) return
+        clearPersons()
+        if (!preparationAvailable || snapshot.generation != before.generation || selected?.id != action.id) return
+        preparationArea = area
+        editing = null; confirming = null; changeError = null
+        loadWorkspace()
+    }
     val tasks = TaskModel(taskRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
         { workspace?.tasks }, ::loadWorkspace, ::showFeedback)
     val operations = OperationsModel(operationsRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
@@ -72,6 +102,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (snapshot.state == SessionState.READY) feedback = StatusFeedback(++feedbackId, text)
     }
     private fun clearPersons() {
+        preparationArea = PreparationArea.OVERVIEW; workspaceRefreshing = false
         workspaceRequest++; workspace = null; workspaceError = false; detailLoading = false; personDetailLoading = false
         tasks.clear(); operations.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
         personForm = false; editingPerson = null; personError = null; personSaving = false
@@ -90,25 +121,34 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val generation = snapshot.generation
         val request = ++workspaceRequest
         val previous = workspace
+        val preparation = action.status == ActionStatus.PREPARATION
+        val area = preparationArea
+        workspaceRefreshing = previous != null
         personsLoading = previous == null
         workspaceError = false
-        val needTasks = taskRepository != null && operations.screen == OperationsScreen.OVERVIEW
+        val needTasks = taskRepository != null && operations.screen == OperationsScreen.OVERVIEW &&
+            (!preparation || (selectedPerson == null && area in setOf(PreparationArea.OVERVIEW, PreparationArea.TASKS)))
+        val needMetadata = preparation && area == PreparationArea.OVERVIEW && selectedPerson == null &&
+            operations.screen == OperationsScreen.OVERVIEW && leadership != null
+        var metadata = previous?.leadershipState
+        var metadataDone = !needMetadata
         var people: List<Person>? = null
         var ops: OperationalBoard? = null
         var taskBoard: TaskBoard? = if (needTasks) null else previous?.tasks
         var peopleDone = false
         var tasksDone = !needTasks
         fun current() = snapshot.state == SessionState.READY && snapshot.generation == generation &&
-            selected?.id == action.id && selected?.status == action.status && request == workspaceRequest
+            selected?.id == action.id && selected?.status == action.status && request == workspaceRequest &&
+            (!preparation || preparationArea == area)
         fun failed() {
             if (!current()) return
-            workspaceRequest++; personsLoading = false; workspaceError = true
+            workspaceRequest++; personsLoading = false; workspaceRefreshing = false; workspaceError = true
         }
         fun publish() {
-            if (!current() || !peopleDone || !tasksDone) return
+            if (!current() || !peopleDone || !tasksDone || !metadataDone) return
             androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
-                workspace = WorkspaceSnapshot(action.id, generation, people.orEmpty(), ops, taskBoard, action.status)
-                personsLoading = false
+                workspace = WorkspaceSnapshot(action.id, generation, people.orEmpty(), ops, taskBoard, action.status, metadata)
+                personsLoading = false; workspaceRefreshing = false
                 tasks.reconcileSelection()
             }
         }
@@ -127,6 +167,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 is PersonResult.Value -> { people = result.value; peopleDone = true; publish() }
                 is PersonResult.Rejected -> { personError = result.reason; failed() }
             }
+        }
+        if (needMetadata && current()) leadership.actionState(action.id) { result ->
+            if (!current()) return@actionState
+            metadata = result; metadataDone = true; publish()
         }
         if (needTasks && current()) taskRepository.board(action.id) { result ->
             if (!current()) return@board
@@ -245,6 +289,18 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             }
         }
     }
+    fun requestActionProtectionSetup() {
+        val before = snapshot
+        val id = selected?.id
+        interaction()
+        val state = (workspace?.leadershipState as? SensitiveResult.Value)?.value
+        if (preparationAvailable && snapshot.generation == before.generation && selected?.id == id &&
+            preparationArea == PreparationArea.OVERVIEW && state == SensitiveState.UNINITIALIZED && !sensitiveBusy) {
+            clearSensitive()
+            if (preparationAvailable && snapshot.generation == before.generation && selected?.id == id)
+                sensitiveSetup = true
+        }
+    }
     fun requestSensitiveSetup() {
         interaction()
         if (personsEditable && sensitiveInventory?.state == SensitiveState.UNINITIALIZED && !sensitiveBusy) {
@@ -265,7 +321,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 is SensitiveResult.Value -> { sensitiveSetup = false; sensitiveError = null }
                 is SensitiveResult.Rejected -> sensitiveError = result.reason
             }
-            refreshSensitive()
+            if (selectedPerson == null && preparationAvailable) loadWorkspace() else refreshSensitive()
         }
     }
     fun requestSensitive(area: SensitiveArea) {
@@ -311,7 +367,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     fun closeSensitive() {
         interaction()
-        clearSensitive(); refreshSensitive()
+        clearSensitive()
+        if (selectedPerson == null && preparationAvailable) loadWorkspace() else refreshSensitive()
     }
     fun checkSensitiveExpiry() {
         val opened=sensitiveOpened ?: return

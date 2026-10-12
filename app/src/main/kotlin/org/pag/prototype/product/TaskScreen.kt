@@ -5,6 +5,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import org.pag.domain.*
 import java.time.LocalDateTime
 import java.time.Instant
@@ -14,7 +16,7 @@ import java.time.format.FormatStyle
 
 @Composable internal fun TaskSection(model:TaskModel,people:OperationalBoard) {
     val board=model.board?:return
-    Text("Aufgaben",style=MaterialTheme.typography.titleLarge)
+    Text("Aufgaben",Modifier.semantics { heading() },style=MaterialTheme.typography.titleLarge)
     model.error?.let{Text(when(it){
         OperationsFailure.INVALID->"Bitte Titel (1–120 Zeichen), Zuständigkeit und Fälligkeit prüfen."
         OperationsFailure.STALE->"Die Aufgabe wurde inzwischen geändert. Bitte neu öffnen."
@@ -45,7 +47,7 @@ import java.time.format.FormatStyle
     model.filter?.let{id->Text("Betrifft: ${people.persons.find{it.person.id==id}?.person?.pseudonym.orEmpty()}");FormOutlinedButton({model.showPerson(null)}){Text("Alle Aufgaben")}}
     val active=board.active.filter{model.filter==null || it.affectedPersonId==model.filter}
     active.forEach{t->FormOutlinedButton({model.open(t)},modifier=Modifier.fillMaxWidth(),enabled=!model.busy){TaskSummary(t,people)}}
-    if(active.isEmpty())Text("Keine offenen Aufgaben.")
+    if(active.isEmpty())Text(if(board.tasks.isEmpty() && people.status==ActionStatus.PREPARATION)"Noch keine Aufgaben." else "Keine offenen Aufgaben.")
     var closed by remember{mutableStateOf(false)}
     FormTextButton({model.touch();closed=!closed}){Text("Erledigt / Entfällt (${board.closed.size}) ${if(closed)"▴" else "▾"}")}
     if(closed)board.closed.filter{model.filter==null || it.affectedPersonId==model.filter}.forEach{t->FormOutlinedButton({model.open(t)},modifier=Modifier.fillMaxWidth()){TaskSummary(t,people)}}
