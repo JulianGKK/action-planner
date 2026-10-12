@@ -344,8 +344,12 @@ Wieder geöffnet. Keine Änderungs-, Personenstatus-, Orts- oder allgemeine Audi
 PREPARATION erlaubt Erstellen/Bearbeiten/Löschen und bewusste statische Vorlagenauswahl.
 ACTIVE erlaubt schnelle Erstellung, Bearbeitung und Lifecycle; kein Löschen.
 COMPLETED ist read-only. DRAFT/DELETION_PENDING bieten keinen Task-Verwaltungspfad.
-Das Lagebild zeigt aktive Aufgaben nach Priorität/Fälligkeit, separate erledigte/
-entfallene Aufgaben und betroffene Aufgabenanzahl bei pseudonymen Personen.
+Das ACTIVE-Lagebild ist als UX-Ziel ein operativer Hub mit kompakter Aufgaben-
+Summary und Zugang zur Aufgabenübersicht. Diese zeigt aktive Aufgaben nach
+Priorität/Fälligkeit sowie separate erledigte/entfallene Aufgaben; betroffene
+Aufgabenanzahlen bleiben bei pseudonymen Personen erreichbar. Details und
+Umsetzungsslices: [UX-Philosophie](docs/ux-philosophy.md), [UX3a–d](docs/ux-roadmap.md).
+Der P5a-Fachvertrag bleibt unverändert.
 
 ## FR-033 — Fälligkeit und Vorschläge
 
@@ -539,6 +543,13 @@ Das Dashboard zeigt mindestens:
 * Materialstatus
 * anstehende Löschungen
 * Kostenübersicht
+
+Diese Module sind der perspektivische Produktumfang. Das ACTIVE-UX-Ziel bündelt
+implementierte Bereiche als große Hub-Karten und führt in fokussierte Übersichten;
+noch nicht implementierte Bereiche erscheinen nicht als tote Buttons. Aktuell
+verfügbare Bereiche: Personen, Aufgaben, Funktionen und eigene read-only
+Aktionsdetails. Protokoll, Vorfälle / Beobachtungen, Dokumente, Uploads und weitere
+Module benötigen eigene Freigaben; daraus folgt kein neuer Netzwerkzugriff.
 
 ## FR-101 — Schnelle Bedienung
 

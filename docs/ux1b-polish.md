@@ -3,6 +3,18 @@
 Stand: 12.10.2026. Uncommittierter Slice auf UX1a/UX0 (`6277059`).
 Kein Commit oder Push. Verbindliche Grundlage: [UX-Philosophie](ux-philosophy.md).
 
+## Zielbild nach manuellem UX-Review
+
+Das verbindliche ACTIVE-Ziel ist nun der operative Lagebild-Hub mit großen
+Bereichskarten für Personen, Aufgaben, Funktionen und eigene Aktionsdetails;
+Details liegen in fokussierten Bereichsübersichten. Spezifikation:
+[UX-Philosophie, Abschnitt 7](ux-philosophy.md#7-active-lagebild-als-operativer-hub--schaltzentrale),
+Umsetzungsslices [UX3a–d](ux-roadmap.md#ux3-active-hub-und-fokussierte-bereiche).
+Die folgenden gemeinsamen Workspace-/Loadbeschreibungen und Prüfnachweise
+beschreiben den implementierten UX1b-Stand, keinen künftigen Vertrag für eine
+lange Gesamtseite oder identische Datenloads in allen Hub-Bereichen.
+Cleanup, ehrliche Ladezustände und Publication-Guards bleiben Anforderungen.
+
 ## Atomic Screen Reveal
 
 Der heute sichtbare fachliche Screen zeigt initial Loading oder einen vollständigen

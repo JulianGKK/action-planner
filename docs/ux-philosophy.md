@@ -3,6 +3,9 @@
 Stand: 12.10.2026. Analysebaseline: sauberer `main`, `3b573ea` (P5a).
 PaG steht für „Peacefully against Genocide“. Dieses Dokument definiert das
 Zielbild für folgende Umbauslices, keine bereits implementierten Funktionen.
+Das manuelle UX-Review vom 12.10.2026 legt ACTIVE verbindlich als operativen
+Hub fest (Abschnitte 5 und 7); ältere P4/P5a- und UX1-Bedienungsnachweise
+beschreiben den damaligen Implementierungsstand, nicht dieses neue Zielbild.
 Die [Roadmap](ux-roadmap.md) grenzt deren Freigabe und Prüfungen ab.
 Grundlagen: [Produkt](../PRODUCT.md), [Security](security.md),
 [Privacy](privacy.md), [Datenmodell](data-model.md), [P4](product-p4.md)
@@ -162,18 +165,29 @@ in UX0. Keine neuen Startpflichten oder automatische Bereitschaftszertifizierung
 Eine Aktion ist ein eigener Arbeitsraum mit sichtbarem Aktionsheader und Phase.
 Keine endlose Seite mit allen fachlichen Bereichen hintereinander.
 
-- PREPARATION: **Übersicht | Personen | Aufgaben | Rollen**.
-- ACTIVE: **Übersicht | Personen | Aufgaben | Funktionen**; Übersicht ist das Lagebild.
-- COMPLETED: dieselben lesbaren Perspektiven, eindeutig als Rückblick markiert.
+- PREPARATION: **Übersicht | Personen | Aufgaben | Rollen**; Planung ist primär.
+- ACTIVE: **Lagebild-Hub → Bereichsübersicht → konkretes Objekt → fokussierte Aktion**.
+  Hauptbereiche sind Personen, Aufgaben, Funktionen und eigene Aktionsdetails.
+- COMPLETED: lesbare Perspektiven, eindeutig als Rückblick markiert.
 - DRAFT: reduzierter Planungsbereich für die erlaubten Aktionsdaten.
 
-Reiter sind groß und touchfreundlich. Auswahl erhält Text-/Formmarkierung und
-Semantik; Farbe allein genügt nicht. Bei schmalem Bildschirm/großer Schrift
-Umbruch oder zugängliche Bereichsauswahl; keine immer kleineren Mini-Tabs.
-Künftige Bereiche: Hauptbereiche plus „Mehr“, ohne unbegrenzte Tabreihe.
-Zur Aktionsliste und manuelles Sperren bleiben erreichbar. Bereichswechsel
-schließt Keyboard, verlässt sensitive Grants und verwirft ungespeicherte Entwürfe
-im bestehenden Vertrag; kein verdecktes Autosave. Detailrückkehr ist vorhersehbar.
+ACTIVE verwendet große touchfreundliche Bereichskarten statt klassischer kleiner
+Top-Tabs. PREPARATION-Reiter bleiben groß und zugänglich; Auswahl erhält Text-/
+Formmarkierung und Semantik. Bei schmalem Bildschirm/großer Schrift zugängliche
+Bereichsauswahl statt immer kleinerer Mini-Tabs.
+
+Wichtige Rücknavigation liegt im fachlichen Header oder als klarer Secondary-
+Control, etwa „Zum Lagebild“ bzw. „Zur Personenübersicht“. Kein kleiner Hyperlink
+am unteren Ende eines langen Screens. Der Security-Header `🔒 m:ss [Sperren]`
+bleibt davon getrennt. Zur Aktionsliste und manuelles Sperren bleiben erreichbar.
+Bereichswechsel schließt Keyboard, verlässt sensitive Grants und verwirft
+ungespeicherte Entwürfe im bestehenden Vertrag; kein verdecktes Autosave.
+Detailrückkehr ist vorhersehbar, nach Lock kein alter Editor oder Grant.
+
+Weitere fachliche Module können als zusätzliche Hub-Bereiche ohne Navigationsumbau
+hinzukommen: Protokoll, Vorfälle / Beobachtungen, Dokumente, Uploads und weitere
+Module. Noch nicht implementierte Funktionen erscheinen nicht als tote Buttons.
+Diese Erweiterbarkeit gibt weder ihre Implementierung noch Netzwerkzugriff frei.
 
 Nach erfolgreichem Unlock erst Maintenance und erfolgreichen geschützten Load
 abschließen. Exakt eine ACTIVE-Aktion: direkt ihr Lagebild öffnen. Keine ACTIVE:
@@ -212,74 +226,137 @@ Kein Lesen von Personengeheimnissen zum Ermitteln des Einrichtungszustands.
 Die Baseline koppelt Inventory an ein Persondetail; die spätere aktionsweite
 Metadatenabfrage benötigt eine abgegrenzte Gate-/Privacy-Prüfung, keine Cache-Ausnahme.
 
-## 7. ACTIVE: Lagebild als Arbeitsplatz
+## 7. ACTIVE: Lagebild als operativer Hub / Schaltzentrale
 
-### Übersicht — „Wo muss die Leitung gerade hinschauen?“
+Das Lagebild zeigt genug Information, um zu erkennen, welcher Bereich
+Aufmerksamkeit braucht, und führt mit großen klaren Controls in fokussierte
+Bereichsübersichten. Details liegen dort statt auf einer langen gemeinsamen
+Seite. Ziel sind weniger visuelle Konkurrenz, weniger Scrollen, schnellere
+Orientierung, bessere Erweiterbarkeit und effiziente Arbeit in kurzen sicheren
+Sessions. Grundmuster: **Hub → Bereichsübersicht → Objekt → fokussierte Aktion**.
 
-Aufmerksamkeit vor Vollständigkeit. Gewahrsam, Nicht erreichbar,
-Identitätsfeststellung, Unklar und fehlende Lageangabe sind aus bestehenden
-Statuswerten sichtbar; HIGH-Tasks und aktuelle Funktionsverteilung ergänzen sie.
-Keine automatische Rechtsbewertung, keine neue Statusklasse und keine P5b-Regel
-oder automatische Task-Erzeugung. Unbekannt ist nicht normal oder erledigt.
+### Hub-Karten und Aufmerksamkeit
+
+Phone: bei ausreichender Breite sinnvoll zweispaltig; bei geringer Breite oder
+großer Schrift sauber einspaltig. Keine starre Zwei-Spalten-Annahme, keine
+abgeschnittenen Labels oder Mini-Dashboards innerhalb der Karten.
+
+Jede Karte enthält Bereichsname, sehr kompakte Zusammenfassung, höchstens einen
+besonders relevanten Hinweis/Aufruf und eine klare Öffnungsaktion. Optional kommt
+eine wirklich sinnvolle Quick Action hinzu. Keine Objektlisten im Hub.
+
+| Bereich | Synthetische kompakte Summary | Öffnen / optionale Quick Action |
+| --- | --- | --- |
+| Personen | 12 insgesamt · 2 in Gewahrsam · 1 nicht erreichbar · 9 ohne aktuelle Lage | Personen öffnen |
+| Aufgaben | 6 offen · 2 in Arbeit · 2 hohe Priorität | Aufgaben öffnen; optional „+ Aufgabe“ |
+| Funktionen | 8 Blockierende · 3 Support · 1 Hummel · 2 Gesa-Support | Funktionen öffnen |
+| Aktionsdetails | Kurzer Aktionskontext / Zeitraum, eindeutig ACTIVE | Aktionsdetails öffnen; read-only |
+
+Attention-Regel: höchstens **ein Hinweis je Karte**, ausschließlich eine
+verständliche Projektion vorhandener Daten. Zum Beispiel direkt nach Aktionsstart
+„9 Personen ohne aktuelle Lage“ oder „2 Aufgaben mit hoher Priorität“.
+Weitere relevante Fakten bleiben in der kompakten Summary und der Bereichsübersicht.
+Keine komplexe Regelengine, persistierte Risikoeinstufung, automatische Eskalation,
+Rechtsbewertung oder Task-Erzeugung. Ohne relevanten Hinweis entfällt die Zeile.
+Eine unbesetzte wichtige Funktion kann einen einzelnen Hinweis erhalten, soweit
+sie aus dem vorhandenen Aktionskontext erkennbar ist; keine neue Pflichtrolle,
+Sollzahl oder automatische Einstufung als Unterbesetzung. „Derzeit niemand“
+bezeichnet ausschließlich null aktuelle Vor-Ort-Zuordnungen.
+
+### Personenübersicht und Personen-Arbeitsbereich
+
+„Personen öffnen“ führt zur kompakten Summary oben und danach zur Personenliste.
+Filter „Alle“, „Vor Ort“, „Gewahrsam“, „Nicht erreichbar“, „Weitere“ halten sämtliche
+P4-Statuswerte einschließlich „Keine Lageangabe“ erreichbar.
+
+ACTIVE-Karten zeigen primär Pseudonym, aktuelle Lage, zulässigen aktuellen Ort/Ziel
+falls vorhanden, aktuelle Funktion (`currentRole`) und Aktualität der Lage.
+Ohne aktuelle Funktion genügt „Keine Funktion“. Der prominente Text
+„Geplant: Keine geplanten Rollen“ entfällt. PREPARATION zeigt dagegen geplante
+Rollen/Funktionen prominent; geplante Informationen bleiben in ACTIVE bei Bedarf
+in Details nachsehbar und dominieren die Übersicht nicht.
+
+Synthetische Beispiele unter dem unveränderten P4-Vertrag:
 
 ```text
-AKTIV · Demo-Aktion
-AUFMERKSAMKEIT
-2 in Gewahrsam · 1 nicht erreichbar · 2 dringende Aufgaben
+Motte
+In Gewahrsam · Gesa 1
+Keine Funktion
+Aktualisiert vor 5 Min.
 
-IN GEWAHRSAM
-Motte · Gesa 1 · 1 offene Aufgabe
-Meise · Gesa 2 · 1 offene Aufgabe
-
-NICHT ERREICHBAR
 Falter
-
-DRINGENDE AUFGABEN
-Hoch · EA kontaktieren · Motte · Gesa-Support
-
-FUNKTIONEN · VOR ORT
-8 Blockierende · 3 Support · 1 Hummel · 2 Gesa-Support
+Vor Ort
+Gesa-Support
+Gerade aktualisiert
 ```
 
-Pseudonyme und manuelle P4-Ortslabels, keine P3b-Identität, Telefonnummer oder
-Notfallkontakte. Gruppen verlinken in gefilterte Details. Normale Personen
-bleiben im Personenbereich. Aufmerksamkeit ist eine UI-Projektion, keine
-persistierte Risikoeinstufung. Reihenfolge innerhalb der weiteren Problemgruppen
-ist vor UX3 mit synthetischen Szenarien festzulegen (Roadmap).
+P4 erlaubt aktuelle Funktionszuordnung nur bei Vor Ort; Gewahrsam und die anderen
+entsprechenden Statuswechsel entfernen sie. Die beim Start für NO_STATUS
+übernommene Hauptfunktion behauptet keine Anwesenheit oder Verfügbarkeit.
+Kein Klarname, Telefonnummer oder anderes P3b-Feld in Hub oder Übersicht.
 
-### Personen
+Die Personenkarte selbst ist das klare große Tap-Ziel; der redundante
+Listenhinweis „Lage aktualisieren“ entfällt. Tap öffnet einen fokussierten
+Personen-Arbeitsbereich mit großen Aktionen „Lage ändern“, „Funktion ändern“ und
+„Personendetails“. Fachlich unzulässige Funktionsänderung bleibt gesperrt.
+Bestehende betroffene Aufgaben und deren zulässige Aktionen sind dort nachrangig
+erreichbar; ihre aktive Anzahl darf kompakt erscheinen, ohne die Liste zu überladen.
+„Offene Aufgaben“ einer Person umfasst OPEN und IN_PROGRESS mit affectedPerson,
+nicht deren Zuständigkeit. P3b bleibt separat unter bestehendem Step-up.
+Gültige Lageübernahme erhält keine zusätzliche Bestätigung.
 
-Eigener Fokus mit „Alle“, „Vor Ort“, „Gewahrsam“, „Nicht erreichbar“, „Weitere“.
-Weitere macht alle restlichen P4-Werte einschließlich „Keine Lageangabe“ erreichbar.
-Karte: Pseudonym; Lage und zulässiger Ort; geplante Funktion nachrangig;
-Anzahl aktiver betroffener Aufgaben. „Offene Aufgaben“ umfasst hier OPEN und
-IN_PROGRESS, die Zuständigkeit wird nicht mit Betroffenheit verwechselt.
+### Lage-Aktualität als UI-Projektion
 
-Öffnen zeigt große Aktionen „Lage ändern“, „Aufgabe hinzufügen“, „Funktion ändern“.
-P4 bleibt maßgeblich: Funktionszuordnung nur bei Vor Ort; andere Statuswerte
-verwerfen sie wie bisher. Detail-/P3b-Zugriff nachrangig und separat geschützt.
-Keine zusätzlichen Bestätigungen für das Übernehmen einer gültigen Lage.
+Anzeige aus vorhandenem `updatedAt` und lokaler Gerätezeit; keine Speicherung
+relativer Texte, neue Historie oder neue Beobachtungsmetadaten.
 
-### Aufgaben
+| Alter / Kalendertag | Anzeige |
+| --- | --- |
+| Unter 1 Minute | Gerade aktualisiert |
+| 1 bis 59 Minuten | Aktualisiert vor X Min. |
+| Ab 60 Minuten am selben lokalen Kalendertag | Zuletzt aktualisiert um HH:mm |
+| Älterer lokaler Kalendertag | Zuletzt aktualisiert am DD.MM. um HH:mm |
 
-Kompakt „2 Hoch · 4 Offen · 2 In Arbeit“, mit definierten Zählmengen:
-Hoch zählt HIGH unter aktiven Tasks, Offen OPEN, In Arbeit IN_PROGRESS.
-Aktive Tasks in bestehender Prioritäts-/Fälligkeitsreihenfolge und stabilen
-Tie-Breakern. HIGH als Text und Struktur hervorheben. DONE/CANCELLED bleiben
-zurückhaltend/eingeklappt. Große Aktion „Aufgabe hinzufügen“, keine kleine FAB
-als Voraussetzung. Alle P5a-Regeln einschließlich exklusive Zuständigkeit,
-optionale Betroffenheit, minimale Chronik, Templates, stale-state-Abweisung,
-kein ACTIVE-Löschen und COMPLETED-read-only bleiben erhalten.
+Bei einem älteren Kalendertag gilt die Datumsanzeige auch über Mitternacht bei
+weniger als 60 Minuten Abstand. Technische NO_STATUS-Initialisierung beim Start
+und unbekannte Migrationszeit (`updatedAt=0`) dürfen keine geprüfte Lage suggerieren:
+„Keine Lageangabe“ bleibt unbekannt, ohne „Gerade aktualisiert“ für den Initial-
+Snapshot. Nicht interpretierbare oder zukünftige Zeiten behaupten keine frische
+Prüfung. Ein eventueller UI-Tick meldet keine Sessioninteraction, verlängert keine
+Deadline und führt keinen fachlichen Refresh aus.
 
-### Funktionen
+### Aufgabenübersicht
 
-„Wer übernimmt gerade was?“ Nach aktueller Funktion gruppierte Pseudonyme,
-primär Personen mit ON_SITE. Das entspricht der bisherigen Funktionszählung;
-NO_STATUS mit übernommener Hauptfunktion behauptet keine verfügbare Person.
-Geplante Rollen bleiben im Personenbereich sichtbar. Unzugeordnet wird ehrlich
-angezeigt. „Gesa-Support: derzeit niemand“ darf null aktuelle Vor-Ort-Zuordnungen
-zeigen, bedeutet aber ohne beschlossenen Sollbedarf nicht automatisch Unterbesetzung.
-Keine neuen Sollzahlen oder Kompetenzprofile durch UX einführen.
+**Hub → Aufgabenübersicht → Task**. Oben kompakte Summary, danach Taskkarten;
+keine Rückkehr zum langen Alles-auf-einer-Seite-Lagebild.
+Offen zählt OPEN, In Arbeit IN_PROGRESS, hohe Priorität HIGH unter aktiven Tasks
+(OPEN/IN_PROGRESS). Bestehende P5a-Sortierung: HIGH, NORMAL, LOW; innerhalb gleicher
+Priorität Fälligkeit vor keiner Fälligkeit, früheste zuerst, danach createdAt und
+ID als stabile Tie-Breaker. DONE/CANCELLED bleiben separat/eingeklappt.
+Priorität und Status erscheinen als Text und Struktur, nicht nur Farbe.
+
+„+ Aufgabe“ ist in ACTIVE als optionale Hub-Quick-Action zulässig und führt in
+einen Entwurf; erst explizites Speichern erstellt die Task. Taskdetail und minimale
+Chronik bleiben erhalten. Exklusive Zuständigkeit, unabhängige Betroffenheit,
+Templates, stale-state-Abweisung, kein ACTIVE-Löschen und COMPLETED-read-only
+bleiben unverändert.
+
+### Funktionenübersicht
+
+Eigener Bereich: „Wer übernimmt gerade was?“ Aktuelle operative Funktionen sind
+primär, nicht geplante Rollen. Personen pro Funktion kompakt als Pseudonyme anzeigen.
+Funktionssummary und Verteilung zählen wie P4 ausschließlich ON_SITE anhand
+`currentRole`; NO_STATUS zählt auch mit übernommener Hauptfunktion nicht als
+verfügbare Person. Unzugeordnet ehrlich und knapp darstellen. Planungsdetails
+bleiben nachrangig in Details erreichbar. Keine Sollbesetzung, Kompetenzprofile
+oder automatische fachliche Eskalationsengine.
+
+### Aktionsdetails
+
+Eigener Hub-Bereich, nicht unter Funktionen vermischen. In ACTIVE gemäß bestehendem
+Vertrag read-only. Der bestehende zulässige Lifecycle-Schritt „Aktion abschließen“
+bleibt getrennt als ausdrückliche Aktion mit seiner Konsequenzbestätigung erreichbar;
+der Hub schafft keine Bearbeitung von Aktionsdaten.
 
 ## 8. Buttons und Formulare
 
@@ -417,7 +494,8 @@ Alle Komponenten übernehmen Abschnitt 11 und geben keine Security-Autorität vo
 | PagPrimaryButton | Nächste zentrale zulässige Aktion. | Metadaten oder jede Nebenaktion. | Große Fläche, klares Verb, Button-Semantik, Busy verhindert Doppelaufruf; keine implizite Mutation. |
 | PagSecondaryButton | Eindeutige Alternative. | Hauptaktion ohne erkennbare Hierarchie. | Umrandete/strukturell unterscheidbare Form, gleichwertiges Touch-Ziel und Disabled-Semantik. |
 | PagTertiaryButton | Nachrangige Textaktion. | Zentrale Lifecycle-/operative Aktion. | Textlabel und mindestens 48-dp-Ziel; kein reiner Farb-/Hyperlinkcode. |
-| PagSectionTabs | Wenige Workspace-Bereiche. | Unbegrenzte Mini-Tabs oder Lifecycle-Schritte. | Selected-Semantik, klare aktive Markierung, große Schrift/kleine Breite berücksichtigen; Wechsel beendet Editor nach Vertrag. |
+| PagHubCard | ACTIVE-Bereich öffnen, kompakte Summary und höchstens ein Hinweis. | Objektlisten, Mini-Dashboard oder nicht implementierter Bereich. | Großes Touch-Ziel, klare Öffnungssemantik; responsive ein-/zweispaltig, optionale Quick Action separat erreichbar. |
+| PagSectionTabs | Wenige PREPARATION-Workspace-Bereiche. | ACTIVE-Hub, unbegrenzte Mini-Tabs oder Lifecycle-Schritte. | Selected-Semantik, klare aktive Markierung, große Schrift/kleine Breite berücksichtigen; Wechsel beendet Editor nach Vertrag. |
 | PagStatusBanner | Kurzes unklar bleibendes Ergebnis. | Jeder Tap, geheimhaltungsbedürftige Inhalte außerhalb READY. | Zurückhaltende Ansage, adaptierte Dauer, Fehler dauerhaft, bei Revoke bereinigt. |
 | PagActionHeader | Aktionsname, Phase und Kontext in READY. | LOCKED/MAINTENANCE oder vollständige Detailkopie. | Heading und Status als Text; stabiler Platz, kurze Details nachrangig. |
 | PagLoadingState | Laufender zulässiger Load. | Erfolgreich leere Daten oder Fehler. | Stabiler Platz und lesbares „Wird geladen“; keine simulierten Daten/Zähler oder Interaktionsticks. |

@@ -106,27 +106,82 @@ Navigation/Lock verwirft Entwürfe. Time-Regression mit normaler Zeit, ungültig
 Kalenderdatum, Berlin-Gap/Overlap und unverändertem bestehenden Action-Instant.
 Role-IN_USE, exklusive Task-Zuständigkeit, unabhängige Betroffenheit bleiben korrekt.
 
-## UX3 — ACTIVE-Lagebild und Einstieg
+## UX3 — ACTIVE-Hub und fokussierte Bereiche
 
-**Ziel:** Operativer Workspace Übersicht/Personen/Aufgaben/Funktionen;
-Aufmerksamkeit statt Vollständigkeit. Personenfilter, kurze Karten, große
-Lage-/Task-/Funktionsaktionen, aktuelle Vor-Ort-Funktionsverteilung.
+Verbindliche Entscheidung aus dem manuellen UX-Review (12.10.2026): Lagebild ist
+operativer Hub / Schaltzentrale. **Hub → Bereichsübersicht → Objekt → fokussierte
+Aktion** ersetzt die lange Gesamtseite. Details: [UX-Philosophie, Abschnitt 7](ux-philosophy.md#7-active-lagebild-als-operativer-hub--schaltzentrale).
+Die folgenden vier Slices sind Zielplanung, noch keine Implementierung.
 
-Zuerst reine Projektionen bestehender P4/P5a-Daten und Workspace-Struktur,
-danach Direkt-Routing nach erfolgreichem Unlock/Maintenance/Load. Exakt eine
-ACTIVE-Aktion → ihr Lagebild; keine → Liste; mehrere → klare Auswahl.
-Kein Routing anhand Default-Leere, alter Sessiondaten oder ungeprüfter Cachewerte.
+### UX3a — ACTIVE Hub / Navigation
 
-**Nicht enthalten:** P5b-Vorschläge, automatische Tasks, Personen-/Ortsgeschichte,
-neue Risikoklassen, Sollbesetzung, Identitäts-/Kontaktfelder in normaler Übersicht.
+Große Bereichskarten für Personen, Aufgaben, Funktionen und eigene read-only
+Aktionsdetails. Sehr kompakte Summary, höchstens ein datenbasierter Hinweis pro
+Karte, klare Öffnungsaktion, optional sinnvolle Quick Action („+ Aufgabe“).
+Responsive auf Phone: bei ausreichender Breite zwei Spalten, bei geringer Breite/
+großer Schrift eine. Keine kleinen Top-Tabs, Mini-Dashboards oder toten Buttons.
+Wichtige Rücknavigation im fachlichen Header / klaren Secondary-Control;
+Security-Header `🔒 m:ss [Sperren]` bleibt getrennt.
 
-**Abnahme:** Gewahrsam/Nicht erreichbar und HIGH sofort sichtbar; Weitere macht
-alle P4-Statuswerte erreichbar. Keine Lageangabe als unbekannt behandeln.
-ON_SITE bestimmt Funktionsverteilung, Planung bleibt ab ACTIVE unverändert.
-P5a-Sortierung und Chronik unverändert, ACTIVE kein Task-Löschen.
-Synthetische Szenarien für Lage ändern, betroffene Aufgabe erstellen, Funktion
-wechseln und Task wieder öffnen mit wenigen Taps. Revoke/Generation/Action/Request-
-Regressionen besonders bei Routing und Navigation; kein alter Editor nach Unlock.
+Routing erst nach erfolgreichem Unlock/Maintenance/Load: genau eine ACTIVE-Aktion
+→ ihr Hub; keine → Liste; mehrere → klare Auswahl. Kein Routing anhand Default-
+Leere, alter Sessiondaten oder ungeprüfter Cachewerte. Zunächst bestehende
+P4/P5a-Projektionen und kleine Navigationsschritte, keine Architektur auf Vorrat.
+
+**Abnahme:** kompakte Orientierung ohne Objektlisten im Hub; Gewahrsam/Nicht
+erreichbar, fehlende Lage und HIGH-Zahl erkennbar. Maximal ein Hinweis je Karte,
+ohne Regel-/Eskalationsengine. Große Schrift, schmale Breite, TalkBack und klare
+Rückwege prüfen. Revoke/Generation/Action/Request, Fokus/IME und Cleanup erhalten;
+keine alten Editoren oder Grants nach Lock. Zusätzliche künftige Bereiche benötigen
+keinen Navigationsumbau und erscheinen erst bei implementierter Funktion.
+
+### UX3b — Personenübersicht + kompakte Personenkarten
+
+Oben Summary, danach Personenliste mit erreichbaren P4-Statusfiltern. ACTIVE:
+Pseudonym, aktuelle Lage, zulässiger Ort/Ziel, aktuelle Funktion und Aktualität.
+Keine prominente Planrollen-/„Keine geplanten Rollen“-Zeile. PREPARATION bleibt
+planungsorientiert; Planungsdetails in ACTIVE nachrangig nachsehbar.
+Personenkarte als Tap-Ziel → fokussierter Arbeitsbereich → große Aktionen
+„Lage ändern“, „Funktion ändern“, „Personendetails“. Kein redundanter Listenhinweis
+„Lage aktualisieren“, keine überladene Karte.
+
+**Abnahme:** currentRole statt geplanter Rolle primär, ohne Funktion knapp
+„Keine Funktion“. P4-Status-/Funktions-/Ortsregeln erhalten; insbesondere keine
+aktuelle Funktion bei Gewahrsam. Aktualität: unter 1 Minute „Gerade aktualisiert“,
+1–59 Minuten „Aktualisiert vor X Min.“, ab 60 Minuten am selben Kalendertag
+„Zuletzt aktualisiert um HH:mm“, älterer Kalendertag „Zuletzt aktualisiert am DD.MM.
+um HH:mm“. Kalenderwechsel hat Vorrang. NO_STATUS-Initialisierung/updatedAt=0
+suggeriert keine geprüfte Lage. Anzeige-Ticks sind keine Sessioninteraction.
+Synthetisch Lagewechsel, Funktionswechsel und separat geschützte Personendetails
+prüfen; keine neue Personen-/Ortsgeschichte.
+
+### UX3c — Aufgabenübersicht
+
+Hub → Aufgabenübersicht → Task. Summary oben, danach bestehende P5a-Taskkarten
+und Sortierung; HIGH unter OPEN/IN_PROGRESS, OPEN und IN_PROGRESS getrennt zählen.
+DONE/CANCELLED separat/eingeklappt, klare Erstellung und Taskaktionen.
+
+**Abnahme:** P5a-Prioritäts-/Fälligkeitsreihenfolge mit stabilen Tie-Breakern,
+exklusive Zuständigkeit, unabhängige Betroffenheit, Chronik, Templates und stale-
+state-Guards erhalten. ACTIVE darf erstellen/bearbeiten/Lifecycle, nicht löschen;
+COMPLETED bleibt read-only. Synthetisch betroffene Aufgabe erstellen, abbrechen,
+wieder öffnen und Lock während Navigation prüfen. Keine lange Gesamtseite.
+
+### UX3d — Funktionenübersicht
+
+Eigener Bereich „Wer übernimmt gerade was?“ mit aktuellen Funktionen und kompakten
+Personen pro Funktion; Planung nachrangig. Summary zählt ausschließlich ON_SITE
+mit currentRole, NO_STATUS behauptet keine verfügbare Person.
+
+**Abnahme:** Funktionswechsel und Statuswechsel korrekt projiziert; null Vor-Ort-
+Zuordnungen ehrlich zeigen, ohne erfundene Sollzahlen/Pflichtrollen oder automatische
+Unterbesetzungsbewertung. Aktionsdetails bleiben ein eigener Bereich.
+
+**Für UX3a–d nicht enthalten:** Änderungen an P4/P5a-Fachregeln, P5b-Vorschläge,
+automatische Tasks, Risikoklassen, Sollbesetzung, sensitive Identitäts-/Kontaktfelder
+in Übersichten, Protokoll-/Vorfälle-/Dokument-/Uploadimplementierung, Netzwerkpfade,
+Sessionverlängerung oder Persistenz von Navigation/Entwürfen. Diese späteren Module
+benötigen ihren eigenen Product-/Security-/Privacy-Slice.
 
 ## UX4 — Demo und Tutorial
 
@@ -169,9 +224,9 @@ Rechtsbewertung und keine unbewiesenen Evidence-/Forensikgarantien.
 | Erneute Bestätigung | Frisches DEVICE_CREDENTIAL, keine Timerlockerung festgelegt; sichere technische Versuch-/Lifecycle-Semantik und Screen-Kontextübernahme noch nachzuweisen. | Vor UX1-S; Security-Review. |
 | Vorbereitung „bereit?“ | Fakten und menschliche Entscheidung, keine neuen Startblocker. Ob künftig fachliche Pflichtchecklisten benötigt werden, ist separater Produktumfang. | Nur bei eigenem späteren Slice. |
 | Task-Datum ohne Uhrzeit | UX0 erhält Zeitpunktsemantik und verlangt bei gesetzter Fälligkeit bestätigte Uhrzeit. Eine reine Tagesfälligkeit benötigt neues fachliches Modell. | Separat, nicht Voraussetzung für UX2. |
-| Aufmerksamkeit | Gewahrsam/Nicht erreichbar/HIGH und weitere bestehende unklare Lagen sichtbar. Genaue Reihenfolge/Umfang der weiteren Gruppen mit Szenarien finalisieren. | Vor UX3. |
+| Aufmerksamkeit | Festgelegt: kompakte Summary und höchstens ein datenbasierter Hinweis je Hub-Karte, ohne Regel-/Eskalationsengine. Konkrete Microcopy mit synthetischen Szenarien prüfen. | UX3a; keine offene Produktentscheidung für das Hub-Modell. |
 | Funktionslücken | Null aktuelle Vor-Ort-Zuordnungen darf angezeigt werden; keine Sollbesetzung. Sollbedarf wäre eigener fachlicher Beschluss. | Separat bei Bedarf. |
-| Kleine Screens / große Schrift | Keine Mini-Tabs; konkrete responsive Anordnung im synthetischen UX-Smoke wählen. | UX2, wiederverwenden UX3. |
+| Kleine Screens / große Schrift | ACTIVE: große Hub-Karten, zwei Spalten nur bei ausreichender Breite, sonst eine; keine starre Spaltenzahl oder Mini-Tabs. PREPARATION-Auswahl zugänglich halten. | UX2 / UX3a; synthetischer UX-Smoke. |
 | Demo-Lifetime | In-Memory bevorzugt; Reset und Tourablauf konkretisieren. Persistenz wäre zusätzlich zu begründen und strikt getrennt zu prüfen. | Vor UX4. |
 | Visuelle Marke | Farben, Logo, Schriftfamilie, exakte Radien und dekorative Animationen offen; Hierarchie und Accessibility bereits verbindlich. | Späterer visueller Slice. |
 
