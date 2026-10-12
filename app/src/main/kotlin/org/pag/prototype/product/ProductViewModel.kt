@@ -84,6 +84,35 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         editing = null; confirming = null; changeError = null
         loadWorkspace()
     }
+    var activeArea by mutableStateOf(ActiveArea.HUB); private set
+    val activeNavigationEnabled get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.ACTIVE &&
+        !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy
+    fun activeArea(area: ActiveArea) = navigateActive(area)
+    private fun navigateActive(area: ActiveArea, retained: WorkspaceSnapshot? = null) {
+        val before = snapshot
+        val action = selected ?: return
+        if (!activeNavigationEnabled) return
+        interaction()
+        if (!activeNavigationEnabled || snapshot.generation != before.generation || selected?.id != action.id) return
+        clearPersons()
+        if (!activeNavigationEnabled || snapshot.generation != before.generation || selected?.id != action.id) return
+        activeArea = area
+        confirming = null; changeError = null
+        // A person-task tap already has both boards. Keep that valid snapshot so
+        // its synchronous form opening needs no interaction from a load callback.
+        if (area == ActiveArea.TASKS && retained?.actionId == action.id && retained.generation == before.generation &&
+            retained.operations != null && retained.tasks != null) workspace = retained
+        if (area != ActiveArea.DETAILS) loadWorkspace()
+    }
+    fun activePersonTasks(personId: String, create: Boolean) {
+        val generation = snapshot.generation
+        val actionId = selected?.id
+        val content = workspace ?: return
+        if (!activeNavigationEnabled || content.tasks == null || content.operations == null || content.persons.none { it.id == personId }) return
+        navigateActive(ActiveArea.TASKS, content)
+        if (!activeNavigationEnabled || snapshot.generation != generation || selected?.id != actionId || activeArea != ActiveArea.TASKS) return
+        if (create) tasks.add(personId) else tasks.showPerson(personId)
+    }
     val tasks = TaskModel(taskRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
         { workspace?.tasks }, ::loadWorkspace, ::showFeedback)
     val operations = OperationsModel(operationsRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
@@ -102,7 +131,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (snapshot.state == SessionState.READY) feedback = StatusFeedback(++feedbackId, text)
     }
     private fun clearPersons() {
-        preparationArea = PreparationArea.OVERVIEW; workspaceRefreshing = false
+        preparationArea = PreparationArea.OVERVIEW; activeArea = ActiveArea.HUB; workspaceRefreshing = false
         workspaceRequest++; workspace = null; workspaceError = false; detailLoading = false; personDetailLoading = false
         tasks.clear(); operations.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
         personForm = false; editingPerson = null; personError = null; personSaving = false
@@ -123,10 +152,14 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val previous = workspace
         val preparation = action.status == ActionStatus.PREPARATION
         val area = preparationArea
+        val active = action.status == ActionStatus.ACTIVE
+        val activeSection = activeArea
+        if (active && activeSection == ActiveArea.DETAILS) return
         workspaceRefreshing = previous != null
         personsLoading = previous == null
         workspaceError = false
         val needTasks = taskRepository != null && operations.screen == OperationsScreen.OVERVIEW &&
+            (!active || activeSection != ActiveArea.FUNCTIONS) &&
             (!preparation || (selectedPerson == null && area in setOf(PreparationArea.OVERVIEW, PreparationArea.TASKS)))
         val needMetadata = preparation && area == PreparationArea.OVERVIEW && selectedPerson == null &&
             operations.screen == OperationsScreen.OVERVIEW && leadership != null
@@ -139,7 +172,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         var tasksDone = !needTasks
         fun current() = snapshot.state == SessionState.READY && snapshot.generation == generation &&
             selected?.id == action.id && selected?.status == action.status && request == workspaceRequest &&
-            (!preparation || preparationArea == area)
+            (!preparation || preparationArea == area) && (!active || activeArea == activeSection)
         fun failed() {
             if (!current()) return
             workspaceRequest++; personsLoading = false; workspaceRefreshing = false; workspaceError = true

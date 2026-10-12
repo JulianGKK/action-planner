@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.Density
 import org.pag.domain.*
 import org.pag.prototype.product.ProductScreen
 import org.pag.prototype.product.ProductViewModel
+import org.pag.prototype.product.ActiveArea
 import org.pag.prototype.product.PreparationArea
 
 /** Synthetic UI only: no authentication, product DB write or system setting change. */
@@ -195,6 +196,70 @@ class Ux1bShellProbe : Instrumentation() {
         waitForIdleSync()
         check(restartNode(awaitNodes{it.any{n->n.contentDescription?.toString()?.startsWith("Sitzung:")==true}})==null)
         runOnMainSync {session.lock()}
+    }
+    private fun verifyActiveHub(activity:MainActivity,density:Float,scale:Float) {
+        val session=Session();val actions=Actions();val ops=NavigationOps(actions);val tasks=NavigationTasks();val metadata=NavigationMetadata()
+        lateinit var model:ProductViewModel
+        fun sameLabel(text:String?,label:String)=text==label || text=="✓ $label"
+        fun visible(label:String):AccessibilityNodeInfo {
+            repeat(40) {
+                val tree=nodes()
+                val found=tree.find{sameLabel(it.text?.toString(),label)}
+                if(found!=null && bounds(found).height()>0)return found
+                // Accessibility can still expose the previous short, non-scrollable
+                // frame after Compose/main is idle. Wait boundedly for that transition.
+                tree.firstOrNull{it.isScrollable}?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                waitForIdleSync();SystemClock.sleep(80)
+            }
+            error("Synthetic control not reachable")
+        }
+        fun top() {
+            repeat(20) {val scroll=nodes().firstOrNull{it.isScrollable} ?: return
+                if(!scroll.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD))return
+                waitForIdleSync();SystemClock.sleep(40)}
+        }
+        fun click(label:String) {
+            repeat(40) {
+                val tree=nodes()
+                for(node in tree.filter{sameLabel(it.text?.toString(),label)}) {
+                    var candidate:AccessibilityNodeInfo?=node
+                    while(candidate!=null && !candidate.isClickable)candidate=candidate.parent
+                    if(candidate!=null && bounds(candidate).height()>0) {
+                        check(candidate.performAction(AccessibilityNodeInfo.ACTION_CLICK));waitForIdleSync();return
+                    }
+                }
+                val backward=label.startsWith("‹") || PreparationArea.entries.any{it.label==label}
+                tree.firstOrNull{it.isScrollable}?.performAction(if(backward)AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                waitForIdleSync();SystemClock.sleep(160)
+            }
+            error("Synthetic clickable control not reachable")
+        }
+        runOnMainSync {
+            actions.row=actions.row.copy(status=ActionStatus.ACTIVE)
+            model=ProductViewModel(session,actions,ProductStorageState.READY_TO_OPEN,People(),metadata,ops,tasks){}
+            activity.setContent{CompositionLocalProvider(LocalDensity provides Density(density,scale)){ProductScreen(model)}}
+            session.ready();model.detail("synthetic")
+        }
+        waitForIdleSync()
+        for(area in ActiveArea.entries.drop(1)) {
+            top();val card=visible("${area.label} öffnen")
+            val rect=bounds(control(card));check(rect.width()>0 && rect.height()>=48*density)
+            check(rect.left>=0 && rect.right<=activity.resources.displayMetrics.widthPixels)
+            click("${area.label} öffnen")
+            runOnMainSync{check(model.activeArea==area)}
+            when(area) {
+                ActiveArea.PERSONS->visible("synthetic person")
+                ActiveArea.TASKS->visible("Keine offenen Aufgaben.")
+                ActiveArea.FUNCTIONS->visible("Support: 1")
+                ActiveArea.DETAILS->{visible("synthetic description");check(nodes().none{it.text?.toString()=="Aktionsdetails bearbeiten"})}
+                else->Unit
+            }
+            top();click("‹ Zum Lagebild")
+            runOnMainSync{check(model.activeArea==ActiveArea.HUB)}
+        }
+        runOnMainSync{check(metadata.actionReads==0 && metadata.reads==0);session.lock();check(model.workspace==null && model.activeArea==ActiveArea.HUB)}
+        awaitNodes{it.any{node->node.text?.toString()=="PaG"}}
+        check(nodes().none{it.text?.toString()=="synthetic action"})
     }
     private fun verifyPreparation(activity:MainActivity,density:Float,scale:Float) {
         val session=Session();val actions=Actions();val ops=NavigationOps(actions);val tasks=NavigationTasks();val metadata=NavigationMetadata()
@@ -390,11 +455,11 @@ class Ux1bShellProbe : Instrumentation() {
                 waitForIdleSync();SystemClock.sleep(200)
                 check(before==anchor)
             }
-            for(scale in listOf(1f,2f)) { scaleUnderTest=scale;verifyPreparation(launched,density,scale) }
+            for(scale in listOf(1f,2f)) { scaleUnderTest=scale;verifyPreparation(launched,density,scale);verifyActiveHub(launched,density,scale) }
             verifyMinorNavigation(launched,density)
             for(scale in listOf(1f,2f)) verifySessionRestart(launched,density,scale)
             runOnMainSync{launched.finish()}
-            finish(-1,Bundle().apply{putString("stream","UX1b/UX1-S synthetic header, font scales 1/2, touch/non-overlap, banner/no reflow, entry focus, lock cleanup, inventory navigation, restart threshold/button click/lock before single auth/non-READY exclusion/new countdown; UX2 DRAFT/lifecycle/four areas/actionState/isolated reads/forms/atomic loading/stale cleanup/font scales 1/2: OK\n")})
+            finish(-1,Bundle().apply{putString("stream","UX1b/UX1-S synthetic header, font scales 1/2, touch/non-overlap, banner/no reflow, entry focus, lock cleanup, inventory navigation, restart threshold/button click/lock before single auth/non-READY exclusion/new countdown; UX3a hub/four areas/navigation/read-only details/zero P3b/font 1+2: OK; UX2 DRAFT/lifecycle/four areas/actionState/isolated reads/forms/atomic loading/stale cleanup/font scales 1/2: OK\n")})
         }catch(failure:Exception){
             activity?.let{runOnMainSync{it.finish()}}
             finish(0,Bundle().apply{putString("stream","UX1b synthetic shell probe failed at test line ${failure.stackTrace.filter{it.className==Ux1bShellProbe::class.java.name}.take(5).joinToString{it.lineNumber.toString()}}; fontScale=$scaleUnderTest; no operational payload logged\n")})

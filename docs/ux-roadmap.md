@@ -82,7 +82,7 @@ Aktuelle Prüfungen und menschlicher Smoke: [UX1-S](ux1s-session-restart.md).
 
 ## UX2 — Preparation Workspace
 
-**Implementiert, automatisch grün; manueller UX-Smoke ausstehend:** DRAFT bleibt Entwurf/Stammdaten mit „Vorbereitung beginnen“.
+**Implementiert und manuell getestet:** DRAFT bleibt Entwurf/Stammdaten mit „Vorbereitung beginnen“.
 PREPARATION hat fachlichen Header und vier große Bereiche Übersicht/Personen/
 Aufgaben/Rollen. Kompakte Summary, frühes actionState-Metadata ohne Person,
 bewusste Einrichtung, Planrollenkarten, bestehende Tasks/Vorlagen, Rollen mit
@@ -99,9 +99,14 @@ Prüfnachweise und menschlicher UX-Smoke: [UX2](ux2-preparation-workspace.md).
 Verbindliche Entscheidung aus dem manuellen UX-Review (12.10.2026): Lagebild ist
 operativer Hub / Schaltzentrale. **Hub → Bereichsübersicht → Objekt → fokussierte
 Aktion** ersetzt die lange Gesamtseite. Details: [UX-Philosophie, Abschnitt 7](ux-philosophy.md#7-active-lagebild-als-operativer-hub--schaltzentrale).
-Die folgenden vier Slices sind Zielplanung, noch keine Implementierung.
+UX3a ist implementiert; UX3b/c/d bleiben Zielplanung.
 
 ### UX3a — ACTIVE Hub / Navigation
+
+**Implementiert:** [UX3a Lagebild-Hub](ux3a-active-hub.md). Vier Bereichskarten,
+gemeinsame Summary-Publication, gezielte Bereichsreads und RAM-only Navigation.
+PREPARATION → ACTIVE öffnet den Hub; Post-Unlock bleibt vorerst die Aktionsliste.
+Die unten beschriebene automatische ACTIVE-Auswahl ist weiterer Routingumfang.
 
 Große Bereichskarten für Personen, Aufgaben, Funktionen und eigene read-only
 Aktionsdetails. Sehr kompakte Summary, höchstens ein datenbasierter Hinweis pro

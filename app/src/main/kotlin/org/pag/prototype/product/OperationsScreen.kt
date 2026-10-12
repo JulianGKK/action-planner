@@ -46,33 +46,37 @@ import java.time.format.FormatStyle
             }else {
                 FormOutlinedButton(ops::roles){Text("Rollen")}
             }
-            board.persons.forEach{p->
-                val planned=p.plan.roleIds.mapNotNull{id->board.roles.find{it.id==id}?.name}.joinToString().ifEmpty{"Keine geplanten Rollen"}
-                FormOutlinedButton(onClick={if(board.status==ActionStatus.ACTIVE)ops.update(p.person.id) else model.personDetail(p.person.id)},modifier=Modifier.fillMaxWidth(),enabled=!ops.busy){
-                    Column(Modifier.fillMaxWidth()){
-                        Text(p.person.pseudonym,style=MaterialTheme.typography.titleLarge)
-                        Text("Geplant: $planned")
-                        p.plan.primaryRoleId?.let{id->Text("Hauptfunktion: ${board.roles.find{it.id==id}?.name.orEmpty()}")}
-                        p.state?.let{s->
-                            Text(operationalLabel(s.status))
-                            s.currentRoleId?.let{id->Text("Aktuelle Funktion: ${board.roles.find{it.id==id}?.name.orEmpty()}")}
-                            s.currentPlaceLabel?.let{Text("Ort / Ziel: $it")}
-                            Text(updatedLabel(s.updatedAt))
-                        }
-                        val count=model.tasks.board?.affectedCount(p.person.id)?:0
-                        if(count>0)Text("$count offene Aufgabe"+(if(count==1)"" else "n"))
-                        if(board.status==ActionStatus.ACTIVE)Text("Lage aktualisieren")
-                    }
-                }
-                if(board.status==ActionStatus.ACTIVE){
-                    FormOutlinedButton({model.tasks.add(p.person.id)}){Text("Aufgabe hinzufügen · ${p.person.pseudonym}")}
-                    if((model.tasks.board?.affectedCount(p.person.id)?:0)>0)FormOutlinedButton({model.tasks.showPerson(p.person.id)}){Text("Aufgaben ansehen")}
-                }
-            }
-            if(board.persons.isEmpty())Text("Noch keine Personen erfasst.")
+            OperationalPersons(model, board)
             if(board.status==ActionStatus.ACTIVE)FormOutlinedButton(ops::roles){Text("Neue Funktion")}
         }
     }
+}
+@Composable internal fun OperationalPersons(model: ProductViewModel, board: OperationalBoard) {
+    val ops = model.operations
+    board.persons.forEach{p->
+        val planned=p.plan.roleIds.mapNotNull{id->board.roles.find{it.id==id}?.name}.joinToString().ifEmpty{"Keine geplanten Rollen"}
+        FormOutlinedButton(onClick={if(board.status==ActionStatus.ACTIVE)ops.update(p.person.id) else model.personDetail(p.person.id)},modifier=Modifier.fillMaxWidth(),enabled=!ops.busy){
+            Column(Modifier.fillMaxWidth()){
+                Text(p.person.pseudonym,style=MaterialTheme.typography.titleLarge)
+                Text("Geplant: $planned")
+                p.plan.primaryRoleId?.let{id->Text("Hauptfunktion: ${board.roles.find{it.id==id}?.name.orEmpty()}")}
+                p.state?.let{s->
+                    Text(operationalLabel(s.status))
+                    s.currentRoleId?.let{id->Text("Aktuelle Funktion: ${board.roles.find{it.id==id}?.name.orEmpty()}")}
+                    s.currentPlaceLabel?.let{Text("Ort / Ziel: $it")}
+                    Text(updatedLabel(s.updatedAt))
+                }
+                val count=model.tasks.board?.affectedCount(p.person.id)?:0
+                if(count>0)Text("$count offene Aufgabe"+(if(count==1)"" else "n"))
+                if(board.status==ActionStatus.ACTIVE)Text("Lage aktualisieren")
+            }
+        }
+        if(board.status==ActionStatus.ACTIVE){
+            FormOutlinedButton({model.activePersonTasks(p.person.id, true)}){Text("Aufgabe hinzufügen · ${p.person.pseudonym}")}
+            if((model.tasks.board?.affectedCount(p.person.id)?:0)>0)FormOutlinedButton({model.activePersonTasks(p.person.id, false)}){Text("Aufgaben ansehen")}
+        }
+    }
+    if(board.persons.isEmpty())Text("Noch keine Personen erfasst.")
 }
 @Composable private fun RoleManagement(ops:OperationsModel,board:OperationalBoard) {
     Text(if(ops.planning)"Rollen" else "Neue Funktion",style=MaterialTheme.typography.titleLarge)
