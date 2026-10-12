@@ -13,6 +13,10 @@
 
 **Verbindliche Terminologie:** Technische Bezeichner verwenden `Action`. In der deutschsprachigen Produktoberfläche und fachlichen Dokumentation heißt das Konzept konsequent „Aktion“, in der Mehrzahl „Aktionen“. Die Domain-Entität `Action` repräsentiert eine Aktion. Die App ist ein Aktionsplaner; technische Klassen, APIs, Datenbanknamen und historische Test-IDs werden nicht sprachlich umbenannt.
 
+Verbindliches UX-Zielbild für den schrittweisen Umbau: [UX-Philosophie](docs/ux-philosophy.md)
+und [UX-Roadmap](docs/ux-roadmap.md). UX0 ist eine Dokumentationsspezifikation;
+bestehende fachliche, Security- und Privacy-Verträge bleiben unverändert.
+
 Der **PaG Aktionsplaner** ist eine lokal betriebene Android-Anwendung zur organisatorischen Durchführung zeitlich begrenzter Aktionen.
 
 Die Anwendung soll insbesondere die organisatorische Arbeit vor, während und nach einer Aktion unterstützen:
