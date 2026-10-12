@@ -32,17 +32,17 @@ import java.time.format.FormatStyle
                 FormOutlinedButton({model.transition(TaskStatus.CANCELLED)},enabled=!model.busy){Text("Entfällt")}
             }else FormButton({model.transition(TaskStatus.OPEN)},enabled=!model.busy){Text("Wieder öffnen")}
             FormOutlinedButton(model::edit,enabled=!model.busy){Text("Bearbeiten")}
-            if(model.deletable)FormTextButton(model::delete,enabled=!model.busy){Text("Aufgabe löschen")}
+            if(model.deletable)FormOutlinedButton(model::delete,enabled=!model.busy){Text("Aufgabe löschen")}
         }
         Text("Chronik",style=MaterialTheme.typography.titleMedium)
         board.events.filter{it.taskId==selected.id}.forEach{Text("${taskTime(it.occurredAt)} · ${eventLabel(it.type)}")}
-        FormTextButton(model::cancel,enabled=!model.busy){Text("Zurück zu Aufgaben")}
+        FormOutlinedButton(model::cancel,enabled=!model.busy){Text("Zurück zu Aufgaben")}
         return
     }
     if(model.writable)FormButton({model.add()},enabled=!model.busy){Text("+ Aufgabe")}
     Text("Dringende / offene Aufgaben",style=MaterialTheme.typography.titleMedium)
     Text("Hoch offen / in Arbeit: ${board.active.count{it.priority==TaskPriority.HIGH}} · Offen: ${board.active.count{it.status==TaskStatus.OPEN}} · In Arbeit: ${board.active.count{it.status==TaskStatus.IN_PROGRESS}}")
-    model.filter?.let{id->Text("Betrifft: ${people.persons.find{it.person.id==id}?.person?.pseudonym.orEmpty()}");FormTextButton({model.showPerson(null)}){Text("Alle Aufgaben")}}
+    model.filter?.let{id->Text("Betrifft: ${people.persons.find{it.person.id==id}?.person?.pseudonym.orEmpty()}");FormOutlinedButton({model.showPerson(null)}){Text("Alle Aufgaben")}}
     val active=board.active.filter{model.filter==null || it.affectedPersonId==model.filter}
     active.forEach{t->FormOutlinedButton({model.open(t)},modifier=Modifier.fillMaxWidth(),enabled=!model.busy){TaskSummary(t,people)}}
     if(active.isEmpty())Text("Keine offenen Aufgaben.")
@@ -66,7 +66,7 @@ import java.time.format.FormatStyle
 }
 @Composable private fun TaskForm(model:TaskModel,people:OperationalBoard) {
     val i=model.input
-    FormTextField(i.title,{model.change(i.copy(title=it))},label={Text("Titel")},singleLine=true,enabled=!model.busy,modifier=Modifier.fillMaxWidth(),supportingText={Text("Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · ${Character.codePointCount(i.title.trim(),0,i.title.trim().length)} / 120 Zeichen")})
+    FormTextField(i.title,{model.change(i.copy(title=it))},label={Text("Titel")},autoFocus=model.selected==null,keyboardOptions=productKeyboard(ProductTextKind.TASK_TITLE),singleLine=true,enabled=!model.busy,modifier=Modifier.fillMaxWidth(),supportingText={Text("Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · ${Character.codePointCount(i.title.trim(),0,i.title.trim().length)} / 120 Zeichen")})
     Text("Priorität")
     TaskPriority.entries.forEach{p->FormOutlinedButton({model.change(i.copy(priority=p))},enabled=!model.busy){Text((if(i.priority==p)"✓ " else "")+priorityLabel(p))}}
     var assignments by remember{mutableStateOf(false)}
@@ -84,9 +84,9 @@ import java.time.format.FormatStyle
     Text("Betrifft: "+(people.persons.find{it.person.id==i.affectedPersonId}?.person?.pseudonym?:"Niemand"))
     var due by remember{mutableStateOf(i.dueAt?.let{Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))}.orEmpty())}
     val parsed=parseTaskDue(due)
-    FormTextField(due,{due=it;model.change(model.input.copy(dueAt=parseTaskDue(it)))},label={Text("Fällig (optional): TT.MM.JJJJ HH:MM")},singleLine=true,enabled=!model.busy,supportingText={if(due.isNotBlank() && parsed==null)Text("Ungültiges Datum oder durch Zeitumstellung nicht eindeutige Uhrzeit. Bitte Datum oder Uhrzeit korrigieren.")})
+    FormTextField(due,{due=it;model.change(model.input.copy(dueAt=parseTaskDue(it)))},label={Text("Fällig (optional): TT.MM.JJJJ HH:MM")},keyboardOptions=productKeyboard(ProductTextKind.DATE),singleLine=true,enabled=!model.busy,supportingText={if(due.isNotBlank() && parsed==null)Text("Ungültiges Datum oder durch Zeitumstellung nicht eindeutige Uhrzeit. Bitte Datum oder Uhrzeit korrigieren.")})
     FormButton(model::save,enabled=!model.busy && TaskRules.valid(i) && (due.isBlank() || parsed!=null)){Text("Speichern")}
-    FormTextButton(model::cancel,enabled=!model.busy){Text("Abbrechen")}
+    FormOutlinedButton(model::cancel,enabled=!model.busy){Text("Abbrechen")}
 }
 internal fun parseTaskDue(value:String,zone:ZoneId=ZoneId.systemDefault()):Long?=try{selectedInstant(LocalDateTime.parse(value.trim(),DateTimeFormatter.ofPattern("dd.MM.uuuu HH:mm").withResolverStyle(java.time.format.ResolverStyle.STRICT)),zone)}catch(_:Exception){null}
 internal fun priorityLabel(p:TaskPriority)=when(p){TaskPriority.LOW->"Niedrig";TaskPriority.NORMAL->"Normal";TaskPriority.HIGH->"Hoch"}

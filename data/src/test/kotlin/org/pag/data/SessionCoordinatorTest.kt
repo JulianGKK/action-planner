@@ -41,6 +41,36 @@ class SessionCoordinatorTest {
         return operation
     }
 
+    @Test fun readOnlyCountdownUsesAuthDeadlineAndDoesNotRenewIdleOrAbsolute() {
+        var now = 0L
+        val timed = SessionCoordinator(auth, work, MonotonicTime { now }, ProductSessionTiming.policy)
+        timed.foreground(true)
+        assertNull(timed.remainingAbsoluteMillis())
+        timed.authenticate(Experiment.PER_OPERATION)
+        auth.callbacks.last()(AuthenticationOutcome.Granted(Operation(), 0))
+        now = 1000
+        assertNull(timed.remainingAbsoluteMillis()) // Maintenance consumes absolute time.
+        work.callbacks.last()(true)
+        assertEquals(179000L, timed.remainingAbsoluteMillis())
+        for (second in 2..30) { now = second * 1000L; timed.remainingAbsoluteMillis() }
+        now = 31000
+        assertNull(timed.remainingAbsoluteMillis()) // ticks did not renew 30-second idle.
+        assertEquals(SessionState.LOCKED, timed.snapshot().state)
+        timed.authenticate(Experiment.PER_OPERATION)
+        auth.callbacks.last()(AuthenticationOutcome.Granted(Operation(), now))
+        work.callbacks.last()(true)
+        assertEquals(180000L, timed.remainingAbsoluteMillis())
+        for (second in 1..180) {
+            now = 31000 + second * 1000L
+            timed.userInteraction()
+            timed.remainingAbsoluteMillis()
+        }
+        assertNull(timed.remainingAbsoluteMillis()) // real activity also cannot renew absolute.
+        assertEquals(SessionState.LOCKED, timed.snapshot().state)
+        timed.storageFailure()
+        assertNull(timed.remainingAbsoluteMillis())
+    }
+
     @Test fun freshStartLocked() {
         assertEquals(SessionState.LOCKED, session.snapshot().state)
         assertNull(session.snapshot().marker)

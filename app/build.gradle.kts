@@ -36,7 +36,7 @@ val preparePrototypeDebugKeystore = tasks.register("preparePrototypeDebugKeystor
         }
     }
 }
-tasks.matching { it.name == "validateSigningDebug" }.configureEach { dependsOn(preparePrototypeDebugKeystore) }
+tasks.matching { it.name == "validateSigningDebug" || it.name == "validateSigningDebugAndroidTest" }.configureEach { dependsOn(preparePrototypeDebugKeystore) }
 val verifyPrototypeManifest = tasks.register("verifyPrototypeManifest") {
     dependsOn("processDebugManifest")
     doLast {

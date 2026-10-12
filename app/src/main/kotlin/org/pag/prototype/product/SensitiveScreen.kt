@@ -31,7 +31,7 @@ import java.util.Locale
             PassphraseField("Leitungs-Passphrase",password,!model.sensitiveBusy,setupCounter=true,imeAction=androidx.compose.ui.text.input.ImeAction.Next) { model.interaction();password=it }
             PassphraseField("Passphrase wiederholen",confirmation,!model.sensitiveBusy) { model.interaction();confirmation=it }
             FormButton(onClick={model.setupSensitive(password.toCharArray(),confirmation.toCharArray());password="";confirmation=""},enabled=!model.sensitiveBusy){Text("Bewusst einrichten")}
-            FormTextButton(onClick=model::closeSensitive){Text("Abbrechen")}
+            FormOutlinedButton(onClick=model::closeSensitive){Text("Abbrechen")}
         }
         model.sensitiveOpened != null -> {
             NoSensitiveCapture()
@@ -39,7 +39,7 @@ import java.util.Locale
             if(opened.grant.valid()) key(opened.grant) {
                 Text("Kurzzeitig freigegeben: ${areaLabel(opened.grant.area)}. Spätestens nach 60 Sekunden erneut geschützt.")
                 SensitiveFields(model,opened.data)
-                FormTextButton(onClick=model::closeSensitive){Text("Sensible Ansicht schließen")}
+                FormOutlinedButton(onClick=model::closeSensitive){Text("Sensible Ansicht schließen")}
             }
         }
         model.sensitiveArea != null -> {
@@ -48,7 +48,7 @@ import java.util.Locale
             var password by remember(model.sensitiveArea) { mutableStateOf("") }
             PassphraseField("Leitungs-Passphrase",password,!model.sensitiveBusy) {model.interaction();password=it}
             FormButton(onClick={model.openSensitive(password.toCharArray());password=""},enabled=!model.sensitiveBusy){Text("Bereich freigeben")}
-            FormTextButton(onClick=model::closeSensitive){Text("Abbrechen")}
+            FormOutlinedButton(onClick=model::closeSensitive){Text("Abbrechen")}
         }
         else -> when(model.sensitiveInventory?.state) {
             SensitiveState.UNINITIALIZED -> if(model.personsEditable) FormButton(onClick=model::requestSensitiveSetup){Text("Sensible Personendaten einrichten")}
@@ -60,7 +60,8 @@ import java.util.Locale
                         else "${areaLabel(area)} erfassen")
                 }
             }
-            null -> Text("Sensible Bereiche werden geprüft …")
+            null -> if(model.sensitiveInventoryLoading) Text("Sensible Bereiche werden geprüft …")
+                else if(model.sensitiveError==null) Text("Status der sensiblen Bereiche nicht verfügbar.")
         }
     }
     if(model.sensitiveBusy) Text("Geschützter Vorgang läuft …")
@@ -85,7 +86,7 @@ private fun areaLabel(area:SensitiveArea)=when(area){SensitiveArea.IDENTITY->"Id
     fun optional(text:String)=text.takeIf{it.isNotEmpty()}
     @Composable fun field(label:String,value:String,ime:androidx.compose.ui.text.input.ImeAction=androidx.compose.ui.text.input.ImeAction.Done,change:(String)->Unit){
         if(editing) FormTextField(value,{model.interaction();change(it)},label={Text("$label (optional)")},enabled=!model.sensitiveBusy,
-            keyboardOptions=KeyboardOptions(autoCorrectEnabled=false),imeAction=ime,modifier=Modifier.fillMaxWidth())
+            keyboardOptions=productKeyboard(if(label=="Telefonnummer")ProductTextKind.PHONE else if(label=="Beziehung")ProductTextKind.DESCRIPTION else ProductTextKind.PERSON).copy(autoCorrectEnabled=false),imeAction=ime,modifier=Modifier.fillMaxWidth())
         else Text("$label: ${value.ifEmpty{"Nicht angegeben"}}")
     }
     when(initial){
@@ -101,11 +102,11 @@ private fun areaLabel(area:SensitiveArea)=when(area){SensitiveArea.IDENTITY->"Id
 @Composable private fun BirthDate(value:LocalDate?,interaction:()->Unit,chosen:(LocalDate?)->Unit){
     var expanded by remember {mutableStateOf(false)}
     FormOutlinedButton(onClick={interaction();expanded=!expanded}){Text(value?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))?:"Geburtsdatum auswählen (optional)")}
-    if(value!=null) FormTextButton(onClick={interaction();chosen(null)}){Text("Geburtsdatum nicht angeben")}
+    if(value!=null) FormOutlinedButton(onClick={interaction();chosen(null)}){Text("Geburtsdatum nicht angeben")}
     if(expanded){
         val state=remember {DatePickerState(Locale.getDefault(),initialSelectedDateMillis=value?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli())}
         DatePicker(state,showModeToggle=false)
-        FormTextButton(onClick={interaction();state.selectedDateMillis?.let{chosen(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate());expanded=false}},enabled=state.selectedDateMillis!=null){Text("Übernehmen")}
-        FormTextButton(onClick={interaction();expanded=false}){Text("Abbrechen")}
+        FormOutlinedButton(onClick={interaction();state.selectedDateMillis?.let{chosen(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate());expanded=false}},enabled=state.selectedDateMillis!=null){Text("Übernehmen")}
+        FormOutlinedButton(onClick={interaction();expanded=false}){Text("Abbrechen")}
     }
 }

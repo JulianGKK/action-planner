@@ -23,11 +23,11 @@ import java.time.format.FormatStyle
             if(board.roles.isEmpty())Text("Noch keine Rollen vorhanden. Rollen können in der Aktionsübersicht angelegt werden.")
             board.roles.forEach{role->
                 FormOutlinedButton({ops.toggleRole(role.id)},enabled=!ops.busy){Text((if(role.id in ops.roleIds)"✓ " else "")+role.name)}
-                if(role.id in ops.roleIds)FormTextButton({ops.primary(role.id)},enabled=!ops.busy){Text(if(role.id==ops.primaryRoleId)"Hauptfunktion ✓" else "Als Hauptfunktion wählen")}
+                if(role.id in ops.roleIds)FormOutlinedButton({ops.primary(role.id)},enabled=!ops.busy){Text(if(role.id==ops.primaryRoleId)"Hauptfunktion ✓" else "Als Hauptfunktion wählen")}
             }
-            FormTextButton({ops.primary(null)},enabled=!ops.busy){Text(if(ops.primaryRoleId==null)"Keine Hauptfunktion ✓" else "Ohne Hauptfunktion planen")}
+            FormOutlinedButton({ops.primary(null)},enabled=!ops.busy){Text(if(ops.primaryRoleId==null)"Keine Hauptfunktion ✓" else "Ohne Hauptfunktion planen")}
             FormButton(ops::savePlan,enabled=!ops.busy){Text("Speichern")}
-            FormTextButton(ops::cancel,enabled=!ops.busy){Text("Abbrechen")}
+            FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Abbrechen")}
         }
         OperationsScreen.LIVE->LiveForm(model,ops,board)
         OperationsScreen.OVERVIEW->{
@@ -65,12 +65,12 @@ import java.time.format.FormatStyle
                     }
                 }
                 if(board.status==ActionStatus.ACTIVE){
-                    FormTextButton({model.tasks.add(p.person.id)}){Text("Aufgabe hinzufügen · ${p.person.pseudonym}")}
-                    if((model.tasks.board?.affectedCount(p.person.id)?:0)>0)FormTextButton({model.tasks.showPerson(p.person.id)}){Text("Aufgaben ansehen")}
+                    FormOutlinedButton({model.tasks.add(p.person.id)}){Text("Aufgabe hinzufügen · ${p.person.pseudonym}")}
+                    if((model.tasks.board?.affectedCount(p.person.id)?:0)>0)FormOutlinedButton({model.tasks.showPerson(p.person.id)}){Text("Aufgaben ansehen")}
                 }
             }
             if(board.persons.isEmpty())Text("Noch keine Personen erfasst.")
-            if(board.status==ActionStatus.ACTIVE)FormTextButton(ops::roles){Text("Neue Funktion")}
+            if(board.status==ActionStatus.ACTIVE)FormOutlinedButton(ops::roles){Text("Neue Funktion")}
         }
     }
 }
@@ -83,21 +83,21 @@ import java.time.format.FormatStyle
         }
     }
     var name by remember{mutableStateOf("")};var editing by remember{mutableStateOf<String?>(null)};var deleting by remember{mutableStateOf<String?>(null)}
-    FormTextField(name,{ops.textInteraction();name=it},label={Text(if(editing==null)"Rollenname" else "Neuer Rollenname")},enabled=!ops.busy,modifier=Modifier.fillMaxWidth())
+    FormTextField(name,{ops.textInteraction();name=it},label={Text(if(editing==null)"Rollenname" else "Neuer Rollenname")},autoFocus=true,keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy,modifier=Modifier.fillMaxWidth())
     FormButton({if(editing==null)ops.createRole(name) else ops.renameRole(editing!!,name);name="";editing=null},enabled=!ops.busy && OperationalRules.validName(name)){Text(if(editing==null && ops.planning)"Eigene Rolle hinzufügen" else if(editing==null)"Neue Funktion hinzufügen" else "Speichern")}
     if(ops.planning)board.roles.forEach{r->
         Text(r.name)
-        Row{
-            FormTextButton({editing=r.id;name=r.name;deleting=null},enabled=!ops.busy){Text("Umbenennen")}
-            FormTextButton({deleting=r.id},enabled=!ops.busy){Text("Löschen")}
+        FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)){
+            FormOutlinedButton({editing=r.id;name=r.name;deleting=null},enabled=!ops.busy){Text("Umbenennen")}
+            FormOutlinedButton({deleting=r.id},enabled=!ops.busy){Text("Löschen")}
         }
         if(deleting==r.id){
             Text("Rolle löschen? Das ist nur möglich, wenn sie nicht mehr zugeordnet ist.")
             FormButton({ops.deleteRole(r.id);deleting=null},enabled=!ops.busy){Text("Löschen bestätigen")}
-            FormTextButton({deleting=null},enabled=!ops.busy){Text("Abbrechen")}
+            FormOutlinedButton({deleting=null},enabled=!ops.busy){Text("Abbrechen")}
         }
     }
-    FormTextButton(ops::cancel,enabled=!ops.busy){Text("Zurück")}
+    FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Zurück")}
 }
 @Composable private fun LiveForm(model:ProductViewModel,ops:OperationsModel,board:OperationalBoard) {
     Text(ops.person?.person?.pseudonym.orEmpty(),style=MaterialTheme.typography.headlineLarge)
@@ -112,20 +112,20 @@ import java.time.format.FormatStyle
             board.preferredRoles(ops.personId!!).forEach{r->FormOutlinedButton({ops.function(r.id)},enabled=!ops.busy){Text((if(ops.liveRoleId==r.id)"✓ " else "")+r.name)}}
         }
         var adding by remember{mutableStateOf(false)};var name by remember{mutableStateOf("")}
-        FormTextButton({adding=!adding},enabled=!ops.busy){Text("Neue Funktion")}
-        if(adding){FormTextField(name,{ops.textInteraction();name=it},label={Text("Rollenname")},enabled=!ops.busy);FormButton({ops.createRole(name);name="";adding=false},enabled=!ops.busy && OperationalRules.validName(name)){Text("Hinzufügen")}}
+        FormOutlinedButton({adding=!adding},enabled=!ops.busy){Text("Neue Funktion")}
+        if(adding){FormTextField(name,{ops.textInteraction();name=it},label={Text("Rollenname")},autoFocus=true,keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy);FormButton({ops.createRole(name);name="";adding=false},enabled=!ops.busy && OperationalRules.validName(name)){Text("Hinzufügen")}}
     }
     if(OperationalRules.placeRelevant(ops.liveStatus)){
         Text("Ort / Ziel · kurze lokale Bezeichnung, keine Notizen")
         FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)){
             board.placeSuggestions.forEach{place->FormOutlinedButton({ops.place(place)},enabled=!ops.busy){Text(place)}}
         }
-        FormTextField(ops.livePlace,ops::place,label={Text("Ort / Ziel")},enabled=!ops.busy,singleLine=true,
+        FormTextField(ops.livePlace,ops::place,label={Text("Ort / Ziel")},keyboardOptions=productKeyboard(ProductTextKind.PLACE),enabled=!ops.busy,singleLine=true,
             supportingText={Text("${Character.codePointCount(ops.livePlace,0,ops.livePlace.length)} / 80 Zeichen")},modifier=Modifier.fillMaxWidth())
     }
     FormButton(ops::saveLive,enabled=!ops.busy){Text("Übernehmen")}
-    FormTextButton(ops::cancel,enabled=!ops.busy){Text("Abbrechen")}
-    FormTextButton({val id=ops.personId;ops.cancel();if(id!=null)model.personDetail(id)},enabled=!ops.busy){Text("Personendetails")}
+    FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Abbrechen")}
+    FormOutlinedButton(model::operationalPersonDetail,enabled=!ops.busy){Text("Personendetails")}
 }
 internal fun operationalLabel(status:OperationalStatus)=when(status){
     OperationalStatus.NO_STATUS->"Keine Lageangabe";OperationalStatus.ON_SITE->"Vor Ort"

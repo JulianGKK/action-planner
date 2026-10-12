@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.pag.domain.*
+import kotlinx.coroutines.delay
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -16,70 +17,92 @@ import java.util.Locale
 @Composable fun ProductScreen(model: ProductViewModel) {
     MaterialTheme {
         val screen=listOf(model.snapshot.state,model.snapshot.generation,model.selected?.id,model.selectedPerson?.id,
-            model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter)
+            model.actionListState::class,model.personDetailLoading,model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter)
         ProductInputScope(screen) {
-        Surface(Modifier.fillMaxSize()) {
-            val scroll=rememberScrollState()
-            LaunchedEffect(model.tasks.form,model.tasks.selected?.id,model.tasks.filter){scroll.scrollTo(0)}
-            Column(Modifier.padding(24.dp).verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("PaG", style = MaterialTheme.typography.headlineLarge)
-                when (model.snapshot.state) {
-                    SessionState.BLOCKED -> Text("Der geschützte Speicher kann nicht sicher verwendet werden. Es wurden keine Daten ersetzt oder repariert.")
-                    SessionState.LOCKED -> {
-                        Text("Gesperrt")
-                        if (model.bootstrap == ProductStorageState.PARTIAL_OR_INVALID) {
-                            Text("Der geschützte Speicher kann nicht sicher verwendet werden.")
-                        } else if (model.bootstrap == ProductStorageState.EMPTY) {
-                            Text("Es ist noch kein geschützter Speicher eingerichtet.")
-                            FormButton(onClick = model::unlock) { Text("Geschützten Speicher einrichten") }
-                        } else FormButton(onClick = model::unlock) { Text("Entsperren") }
-                    }
-                    SessionState.AUTHENTICATING -> Text("Bitte bestätige den Gerätesperrcode im Android-Dialog.")
-                    SessionState.MAINTENANCE -> Text("Der geschützte Speicher wird geprüft …")
-                    SessionState.READY -> {
-                        FormTextButton(onClick = model::lock) { Text("Sperren") }
-                        when {
-                            model.creating || model.editing != null -> ActionForm(model)
-                            model.selected != null -> {
-                                val action = model.selected!!
-                                Text(action.title, style = MaterialTheme.typography.headlineMedium)
-                                Text(statusLabel(action.status))
-                                var showActionFields by remember(action.id, action.status) { mutableStateOf(action.status != ActionStatus.ACTIVE) }
-                                if (action.status == ActionStatus.ACTIVE) FormTextButton({ model.interaction(); showActionFields = !showActionFields }) { Text("Aktionsdetails") }
-                                if (showActionFields) {
-                                Text(action.description)
-                                Text("Beginn: ${formattedTime(action.startAt)}")
-                                Text("Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}")
-                                action.completedAt?.let { Text("Abgeschlossen: ${formattedTime(it)}") }
-                                }
-                                if (model.personsVisible && model.confirming == null) PersonsSection(model)
-                                model.changeError?.let { Text(changeErrorLabel(it)) }
-                                if (model.confirming != null) {
-                                    Text(if (action.status == ActionStatus.ACTIVE)
-                                        "Aktion endgültig abschließen? Danach sind Bearbeitung und Wiedereröffnung ausgeschlossen."
-                                        else "${advanceLabel(action.status)}? Dieser Statusschritt kann nicht rückgängig gemacht werden.")
-                                    FormButton(onClick = model::confirmAdvance, enabled = !model.saving) { Text("Bestätigen") }
-                                    FormTextButton(onClick = model::cancelAdvance, enabled = !model.saving) { Text("Abbrechen") }
-                                } else if (!model.personForm && model.selectedPerson == null && !model.personSaving && model.operations.screen == OperationsScreen.OVERVIEW && !model.tasks.form && model.tasks.selected==null) {
-                                    if (ActionLifecycle.mayEdit(action.status)) {
-                                        FormOutlinedButton(onClick = model::edit) { Text("Bearbeiten") }
-                                    }
-                                    if (ActionLifecycle.next(action.status) != null) {
-                                        FormButton(onClick = model::requestAdvance) { Text(advanceLabel(action.status)) }
-                                    }
-                                }
-                                FormTextButton(onClick = model::back, enabled = !model.saving && !model.personSaving) { Text("Zur Aktionsliste") }
+            LaunchedEffect(model.snapshot.state, model.snapshot.generation) {
+                if (model.snapshot.state == SessionState.READY) while (true) {
+                    model.refreshCountdown()
+                    delay(1000)
+                }
+            }
+            Surface(Modifier.fillMaxSize()) {
+                if (model.snapshot.state == SessionState.LOCKED) {
+                    PagLockedScreen(model.bootstrap, model::unlock)
+                } else {
+                    Column(Modifier.safeDrawingPadding()) {
+                        if (model.snapshot.state == SessionState.READY) {
+                            FlowRow(Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                itemVerticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                PagSessionCountdown(model.remainingMillis)
+                                PagSecondaryButton("Sperren", model::lock, modifier=Modifier)
                             }
-                            else -> {
-                                Text("Aktionsliste", style = MaterialTheme.typography.headlineMedium)
-                                if (model.actions.isEmpty()) Text("Noch keine Aktionen vorhanden.")
-                                model.actions.forEach { action ->
-                                    FormOutlinedButton(onClick = { model.detail(action.id) }, modifier = Modifier.fillMaxWidth()) {
-                                        Column { Text(action.title); Text(statusLabel(action.status)) }
+                        }
+                        PagWorkspace(model.feedback.takeIf { model.snapshot.state == SessionState.READY },
+                            model::dismissFeedback, Modifier.fillMaxWidth().weight(1f)) {
+                        val scroll=rememberScrollState()
+                        LaunchedEffect(model.tasks.form,model.tasks.selected?.id,model.tasks.filter){scroll.scrollTo(0)}
+                        Column(Modifier.padding(24.dp).verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            when (model.snapshot.state) {
+                                SessionState.BLOCKED -> PagErrorState()
+                                SessionState.LOCKED -> Unit
+                                SessionState.AUTHENTICATING -> Text("Bitte bestätige den Gerätesperrcode im Android-Dialog.")
+                                SessionState.MAINTENANCE -> PagLoadingState()
+                                SessionState.READY -> {
+                                    when {
+                                        model.creating || model.editing != null -> ActionForm(model)
+                                        model.detailLoading || model.personDetailLoading -> PagLoadingState()
+                                        model.selected != null && model.workspaceError -> PagErrorState()
+                                        model.selected != null && model.personsVisible && model.workspace == null -> PagLoadingState()
+                                        model.selected != null -> {
+                                            val action = model.selected!!
+                                            Text(action.title, style = MaterialTheme.typography.headlineMedium)
+                                            Text(statusLabel(action.status))
+                                            var showActionFields by remember(action.id, action.status) { mutableStateOf(action.status != ActionStatus.ACTIVE) }
+                                            if (action.status == ActionStatus.ACTIVE) FormTextButton({ model.interaction(); showActionFields = !showActionFields }) { Text("Aktionsdetails") }
+                                            if (showActionFields) {
+                                                Text(action.description)
+                                                Text("Beginn: ${formattedTime(action.startAt)}")
+                                                Text("Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}")
+                                                action.completedAt?.let { Text("Abgeschlossen: ${formattedTime(it)}") }
+                                            }
+                                            if (model.personsVisible && model.confirming == null) PersonsSection(model)
+                                            model.changeError?.let { Text(changeErrorLabel(it)) }
+                                            if (model.confirming != null) {
+                                                Text(if (action.status == ActionStatus.ACTIVE)
+                                                "Aktion endgültig abschließen? Danach sind Bearbeitung und Wiedereröffnung ausgeschlossen."
+                                                else "${advanceLabel(action.status)}? Dieser Statusschritt kann nicht rückgängig gemacht werden.")
+                                                FormButton(onClick = model::confirmAdvance, enabled = !model.saving) { Text("Bestätigen") }
+                                                FormOutlinedButton(onClick = model::cancelAdvance, enabled = !model.saving) { Text("Abbrechen") }
+                                            } else if (!model.personForm && model.selectedPerson == null && !model.personSaving && model.operations.screen == OperationsScreen.OVERVIEW && !model.tasks.form && model.tasks.selected==null) {
+                                                if (ActionLifecycle.mayEdit(action.status)) {
+                                                    FormOutlinedButton(onClick = model::edit) { Text("Bearbeiten") }
+                                                }
+                                                if (ActionLifecycle.next(action.status) != null) {
+                                                    FormButton(onClick = model::requestAdvance) { Text(advanceLabel(action.status)) }
+                                                }
+                                            }
+                                            FormOutlinedButton(onClick = model::back, enabled = !model.saving && !model.personSaving) { Text("Zur Aktionsliste") }
+                                        }
+                                        else -> {
+                                            if (model.actionListState != ActionListState.Loading) Text("Aktionsliste", style = MaterialTheme.typography.headlineMedium)
+                                            when (val state = model.actionListState) {
+                                                ActionListState.Loading -> PagLoadingState()
+                                                ActionListState.Empty -> PagEmptyState(model::createScreen)
+                                                ActionListState.Error -> PagErrorState()
+                                                is ActionListState.Content -> {
+                                                    state.actions.forEach { action ->
+                                                        PagSecondaryButton("${action.title} · ${statusLabel(action.status)}", { model.detail(action.id) }, modifier=Modifier.fillMaxWidth())
+                                                    }
+                                                    PagPrimaryButton("Aktion planen", model::createScreen)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
-                                FormButton(onClick = model::createScreen) { Text("Aktion planen") }
                             }
+                        }
                         }
                     }
                 }
@@ -87,7 +110,7 @@ import java.util.Locale
         }
     }
 }
-}
+
 
 @Composable private fun PersonsSection(model: ProductViewModel) {
     if (model.operations.screen != OperationsScreen.OVERVIEW) { OperationsSection(model); return }
@@ -99,16 +122,16 @@ import java.util.Locale
             var pseudonym by remember(existing?.id) { mutableStateOf(existing?.pseudonym ?: "") }
             Text(if (existing == null) "Person hinzufügen" else "Person bearbeiten")
             FormTextField(pseudonym, { model.interaction(); pseudonym = it },
-                label = { Text("Pseudonym") }, modifier = Modifier.fillMaxWidth(), enabled = !model.personSaving)
+                label = { Text("Pseudonym") }, autoFocus=existing==null, keyboardOptions=productKeyboard(ProductTextKind.PERSON), modifier = Modifier.fillMaxWidth(), enabled = !model.personSaving)
             FormButton(onClick = { model.savePerson(pseudonym) }, enabled = !model.personSaving) { Text("Speichern") }
-            FormTextButton(onClick = model::cancelPerson, enabled = !model.personSaving) { Text("Abbrechen") }
+            FormOutlinedButton(onClick = model::cancelPerson, enabled = !model.personSaving) { Text("Abbrechen") }
         }
         model.selectedPerson != null -> {
             Text(model.selectedPerson!!.pseudonym, style = MaterialTheme.typography.titleMedium)
             if (model.personsEditable) FormOutlinedButton(onClick = model::editPerson) { Text("Bearbeiten") }
             if (model.personsEditable) FormOutlinedButton({ model.operations.plan(model.selectedPerson!!.id) }) { Text("Rollen planen") }
             SensitiveSection(model)
-            FormTextButton(onClick = model::backToPersons) { Text("Zur Personenliste") }
+            FormOutlinedButton(onClick = model::backToPersons) { Text("Zur Personenliste") }
         }
         else -> {
             if (model.personsLoading) Text("Personen werden geladen …")
@@ -140,8 +163,8 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
     var end by remember(existing?.id) { mutableStateOf(existing?.expectedEndAt?.let { Instant.ofEpochMilli(it).atZone(zone).toLocalDateTime() }) }
     var error by remember { mutableStateOf<String?>(null) }
     Text(if (existing == null) "Aktion planen" else "Aktion bearbeiten", style = MaterialTheme.typography.headlineMedium)
-    FormTextField(title, { model.interaction(); title = it }, label = { Text("Titel") }, imeAction = androidx.compose.ui.text.input.ImeAction.Next, modifier = Modifier.fillMaxWidth())
-    FormTextField(description, { model.interaction(); description = it }, label = { Text("Beschreibung") }, modifier = Modifier.fillMaxWidth())
+    FormTextField(title, { model.interaction(); title = it }, label = { Text("Titel") }, keyboardOptions=productKeyboard(ProductTextKind.ACTION_TITLE), imeAction = androidx.compose.ui.text.input.ImeAction.Next, modifier = Modifier.fillMaxWidth())
+    FormTextField(description, { model.interaction(); description = it }, label = { Text("Beschreibung") }, keyboardOptions=productKeyboard(ProductTextKind.DESCRIPTION), modifier = Modifier.fillMaxWidth())
     Text("Zeitzone: ${zone.id}")
     DateTimeField("Beginn", start, zone, model::interaction) { start = it }
     DateTimeField("Voraussichtliches Ende", end, zone, model::interaction) { end = it }
@@ -163,7 +186,7 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
         }
         if (error == null) model.save(input!!)
     }, enabled = !model.saving) { Text("Speichern") }
-    FormTextButton(onClick = { if (existing == null) model.back() else model.cancelEdit() }, enabled = !model.saving) { Text("Abbrechen") }
+    FormOutlinedButton(onClick = { if (existing == null) model.back() else model.cancelEdit() }, enabled = !model.saving) { Text("Abbrechen") }
 }
 
 /** Inline selectors keep the existing foreground/focus contract; no secondary window.
@@ -185,7 +208,7 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
         DatePicker(state = date, showModeToggle = false)
         TimePicker(state = time)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FormTextButton(onClick = {
+            FormOutlinedButton(onClick = {
                 interaction()
                 date.selectedDateMillis?.let { millis ->
                     val day = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
@@ -193,7 +216,7 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
                     expanded = false
                 }
             }, enabled = date.selectedDateMillis != null) { Text("Übernehmen") }
-            FormTextButton(onClick = { interaction(); expanded = false }) { Text("Abbrechen") }
+            FormOutlinedButton(onClick = { interaction(); expanded = false }) { Text("Abbrechen") }
         }
     }
 }

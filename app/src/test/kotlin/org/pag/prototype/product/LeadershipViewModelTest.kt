@@ -44,12 +44,14 @@ class LeadershipViewModelTest {
     }
     private class Sensitive : LeadershipRepository {
         var state=SensitiveState.UNINITIALIZED; var writes=0; var revokes=0
+        var deferInventory=false
+        var inventoryResult:((SensitiveResult<SensitiveInventory>)->Unit)?=null
         var deferred:((SensitiveResult<SensitiveOpened>)->Unit)?=null
         val grant=object:SensitiveGrant {
             override val actionId="synthetic-action";override val personId="synthetic-person";override val area=SensitiveArea.IDENTITY
             var live=true;override fun valid()=live;override fun cancel(){live=false}
         }
-        override fun inventory(actionId:String,personId:String,publish:(SensitiveResult<SensitiveInventory>)->Unit)=publish(SensitiveResult.Value(SensitiveInventory(state,setOf(SensitiveArea.IDENTITY))))
+        override fun inventory(actionId:String,personId:String,publish:(SensitiveResult<SensitiveInventory>)->Unit){if(deferInventory)inventoryResult=publish else publish(SensitiveResult.Value(SensitiveInventory(state,setOf(SensitiveArea.IDENTITY))))}
         override fun setup(actionId:String,passphrase:CharArray,confirmation:CharArray,publish:(SensitiveResult<Unit>)->Unit){writes++;passphrase.fill('\u0000');confirmation.fill('\u0000');state=SensitiveState.READY;publish(SensitiveResult.Value(Unit))}
         override fun open(actionId:String,personId:String,area:SensitiveArea,passphrase:CharArray,publish:(SensitiveResult<SensitiveOpened>)->Unit){passphrase.fill('\u0000');deferred=publish}
         override fun save(grant:SensitiveGrant,data:SensitiveData,publish:(SensitiveResult<Unit>)->Unit){writes++;publish(SensitiveResult.Value(Unit))}
@@ -62,6 +64,23 @@ class LeadershipViewModelTest {
     private val model=ProductViewModel(session,actions,ProductStorageState.READY_TO_OPEN,people,sensitive){}
     private fun open(){model.detail(actions.row.id);model.personDetail(people.row.id)}
     private fun release(){sensitive.state=SensitiveState.READY;open();model.requestSensitive(SensitiveArea.IDENTITY);model.openSensitive("synthetic secret fixture".toCharArray());sensitive.deferred!!(SensitiveResult.Value(SensitiveOpened(sensitive.grant,SensitiveData.Identity("synthetic"))))}
+    @Test fun personDetailRevealsOnlyWithItsInventoryMetadata() {
+        model.detail(actions.row.id); sensitive.deferInventory=true;model.personDetail(people.row.id)
+        assertTrue(model.personDetailLoading);assertNull(model.selectedPerson);assertNull(model.sensitiveInventory)
+        sensitive.inventoryResult!!(SensitiveResult.Value(SensitiveInventory(SensitiveState.UNINITIALIZED)))
+        assertFalse(model.personDetailLoading);assertEquals(people.row,model.selectedPerson);assertNotNull(model.sensitiveInventory)
+        assertEquals(0,sensitive.writes)
+    }
+    @Test fun lockDuringPersonInventoryCannotRevealPersonOrMetadata() {
+        model.detail(actions.row.id);sensitive.deferInventory=true;model.personDetail(people.row.id)
+        val old=sensitive.inventoryResult!!;session.lock();old(SensitiveResult.Value(SensitiveInventory(SensitiveState.UNINITIALIZED)))
+        assertFalse(model.personDetailLoading);assertNull(model.selectedPerson);assertNull(model.sensitiveInventory)
+    }
+    @Test fun leavingPersonDetailDiscardsPendingInventory() {
+        model.detail(actions.row.id);sensitive.deferInventory=true;model.personDetail(people.row.id)
+        val old=sensitive.inventoryResult!!;model.backToPersons();old(SensitiveResult.Value(SensitiveInventory(SensitiveState.UNINITIALIZED)))
+        assertFalse(model.personDetailLoading);assertNull(model.selectedPerson);assertNull(model.sensitiveInventory)
+    }
     @Test fun explicitSetupAndCancellationDoNotAutomaticallyWrite(){open();assertFalse(model.sensitiveSetup);assertEquals(0,sensitive.writes);model.requestSensitiveSetup();assertTrue(model.sensitiveSetup);model.closeSensitive();assertFalse(model.sensitiveSetup);assertEquals(0,sensitive.writes)}
     @Test fun partialSensitiveStateDoesNotBlockBasicOrPermitSetup(){sensitive.state=SensitiveState.PARTIAL_OR_INVALID;open();model.requestSensitiveSetup();assertFalse(model.sensitiveSetup);assertTrue(model.personsVisible);assertNotNull(model.selectedPerson)}
     @Test fun navigationCancelsAndDiscardsDelayedRelease(){sensitive.state=SensitiveState.READY;open();model.requestSensitive(SensitiveArea.IDENTITY);model.openSensitive("synthetic secret fixture".toCharArray());model.backToPersons();sensitive.deferred!!(SensitiveResult.Value(SensitiveOpened(sensitive.grant,SensitiveData.Identity("synthetic"))));assertNull(model.sensitiveOpened);assertFalse(sensitive.grant.valid())}

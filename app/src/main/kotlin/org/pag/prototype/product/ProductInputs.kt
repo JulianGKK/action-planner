@@ -78,28 +78,40 @@ private val LocalFormInput=staticCompositionLocalOf<FormInput>{error("PRODUCT-FO
         }){content()}
     }
 }
-@Composable internal fun FormButton(onClick:()->Unit,enabled:Boolean=true,content:@Composable RowScope.()->Unit) {
+@Composable internal fun FormButton(onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,shape:androidx.compose.ui.graphics.Shape=androidx.compose.foundation.shape.RoundedCornerShape(4.dp),content:@Composable RowScope.()->Unit) {
     val input=LocalFormInput.current
-    Button(onClick={input.finish();onClick()},enabled=enabled,content=content)
+    Button(onClick={input.finish();onClick()},enabled=enabled,modifier=modifier.fillMaxWidth().heightIn(min=56.dp),shape=shape) {
+        ProvideTextStyle(LocalTextStyle.current.copy(textAlign=androidx.compose.ui.text.style.TextAlign.Center)) { content() }
+    }
 }
-@Composable internal fun FormTextButton(onClick:()->Unit,enabled:Boolean=true,content:@Composable RowScope.()->Unit) {
+@Composable internal fun FormTextButton(onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,content:@Composable RowScope.()->Unit) {
     val input=LocalFormInput.current
-    TextButton(onClick={input.finish();onClick()},enabled=enabled,content=content)
+    TextButton(onClick={input.finish();onClick()},enabled=enabled,modifier=modifier.heightIn(min=48.dp),content=content)
 }
-@Composable internal fun FormOutlinedButton(onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,content:@Composable RowScope.()->Unit) {
+@Composable internal fun FormOutlinedButton(onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,shape:androidx.compose.ui.graphics.Shape=androidx.compose.foundation.shape.RoundedCornerShape(4.dp),content:@Composable RowScope.()->Unit) {
     val input=LocalFormInput.current
-    OutlinedButton(onClick={input.finish();onClick()},modifier=modifier,enabled=enabled,content=content)
+    OutlinedButton(onClick={input.finish();onClick()},modifier=modifier.heightIn(min=48.dp),enabled=enabled,shape=shape,content=content)
 }
 @Composable internal fun FormTextField(value:String,onValueChange:(String)->Unit,label:@Composable ()->Unit,
     modifier:Modifier=Modifier,enabled:Boolean=true,singleLine:Boolean=false,
     keyboardOptions:KeyboardOptions=KeyboardOptions.Default,imeAction:ImeAction=ImeAction.Done,
     visualTransformation:VisualTransformation=VisualTransformation.None,
     trailingIcon:(@Composable ()->Unit)?=null,supportingText:(@Composable ()->Unit)?=null,
-    focusRequester:FocusRequester?=null,focusChanged:(Boolean)->Unit={}) {
+    autoFocus:Boolean=false,focusRequester:FocusRequester?=null,focusChanged:(Boolean)->Unit={}) {
     val input=LocalFormInput.current;val manager=LocalFocusManager.current
     val id=remember{Any()};var rectangle:Rect? by remember{mutableStateOf(null)};var active by remember{mutableStateOf(false)}
     DisposableEffect(id){onDispose{if(input.focused===id)input.finish()}}
-    val request=if(focusRequester==null)Modifier else Modifier.focusRequester(focusRequester)
+    val entryFocus=remember{FocusRequester()}
+    val requester=focusRequester ?: entryFocus.takeIf{autoFocus}
+    val keyboard=LocalSoftwareKeyboardController.current
+    val accessibility=LocalContext.current.getSystemService(android.view.accessibility.AccessibilityManager::class.java)
+    // One entry effect; no focus restoration at ticks/recomposition or after leaving this form.
+    LaunchedEffect(autoFocus) {
+        if(autoFocus && accessibility?.isTouchExplorationEnabled != true) {
+            requester?.requestFocus(); keyboard?.show()
+        }
+    }
+    val request=if(requester==null)Modifier else Modifier.focusRequester(requester)
     OutlinedTextField(value,onValueChange,label=label,enabled=enabled,singleLine=singleLine,
         visualTransformation=visualTransformation,trailingIcon=trailingIcon,supportingText=supportingText,
         keyboardOptions=keyboardOptions.copy(imeAction=imeAction),
@@ -153,4 +165,14 @@ private val LocalFormInput=staticCompositionLocalOf<FormInput>{error("PRODUCT-FO
 internal fun passphraseCounter(value:String):String {
     val count=org.pag.domain.LeadershipRules.codePointCount(value)
     return "$count / 128 Zeichen · "+when{count<16->"mindestens 16";count>128->"Maximum überschritten";count==128->"Maximum erreicht";else->"Mindestlänge erreicht"}
+}
+
+/** Keyboard hints only: values and domain normalization never pass through this mapping. */
+internal enum class ProductTextKind { PERSON, ACTION_TITLE, ROLE, TASK_TITLE, PLACE, DESCRIPTION, PHONE, DATE, PASSPHRASE }
+internal fun productKeyboard(kind:ProductTextKind):KeyboardOptions = when(kind) {
+    ProductTextKind.PERSON,ProductTextKind.ROLE,ProductTextKind.PLACE -> KeyboardOptions(capitalization=KeyboardCapitalization.Words)
+    ProductTextKind.ACTION_TITLE,ProductTextKind.TASK_TITLE,ProductTextKind.DESCRIPTION -> KeyboardOptions(capitalization=KeyboardCapitalization.Sentences)
+    ProductTextKind.PHONE -> KeyboardOptions(keyboardType=KeyboardType.Phone,autoCorrectEnabled=false)
+    ProductTextKind.DATE -> KeyboardOptions(capitalization=KeyboardCapitalization.None,autoCorrectEnabled=false)
+    ProductTextKind.PASSPHRASE -> KeyboardOptions(capitalization=KeyboardCapitalization.None,keyboardType=KeyboardType.Password,autoCorrectEnabled=false)
 }

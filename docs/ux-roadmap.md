@@ -46,6 +46,22 @@ Idle trotz Ticks/Bannern/Loads, Foreground/Device-Lock, keine Publication nach
 Revoke, Fokus/Keyboard und Textskalierung/TalkBack. Build und passende Unitchecks;
 Lifecycle-/IME-Verhalten auf Gerät mit synthetischen Daten prüfen.
 
+### UX1a — implementierter Shell-Slice (12.10.2026)
+
+Der angeforderte UX1a-Scope bündelt Shell-Grundlagen, initialen Action-Load und
+read-only Countdown aus den obigen Planungspunkten. Umsetzung und Prüfnachweise:
+[UX1a Shell](ux1a-shell.md). Bereichs-Loadzustände, weitere Banner und Legacy-
+Buttons bleiben UX2/UX3; keine Re-Auth oder Vorwegnahme von UX1-S.
+
+### UX1b — Polish auf UX1a (12.10.2026)
+
+Manuelle Befunde konkretisieren die ruhige Shell: Atomic Screen Reveal für den
+heutigen Workspace, initiales Laden getrennt von Refresh, stabiler READY-Header,
+4-dp-Controls, floating Feedback mit Lebensdauerbalken, Rollen-/Taskfeedback,
+KeyboardHints und einmaliger Eintrittsfokus. Keine Sessionverlängerung oder
+Änderung von Storage/P3b. Details und Grenzen: [UX1b Polish](ux1b-polish.md).
+UX2/UX3 behalten fachliche Navigation und Bereichsneugestaltung.
+
 ### UX1-S — Frische explizite Sitzungsbestätigung
 
 **Ziel:** Den Zielvertrag aus UX-Philosophie Abschnitt 3 technisch ermöglichen.

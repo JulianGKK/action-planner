@@ -176,6 +176,11 @@ Arbeit kann enden; keine neue Zulassung oder fachliche Veröffentlichung nach
 Widerruf. Interne JVM/JCA/SQLCipher-Kopien und physische RAM-Löschung sind nicht
 garantiert. Kein File-Key- oder Multi-Key-Vertrag wird dadurch entschieden.
 
+UX1a zeigt ausschließlich eine read-only Restzeitprojektion dieser bestehenden
+Deadline mit derselben monotonen Uhr. Anzeige-Ticks erzeugen keine Interaktion,
+keine neue Deadline und keine Storagefreigabe; siehe [ux1a-shell.md](ux1a-shell.md).
+Der bestehende Sessionvertrag bleibt unverändert.
+
 Produktive Sessionparameter: 180000 ms absolut, ab dem tatsächlichen erfolgreichen
 Auth-Callback; 30000 ms Inaktivität ausschließlich in READY. MAINTENANCE zählt
 gegen absolut und erhält keine künstliche Aktivität. Timer prüfen nur nach;

@@ -70,6 +70,12 @@ class SessionCoordinator(
 
     @Synchronized override fun checkExpiry() { enforceValidity() }
 
+    @Synchronized override fun remainingAbsoluteMillis(): Long? {
+        enforceValidity()
+        if (current.state != SessionState.READY) return null
+        return absoluteDeadline?.let { (it - clock.nowMillis()).coerceAtLeast(0) }
+    }
+
     @Synchronized override fun userInteraction() {
         enforceValidity()
         if (current.state == SessionState.READY && foregroundAllowed && accessEnvironmentAllowed())

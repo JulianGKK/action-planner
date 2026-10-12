@@ -24,6 +24,8 @@ interface SessionPort {
     fun observe(observer: (SessionSnapshot) -> Unit): Subscription
     fun authenticate(experiment: Experiment)
     fun testAccess()
+    /** Read-only display projection; null outside a currently valid READY session. */
+    fun remainingAbsoluteMillis(): Long? = null
     fun userInteraction()
     fun lock()
 }
