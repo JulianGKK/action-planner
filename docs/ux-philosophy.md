@@ -70,7 +70,7 @@ Keine verlängerte Vorbereitungssitzung, kein „Stay unlocked“ und keine
 persistenten operativen/sensitiven Entwürfe über Lock. Referenzbereinigung
 behauptet keine vollständige RAM- oder Flash-Überschreibung.
 
-## 3. Geschützte Shell, Countdown und erneute Bestätigung
+## 3. Geschützte Shell, Countdown und Session-Neustart
 
 ### Session-Countdown
 
@@ -90,38 +90,32 @@ geschützte Ansicht bis zum nächsten Tick stehen lassen. Ziffern erhalten stabi
 Breite. Symbol/Farbe allein reichen nicht; Screenreader erhalten verständlichen
 Text, aber keine automatische Ansage jeder Sekunde.
 
-### „Neu bestätigen“ — Ziel für einen separaten Security-Slice
+### „Sitzung neu starten“ — konservativer UX1-S-Vertrag
 
-Zunächst in den letzten etwa 30 Sekunden: „Sitzung endet gleich“ und die klar
-erkennbare Aktion „Neu bestätigen“. Das ist eine neue explizite
-DEVICE_CREDENTIAL-Systemauthentisierung, niemals die Leitungspassphrase.
-Ein Tap allein verändert die absolute Deadline nicht. Kein automatischer Start.
-Keine parallelen Authentisierungsversuche; alte Ergebnisse werden verworfen.
+Die ursprüngliche Idee einer weiterlaufenden READY-Session mit „Neu bestätigen“
+ist verworfen. Der bestehende READY-Foreground-/Authvertrag trägt sie nicht ohne
+neue Koordination. UX1-S nutzt ausschließlich **Lock → normaler Unlock**.
 
-| Ereignis | Verbindliches Zielverhalten |
-| --- | --- |
-| Frische Authentisierung erfolgreich | Neue normale Sitzung, neue Generation, neue absolute Drei-Minuten-Deadline ab frischem Authentisierungszeitpunkt und neue READY-Inactivity-Basis nach zulässiger Maintenance. |
-| Abbruch oder Fehler | Alte Deadline bleibt unverändert. Die alte Sitzung besteht ausschließlich weiter, soweit sie nach allen bisherigen Gates noch gültig ist. Kein Wiederbeleben nach Lock. |
-| Alte Sitzung läuft während des Versuchs ab | Regulär LOCKED und alte operative/sensitive UI-Daten bereinigen. Ein späteres zulässiges erfolgreiches Ergebnis des ausdrücklich gestarteten frischen Versuchs darf eine neue Sitzung starten. |
-| Erfolg vor altem Ablauf | Möglichst den normalen Screen-Kontext erhalten: Bereich und Navigation als Absicht, Daten unter neuer Generation frisch laden. Keine alten Grants, Requests oder Klartext-Editoren in die neue Generation übernehmen. |
-| Foreground-/Device-Lock-Revoke | Bestehenden Revoke-Vertrag anwenden. Authentisierung ist keine allgemeine Foreground-Ausnahme; ein unzulässiger/überholter Versuch darf keine neue Freigabe erzeugen. |
+Bei gültigem READY und positiver absoluter Restzeit bis einschließlich 30 Sekunden
+erscheint „Sitzung neu starten“ als Secondary-Control neben Countdown und Sperren.
+Kein automatischer Prompt, kein Timerbanner. Der Hinweis für Accessibility lautet:
+„Sitzung neu starten. Ungespeicherte Eingaben werden verworfen.“
 
-Ungespeicherte Leadership-Sensitive-Geheimnisse werden niemals über die
-Sicherheitsgrenze konserviert. Auch normale ungespeicherte Task-/Personenentwürfe
-werden in UX0 nicht zur Übernahme zwischen Generationen freigegeben. Nach Ablauf
-keine automatische Restaurierung alter Editoren. Neu laden ist keine Wiederaufnahme
-alter Requests. Die nach neuem Unlock zulässige Navigation folgt Abschnitt 5.
+Der Tap beendet sofort die alte Session über den normalen Lock-Pfad, invalidiert
+deren Generation und bereinigt operative Daten, Navigation, ungespeicherte Editoren,
+Leadership-Grants und sensitive Payload. Anschließend startet der normale explizite
+DEVICE_CREDENTIAL-Unlock: LOCKED → AUTHENTICATING → MAINTENANCE → READY.
+Der Tap setzt keine neue absolute Deadline. Erst erfolgreiche Authentisierung
+verankert die neue 180-Sekunden-Deadline; Maintenance verbraucht dieses Budget.
+Cancel bleibt LOCKED; Fehler bleiben gemäß bestehendem Vertrag fail closed
+(gegebenenfalls BLOCKED). Keine Rückkehr zur alten Session.
 
-**Technische Grenze der Baseline:** `SessionCoordinator.authenticate()` akzeptiert
-nur LOCKED; `SessionSnapshot` enthält keine Deadline. `MainActivity` behandelt
-AUTHENTICATING speziell, READY-Fokusverlust sperrt dagegen. Der gewünschte Versuch
-aus einer noch gültigen Sitzung ist daher kein reiner Buttonumbau. Vor Umsetzung
-müssen Versuchslifetime, alter Sessionablauf, Android-Dialog/Lifecycle, frische
-Keystore-Autorisierung, DB-Key-Lifetime und Generation-Publication separat geprüft
-werden. Ein laufender Versuch darf weder absolute noch Idle-/Foreground-Gates
-aussetzen. Falls der Systemdialog den erlaubten Foreground beendet, sperrt die
-alte Sitzung konservativ; Screen-Erhalt ist dann nachrangig. UX0 ändert keine
-dieser Regeln und verspricht keinen nahtlosen Erhalt auf jedem Gerät.
+Kein Continuation-Descriptor, kein RAM-/SavedState-Editorrestore und keine neue
+READY-Foreground-Ausnahme. Die normale Generation-/Storage-/P3b-Sicherheit bleibt
+vollständig erhalten. Nach Erfolg werden Daten frisch geladen; die heutige
+Aktionsliste bleibt der Post-Unlock-Einstieg. Das ACTIVE-Routing aus Abschnitt 5
+ist späterer UX-Umfang, kein zusätzlicher Router in UX1-S.
+Details und Nachweise: [UX1-S Session-Neustart](ux1s-session-restart.md).
 
 ### Locked-Screen
 

@@ -12,7 +12,7 @@ UX1 → UX2 → UX3 → UX4 → UX5 bleibt sinnvoll: erst stabile Shell/Zuständ
 dann ein Workspace-Muster, anschließend operative Priorisierung und Training.
 Read-only-Korrektheit für COMPLETED muss schon UX1–UX3 erhalten bleiben;
 UX5 verbessert die Darstellung und repariert nicht erst spät deren Gates.
-„Neu bestätigen“ wird als UX1-S separiert und blockiert die übrige UX1-Arbeit
+„Sitzung neu starten“ wird als UX1-S separiert und blockiert die übrige UX1-Arbeit
 nicht. Wegen des realen Sessioncodes ist ein zusätzlicher Security-Review zwingend.
 
 Jeder Slice bleibt klein: erst betroffene Code-/Datenpfade prüfen, dann
@@ -62,26 +62,23 @@ KeyboardHints und einmaliger Eintrittsfokus. Keine Sessionverlängerung oder
 Änderung von Storage/P3b. Details und Grenzen: [UX1b Polish](ux1b-polish.md).
 UX2/UX3 behalten fachliche Navigation und Bereichsneugestaltung.
 
-### UX1-S — Frische explizite Sitzungsbestätigung
+### UX1-S — Konservativer Session-Neustart
 
-**Ziel:** Den Zielvertrag aus UX-Philosophie Abschnitt 3 technisch ermöglichen.
-Aktuell kann authenticate nur aus LOCKED starten. Diesen Guard nicht einfach
-entfernen oder vor dem Prompt einen neuen Drei-Minuten-Timer setzen.
+**Implementiert:** Bei gültigem READY und `0 < Restzeit <= 30000 ms` erscheint
+„Sitzung neu starten“. Expliziter Tap führt sofort normalen Lock/Cleanup aus,
+danach normalen DEVICE_CREDENTIAL-Unlock mit Maintenance. Alte Generation,
+Editoren, Navigation und Leadership-Grants werden verworfen. Cancel bleibt LOCKED,
+Fehler folgen dem bisherigen fail-closed Vertrag. Kein Continuation-Descriptor,
+keine neue Auth-State-Machine und keine READY-Foreground-Ausnahme.
 
-Vor Implementierung Review/Entscheidung über getrennte Versuchslifetime und
-weiterlaufende alte Session, Android-Systemdialog/Foreground, authentifizierten
-Zeitanker, Key-/Maintenance-Lifetime und atomaren Generationswechsel. Keine
-Foreground-/Device-Lock-/Idle-Ausnahme zur Erhaltung alter Daten erfinden.
-Screen-Erhalt ist gegenüber Cleanup nachrangig. Fehler/Abbruch darf alten Ablauf
-nicht verändern; abgelaufene Session bleibt gesperrt, frischer zulässiger Erfolg
-eröffnet neue Session. Kein Leadership-Geheimnis oder alter Request überlebt.
+Die ursprüngliche weiterlaufende Re-Auth-Idee wurde vor Änderungen gestoppt
+und durch diese Produktentscheidung ersetzt. Der heutige Post-Unlock-Einstieg
+bleibt die Aktionsliste; ACTIVE-Hub-Routing gehört zu UX3.
 
-**Abnahmefälle:** Erfolg vor/nach altem Ablauf, Abbruch, Fehler, Idle-Ablauf
-während Prompt, echter Foregroundverlust/Device-Lock, Doppel-Tap, überholtes
-Auth-Ergebnis, Maintenance verbraucht neue absolute Zeit, Keyowner entzogen,
-keine alte Ergebnispublication und kein Editor-Reopen. Gezielter Geräte-/Security-
-Nachweis nötig. Bei nicht nachweisbarer sicherer Umsetzung bleibt UX1 ohne Button;
-Countdown und normale explizite Entsperrung bleiben nutzbar.
+**Abnahmefälle:** Sichtbarkeit und tatsächlicher Tap, sofortiger Revoke vor Auth,
+Cancel/Fehler/Erfolg, Maintenance-Zeit, Doppeltap, Foreground-/Device-Lock-Revoke,
+stale Storage-/UI-Publication, Countdown/Banner/Atomic Reveal/TaskModel und P3b.
+Aktuelle Prüfungen und menschlicher Smoke: [UX1-S](ux1s-session-restart.md).
 
 ## UX2 — Preparation Workspace
 
@@ -221,7 +218,7 @@ Rechtsbewertung und keine unbewiesenen Evidence-/Forensikgarantien.
 
 | Punkt | Festgelegt / noch zu entscheiden | Zeitpunkt |
 | --- | --- | --- |
-| Erneute Bestätigung | Frisches DEVICE_CREDENTIAL, keine Timerlockerung festgelegt; sichere technische Versuch-/Lifecycle-Semantik und Screen-Kontextübernahme noch nachzuweisen. | Vor UX1-S; Security-Review. |
+| Session-Neustart | Entschieden: sofortiger normaler Lock, danach frischer normaler DEVICE_CREDENTIAL-Unlock. Keine Navigation-/Editorübernahme und keine READY-Ausnahme. | UX1-S; Security-Review und manueller Systemdialog-Smoke. |
 | Vorbereitung „bereit?“ | Fakten und menschliche Entscheidung, keine neuen Startblocker. Ob künftig fachliche Pflichtchecklisten benötigt werden, ist separater Produktumfang. | Nur bei eigenem späteren Slice. |
 | Task-Datum ohne Uhrzeit | UX0 erhält Zeitpunktsemantik und verlangt bei gesetzter Fälligkeit bestätigte Uhrzeit. Eine reine Tagesfälligkeit benötigt neues fachliches Modell. | Separat, nicht Voraussetzung für UX2. |
 | Aufmerksamkeit | Festgelegt: kompakte Summary und höchstens ein datenbasierter Hinweis je Hub-Karte, ohne Regel-/Eskalationsengine. Konkrete Microcopy mit synthetischen Szenarien prüfen. | UX3a; keine offene Produktentscheidung für das Hub-Modell. |

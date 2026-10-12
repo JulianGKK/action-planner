@@ -16,4 +16,12 @@ interface StorageContext {
     fun check(point: AccessPoint): Boolean
     /** Only a short in-memory publication. Never execute I/O in this callback. */
     fun publish(result: () -> Unit): Boolean
+    /** Short synchronous key acquisition, never crypto, I/O or consumer work.
+     * The authority serializes with session revoke before acquire takes a key-owner
+     * monitor. Call authorize inside that monitor immediately before copying.
+     * It rechecks the authoritative session and validUntilMillis using one time
+     * sample in the context's monotonic epoch. The guard is same-thread/scoped;
+     * it must not escape. Providers without this atomic admission deny by default.
+     */
+    fun <T> admitKey(validUntilMillis: Long, acquire: (authorize: () -> Boolean) -> T?): T? = null
 }

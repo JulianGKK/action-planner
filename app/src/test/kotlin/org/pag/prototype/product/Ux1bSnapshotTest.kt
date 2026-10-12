@@ -12,10 +12,11 @@ class Ux1bSnapshotTest {
         var value=SessionSnapshot()
         var listener:((SessionSnapshot)->Unit)?=null
         var interactions=0
+        var remaining=102000L
         override fun snapshot()=value
         override fun observe(observer:(SessionSnapshot)->Unit):Subscription { listener=observer;observer(value);return Subscription{} }
         fun emit(state:SessionState,generation:Long){value=SessionSnapshot(state,generation);listener!!(value)}
-        override fun remainingAbsoluteMillis()=102000L.takeIf{value.state==SessionState.READY}
+        override fun remainingAbsoluteMillis()=remaining.takeIf{value.state==SessionState.READY}
         override fun authenticate(experiment:Experiment){}
         override fun testAccess(){}
         override fun userInteraction(){interactions++}
@@ -97,4 +98,37 @@ class Ux1bSnapshotTest {
     @Test fun progressStartsFullEndsEmptyAndIsClamped(){assertEquals(1f,bannerProgress(0,5000));assertEquals(.5f,bannerProgress(2500,5000));assertEquals(0f,bannerProgress(5000,5000));assertEquals(0f,bannerProgress(6000,5000));assertEquals(1f,bannerProgress(-1,5000))}
     @Test fun progressTimerCannotInteractOrDismissNewerBanner()=runBlocking{open();complete();model.operations.createRole("synthetic first");ops.write!!(OperationsResult.Value(Role("new","a","synthetic",0)));val old=model.feedback!!.id;model.operations.createRole("synthetic second");ops.write!!(OperationsResult.Value(Role("new","a","synthetic",0)));val newest=model.feedback;val interactions=session.interactions;val progress=mutableListOf<Float>();expireFeedback(old,100,model::dismissFeedback){progress.add(it)};assertSame(newest,model.feedback);assertEquals(1f,progress.first());assertEquals(0f,progress.last());assertEquals(interactions,session.interactions);session.lock();assertNull(model.feedback)}
     @Test fun keyboardHintsMatchFieldPurpose(){for(kind in listOf(ProductTextKind.PERSON,ProductTextKind.ROLE,ProductTextKind.PLACE))assertEquals(KeyboardCapitalization.Words,productKeyboard(kind).capitalization);for(kind in listOf(ProductTextKind.ACTION_TITLE,ProductTextKind.TASK_TITLE,ProductTextKind.DESCRIPTION))assertEquals(KeyboardCapitalization.Sentences,productKeyboard(kind).capitalization);assertEquals(KeyboardCapitalization.None,productKeyboard(ProductTextKind.PASSPHRASE).capitalization)}
+    @Test fun restartDropsTaskDraftAndStaleWriteBannerAcrossNewReady() {
+        open(); complete(); session.remaining=20000
+        model.tasks.add(); model.tasks.change(TaskInput("synthetic unsaved task")); model.tasks.save()
+        val old=tasks.write!!
+        model.restartSession()
+        assertFalse(model.tasks.form); assertNull(model.tasks.board); assertNull(model.feedback)
+        assertNull(model.workspace); assertNull(model.remainingMillis); assertNull(model.selected)
+        session.emit(SessionState.READY,3)
+        old(OperationsResult.Value(task))
+        assertNull(model.feedback); assertFalse(model.tasks.form); assertNull(model.tasks.selected)
+        assertNull(model.workspace); assertNull(model.selected)
+    }
+    @Test fun restartInvalidatesAtomicRevealReadsAndBannerExpiry() {
+        open(); complete(); session.remaining=20000
+        model.operations.createRole("synthetic role"); ops.write!!(OperationsResult.Value(Role("new","a","synthetic",0)))
+        val banner=model.feedback!!.id
+        val oldOps=ops.loads.last(); val oldTasks=tasks.loads.last()
+        model.restartSession()
+        assertNull(model.feedback); assertNull(model.workspace); assertNull(model.operations.board)
+        session.emit(SessionState.READY,3)
+        oldOps(OperationsResult.Value(operational)); oldTasks(OperationsResult.Value(taskBoard)); model.dismissFeedback(banner)
+        assertNull(model.feedback); assertNull(model.workspace); assertNull(model.operations.board); assertNull(model.tasks.board)
+        assertEquals(ActionListState.Loading,model.actionListState)
+    }
+    @Test fun restartDropsPersonAndOperationalEditorNavigation() {
+        open(); complete(); session.remaining=20000
+        model.operations.update("p"); assertEquals(OperationsScreen.LIVE,model.operations.screen)
+        model.restartSession()
+        assertEquals(OperationsScreen.OVERVIEW,model.operations.screen); assertNull(model.operations.personId)
+        session.emit(SessionState.READY,3)
+        assertNull(model.selectedPerson); assertFalse(model.personForm); assertNull(model.editingPerson)
+        assertNull(model.selected); assertNull(model.workspace)
+    }
 }

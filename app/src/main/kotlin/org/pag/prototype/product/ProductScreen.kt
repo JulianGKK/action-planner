@@ -6,6 +6,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.pag.domain.*
 import kotlinx.coroutines.delay
@@ -36,6 +38,12 @@ import java.util.Locale
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 itemVerticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 PagSessionCountdown(model.remainingMillis)
+                                if (sessionRestartVisible(model.snapshot.state, model.remainingMillis)) {
+                                    PagSecondaryButton("Sitzung neu starten", model::restartSession,
+                                        modifier = Modifier.semantics {
+                                            contentDescription = "Sitzung neu starten. Ungespeicherte Eingaben werden verworfen."
+                                        })
+                                }
                                 PagSecondaryButton("Sperren", model::lock, modifier=Modifier)
                             }
                         }

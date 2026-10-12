@@ -181,6 +181,19 @@ Deadline mit derselben monotonen Uhr. Anzeige-Ticks erzeugen keine Interaktion,
 keine neue Deadline und keine Storagefreigabe; siehe [ux1a-shell.md](ux1a-shell.md).
 Der bestehende Sessionvertrag bleibt unverändert.
 
+UX1-S ergänzt ausschließlich den expliziten Control „Sitzung neu starten“ bei
+gültigem READY und positiver absoluter Restzeit bis einschließlich 30000 ms.
+Vor Systemauthentisierung wird die alte Session über den normalen Lock-Pfad
+widerrufen und bereinigt. Anschließend gilt unverändert LOCKED → AUTHENTICATING
+→ MAINTENANCE → READY mit frischem DEVICE_CREDENTIAL und neuem Zeitanker.
+Der Tap erzeugt keine neue Deadline oder READY-Publication. Cancel bleibt LOCKED;
+Auth-/Maintenancefehler bleiben gemäß normalem Vertrag fail closed, gegebenenfalls
+BLOCKED. Keine Reaktivierung alter Generation, Continuation oder Editorrestoration;
+P3b-Grants werden widerrufen und nicht durch Geräteauthentisierung erneuert.
+Keine neue READY-Foreground-Ausnahme, kein Storage-Bypass, keine Persistenz.
+Die ursprüngliche weiterlaufende Re-Auth-Idee ist verworfen. Details und Nachweise:
+[ux1s-session-restart.md](ux1s-session-restart.md).
+
 Produktive Sessionparameter: 180000 ms absolut, ab dem tatsächlichen erfolgreichen
 Auth-Callback; 30000 ms Inaktivität ausschließlich in READY. MAINTENANCE zählt
 gegen absolut und erhält keine künstliche Aktivität. Timer prüfen nur nach;
@@ -210,3 +223,53 @@ keine permanente Archivierung, Exporte oder Secure-Overwrite-Zusage. Kurze Titel
 ohne Notizfeld, Pseudonyme in der UI; keine Übernahme sensibler P3b-Payloads.
 Statische Vorlagen erzeugen erst nach Auswahl und Speichern normale Tasks;
 sourceTemplateKey ist nicht unique. P5b-Vorschlagsregeln sind nicht implementiert.
+
+### UX1-S: Deadlock und finale Grant-Key-Zulassung
+
+Der ursprüngliche Zyklus war Coordinator-Monitor -> synchroner Cleanup ->
+Grant-Monitor gegen Grant-Monitor -> Contextcheck -> Coordinator-Monitor.
+Der erste Fix zog den Contextcheck aus dem Grant-Monitor. Der Re-Audit wies
+anschließend neue Key-Übergaben nach Generationinvalidierung, bei bereits
+wartendem Cancel und nach Deadline nach; der Reject erst nach Work war zu spät.
+
+Der finale Pfad erweitert ausschließlich den bestehenden Context um eine kurze
+`admitKey`-Operation. Sie besitzt zuerst den Coordinator-Monitor; die Grant-
+Kopie besitzt danach den Grant-Monitor. Der scoped Authorizer liest den bereits
+gehaltenen Coordinator, ohne einen Monitor zu erwerben oder Observer/Cleanup
+aufzurufen. Er prüft READY/Generation, die bestehende Live-Umgebung und eine
+gemeinsame monotone Zeitprobe gegen absolute Session-, READY-Inaktivitäts- und
+Grantdeadline. Es gibt keinen lock-freien Schattenstate und keinen Two-Phase-
+Cleanup. `check`/`publish` und bestehende Storage-Gates bleiben unverändert.
+
+Die erfolgreiche finale Gate-Momentaufnahme innerhalb beider Monitore ist die
+logisch atomare Zulassung: lokale Key-Präsenz bleibt unter Grant geschützt,
+Sessionzustand unter Coordinator. Beim positiven Live-Environment-Snapshot
+sind diese Zustände stabil; die anschließende monotone Zeitprobe unter allen
+Deadlines bestätigt auch die Zeitgültigkeit an diesem Punkt. Bound-Context-
+Requestchecks müssen ebenfalls erfolgreich sein. Erst dann wird kopiert.
+Gibt der Guard false zurück, entsteht keine Lease. Nicht unterstützte Context-
+Provider verweigern `admitKey` standardmäßig; es gibt keinen Check-/Publish-
+Fallback mit schwächeren Garantien. Produktionsprovider/Grant verwenden dieselbe
+elapsedRealtime-Epoche. Guard-Nutzung nach Scope-Ende oder auf anderen Threads
+wird abgewiesen; er ist kein dauerhafter Autorisierungstoken.
+
+60 Sekunden sind eine Zulassungsgrenze: keine neue Admission bei erreichten
+60 Sekunden. Bereits vollständig zugelassene synchrone CPU-Arbeit darf enden;
+Work läuft ohne Coordinator-/Grant-Monitor. `cancel` überschreibt die originale
+Grantkopie, nicht aktive Consumerkopien. Diese werden bei Work-Ende/Exception
+best-effort überschrieben. Ein später Reject verhindert die Rückgabe eines
+stalen Ergebnisses und weitere Storagearbeit, autorisiert aber keine Work.
+Der äußere Lease-finally deckt auch Adapterfehler nach der Kopie ab.
+
+Session-Revoke linearisiert weiterhin beim Generation-/Statewechsel vor
+synchronem Cleanup. Lokales Cancel linearisiert beim Wipe/null unter Grant;
+Repository-Revoke invalidiert zunächst seinen atomaren Request. Die gemeinsame
+Reihenfolge ist Coordinator -> Grant; es gibt im untersuchten Scope keine
+Grant -> Coordinator-Monitoraufnahme. Lock/Background kehren erst nach Cleanup
+zurück, der normale UX1-S-Authrequest erfolgt danach. Keine Deadlineverlängerung,
+Generationverschiebung, READY-Ausnahme oder übersprungene Bereinigung.
+
+Drei vor dem finalen Fix rote echte Coordinator-/Grant-Regressionsfälle und
+weitere Ordering-/Deadline-/Wipe-Tests einschließlich 128 kontrollierter
+Cancel-Wartereihenfolgen sichern die Grenze. Details, Grenzen und Prüfprotokolle:
+[UX1-S-Zulassung](ux1s-session-restart.md#finale-key-zulassung-nach-dem-toctou-re-audit).

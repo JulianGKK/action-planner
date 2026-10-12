@@ -14,6 +14,7 @@ class LeadershipViewModelTest {
             observers.add(observer); observer(current); return Subscription { observers.remove(observer) }
         }
         override fun authenticate(experiment: Experiment) {}
+        override fun remainingAbsoluteMillis() = 20_000L.takeIf { current.state == SessionState.READY }
         override fun testAccess() {}
         override fun userInteraction() {}
         override fun lock() { current = SessionSnapshot(SessionState.LOCKED,2); observers.toList().forEach { it(current) } }
@@ -85,6 +86,19 @@ class LeadershipViewModelTest {
     @Test fun partialSensitiveStateDoesNotBlockBasicOrPermitSetup(){sensitive.state=SensitiveState.PARTIAL_OR_INVALID;open();model.requestSensitiveSetup();assertFalse(model.sensitiveSetup);assertTrue(model.personsVisible);assertNotNull(model.selectedPerson)}
     @Test fun navigationCancelsAndDiscardsDelayedRelease(){sensitive.state=SensitiveState.READY;open();model.requestSensitive(SensitiveArea.IDENTITY);model.openSensitive("synthetic secret fixture".toCharArray());model.backToPersons();sensitive.deferred!!(SensitiveResult.Value(SensitiveOpened(sensitive.grant,SensitiveData.Identity("synthetic"))));assertNull(model.sensitiveOpened);assertFalse(sensitive.grant.valid())}
     @Test fun lockDropsSensitiveContent(){release();assertNotNull(model.sensitiveOpened);session.lock();assertNull(model.sensitiveOpened);assertNull(model.selectedPerson);assertFalse(sensitive.grant.valid())}
+    @Test fun sessionRestartRevokesGrantAndNeverRestoresSensitiveAreaInNewGeneration() {
+        release()
+        model.restartSession()
+        assertEquals(SessionState.LOCKED, model.snapshot.state)
+        assertFalse(sensitive.grant.valid()); assertNull(model.sensitiveOpened)
+        assertNull(model.selectedPerson); assertNull(model.sensitiveArea); assertFalse(model.sensitiveSetup)
+        assertNull(model.remainingMillis)
+        session.current = SessionSnapshot(SessionState.READY, 3)
+        session.observers.toList().forEach { it(session.current) }
+        assertNull(model.sensitiveOpened); assertNull(model.selectedPerson); assertNull(model.sensitiveArea)
+        open(); model.requestSensitive(SensitiveArea.IDENTITY)
+        assertNull(model.sensitiveOpened); assertEquals(SensitiveArea.IDENTITY, model.sensitiveArea)
+    }
     @Test fun expiredReleaseClearsWithoutAutomaticReauth(){release();sensitive.grant.cancel();model.checkSensitiveExpiry();assertNull(model.sensitiveOpened);assertEquals(SensitiveFailure.DENIED,model.sensitiveError);assertEquals(SessionState.READY,model.snapshot.state)}
     @Test fun activeAndCompletedDoNotWrite(){for(status in listOf(ActionStatus.ACTIVE,ActionStatus.COMPLETED)){actions.row=actions.row.copy(status=status);release();model.saveSensitive(SensitiveData.Identity("synthetic changed"));assertEquals(0,sensitive.writes);assertFalse(model.personsEditable)}}
 }

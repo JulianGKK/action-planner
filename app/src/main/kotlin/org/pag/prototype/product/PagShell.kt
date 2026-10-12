@@ -14,6 +14,11 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import org.pag.domain.Action
 import org.pag.domain.ProductStorageState
+import org.pag.domain.SessionState
+
+/** Display threshold only; the coordinator still decides validity at the tap. */
+internal fun sessionRestartVisible(state: SessionState, remainingMillis: Long?): Boolean =
+    state == SessionState.READY && remainingMillis != null && remainingMillis > 0 && remainingMillis <= 30_000
 
 /** One UI publication, not a long-lived DB connection or new authorization. */
 data class WorkspaceSnapshot(val actionId: String, val generation: Long, val persons: List<org.pag.domain.Person>,

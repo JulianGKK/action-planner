@@ -27,6 +27,8 @@ class LeadershipStorageTest {
         private val captured:Long=this@LeadershipStorageTest.generation
         override val generation=captured;override val scope=scopeValue
         override fun check(point:AccessPoint):Boolean {if(denyCommit&&point==AccessPoint.COMMIT)allowed=false;return allowed&&captured==this@LeadershipStorageTest.generation}
+        override fun <T> admitKey(validUntilMillis:Long,acquire:(()->Boolean)->T?):T? =
+            synchronized(this){acquire{scope==AccessScope.READY && check(AccessPoint.STEP) && now<validUntilMillis}}
         override fun publish(result:()->Unit):Boolean{if(!check(AccessPoint.PUBLICATION))return false;result();return true}
     }
     private val direct=Executor{it.run()}
@@ -62,6 +64,76 @@ class LeadershipStorageTest {
     private fun alter(i:ProductInventory,row:SensitiveRow)=ActionDatabaseAccess(app).use(i.database,key,context()){it.leadership().updateArea(row)}
     private fun assertPreserved(i:ProductInventory,expected:SensitiveRow){val actual=existingRow(i,expected.personId,SensitiveArea.valueOf(expected.area));assertEquals(expected.cryptoVersion,actual.cryptoVersion);assertEquals(expected.revision,actual.revision);assertTrue(expected.keyEnvelope.contentEquals(actual.keyEnvelope));assertTrue(expected.payload.contentEquals(actual.payload))}
     private fun otherArea(r:LeadershipRepository){var opened:SensitiveOpened?=null;r.open(id,second,SensitiveArea.EMERGENCY_CONTACT,pass()){opened=(it as SensitiveResult.Value).value};save(r,opened!!,SensitiveData.EmergencyContact("synthetic other"))}
+    @Test fun realCoordinatorAndRepositoryConcurrentLockAndBackgroundCleanup() {
+        val inventory = inv()
+        var authResult: ((AuthenticationOutcome) -> Unit)? = null
+        var maintenanceResult: ((Boolean) -> Unit)? = null
+        val coordinator = org.pag.data.SessionCoordinator(object : AuthenticationExperiment {
+            override fun start(mode: KeyExperiment, complete: (AuthenticationOutcome) -> Unit): Cancellation {
+                authResult = complete; return Cancellation {}
+            }
+        }, Maintenance { maintenanceResult = it; Subscription {} }, MonotonicTime { 0 }, SessionPolicy(180000, 30000))
+        var currentOwner: SessionDbKeyOwner? = null
+        devices.add(real) // Cleanup only this isolated fixture's own P3b aliases.
+        val repository = ProductLeadershipRepository(app, coordinator, inventory, { currentOwner }, direct, direct, MonotonicTime { 0 }, real)
+        repositories.add(repository)
+        coordinator.observe {
+            if (it.state != SessionState.READY) { repository.revoke(); currentOwner?.invalidate(); currentOwner = null }
+        }
+        for (background in listOf(false, true)) {
+            coordinator.foreground(true); coordinator.authenticate(Experiment.PER_OPERATION)
+            authResult!!(AuthenticationOutcome.Granted(object : SyntheticOperation {
+                override fun perform() = OperationResult.SUCCEEDED
+                override fun release() {}
+            }, 0)); maintenanceResult!!(true)
+            val context = coordinator.acquire(AccessScope.READY)!!
+            currentOwner = SessionDbKeyOwner.bind(context, key).also { owners.add(it) }
+            if (!background) setup(repository)
+            val grant = open(repository).grant as LeadershipGrant
+            assertEquals(context.generation, grant.context.generation)
+            var admittedLease: ByteArray? = null
+            grant.consume { bytes ->
+                assertFalse(Thread.holdsLock(coordinator)); assertFalse(Thread.holdsLock(grant))
+                admittedLease = bytes
+            }
+            assertTrue(admittedLease!!.all { it == 0.toByte() })
+            val keyField = grant.javaClass.getDeclaredField("bytes").apply { isAccessible = true }
+            val ownedKey = keyField.get(grant) as ByteArray
+            val held = java.util.concurrent.CountDownLatch(1)
+            val done = java.util.concurrent.CountDownLatch(2)
+            val failure = java.util.concurrent.atomic.AtomicReference<Throwable?>()
+            lateinit var checker: Thread
+            val locker = Thread {
+                try {
+                    synchronized(coordinator) {
+                        held.countDown()
+                        val deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(2)
+                        // Grant is uncontended; only the real coordinator can block this check.
+                        while (checker.state != Thread.State.BLOCKED) {
+                            check(System.nanoTime() < deadline); Thread.yield()
+                        }
+                        if (background) coordinator.foreground(false) else coordinator.lock()
+                    }
+                } catch (t: Throwable) { failure.compareAndSet(null, t) } finally { done.countDown() }
+            }.apply { isDaemon = true }
+            checker = Thread {
+                try {
+                    assertTrue(held.await(2, java.util.concurrent.TimeUnit.SECONDS))
+                    assertThrows(SensitiveProblem::class.java) { grant.consume { fail("Concurrent lock admitted key callback") } }
+                }
+                catch (t: Throwable) { failure.compareAndSet(null, t) } finally { done.countDown() }
+            }.apply { isDaemon = true }
+            locker.start(); checker.start()
+            assertTrue("Real repository revoke must terminate", done.await(5, java.util.concurrent.TimeUnit.SECONDS))
+            failure.get()?.let { throw AssertionError(it) }
+            assertEquals(SessionState.LOCKED, coordinator.snapshot().state)
+            assertThrows(SensitiveProblem::class.java) { grant.consume { fail("Key callback after session revoke") } }
+            assertFalse(grant.valid()); assertNull(keyField.get(grant)); assertTrue(ownedKey.all { it == 0.toByte() })
+            assertNull(currentOwner); assertFalse(context.check(AccessPoint.COMMIT))
+            assertFalse(context.publish { fail("Old generation publication") })
+        }
+    }
+
     @Test fun unknownOtherPersonAreaBlocksEverySensitiveOpenAndExistingGrantSave() {
         val i=inv();val r=repo(i);setup(r);save(r,open(r),SensitiveData.Identity("synthetic"));otherArea(r)
         val granted=open(r);val bad=existingRow(i,second,SensitiveArea.EMERGENCY_CONTACT).copy(cryptoVersion=99);alter(i,bad)

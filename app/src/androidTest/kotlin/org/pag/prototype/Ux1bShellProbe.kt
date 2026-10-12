@@ -29,11 +29,14 @@ class Ux1bShellProbe : Instrumentation() {
         var current=SessionSnapshot()
         var observer:((SessionSnapshot)->Unit)?=null
         var interactions=0
+        var remaining=102000L
+        var authRequests=0
         override fun snapshot()=current
         override fun observe(observer:(SessionSnapshot)->Unit):Subscription {this.observer=observer;observer(current);return Subscription{}}
         fun ready(){current=SessionSnapshot(SessionState.READY,current.generation+1);observer!!(current)}
-        override fun remainingAbsoluteMillis()=102000L.takeIf{current.state==SessionState.READY}
-        override fun authenticate(experiment:Experiment){}
+        override fun remainingAbsoluteMillis()=remaining.takeIf{current.state==SessionState.READY}
+        fun emit(state:SessionState){current=SessionSnapshot(state,current.generation+1);observer!!(current)}
+        override fun authenticate(experiment:Experiment){check(current.state==SessionState.LOCKED);authRequests++;emit(SessionState.AUTHENTICATING)}
         override fun testAccess(){}
         override fun userInteraction(){interactions++}
         override fun lock(){current=SessionSnapshot(SessionState.LOCKED,current.generation+1);observer!!(current)}
@@ -140,6 +143,53 @@ class Ux1bShellProbe : Instrumentation() {
     }
     private fun bounds(node:AccessibilityNodeInfo)=Rect().also{node.getBoundsInScreen(it)}
     private fun control(node:AccessibilityNodeInfo):AccessibilityNodeInfo {var n=node;while(!n.isClickable)n=n.parent?:break;check(n.isClickable);return n}
+    private fun verifySessionRestart(activity:MainActivity,density:Float,scale:Float) {
+        val session=Session()
+        lateinit var model:ProductViewModel
+        fun restartNode(tree:List<AccessibilityNodeInfo>)=tree.find {
+            it.text?.toString()=="Sitzung neu starten" || it.contentDescription?.toString()?.startsWith("Sitzung neu starten.")==true
+        }
+        runOnMainSync {
+            model=ProductViewModel(session,Actions(),ProductStorageState.READY_TO_OPEN,People()) {
+                check(session.current.state==SessionState.LOCKED && model.selected==null && model.remainingMillis==null)
+                session.authenticate(Experiment.STORAGE_UNWRAP)
+            }
+            session.ready()
+            activity.setContent {CompositionLocalProvider(LocalDensity provides Density(density,scale)){ProductScreen(model)}}
+        }
+        waitForIdleSync()
+        check(restartNode(awaitNodes{it.any{n->n.text?.toString()=="Sperren"}})==null)
+        runOnMainSync {session.remaining=30000;model.refreshCountdown()}
+        waitForIdleSync()
+        val offered=awaitNodes{restartNode(it)!=null}
+        val restart=control(checkNotNull(restartNode(offered)))
+        val restartRect=bounds(restart)
+        val lockRect=bounds(control(checkNotNull(offered.find{it.text?.toString()=="Sperren"})))
+        val timerRect=bounds(checkNotNull(offered.find{it.contentDescription?.toString()?.startsWith("Sitzung:")==true}))
+        check(restart.isEnabled && restartRect.width()>=48*density && restartRect.height()>=48*density)
+        check(restartRect.left>=0 && restartRect.right<=targetContext.resources.displayMetrics.widthPixels)
+        check(!Rect.intersects(restartRect,lockRect) && !Rect.intersects(restartRect,timerRect))
+        check(offered.filter{it.contentDescription?.toString()?.startsWith("Sitzung:")==true}.all{it.liveRegion==0})
+        check(restart.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+        waitForIdleSync()
+        val authenticating=awaitNodes{it.any{n->n.text?.toString()=="Bitte bestätige den Gerätesperrcode im Android-Dialog."}}
+        check(restartNode(authenticating)==null)
+        runOnMainSync {model.restartSession();check(session.authRequests==1 && model.remainingMillis==null)}
+        for(state in listOf(SessionState.MAINTENANCE,SessionState.BLOCKED,SessionState.LOCKED)) {
+            runOnMainSync {session.emit(state)}
+            waitForIdleSync()
+            val tree=awaitNodes { nodes -> nodes.any{it.text?.toString()==when(state) {
+                SessionState.MAINTENANCE->"Geschützter Speicher wird geprüft"
+                SessionState.BLOCKED->"Geschützter Speicher nicht verfügbar"
+                else->"PaG"
+            }}}
+            check(restartNode(tree)==null && tree.none{it.contentDescription?.toString()?.startsWith("Sitzung:")==true})
+        }
+        runOnMainSync {session.remaining=180000;session.ready()}
+        waitForIdleSync()
+        check(restartNode(awaitNodes{it.any{n->n.contentDescription?.toString()?.startsWith("Sitzung:")==true}})==null)
+        runOnMainSync {session.lock()}
+    }
     override fun onCreate(arguments:Bundle?){super.onCreate(arguments);start()}
     override fun onStart(){
         var activity:MainActivity?=null
@@ -223,8 +273,9 @@ class Ux1bShellProbe : Instrumentation() {
                 check(before==anchor)
             }
             verifyMinorNavigation(launched,density)
+            for(scale in listOf(1f,2f)) verifySessionRestart(launched,density,scale)
             runOnMainSync{launched.finish()}
-            finish(-1,Bundle().apply{putString("stream","UX1b synthetic READY/header, font scales 1/2, touch/non-overlap, floating banner/no body reflow, entry focus, timer/no interaction, immediate lock cleanup, minor navigation/no extra boards, inventory Cancel/Save/Partial/Lock: OK\n")})
+            finish(-1,Bundle().apply{putString("stream","UX1b/UX1-S synthetic header, font scales 1/2, touch/non-overlap, banner/no reflow, entry focus, lock cleanup, inventory navigation, restart threshold/button click/lock before single auth/non-READY exclusion/new countdown: OK\n")})
         }catch(failure:Exception){
             activity?.let{runOnMainSync{it.finish()}}
             finish(0,Bundle().apply{putString("stream","UX1b synthetic shell probe failed at test line ${failure.stackTrace.firstOrNull{it.className==Ux1bShellProbe::class.java.name}?.lineNumber}; fontScale=$scaleUnderTest; no operational payload logged\n")})

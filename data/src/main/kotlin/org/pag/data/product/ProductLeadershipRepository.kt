@@ -32,6 +32,8 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
         override val scope=c.scope
         override fun check(point:AccessPoint)=c.check(point)&&allowed()
         override fun publish(result:()->Unit):Boolean { if(!allowed())return false; var delivered=false; c.publish{if(allowed()){result();delivered=true}}; return delivered }
+        override fun <T> admitKey(validUntilMillis:Long,acquire:(()->Boolean)->T?):T? =
+            c.admitKey(validUntilMillis){authorize->acquire{authorize() && allowed()}}
     }
     private fun alias(actionId:String)="org.pag.product.leadership.aes.v1.$actionId"
     private fun rootAad(row:LeadershipRow)=SensitiveCodec.context("P3b-root",row.actionId,row.epoch,row.cryptoVersion.toString(),row.algorithm,row.kdfVersion.toString(),row.memoryKiB.toString(),row.iterations.toString(),row.parallelism.toString(),java.util.Base64.getEncoder().encodeToString(row.salt))

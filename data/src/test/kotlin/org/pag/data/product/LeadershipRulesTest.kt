@@ -19,6 +19,8 @@ class LeadershipRulesTest {
         var now=0L;var allowed=true;val context=object:StorageContext{
             override val scope=AccessScope.READY;override val generation=1L
             override fun check(point:AccessPoint)=allowed
+            override fun <T> admitKey(validUntilMillis:Long,acquire:(()->Boolean)->T?):T? =
+                synchronized(this){acquire{allowed && now<validUntilMillis}}
             override fun publish(result:()->Unit):Boolean{if(!allowed)return false;result();return true}
         }
         val grant=LeadershipGrant("a","p",SensitiveArea.IDENTITY,context,MonotonicTime{now},ByteArray(32),"epoch",0,byteArrayOf(),true)
@@ -30,6 +32,8 @@ class LeadershipRulesTest {
         var allowed=true;val context=object:StorageContext{
             override val scope=AccessScope.READY;override val generation=4L
             override fun check(point:AccessPoint)=allowed
+            override fun <T> admitKey(validUntilMillis:Long,acquire:(()->Boolean)->T?):T? =
+                synchronized(this){acquire{allowed && 0L<validUntilMillis}}
             override fun publish(result:()->Unit)=false
         }
         val source=ByteArray(32){8};val g=LeadershipGrant("a","p",SensitiveArea.CONTACT,context,MonotonicTime{0},source,"epoch",0,byteArrayOf(),true)

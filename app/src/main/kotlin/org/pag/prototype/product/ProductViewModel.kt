@@ -341,6 +341,18 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         }
     }
     fun unlock() = begin(bootstrap == ProductStorageState.EMPTY)
+    /** Explicit lock followed by the ordinary unlock. No navigation or editor continuation. */
+    fun restartSession() {
+        val before = session.snapshot()
+        if (!sessionRestartVisible(before.state, session.remainingAbsoluteMillis())) return
+        interaction()
+        // Interaction/clock/environment checks may synchronously revoke the session.
+        val current = session.snapshot()
+        if (current.state != SessionState.READY || current.generation != before.generation) return
+        lock()
+        // Lock observers complete all existing cleanup before entering the normal auth path.
+        if (session.snapshot().state == SessionState.LOCKED) unlock()
+    }
     fun lock() = session.lock()
     fun interaction() = session.userInteraction()
     fun createScreen() { interaction(); if (snapshot.state == SessionState.READY) { selected = null; creating = true } }

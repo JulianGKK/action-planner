@@ -108,7 +108,37 @@ class SessionCoordinator(
             override fun publish(result: () -> Unit): Boolean = synchronized(this@SessionCoordinator) {
                 if (!valid(generation, expected)) false else { result(); true }
             }
+            override fun <T> admitKey(validUntilMillis: Long, acquire: (() -> Boolean) -> T?): T? =
+                synchronized(this@SessionCoordinator) {
+                    // Always Coordinator -> key owner, also during synchronous cleanup.
+                    // Enforce/callbacks only before/after acquire, never under its monitor.
+                    enforceValidity()
+                    if (scope != AccessScope.READY || !valid(generation, SessionState.READY)) null else {
+                        val thread = Thread.currentThread()
+                        var active = true
+                        val result = try {
+                            acquire {
+                                check(Thread.currentThread() === thread && active && Thread.holdsLock(this@SessionCoordinator))
+                                readyKeyAdmissionAllowed(generation, validUntilMillis)
+                            }
+                        } finally { active = false }
+                        if (result == null) enforceValidity()
+                        result
+                    }
+                }
         }
+    }
+
+    /** Called with the coordinator already owned, including while the grant is owned.
+     * Reads the original authority; no monitor acquisition, invalidation or observer.
+     * One final sample compares session absolute, READY idle and key deadlines.
+     */
+    private fun readyKeyAdmissionAllowed(generation: Long, keyDeadline: Long): Boolean {
+        if (!foregroundAllowed || !accessEnvironmentAllowed()) return false
+        val now = clock.nowMillis()
+        return current.generation == generation && current.state == SessionState.READY &&
+            absoluteDeadline?.let { now < it } == true && idleDeadline?.let { now < it } == true &&
+            now < keyDeadline
     }
 
     @Synchronized fun storageFailure() = block("P1-STORAGE-BLOCKED")
