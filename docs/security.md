@@ -181,3 +181,27 @@ Auth-Callback; 30000 ms Inaktivität ausschließlich in READY. MAINTENANCE zähl
 gegen absolut und erhält keine künstliche Aktivität. Timer prüfen nur nach;
 elapsedRealtime ist maßgeblich, nicht Wanduhr. Werte sind derzeit bewusst fest,
 spätere Anpassbarkeit ist noch kein implementiertes Einstellungsfeature.
+
+
+## P5a – operative Aufgaben und minimale Task-Chronik
+
+Der verbindliche implementierte Vertrag steht in [product-p5a.md](product-p5a.md).
+Task und TaskEvent sind ausdrücklich INTERNAL für schnelle operative Koordination
+in einer gültigen READY-Sitzung, trotz potentiell sensibler kurzer Titel. Bestehende
+SQLCipher-DB, Session- und P3b-Verträge bleiben erhalten; kein Leadership-Step-up
+für normale Taskarbeit, keine neuen Permissions, Dependencies oder Netzwerkzugriffe.
+
+Schema 6 ergänzt tasks und task_events additiv. Zuständigkeit Person/Rolle/niemand
+und optionale betroffene Person sind getrennt. Zusammengesetzte Foreign Keys
+verhindern Cross-Action-Referenzen; Insert-/Update-Trigger sichern exklusive Zuständigkeit; das Repository prüft zusätzlich
+persistierten Aktionsstatus und erwarteten Snapshot. Lifecycle + Event sind atomar.
+TaskEvents sind ausschließlich CREATED/STARTED/COMPLETED/CANCELLED/REOPENED,
+append-only im Repository. Keine Edit-Historie, allgemeine Audit- oder Personen-
+Lagehistorie. PREPARATION erlaubt vollständiges Task+Event-Löschen, ACTIVE nicht,
+COMPLETED ist read-only. Rollenreferenzen verhindern stilles Rollenlöschen.
+
+Daten verbleiben aktionsgebunden, mit späterer Aktionslöschung zu entfernen,
+keine permanente Archivierung, Exporte oder Secure-Overwrite-Zusage. Kurze Titel
+ohne Notizfeld, Pseudonyme in der UI; keine Übernahme sensibler P3b-Payloads.
+Statische Vorlagen erzeugen erst nach Auswahl und Speichern normale Tasks;
+sourceTemplateKey ist nicht unique. P5b-Vorschlagsregeln sind nicht implementiert.

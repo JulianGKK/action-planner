@@ -190,27 +190,36 @@ Eine Person kann mehrere organisatorische Rollen besitzen. Diese Rollen sind kei
 
 Das Paar ist eindeutig. Beide Bezugspunkte gehören derselben Aktion an. Die Zuordnung ist mindestens so schutzbedürftig wie die Person und endet spätestens mit der Löschung eines Bezugspunkts.
 
-## 8. Task
+## 8. Task und TaskEvent (P5a)
 
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
-| `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Aktion |
-| `title` | Text | P | Nicht leerer Titel |
-| `description` | Text | P | Beschreibung gemäß FR-030 |
-| `assigned_person_id` | Referenz | O | Höchstens eine verantwortliche Person |
-| `status` | Enum | P | Aufgabenstatus |
-| `priority` | Enum | P | `LOW`, `NORMAL`, `HIGH`; Standard `NORMAL` |
-| `due_at` | Zeitpunkt | O | Fälligkeit |
-| `created_at` | Zeitpunkt | P | Erstellung |
-| `category` | Text | O | Kategorie im Fachbereich Aufgaben |
-| gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und Retention |
+| `id`, `actionId` | ID/Referenz | P | Aufgabe und genau eine Aktion |
+| `title` | Text | P | Trim, 1–120 Unicode-Codepoints; kein Notizfeld |
+| `assigneePersonId` | Referenz | O | Zuständige Person derselben Aktion |
+| `assigneeRoleId` | Referenz | O | Zuständige Rolle derselben Aktion, exklusiv zur Person |
+| `affectedPersonId` | Referenz | O | Unabhängige betroffene Person derselben Aktion |
+| `status` | Enum | P | OPEN, IN_PROGRESS, DONE, CANCELLED |
+| `priority` | Enum | P | LOW, NORMAL (Default), HIGH |
+| `dueAt` | Zeitpunkt | O | Fälligkeit, ohne Alarm/Worker |
+| `sourceTemplateKey` | Text | O | Stabiler technischer Vorlagenkey, ausdrücklich nicht unique |
+| `createdAt`, `updatedAt` | Zeitpunkt | P | Aktueller Snapshot |
+| `completedAt` | Zeitpunkt | O | Ausschließlich bei DONE; Reopen entfernt ihn |
 
-Statuswerte: `OPEN` (offen), `IN_PROGRESS` (in Arbeit), `DONE` (erledigt), `DISCARDED` (verworfen).
+TaskEvent: `id`, `actionId`, `taskId`, `type`, `occurredAt`; Typen CREATED,
+STARTED, COMPLETED, CANCELLED, REOPENED. Append-only Repository, Task und Event
+atomar. Keine Historisierung von Snapshot-Bearbeitungen oder Personenlage.
 
-Aufgaben dürfen ohne verantwortliche Person und ohne Fälligkeit bestehen. Eine zugewiesene Person muss derselben Aktion angehören.
+Zuständigkeit: niemand ODER Person ODER Rolle, SQLite-Trigger und zentrale Domain-/
+Repository-Prüfung. Zusammengesetzte Foreign Keys sichern alle Aktionsgrenzen.
+PREPARATION erlaubt vollständige Task+Event-Löschung; ACTIVE stattdessen CANCELLED;
+COMPLETED read-only. Statische Vorlagen sind Domain-Inputs, keine persistierte
+TaskTemplate-Tabelle. P5b-Vorschlagslogik bleibt ausgenommen.
 
-„Überfällig“ wird abgeleitet: Fälligkeit überschritten und Status `OPEN` oder `IN_PROGRESS`. Ohne Fälligkeit ist eine Aufgabe nicht überfällig.
+Schutzklasse ausdrücklich INTERNAL, bestehende SQLCipher-DB und READY-Session;
+Retention an die Aktion gebunden. Schema 5 → 6 additiv. Der detaillierte Vertrag
+in [product-p5a.md](product-p5a.md) ersetzt die früheren Task-Felder Beschreibung,
+Kategorie, assigned_person_id und DISCARDED ausdrücklich.
 
 ## 9. Material
 
@@ -355,7 +364,7 @@ Zunächst erfolgt die Klassifizierung auf Objektebene; keine zusätzliche Feldkl
 | `Action` → Role | 1 : 0..n |
 | Person ↔ Role | n : m über PersonRole |
 | `Action` → Task | 1 : 0..n |
-| Person → zugewiesene Task | 1 : 0..n; Task hat 0..1 verantwortliche Person |
+| Person → zugewiesene Task | 1 : 0..n; Task hat 0..1 zuständige Person oder Rolle |
 | `Action` → Material | 1 : 0..n |
 | Person → verantwortetes Material | 1 : 0..n; Material hat 0..1 verantwortliche Person |
 | `Action` → Document | 1 : 0..n |
@@ -386,9 +395,9 @@ Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, ke
 |---|---|
 | `Action` | Zugehörige Personen, Rollen, Statusdefinitionen, Zuordnungen, Aufgaben, Material, Dokumente, Dateien, Notes und Ausgaben entfernen |
 | Person | PersonRole und personenbezogene Notes entfernen; Personenreferenzen in Aufgaben und Material entfernen |
-| Role | P4: einzelne Rolle nur ohne geplante/operative Referenzen entfernen; kein stilles Entfernen von Zuordnungen |
+| Role | P4/P5a: einzelne Rolle nur ohne geplante/operative/Task-Referenzen entfernen; kein stilles Entfernen von Zuordnungen |
 | PersonStatusDefinition | Statusreferenzen entfernen; Personen erhalten |
-| Task | Aufgabe und abgeleitete Kopien entfernen; Person erhalten |
+| Task | P5a: Aufgabe und TaskEvents vollständig entfernen, nur PREPARATION; Personen erhalten |
 | Material | Materialposition und abgeleitete Kopien entfernen; Person erhalten |
 | Document | Dokument und zugehöriges FileAsset entfernen |
 | Note | Note entfernen; `Action` und Person erhalten |
@@ -523,3 +532,27 @@ Verträge. Alle Daten bleiben verschlüsselt und sitzungsgebunden. Einzelne Roll
 werden nur unreferenziert gelöscht, nicht mit stiller Zuordnungskaskade. Ein
 späterer Gesamtlöschpfad muss abhängige Plan-/Snapshot-Rows geordnet entfernen.
 Details: [product-p4.md](product-p4.md).
+
+
+## P5a – operative Aufgaben und minimale Task-Chronik
+
+Der verbindliche implementierte Vertrag steht in [product-p5a.md](product-p5a.md).
+Task und TaskEvent sind ausdrücklich INTERNAL für schnelle operative Koordination
+in einer gültigen READY-Sitzung, trotz potentiell sensibler kurzer Titel. Bestehende
+SQLCipher-DB, Session- und P3b-Verträge bleiben erhalten; kein Leadership-Step-up
+für normale Taskarbeit, keine neuen Permissions, Dependencies oder Netzwerkzugriffe.
+
+Schema 6 ergänzt tasks und task_events additiv. Zuständigkeit Person/Rolle/niemand
+und optionale betroffene Person sind getrennt. Zusammengesetzte Foreign Keys
+verhindern Cross-Action-Referenzen; Insert-/Update-Trigger sichern exklusive Zuständigkeit; das Repository prüft zusätzlich
+persistierten Aktionsstatus und erwarteten Snapshot. Lifecycle + Event sind atomar.
+TaskEvents sind ausschließlich CREATED/STARTED/COMPLETED/CANCELLED/REOPENED,
+append-only im Repository. Keine Edit-Historie, allgemeine Audit- oder Personen-
+Lagehistorie. PREPARATION erlaubt vollständiges Task+Event-Löschen, ACTIVE nicht,
+COMPLETED ist read-only. Rollenreferenzen verhindern stilles Rollenlöschen.
+
+Daten verbleiben aktionsgebunden, mit späterer Aktionslöschung zu entfernen,
+keine permanente Archivierung, Exporte oder Secure-Overwrite-Zusage. Kurze Titel
+ohne Notizfeld, Pseudonyme in der UI; keine Übernahme sensibler P3b-Payloads.
+Statische Vorlagen erzeugen erst nach Auswahl und Speichern normale Tasks;
+sourceTemplateKey ist nicht unique. P5b-Vorschlagsregeln sind nicht implementiert.

@@ -11,7 +11,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     initialBootstrap: ProductStorageState, private val personRepository: PersonRepository,
     private val leadership: LeadershipRepository? = null,
     operationsRepository: OperationsRepository? = null,
-    private val begin: (Boolean) -> Unit) : ViewModel() {
+    taskRepository: TaskRepository? = null, private val begin: (Boolean) -> Unit) : ViewModel() {
     var bootstrap by mutableStateOf(initialBootstrap); private set
     fun updateBootstrap(state: ProductStorageState) { bootstrap = state }
     var snapshot by mutableStateOf(session.snapshot()); private set
@@ -32,9 +32,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private var personRequest = 0L // Navigation ordering only, never session authority.
     val personsVisible get() = snapshot.state == SessionState.READY && selected?.let { PersonRules.mayRead(it.status) } == true
     val personsEditable get() = snapshot.state == SessionState.READY && selected?.let { PersonRules.mayManage(it.status) } == true
+    val tasks = TaskModel(taskRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive)
     val operations = OperationsModel(operationsRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive)
     private fun clearPersons() {
-        operations.clear(); clearSensitive(); personRequest++; persons = emptyList(); personsLoading = false; selectedPerson = null
+        tasks.clear(); operations.clear(); clearSensitive(); personRequest++; persons = emptyList(); personsLoading = false; selectedPerson = null
         personForm = false; editingPerson = null; personError = null; personSaving = false
     }
     private fun loadPersons() {
@@ -46,7 +47,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             if (request != personRequest || selected?.id != action.id || !personsVisible) return@listPersons
             personsLoading = false
             when (result) {
-                is PersonResult.Value -> { persons = result.value; operations.refresh() }
+                is PersonResult.Value -> { persons = result.value; operations.refresh(); tasks.refresh() }
                 is PersonResult.Rejected -> personError = result.reason
             }
         }

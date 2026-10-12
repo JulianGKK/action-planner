@@ -77,7 +77,7 @@ internal class OperationsStore(private val db:ActionDatabase,private val c:Stora
         val status=actionStatus(actionId)?:return denied(OperationsFailure.NOT_FOUND)
         if(!OperationalRules.mayPlan(status))return denied(OperationsFailure.NOT_ALLOWED)
         step{db.operations().role(actionId,roleId)}?.model()?:return denied(OperationsFailure.NOT_FOUND)
-        if(step{db.operations().plannedReferences(actionId,roleId)}>0 || step{db.operations().liveReferences(actionId,roleId)}>0)return denied(OperationsFailure.IN_USE)
+        if(step{db.operations().plannedReferences(actionId,roleId)}>0 || step{db.operations().liveReferences(actionId,roleId)}>0 || step{db.tasks().roleReferences(actionId,roleId)}>0)return denied(OperationsFailure.IN_USE)
         if(step{db.operations().removeRole(actionId,roleId)}!=1)throw ProductStorageFailure()
         return OperationsResult.Value(Unit)
     }

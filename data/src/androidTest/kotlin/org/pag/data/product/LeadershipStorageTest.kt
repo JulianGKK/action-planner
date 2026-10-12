@@ -126,6 +126,8 @@ class LeadershipStorageTest {
         org.pag.data.prototype.b2.B2Native.open(i.database,key,context(AccessScope.MAINTENANCE)).use { db ->
             db.beginTransaction()
             try {
+                db.execSQL("DROP TABLE task_events")
+                db.execSQL("DROP TABLE tasks")
                 db.execSQL("DROP TABLE person_role_plans")
                 db.execSQL("DROP TABLE person_operational_states")
                 db.execSQL("DROP TABLE person_planned_roles")
@@ -145,7 +147,7 @@ class LeadershipStorageTest {
             assertEquals("synthetic other",db.actions().get(other)!!.title)
             assertNull(db.leadership().get(id));assertTrue(db.leadership().all(id).isEmpty())
         }
-        org.pag.data.prototype.b2.B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(5,it.version)}
+        org.pag.data.prototype.b2.B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(6,it.version)}
     }
     @Test fun explicitSetupAndAllThreeAreasPersistAcrossNewRuntime() {
         val i=inv();val device=Device();var r=repo(i,device)

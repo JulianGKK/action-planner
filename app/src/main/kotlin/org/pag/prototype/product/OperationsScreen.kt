@@ -31,8 +31,11 @@ import java.time.format.FormatStyle
         }
         OperationsScreen.LIVE->LiveForm(model,ops,board)
         OperationsScreen.OVERVIEW->{
-            if(board.status==ActionStatus.ACTIVE || board.status==ActionStatus.COMPLETED) {
+            if(board.status==ActionStatus.ACTIVE || board.status==ActionStatus.COMPLETED)
                 Text(if(board.status==ActionStatus.ACTIVE)"Lagebild" else "Letztes Lagebild",style=MaterialTheme.typography.titleLarge)
+            TaskSection(model.tasks,board)
+            if(model.tasks.form || model.tasks.selected!=null)return
+            if(board.status==ActionStatus.ACTIVE || board.status==ActionStatus.COMPLETED) {
                 Text("Gesamt: ${board.persons.size} Personen")
                 OperationalStatus.entries.chunked(2).forEach{pair->Row(horizontalArrangement=Arrangement.spacedBy(12.dp)){
                     pair.forEach{s->Text("${operationalLabel(s)}: ${board.count(s)}",modifier=Modifier.weight(1f))}
@@ -56,8 +59,14 @@ import java.time.format.FormatStyle
                             s.currentPlaceLabel?.let{Text("Ort / Ziel: $it")}
                             Text(updatedLabel(s.updatedAt))
                         }
+                        val count=model.tasks.board?.affectedCount(p.person.id)?:0
+                        if(count>0)Text("$count offene Aufgabe"+(if(count==1)"" else "n"))
                         if(board.status==ActionStatus.ACTIVE)Text("Lage aktualisieren")
                     }
+                }
+                if(board.status==ActionStatus.ACTIVE){
+                    FormTextButton({model.tasks.add(p.person.id)}){Text("Aufgabe hinzufügen · ${p.person.pseudonym}")}
+                    if((model.tasks.board?.affectedCount(p.person.id)?:0)>0)FormTextButton({model.tasks.showPerson(p.person.id)}){Text("Aufgaben ansehen")}
                 }
             }
             if(board.persons.isEmpty())Text("Noch keine Personen erfasst.")
@@ -130,6 +139,6 @@ private fun operationsError(failure:OperationsFailure)=when(failure){
     OperationsFailure.NOT_ALLOWED->"Diese Änderung ist im aktuellen Aktionsstatus nicht möglich."
     OperationsFailure.INVALID->"Bitte Rollenname, Hauptfunktion oder Ort prüfen (maximal 80 Zeichen)."
     OperationsFailure.DUPLICATE->"Dieser Rollenname ist in der Aktion bereits vergeben."
-    OperationsFailure.IN_USE->"Die Rolle ist noch geplant oder aktuell zugeordnet und kann nicht gelöscht werden."
+    OperationsFailure.IN_USE->"Die Rolle wird noch von einer Person oder Aufgabe verwendet und kann nicht gelöscht werden."
     OperationsFailure.STALE->"Die Lage wurde inzwischen geändert. Bitte neu öffnen."
 }

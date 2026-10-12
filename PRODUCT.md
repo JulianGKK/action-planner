@@ -320,35 +320,39 @@ Rollen gelten grundsätzlich innerhalb einer Aktion.
 
 # 9. Aufgaben
 
-## FR-030 — Aufgabe erstellen
+## FR-030 — Aufgabe erstellen (P5a)
 
-Eine Aufgabe besitzt:
+Aktionsgebundene Aufgaben besitzen einen getrimmten Titel (1–120 Unicode-Codepoints),
+Priorität Niedrig/Normal/Hoch (Default Normal), Status, optional Fälligkeit sowie
+Erstellungs-/Änderungszeit. Kein separates Freitext-Notizfeld.
+Zuständigkeit: niemand ODER eine Person ODER eine Rolle derselben Aktion.
+Eine unabhängige optionale betroffene Person verbindet die Aufgabe mit dem Lagebild.
 
-* Titel
-* Beschreibung
-* Verantwortliche Person
-* Status
-* Priorität
-* Fälligkeit
-* Erstellungszeitpunkt
-* optionale Kategorie
+## FR-031 — Aufgabenstatus und minimale Chronik
 
-## FR-031 — Aufgabenstatus
+Offen → In Arbeit; Offen/In Arbeit → Erledigt oder Entfällt;
+Erledigt/Entfällt → Wieder öffnen (Offen). completedAt nur bei Erledigt.
+TaskEvents enthalten ausschließlich Erstellt, In Arbeit, Erledigt, Entfällt,
+Wieder geöffnet. Keine Änderungs-, Personenstatus-, Orts- oder allgemeine Audit-Historie.
 
-Mögliche Statuswerte:
+## FR-032 — Aufgaben als Teil des Lagebilds
 
-* offen
-* in Arbeit
-* erledigt
-* verworfen
+PREPARATION erlaubt Erstellen/Bearbeiten/Löschen und bewusste statische Vorlagenauswahl.
+ACTIVE erlaubt schnelle Erstellung, Bearbeitung und Lifecycle; kein Löschen.
+COMPLETED ist read-only. DRAFT/DELETION_PENDING bieten keinen Task-Verwaltungspfad.
+Das Lagebild zeigt aktive Aufgaben nach Priorität/Fälligkeit, separate erledigte/
+entfallene Aufgaben und betroffene Aufgabenanzahl bei pseudonymen Personen.
 
-## FR-032 — Aufgabenübersicht
+## FR-033 — Fälligkeit und Vorschläge
 
-Offene Aufgaben werden auf dem Aktionsdashboard angezeigt.
+Fälligkeit ist optional, nur innerhalb der App angezeigt, ohne Alarm oder Worker.
+Statische Vorlagen sind organisatorische Vorschläge, keine rechtliche Pflichtaussage.
+sourceTemplateKey ist stabil und nicht unique; keine globale Template-Persistenz.
+Situationsabhängige Vorschlagslogik ist erst P5b, keine automatische Aufgabenerzeugung.
 
-## FR-033 — Überfällige Aufgaben
-
-Überfällige Aufgaben werden sichtbar hervorgehoben.
+Verbindlicher P5a-Vertrag: [docs/product-p5a.md](docs/product-p5a.md).
+Task/TaskEvent sind ausdrücklich INTERNAL in der bestehenden SQLCipher-DB;
+normaler READY-Zugriff analog P4, keine zusätzliche P3b-Freigabe.
 
 ---
 
@@ -982,14 +986,16 @@ PersonRole
  └── role_id
 
 Task
- ├── id
- ├── action_id
- ├── title
- ├── description
- ├── status
- ├── priority
- ├── due_at
- └── assigned_person_id
+ ├── id, actionId, title
+ ├── priority, status
+ ├── assigneePersonId ODER assigneeRoleId (optional)
+ ├── affectedPersonId (unabhängig, optional)
+ ├── dueAt, sourceTemplateKey (optional)
+ ├── createdAt, updatedAt
+ └── completedAt (nur DONE)
+
+TaskEvent
+ └── id, actionId, taskId, type, occurredAt
 
 Material
  ├── id

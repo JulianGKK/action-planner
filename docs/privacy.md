@@ -47,7 +47,8 @@ Die Speicherbereiche sind konzeptionell. Konkrete Pfade und technische Verfahren
 | `Action` | Planung, Durchführung, Nachbereitung | SENSITIVE bei ungeprüftem Freitext; sonst inhaltsabhängig | Privater verschlüsselter strukturierter Speicher | Eigene Frist offen; vollständige Kaskade |
 | Person, PersonRole | Personengebundene Koordination | Standard SENSITIVE | Wie Aktion | Frist offen; Personenkaskade |
 | Role, PersonStatusDefinition | Aktionsgebundene Konfiguration | SENSITIVE bei ungeprüftem Freitext; sonst inhaltsabhängig | Wie Aktion | Spätestens mit Aktion; Definition/Zuordnung bereinigen |
-| Task, Material | Arbeits- und Materialkoordination | SENSITIVE bei Personenbezug/ungeprüftem Freitext | Wie Aktion | Frist offen; Referenzen und Ableitungen bereinigen |
+| Task, TaskEvent (P5a) | Operative Aufgabenkoordination und minimale Lifecycle-Chronik | Ausdrücklich INTERNAL, sensible Titel möglich | Bestehende SQLCipher-Produkt-DB | Aktionsgebunden; TaskEvents mit Task entfernen, keine permanente Archivierung |
+| Material | Materialkoordination | SENSITIVE bei Personenbezug/ungeprüftem Freitext | Wie Aktion | Frist offen; Referenzen und Ableitungen bereinigen |
 | Note, typisiertes Protokoll | Organisatorische Dokumentation | Standard SENSITIVE bei ungeprüftem Inhalt/Personenbezug | Wie Aktion | Eigene Frist offen; personenbezogene Kaskade |
 | Document, FileAsset, Beleg | Offline-Unterlagen, Nachweise | Standard SENSITIVE | Verschlüsselte Metadaten und private verschlüsselte Dateien | Eigene Frist offen; Eigentümerbeziehung beachten |
 | Expense | Ausgaben und Summen | SENSITIVE bei ungeprüftem Freitext/Personenbezug | Verschlüsselter strukturierter Speicher | Frist offen; optionalen Beleg mitlöschen |
@@ -116,3 +117,27 @@ Keine persistente globale Ortsliste, Außenoberfläche oder Netzwerkkopie. Frist
 kein neuer Retentionjob oder Personenlöschpfad. Einzelne unbenutzte Rollen sind in
 PREPARATION nach Bestätigung logisch löschbar, ohne physische Löschgarantie.
 Fokus-/Keyboard- und flüchtige UI-State-Regeln bleiben verbindlich.
+
+
+## P5a – operative Aufgaben und minimale Task-Chronik
+
+Der verbindliche implementierte Vertrag steht in [product-p5a.md](product-p5a.md).
+Task und TaskEvent sind ausdrücklich INTERNAL für schnelle operative Koordination
+in einer gültigen READY-Sitzung, trotz potentiell sensibler kurzer Titel. Bestehende
+SQLCipher-DB, Session- und P3b-Verträge bleiben erhalten; kein Leadership-Step-up
+für normale Taskarbeit, keine neuen Permissions, Dependencies oder Netzwerkzugriffe.
+
+Schema 6 ergänzt tasks und task_events additiv. Zuständigkeit Person/Rolle/niemand
+und optionale betroffene Person sind getrennt. Zusammengesetzte Foreign Keys
+verhindern Cross-Action-Referenzen; Insert-/Update-Trigger sichern exklusive Zuständigkeit; das Repository prüft zusätzlich
+persistierten Aktionsstatus und erwarteten Snapshot. Lifecycle + Event sind atomar.
+TaskEvents sind ausschließlich CREATED/STARTED/COMPLETED/CANCELLED/REOPENED,
+append-only im Repository. Keine Edit-Historie, allgemeine Audit- oder Personen-
+Lagehistorie. PREPARATION erlaubt vollständiges Task+Event-Löschen, ACTIVE nicht,
+COMPLETED ist read-only. Rollenreferenzen verhindern stilles Rollenlöschen.
+
+Daten verbleiben aktionsgebunden, mit späterer Aktionslöschung zu entfernen,
+keine permanente Archivierung, Exporte oder Secure-Overwrite-Zusage. Kurze Titel
+ohne Notizfeld, Pseudonyme in der UI; keine Übernahme sensibler P3b-Payloads.
+Statische Vorlagen erzeugen erst nach Auswahl und Speichern normale Tasks;
+sourceTemplateKey ist nicht unique. P5b-Vorschlagsregeln sind nicht implementiert.

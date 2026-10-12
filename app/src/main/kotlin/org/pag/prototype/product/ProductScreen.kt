@@ -16,10 +16,12 @@ import java.util.Locale
 @Composable fun ProductScreen(model: ProductViewModel) {
     MaterialTheme {
         val screen=listOf(model.snapshot.state,model.snapshot.generation,model.selected?.id,model.selectedPerson?.id,
-            model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId)
+            model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter)
         ProductInputScope(screen) {
         Surface(Modifier.fillMaxSize()) {
-            Column(Modifier.padding(24.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            val scroll=rememberScrollState()
+            LaunchedEffect(model.tasks.form,model.tasks.selected?.id,model.tasks.filter){scroll.scrollTo(0)}
+            Column(Modifier.padding(24.dp).verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text("PaG", style = MaterialTheme.typography.headlineLarge)
                 when (model.snapshot.state) {
                     SessionState.BLOCKED -> Text("Der geschützte Speicher kann nicht sicher verwendet werden. Es wurden keine Daten ersetzt oder repariert.")
@@ -58,7 +60,7 @@ import java.util.Locale
                                         else "${advanceLabel(action.status)}? Dieser Statusschritt kann nicht rückgängig gemacht werden.")
                                     FormButton(onClick = model::confirmAdvance, enabled = !model.saving) { Text("Bestätigen") }
                                     FormTextButton(onClick = model::cancelAdvance, enabled = !model.saving) { Text("Abbrechen") }
-                                } else if (!model.personForm && model.selectedPerson == null && !model.personSaving && model.operations.screen == OperationsScreen.OVERVIEW) {
+                                } else if (!model.personForm && model.selectedPerson == null && !model.personSaving && model.operations.screen == OperationsScreen.OVERVIEW && !model.tasks.form && model.tasks.selected==null) {
                                     if (ActionLifecycle.mayEdit(action.status)) {
                                         FormOutlinedButton(onClick = model::edit) { Text("Bearbeiten") }
                                     }
@@ -117,7 +119,7 @@ import java.util.Locale
                 else model.persons.forEach { person ->
                     FormOutlinedButton(onClick = { model.personDetail(person.id) }, enabled = !model.saving) { Text(person.pseudonym) }
                 }
-                if (model.personsEditable) FormButton(onClick = model::addPerson, enabled = !model.saving) { Text("Person hinzufügen") }
+                if (model.personsEditable && !model.tasks.form && model.tasks.selected==null) FormButton(onClick = model::addPerson, enabled = !model.saving) { Text("Person hinzufügen") }
             }
         }
     }
@@ -194,13 +196,6 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
             FormTextButton(onClick = { interaction(); expanded = false }) { Text("Abbrechen") }
         }
     }
-}
-private fun selectedInstant(value: LocalDateTime?, zone: ZoneId): Long? {
-    if (value == null) return null
-    val offsets = zone.rules.getValidOffsets(value)
-    // Do not silently shift nonexistent times or guess an offset at an overlap.
-    if (offsets.size != 1) return null
-    return value.toInstant(offsets.single()).toEpochMilli()
 }
 private fun localTimeFormat() = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
 private fun formattedTime(millis: Long): String {
