@@ -99,7 +99,7 @@ Prüfnachweise und menschlicher UX-Smoke: [UX2](ux2-preparation-workspace.md).
 Verbindliche Entscheidung aus dem manuellen UX-Review (12.10.2026): Lagebild ist
 operativer Hub / Schaltzentrale. **Hub → Bereichsübersicht → Objekt → fokussierte
 Aktion** ersetzt die lange Gesamtseite. Details: [UX-Philosophie, Abschnitt 7](ux-philosophy.md#7-active-lagebild-als-operativer-hub--schaltzentrale).
-UX3a, UX3b und UX3c sind implementiert; UX3d bleibt Zielplanung.
+UX3a, UX3b, UX3c und UX3d sind implementiert.
 
 ### UX3a — ACTIVE Hub / Navigation
 
@@ -167,6 +167,11 @@ COMPLETED bleibt read-only. Synthetisch betroffene Aufgabe erstellen, abbrechen,
 wieder öffnen und Lock während Navigation prüfen. Keine lange Gesamtseite.
 
 ### UX3d — Funktionenübersicht
+
+**Implementiert:** [UX3d Funktionenarbeitsbereich](ux3d-active-functions.md).
+Aktuelle Gruppen, Ohne Funktion, nachrangige weitere Funktionen und bestehende
+P4-Anlage; Gruppen → vorhandener UX3b-Personenbereich mit RAM-only Rückkontext.
+Keine Sollbesetzung, Bewertung oder neue Fach-/Securitylogik.
 
 Eigener Bereich „Wer übernimmt gerade was?“ mit aktuellen Funktionen und kompakten
 Personen pro Funktion; Planung nachrangig. Summary zählt ausschließlich ON_SITE

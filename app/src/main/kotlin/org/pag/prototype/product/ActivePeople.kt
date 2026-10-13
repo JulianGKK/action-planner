@@ -83,7 +83,7 @@ internal fun activePersonCard(person: OperationalPerson, board: OperationalBoard
     FormButton(model.operations::changeFunction, enabled = model.activeNavigationEnabled && person.state?.status == OperationalStatus.ON_SITE) { Text("Funktion ändern") }
     if (person.state?.status != OperationalStatus.ON_SITE) Text("Eine Funktion kann bei „Vor Ort“ zugeordnet werden.")
     FormOutlinedButton({ model.personDetail(card.id) }, enabled = model.activeNavigationEnabled) { Text("Personendetails") }
-    FormOutlinedButton({ model.activePersonTasks(card.id, true) }, enabled = model.activeNavigationEnabled) { Text("Aufgabe hinzufügen") }
+    if (model.tasks.board != null) FormOutlinedButton({ model.activePersonTasks(card.id, true) }, enabled = model.activeNavigationEnabled) { Text("Aufgabe hinzufügen") }
     if ((model.tasks.board?.affectedCount(card.id) ?: 0) > 0)
         FormOutlinedButton({ model.activePersonTasks(card.id, false) }, enabled = model.activeNavigationEnabled) { Text("Aufgaben ansehen") }
 }
