@@ -221,8 +221,9 @@ Lifecycle-Ereignisse; vergangene Titel-/Personenänderungen werden nicht behaupt
 ## P6a.1 — Aktionsprotokoll: Produkt-/Privacyentscheidungen
 
 [Der P6-Vertrag](product-p6a-protocol.md) ist fachlich festgelegt, noch nicht
-implementiert. Nächster Schritt ist eine separate Implementierungsspezifikation,
-keine heutige Code-/Schemafreigabe. Eigenständiger Bereich mit bewusst erstellten
+implementiert. Die separate Implementierungsspezifikation ist als
+[P6b](product-p6b-protocol-implementation.md) dokumentiert; keine heutige
+Code-/Schemafreigabe. Eigenständiger Bereich mit bewusst erstellten
 Schlüsselereignissen/relevanten Einträgen, Vorlagen, vollständigen Revisionen,
 Quellenart und optionalen Betroffenen-/Behördenangaben. Keine allgemeine Notiz-
 oder Audit-Historie, automatische Rechtsbewertung oder P4-/Taskmutation.
@@ -285,3 +286,20 @@ UX-Philosophie Abschnitt 14. Kein Refactor, keine .kt-Änderung, keine neue
 Dependency, Permission, Persistenz oder Security-Vertragsänderung.
 Für reine Dokumentation keine Unit-/Gerätetests oder Builds nötig;
 Abnahme über Inhaltsreview, lokale Link-/Scope-Prüfung und `git diff --check`.
+
+
+## P6b — technischer Plan, noch keine Protokoll-UI
+
+[Implementierungsspezifikation](product-p6b-protocol-implementation.md) konkretisiert
+P6a.1 mit fünf additiven geplanten Tabellen, atomaren Fassungen, Same-Action-/
+Stale-Gates und minimierten Summary-/Timeline-/Detailprojektionen. Keine Code-
+oder Schemaänderung und keine erneute Produktentscheidung.
+
+Nächste getrennte Aufträge: P6c1 Domain+Storage+Repository/Policytests gemeinsam,
+P6c2 ACTIVE-UI, P6c3 COMPLETED-Nachbereitung, P6c4 Integration/Accessibility.
+Hubkarte erst mit umgesetzter Funktion; keine tote Karte jetzt. ACTIVE/COMPLETED-
+Phasenwechsel im Entwurf fordert bewussten neuen Nachbereitungskontext, alte
+Fassungen bleiben ehrlich lesbar. Atomic Reveal/Refresh, RAM-only Navigation/
+Editoren, Lock-/Stale-Cleanup, Font Scale 2 und bestehende Securityshell erhalten.
+[P6-Prüfplan](testing.md) ist Sollabnahme, keine bereits ausgeführte Testkampagne.
+Retentiondauer/Rechtsprüfung/Allgemeinlöschworkflow bleiben P6a.1-Restgrenzen.

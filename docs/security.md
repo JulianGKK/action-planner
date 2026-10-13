@@ -313,3 +313,21 @@ Revisionshistorie und Gerätezeit sind nachvollziehbare Anwendungshistorie,
 keine Hash-Chain/Signaturen/eigene Kryptografie, Beweissicherheit, Gerichtsfestigkeit,
 forensische Unveränderlichkeit oder vertrauenswürdige Zeitquelle. Juristische
 Prüfung vor Echtdaten bleibt erforderlich; dieser Slice ändert keinen Securitycode.
+
+
+## P6b — geplanter Storage-/Publicationpfad
+
+[P6b](product-p6b-protocol-implementation.md) verwendet ausschließlich vorhandene
+READY-Contexts, Sessiongeneration, Foreground/Deadlines, kurze DB-Key-Leases und
+Room-Lebensdauer samt STEP/COMMIT/Publication. Keine Änderung an Coordinator,
+StorageAccess, LeadershipGrant/Key-Admission, Crypto oder Keystore. Vollständige
+Revision+Children atomar; Revoke vor irreversibler Commitzulassung rollt zurück,
+bereits zugelassene native Arbeit kann enden, stale Publication bleibt untersagt.
+
+COMPLETED-Schreibfähigkeit ist nur P6-Policy, kein allgemeines Aktionsschreibrecht.
+SENSITIVE bleibt ohne zusätzlichen Step-up gemäß P6a.1 zugänglich. Keine eigenen
+Keys, Envelopes, neuen Permissions, Flows/Worker, Dateien, Exporte oder Netzwerke.
+recordedAt aus Repository-Wanduhr, kein Nutzereingabefeld und kein vertrauenswürdiger
+Zeitstempel. FK-/Sequenztrigger sind Anwendungsintegrität, keine kryptografische
+Manipulationssicherheit. [Tests](testing.md) stehen noch aus; keine technische
+Implementierung oder zusätzliche Securityarchitektur durch diesen Dokumentslice.

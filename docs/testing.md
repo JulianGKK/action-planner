@@ -1,0 +1,99 @@
+# Prüfplanung — P6 Aktionsprotokoll
+
+## Status und Umfang
+
+Dieses bislang nicht vorhandene Dokument wird als fokussierter **P6-Testplan**
+angelegt; es ersetzt keine historischen Testnachweise anderer Slices und behauptet
+keine bereits ausgeführten P6-Tests. Fachvertrag: [P6a.1](product-p6a-protocol.md),
+technischer Plan: [P6b](product-p6b-protocol-implementation.md).
+Referenzen: ARCH-02/09/10/23/26/30/34/36/37, PRIV-03/06/07/11,
+SEC-01/05/08/09/10/11/15/17 und RET-02/03/09; Bedrohungen TM-06/09,
+TM-F03/06/08/11/12/13/15/18. Nur synthetische Daten.
+
+## Domain und Zeit
+
+- Trim, Pflichttitel 1..120, optionale Leertexte null; Unicode-Codepoints mit
+  Supplementary-Zeichen für sämtliche 2000/1000/80/120-Grenzen, keine stille Kürzung.
+- 19 eindeutige statische Templatekeys; free null, keine Unique-Regel für Verwendung,
+  Vorlage ohne Save erzeugt nichts und klassifiziert keine Rechtslage.
+- Quelle optional; REPORTED ohne/mit optionaler Person, fremde Aktion reject;
+  andere sourceType mit ReportedBy reject, Ansagetext/WORDING-PARAPHRASE-Paar.
+- Betroffene als Menge, mehr als eine Person und keine künstliche kleine Grenze;
+  Identifier 0/32 erlaubt, 33 reject, gleiche Werte nicht automatisch zusammengeführt.
+- ORIGINAL=1, nächster Append n+1; current nach Nummer bei rückwärtslaufender Uhr;
+  MARKED_MISTAKEN sichtbar, ADDENDUM bewahrt Marker, bewusste CORRECTION hebt ihn auf.
+- ProductTime Gap/Overlap reject, genau ein Offset, Ereignis-/Erfassungszeit getrennt;
+  Draftzeit fixiert, Save-/Retryzeit neu, occurredAtApproximate sichtbar.
+
+## Echte Storage-/Repositorytests
+
+- Fresh Schema7 und Migration 6→7 (sowie historische Upgradepfade) mit echter
+  SQLCipher/Room-Engine: alle alten Tabellen/Rows/Trigger/Ciphertexts erhalten,
+  neue P6-Struktur leer; kein destructive fallback. Exportvergleich und tatsächliche
+  sqlite_master-Triggerprüfung, nicht nur Room-Schema-Datei.
+- Direktes SQL: Same-Action-Entry-/Revision-/Person-FKs, passende Unique-Parentindizes,
+  ORIGINAL ausschließlich erste Revision, Nummern-/Typ-/Boolean-/Ansagepaartrigger;
+  reported_by nur bei REPORTED, Identifierposition 0..31 und maximale 32 Rows.
+- Entry+Original+Children atomar; Revision+Children atomar. Fehler injizieren bei
+  jedem Childtyp/Insert und vor Commit; keine leere Entryrow oder halbe Fassung.
+  Keine catch+Rejected-Success-Transaktion nach bereits erfolgtem Insert.
+- Deterministisch zwei Writers auf denselben Expectedstand: genau ein Append,
+  andere Operation STALE. Unique Nummer, kein Lost Update; frühere Rows und
+  Children unverändert. Personenrelationstrennung ohne Nummernänderung macht
+  alten vollständigen Expectedstand STALE, kein unbemerktes Restore.
+- ACTIVE/COMPLETED alle vorgesehenen P6-Pfade; DRAFT/PREPARATION/DELETION_PENDING
+  auch Read verweigern. Fehlende/inkonsistente Originalfassung kein Empty.
+- COMPLETED-Test gemeinsam mit P4/P5a: P6 create/revise/mark erlaubt, P4-Snapshot/
+  Plan/Rollenwechsel und P5a create/edit/transition/delete bleiben verweigert;
+  Action bleibt abgeschlossen, kein Reopen oder generisches writable(COMPLETED).
+- Draft ACTIVE→COMPLETED: STALE bis bewusst bestätigter neuer Kontext;
+  Entry.createdAfterCompletion dauerhaft, recordedAfterCompletion pro Revision;
+  Uhr zurückstellen und occurredAt korrigieren darf Marker nicht beseitigen.
+- Personen-FKbereinigung ausschließlich Betroffenen-/ReportedBy-Rows; Entry/
+  Revision/Identifier/Texte erhalten. Keinen echten unimplementierten Personen-
+  löschworkflow behaupten: Integration über kontrollierte synthetische DB-Fixture.
+- Gesamte synthetische Action geordnet einschließlich bestehender P4/P5a-
+  RESTRICT-Abhängigkeiten entfernen: keine P6-Reste in allen fünf Tabellen.
+- Echte Gates/Driver: revoke vor COMMIT-prepare und -step → Rollback auf derselben
+  Connection; Commit bereits irreversibel zugelassen → darf physisch fertig sein,
+  aber keine stale Publication. Worker-/main-Barrier, alte Generation/Action/Request
+  abweisen. DB-/DAO-Handles geschlossen, keine Sessioninteraction durch Ergebnisse.
+- SQLCipher-Persistenz/erneutes zulässiges Öffnen zeigt alle Fassungen konsistent,
+  bestehende Inventory-/Key-/P3b-Verträge erhalten; keine neue Kryptografieprüfung.
+
+## Privacy und Datenzugriff
+
+- Querybeobachtung mit synthetischen Markertexten: Summary selektiert ausschließlich
+  Anzahl/Originalzeit; Timeline ausschließlich schmale aktuelle Projektion.
+  Keine Identifier, Description, Ansage, Rechtsgrundlage, P3b oder unnötigen Personen.
+  SELECT-*+UI-Hiding gilt nicht als bestandener Datenminimierungstest.
+- Detail nur Entry-eigene Fassung/Children und benötigte P3a-Pseudonyme; keine
+  automatisch geladenen Task-/Operations-/Sensitiveboards oder historische Namen.
+- Keine globale Identifier-/Such-/Matchingstruktur, sensitive Logs/Fehlertexte,
+  neue Permission/INTERNET/Komponente/Dependency, Export, Clipboard-Automatik,
+  Dateien/Medien, Worker/Notification oder neue Authentifizierung.
+- Normale append-only-API besitzt keine Update-/Einzel-Delete-Methode.
+  Privacy-/Retentionlöschung bleibt möglich, keine forensische Garantie daraus ableiten.
+
+## Spätere UI-/Lastabnahme
+
+- Hub→Protokoll→Vorlage/frei→Detail→CORRECTION/ADDENDUM/Irrtum;
+  Chronologie/Filter nach occurredAt und Zeitkorrektur, Keyevent/Nachtrag als Text.
+- COMPLETED-Nachträge mit occurredAt und tatsächlicher recordedAt sichtbar,
+  Original nach Abschluss markiert, ACTIVE-Original nicht nachträglich umetikettiert.
+- Atomic Initial Reveal, Refresh erhält gültigen Inhalt, Stale/Lock aus Detail/
+  Entwurf leert Fokus/Filter/Disclosure; kein SavedState oder alter G2-State.
+- Font Scale 1/2, schmaler Phone, große Touchziele, TalkBack, Keyboard/Cancel/Save;
+  nicht-invasive synthetische Galaxy/API33-Probe ohne Credentialänderung/pm clear/uninstall.
+- Technische Testlasten ohne Produktobergrenze: 1000 Entries×3 Fassungen,
+  1 Entry×1000 Fassungen, maximaler Inhalt/32 Identifier und 500 synthetische
+  betroffene Personen. Zeiten/RAM/Queryplan/Abbruch bei Deadline messen,
+  Detail gebündelt statt N+1; keine unbelegte Latenz- oder Manipulationssicherheitszusage.
+
+## Nachweisstand
+
+P6b selbst: ausschließlich Markdown-/Verweis-/Scopeprüfung und git diff --check.
+Keine Migration, Code-/Schemaerzeugung oder Unit-/Gerätetests ausgeführt.
+P6c-Abnahme muss echte Testergebnisse mit Testumfang, Plattform, Datum und Grenzen
+nachtragen. Rechtliche Zulässigkeit/Retentiondauer/manuelle Inhaltsprüfung sind
+keine durch Unit-Tests ersetzbaren Freigaben für Echtdaten.
