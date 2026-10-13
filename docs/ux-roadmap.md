@@ -325,3 +325,12 @@ bewusste Revisionen/Irrtumsmarkierung. Gemeinsame Hubpublication, Lock-/Stale-
 Cleanup und vorhandene Produktinputs; Domain/Data/Schema7/Security unverändert.
 Keine P6-Demoerweiterung. COMPLETED-Nachträge folgen separat in P6c3,
 Cross-Area-/Last-/Accessibility-Abnahme bleibt im abgegrenzten P6c4-Umfang.
+
+## P6c3 — bewusste COMPLETED-Nachbereitung
+
+[Follow-up](product-p6c3-protocol-completed-followup.md): ausdrücklich geöffneter
+P6-Sonderbereich, getrennte ACTIVE-/COMPLETED-Modi, dauerhafte Entry- und
+fassungsbezogene Phasenmarker, gemeinsame Formulare und Revisionen. Kein Prefetch
+auf der normalen abgeschlossenen Aktionsseite; Lock/Reauth öffnet nichts automatisch.
+P4/P5a/Aktionsdaten bleiben read-only; Schema7, Domain/Data/Security und Demo bleiben
+unverändert. P6c4 übernimmt die weitere Integration-/Accessibilityabnahme.

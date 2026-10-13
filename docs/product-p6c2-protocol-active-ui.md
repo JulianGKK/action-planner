@@ -1,5 +1,9 @@
 # P6c2 — ACTIVE Aktionsprotokoll UI
 
+Aktueller Anschluss: [P6c3](product-p6c3-protocol-completed-followup.md) ergänzt
+die ausdrücklich geöffnete COMPLETED-Nachbereitung. Die ACTIVE-only-Aussagen
+unten beschreiben den ursprünglichen P6c2-Slice; ACTIVE bleibt unverändert.
+
 ## Baseline und Umfang
 
 Baseline: sauberer Branch `p6c2-protocol-active-ui`, HEAD `9c2f8b7`,

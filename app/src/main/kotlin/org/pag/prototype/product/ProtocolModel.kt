@@ -9,11 +9,34 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 enum class ProtocolFilter { ALL, KEY_EVENTS }
-/** ACTIVE-only presentation. All drafts and request bindings expire with the workspace. */
+enum class ProtocolUiMode { ACTIVE, COMPLETED_FOLLOW_UP }
+/** Explicit phase presentation. All drafts and request bindings expire with the workspace. */
 class ProtocolModel(private val repository: ProtocolRepository?, private val session: () -> SessionSnapshot,
     private val action: () -> Action?, private val interaction: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit,
     private val now: () -> Long = System::currentTimeMillis) {
+    var mode by mutableStateOf(ProtocolUiMode.ACTIVE); private set
+    private var followUpActionId: String? = null
+    private var followUpGeneration: Long? = null
+    private var draftStatus: ActionStatus? = null
+    private val modeStatus get() = when (mode) {
+        ProtocolUiMode.ACTIVE -> ActionStatus.ACTIVE
+        ProtocolUiMode.COMPLETED_FOLLOW_UP -> ActionStatus.COMPLETED
+    }
+    val completedFollowUp get() = mode == ProtocolUiMode.COMPLETED_FOLLOW_UP && writable
+    fun openCompletedFollowUp(prepare: () -> Unit = {}) {
+        val before = session(); val a = action() ?: return; val token = epoch
+        if (busy || repository == null || before.state != SessionState.READY || a.status != ActionStatus.COMPLETED) return
+        fun current() = session().state == SessionState.READY && session().generation == before.generation &&
+            action()?.id == a.id && action()?.status == ActionStatus.COMPLETED
+        interaction()
+        if (!current() || token != epoch) return
+        prepare()
+        if (!current()) return
+        clear(); mode = ProtocolUiMode.COMPLETED_FOLLOW_UP
+        followUpActionId = a.id; followUpGeneration = before.generation
+        refresh()
+    }
     var timeline by mutableStateOf<List<ProtocolTimelineItem>?>(null); private set
     var loading by mutableStateOf(false); private set
     var detail by mutableStateOf<ProtocolEntryDetail?>(null); private set
@@ -39,21 +62,24 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
     private var detailRequest = 0L
     val form get() = input != null
     val nested get() = form || entryId != null
-    val writable get() = session().state == SessionState.READY && action()?.status == ActionStatus.ACTIVE
+    val writable get() = session().state == SessionState.READY && action()?.status == modeStatus &&
+        (mode == ProtocolUiMode.ACTIVE || (action()?.id == followUpActionId && session().generation == followUpGeneration))
     val filtered get() = timeline?.filter { filter == ProtocolFilter.ALL || it.classification == ProtocolClassification.KEY_EVENT }
     private fun moveContext() { epoch++; loading = false }
     fun clear() {
         moveContext(); timelineRequest++; detailRequest++
+        mode = ProtocolUiMode.ACTIVE; followUpActionId = null; followUpGeneration = null
         timeline = null; loading = false; detail = null; entryId = null; detailLoading = false; filter = ProtocolFilter.ALL
         discardDraft(); busy = false; error = null; moreTemplates = false; history = false
         historical = null; confirmingMistaken = false
     }
-    private fun discardDraft() { input = null; eventTime = null; expected = null; clearMistaken = false; moreFields = false; validation = null; revisionType = ProtocolRevisionType.ORIGINAL }
+    private fun discardDraft() { draftStatus = null; input = null; eventTime = null; expected = null; clearMistaken = false; moreFields = false; validation = null; revisionType = ProtocolRevisionType.ORIGINAL }
     private fun binding(): (() -> Boolean)? {
         val s = session(); val a = action() ?: return null; val token = epoch
-        if (s.state != SessionState.READY || a.status != ActionStatus.ACTIVE) return null
+        val uiMode = mode; val status = modeStatus
+        if (!writable) return null
         return { val n = session(); n.state == SessionState.READY && n.generation == s.generation &&
-            action()?.id == a.id && action()?.status == ActionStatus.ACTIVE && epoch == token }
+            action()?.id == a.id && action()?.status == status && mode == uiMode && writable && epoch == token }
     }
     private fun act(block: () -> Unit) {
         if (busy) return
@@ -68,7 +94,7 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
             if (!current() || request != timelineRequest) return@listTimeline
             loading = false
             when (result) { is ProtocolResult.Value -> { timeline = result.value; error = null }
-                is ProtocolResult.Rejected -> error = result.reason }
+                is ProtocolResult.Rejected -> reject(result.reason) }
         }
     }
     fun refreshFromInteraction() = act { refresh() }
@@ -87,6 +113,7 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
         moveContext(); detailRequest++; detail = null; entryId = null; detailLoading = false; beginDraft(draft, ProtocolRevisionType.ORIGINAL)
     }
     private fun beginDraft(value: ProtocolInput, type: ProtocolRevisionType) {
+        draftStatus = modeStatus
         input = value.copy(affectedPersonIds = value.affectedPersonIds.toSet(), officialIdentifiers = value.officialIdentifiers.toList())
         zone = ZoneId.systemDefault(); eventTime = Instant.ofEpochMilli(value.occurredAt).atZone(zone).toLocalDateTime()
         revisionType = type; clearMistaken = false; error = null; validation = null; moreFields = false
@@ -116,7 +143,7 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
             if (!current() || request != detailRequest) return@getEntry
             detailLoading = false
             when (result) { is ProtocolResult.Value -> if (result.value.entry.actionId == id && result.value.entry.id == entryId) detail = result.value
-                is ProtocolResult.Rejected -> error = result.reason }
+                is ProtocolResult.Rejected -> reject(result.reason) }
         }
     }
     fun revise(type: ProtocolRevisionType) = act {
@@ -142,10 +169,12 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
     fun markMistaken() = act {
         val d = detail ?: return@act
         if (error == ProtocolFailure.STALE || !confirmingMistaken || d.current.revision.mistaken) return@act
-        write { publish -> repository?.markMistaken(action()!!.id, ActionStatus.ACTIVE, ProtocolExpectedRevision(d.entry, d.current.revision), publish) }
+        val status = modeStatus
+        write(ProtocolRevisionType.MARKED_MISTAKEN) { publish -> repository?.markMistaken(action()!!.id, status, ProtocolExpectedRevision(d.entry, d.current.revision), publish) }
     }
     fun save() = act {
         if (error == ProtocolFailure.STALE) return@act
+        val status = draftStatus?.takeIf { it == modeStatus } ?: return@act
         val draft = input ?: return@act
         val instant = selectedInstant(eventTime, zone)
         if (instant == null) { validation = "Diese Uhrzeit ist durch eine Zeitumstellung nicht eindeutig. Bitte eine andere Uhrzeit wählen."; return@act }
@@ -153,22 +182,35 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
         validation = protocolValidation(value)
         if (validation != null) return@act
         val e = expected
-        write { publish -> if (revisionType == ProtocolRevisionType.ORIGINAL)
-            repository?.createEntry(action()!!.id, ActionStatus.ACTIVE, value, publish)
-            else if (e != null) repository?.reviseEntry(action()!!.id, ActionStatus.ACTIVE, e, revisionType, value, clearMistaken, publish) }
+        write(revisionType) { publish -> if (revisionType == ProtocolRevisionType.ORIGINAL)
+            repository?.createEntry(action()!!.id, status, value, publish)
+            else if (e != null) repository?.reviseEntry(action()!!.id, status, e, revisionType, value, clearMistaken, publish) }
     }
-    private fun write(operation: ((ProtocolResult<ProtocolSaved>) -> Unit) -> Unit) {
+    private fun reject(reason: ProtocolFailure) {
+        // Persisted policy can reject a phase change before the action projection refreshes.
+        if (reason == ProtocolFailure.INVALID_STATE && mode == ProtocolUiMode.COMPLETED_FOLLOW_UP) clear()
+        error = reason
+    }
+    private fun write(type: ProtocolRevisionType, operation: ((ProtocolResult<ProtocolSaved>) -> Unit) -> Unit) {
         val current = binding() ?: return
+        val message = if (mode == ProtocolUiMode.ACTIVE) "Protokolleintrag gespeichert" else when (type) {
+            ProtocolRevisionType.ORIGINAL -> "Nachtrag gespeichert"
+            ProtocolRevisionType.CORRECTION -> "Korrektur gespeichert"
+            ProtocolRevisionType.ADDENDUM -> "Ergänzung gespeichert"
+            ProtocolRevisionType.MARKED_MISTAKEN -> "Irrtumsmarkierung gespeichert"
+        }
         busy = true; error = null
         operation { result ->
             if (!current()) return@operation
             busy = false
             when (result) {
-                is ProtocolResult.Rejected -> error = result.reason
+                is ProtocolResult.Rejected -> reject(result.reason)
                 is ProtocolResult.Value -> {
                     discardDraft(); confirmingMistaken = false; history = false; historical = null
-                    loadDetail(result.value.entryId); refresh(); refreshWorkspace()
-                    if (current()) feedback("Protokolleintrag gespeichert")
+                    loadDetail(result.value.entryId)
+                    if (current()) refresh()
+                    if (current() && mode == ProtocolUiMode.ACTIVE) refreshWorkspace()
+                    if (current()) feedback(message)
                 }
             }
         }
