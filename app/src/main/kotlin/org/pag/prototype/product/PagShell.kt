@@ -23,7 +23,8 @@ internal fun sessionRestartVisible(state: SessionState, remainingMillis: Long?):
 /** One UI publication, not a long-lived DB connection or new authorization. */
 data class WorkspaceSnapshot(val actionId: String, val generation: Long, val persons: List<org.pag.domain.Person>,
     val operations: org.pag.domain.OperationalBoard?, val tasks: org.pag.domain.TaskBoard?, val status: org.pag.domain.ActionStatus,
-    val leadershipState: org.pag.domain.SensitiveResult<org.pag.domain.SensitiveState>? = null)
+    val leadershipState: org.pag.domain.SensitiveResult<org.pag.domain.SensitiveState>? = null,
+    val protocolSummary: org.pag.domain.ProtocolSummary? = null)
 
 sealed interface ActionListState {
     data object Loading : ActionListState
