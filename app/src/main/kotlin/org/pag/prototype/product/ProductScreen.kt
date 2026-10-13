@@ -20,7 +20,7 @@ import java.util.Locale
 @Composable fun ProductScreen(model: ProductViewModel) {
     MaterialTheme {
         val screen=listOf(model.snapshot.state,model.snapshot.generation,model.selected?.id,model.selectedPerson?.id,
-            model.actionListState::class,model.preparationArea,model.activeArea,model.personDetailLoading,model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter)
+            model.actionListState::class,model.preparationArea,model.activeArea,model.personDetailLoading,model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter,model.protocol.form,model.protocol.detail?.entry?.id,model.protocol.historical?.revision?.id)
         ProductInputScope(screen) {
             LaunchedEffect(model.snapshot.state, model.snapshot.generation) {
                 if (model.snapshot.state == SessionState.READY) while (true) {
@@ -51,7 +51,7 @@ import java.util.Locale
                         PagWorkspace(model.feedback.takeIf { model.snapshot.state == SessionState.READY },
                             model::dismissFeedback, Modifier.fillMaxWidth().weight(1f)) {
                         val scroll=rememberScrollState()
-                        LaunchedEffect(model.preparationArea,model.activeArea,model.operations.screen,model.operations.personId,model.operations.functionFocus,model.selectedPerson?.id,model.personDetailLoading,model.tasks.form,model.tasks.selected?.id,model.tasks.selected?.status,model.tasks.filter){scroll.scrollTo(0)}
+                        LaunchedEffect(model.preparationArea,model.activeArea,model.operations.screen,model.operations.personId,model.operations.functionFocus,model.selectedPerson?.id,model.personDetailLoading,model.tasks.form,model.tasks.selected?.id,model.tasks.selected?.status,model.tasks.filter,model.protocol.form,model.protocol.detail?.entry?.id,model.protocol.historical?.revision?.id){scroll.scrollTo(0)}
                         Column(Modifier.padding(24.dp).verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             when (model.snapshot.state) {
                                 SessionState.BLOCKED -> PagErrorState()

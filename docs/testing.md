@@ -119,3 +119,14 @@ Tatsächliche Ergebnisse und Grenzen stehen im [P6c1-Nachweis](product-p6c1-prot
 Die oben genannten UI-/Last-/Retention-/Rechtsprüfungen sind hierdurch nicht
 als bereits erfüllt zu verstehen; P6c1 hat keine UI und implementiert keine
 allgemeine Teilnehmer-/Aktionslöschung oder Retentionjobs.
+
+## P6c2 — ACTIVE UI
+
+ProtocolModelTest prüft Draft-/Zeitvorbelegung, lokales Filtern und unveränderte
+Reihenfolge, Quellen-/Betroffenen-/Kennungs-/Ansageinvarianten, vollständigen
+Expectedstand, Korrektur/Ergänzung/Irrtum, STALE-Erhalt, Cancel, Lock und alte
+Action-/Generationscallbacks. ActiveWorkspaceTest prüft zusätzliche Summary-
+Freigabe, Fehler ohne Mischstand und Bereichscleanup.
+P6c2ProtocolProbe verwendet echte ProductScreen-Komposition mit ausschließlich
+synthetischen Domainports, lokaler Font Scale 1/2 und ohne Credential-/DB-Writes.
+Konkrete Ergebnisse und Restgrenzen: [P6c2](product-p6c2-protocol-active-ui.md).

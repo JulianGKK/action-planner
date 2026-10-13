@@ -71,7 +71,12 @@ class ActiveWorkspaceTest {
     }
     private val session = Session(); private val actions = Actions(); private val people = People()
     private val ops = Ops(); private val tasks = Tasks(); private val protection = Protection()
-    private val model = ProductViewModel(session, actions, ProductStorageState.READY_TO_OPEN, people, protection, ops, tasks) {}
+    private val summaries = mutableListOf<(ProtocolResult<ProtocolSummary>) -> Unit>()
+    private val protocolDelegate = ProtocolFake()
+    private val protocolPort = object : ProtocolRepository by protocolDelegate {
+        override fun summary(actionId: String, publish: (ProtocolResult<ProtocolSummary>) -> Unit) { summaries.add(publish) }
+    }
+    private val model = ProductViewModel(session, actions, ProductStorageState.READY_TO_OPEN, people, protection, ops, tasks, protocolPort) {}
     private val person = OperationalPerson(Person("p", "a", "synthetic", 0), PersonRolePlan(setOf("r"), "r"), null)
     private val board = OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r", "a", "Support", 0)), listOf(person))
     private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null)
@@ -80,15 +85,17 @@ class ActiveWorkspaceTest {
     private fun complete() {
         ops.loads.last()(OperationsResult.Value(board.copy(status = actions.row.status)))
         if (model.activeArea != ActiveArea.FUNCTIONS) tasks.loads.last()(OperationsResult.Value(taskBoard))
+        if (model.selected?.status == ActionStatus.ACTIVE && model.activeArea in setOf(ActiveArea.HUB, ActiveArea.PROTOCOL)) summaries.last()(ProtocolResult.Value(ProtocolSummary(3, 1000)))
     }
-    @Test fun activeStartsAtHubAndPublishesBothBoardsTogetherWithoutProtectionReads() {
+    @Test fun activeStartsAtHubAndPublishesAllRequiredSourcesTogetherWithoutProtectionReads() {
         open(); assertEquals(ActiveArea.HUB, model.activeArea); assertNull(model.workspace)
         ops.loads.last()(OperationsResult.Value(board)); assertNull(model.workspace)
-        tasks.loads.last()(OperationsResult.Value(taskBoard)); assertNotNull(model.workspace)
+        tasks.loads.last()(OperationsResult.Value(taskBoard)); assertNull(model.workspace)
+        summaries.last()(ProtocolResult.Value(ProtocolSummary(3, 1000))); assertNotNull(model.workspace)
         assertTrue(protection.states.isEmpty()); assertEquals(0, protection.inventories)
-        assertEquals(ActiveArea.entries.drop(1), activeHubCards(actions.row, board, taskBoard).map { it.area })
+        assertEquals(ActiveArea.entries.drop(1).filter { it != ActiveArea.PROTOCOL }, activeHubCards(actions.row, board, taskBoard).map { it.area })
     }
-    @Test fun allFourAreasReturnToHubAndDetailsNeedNoBoardRead() {
+    @Test fun allActiveAreasReturnToHubAndDetailsNeedNoBoardRead() {
         open(); complete()
         ActiveArea.entries.drop(1).forEach { area ->
             val reads = ops.loads.size
@@ -139,6 +146,8 @@ class ActiveWorkspaceTest {
         model.loadWorkspace(); ops.loads.last()(OperationsResult.Value(board.copy(persons = emptyList())))
         assertSame(old, model.workspace); assertTrue(model.workspaceRefreshing)
         tasks.loads.last()(OperationsResult.Value(taskBoard.copy(tasks = emptyList())))
+        assertSame(old, model.workspace)
+        summaries.last()(ProtocolResult.Value(ProtocolSummary(4, 2000)))
         assertNotSame(old, model.workspace); assertFalse(model.workspaceRefreshing)
     }
     @Test fun staleAreaAndGenerationCannotPublishAndLockClearsForms() {
@@ -190,6 +199,33 @@ class ActiveWorkspaceTest {
         open(); model.activeArea(ActiveArea.FUNCTIONS); val late = ops.loads.last()
         session.emit(SessionState.READY, 2); late(OperationsResult.Value(board))
         assertNull(model.selected); assertNull(model.workspace); assertEquals(ActiveArea.HUB, model.activeArea)
+    }
+
+    @Test fun protocolSummaryFailureNeverPublishesPartialCountsAndRefreshKeepsOldSnapshot() {
+        open(); complete(); val old = model.workspace
+        model.loadWorkspace()
+        ops.loads.last()(OperationsResult.Value(board.copy(persons = emptyList())))
+        tasks.loads.last()(OperationsResult.Value(taskBoard.copy(tasks = emptyList())))
+        summaries.last()(ProtocolResult.Rejected(ProtocolFailure.INVALID_STATE))
+        assertSame(old, model.workspace); assertTrue(model.workspaceError)
+        model.back(); open()
+        summaries.last()(ProtocolResult.Rejected(ProtocolFailure.INVALID_STATE))
+        assertNull(model.workspace)
+    }
+    @Test fun productHubHasFiveCardsWithOnlyProtocolMetadataAndAreaCleanupClearsProtocolDraft() {
+        open(); complete()
+        val content = model.workspace!!
+        val cards = activeHubCards(actions.row, content.operations!!, content.tasks!!, content.protocolSummary)
+        assertEquals(ActiveArea.entries.drop(1), cards.map { it.area })
+        assertEquals("3 Schlüsselereignisse", cards.single { it.area == ActiveArea.PROTOCOL }.summary.first())
+        model.activeArea(ActiveArea.PROTOCOL); complete(); model.protocol.create("POLICE_ARRIVED")
+        assertTrue(model.protocol.form); assertEquals(0, protocolDelegate.detailReads)
+        model.activeArea(ActiveArea.PERSONS); complete(); assertFalse(model.protocol.form)
+    }
+    @Test fun lateSummaryAfterLockCannotPublishOrRestoreProtocolNavigation() {
+        open(); val late = summaries.last(); model.protocol.create("POLICE_ARRIVED"); session.lock()
+        late(ProtocolResult.Value(ProtocolSummary(99, 1000)))
+        assertNull(model.workspace); assertFalse(model.protocol.form); assertNull(model.protocol.timeline)
     }
 
 }

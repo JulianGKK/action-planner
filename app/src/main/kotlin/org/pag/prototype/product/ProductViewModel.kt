@@ -11,7 +11,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     initialBootstrap: ProductStorageState, private val personRepository: PersonRepository,
     private val leadership: LeadershipRepository? = null,
     private val operationsRepository: OperationsRepository? = null,
-    private val taskRepository: TaskRepository? = null, private val begin: (Boolean) -> Unit) : ViewModel() {
+    private val taskRepository: TaskRepository? = null, private val protocolRepository: ProtocolRepository? = null, private val begin: (Boolean) -> Unit) : ViewModel() {
     var bootstrap by mutableStateOf(initialBootstrap); private set
     fun updateBootstrap(state: ProductStorageState) { bootstrap = state }
     var snapshot by mutableStateOf(session.snapshot()); private set
@@ -57,7 +57,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     var preparationArea by mutableStateOf(PreparationArea.OVERVIEW); private set
     var workspaceRefreshing by mutableStateOf(false); private set
     val preparationAvailable get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.PREPARATION
-    val preparationNavigationEnabled get() = preparationAvailable && !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy
+    val preparationNavigationEnabled get() = preparationAvailable && !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy
     val preparationContentState: PreparationContentState get() {
         val content = workspace ?: return if (workspaceError) PreparationContentState.ERROR else PreparationContentState.LOADING
         if ((preparationArea == PreparationArea.TASKS && (content.tasks == null || content.operations == null)) ||
@@ -86,7 +86,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     var activeArea by mutableStateOf(ActiveArea.HUB); private set
     val activeNavigationEnabled get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.ACTIVE &&
-        !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy
+        !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy
     fun activeArea(area: ActiveArea) = navigateActive(area)
     private fun navigateActive(area: ActiveArea, retained: WorkspaceSnapshot? = null) {
         val before = snapshot
@@ -103,6 +103,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (area == ActiveArea.TASKS && retained?.actionId == action.id && retained.generation == before.generation &&
             retained.operations != null && retained.tasks != null) workspace = retained
         if (area != ActiveArea.DETAILS) loadWorkspace()
+        if (area == ActiveArea.PROTOCOL) protocol.refresh()
     }
     fun activePersonTasks(personId: String, create: Boolean) {
         val generation = snapshot.generation
@@ -113,6 +114,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (!activeNavigationEnabled || snapshot.generation != generation || selected?.id != actionId || activeArea != ActiveArea.TASKS) return
         if (create) tasks.add(personId) else tasks.showPerson(personId)
     }
+    val protocol = ProtocolModel(protocolRepository, { snapshot }, { selected }, ::interaction, ::loadWorkspace, ::showFeedback)
     val tasks = TaskModel(taskRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
         { workspace?.tasks }, ::loadWorkspace, ::showFeedback)
     val operations = OperationsModel(operationsRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
@@ -133,14 +135,14 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private fun clearPersons() {
         preparationArea = PreparationArea.OVERVIEW; activeArea = ActiveArea.HUB; workspaceRefreshing = false
         workspaceRequest++; workspace = null; workspaceError = false; detailLoading = false; personDetailLoading = false
-        tasks.clear(); operations.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
+        tasks.clear(); operations.clear(); protocol.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
         personForm = false; editingPerson = null; personError = null; personSaving = false
     }
     private fun loadPersons() {
         clearSensitive(); personRequest++
         selectedPerson = null; personForm = false; editingPerson = null; personError = null; personSaving = false
         if (workspace?.status != selected?.status) {
-            workspace = null; tasks.clear(); operations.clear()
+            workspace = null; tasks.clear(); operations.clear(); protocol.clear()
         }
         loadWorkspace()
     }
@@ -163,6 +165,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             (!preparation || (selectedPerson == null && area in setOf(PreparationArea.OVERVIEW, PreparationArea.TASKS)))
         val needMetadata = preparation && area == PreparationArea.OVERVIEW && selectedPerson == null &&
             operations.screen == OperationsScreen.OVERVIEW && leadership != null
+        val needProtocol = active && activeSection in setOf(ActiveArea.HUB, ActiveArea.PROTOCOL) && protocolRepository != null
+        var protocolSummary = previous?.protocolSummary
+        var protocolDone = !needProtocol
         var metadata = previous?.leadershipState
         var metadataDone = !needMetadata
         var people: List<Person>? = null
@@ -178,9 +183,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             workspaceRequest++; personsLoading = false; workspaceRefreshing = false; workspaceError = true
         }
         fun publish() {
-            if (!current() || !peopleDone || !tasksDone || !metadataDone) return
+            if (!current() || !peopleDone || !tasksDone || !metadataDone || !protocolDone) return
             androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
-                workspace = WorkspaceSnapshot(action.id, generation, people.orEmpty(), ops, taskBoard, action.status, metadata)
+                workspace = WorkspaceSnapshot(action.id, generation, people.orEmpty(), ops, taskBoard, action.status, metadata, protocolSummary)
                 personsLoading = false; workspaceRefreshing = false
                 tasks.reconcileSelection()
             }
@@ -204,6 +209,13 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (needMetadata && current()) leadership.actionState(action.id) { result ->
             if (!current()) return@actionState
             metadata = result; metadataDone = true; publish()
+        }
+        if (needProtocol && current()) protocolRepository.summary(action.id) { result ->
+            if (!current()) return@summary
+            when (result) {
+                is ProtocolResult.Value -> { protocolSummary = result.value; protocolDone = true; publish() }
+                is ProtocolResult.Rejected -> failed()
+            }
         }
         if (needTasks && current()) taskRepository.board(action.id) { result ->
             if (!current()) return@board
@@ -506,5 +518,5 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             loadActions()
         }
     }
-    override fun onCleared() { clearSensitive(); subscription.cancel(); session.lock() }
+    override fun onCleared() { protocol.clear(); clearSensitive(); subscription.cancel(); session.lock() }
 }

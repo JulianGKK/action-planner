@@ -130,3 +130,10 @@ COMPLETED-Bedienung, konkrete Retention/Rechtsprüfung und späterer allgemeiner
 Löschworkflow einschließlich manueller Protokollprüfung bleiben ausstehend.
 Die große P6b-Lastmatrix ist nicht als durch diesen Funktionsslice vermessen
 behauptet; spätere Skalierungs-/UI-Abnahme bleibt erforderlich.
+
+## Nachfolgender ACTIVE-UI-Slice
+
+[P6c2](product-p6c2-protocol-active-ui.md) verwendet den bestehenden Port unverändert
+für Hubsummary, Timeline und bewusst geöffnete Details sowie Create/Append/Irrtum.
+Schema7 und Domain-/Storage-Verträge dieses Nachweises bleiben unverändert.
+COMPLETED-Nachbereitung bleibt ein separater UI-Slice.

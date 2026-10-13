@@ -316,3 +316,12 @@ Nächster eigenständiger Slice P6c2: ACTIVE-UI auf Summary-/Timeline-/Detailpro
 RAM-only Entwürfe und explicit Save/Cancel, vorhandene Session-/Atomic-Reveal-
 Verträge. COMPLETED-Nachbereitung fachlich und repositoryseitig bereits erlaubt,
 aber deren Bedienung folgt separat. Keine P4/P5a-Mutation oder neue Vorschlagslogik.
+
+## P6c2 — ACTIVE Protokoll
+
+[ACTIVE-UI](product-p6c2-protocol-active-ui.md): fünfte Hubkarte mit ausschließlich
+ProtocolSummary, Chronologie/Filter, Schnellvorlagen, RAM-Entwürfe, Details und
+bewusste Revisionen/Irrtumsmarkierung. Gemeinsame Hubpublication, Lock-/Stale-
+Cleanup und vorhandene Produktinputs; Domain/Data/Schema7/Security unverändert.
+Keine P6-Demoerweiterung. COMPLETED-Nachträge folgen separat in P6c3,
+Cross-Area-/Last-/Accessibility-Abnahme bleibt im abgegrenzten P6c4-Umfang.
