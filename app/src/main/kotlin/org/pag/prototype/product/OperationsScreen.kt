@@ -31,6 +31,8 @@ import java.time.format.FormatStyle
         }
         OperationsScreen.LIVE, OperationsScreen.FUNCTION->LiveForm(model,ops,board)
         OperationsScreen.PERSON->ActivePersonWorkspace(model, board)
+        OperationsScreen.FUNCTION_DETAIL->ActiveFunctionDetail(model, board)
+        OperationsScreen.NEW_FUNCTION->NewActiveFunction(model.operations)
         OperationsScreen.OVERVIEW->{
             if(board.status==ActionStatus.ACTIVE || board.status==ActionStatus.COMPLETED)
                 Text(if(board.status==ActionStatus.ACTIVE)"Lagebild" else "Letztes Lagebild",style=MaterialTheme.typography.titleLarge)

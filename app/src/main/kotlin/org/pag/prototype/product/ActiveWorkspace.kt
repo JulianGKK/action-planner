@@ -51,7 +51,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
     }
     val shownArea = when {
         model.operations.screen in setOf(OperationsScreen.LIVE, OperationsScreen.FUNCTION, OperationsScreen.PERSON) || model.selectedPerson != null -> ActiveArea.PERSONS
-        model.operations.screen == OperationsScreen.ROLES -> ActiveArea.FUNCTIONS
+        model.operations.screen in setOf(OperationsScreen.ROLES, OperationsScreen.FUNCTION_DETAIL, OperationsScreen.NEW_FUNCTION) -> ActiveArea.FUNCTIONS
         model.tasks.form || model.tasks.selected != null -> ActiveArea.TASKS
         else -> model.activeArea
     }
@@ -62,11 +62,12 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
                 model.operations.screen == OperationsScreen.PERSON && (model.selectedPerson != null || model.personDetailLoading) -> model.backToPersons()
                 model.operations.screen == OperationsScreen.PERSON -> model.operations.backToList()
                 model.operations.screen in setOf(OperationsScreen.LIVE, OperationsScreen.FUNCTION) -> model.operations.cancel()
+                model.operations.screen in setOf(OperationsScreen.FUNCTION_DETAIL, OperationsScreen.NEW_FUNCTION) -> model.operations.backToFunctions()
                 model.tasks.form -> model.tasks.cancel()
                 model.tasks.selected != null -> model.tasks.backToTasks()
                 else -> model.activeArea(shownArea)
             }
-        }, enabled = model.activeNavigationEnabled) { Text(if ((model.selectedPerson != null || model.personDetailLoading) && model.operations.screen == OperationsScreen.PERSON) "‹ Zur Person" else if (model.tasks.form && model.tasks.selected != null) "‹ Zur Aufgabe" else "‹ ${shownArea.label}") }
+        }, enabled = model.activeNavigationEnabled) { Text(if ((model.selectedPerson != null || model.personDetailLoading) && model.operations.screen == OperationsScreen.PERSON) "‹ Zur Person" else if (model.operations.screen == OperationsScreen.PERSON && model.operations.functionFocus != null) "‹ ${activeFunctionName(board = model.operations.board, roleId = model.operations.functionFocus!!.roleId)}" else if (model.tasks.form && model.tasks.selected != null) "‹ Zur Aufgabe" else "‹ ${shownArea.label}") }
     }
     if (model.activeArea == ActiveArea.DETAILS) {
         val action = model.selected ?: return
@@ -101,13 +102,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             }
             ActiveArea.PERSONS -> OperationalPersons(model, board)
             ActiveArea.TASKS -> if (content.tasks == null) PagErrorState() else TaskSection(model.tasks, board)
-            ActiveArea.FUNCTIONS -> {
-                PreparationHeading("Aktuelle Funktionen · Vor Ort")
-                if (board.roles.none { board.roleCount(it.id) > 0 }) Text("Noch keine aktuellen Funktionen")
-                board.roles.forEach { Text("${it.name}: ${board.roleCount(it.id)}") }
-                Text("Ohne Funktion vor Ort: ${board.roleCount(null)}")
-                FormOutlinedButton(model.operations::roles, enabled = model.activeNavigationEnabled) { Text("Neue Funktion") }
-            }
+            ActiveArea.FUNCTIONS -> ActiveFunctionsOverview(model, board)
             ActiveArea.DETAILS -> Unit
         }
     }

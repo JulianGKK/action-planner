@@ -3,7 +3,8 @@ package org.pag.prototype.product
 import androidx.compose.runtime.*
 import org.pag.domain.*
 
-internal enum class OperationsScreen { OVERVIEW, ROLES, PLAN, LIVE, PERSON, FUNCTION }
+internal enum class OperationsScreen { OVERVIEW, ROLES, PLAN, LIVE, PERSON, FUNCTION, FUNCTION_DETAIL, NEW_FUNCTION }
+internal data class FunctionFocus(val roleId: String?)
 /** Short-lived UI/navigation state only; the repository enforces persisted status and session. */
 class OperationsModel(private val repository:OperationsRepository?,private val session:()->SessionSnapshot,
     private val action:()->Action?,private val interaction:()->Unit,private val leaveSensitive:()->Unit,
@@ -22,6 +23,9 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     var liveStatus by mutableStateOf(OperationalStatus.NO_STATUS);private set
     var liveRoleId by mutableStateOf<String?>(null);private set
     var livePlace by mutableStateOf("");private set
+    internal var functionFocus by mutableStateOf<FunctionFocus?>(null); private set
+    var moreFunctionsExpanded by mutableStateOf(false); private set
+    var newFunctionName by mutableStateOf(""); private set
     private var focusedPersonId: String? = null
     private var expected:PersonOperationalState?=null
     private var request=0L
@@ -29,7 +33,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     val live get()=session().state==SessionState.READY && action()?.let{OperationalRules.mayUpdateSnapshot(it.status)}==true
     val person get()=board?.persons?.singleOrNull{it.person.id==personId}
     fun textInteraction() = interaction()
-    fun clear(){focusedPersonId=null;request++;ownBoard=null;screen=OperationsScreen.OVERVIEW;personId=null;busy=false;error=null;roleIds=emptySet();primaryRoleId=null;expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS}
+    fun clear(){functionFocus=null;moreFunctionsExpanded=false;newFunctionName="";focusedPersonId=null;request++;ownBoard=null;screen=OperationsScreen.OVERVIEW;personId=null;busy=false;error=null;roleIds=emptySet();primaryRoleId=null;expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS}
     fun refresh(){
         if (refreshWorkspace != null) { request++; refreshWorkspace.invoke(); return }
         val a=action()?.takeIf{session().state==SessionState.READY && OperationalRules.mayRead(it.status)}?:return
@@ -58,6 +62,37 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         interaction(); leaveSensitive()
         if (!live || session().generation != before.generation || action()?.id != actionId || request != token) return
         focusedPersonId = id; personId = id; screen = OperationsScreen.PERSON; error = null
+    }
+    private fun functionNavigation(change: () -> Unit) {
+        val before = session(); val actionId = action()?.id; val token = request
+        if (!live || busy) return
+        fun current() = live && session().generation == before.generation && action()?.id == actionId && request == token
+        interaction(); if (!current()) return
+        leaveSensitive(); if (current()) change()
+    }
+    fun focusFunction(roleId: String?) = functionNavigation {
+        if (roleId != null && board?.roles?.none { it.id == roleId } != false) return@functionNavigation
+        functionFocus = FunctionFocus(roleId); focusedPersonId = null; personId = null
+        screen = OperationsScreen.FUNCTION_DETAIL; error = null
+    }
+    fun backToFunctions() = functionNavigation {
+        functionFocus = null; focusedPersonId = null; finishForm()
+    }
+    fun newFunction() = functionNavigation {
+        functionFocus = null; focusedPersonId = null; personId = null
+        newFunctionName = ""; screen = OperationsScreen.NEW_FUNCTION; error = null
+    }
+    fun changeNewFunctionName(value: String) {
+        val before = session(); val token = request; val actionId = action()?.id
+        if (!live || busy || screen != OperationsScreen.NEW_FUNCTION) return
+        interaction()
+        if (live && session().generation == before.generation && action()?.id == actionId && token == request)
+            newFunctionName = value
+    }
+    fun toggleMoreFunctions() = functionNavigation { moreFunctionsExpanded = !moreFunctionsExpanded }
+    fun saveNewFunction() {
+        if (!live || busy || screen != OperationsScreen.NEW_FUNCTION) return
+        createRoleWrite(newFunctionName, true, "Funktion „${newFunctionName.trim()}“ angelegt")
     }
     fun backToList() {
         if (!live || busy) return
@@ -89,7 +124,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         finishForm()
         return id
     }
-    private fun finishForm(){request++;screen=if(focusedPersonId==null)OperationsScreen.OVERVIEW else OperationsScreen.PERSON;personId=focusedPersonId;roleIds=emptySet();primaryRoleId=null;expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS;error=null}
+    private fun finishForm(){request++;screen=when {focusedPersonId!=null->OperationsScreen.PERSON;functionFocus!=null->OperationsScreen.FUNCTION_DETAIL;else->OperationsScreen.OVERVIEW};newFunctionName="";personId=focusedPersonId;roleIds=emptySet();primaryRoleId=null;expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS;error=null}
     fun toggleRole(id:String){interaction();if(!planning || busy)return;roleIds=if(id in roleIds)roleIds-id else roleIds+id;if(primaryRoleId !in roleIds)primaryRoleId=null}
     fun primary(id:String?){interaction();if(planning && !busy && (id==null || id in roleIds))primaryRoleId=id}
     fun status(status:OperationalStatus){interaction();if(!live || busy)return;if(status!=liveStatus){livePlace="";if(!OperationalRules.roleAllowed(status) || status==OperationalStatus.RELEASED)liveRoleId=null};liveStatus=status}
@@ -97,7 +132,8 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     fun place(value:String){interaction();if(live && !busy)livePlace=value}
     fun savePlan(){val a=action()?:return;val p=personId?:return;if(!planning || busy)return;write{publish->repository?.planRoles(a.id,p,PersonRolePlan(roleIds,primaryRoleId),publish)}}
     fun saveLive(){val a=action()?:return;val p=personId?:return;val old=expected?:return;if(!live || busy)return;if(!OperationalRules.validPlace(livePlace)){error=OperationsFailure.INVALID;return};write{publish->repository?.updateSnapshot(a.id,p,old,liveStatus,liveRoleId,livePlace,publish)}}
-    fun createRole(name:String){val a=action()?:return;if(!planning && !live || busy)return;write(close=false,message="Rolle „${name.trim()}“ angelegt"){publish->repository?.createRole(a.id,name){result->publish(when(result){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->result})}}}
+    fun createRole(name:String) = createRoleWrite(name, false, "Rolle „${name.trim()}“ angelegt")
+    private fun createRoleWrite(name:String,close:Boolean,message:String){val a=action()?:return;if(!planning && !live || busy)return;write(close=close,message=message){publish->repository?.createRole(a.id,name){result->publish(when(result){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->result})}}}
     fun renameRole(id:String,name:String){val a=action()?:return;if(!planning || busy)return;write(close=false){publish->repository?.renameRole(a.id,id,name){result->publish(when(result){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->result})}}}
     fun deleteRole(id:String){val a=action()?:return;if(!planning || busy)return;write(close=false){publish->repository?.deleteRole(a.id,id,publish)}}
     private fun write(close:Boolean=true,message:String?=null,work:((OperationsResult<Unit>)->Unit)->Unit){
