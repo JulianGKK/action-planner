@@ -51,7 +51,7 @@ import java.util.Locale
                         PagWorkspace(model.feedback.takeIf { model.snapshot.state == SessionState.READY },
                             model::dismissFeedback, Modifier.fillMaxWidth().weight(1f)) {
                         val scroll=rememberScrollState()
-                        LaunchedEffect(model.preparationArea,model.activeArea,model.tasks.form,model.tasks.selected?.id,model.tasks.filter){scroll.scrollTo(0)}
+                        LaunchedEffect(model.preparationArea,model.activeArea,model.operations.screen,model.operations.personId,model.selectedPerson?.id,model.personDetailLoading,model.tasks.form,model.tasks.selected?.id,model.tasks.filter){scroll.scrollTo(0)}
                         Column(Modifier.padding(24.dp).verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             when (model.snapshot.state) {
                                 SessionState.BLOCKED -> PagErrorState()
@@ -126,7 +126,7 @@ import java.util.Locale
 
 
 @Composable internal fun PersonsSection(model: ProductViewModel) {
-    if (model.operations.screen != OperationsScreen.OVERVIEW) { OperationsSection(model); return }
+    if (model.operations.screen != OperationsScreen.OVERVIEW && !(model.operations.screen == OperationsScreen.PERSON && model.selectedPerson != null)) { OperationsSection(model); return }
     if (model.selected?.status != ActionStatus.ACTIVE) Text("Personen", style = MaterialTheme.typography.titleLarge)
     model.personError?.let { Text(personErrorLabel(it)) }
     when {
@@ -148,8 +148,13 @@ import java.util.Locale
             }
             if (model.personsEditable) FormOutlinedButton(onClick = model::editPerson) { Text("Bearbeiten") }
             if (model.personsEditable) FormOutlinedButton({ model.operations.plan(model.selectedPerson!!.id) }) { Text("Rollen planen") }
+            if (model.selected?.status == ActionStatus.ACTIVE) model.workspace?.operations?.let { board ->
+                board.persons.find { it.person.id == model.selectedPerson!!.id }?.let { person ->
+                    plannedRoles(person, board)?.let { Text("Geplante Rollen: $it") }
+                }
+            }
             SensitiveSection(model)
-            FormOutlinedButton(onClick = model::backToPersons) { Text("Zur Personenliste") }
+            FormOutlinedButton(onClick = model::backToPersons) { Text(if (model.selected?.status == ActionStatus.ACTIVE && model.operations.screen == OperationsScreen.PERSON) "Zur Person" else "Zur Personenliste") }
         }
         else -> {
             if (model.personsLoading) Text("Personen werden geladen …")

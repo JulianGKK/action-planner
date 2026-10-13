@@ -50,14 +50,21 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
         FormOutlinedButton({ model.activeArea(ActiveArea.HUB) }, enabled = model.activeNavigationEnabled) { Text("‹ Zum Lagebild") }
     }
     val shownArea = when {
-        model.operations.screen == OperationsScreen.LIVE || model.selectedPerson != null -> ActiveArea.PERSONS
+        model.operations.screen in setOf(OperationsScreen.LIVE, OperationsScreen.FUNCTION, OperationsScreen.PERSON) || model.selectedPerson != null -> ActiveArea.PERSONS
         model.operations.screen == OperationsScreen.ROLES -> ActiveArea.FUNCTIONS
         model.tasks.form || model.tasks.selected != null -> ActiveArea.TASKS
         else -> model.activeArea
     }
     PreparationHeading(shownArea.label)
     if (model.operations.screen != OperationsScreen.OVERVIEW || model.selectedPerson != null || model.tasks.form || model.tasks.selected != null) {
-        FormOutlinedButton({ model.activeArea(shownArea) }, enabled = model.activeNavigationEnabled) { Text("‹ ${shownArea.label}") }
+        FormOutlinedButton({
+            when {
+                model.operations.screen == OperationsScreen.PERSON && (model.selectedPerson != null || model.personDetailLoading) -> model.backToPersons()
+                model.operations.screen == OperationsScreen.PERSON -> model.operations.backToList()
+                model.operations.screen in setOf(OperationsScreen.LIVE, OperationsScreen.FUNCTION) -> model.operations.cancel()
+                else -> model.activeArea(shownArea)
+            }
+        }, enabled = model.activeNavigationEnabled) { Text(if ((model.selectedPerson != null || model.personDetailLoading) && model.operations.screen == OperationsScreen.PERSON) "‹ Zur Person" else "‹ ${shownArea.label}") }
     }
     if (model.activeArea == ActiveArea.DETAILS) {
         val action = model.selected ?: return
@@ -73,6 +80,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
     val board = content.operations
     if (board == null) { PagErrorState(); return }
     when {
+        model.selectedPerson != null && model.operations.screen == OperationsScreen.PERSON -> PersonsSection(model)
         model.operations.screen != OperationsScreen.OVERVIEW -> OperationsSection(model)
         model.selectedPerson != null -> PersonsSection(model)
         model.tasks.form || model.tasks.selected != null -> TaskSection(model.tasks, board)

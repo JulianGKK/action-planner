@@ -99,7 +99,7 @@ Prüfnachweise und menschlicher UX-Smoke: [UX2](ux2-preparation-workspace.md).
 Verbindliche Entscheidung aus dem manuellen UX-Review (12.10.2026): Lagebild ist
 operativer Hub / Schaltzentrale. **Hub → Bereichsübersicht → Objekt → fokussierte
 Aktion** ersetzt die lange Gesamtseite. Details: [UX-Philosophie, Abschnitt 7](ux-philosophy.md#7-active-lagebild-als-operativer-hub--schaltzentrale).
-UX3a ist implementiert; UX3b/c/d bleiben Zielplanung.
+UX3a und UX3b sind implementiert; UX3c/d bleiben Zielplanung.
 
 ### UX3a — ACTIVE Hub / Navigation
 
@@ -130,7 +130,9 @@ keinen Navigationsumbau und erscheinen erst bei implementierter Funktion.
 
 ### UX3b — Personenübersicht + kompakte Personenkarten
 
-Oben Summary, danach Personenliste mit erreichbaren P4-Statusfiltern. ACTIVE:
+**Implementiert:** [UX3b Personenarbeitsbereich](ux3b-active-people.md).
+Summary, kompakte Karten und fokussierte Lage-/Funktionsaktionen. Die bestehende
+Reihenfolge bleibt erhalten; Statusfilter sind nicht Teil dieses Slices. ACTIVE:
 Pseudonym, aktuelle Lage, zulässiger Ort/Ziel, aktuelle Funktion und Aktualität.
 Keine prominente Planrollen-/„Keine geplanten Rollen“-Zeile. PREPARATION bleibt
 planungsorientiert; Planungsdetails in ACTIVE nachrangig nachsehbar.
