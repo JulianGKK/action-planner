@@ -99,7 +99,7 @@ Prüfnachweise und menschlicher UX-Smoke: [UX2](ux2-preparation-workspace.md).
 Verbindliche Entscheidung aus dem manuellen UX-Review (12.10.2026): Lagebild ist
 operativer Hub / Schaltzentrale. **Hub → Bereichsübersicht → Objekt → fokussierte
 Aktion** ersetzt die lange Gesamtseite. Details: [UX-Philosophie, Abschnitt 7](ux-philosophy.md#7-active-lagebild-als-operativer-hub--schaltzentrale).
-UX3a und UX3b sind implementiert; UX3c/d bleiben Zielplanung.
+UX3a, UX3b und UX3c sind implementiert; UX3d bleibt Zielplanung.
 
 ### UX3a — ACTIVE Hub / Navigation
 
@@ -151,6 +151,10 @@ Synthetisch Lagewechsel, Funktionswechsel und separat geschützte Personendetail
 prüfen; keine neue Personen-/Ortsgeschichte.
 
 ### UX3c — Aufgabenübersicht
+
+**Implementiert:** [UX3c Aufgabenarbeitsbereich](ux3c-active-tasks.md).
+Kompakte Karten, sichtbarer Personenfilter, Closed-Disclosure und fokussierter
+Task mit bestehenden P5a-Aktionen. Detailfokus bleibt nach Save/Transition erhalten.
 
 Hub → Aufgabenübersicht → Task. Summary oben, danach bestehende P5a-Taskkarten
 und Sortierung; HIGH unter OPEN/IN_PROGRESS, OPEN und IN_PROGRESS getrennt zählen.
