@@ -27,6 +27,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     var moreFunctionsExpanded by mutableStateOf(false); private set
     var newFunctionName by mutableStateOf(""); private set
     private var focusedPersonId: String? = null
+    internal val hasPersonFocus get() = focusedPersonId != null
     private var expected:PersonOperationalState?=null
     private var request=0L
     val planning get()=session().state==SessionState.READY && action()?.let{OperationalRules.mayPlan(it.status)}==true
@@ -117,7 +118,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     /** Discard the bound local edit for direct person navigation; no board read. */
     internal fun dismissEditForPersonDetail():String? {
         val before=session();val actionId=action()?.id?:return null;val token=request;val id=personId?:return null
-        if(before.state!=SessionState.READY || busy || screen!=OperationsScreen.LIVE)return null
+        if(before.state!=SessionState.READY || busy || screen !in setOf(OperationsScreen.LIVE, OperationsScreen.FUNCTION))return null
         interaction()
         if(session().state!=SessionState.READY || session().generation!=before.generation ||
             action()?.id!=actionId || personId!=id || request!=token || busy)return null

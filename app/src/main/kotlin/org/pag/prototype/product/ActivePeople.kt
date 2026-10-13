@@ -24,6 +24,10 @@ internal fun activePeopleSummary(board: OperationalBoard): List<String> = if (bo
     }
 }
 
+/** Existing P5a affected count, OPEN + IN_PROGRESS; no count claimed without a board. */
+internal fun activeAffectedTaskLabel(tasks: TaskBoard?, personId: String): String? =
+    tasks?.affectedCount(personId)?.takeIf { it > 0 }?.let { "$it offene Aufgabe" + if (it == 1) "" else "n" }
+
 /** Calendar boundaries take precedence; NO_STATUS cannot prove a human observation. */
 internal fun activeUpdatedLabel(state: PersonOperationalState?, now: Long, zone: ZoneId): String? {
     if (state == null || state.status == OperationalStatus.NO_STATUS || state.updatedAt <= 0 || state.updatedAt > now) return null
@@ -67,6 +71,7 @@ internal fun activePersonCard(person: OperationalPerson, board: OperationalBoard
                 Text(card.situation)
                 Text(card.function)
                 card.updated?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                activeAffectedTaskLabel(model.tasks.board, card.id)?.let { Text(it) }
             }
         }
     }
@@ -83,6 +88,7 @@ internal fun activePersonCard(person: OperationalPerson, board: OperationalBoard
     FormButton(model.operations::changeFunction, enabled = model.activeNavigationEnabled && person.state?.status == OperationalStatus.ON_SITE) { Text("Funktion ändern") }
     if (person.state?.status != OperationalStatus.ON_SITE) Text("Eine Funktion kann bei „Vor Ort“ zugeordnet werden.")
     FormOutlinedButton({ model.personDetail(card.id) }, enabled = model.activeNavigationEnabled) { Text("Personendetails") }
+    activeAffectedTaskLabel(model.tasks.board, card.id)?.let { Text(it) }
     if (model.tasks.board != null) FormOutlinedButton({ model.activePersonTasks(card.id, true) }, enabled = model.activeNavigationEnabled) { Text("Aufgabe hinzufügen") }
     if ((model.tasks.board?.affectedCount(card.id) ?: 0) > 0)
         FormOutlinedButton({ model.activePersonTasks(card.id, false) }, enabled = model.activeNavigationEnabled) { Text("Aufgaben ansehen") }
