@@ -11,4 +11,5 @@
         android:name="org.pag.prototype.Ux1bShellProbe"
         android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.Ux4DemoProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.Ux3bPeopleProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

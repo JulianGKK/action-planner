@@ -29,7 +29,8 @@ import java.time.format.FormatStyle
             FormButton(ops::savePlan,enabled=!ops.busy){Text("Speichern")}
             FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Abbrechen")}
         }
-        OperationsScreen.LIVE->LiveForm(model,ops,board)
+        OperationsScreen.LIVE, OperationsScreen.FUNCTION->LiveForm(model,ops,board)
+        OperationsScreen.PERSON->ActivePersonWorkspace(model, board)
         OperationsScreen.OVERVIEW->{
             if(board.status==ActionStatus.ACTIVE || board.status==ActionStatus.COMPLETED)
                 Text(if(board.status==ActionStatus.ACTIVE)"Lagebild" else "Letztes Lagebild",style=MaterialTheme.typography.titleLarge)
@@ -53,6 +54,7 @@ import java.time.format.FormatStyle
 }
 @Composable internal fun OperationalPersons(model: ProductViewModel, board: OperationalBoard) {
     val ops = model.operations
+    if (board.status == ActionStatus.ACTIVE) { ActivePeopleList(model, board); return }
     board.persons.forEach{p->
         val planned=p.plan.roleIds.mapNotNull{id->board.roles.find{it.id==id}?.name}.joinToString().ifEmpty{"Keine geplanten Rollen"}
         FormOutlinedButton(onClick={if(board.status==ActionStatus.ACTIVE)ops.update(p.person.id) else model.personDetail(p.person.id)},modifier=Modifier.fillMaxWidth(),enabled=!ops.busy){
@@ -105,8 +107,9 @@ import java.time.format.FormatStyle
 }
 @Composable private fun LiveForm(model:ProductViewModel,ops:OperationsModel,board:OperationalBoard) {
     Text(ops.person?.person?.pseudonym.orEmpty(),style=MaterialTheme.typography.headlineLarge)
-    Text("Lage aktualisieren",style=MaterialTheme.typography.titleLarge)
-    OperationalStatus.entries.chunked(2).forEach{pair->Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
+    val functionOnly = ops.screen == OperationsScreen.FUNCTION
+    Text(if (functionOnly) "Funktion ändern" else "Lage aktualisieren",style=MaterialTheme.typography.titleLarge)
+    if (!functionOnly) OperationalStatus.entries.chunked(2).forEach{pair->Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
         pair.forEach{status->FormOutlinedButton({ops.status(status)},modifier=Modifier.weight(1f).heightIn(min=56.dp),enabled=!ops.busy){Text((if(status==ops.liveStatus)"✓ " else "")+operationalLabel(status))}}
     }}
     if(ops.liveStatus==OperationalStatus.ON_SITE){
@@ -119,7 +122,7 @@ import java.time.format.FormatStyle
         FormOutlinedButton({adding=!adding},enabled=!ops.busy){Text("Neue Funktion")}
         if(adding){FormTextField(name,{ops.textInteraction();name=it},label={Text("Rollenname")},autoFocus=true,keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy);FormButton({ops.createRole(name);name="";adding=false},enabled=!ops.busy && OperationalRules.validName(name)){Text("Hinzufügen")}}
     }
-    if(OperationalRules.placeRelevant(ops.liveStatus)){
+    if(!functionOnly && OperationalRules.placeRelevant(ops.liveStatus)){
         Text("Ort / Ziel · kurze lokale Bezeichnung, keine Notizen")
         FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)){
             board.placeSuggestions.forEach{place->FormOutlinedButton({ops.place(place)},enabled=!ops.busy){Text(place)}}
