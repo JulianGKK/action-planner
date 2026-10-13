@@ -16,4 +16,5 @@
     <instrumentation android:name="org.pag.prototype.Ux3dFunctionsProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.Ux3ActiveIntegrationProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P6c2ProtocolProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P6c3ProtocolProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

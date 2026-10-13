@@ -37,6 +37,11 @@ internal fun protocolSummaryTime(time: Long, zone: ZoneId = ZoneId.systemDefault
     val local = Instant.ofEpochMilli(time).atZone(zone)
     return local.format(DateTimeFormatter.ofPattern(if (local.toLocalDate() == today) "HH:mm" else "dd.MM.yyyy HH:mm"))
 }
+internal fun protocolEntryPhase(createdAfterCompletion: Boolean) = if (createdAfterCompletion) "Nach Abschluss erfasst" else null
+internal fun protocolRevisionPhase(recordedAfterCompletion: Boolean) = if (recordedAfterCompletion) "Diese Fassung wurde nach Abschluss erfasst." else null
+internal fun protocolTimelinePhase(item: ProtocolTimelineItem) = protocolEntryPhase(item.createdAfterCompletion)
+    ?: if (item.recordedAfterCompletion) "Aktuelle Fassung nach Abschluss erfasst" else null
+
 @Composable internal fun ProtocolSection(model: ProtocolModel, persons: List<Person>) {
     model.error?.let { Text(protocolFailure(it)) }
     model.validation?.let { Text(it) }
@@ -47,7 +52,8 @@ internal fun protocolSummaryTime(time: Long, zone: ZoneId = ZoneId.systemDefault
     if (detail != null) {
         if (model.detailLoading) Text("Eintrag wird aktualisiert …")
         val shown = model.historical ?: detail.current
-        ProtocolRevisionContent(shown)
+        protocolEntryPhase(detail.entry.createdAfterCompletion)?.let { Text(it) }
+        ProtocolRevisionContent(shown, model.mode == ProtocolUiMode.COMPLETED_FOLLOW_UP)
         if (model.historical != null) return
         if (model.error == ProtocolFailure.STALE) FormOutlinedButton(model::currentVersion, enabled = !model.busy) { Text("Zur aktuellen Fassung") }
         if (model.writable) {
@@ -56,6 +62,7 @@ internal fun protocolSummaryTime(time: Long, zone: ZoneId = ZoneId.systemDefault
             if (!detail.current.revision.mistaken) {
                 if (model.confirmingMistaken) {
                     Text("Der Eintrag wird nicht gelöscht. PaG fügt eine neue Fassung hinzu und markiert den Eintrag als irrtümlich.")
+                    if (model.completedFollowUp) Text("Die neue Irrtumsmarkierung wird nach Abschluss erfasst.")
                     FormButton(model::markMistaken, enabled = !model.busy && model.error != ProtocolFailure.STALE) { Text("Irrtümlich markieren") }
                     FormOutlinedButton(model::cancelMistaken, enabled = !model.busy) { Text("Abbrechen") }
                 } else FormOutlinedButton(model::requestMistaken, enabled = !model.busy && !model.detailLoading && model.error != ProtocolFailure.STALE) { Text("Als irrtümlich markieren") }
@@ -74,8 +81,9 @@ internal fun protocolSummaryTime(time: Long, zone: ZoneId = ZoneId.systemDefault
     }
     if (model.writable) {
         Text("Einträge dokumentieren Beobachtungen und Angaben. Die Kategorien sind keine rechtliche Bewertung.")
+        if (model.completedFollowUp) PreparationHeading("Schlüsselereignis nachtragen")
         ProtocolRules.templates.filter { it.key in protocolQuickKeys }.forEach { template -> FormOutlinedButton({ model.create(template.key) }) { Text(template.title) } }
-        FormButton({ model.create() }) { Text("+ Relevanter Eintrag") }
+        FormButton({ model.create() }) { Text(if (model.completedFollowUp) "+ Nachtrag nach Abschluss" else "+ Relevanter Eintrag") }
         FormOutlinedButton({ model.create("CUSTOM_KEY_EVENT") }) { Text("Eigenes Schlüsselereignis") }
         FormOutlinedButton(model::toggleTemplates, modifier = Modifier.semantics { stateDescription = if (model.moreTemplates) "Ausgeklappt" else "Eingeklappt" }) { Text("Weitere Schlüsselereignisse") }
         if (model.moreTemplates) ProtocolRules.templates.filter { it.key !in protocolQuickKeys && it.key != "CUSTOM_KEY_EVENT" }.forEach { template -> FormOutlinedButton({ model.create(template.key) }) { Text(template.title) } }
@@ -94,18 +102,20 @@ internal fun protocolSummaryTime(time: Long, zone: ZoneId = ZoneId.systemDefault
             Text(protocolClassification(item.classification))
             PreparationHeading(item.title)
             Text("Ereigniszeit: ${formattedTime(item.occurredAt)}")
+            protocolTimelinePhase(item)?.let { Text(it) }
             if (item.occurredAtApproximate) Text("Zeitpunkt ungefähr")
             if (item.mistaken) Text("Irrtümlich markiert")
             if (item.revisionType != ProtocolRevisionType.ORIGINAL && item.revisionType != ProtocolRevisionType.MARKED_MISTAKEN) Text(protocolRevisionLabel(item.revisionType))
         }
     } }
 }
-@Composable private fun ProtocolRevisionContent(value: ProtocolRevisionDetail) {
+@Composable private fun ProtocolRevisionContent(value: ProtocolRevisionDetail, followUp: Boolean) {
     val revision = value.revision; val input = revision.input
     Text(protocolClassification(input.classification)); PreparationHeading(input.title)
     Text("Ereigniszeit: ${formattedTime(input.occurredAt)}")
     if (input.occurredAtApproximate) Text("Zeitpunkt ungefähr")
-    Text("Erfasst am ${formattedTime(revision.recordedAt)}")
+    Text("Erfasst am${if (followUp) ":" else ""} ${formattedTime(revision.recordedAt)}")
+    protocolRevisionPhase(revision.recordedAfterCompletion)?.let { Text(it) }
     if (revision.revisionType != ProtocolRevisionType.ORIGINAL) Text(protocolRevisionLabel(revision.revisionType))
     if (revision.mistaken && revision.revisionType != ProtocolRevisionType.MARKED_MISTAKEN) Text("Irrtümlich markiert")
     input.description?.let { PreparationHeading("Beschreibung"); Text(it) }
@@ -120,6 +130,14 @@ internal fun protocolSummaryTime(time: Long, zone: ZoneId = ZoneId.systemDefault
 @Composable private fun ProtocolForm(model: ProtocolModel, persons: List<Person>) {
     val input = model.input ?: return
     PreparationHeading(when (model.revisionType) { ProtocolRevisionType.CORRECTION -> "Eintrag korrigieren"; ProtocolRevisionType.ADDENDUM -> "Eintrag ergänzen"; else -> "${protocolClassification(input.classification)} erfassen" })
+    if (model.completedFollowUp) {
+        Text(when (model.revisionType) {
+            ProtocolRevisionType.CORRECTION -> "Diese Korrektur wird als neue Fassung nach Abschluss gespeichert."
+            ProtocolRevisionType.ADDENDUM -> "Diese Ergänzung wird als neue Fassung nach Abschluss gespeichert."
+            else -> "Nach Abschluss erfasst"
+        })
+        Text("Ereigniszeit und Erfassungszeit können voneinander abweichen.")
+    }
     fun change(value: ProtocolInput) = model.change(value)
     if (model.revisionType == ProtocolRevisionType.CORRECTION) {
         ProtocolClassification.entries.forEach { c -> FormOutlinedButton({ change(input.copy(classification = c)) }, modifier = Modifier.semantics { selected = input.classification == c }, enabled = !model.busy) { Text((if (input.classification == c) "✓ " else "") + protocolClassification(c)) } }

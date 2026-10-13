@@ -19,7 +19,7 @@ internal class ProtocolFake : ProtocolRepository {
     override fun getEntry(actionId: String, entryId: String, publish: (ProtocolResult<ProtocolEntryDetail>) -> Unit) { detailReads++; detailCallback = publish }
     override fun createEntry(actionId: String, expectedActionStatus: ActionStatus, input: ProtocolInput, publish: (ProtocolResult<ProtocolSaved>) -> Unit) { writes++; captured = input; capturedStatus = expectedActionStatus; writeCallback = publish }
     override fun reviseEntry(actionId: String, expectedActionStatus: ActionStatus, expectedRevision: ProtocolExpectedRevision, revisionType: ProtocolRevisionType, input: ProtocolInput, clearMistaken: Boolean, publish: (ProtocolResult<ProtocolSaved>) -> Unit) { writes++; captured = input; capturedExpected = expectedRevision; capturedType = revisionType; capturedClear = clearMistaken; capturedStatus = expectedActionStatus; writeCallback = publish }
-    override fun markMistaken(actionId: String, expectedActionStatus: ActionStatus, expectedRevision: ProtocolExpectedRevision, publish: (ProtocolResult<ProtocolSaved>) -> Unit) { writes++; capturedExpected = expectedRevision; capturedType = ProtocolRevisionType.MARKED_MISTAKEN; writeCallback = publish }
+    override fun markMistaken(actionId: String, expectedActionStatus: ActionStatus, expectedRevision: ProtocolExpectedRevision, publish: (ProtocolResult<ProtocolSaved>) -> Unit) { writes++; capturedStatus = expectedActionStatus; capturedExpected = expectedRevision; capturedType = ProtocolRevisionType.MARKED_MISTAKEN; writeCallback = publish }
 }
 class ProtocolModelTest {
     private var session = SessionSnapshot(SessionState.READY, 1)

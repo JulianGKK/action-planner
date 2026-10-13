@@ -114,6 +114,22 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (!activeNavigationEnabled || snapshot.generation != generation || selected?.id != actionId || activeArea != ActiveArea.TASKS) return
         if (create) tasks.add(personId) else tasks.showPerson(personId)
     }
+    val completedProtocolOpen get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.COMPLETED && protocol.completedFollowUp
+    fun openCompletedProtocol() {
+        if (selected?.status != ActionStatus.COMPLETED || protocolRepository == null || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy) return
+        val retained = workspace
+        protocol.openCompletedFollowUp {
+            clearPersons()
+            if (retained?.actionId == selected?.id && retained?.generation == snapshot.generation && retained?.status == ActionStatus.COMPLETED) workspace = retained
+            else loadWorkspace()
+        }
+    }
+    fun closeCompletedProtocol() {
+        val before = snapshot; val a = selected ?: return
+        if (!completedProtocolOpen || protocol.busy) return
+        interaction()
+        if (completedProtocolOpen && snapshot.generation == before.generation && selected?.id == a.id) protocol.clear()
+    }
     val protocol = ProtocolModel(protocolRepository, { snapshot }, { selected }, ::interaction, ::loadWorkspace, ::showFeedback)
     val tasks = TaskModel(taskRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
         { workspace?.tasks }, ::loadWorkspace, ::showFeedback)

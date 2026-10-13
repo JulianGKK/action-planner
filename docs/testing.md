@@ -130,3 +130,13 @@ Freigabe, Fehler ohne Mischstand und Bereichscleanup.
 P6c2ProtocolProbe verwendet echte ProductScreen-Komposition mit ausschließlich
 synthetischen Domainports, lokaler Font Scale 1/2 und ohne Credential-/DB-Writes.
 Konkrete Ergebnisse und Restgrenzen: [P6c2](product-p6c2-protocol-active-ui.md).
+
+## P6c3 — COMPLETED Follow-up
+
+ProtocolFollowUpModelTest und CompletedProtocolWorkspaceTest prüfen expliziten
+Einstieg ohne P6-Prefetch, getrennte Statusbindung, alle Nachbereitungswrites,
+Entry-/Revisionsphasen, STALE-Erhalt, ACTIVE-Draftcleanup, Lock/Reauth und späte
+Callbacks. Reale ViewModel-Fakeports verweigern weiterhin P4/P5a/Action-Writes.
+P6c3ProtocolProbe verwendet echte ProductScreen-Komposition mit synthetischen
+Ports bei Font Scale 1/2; P6c2ProtocolProbe bleibt die separate ACTIVE-Regression.
+Details und Restgrenzen: [P6c3](product-p6c3-protocol-completed-followup.md).
