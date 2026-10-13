@@ -67,7 +67,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
                 model.tasks.selected != null -> model.tasks.backToTasks()
                 else -> model.activeArea(shownArea)
             }
-        }, enabled = model.activeNavigationEnabled) { Text(if ((model.selectedPerson != null || model.personDetailLoading) && model.operations.screen == OperationsScreen.PERSON) "‹ Zur Person" else if (model.operations.screen == OperationsScreen.PERSON && model.operations.functionFocus != null) "‹ ${activeFunctionName(board = model.operations.board, roleId = model.operations.functionFocus!!.roleId)}" else if (model.tasks.form && model.tasks.selected != null) "‹ Zur Aufgabe" else "‹ ${shownArea.label}") }
+        }, enabled = model.activeNavigationEnabled) { Text(if ((model.selectedPerson != null || model.personDetailLoading) && model.operations.screen == OperationsScreen.PERSON) "‹ Zur Person" else if (model.operations.screen in setOf(OperationsScreen.LIVE, OperationsScreen.FUNCTION) && model.operations.hasPersonFocus) "‹ Zur Person" else if (model.operations.screen == OperationsScreen.PERSON && model.operations.functionFocus != null) "‹ ${activeFunctionName(board = model.operations.board, roleId = model.operations.functionFocus!!.roleId)}" else if (model.tasks.form && model.tasks.selected != null) "‹ Zur Aufgabe" else "‹ ${shownArea.label}") }
     }
     if (model.activeArea == ActiveArea.DETAILS) {
         val action = model.selected ?: return

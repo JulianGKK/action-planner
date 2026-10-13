@@ -154,7 +154,7 @@ import java.util.Locale
                 }
             }
             SensitiveSection(model)
-            FormOutlinedButton(onClick = model::backToPersons) { Text(if (model.selected?.status == ActionStatus.ACTIVE && model.operations.screen == OperationsScreen.PERSON) "Zur Person" else "Zur Personenliste") }
+            if (model.selected?.status != ActionStatus.ACTIVE) FormOutlinedButton(onClick = model::backToPersons) { Text("Zur Personenliste") }
         }
         else -> {
             if (model.personsLoading) Text("Personen werden geladen …")

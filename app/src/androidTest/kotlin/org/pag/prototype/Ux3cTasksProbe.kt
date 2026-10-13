@@ -201,7 +201,7 @@ class Ux3cTasksProbe : Instrumentation() {
                 top(); click("‹ Aufgaben")
                 phase = "create"; top(); click("+ Aufgabe", backwards = false); title("Neue Übungsaufgabe")
                 runOnMainSync { check(model.tasks.input.priority == TaskPriority.NORMAL && model.tasks.input.title == "Neue Übungsaufgabe") }
-                click("Speichern", backwards = false); visible("2 offen · 1 in Arbeit")
+                click("Speichern", backwards = false); visible("Neue Übungsaufgabe"); runOnMainSync { check(model.tasks.selected?.title == "Neue Übungsaufgabe") }; top(); click("‹ Aufgaben"); visible("2 offen · 1 in Arbeit")
                 runOnMainSync { check(tasks.rows.any { it.title == "Neue Übungsaufgabe" && it.status == TaskStatus.OPEN }) }
                 phase = "person-filter"; top(); click("‹ Zum Lagebild"); visible("Lagebild"); top(); click("Personen", backwards = false)
                 visible("Motte"); click("Motte", backwards = true); visible("Aktuelle Funktion: Support")

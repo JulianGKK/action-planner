@@ -100,6 +100,8 @@ Verbindliche Entscheidung aus dem manuellen UX-Review (12.10.2026): Lagebild ist
 operativer Hub / Schaltzentrale. **Hub → Bereichsübersicht → Objekt → fokussierte
 Aktion** ersetzt die lange Gesamtseite. Details: [UX-Philosophie, Abschnitt 7](ux-philosophy.md#7-active-lagebild-als-operativer-hub--schaltzentrale).
 UX3a, UX3b, UX3c und UX3d sind implementiert.
+Der [UX3-Integrationsslice](ux3-active-integration.md) prüft Cross-Area-Verträge
+und repariert gezielt Task-Fokus, affected Counts und Rücknavigation.
 
 ### UX3a — ACTIVE Hub / Navigation
 

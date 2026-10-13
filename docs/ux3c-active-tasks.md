@@ -42,8 +42,9 @@ die Speicherung und DST-Gap-/Overlap-Abweisung bleiben unverändert.
 Save und Transition behalten den bestehenden Detailfokus. Erst der vollständig
 publizierte Ersatz-Snapshot aktualisiert ausgewählten Task und Chronik gemeinsam.
 Auch ein geschlossener Task bleibt nachvollziehbar im Detail. Bewusstes Zurück
-führt zur Übersicht, wo er in der passenden Liste liegt. Neue Aufgaben führen
-nach Speichern zur aktualisierten Übersicht mit bestehendem Floating Feedback.
+führt zur Übersicht, wo er in der passenden Liste liegt. Im nachfolgenden
+[Integrationsslice](ux3-active-integration.md) führen neue ACTIVE-Aufgaben nach
+Speichern und vollständiger Publication zum Taskdetail mit bestehendem Floating Feedback.
 Abbrechen einer ACTIVE-Bearbeitung kehrt ohne Write/Read zum ursprünglichen Detail
 zurück; Abbrechen einer Neuanlage verwirft den Entwurf.
 Rücknavigation steht im Header; Statusänderung setzt den Detail-Scroll auf den
