@@ -1,5 +1,15 @@
 # P6b — Technische Implementierungsspezifikation Aktionsprotokoll
 
+## Implementierungsstand P6c1
+
+Domain, fünf Tabellen/DAO, ProductProtocolRepository, Runtime-Port und additive
+Migration 6→7 sind im aktuellen P6c1-Working-Tree umgesetzt. Der nachfolgende Text
+bleibt die ursprüngliche technische Spezifikation mit seiner historischen
+Analysebaseline. Aktuelle Baseline ist `d9c24d2` auf
+`p6c1-protocol-domain-storage`; P6a/P6b sind dort gemerged.
+Gewählte Details und tatsächliche Prüfnachweise stehen im
+[P6c1-Nachweis](product-p6c1-protocol-storage.md). Keine UI-/Hubintegration.
+
 ## 1. Status und tatsächliche Baseline
 
 Analyse/technischer Plan, **keine Umsetzung**. [P6a.1](product-p6a-protocol.md)

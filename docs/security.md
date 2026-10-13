@@ -331,3 +331,20 @@ recordedAt aus Repository-Wanduhr, kein Nutzereingabefeld und kein vertrauenswü
 Zeitstempel. FK-/Sequenztrigger sind Anwendungsintegrität, keine kryptografische
 Manipulationssicherheit. [Tests](testing.md) stehen noch aus; keine technische
 Implementierung oder zusätzliche Securityarchitektur durch diesen Dokumentslice.
+
+
+## P6c1 — bestehende Gates unverändert wiederverwendet
+
+Der [DB-only-Adapter](product-p6c1-protocol-storage.md) erwirbt vorhandenen READY-
+Context, prüft OPERATION/STEP/COMMIT, öffnet Room nur kurz mit bestehender DB-Key-
+Lease und publiziert auf main ausschließlich durch context.publish. Revoke ist
+kein fachlicher Protokollfehler; es beendet Publication. Native Commitnuance bleibt
+unverändert. P6 meldet keine Sessioninteraction und verändert keine Deadline.
+
+COMPLETED-Write-Ausnahme ist ausschließlich ProtocolRules; P4/P5a bleiben
+unverändert read-only. Keine Änderungen an Coordinator, StorageAccess,
+SessionDbKeyOwner-Semantik, LeadershipGrant, P3b-Crypto, Argon2/Tink, Keystore,
+Auth, Manifest/Permissions oder Backup-/Transferregeln. Runtimeänderung ist nur
+Portverdrahtung; ActionDatabaseänderung nur additiver Schema-/Migrationanschluss.
+SENSITIVE trotz READY-Zugriff bleibt der explizite P6a.1-Trade-off. Keine zusätzliche
+Kryptografie oder Beweis-/Timestamp-/Forensik-/Secure-Overwrite-Garantie.

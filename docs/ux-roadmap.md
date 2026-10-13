@@ -303,3 +303,16 @@ Fassungen bleiben ehrlich lesbar. Atomic Reveal/Refresh, RAM-only Navigation/
 Editoren, Lock-/Stale-Cleanup, Font Scale 2 und bestehende Securityshell erhalten.
 [P6-Prüfplan](testing.md) ist Sollabnahme, keine bereits ausgeführte Testkampagne.
 Retentiondauer/Rechtsprüfung/Allgemeinlöschworkflow bleiben P6a.1-Restgrenzen.
+
+
+## P6c1 — Domain / Storage / Repository implementiert
+
+[DB-only-Nachweis](product-p6c1-protocol-storage.md): Protocol-Domainport,
+SENSITIVE/READY-Adapter, fünf Tabellen/DAO, additive Migration6→7 und
+ProductRuntime.protocol sind umgesetzt. Noch keine ProductViewModel-/Compose-
+Integration, Hubkarte, Timeline, Formulare oder COMPLETED-UX.
+
+Nächster eigenständiger Slice P6c2: ACTIVE-UI auf Summary-/Timeline-/Detailprojektionen,
+RAM-only Entwürfe und explicit Save/Cancel, vorhandene Session-/Atomic-Reveal-
+Verträge. COMPLETED-Nachbereitung fachlich und repositoryseitig bereits erlaubt,
+aber deren Bedienung folgt separat. Keine P4/P5a-Mutation oder neue Vorschlagslogik.

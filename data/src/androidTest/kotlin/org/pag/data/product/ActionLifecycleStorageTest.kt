@@ -200,7 +200,7 @@ class ActionLifecycleStorageTest {
         assertEquals("synthetic old",old.title); assertNull(old.completedAt)
         var action=old; repeat(3) { action=advance(repo,action) }
         assertEquals(ActionStatus.COMPLETED,action.status); assertNotNull(action.completedAt)
-        B2Native.open(inv.database,key,context(AccessScope.MAINTENANCE),true).use { assertEquals(6,it.version) }
+        B2Native.open(inv.database,key,context(AccessScope.MAINTENANCE),true).use { assertEquals(7,it.version) }
     }
     @Test fun revokedMigrationRollsBackWithoutReplacement() {
         val inv=legacyV1(); val c=context()

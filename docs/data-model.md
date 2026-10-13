@@ -648,3 +648,19 @@ Constraints stehen zentral in P6b. Bestehende Note/P4/P5a-Daten werden nicht
 umgenutzt. Additive Migration 6→7 mit leerem neuem Bestand ist nur geplant,
 keine Room-Schema-Datei erzeugt. Allgemeine Delete-/Retentionworkflows folgen
 separat, vollständige Aktionslöschung bleibt Obergrenze für alle Fassungen/Children.
+
+
+## P6c1 — implementierte Protokollpersistenz
+
+Aktueller P6c1-Stand: Schema **7** ergänzt ausschließlich protocol_entries,
+protocol_revisions, protocol_affected_persons, protocol_official_identifiers und
+protocol_reported_by_persons. Alle zehn bisherigen Entity-/Feld-/Indexdefinitionen
+von Schema6 bleiben identisch. Der konzeptionelle P6a-/technische P6b-Plan oben
+ist durch diesen DB-only-Slice umgesetzt, keine neue Note-/Polizeipersonen-Entity.
+
+Aktuelle Revision nach Nummer, vollständiger Expected-Vergleich inklusive
+Relationen/Identifierreihenfolge, repositoryeigene Zeit-/Phasenflags. Children
+gehören jeweils ihrer eigenen Revision. Personcascade entfernt nur Betroffenen-/
+Quellenrelationen; Actioncascade entfernt alle P6-Daten. Keine allgemeinen
+Produktlöschworkflows oder Retentiondauer eingeführt. Port/DAO haben keinen normalen
+Update-/Einzel-Deletepfad. Details und Nachweise: [P6c1](product-p6c1-protocol-storage.md).
