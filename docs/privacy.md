@@ -220,3 +220,20 @@ löschung lösbar ohne Text-/Fassungverlust, keine automatische Anonymisierung.
 Vollvergleich des erwarteten Standes schützt vor stale Wiedereinsetzen gelöster
 Bezüge. Manuelle Protokollprüfung und konkrete Retention-/Rechtsprüfung bleiben
 eigenständige spätere Anforderungen. Keine Code-, Export- oder Medienfreigabe.
+
+
+## P6c1 — implementierter DB-only-Zugriff
+
+[P6c1](product-p6c1-protocol-storage.md) setzt genau den entschiedenen SENSITIVE/
+READY-Vertrag um, ohne Leadership-Step-up oder P3b-Inhalte zu lesen. Summary und
+Timeline verwenden explizite schmale SQL-Projektionen; keine Kennungen/langen Texte/
+Personen in diesen Reads. Room-generiertes SQL und Modelloberflächen sind durch
+gezielte Unitchecks geprüft. Vollständige Inhalte/Childrows erst im Entrydetail,
+Personen dort ausschließlich benötigte aktuelle P3a-ID/Pseudonymprojektionen.
+
+Same-Action-FKs, vollständiger Expectedvergleich und atomare vollständige Fassungen
+sichern aktionslokale Bezüge. Personenrelationstrennung bewahrt Texte/Revisionen;
+keine automatische Anonymisierung, manuelle Prüfung im späteren Löschworkflow
+weiterhin erforderlich. Keine globale Identifierkartei, Autorenprofile, UI,
+Export/Medien oder neue Erfassungskanäle. Eigene Retentionbetrachtung bleibt innerhalb
+der Aktion, konkrete Frist und Echtdaten-Rechtsprüfung unverändert offen.

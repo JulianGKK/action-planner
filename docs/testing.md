@@ -97,3 +97,25 @@ Keine Migration, Code-/Schemaerzeugung oder Unit-/Gerätetests ausgeführt.
 P6c-Abnahme muss echte Testergebnisse mit Testumfang, Plattform, Datum und Grenzen
 nachtragen. Rechtliche Zulässigkeit/Retentiondauer/manuelle Inhaltsprüfung sind
 keine durch Unit-Tests ersetzbaren Freigaben für Echtdaten.
+
+
+## P6c1 — konkrete Implementierung und Nachweisverweis
+
+ProtocolRulesTest prüft reine Domainregeln ohne neue Domain-Testdependency;
+die bestehende Data-Unit-Testkonfiguration stellt JUnit bereit. ProtocolProjectionTest
+prüft die tatsächlich von Room/KSP erzeugten Querystrings auf minimierte Spalten/
+Tabellenzugriffe, zusätzlich zu DTO-/Portoberflächen. ProtocolStorageTest prüft
+reale SQLCipher-/Roompfade mit RAM-Testkeys im separaten Data-Testpaket.
+
+Coverage: Repository-Port, vollständige Fassungen/Children, Same-Action-FKs,
+Sequenz/Unveränderlichkeit/Identifier-Slots, Irrtumszustände, persistierte Phase,
+stale Snapshot samt Relationstrennung, kontrolliert konkurrierende Appends,
+Childfehler-Rollback, Commitrevoke, Generationspublication, 6→7-Migration/
+Migrationrevoke, P4/P5a-COMPLETED-Regression und logische FK-Kaskaden.
+Historische Migrationfixtures entfernen nur neue P6-Testtabellen vor gezieltem
+Downgrade und erwarten danach Schema7. Keine echten Produktdaten/Gerätecredentials.
+
+Tatsächliche Ergebnisse und Grenzen stehen im [P6c1-Nachweis](product-p6c1-protocol-storage.md).
+Die oben genannten UI-/Last-/Retention-/Rechtsprüfungen sind hierdurch nicht
+als bereits erfüllt zu verstehen; P6c1 hat keine UI und implementiert keine
+allgemeine Teilnehmer-/Aktionslöschung oder Retentionjobs.
