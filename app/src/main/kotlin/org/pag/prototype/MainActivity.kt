@@ -15,6 +15,8 @@ import androidx.activity.compose.setContent
 import org.pag.data.product.ProductRuntime
 import org.pag.domain.ProductStorageState
 import org.pag.domain.SessionState
+import org.pag.prototype.demo.DemoState
+import org.pag.prototype.demo.DemoScreen
 import org.pag.prototype.product.ProductScreen
 import org.pag.prototype.product.ProductViewModel
 import java.util.concurrent.Executors
@@ -23,8 +25,9 @@ import java.util.concurrent.Executors
 class MainActivity : ComponentActivity() {
     private lateinit var runtime: ProductRuntime
     private lateinit var model: ProductViewModel
-    private val worker = Executors.newSingleThreadExecutor()
-    private val handler = Handler(Looper.getMainLooper())
+    private val worker by lazy { Executors.newSingleThreadExecutor() }
+    private val handler by lazy { Handler(Looper.getMainLooper()) }
+    private var demo: DemoState? = null
     private var resumed = false
     private val expiry = object : Runnable {
         override fun run() {
@@ -41,6 +44,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(null)
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         if (Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(false)
+        launchAppMode(BuildConfig.PAG_DEMO_ONLY,
+            demo = {
+                val state = DemoState()
+                demo = state
+                setContent { DemoScreen(state) }
+            },
+            product = { initializeProduct() })
+    }
+    private fun initializeProduct() {
         runtime = ProductRuntime(this, worker, mainExecutor) {
             resumed && window.decorView.hasWindowFocus() && !getSystemService(KeyguardManager::class.java).isDeviceLocked
         }
@@ -54,6 +66,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume(); resumed = true
+        if (!::runtime.isInitialized) return
         runtime.session.foreground(!getSystemService(KeyguardManager::class.java).isDeviceLocked)
         if (runtime.session.snapshot().state == SessionState.LOCKED) {
             val state = runtime.inventory.state()
@@ -64,12 +77,15 @@ class MainActivity : ComponentActivity() {
         handler.removeCallbacks(expiry); handler.post(expiry)
     }
     override fun onPause() {
-        resumed = false; handler.removeCallbacks(expiry)
-        if (runtime.session.snapshot().state != SessionState.AUTHENTICATING) runtime.session.foreground(false)
+        resumed = false
+        if (::runtime.isInitialized) {
+            handler.removeCallbacks(expiry)
+            if (runtime.session.snapshot().state != SessionState.AUTHENTICATING) runtime.session.foreground(false)
+        }
         super.onPause()
     }
-    override fun onStop() { runtime.session.foreground(false); super.onStop() }
-    override fun onUserLeaveHint() { runtime.session.foreground(false); super.onUserLeaveHint() }
+    override fun onStop() { if (::runtime.isInitialized) runtime.session.foreground(false); demo?.end(); super.onStop() }
+    override fun onUserLeaveHint() { if (::runtime.isInitialized) runtime.session.foreground(false); super.onUserLeaveHint() }
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (!::runtime.isInitialized) return
@@ -81,8 +97,11 @@ class MainActivity : ComponentActivity() {
     }
     override fun onUserInteraction() { super.onUserInteraction(); if (::model.isInitialized && resumed) model.interaction() }
     override fun onDestroy() {
-        handler.removeCallbacks(expiry)
-        runtime.close(); worker.shutdownNow(); unregisterReceiver(screenOff)
+        demo?.end(); demo = null
+        if (::runtime.isInitialized) {
+            handler.removeCallbacks(expiry)
+            runtime.close(); worker.shutdownNow(); unregisterReceiver(screenOff)
+        }
         super.onDestroy()
     }
 }

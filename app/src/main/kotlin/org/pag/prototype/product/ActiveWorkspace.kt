@@ -81,27 +81,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
                 val tasks = content.tasks
                 if (tasks == null) { PagErrorState(); return }
                 val cards = activeHubCards(model.selected ?: return, board, tasks)
-                val fontScale = LocalDensity.current.fontScale
-                BoxWithConstraints(Modifier.fillMaxWidth()) {
-                    val columns = activeHubColumns(maxWidth.value, fontScale)
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        cards.chunked(columns).forEach { row ->
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                row.forEach { card ->
-                                    FormOutlinedButton({ model.activeArea(card.area) }, enabled = model.activeNavigationEnabled,
-                                        modifier = Modifier.weight(1f).heightIn(min = 96.dp)) {
-                                        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            PreparationHeading(card.area.label)
-                                            card.summary.forEach { Text(it) }
-                                            card.attention?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-                                            Text("${card.area.label} öffnen")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                ActiveHubGrid(cards, model.activeNavigationEnabled) { model.activeArea(it) }
                 model.changeError?.let { Text(changeErrorLabel(it)) }
                 if (model.confirming != null) {
                     Text("Aktion endgültig abschließen? Danach sind Bearbeitung und Wiedereröffnung ausgeschlossen.")
@@ -119,6 +99,31 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
                 FormOutlinedButton(model.operations::roles, enabled = model.activeNavigationEnabled) { Text("Neue Funktion") }
             }
             ActiveArea.DETAILS -> Unit
+        }
+    }
+}
+
+/** Shared stateless hub presentation; no session, repository or demo capability. */
+@Composable internal fun ActiveHubGrid(cards: List<HubCard>, enabled: Boolean = true, onOpen: (ActiveArea) -> Unit) {
+    val fontScale = LocalDensity.current.fontScale
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val columns = activeHubColumns(maxWidth.value, fontScale)
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            cards.chunked(columns).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    row.forEach { card ->
+                        FormOutlinedButton({ onOpen(card.area) }, enabled = enabled,
+                            modifier = Modifier.weight(1f).heightIn(min = 96.dp)) {
+                            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                PreparationHeading(card.area.label)
+                                card.summary.forEach { Text(it) }
+                                card.attention?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                                Text("${card.area.label} öffnen")
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

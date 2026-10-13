@@ -2,12 +2,13 @@
     xmlns:tools="http://schemas.android.com/tools">
     <instrumentation
         android:name="org.pag.prototype.I3LifecycleProbe"
-        android:targetPackage="org.pag.prototype.a"
+        android:targetPackage="${pagTestTargetPackage}"
         tools:replace="android:name" />
     <instrumentation
         android:name="org.pag.prototype.Ux1aShellProbe"
-        android:targetPackage="org.pag.prototype.a" />
+        android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation
         android:name="org.pag.prototype.Ux1bShellProbe"
-        android:targetPackage="org.pag.prototype.a" />
+        android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.Ux4DemoProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

@@ -214,7 +214,7 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
  * Date and time are explicitly selected; selecting only a date creates no instant.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable private fun DateTimeField(label: String, value: LocalDateTime?, zone: ZoneId,
+@Composable internal fun DateTimeField(label: String, value: LocalDateTime?, zone: ZoneId,
     interaction: () -> Unit, chosen: (LocalDateTime) -> Unit) {
     var part by remember { mutableStateOf<String?>(null) }
     var day by remember { mutableStateOf(value?.toLocalDate()) }

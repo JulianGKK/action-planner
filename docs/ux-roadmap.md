@@ -176,19 +176,18 @@ in Übersichten, Protokoll-/Vorfälle-/Dokument-/Uploadimplementierung, Netzwerk
 Sessionverlängerung oder Persistenz von Navigation/Entwürfen. Diese späteren Module
 benötigen ihren eigenen Product-/Security-/Privacy-Slice.
 
-## UX4 — Demo und Tutorial
+## UX4 — Eigenständige PaG Demo
 
-**Ziel:** Offline 90-Sekunden-Tour und freie Erkundung mit dauerhaftem DEMO.
-Separater synthetischer Datenraum, bevorzugt in Memory und ohne echte Product DB,
-Sessionkeys oder echte Personen. Echte Sessionregeln in der Tour erklären.
+**Implementiert:** [UX4 Demo](ux4-demo.md). Eigener debug-artiger Build Type
+`demo`, Application-ID `org.pag.prototype.a.demo`, direkter synthetischer Home-
+Einstieg. Vorbereitung, ACTIVE-Quickstart und optionaler Vier-Schritte-Rundgang;
+permanentes DEMO, Reset/Ende und ausschließlich RAM. Kein ProductRuntime,
+Produktdatenzugriff oder Nachbau echter Session-/P3b-Sicherheitsgrenzen.
 
-**Nicht enthalten:** Testpersonen in echten Aktionen, Demo-Schalter zum Umgehen
-realer Gates, Cloud/Lernprofil, Demo-Import in Produktdaten.
-
-**Abnahme:** Demooperationen erreichen technisch keine echte Repository-/Key-
-Quelle; Wechsel beendet Demo-State und reale Nutzung benötigt reguläre Freigabe.
-Kalte Starts, Wechsel, Reset und Abbruch bleiben eindeutig DEMO bzw. LOCKED.
-Tour mit TalkBack und großer Schrift verständlich; keine Telemetrie.
+Reine Domainregeln sowie stateless Controls/Picker/Hub werden wiederverwendet.
+Normale debug/release Build-/Securitypfade bleiben erhalten. Keine Demoimports,
+Exporte, Kamera, Cloud, Telemetrie oder falschen Sicherheitsversprechen.
+Automatische Abnahme und manueller Smoke stehen im Slice-Dokument.
 
 ## UX5 — COMPLETED / Rückblick
 

@@ -8,8 +8,22 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "0.1-stage-a"
+        testInstrumentationRunner = "org.pag.prototype.I3LifecycleProbe"
     }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
+    defaultConfig { buildConfigField("boolean", "PAG_DEMO_ONLY", "false"); manifestPlaceholders["pagTestTargetPackage"] = "org.pag.prototype.a" }
+    buildTypes {
+        create("demo") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".demo"
+            versionNameSuffix = "-demo"
+            matchingFallbacks += listOf("debug")
+            buildConfigField("boolean", "PAG_DEMO_ONLY", "true")
+            manifestPlaceholders["pagTestTargetPackage"] = "org.pag.prototype.a.demo"
+        }
+    }
+    // Default instrumentation names remain debug; opt in only for demo probes.
+    testBuildType = providers.gradleProperty("pagTestBuildType").orElse("debug").get()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -17,6 +31,11 @@ android {
     // Even debug signing stays inside this project, never in ~/.android.
     signingConfigs.getByName("debug") {
         storeFile = rootProject.file(".prototype-cache/debug.keystore")
+    }
+}
+androidComponents {
+    beforeVariants(selector().withBuildType("demo")) {
+        it.hostTests[com.android.build.api.variant.HostTestBuilder.UNIT_TEST_TYPE]?.enable = true
     }
 }
 kotlin { jvmToolchain(17) }
@@ -36,7 +55,7 @@ val preparePrototypeDebugKeystore = tasks.register("preparePrototypeDebugKeystor
         }
     }
 }
-tasks.matching { it.name == "validateSigningDebug" || it.name == "validateSigningDebugAndroidTest" }.configureEach { dependsOn(preparePrototypeDebugKeystore) }
+tasks.matching { it.name in setOf("validateSigningDebug", "validateSigningDebugAndroidTest", "validateSigningDemo", "validateSigningDemoAndroidTest") }.configureEach { dependsOn(preparePrototypeDebugKeystore) }
 val verifyPrototypeManifest = tasks.register("verifyPrototypeManifest") {
     dependsOn("processDebugManifest")
     doLast {
@@ -80,3 +99,29 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     testImplementation("junit:junit:4.13.2")
 }
+
+val verifyDemoManifest = tasks.register("verifyDemoManifest") {
+    dependsOn("processDemoManifest")
+    doLast {
+        val manifest = layout.buildDirectory.file("intermediates/merged_manifests/demo/processDemoManifest/AndroidManifest.xml").get().asFile
+        val factory = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply {
+            isNamespaceAware = true
+            setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+        }
+        val document = factory.newDocumentBuilder().parse(manifest)
+        val namespace = "http://schemas.android.com/apk/res/android"
+        check(document.documentElement.getAttribute("package") == "org.pag.prototype.a.demo")
+        val permissions = document.getElementsByTagName("uses-permission")
+        val actual = (0 until permissions.length).map { (permissions.item(it) as org.w3c.dom.Element).getAttributeNS(namespace, "name") }.toSet()
+        check(actual == setOf("org.pag.prototype.a.demo.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION")) { "Unexpected demo permissions: $actual" }
+        val application = document.getElementsByTagName("application").item(0) as org.w3c.dom.Element
+        check(application.getAttributeNS(namespace, "label") == "PaG Demo")
+        check(application.getAttributeNS(namespace, "allowBackup") == "false")
+        check(application.getAttributeNS(namespace, "usesCleartextTraffic") == "false")
+        val activities = document.getElementsByTagName("activity")
+        check(activities.length == 1)
+        check((activities.item(0) as org.w3c.dom.Element).getAttributeNS(namespace, "name") == "org.pag.prototype.MainActivity")
+        listOf("activity-alias", "provider", "receiver", "service").forEach { check(document.getElementsByTagName(it).length == 0) }
+    }
+}
+tasks.matching { it.name == "check" }.configureEach { dependsOn(verifyDemoManifest) }
