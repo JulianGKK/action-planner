@@ -8,7 +8,8 @@ import sys
 import time
 from pathlib import Path
 
-ADB = '/home/julian-tio-valenzuela/Android/Sdk/platform-tools/adb'
+SDK_ROOT = os.environ.get('ANDROID_SDK_ROOT') or os.environ.get('ANDROID_HOME')
+ADB = os.environ.get('ADB') or (str(Path(SDK_ROOT) / 'platform-tools' / 'adb') if SDK_ROOT else 'adb')
 PACKAGE = 'org.pag.data.test'
 RUNNER = PACKAGE + '/androidx.test.runner.AndroidJUnitRunner'
 OWNER = Path('.prototype-cache/i1-ah-owner')
