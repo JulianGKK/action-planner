@@ -273,3 +273,43 @@ Drei vor dem finalen Fix rote echte Coordinator-/Grant-Regressionsfälle und
 weitere Ordering-/Deadline-/Wipe-Tests einschließlich 128 kontrollierter
 Cancel-Wartereihenfolgen sichern die Grenze. Details, Grenzen und Prüfprotokolle:
 [UX1-S-Zulassung](ux1s-session-restart.md#finale-key-zulassung-nach-dem-toctou-re-audit).
+
+
+## P6a.1 — SENSITIVE-Protokoll, begrenzter operativer Zugriff
+
+[Der P6-Vertrag](product-p6a-protocol.md) enthält entschiedene Product-/Privacy-
+Anforderungen, noch keine technische Umsetzung/Freigabe. Alle Protokolldaten
+sind **SENSITIVE**, einschließlich Freitext, Aussagen, Betroffenenbezügen,
+Gesundheitsbeobachtungen, Behördenkennungen und früheren Fassungen.
+Sensitivitätsklasse und UI-Zugriffsmodus sind getrennte Konzepte.
+
+Ausdrücklicher enger Trade-off: normale P6-Arbeit in gültiger READY-Sitzung
+benötigt keinen zusätzlichen P3b-/Leadership-Step-up, damit schnelle Dokumentation
+und bewusste Nachbereitung möglich sind. Offene Sessions können den gesamten
+Protokollbestand offenlegen; Verschlüsselung ruhender Daten verhindert dies nicht.
+Keine Herabstufung auf INTERNAL und keine allgemeine Öffnung von SENSITIVE.
+P3b-Identitäts-/Kontaktwerte bleiben separat geschützt, keine automatische
+Übernahme oder Leadership-Freigabe. Detail-only Kennungen sind keine eigene
+Securitygrenze, kein neues P3b-/Grant-/Key-Admission-Verfahren.
+
+Bestehende verschlüsselte SQLCipher-Produktstorage, READY-/Generation-/Action-/
+Status- und Storage-Gates vor Read, Arbeit, Commit-Zulassung und Publication bleiben
+maßgeblich. P6 erlaubt in COMPLETED ausschließlich bewusste Nachbereitung mit
+sichtbaren neuen Nachträgen und angehängten Revisionen; keine P4/P5a-Writes,
+Aktionswiederöffnung oder normale Einzel-Löschung. DELETION_PENDING ohne Zugriff.
+
+Unverändert: DEVICE_CREDENTIAL, 180 s absolut, 30 s READY-Inaktivität,
+Session-Neustart, Foreground-/Device-Lock, StorageAccess, LeadershipGrant/
+Key-Admission, DB-Key-Lifecycle, Crypto/Keystore, FLAG_SECURE und Backup-Ausschluss.
+Keine neue Securityarchitektur, Dependency oder Permission. Ausgeschlossen:
+INTERNET/Netzwerk, Cloud, Telemetrie, Notifications/Worker, Clipboard-Automatik,
+externe Viewer/Export, Kamera/Fotos/Video/Audio/Dateianhänge, GPS/Tracking,
+automatische P3b-Übernahme/P4-/P5a-Mutation oder externe Zeitstempel.
+
+Append-only betrifft normale Produktänderungen, nicht erforderliche
+Privacy-/Retentionlöschung. Aktionslöschung erfasst alle Fassungen, Relationen
+und Kennungen, ohne permanente Restbestände oder Secure-Overwrite-Zusage.
+Revisionshistorie und Gerätezeit sind nachvollziehbare Anwendungshistorie,
+keine Hash-Chain/Signaturen/eigene Kryptografie, Beweissicherheit, Gerichtsfestigkeit,
+forensische Unveränderlichkeit oder vertrauenswürdige Zeitquelle. Juristische
+Prüfung vor Echtdaten bleibt erforderlich; dieser Slice ändert keinen Securitycode.

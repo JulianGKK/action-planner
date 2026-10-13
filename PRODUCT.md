@@ -233,6 +233,12 @@ Eine Aktion kann manuell abgeschlossen werden.
 
 Das Abschließen löst die definierte Nachbereitungs- und Retention-Logik aus.
 
+P6a.1 definiert eine ausschließlich protokollbezogene COMPLETED-Ausnahme:
+bewusste Korrekturen/Ergänzungen und gekennzeichnete neue Nachträge sind fachlich
+zulässig. Dies öffnet weder P4/P5a-Schreibpfade noch den Aktionslebenszyklus erneut;
+Umsetzung folgt separat. Siehe [P6](docs/product-p6a-protocol.md).
+
+
 ---
 
 # 7. Personenverwaltung
@@ -464,6 +470,49 @@ Sensible Notizen müssen entsprechend der Sensitivitätsklasse geschützt werden
 ## FR-072 — Retention
 
 Notizen besitzen eine definierte Speicherfrist.
+
+### P6a.1 — eigener Aktionsprotokollbereich (Produktentscheidungen)
+
+[Der P6-Vertrag](docs/product-p6a-protocol.md) ist fachlich entschieden, noch
+nicht implementiert: Schlüsselereignisse und relevante Einträge sind frei oder
+über Vorlagen erfassbar. Ereigniszeit, ungefähre Zeit und tatsächliche Erfassungszeit
+je Fassung bleiben getrennt. Kategorien sind Dokumentationshilfen, keine
+juristische Qualifikation, Rechtsbewertung oder Vollständigkeitsbehauptung.
+
+P6 ist SENSITIVE; normale Arbeit in gültigem READY benötigt trotzdem keinen
+zusätzlichen P3b-/Leadership-Step-up. Diese enge operative Zugriffsausnahme
+ändert weder PRIV-06 allgemein noch den separaten Schutz von P3b-Identitäts-/
+Kontaktwerten. Keine automatische P3b-Übernahme oder P4-/Taskmutation.
+
+ProtocolEntry besitzt vollständige ProtocolRevision-Fassungen: ORIGINAL,
+CORRECTION, ADDENDUM und MARKED_MISTAKEN. Normaler Produktpfad hängt an, ohne
+stilles Überschreiben oder Einzel-Löschen. 0..n ausdrücklich betroffene Personen
+derselben Aktion werden nur über Pseudonyme angezeigt; eintragsbezogene Revisionen
+sind die enge PRIV-03-Ausnahme, keine allgemeine Audit- oder Personenhistorie.
+
+ACTIVE erlaubt Erfassung/Korrektur/Ergänzung/Irrtumsmarkierung. COMPLETED erlaubt
+bewusste P6-Nachbereitung einschließlich neuer Einträge mit dauerhafter Kennzeichnung
+„Nachtrag nach Abschluss“, getrenntem occurredAt und tatsächlichem recordedAt.
+P4/P5a und Aktionsstammdaten bleiben read-only; kein Reopen, stilles Editieren oder
+normales Einzel-Löschen. DELETION_PENDING besitzt keinen normalen P6-Zugriff.
+
+Optionale Quellenart und Behördenkennungen nur gemäß P6-Vertrag; Kennungen nur im
+geöffneten Detail, keine globale Behördenkartei oder aktionsübergreifende
+Wiedererkennung. Personenlöschung kann Referenzen lösen, verändert aber Protokoll-
+text/Fassungen nicht automatisch; spätere manuelle Inhaltsprüfung ist notwendig.
+Eigene endliche P6-Retentionbetrachtung innerhalb der Aktion, konkrete Frist noch
+offen. Vollständige Aktionslöschung entfernt alle Fassungen, Relationen und Kennungen.
+
+Verbindliche Unicode-Codepointgrenzen: Titel 120, Beschreibung/Ansage je 2000,
+Begründung laut Polizei 1000, lokale Bezeichnung 80, einzelne Kennung 120;
+maximal 32 Kennungen je Fassung. Getrimmt, leere optionale Angaben nicht speichern,
+keine unbegrenzte Freitextalternative. Weitere Details im P6-Vertrag.
+
+Hubkarte „Protokoll“ erst nach späterer Implementierung, ohne Namen/Kennungen/
+Freitextvorschau. Keine Medien, Exporte, neue Permissions oder Securityarchitektur.
+Keine Beweis-/Forensik-/Timestamp-/Verwertbarkeitsgarantie; konkrete rechtliche
+Prüfung vor Echtdaten erforderlich. Nächster Schritt ist ausschließlich die
+separate Implementierungsspezifikation, noch keine technische Umsetzung.
 
 ---
 
