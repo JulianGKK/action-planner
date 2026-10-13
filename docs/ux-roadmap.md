@@ -10,7 +10,7 @@ P3b, P4, P5a, Session-, Storage-, Privacy- und Zeitverträge bleiben maßgeblich
 
 UX1 → UX2 → UX3 → UX4 → UX5 bleibt sinnvoll: erst stabile Shell/Zustände,
 dann ein Workspace-Muster, anschließend operative Priorisierung und Training.
-Read-only-Korrektheit für COMPLETED muss schon UX1–UX3 erhalten bleiben;
+Read-only-Korrektheit für bestehende P4/P5a-/Aktionsdaten in COMPLETED muss schon UX1–UX3 erhalten bleiben;
 UX5 verbessert die Darstellung und repariert nicht erst spät deren Gates.
 „Sitzung neu starten“ wird als UX1-S separiert und blockiert die übrige UX1-Arbeit
 nicht. Wegen des realen Sessioncodes ist ein zusätzlicher Security-Review zwingend.
@@ -210,10 +210,48 @@ verständlich darstellen, Abschlusszeit/Phase deutlich markieren.
 **Nicht enthalten:** Wiederöffnung der Aktion, allgemeine Historie, Exporte,
 Archivierungsversprechen, neue Retention, Evidence-/Forensikfunktionen.
 
-**Abnahme:** Keine Schreibcontrols oder zugelassenen Schreibpfade; weiterhin
+**Abnahme:** Für bestehende P4/P5a-/Aktionsdaten keine Schreibcontrols oder
+zugelassenen Schreibpfade. Die eigenständige zukünftige P6-Nachbereitung ist eine
+eng begrenzte fachliche Ausnahme und wird separat implementiert, nicht durch UX5;
+weiterhin
 separater P3b-Step-up für vorhandene sensible Bereiche. Keine historische Lage
 aus heutigem Snapshot erfinden. TaskEvents bleiben ausschließlich bestehende
 Lifecycle-Ereignisse; vergangene Titel-/Personenänderungen werden nicht behauptet.
+
+## P6a.1 — Aktionsprotokoll: Produkt-/Privacyentscheidungen
+
+[Der P6-Vertrag](product-p6a-protocol.md) ist fachlich festgelegt, noch nicht
+implementiert. Nächster Schritt ist eine separate Implementierungsspezifikation,
+keine heutige Code-/Schemafreigabe. Eigenständiger Bereich mit bewusst erstellten
+Schlüsselereignissen/relevanten Einträgen, Vorlagen, vollständigen Revisionen,
+Quellenart und optionalen Betroffenen-/Behördenangaben. Keine allgemeine Notiz-
+oder Audit-Historie, automatische Rechtsbewertung oder P4-/Taskmutation.
+
+**SENSITIVE, normale Arbeit in gültigem READY ohne Leadership-Step-up:** enge
+Zugriffsausnahme für schnelle Dokumentation, keine Klassifizierungsherabstufung
+oder automatische P3b-Übernahme. PRIV-03 erlaubt ausschließlich eintragsbezogene
+Revisionen und Betroffene derselben Aktion mit Pseudonymanzeige.
+
+ACTIVE erfasst/korrigiert/ergänzt/markiert Irrtümer. COMPLETED hat ausschließlich
+für P6 bewusste Nachbereitung einschließlich neuer Einträge mit dauerhaftem
+„Nachtrag nach Abschluss“. Ereigniszeit und tatsächliche recordedAt je Fassung
+klar unterscheiden. Keine stillen Updates/normalen Einzel-Löschcontrols,
+P4/P5a bleiben read-only; kein Reopen der Aktion und kein UX5-Redesign.
+
+Flow: Lagebild → Protokoll → Vorlage/freier Eintrag → Detail → Chronologie.
+Hubkarte erst nach implementierter Funktion, nur kompakte Anzahl-/Zeitangaben,
+keine Namen/Kennungen/Freitextvorschau. Timeline nach occurredAt mit Textmarkern
+für Schlüsselereignis, ungefähre Zeit, Revision/Irrtum und Nachtrag;
+Filter Alle/Schlüsselereignisse. Detail zeigt vollständigen Inhalt, betroffene
+Pseudonyme, Quellenart, Kennungen, Zeiten und Revisionsverlauf. Kennungen nur dort.
+
+Atomic Reveal/Refresh, RAM-only Navigation/Entwürfe, Lock-Cleanup und Font Scale 2
+bleiben verbindlich. Eigene endliche P6-Retentionbetrachtung innerhalb der Aktion;
+konkrete Dauer und juristische Prüfung bleiben spätere fachkundige Entscheidungen.
+Personenlöschung löst erforderliche Relationen, erhält Texte/Fassungen und verlangt
+spätere manuelle Protokollprüfung. Vollständige Aktionslöschung ohne P6-Restbestand.
+Keine Medien/Exporte/Permissions/Worker oder neue Securityarchitektur;
+keine Beweis-/Forensik-/Zeit-/Verwertbarkeitsgarantien.
 
 ## Später — Vorfälle / Beobachtungen / Evidenz
 

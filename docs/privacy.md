@@ -14,10 +14,25 @@ Grundlage sind [PRODUCT.md](../PRODUCT.md), [AGENTS.md](../AGENTS.md), das freig
   zur aktionsgebundenen Koordination, keine Namens-/Telefonfelder. BASIC ist eine
   Zugriffsklasse und hebt die SENSITIVE-Einordnung nicht auf; siehe
   [person-data-access.md](person-data-access.md).
-- **PRIV-03:** Keine globale Personenkartei, E-Mail, automatische aktionsübergreifende Personenverknüpfung, Standortverfolgung oder Statushistorie. Personenbezogene Notes werden über Note modelliert. Protokolle erhalten keine Teilnehmerlisten, Autorenprofile oder Versionshistorie.
+- **PRIV-03:** Keine globale Personenkartei, E-Mail, automatische aktionsübergreifende Personenverknüpfung, Standortverfolgung oder allgemeine Personenstatushistorie. Personenbezogene Notes bleiben Notes; keine globale Teilnehmerliste oder Autorenprofile.
+  **Ausdrückliche enge P6a.1-Ausnahme:** Ein Aktionsprotokolleintrag darf 0..n
+  ausdrücklich betroffene Personen derselben Aktion referenzieren (UI nur
+  Pseudonyme) und eine eintragsbezogene Revisionshistorie besitzen. Diese entsteht
+  allein aus bewusster Dokumentation/Korrektur, nicht automatisch aus P4/P5a.
+  Keine allgemeinen Teilnehmerlisten, Autorenprofile, Bewegungsprofile oder
+  aktionsübergreifende Personen-/Einsatzkräftewiedererkennung. Andere Notes
+  erhalten hierdurch keine Versionshistorie. Details im [P6-Vertrag](product-p6a-protocol.md).
 - **PRIV-04:** Keine Telemetrie, Tracking-, Werbe-, Cloud-, Synchronisations- oder externen Crash-Reporting-Dienste im MVP. Lokale Kernfunktionen funktionieren ohne Netzwerk. Berechtigungen siehe SEC-10.
 - **PRIV-05:** Keine echten personenbezogenen Daten in Entwicklung, Tests, Beispielen, Screenshots oder Repository-Dokumentation; keine Secrets im Repository.
 - **PRIV-06:** Personenbezogene Daten, ungeprüfte Freitexte und importierte Dateien sind standardmäßig SENSITIVE. Alle operativen Daten werden unabhängig von ihrer Klasse verschlüsselt.
+  **P6a.1-Zugriffsentscheidung ohne Herabstufung:** P6-Daten bleiben SENSITIVE,
+  benötigen für normale P6-Arbeit in gültigem READY aber keinen zusätzlichen
+  P3b-/Leadership-Step-up. Sensitivitätsklasse und Zugriffsmodus sind getrennt.
+  Dies ist der enge Trade-off für schnelle Dokumentation/Nachbereitung, keine
+  allgemeine Öffnung von SENSITIVE. P3b-Identitäts-/Kontaktdaten bleiben separat
+  geschützt; keine automatische Übernahme. Offenlegungsrisiko in offenen Sessions
+  wird ausdrücklich akzeptiert, nicht durch Verschlüsselung ruhender Daten beseitigt.
+
 - **PRIV-07:** Keine unkontrollierten Kopien erzeugen. Appverwaltete abgeleitete Daten müssen Schutz und Löschung ihrer Ausgangsdaten berücksichtigen.
 
 **PRIV-10 — Maßnahmenpriorität:**
@@ -49,7 +64,8 @@ Die Speicherbereiche sind konzeptionell. Konkrete Pfade und technische Verfahren
 | Role, PersonStatusDefinition | Aktionsgebundene Konfiguration | SENSITIVE bei ungeprüftem Freitext; sonst inhaltsabhängig | Wie Aktion | Spätestens mit Aktion; Definition/Zuordnung bereinigen |
 | Task, TaskEvent (P5a) | Operative Aufgabenkoordination und minimale Lifecycle-Chronik | Ausdrücklich INTERNAL, sensible Titel möglich | Bestehende SQLCipher-Produkt-DB | Aktionsgebunden; TaskEvents mit Task entfernen, keine permanente Archivierung |
 | Material | Materialkoordination | SENSITIVE bei Personenbezug/ungeprüftem Freitext | Wie Aktion | Frist offen; Referenzen und Ableitungen bereinigen |
-| Note, typisiertes Protokoll | Organisatorische Dokumentation | Standard SENSITIVE bei ungeprüftem Inhalt/Personenbezug | Wie Aktion | Eigene Frist offen; personenbezogene Kaskade |
+| Note | Allgemeine organisatorische Notiz, getrennt von P6 | Standard SENSITIVE bei ungeprüftem Inhalt/Personenbezug | Wie Aktion | Eigene Frist offen; personenbezogene Note-Kaskade |
+| P6: ProtocolEntry/Revision samt Betroffenen-/Quellenbezügen und Behördenkennungen | Bewusste Ereignisdokumentation und nachvollziehbare Korrektur/Nachbereitung | SENSITIVE; normale Arbeit in gültigem READY ohne zusätzlichen Leadership-Step-up | Bestehende verschlüsselte SQLCipher-Produktstorage | Eigene endliche Retentionbetrachtung, Dauer offen; alle Fassungen/Kennungen gemeinsam, vollständige Aktionslöschung als Obergrenze. Personenlöschung löst notwendige Relationen, keine automatische Textmutation. |
 | Document, FileAsset, Beleg | Offline-Unterlagen, Nachweise | Standard SENSITIVE | Verschlüsselte Metadaten und private verschlüsselte Dateien | Eigene Frist offen; Eigentümerbeziehung beachten |
 | Expense | Ausgaben und Summen | SENSITIVE bei ungeprüftem Freitext/Personenbezug | Verschlüsselter strukturierter Speicher | Frist offen; optionalen Beleg mitlöschen |
 | RetentionPolicy, Fristmetadaten | Aufbewahrung steuern | Geschützt; keine sensiblen Freitextbegründungen | Privater geschützter technischer/strukturierter Speicher | Verwendete Regeln nicht ersatzlos löschen; Details offen |
@@ -141,3 +157,49 @@ keine permanente Archivierung, Exporte oder Secure-Overwrite-Zusage. Kurze Titel
 ohne Notizfeld, Pseudonyme in der UI; keine Übernahme sensibler P3b-Payloads.
 Statische Vorlagen erzeugen erst nach Auswahl und Speichern normale Tasks;
 sourceTemplateKey ist nicht unique. P5b-Vorschlagsregeln sind nicht implementiert.
+
+
+## P6a.1 — Aktionsprotokoll: entschiedene enge Ausnahmen
+
+[Der P6-Vertrag](product-p6a-protocol.md) ist Produktspezifikation, keine
+Implementierung oder pauschale rechtliche Freigabe. P6 dokumentiert bewusst
+Ereignisse einschließlich begrenzter Fassungen; es ist keine allgemeine Notiz-,
+Audit-, Status- oder Bewegungshistorie. Mehrfachbetroffene sind ausdrücklich
+Betroffene des einzelnen Vorgangs, keine generierte Teilnehmerliste.
+
+SENSITIVE bleibt auch für ungeprüften Freitext, Gesundheitsbeobachtungen und
+Behördenkennungen maßgeblich. Schnelle Dokumentation/Nachbereitung begründet
+bewusst Zugriff ohne zusätzlichen Leadership-Step-up während gültigem READY,
+keine allgemeine Herabstufung und keinen P3b-Zugriff. Ein Angreifer in offener
+Session kann diesen sensiblen Bestand einschließlich früherer Fassungen lesen.
+Nur-im-Detail-Kennungen verringern beiläufige Anzeige, sind kein zusätzlicher Schutz.
+Keine Klarnamen-/Kontaktübernahme, globalen Personen-/Behördenprofile,
+biometrischen Beschreibungen oder aktionsübergreifenden Verknüpfungen.
+
+COMPLETED erlaubt ausschließlich P6-Nachbereitung: Korrekturen/Ergänzungen und
+neue Einträge mit deutlichem dauerhaftem Nachtragmarker. recordedAt je Fassung
+ist unveränderlich; kein stilles Überschreiben/gewöhnliches Einzel-Löschen, keine
+P4/P5a-Writes und kein Reopen. Zeit, Inhalte und Nachtragsstatus müssen ehrlich
+unterscheidbar sein, keine forensische oder rechtliche Garantie.
+
+Teilnehmerlöschung darf ProtocolEntry/Revisionen nicht automatisch zerstören
+oder inhaltlich ändern. Erforderliche Betroffenen-/REPORTED-Quellenrelationen
+werden gelöst; Freitext bleibt unverändert und möglicherweise personenbezogen.
+Kein automatisches Rekonstruieren historischer Pseudonyme aus P3b. Der spätere
+Löschworkflow braucht eine ausdrückliche manuelle Prüfung sämtlicher Fassungen;
+Relationstrennung ist keine Anonymisierung. Diese Privacy-Bereinigung ist vom
+normalen append-only-Produktpfad zu unterscheiden.
+
+Längere P6-Retention kann für Nachbereitung relevant sein und erhöht zugleich
+Rekonstruktions-/Offenlegungsrisiken. Keine unbegrenzte Speicherung oder unabhängige
+Archivinsel; vollständige Aktionslöschung entfernt Einträge, alle Revisionen,
+Relationen, Kennungen und kontrollierte Ableitungen. Eine einzelne Altfassung darf
+nicht verdeckt weiterbestehen. Dauer und konkrete Prüf-/Löschabläufe bleiben
+fachkundiger Retention-/Privacyprüfung vorbehalten, keine Secure-Overwrite-Garantie.
+
+Die App behauptet nicht pauschal, dass Erfassung oder Weitergabe jeder
+personenbezogenen Behördenangabe in jedem Kontext zulässig ist. Konkrete
+juristische Prüfung bleibt erforderlich. Quellenart ist optional, ohne
+Glaubwürdigkeitsbewertung/Zeug:innenkartei; Behördenkennungen nur im Detail,
+keine sensitiven Freitextvorschauen im Hub. Keine Medien, Exporte, Außenoberflächen
+oder neue Securityarchitektur. Technische Umsetzung muss separat spezifiziert werden.

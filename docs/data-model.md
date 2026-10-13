@@ -59,7 +59,12 @@ Pflichtfelder sind nicht zwangsläufig Eingabefelder. Für ausdrücklich offene 
 | `Material` | Materialposition |
 | `Document` | Dokumenteintrag einschließlich Informationsmaterial |
 | `FileAsset` | Verwalteter lokaler Dateiinhalt |
-| `Note` | Notiz oder typisiertes Protokoll |
+| `Note` | Allgemeine aktions-/personenbezogene Notiz, getrennt von P6 |
+| `ProtocolEntry` | Stabile Identität eines bewusst dokumentierten Aktionsvorgangs (P6) |
+| `ProtocolRevision` | Vollständige nachvollziehbare Fassung eines P6-Eintrags |
+| `ProtocolAffectedPerson` | Betroffenenbezug je Fassung auf bestehende Person derselben Aktion |
+| `ProtocolOfficialIdentifier` | Beobachtete amtliche Kennung je Fassung, kein Behördenpersonenprofil |
+| `ProtocolReportedByPerson` | Optionaler REPORTED-Quellenbezug auf bestehende Person derselben Aktion |
 | `Expense` | Ausgabe mit optionalem Beleg |
 | `RetentionPolicy` | Konzeptionelle Aufbewahrungsregel |
 
@@ -67,7 +72,7 @@ Gemeinsame Schutz- und Retention-Metadaten sind Bestandteile der betroffenen Obj
 
 ## 5. Gemeinsame Schutz- und Retention-Metadaten
 
-`Action`, `Person`, `Role`, `Task`, `Material`, `Document`, `FileAsset`, `Note` und `Expense` besitzen eine Sensitivitätsklasse. Personenbezogene Zuordnungen werden ebenfalls geschützt.
+`Action`, `Person`, `Role`, `Task`, `Material`, `Document`, `FileAsset`, `Note` und `Expense` sowie P6-Einträge/Fassungen/Relationen besitzen eine Sensitivitätsklasse. Personenbezogene Zuordnungen werden ebenfalls geschützt.
 
 Die folgenden Retention-Attribute sind ein konzeptioneller Vorschlag. Fristen, Fristanker, Vererbung, Überschreibungen, technische Löschzustände und ihre Persistenz werden erst in `data-retention.md` und `security.md` verbindlich festgelegt.
 
@@ -125,6 +130,12 @@ DRAFT → PREPARATION → ACTIVE → COMPLETED → DELETION_PENDING → Löschun
 ```
 
 Der Abschluss setzt `completed_at`. Welche Retention-Regeln daran anknüpfen, bleibt offen. Die Löschung einzelner Inhalte bedeutet nicht die vollständige Löschung der Aktion.
+
+P6a.1 erlaubt ausschließlich für das Aktionsprotokoll bewusste COMPLETED-
+Nachbereitung: angehängte Korrekturen/Ergänzungen/Irrtumsmarkierung sowie neue
+Einträge mit dauerhaftem Nachtragmarker. Erfassungsphase und recordedAt bleiben
+nachvollziehbar. Dies ermöglicht weder P4/P5a-Writes, normales Einzel-Löschen
+von Protokollfassungen noch Wiedereröffnung der Aktion. Noch nicht implementiert.
 
 Statuswechsel erfolgen fachlich; geplante Zeiten allein lösen keinen automatischen Wechsel aus. Direkter Abschluss nicht durchgeführter Aktionen, Rückwärtsübergänge vor Abschluss und Abbruchverhalten bleiben unter OD-01 zu konkretisieren.
 
@@ -276,14 +287,14 @@ Dateinamen und Datei-Metadaten können personenbezogen sein. Der lokale Import s
 
 Kryptografisches Schlüsselmaterial ist kein Fachattribut. Erforderliche Schlüsselreferenzen, Importzustände und Bereinigungszustände werden separat spezifiziert.
 
-## 11. Note: Notizen und Protokolle
+## 11. Note und eigenständiges Aktionsprotokoll (P6)
 
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
 | `id` | ID | P | Kennung |
 | `action_id` | Referenz | P | Aktion |
 | `person_id` | Referenz | O | Zusätzliche Personenzuordnung |
-| `kind` | Enum | P | `NOTE` oder `MINUTES` |
+| `kind` | Enum | P | `NOTE`; P6 wird nicht als `MINUTES`-Note modelliert |
 | `title` | Text | O | Überschrift |
 | `content` | Text | P | Nicht leerer Inhalt |
 | `created_at` | Zeitpunkt | P | Erstellung |
@@ -291,7 +302,52 @@ Kryptografisches Schlüsselmaterial ist kein Fachattribut. Erforderliche Schlüs
 
 Ohne Personenzuordnung ist eine Note aktionsbezogen. Mit Personenzuordnung ist sie personenbezogen; die Person gehört derselben Aktion an.
 
-Protokolle sind typisierte Notes. Teilnehmerlisten, Autorenprofile und Versionshistorien gehören nicht zum MVP. Personenbezogene Notizen werden nicht zusätzlich in `Person` gespeichert.
+Allgemeine Notes erhalten keine Versionshistorie, Teilnehmerlisten oder
+Autorenprofile. Personenbezogene Notizen werden nicht zusätzlich in `Person`
+gespeichert. Die frühere Planung „Protokoll als typisierte Note/MINUTES“ ist durch
+**P6a.1 bewusst ersetzt**, nicht durch eine technische Migration.
+
+### 11.1 P6: konzeptionelle Elemente und Beziehungen
+
+Verbindliche Produktentscheidungen: [P6a.1](product-p6a-protocol.md).
+Alle folgenden Elemente sind **zukünftig und konzeptionell**, keine konkreten
+Room-Tabellen, Indizes, Foreign-Key-Cascades oder Schema-Versionsentscheidung.
+
+| Element | Fachliche Bedeutung |
+| --- | --- |
+| `ProtocolEntry` | Stabile Identität des Vorgangs, genau eine Aktion; erste Fassung ORIGINAL, weitere Fassungen. Erfassungsphase des Originals erhält dauerhaften COMPLETED-Nachtragmarker. |
+| `ProtocolRevision` | Genau ein Entry, vollständiger Inhalt und eigene unveränderliche recordedAt; ORIGINAL, CORRECTION, ADDENDUM oder MARKED_MISTAKEN. Enthält Art, kurzen Titel, occurredAt, occurredAtApproximate, begrenzte optionale Texte, Quellenart und Erfassungsphase. |
+| `ProtocolAffectedPerson` | 0..n ausdrücklich betroffene bestehende Personen derselben Aktion je Revision, ausschließlich Pseudonymanzeige; kein einzelnes affectedPersonId-Limit und keine globale Teilnehmerliste. |
+| `ProtocolOfficialIdentifier` | 0..32 Angaben je Revision: SERVICE_OR_ID_NUMBER, DISPLAYED_NAME, UNIT_OR_VEHICLE_ID oder OTHER_OFFICIAL_ID; getrimmter Wert höchstens 120 Codepoints. Kein Einsatzkräfteverzeichnis oder Zusammenführen gleicher Werte. |
+| `ProtocolReportedByPerson` | Optional 0..1 mitteilende bestehende Person derselben Aktion je REPORTED-Revision; unabhängig von Betroffenen, keine Autoren-/Zeug:innenprofile. |
+
+Quellenart optional: OWN_OBSERVATION, REPORTED, OFFICIAL_ANNOUNCEMENT, UNCLEAR.
+Bei behördlicher Ansage genügen die vorhandenen Wortlaut-/sinngemäßen Ansagefelder,
+keine weitere Pflichtidentität. Beobachtete Maßnahme gehört in die begrenzte
+Beschreibung, nicht in ein zusätzliches unbegrenztes Freitextfeld.
+
+Verbindliche getrimmte Unicode-Codepointgrenzen: Titel 120, Beschreibung/Ansage
+je 2000, Begründung/Rechtsgrundlage laut Polizei 1000, Ort 80, Kennung 120.
+Leere optionale Angaben nicht speichern, keine stille Kürzung. Betroffenenanzahl
+nicht künstlich klein begrenzen; ausschließlich vorhandene Personen derselben Aktion.
+
+Gespeicherte Revisionen werden im normalen Produktpfad nur angehängt, nicht
+überschrieben/gelöscht. Jüngste wirksame Fassung für aktuelle Ansicht, ältere im
+Detail. MARKED_MISTAKEN bewahrt frühere Fassungen. Keine allgemeine Audit-Historie
+oder kryptografische Beweis-/Integritätsgarantie. Atomare vollständige Fassungen
+und Konflikterkennung sind fachliche Anforderungen, konkrete Mechanik folgt separat.
+
+SENSITIVE ist entschieden; normale P6-Arbeit in gültigem READY ohne zusätzlichen
+Leadership-Step-up ist die enge Zugriffsausnahme, keine Herabstufung (PRIV-06).
+P3b-Werte werden nicht übernommen, P4/P5a nicht automatisch verändert.
+
+Teilnehmerlöschung kann erforderliche Betroffenen-/REPORTED-Relationen lösen,
+**erhält aber Entry und Revisionen und verändert Freitext nicht automatisch**.
+Keine historischen Pseudonymkopien oder Rekonstruktion aus P3b. Späterer
+Personenlöschworkflow prüft sämtliche Fassungen manuell auf verbleibende Bezüge.
+Eigene endliche P6-Retentionbetrachtung innerhalb der Aktion, konkrete Dauer offen.
+Vollständige Aktionslöschung entfernt Einträge, alle Fassungen/Relationen/Kennungen;
+keine P6-Insel oder einzelne versteckte Altfassung, keine Secure-Overwrite-Garantie.
 
 ## 12. Expense: Kosten und Belege
 
@@ -344,6 +400,9 @@ Die Klassen sind Produkt-Schutzkategorien, keine abschließende rechtliche Klass
 Personenbezogene Daten, ungeprüfte Freitexte und Importe sind gemäß PRIV-06 verbindlich standardmäßig SENSITIVE. Weitere Klassifizierungsänderungen bleiben unter OD-09 offen. Für die Anwendung gilt beziehungsweise wird empfohlen:
 
 - `Person`, `PersonRole` und personenbezogene Notes sind `SENSITIVE`.
+- Alle P6-Daten sind SENSITIVE; normale P6-Arbeit in gültigem READY benötigt
+  dennoch keinen zusätzlichen P3b-/Leadership-Step-up. Sensitivität und Zugriff
+  sind getrennt, keine allgemeine Herabstufung/Öffnung von SENSITIVE (P6a.1).
 - Personenreferenzen in Aufgaben und Material machen die Zuordnung sensibel.
 - Ungeprüfte Importe und Freitext starten konservativ als `SENSITIVE`.
 - Öffentlich geeigneter Inhalt kann durch seine Aktionszuordnung sensible Metadaten besitzen.
@@ -371,6 +430,11 @@ Zunächst erfolgt die Klassifizierung auf Objektebene; keine zusätzliche Feldkl
 | Document → FileAsset | 1 : 1 |
 | `Action` → Note | 1 : 0..n |
 | Person → Note | 1 : 0..n; Note hat 0..1 Person |
+| `Action` → ProtocolEntry | 1 : 0..n; Eintrag gehört genau einer Aktion |
+| ProtocolEntry → ProtocolRevision | 1 : 1..n für gespeicherte Einträge; erste ORIGINAL |
+| ProtocolRevision ↔ betroffene Person | 0..n über ProtocolAffectedPerson, gleiche Aktion |
+| ProtocolRevision → ProtocolOfficialIdentifier | 1 : 0..32 |
+| ProtocolRevision → mitteilende Person | 0..1 über ProtocolReportedByPerson, nur REPORTED und gleiche Aktion |
 | `Action` → Expense | 1 : 0..n |
 | Expense → FileAsset als Beleg | 1 : 0..1 |
 | RetentionPolicy → zugeordnete Objekte | 1 : 0..n |
@@ -393,20 +457,21 @@ Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, ke
 
 | Gelöschtes Objekt | Fachliche Folge |
 |---|---|
-| `Action` | Zugehörige Personen, Rollen, Statusdefinitionen, Zuordnungen, Aufgaben, Material, Dokumente, Dateien, Notes und Ausgaben entfernen |
-| Person | PersonRole und personenbezogene Notes entfernen; Personenreferenzen in Aufgaben und Material entfernen |
+| `Action` | Zugehörige Personen, Rollen, Statusdefinitionen, Zuordnungen, Aufgaben, Material, Dokumente, Dateien, Notes, Ausgaben und sämtliche P6-Einträge/Fassungen/Relationen/Kennungen entfernen |
+| Person | PersonRole und personenbezogene Notes entfernen; Personenreferenzen in Aufgaben/Material sowie erforderliche P6-Betroffenen-/Quellenrelationen lösen. P6-Einträge/Fassungen erhalten, Freitext nicht automatisch ändern; manuelle Protokollprüfung erforderlich. |
 | Role | P4/P5a: einzelne Rolle nur ohne geplante/operative/Task-Referenzen entfernen; kein stilles Entfernen von Zuordnungen |
 | PersonStatusDefinition | Statusreferenzen entfernen; Personen erhalten |
 | Task | P5a: Aufgabe und TaskEvents vollständig entfernen, nur PREPARATION; Personen erhalten |
 | Material | Materialposition und abgeleitete Kopien entfernen; Person erhalten |
 | Document | Dokument und zugehöriges FileAsset entfernen |
 | Note | Note entfernen; `Action` und Person erhalten |
+| P6-Bestand bei Retention-/Aktionslöschung | Einträge mit sämtlichen Fassungen, Betroffenen-/Quellenrelationen, Kennungen und Ableitungen entfernen; keine gewöhnliche Einzel-Löschung im P6-Produktpfad |
 | Expense | Ausgabe und optionalen Beleg entfernen |
 | FileAsset eines Dokuments | Dokument ebenfalls entfernen, damit kein funktionsloser Eintrag verbleibt |
 | FileAsset eines Belegs | Belegreferenz entfernen; Ausgabe bleibt bis zu ihrer eigenen Löschung bestehen |
 | RetentionPolicy | Keine Inhaltskaskade; verwendete Regel darf nicht ersatzlos entfernt werden |
 
-Die Entfernung einer Personenreferenz anonymisiert keinen Freitext. Namen oder identifizierende Angaben in Aufgaben, Materialnotizen, Dateien und Belegen können verbleiben. Eine zuverlässige automatische Erkennung wird nicht vorausgesetzt. Ein Bereinigungsablauf ist unter OD-10 offen.
+Die Entfernung einer Personenreferenz anonymisiert keinen Freitext. Namen oder identifizierende Angaben in Aufgaben, Materialnotizen, Dateien und Belegen können verbleiben. Eine zuverlässige automatische Erkennung wird nicht vorausgesetzt. Ein Bereinigungsablauf ist unter OD-10 offen. Für P6 muss er ausdrücklich die manuelle Prüfung sämtlicher Protokollfassungen umfassen, ohne automatische Inhaltszerstörung bei Teilnehmerlöschung.
 
 ### 15.4 Technische Löschung: ausdrücklich offen
 
@@ -500,7 +565,10 @@ Vollständige Aktionslöschung ist die Obergrenze für untergeordnete Daten. Kei
 
 ### OD-13 — Nachvollziehbarkeit und technische Sicherheitsdaten
 
-**Offen:** Bedarf einer dauerhaften organisatorischen Änderungshistorie und genauer Umfang technischer Arbeits-/Authentifizierungsdaten. Keine dauerhafte detaillierte Löschhistorie im MVP; nur minimaler geschützter Arbeitsstatus für Wiederanlauf (RET-07, ARCH-25).
+**P6a.1 entschieden:** ausschließlich eintragsbezogene vollständige P6-Revisionen
+als bewusste Dokumentationsfunktion; keine allgemeine Personenstatus-/Audit-Historie.
+
+**Offen:** Weiterer Bedarf einer dauerhaften organisatorischen Änderungshistorie und genauer Umfang technischer Arbeits-/Authentifizierungsdaten. Keine dauerhafte detaillierte Löschhistorie im MVP; nur minimaler geschützter Arbeitsstatus für Wiederanlauf (RET-07, ARCH-25).
 
 **Empfehlung:** Nur nachgewiesenen Bedarf dokumentieren und eigene Retention festlegen. Keine gelöschten Inhalte als Wiederanlaufhilfe erhalten. Authentifizierung und Verschlüsselung getrennt in security.md spezifizieren; keine Klartext-Credentials oder persönlichen Admindaten in Fachentitäten aufnehmen.
 
