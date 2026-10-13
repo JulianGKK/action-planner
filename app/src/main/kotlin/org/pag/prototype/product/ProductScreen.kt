@@ -51,7 +51,7 @@ import java.util.Locale
                         PagWorkspace(model.feedback.takeIf { model.snapshot.state == SessionState.READY },
                             model::dismissFeedback, Modifier.fillMaxWidth().weight(1f)) {
                         val scroll=rememberScrollState()
-                        LaunchedEffect(model.preparationArea,model.activeArea,model.operations.screen,model.operations.personId,model.selectedPerson?.id,model.personDetailLoading,model.tasks.form,model.tasks.selected?.id,model.tasks.filter){scroll.scrollTo(0)}
+                        LaunchedEffect(model.preparationArea,model.activeArea,model.operations.screen,model.operations.personId,model.selectedPerson?.id,model.personDetailLoading,model.tasks.form,model.tasks.selected?.id,model.tasks.selected?.status,model.tasks.filter){scroll.scrollTo(0)}
                         Column(Modifier.padding(24.dp).verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             when (model.snapshot.state) {
                                 SessionState.BLOCKED -> PagErrorState()

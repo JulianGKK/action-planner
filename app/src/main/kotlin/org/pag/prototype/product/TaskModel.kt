@@ -15,13 +15,14 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     var form by mutableStateOf(false);private set
     var input by mutableStateOf(TaskInput(""));private set
     var filter by mutableStateOf<String?>(null);private set
+    var closedExpanded by mutableStateOf(false); private set
     var busy by mutableStateOf(false);private set
     var error by mutableStateOf<OperationsFailure?>(null);private set
     private var request=0L
     val writable get()=session().state==SessionState.READY && action()?.let{TaskRules.mayWrite(it.status)}==true
     val deletable get()=writable && action()?.status==ActionStatus.PREPARATION
     fun touch()=interaction()
-    fun clear(){request++;ownBoard=null;selected=null;form=false;input=TaskInput("");filter=null;busy=false;error=null}
+    fun clear(){request++;ownBoard=null;selected=null;form=false;input=TaskInput("");filter=null;closedExpanded=false;busy=false;error=null}
     fun refresh(){
         if (refreshWorkspace != null) { request++; refreshWorkspace.invoke(); return }
         val a=action()?.takeIf{session().state==SessionState.READY && TaskRules.mayRead(it.status)}?:return
@@ -47,8 +48,18 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     }
     fun edit()=guardedInteraction { _,_ -> if(writable && !busy){selected?.let{input=it.input();form=true;error=null}} }
     fun change(i:TaskInput)=guardedInteraction { _,_ -> if(writable && !busy)input=i }
-    fun showPerson(id:String?)=guardedInteraction { _,_ -> if(!busy){filter=id;selected=null;form=false;input=TaskInput("")} }
-    fun cancel(){interaction();if(busy)return;form=false;selected=null;input=TaskInput("");error=null}
+    fun showPerson(id:String?)=guardedInteraction { _,_ -> if(!busy){filter=id;closedExpanded=false;selected=null;form=false;input=TaskInput("")} }
+    fun cancel() = guardedInteraction { _, _ ->
+        if (!busy) {
+            val returnToDetail = action()?.status == ActionStatus.ACTIVE && form && selected != null
+            form = false; if (!returnToDetail) selected = null
+            input = TaskInput(""); error = null
+        }
+    }
+    fun backToTasks() = guardedInteraction { _, _ ->
+        if (!busy) { selected = null; form = false; input = TaskInput(""); error = null }
+    }
+    fun toggleClosed() = guardedInteraction { _, _ -> if (!busy) closedExpanded = !closedExpanded }
     fun save(){val a=action()?:return;if(!writable || busy)return;if(!TaskRules.valid(input)){error=OperationsFailure.INVALID;return}
         val old=selected;write(message=if(old==null)"Aufgabe angelegt" else "Aufgabe gespeichert"){done->if(old==null)repository?.create(a.id,input){done(unit(it))}else repository?.edit(a.id,old,input){done(unit(it))}}
     }

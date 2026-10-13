@@ -16,6 +16,7 @@ import java.time.format.FormatStyle
 
 @Composable internal fun TaskSection(model:TaskModel,people:OperationalBoard) {
     val board=model.board?:return
+    if (people.status == ActionStatus.ACTIVE) { ActiveTaskSection(model, people, board); return }
     Text("Aufgaben",Modifier.semantics { heading() },style=MaterialTheme.typography.titleLarge)
     model.error?.let{Text(when(it){
         OperationsFailure.INVALID->"Bitte Titel (1–120 Zeichen), Zuständigkeit und Fälligkeit prüfen."
@@ -66,7 +67,7 @@ import java.time.format.FormatStyle
         t.dueAt?.let{Text("Fällig: ${taskTime(it)}")}
     }
 }
-@Composable private fun TaskForm(model:TaskModel,people:OperationalBoard) {
+@Composable internal fun TaskForm(model:TaskModel,people:OperationalBoard) {
     val i=model.input
     FormTextField(i.title,{model.change(i.copy(title=it))},label={Text("Titel")},autoFocus=model.selected==null,keyboardOptions=productKeyboard(ProductTextKind.TASK_TITLE),singleLine=true,enabled=!model.busy,modifier=Modifier.fillMaxWidth(),supportingText={Text("Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · ${Character.codePointCount(i.title.trim(),0,i.title.trim().length)} / 120 Zeichen")})
     Text("Priorität")
@@ -94,4 +95,4 @@ internal fun parseTaskDue(value:String,zone:ZoneId=ZoneId.systemDefault()):Long?
 internal fun priorityLabel(p:TaskPriority)=when(p){TaskPriority.LOW->"Niedrig";TaskPriority.NORMAL->"Normal";TaskPriority.HIGH->"Hoch"}
 internal fun taskStatusLabel(s:TaskStatus)=when(s){TaskStatus.OPEN->"Offen";TaskStatus.IN_PROGRESS->"In Arbeit";TaskStatus.DONE->"Erledigt";TaskStatus.CANCELLED->"Entfällt"}
 internal fun eventLabel(t:TaskEventType)=when(t){TaskEventType.CREATED->"Erstellt";TaskEventType.STARTED->"In Arbeit";TaskEventType.COMPLETED->"Erledigt";TaskEventType.CANCELLED->"Entfällt";TaskEventType.REOPENED->"Wieder geöffnet"}
-private fun taskTime(time:Long)=Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))
+internal fun taskTime(time:Long)=Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))
