@@ -311,3 +311,27 @@ MAINTENANCE-Prüfungen unverändert durch und adaptiert lediglich die historisch
 Maintenance-Typassertion des Drivers. Kein Gate-Bypass. Widerruf bereits vor
 COMMIT-prepare sowie bei COMMIT-step führt zu Rollback auf derselben Connection.
 Neue Produkt-Repositories bekommen weder freie DAO- noch DB-/Key-Referenzen.
+
+
+## P6b — geplanter Protokolladapter im bestehenden DB-only-Vertrag
+
+[Die technische Spezifikation](product-p6b-protocol-implementation.md) konkretisiert
+P6a.1, ohne Modulgraph, Securityarchitektur oder Keys zu verändern. Domainport →
+Data-P6-Repository/Store → bestehende ActionDatabaseAccess/SQLCipher-Operation;
+Activity-eigene ProductRuntime verdrahtet später dieselben READY-/Generation-/
+Worker-/Publication-/DB-Key-Owner-Verträge. Keine freie DAO-Nutzung aus UI,
+observable DAOs oder dauerhafte Room-Instanz.
+
+Geplanter additiver Schema6→7-Slice: Entry, vollständige Revision, revisionsgebundene
+Betroffene/Kennungen/ReportedBy. Aktuelle Fassung nach Nummer, erwarteter kompletter
+Snapshot unter Write-Transaktion, atomare Children und unveränderte COMMIT-/
+Publication-Gates. Kleine Constraints analog P5a, fresh/migrated identisch prüfen.
+P6-spezifische Policy erlaubt COMPLETED-Nachbereitung; kein allgemeines writable-
+Flag und keine P4/P5a-Writes. SENSITIVE bleibt SENSITIVE trotz normalem READY-
+Zugriff ohne zusätzlichen Step-up. Fachliche Entscheidungen bleiben in P6a.1.
+
+Allgemeine Personen-/Aktionslöschung existiert im geprüften Produktstand noch
+nicht; Leadership-Löschung ist kein Ersatz. P6-FKs erhalten Fassungen bei späterer
+Personenreferenzbereinigung und entfernen P6 vollständig bei erfolgreicher Action-
+Gesamtlöschung. Vor Umsetzung Baseline/Version abgleichen. Keine Migration/Code-
+änderung hier; [Prüfplan](testing.md), keine bereits bestandenen P6-Nachweise.

@@ -310,8 +310,9 @@ gespeichert. Die frühere Planung „Protokoll als typisierte Note/MINUTES“ is
 ### 11.1 P6: konzeptionelle Elemente und Beziehungen
 
 Verbindliche Produktentscheidungen: [P6a.1](product-p6a-protocol.md).
-Alle folgenden Elemente sind **zukünftig und konzeptionell**, keine konkreten
-Room-Tabellen, Indizes, Foreign-Key-Cascades oder Schema-Versionsentscheidung.
+Alle folgenden Elemente sind **zukünftig und konzeptionell**, keine bereits implementierten
+Room-Tabellen oder Migration. Die geplante technische Ausgestaltung steht in
+[P6b](product-p6b-protocol-implementation.md).
 
 | Element | Fachliche Bedeutung |
 | --- | --- |
@@ -335,7 +336,8 @@ Gespeicherte Revisionen werden im normalen Produktpfad nur angehängt, nicht
 überschrieben/gelöscht. Jüngste wirksame Fassung für aktuelle Ansicht, ältere im
 Detail. MARKED_MISTAKEN bewahrt frühere Fassungen. Keine allgemeine Audit-Historie
 oder kryptografische Beweis-/Integritätsgarantie. Atomare vollständige Fassungen
-und Konflikterkennung sind fachliche Anforderungen, konkrete Mechanik folgt separat.
+und Konflikterkennung sind fachliche Anforderungen; geplante Mechanik in
+[P6b](product-p6b-protocol-implementation.md), Umsetzung folgt separat.
 
 SENSITIVE ist entschieden; normale P6-Arbeit in gültigem READY ohne zusätzlichen
 Leadership-Step-up ist die enge Zugriffsausnahme, keine Herabstufung (PRIV-06).
@@ -624,3 +626,25 @@ keine permanente Archivierung, Exporte oder Secure-Overwrite-Zusage. Kurze Titel
 ohne Notizfeld, Pseudonyme in der UI; keine Übernahme sensibler P3b-Payloads.
 Statische Vorlagen erzeugen erst nach Auswahl und Speichern normale Tasks;
 sourceTemplateKey ist nicht unique. P5b-Vorschlagsregeln sind nicht implementiert.
+
+
+## P6b — technische Ausgestaltung der entschiedenen P6-Elemente
+
+[P6b](product-p6b-protocol-implementation.md) legt den geplanten DB-only-Adapter
+fest, ohne das Schema zu verändern. ProtocolEntry speichert stabile Identität/
+Action und createdAfterCompletion; ProtocolRevision ist vollständige Fassung mit
+Nummer, Irrtumszustand, eigenem recordedAt und recordedAfterCompletion. Herkunftskey
+bleibt optional, Vorlagen sind statische Definitionen. Current = höchste Nummer,
+keine Ableitung aus möglicherweise zurückgestellter Wanduhr.
+
+Betroffene und Kennungen sind revisionsgebundene Child-Rows. ProtocolReportedByPerson
+bleibt eine eigene optionale 0..1-Relation: zusammengesetztes Person-FK-SET-NULL
+auf Revision würde actionId ebenfalls nullen, gezieltes Revisionupdate widerspräche
+der unveränderlichen Inhaltsfassung. Separate Relationsbereinigung löst dies ohne
+neue fachliche Entity. Keine historischen Pseudonymkopien, keine globale Kennung.
+
+Same-Action-FKs/Parent-Uniqueindizes, Revisionssequenz/Expectedvollvergleich und
+Constraints stehen zentral in P6b. Bestehende Note/P4/P5a-Daten werden nicht
+umgenutzt. Additive Migration 6→7 mit leerem neuem Bestand ist nur geplant,
+keine Room-Schema-Datei erzeugt. Allgemeine Delete-/Retentionworkflows folgen
+separat, vollständige Aktionslöschung bleibt Obergrenze für alle Fassungen/Children.

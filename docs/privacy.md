@@ -203,3 +203,20 @@ juristische Prüfung bleibt erforderlich. Quellenart ist optional, ohne
 Glaubwürdigkeitsbewertung/Zeug:innenkartei; Behördenkennungen nur im Detail,
 keine sensitiven Freitextvorschauen im Hub. Keine Medien, Exporte, Außenoberflächen
 oder neue Securityarchitektur. Technische Umsetzung muss separat spezifiziert werden.
+
+
+## P6b — Datenminimierung durch getrennte Readprojektionen
+
+[Technischer P6-Plan](product-p6b-protocol-implementation.md): Summary lädt nur
+Keyeventanzahl/letzte Original-Erfassungszeit; Timeline nur aktuelle schmale Fassung
+mit Zeit-/Irrtums-/Nachtragsmarkern. Keine Kennungen, langen Texte, P3b oder
+unnötigen Betroffenenreads. Detail lädt Entry-eigene Fassungen/Children und nur
+benötigte aktuelle P3a-Pseudonyme. Datenzugriff minimieren, nicht erst SELECT-*
+auf der Oberfläche verstecken; [später zu prüfen](testing.md).
+
+SENSITIVE-/READY-Trade-off und enge PRIV-03-Ausnahme bleiben exakt P6a.1.
+Revisionsgebundene Betroffenen-/ReportedBy-Relationen sind bei späterer Personen-
+löschung lösbar ohne Text-/Fassungverlust, keine automatische Anonymisierung.
+Vollvergleich des erwarteten Standes schützt vor stale Wiedereinsetzen gelöster
+Bezüge. Manuelle Protokollprüfung und konkrete Retention-/Rechtsprüfung bleiben
+eigenständige spätere Anforderungen. Keine Code-, Export- oder Medienfreigabe.
