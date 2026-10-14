@@ -398,3 +398,15 @@ Kein Zugriff DRAFT/PREPARATION/DELETION_PENDING. Keine Securitycodeänderung,
 neue Kryptografie/Dependency/Permission, INTERNET/Netzwerk, Export, Dateien,
 Medien, Notifications oder sensible Logs. Keine Garantie physischer RAM-/Flash-
 Überschreibung, rechtlicher Bewertung oder externer Zeitbeglaubigung.
+
+## P9b — bestehende Gates, persistenter Fachentwurf
+
+[P9b](product-p9b-memory-protocol-implementation.md) verwendet dieselbe SQLCipher-
+DB und READY-/OPERATION-/STEP-/COMMIT-/Publication-/Generationgates.
+Persistente Sections sind ausschließlich verschlüsselte Fachinhalte; Model,
+Navigation, ungespeicherter Text und Bestätigungen bleiben RAM-only.
+Commit vor Revoke kann überleben, Callback/Feedback danach nicht; kein blindes
+Retry oder automatischer Reopen. Keine Änderung an Securitymodul, Auth, Keys,
+Leadership/P3b, Deadlines, FLAG_SECURE, Backup/Transfer oder Produktpermissions.
+Kein INTERNET/Netzwerk/Export/Medien/Notifications. P9a-Zugriffsausnahme bleibt
+eng; keine allgemeine COMPLETED-Schreibfreigabe oder rechtliche Bewertung.

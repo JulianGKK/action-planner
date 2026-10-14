@@ -241,7 +241,7 @@ class Ux1bShellProbe : Instrumentation() {
             session.ready();model.detail("synthetic")
         }
         waitForIdleSync()
-        for(area in ActiveArea.entries.drop(1)) {
+        for(area in ActiveArea.entries.drop(1).filter { it != ActiveArea.MEMORY_REPORTS }) {
             top();val card=visible("${area.label} öffnen")
             val rect=bounds(control(card));check(rect.width()>0 && rect.height()>=48*density)
             check(rect.left>=0 && rect.right<=activity.resources.displayMetrics.widthPixels)

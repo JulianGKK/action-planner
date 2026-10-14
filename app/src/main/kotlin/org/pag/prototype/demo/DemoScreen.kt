@@ -80,7 +80,7 @@ import java.time.ZoneId
             DemoPage.HUB -> {
                 PreparationHeading("Lagebild")
                 ActiveHubGrid(activeHubCards(action, model.board ?: return, model.taskBoard ?: return)) { area ->
-                    model.navigate(when (area) { ActiveArea.PERSONS -> DemoPage.PERSONS; ActiveArea.TASKS -> DemoPage.TASKS; ActiveArea.FUNCTIONS -> DemoPage.FUNCTIONS; ActiveArea.DETAILS -> DemoPage.DETAILS; ActiveArea.HUB, ActiveArea.PROTOCOL, ActiveArea.MATERIAL, ActiveArea.COSTS -> DemoPage.HUB })
+                    model.navigate(when (area) { ActiveArea.PERSONS -> DemoPage.PERSONS; ActiveArea.TASKS -> DemoPage.TASKS; ActiveArea.FUNCTIONS -> DemoPage.FUNCTIONS; ActiveArea.DETAILS -> DemoPage.DETAILS; ActiveArea.HUB, ActiveArea.PROTOCOL, ActiveArea.MATERIAL, ActiveArea.COSTS, ActiveArea.MEMORY_REPORTS -> DemoPage.HUB })
                 }
             }
             DemoPage.PERSONS -> DemoPersons(model)

@@ -283,7 +283,7 @@ class ProtocolStorageTest {
             assertArrayEquals(area.payload, d.leadership().area("a", "p", "IDENTITY")!!.payload)
         }
         assertEquals(freshTriggers, triggerNames(i)); create(i)
-        B2Native.open(i.database, key, context(AccessScope.MAINTENANCE), true).use { assertEquals(9, it.version) }
+        B2Native.open(i.database, key, context(AccessScope.MAINTENANCE), true).use { assertEquals(10, it.version) }
     }
     @Test fun revokedMigrationSixToSevenRetainsSchemaSixForRetry() {
         val i = fixture()

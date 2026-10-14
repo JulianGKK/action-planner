@@ -1,0 +1,1774 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 10,
+    "identityHash": "dea7248a754cb803543888ae2b4f830c",
+    "entities": [
+      {
+        "tableName": "actions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `description` TEXT NOT NULL, `startAt` INTEGER NOT NULL, `expectedEndAt` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `status` TEXT NOT NULL, `sensitivity` TEXT NOT NULL, `completedAt` INTEGER DEFAULT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startAt",
+            "columnName": "startAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expectedEndAt",
+            "columnName": "expectedEndAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sensitivity",
+            "columnName": "sensitivity",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER",
+            "defaultValue": "NULL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "persons",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `actionId` TEXT NOT NULL, `pseudonym` TEXT NOT NULL, `pseudonymNormalized` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`actionId`) REFERENCES `actions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pseudonym",
+            "columnName": "pseudonym",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pseudonymNormalized",
+            "columnName": "pseudonymNormalized",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_persons_actionId",
+            "unique": false,
+            "columnNames": [
+              "actionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_persons_actionId` ON `${TABLE_NAME}` (`actionId`)"
+          },
+          {
+            "name": "index_persons_actionId_id",
+            "unique": true,
+            "columnNames": [
+              "actionId",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_persons_actionId_id` ON `${TABLE_NAME}` (`actionId`, `id`)"
+          },
+          {
+            "name": "index_persons_actionId_pseudonymNormalized",
+            "unique": true,
+            "columnNames": [
+              "actionId",
+              "pseudonymNormalized"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_persons_actionId_pseudonymNormalized` ON `${TABLE_NAME}` (`actionId`, `pseudonymNormalized`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "actions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "leadership",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `state` TEXT NOT NULL, `epoch` TEXT NOT NULL, `cryptoVersion` INTEGER NOT NULL, `algorithm` TEXT NOT NULL, `kdfVersion` INTEGER NOT NULL, `memoryKiB` INTEGER NOT NULL, `iterations` INTEGER NOT NULL, `parallelism` INTEGER NOT NULL, `salt` BLOB NOT NULL, `envelope` BLOB NOT NULL, PRIMARY KEY(`actionId`), FOREIGN KEY(`actionId`) REFERENCES `actions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epoch",
+            "columnName": "epoch",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cryptoVersion",
+            "columnName": "cryptoVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "algorithm",
+            "columnName": "algorithm",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kdfVersion",
+            "columnName": "kdfVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "memoryKiB",
+            "columnName": "memoryKiB",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iterations",
+            "columnName": "iterations",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parallelism",
+            "columnName": "parallelism",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "salt",
+            "columnName": "salt",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "envelope",
+            "columnName": "envelope",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "actions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "sensitive_person_areas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `personId` TEXT NOT NULL, `area` TEXT NOT NULL, `cryptoVersion` INTEGER NOT NULL, `revision` INTEGER NOT NULL, `keyEnvelope` BLOB NOT NULL, `payload` BLOB NOT NULL, PRIMARY KEY(`actionId`, `personId`, `area`), FOREIGN KEY(`actionId`, `personId`) REFERENCES `persons`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "personId",
+            "columnName": "personId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "area",
+            "columnName": "area",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cryptoVersion",
+            "columnName": "cryptoVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "keyEnvelope",
+            "columnName": "keyEnvelope",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payload",
+            "columnName": "payload",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId",
+            "personId",
+            "area"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sensitive_person_areas_actionId_personId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "personId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sensitive_person_areas_actionId_personId` ON `${TABLE_NAME}` (`actionId`, `personId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "persons",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "personId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "roles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `actionId` TEXT NOT NULL, `name` TEXT NOT NULL, `normalizedName` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`actionId`) REFERENCES `actions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "normalizedName",
+            "columnName": "normalizedName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_roles_actionId_id",
+            "unique": true,
+            "columnNames": [
+              "actionId",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_roles_actionId_id` ON `${TABLE_NAME}` (`actionId`, `id`)"
+          },
+          {
+            "name": "index_roles_actionId_normalizedName",
+            "unique": true,
+            "columnNames": [
+              "actionId",
+              "normalizedName"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_roles_actionId_normalizedName` ON `${TABLE_NAME}` (`actionId`, `normalizedName`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "actions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "person_planned_roles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `personId` TEXT NOT NULL, `roleId` TEXT NOT NULL, PRIMARY KEY(`actionId`, `personId`, `roleId`), FOREIGN KEY(`actionId`, `personId`) REFERENCES `persons`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`actionId`, `roleId`) REFERENCES `roles`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "personId",
+            "columnName": "personId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "roleId",
+            "columnName": "roleId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId",
+            "personId",
+            "roleId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_person_planned_roles_actionId_roleId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "roleId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_person_planned_roles_actionId_roleId` ON `${TABLE_NAME}` (`actionId`, `roleId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "persons",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "personId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          },
+          {
+            "table": "roles",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "roleId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "person_role_plans",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `personId` TEXT NOT NULL, `primaryRoleId` TEXT, PRIMARY KEY(`actionId`, `personId`), FOREIGN KEY(`actionId`, `personId`) REFERENCES `persons`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`actionId`, `personId`, `primaryRoleId`) REFERENCES `person_planned_roles`(`actionId`, `personId`, `roleId`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "personId",
+            "columnName": "personId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "primaryRoleId",
+            "columnName": "primaryRoleId",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId",
+            "personId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_person_role_plans_actionId_personId_primaryRoleId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "personId",
+              "primaryRoleId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_person_role_plans_actionId_personId_primaryRoleId` ON `${TABLE_NAME}` (`actionId`, `personId`, `primaryRoleId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "persons",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "personId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          },
+          {
+            "table": "person_planned_roles",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "personId",
+              "primaryRoleId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "personId",
+              "roleId"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "person_operational_states",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `personId` TEXT NOT NULL, `currentRoleId` TEXT, `operationalStatus` TEXT NOT NULL, `currentPlaceLabel` TEXT, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`actionId`, `personId`), FOREIGN KEY(`actionId`, `personId`) REFERENCES `persons`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`actionId`, `currentRoleId`) REFERENCES `roles`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "personId",
+            "columnName": "personId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currentRoleId",
+            "columnName": "currentRoleId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "operationalStatus",
+            "columnName": "operationalStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currentPlaceLabel",
+            "columnName": "currentPlaceLabel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId",
+            "personId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_person_operational_states_actionId_currentRoleId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "currentRoleId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_person_operational_states_actionId_currentRoleId` ON `${TABLE_NAME}` (`actionId`, `currentRoleId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "persons",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "personId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          },
+          {
+            "table": "roles",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "currentRoleId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "tasks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `actionId` TEXT NOT NULL, `title` TEXT NOT NULL, `priority` TEXT NOT NULL, `status` TEXT NOT NULL, `assigneePersonId` TEXT, `assigneeRoleId` TEXT, `affectedPersonId` TEXT, `dueAt` INTEGER, `sourceTemplateKey` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `completedAt` INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`actionId`) REFERENCES `actions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`actionId`, `assigneePersonId`) REFERENCES `persons`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`actionId`, `assigneeRoleId`) REFERENCES `roles`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`actionId`, `affectedPersonId`) REFERENCES `persons`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "priority",
+            "columnName": "priority",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "assigneePersonId",
+            "columnName": "assigneePersonId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "assigneeRoleId",
+            "columnName": "assigneeRoleId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "affectedPersonId",
+            "columnName": "affectedPersonId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dueAt",
+            "columnName": "dueAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sourceTemplateKey",
+            "columnName": "sourceTemplateKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_tasks_actionId_id",
+            "unique": true,
+            "columnNames": [
+              "actionId",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_tasks_actionId_id` ON `${TABLE_NAME}` (`actionId`, `id`)"
+          },
+          {
+            "name": "index_tasks_actionId_assigneePersonId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "assigneePersonId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tasks_actionId_assigneePersonId` ON `${TABLE_NAME}` (`actionId`, `assigneePersonId`)"
+          },
+          {
+            "name": "index_tasks_actionId_assigneeRoleId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "assigneeRoleId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tasks_actionId_assigneeRoleId` ON `${TABLE_NAME}` (`actionId`, `assigneeRoleId`)"
+          },
+          {
+            "name": "index_tasks_actionId_affectedPersonId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "affectedPersonId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tasks_actionId_affectedPersonId` ON `${TABLE_NAME}` (`actionId`, `affectedPersonId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "actions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "persons",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "assigneePersonId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          },
+          {
+            "table": "roles",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "assigneeRoleId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          },
+          {
+            "table": "persons",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "affectedPersonId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "task_events",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `actionId` TEXT NOT NULL, `taskId` TEXT NOT NULL, `type` TEXT NOT NULL, `occurredAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`actionId`, `taskId`) REFERENCES `tasks`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "taskId",
+            "columnName": "taskId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "occurredAt",
+            "columnName": "occurredAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_task_events_actionId_taskId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "taskId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_task_events_actionId_taskId` ON `${TABLE_NAME}` (`actionId`, `taskId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "tasks",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "taskId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "protocol_entries",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `actionId` TEXT NOT NULL, `createdAfterCompletion` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`actionId`) REFERENCES `actions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAfterCompletion",
+            "columnName": "createdAfterCompletion",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_protocol_entries_actionId_id",
+            "unique": true,
+            "columnNames": [
+              "actionId",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_protocol_entries_actionId_id` ON `${TABLE_NAME}` (`actionId`, `id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "actions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "protocol_revisions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `actionId` TEXT NOT NULL, `entryId` TEXT NOT NULL, `revisionNumber` INTEGER NOT NULL, `revisionType` TEXT NOT NULL, `classification` TEXT NOT NULL, `templateKey` TEXT, `title` TEXT NOT NULL, `description` TEXT, `occurredAt` INTEGER NOT NULL, `occurredAtApproximate` INTEGER NOT NULL, `recordedAt` INTEGER NOT NULL, `recordedAfterCompletion` INTEGER NOT NULL, `mistaken` INTEGER NOT NULL, `sourceType` TEXT, `placeLabel` TEXT, `announcementText` TEXT, `announcementKind` TEXT, `statedLegalBasis` TEXT, PRIMARY KEY(`id`), FOREIGN KEY(`actionId`, `entryId`) REFERENCES `protocol_entries`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "entryId",
+            "columnName": "entryId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revisionNumber",
+            "columnName": "revisionNumber",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revisionType",
+            "columnName": "revisionType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "classification",
+            "columnName": "classification",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "templateKey",
+            "columnName": "templateKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "occurredAt",
+            "columnName": "occurredAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "occurredAtApproximate",
+            "columnName": "occurredAtApproximate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAt",
+            "columnName": "recordedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAfterCompletion",
+            "columnName": "recordedAfterCompletion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mistaken",
+            "columnName": "mistaken",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceType",
+            "columnName": "sourceType",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "placeLabel",
+            "columnName": "placeLabel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "announcementText",
+            "columnName": "announcementText",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "announcementKind",
+            "columnName": "announcementKind",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "statedLegalBasis",
+            "columnName": "statedLegalBasis",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_protocol_revisions_actionId_id",
+            "unique": true,
+            "columnNames": [
+              "actionId",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_protocol_revisions_actionId_id` ON `${TABLE_NAME}` (`actionId`, `id`)"
+          },
+          {
+            "name": "index_protocol_revisions_entryId_revisionNumber",
+            "unique": true,
+            "columnNames": [
+              "entryId",
+              "revisionNumber"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_protocol_revisions_entryId_revisionNumber` ON `${TABLE_NAME}` (`entryId`, `revisionNumber`)"
+          },
+          {
+            "name": "index_protocol_revisions_actionId_entryId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "entryId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_protocol_revisions_actionId_entryId` ON `${TABLE_NAME}` (`actionId`, `entryId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "protocol_entries",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "entryId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "protocol_affected_persons",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `revisionId` TEXT NOT NULL, `personId` TEXT NOT NULL, PRIMARY KEY(`actionId`, `revisionId`, `personId`), FOREIGN KEY(`actionId`, `revisionId`) REFERENCES `protocol_revisions`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`actionId`, `personId`) REFERENCES `persons`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revisionId",
+            "columnName": "revisionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "personId",
+            "columnName": "personId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId",
+            "revisionId",
+            "personId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_protocol_affected_persons_actionId_personId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "personId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_protocol_affected_persons_actionId_personId` ON `${TABLE_NAME}` (`actionId`, `personId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "protocol_revisions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "revisionId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          },
+          {
+            "table": "persons",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "personId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "protocol_official_identifiers",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `revisionId` TEXT NOT NULL, `position` INTEGER NOT NULL, `type` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY(`actionId`, `revisionId`, `position`), FOREIGN KEY(`actionId`, `revisionId`) REFERENCES `protocol_revisions`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revisionId",
+            "columnName": "revisionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId",
+            "revisionId",
+            "position"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "protocol_revisions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "revisionId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "protocol_reported_by_persons",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `revisionId` TEXT NOT NULL, `personId` TEXT NOT NULL, PRIMARY KEY(`actionId`, `revisionId`), FOREIGN KEY(`actionId`, `revisionId`) REFERENCES `protocol_revisions`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`actionId`, `personId`) REFERENCES `persons`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revisionId",
+            "columnName": "revisionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "personId",
+            "columnName": "personId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId",
+            "revisionId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_protocol_reported_by_persons_actionId_personId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "personId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_protocol_reported_by_persons_actionId_personId` ON `${TABLE_NAME}` (`actionId`, `personId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "protocol_revisions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "revisionId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          },
+          {
+            "table": "persons",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "personId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "materials",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `actionId` TEXT NOT NULL, `name` TEXT NOT NULL, `quantityLabel` TEXT, `placeLabel` TEXT, `responsiblePersonId` TEXT, `linkedTaskId` TEXT, `sourceTemplateKey` TEXT, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`actionId`) REFERENCES `actions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "quantityLabel",
+            "columnName": "quantityLabel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "placeLabel",
+            "columnName": "placeLabel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "responsiblePersonId",
+            "columnName": "responsiblePersonId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "linkedTaskId",
+            "columnName": "linkedTaskId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sourceTemplateKey",
+            "columnName": "sourceTemplateKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_materials_actionId_id",
+            "unique": true,
+            "columnNames": [
+              "actionId",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_materials_actionId_id` ON `${TABLE_NAME}` (`actionId`, `id`)"
+          },
+          {
+            "name": "index_materials_actionId_responsiblePersonId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "responsiblePersonId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_materials_actionId_responsiblePersonId` ON `${TABLE_NAME}` (`actionId`, `responsiblePersonId`)"
+          },
+          {
+            "name": "index_materials_actionId_linkedTaskId",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "linkedTaskId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_materials_actionId_linkedTaskId` ON `${TABLE_NAME}` (`actionId`, `linkedTaskId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "actions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "expenses",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `actionId` TEXT NOT NULL, `title` TEXT NOT NULL, `totalCents` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`actionId`) REFERENCES `actions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalCents",
+            "columnName": "totalCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_expenses_actionId_id",
+            "unique": true,
+            "columnNames": [
+              "actionId",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_expenses_actionId_id` ON `${TABLE_NAME}` (`actionId`, `id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "actions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "expense_payments",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `expenseId` TEXT NOT NULL, `position` INTEGER NOT NULL, `payerLabel` TEXT NOT NULL, `amountCents` INTEGER NOT NULL, PRIMARY KEY(`actionId`, `expenseId`, `position`), FOREIGN KEY(`actionId`, `expenseId`) REFERENCES `expenses`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expenseId",
+            "columnName": "expenseId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payerLabel",
+            "columnName": "payerLabel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amountCents",
+            "columnName": "amountCents",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId",
+            "expenseId",
+            "position"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "expenses",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "expenseId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "memory_reports",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `actionId` TEXT NOT NULL, `authorLabel` TEXT NOT NULL, `questionnaireVersion` INTEGER NOT NULL, `status` TEXT NOT NULL, `revision` INTEGER NOT NULL, `lastSavedSectionOrdinal` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `completedAt` INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`actionId`) REFERENCES `actions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "authorLabel",
+            "columnName": "authorLabel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "questionnaireVersion",
+            "columnName": "questionnaireVersion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revision",
+            "columnName": "revision",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastSavedSectionOrdinal",
+            "columnName": "lastSavedSectionOrdinal",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_memory_reports_actionId_id",
+            "unique": true,
+            "columnNames": [
+              "actionId",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_memory_reports_actionId_id` ON `${TABLE_NAME}` (`actionId`, `id`)"
+          },
+          {
+            "name": "index_memory_reports_actionId_status",
+            "unique": false,
+            "columnNames": [
+              "actionId",
+              "status"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_memory_reports_actionId_status` ON `${TABLE_NAME}` (`actionId`, `status`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "actions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "memory_answers",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `reportId` TEXT NOT NULL, `questionKey` TEXT NOT NULL, `valueKind` TEXT NOT NULL, `payload` TEXT NOT NULL, PRIMARY KEY(`actionId`, `reportId`, `questionKey`), FOREIGN KEY(`actionId`, `reportId`) REFERENCES `memory_reports`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reportId",
+            "columnName": "reportId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "questionKey",
+            "columnName": "questionKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "valueKind",
+            "columnName": "valueKind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payload",
+            "columnName": "payload",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId",
+            "reportId",
+            "questionKey"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "memory_reports",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "reportId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "memory_addenda",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`actionId` TEXT NOT NULL, `reportId` TEXT NOT NULL, `sequence` INTEGER NOT NULL, `content` TEXT NOT NULL, `recordedAt` INTEGER NOT NULL, PRIMARY KEY(`actionId`, `reportId`, `sequence`), FOREIGN KEY(`actionId`, `reportId`) REFERENCES `memory_reports`(`actionId`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "actionId",
+            "columnName": "actionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reportId",
+            "columnName": "reportId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sequence",
+            "columnName": "sequence",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "content",
+            "columnName": "content",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAt",
+            "columnName": "recordedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "actionId",
+            "reportId",
+            "sequence"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "memory_reports",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "actionId",
+              "reportId"
+            ],
+            "referencedColumns": [
+              "actionId",
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dea7248a754cb803543888ae2b4f830c')"
+    ]
+  }
+}

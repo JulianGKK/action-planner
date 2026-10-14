@@ -12,7 +12,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private val leadership: LeadershipRepository? = null,
     private val operationsRepository: OperationsRepository? = null,
     private val taskRepository: TaskRepository? = null, private val protocolRepository: ProtocolRepository? = null,
-    private val materialRepository: MaterialRepository? = null, private val expenseRepository: ExpenseRepository? = null, private val begin: (Boolean) -> Unit) : ViewModel() {
+    private val materialRepository: MaterialRepository? = null, private val expenseRepository: ExpenseRepository? = null, private val memoryReportRepository: MemoryReportRepository? = null, private val begin: (Boolean) -> Unit) : ViewModel() {
     var bootstrap by mutableStateOf(initialBootstrap); private set
     fun updateBootstrap(state: ProductStorageState) { bootstrap = state }
     var snapshot by mutableStateOf(session.snapshot()); private set
@@ -58,9 +58,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     var preparationArea by mutableStateOf(PreparationArea.OVERVIEW); private set
     var workspaceRefreshing by mutableStateOf(false); private set
     val preparationAvailable get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.PREPARATION
+    val memoryReportsAvailable get() = memoryReportRepository != null
     val expensesAvailable get() = expenseRepository != null
     val materialAvailable get() = materialRepository != null
-    val preparationNavigationEnabled get() = preparationAvailable && !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy && !material.busy && !expenses.busy
+    val preparationNavigationEnabled get() = preparationAvailable && !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy && !material.busy && !expenses.busy && !memoryReports.busy
     val preparationContentState: PreparationContentState get() {
         val content = workspace ?: return if (workspaceError) PreparationContentState.ERROR else PreparationContentState.LOADING
         if ((preparationArea == PreparationArea.TASKS && (content.tasks == null || content.operations == null)) ||
@@ -93,12 +94,13 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     var activeArea by mutableStateOf(ActiveArea.HUB); private set
     val activeNavigationEnabled get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.ACTIVE &&
-        !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy && !material.busy && !expenses.busy
+        !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy && !material.busy && !expenses.busy && !memoryReports.busy
     fun activeArea(area: ActiveArea) = navigateActive(area)
     private fun navigateActive(area: ActiveArea, retained: WorkspaceSnapshot? = null) {
+        if (memoryReports.available && memoryReports.dirty) { memoryReports.requestLeave { navigateActive(area, retained) }; return }
         val before = snapshot
         val action = selected ?: return
-        if (!activeNavigationEnabled || (area == ActiveArea.MATERIAL && !materialAvailable) || (area == ActiveArea.COSTS && !expensesAvailable)) return
+        if (!activeNavigationEnabled || (area == ActiveArea.MATERIAL && !materialAvailable) || (area == ActiveArea.COSTS && !expensesAvailable) || (area == ActiveArea.MEMORY_REPORTS && !memoryReportsAvailable)) return
         interaction()
         if (!activeNavigationEnabled || snapshot.generation != before.generation || selected?.id != action.id) return
         clearPersons()
@@ -113,6 +115,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (area == ActiveArea.PROTOCOL) protocol.refresh()
         if (area == ActiveArea.MATERIAL) material.enter()
         if (area == ActiveArea.COSTS) expenses.enter()
+        if (area == ActiveArea.MEMORY_REPORTS) memoryReports.enter()
     }
     fun activePersonTasks(personId: String, create: Boolean) {
         val generation = snapshot.generation
@@ -125,7 +128,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     val completedProtocolOpen get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.COMPLETED && protocol.completedFollowUp
     fun openCompletedProtocol() {
-        if (selected?.status != ActionStatus.COMPLETED || protocolRepository == null || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || material.busy || expenses.busy) return
+        if (selected?.status != ActionStatus.COMPLETED || protocolRepository == null || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || material.busy || expenses.busy || memoryReports.busy) return
         val retained = workspace
         protocol.openCompletedFollowUp {
             clearPersons()
@@ -135,13 +138,13 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     fun closeCompletedProtocol() {
         val before = snapshot; val a = selected ?: return
-        if (!completedProtocolOpen || protocol.busy || expenses.busy) return
+        if (!completedProtocolOpen || protocol.busy || expenses.busy || memoryReports.busy) return
         interaction()
         if (completedProtocolOpen && snapshot.generation == before.generation && selected?.id == a.id) protocol.clear()
     }
     val completedMaterialOpen get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.COMPLETED && material.completedView
     fun openCompletedMaterial() {
-        if (selected?.status != ActionStatus.COMPLETED || !materialAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy || expenses.busy) return
+        if (selected?.status != ActionStatus.COMPLETED || !materialAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy || expenses.busy || memoryReports.busy) return
         val retained = workspace
         material.openCompleted {
             clearPersons()
@@ -151,13 +154,13 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     fun closeCompletedMaterial() {
         val before = snapshot; val a = selected ?: return
-        if (!completedMaterialOpen || material.busy || expenses.busy) return
+        if (!completedMaterialOpen || material.busy || expenses.busy || memoryReports.busy) return
         interaction()
         if (completedMaterialOpen && snapshot.generation == before.generation && selected?.id == a.id) material.clear()
     }
     val completedExpensesOpen get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.COMPLETED && expenses.completedView
     fun openCompletedExpenses() {
-        if (selected?.status != ActionStatus.COMPLETED || !expensesAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy || material.busy) return
+        if (selected?.status != ActionStatus.COMPLETED || !expensesAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy || material.busy || memoryReports.busy) return
         val retained = workspace
         expenses.openCompleted {
             clearPersons()
@@ -171,6 +174,21 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         interaction()
         if (completedExpensesOpen && snapshot.generation == before.generation && selected?.id == a.id) expenses.clear()
     }
+    val completedMemoryReportsOpen get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.COMPLETED && memoryReports.completedView
+    fun openCompletedMemoryReports() {
+        if (selected?.status != ActionStatus.COMPLETED || !memoryReportsAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy || expenses.busy || material.busy || memoryReports.busy) return
+        val retained = workspace
+        memoryReports.openCompleted {
+            clearPersons()
+            if (retained?.actionId == selected?.id && retained?.generation == snapshot.generation && retained?.status == ActionStatus.COMPLETED) workspace = retained
+            else loadWorkspace()
+        }
+    }
+    fun closeCompletedMemoryReports() {
+        if (!completedMemoryReportsOpen || memoryReports.busy) return
+        memoryReports.requestLeave { if (completedMemoryReportsOpen) memoryReports.clear() }
+    }
+    val memoryReports = MemoryReportModel(memoryReportRepository, { snapshot }, { selected }, ::interaction, ::loadWorkspace, ::showFeedback)
     val protocol = ProtocolModel(protocolRepository, { snapshot }, { selected }, ::interaction, ::loadWorkspace, ::showFeedback)
     val tasks = TaskModel(taskRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
         { workspace?.tasks }, ::loadWorkspace, ::showFeedback)
@@ -194,14 +212,14 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private fun clearPersons() {
         preparationArea = PreparationArea.OVERVIEW; activeArea = ActiveArea.HUB; workspaceRefreshing = false
         workspaceRequest++; workspace = null; workspaceError = false; detailLoading = false; personDetailLoading = false
-        tasks.clear(); operations.clear(); protocol.clear(); material.clear(); expenses.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
+        tasks.clear(); operations.clear(); protocol.clear(); material.clear(); expenses.clear(); memoryReports.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
         personForm = false; editingPerson = null; personError = null; personSaving = false
     }
     private fun loadPersons() {
         clearSensitive(); personRequest++
         selectedPerson = null; personForm = false; editingPerson = null; personError = null; personSaving = false
         if (workspace?.status != selected?.status) {
-            workspace = null; tasks.clear(); operations.clear(); protocol.clear(); material.clear(); expenses.clear()
+            workspace = null; tasks.clear(); operations.clear(); protocol.clear(); material.clear(); expenses.clear(); memoryReports.clear()
         }
         loadWorkspace()
     }
@@ -229,6 +247,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             (preparation && area == PreparationArea.OVERVIEW && selectedPerson == null))
         val needExpenses = expenseRepository != null && ((active && activeSection in setOf(ActiveArea.HUB, ActiveArea.COSTS)) ||
             (preparation && area == PreparationArea.OVERVIEW && selectedPerson == null))
+        val needMemory = memoryReportRepository != null && active && activeSection == ActiveArea.HUB
+        var memorySummary = previous?.memoryReportSummary
+        var memoryDone = !needMemory
         var expenseSummary = previous?.expenseSummary
         var expensesDone = !needExpenses
         var materialSummary = previous?.materialSummary
@@ -250,9 +271,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             workspaceRequest++; personsLoading = false; workspaceRefreshing = false; workspaceError = true
         }
         fun publish() {
-            if (!current() || !peopleDone || !tasksDone || !metadataDone || !protocolDone || !materialDone || !expensesDone) return
+            if (!current() || !peopleDone || !tasksDone || !metadataDone || !protocolDone || !materialDone || !expensesDone || !memoryDone) return
             androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
-                workspace = WorkspaceSnapshot(action.id, generation, people.orEmpty(), ops, taskBoard, action.status, metadata, protocolSummary, materialSummary, expenseSummary)
+                workspace = WorkspaceSnapshot(action.id, generation, people.orEmpty(), ops, taskBoard, action.status, metadata, protocolSummary, materialSummary, expenseSummary, memorySummary)
                 personsLoading = false; workspaceRefreshing = false
                 tasks.reconcileSelection()
             }
@@ -295,6 +316,13 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             if (!current()) return@summary
             when (result) {
                 is OperationsResult.Value -> { expenseSummary = result.value; expensesDone = true; publish() }
+                is OperationsResult.Rejected -> failed()
+            }
+        }
+        if (needMemory && current()) memoryReportRepository.summary(action.id) { result ->
+            if (!current()) return@summary
+            when (result) {
+                is OperationsResult.Value -> { memorySummary = result.value; memoryDone = true; publish() }
                 is OperationsResult.Rejected -> failed()
             }
         }
@@ -539,7 +567,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     fun lock() = session.lock()
     fun interaction() = session.userInteraction()
     fun createScreen() { interaction(); if (snapshot.state == SessionState.READY) { selected = null; creating = true } }
-    fun back() { interaction(); selected = null; creating = false; editing = null; confirming = null; changeError = null; clearPersons() }
+    fun back() { if (memoryReports.available && memoryReports.dirty) { memoryReports.requestLeave { back() }; return }; interaction(); selected = null; creating = false; editing = null; confirming = null; changeError = null; clearPersons() }
     fun edit() {
         interaction()
         selected?.takeIf { snapshot.state == SessionState.READY && ActionLifecycle.mayEdit(it.status) }?.let {
@@ -599,5 +627,5 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             loadActions()
         }
     }
-    override fun onCleared() { protocol.clear(); material.clear(); expenses.clear(); clearSensitive(); subscription.cancel(); session.lock() }
+    override fun onCleared() { protocol.clear(); material.clear(); expenses.clear(); memoryReports.clear(); clearSensitive(); subscription.cancel(); session.lock() }
 }

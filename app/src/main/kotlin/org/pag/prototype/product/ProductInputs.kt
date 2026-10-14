@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.state.ToggleableState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -92,6 +93,21 @@ private val LocalFormInput=staticCompositionLocalOf<FormInput>{error("PRODUCT-FO
     val input=LocalFormInput.current
     OutlinedButton(onClick={input.finish();onClick()},modifier=modifier.heightIn(min=48.dp),enabled=enabled,shape=shape,content=content)
 }
+/** One accessible checkbox action with the same input cleanup as other form controls. */
+@Composable internal fun FormCheckboxButton(label: String, checked: Boolean, onClick: () -> Unit, enabled: Boolean = true) {
+    val input = LocalFormInput.current
+    val click = { input.finish(); onClick() }
+    OutlinedButton(onClick = click, enabled = enabled,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clearAndSetSemantics {
+            contentDescription = label
+            role = Role.Checkbox
+            toggleableState = if (checked) ToggleableState.On else ToggleableState.Off
+            if (!enabled) disabled()
+            onClick(label = label) { if (enabled) { click(); true } else false }
+        }) { Text((if (checked) "✓ " else "") + label) }
+}
+
 @Composable internal fun FormTextField(value:String,onValueChange:(String)->Unit,label:@Composable ()->Unit,
     modifier:Modifier=Modifier,enabled:Boolean=true,singleLine:Boolean=false,
     keyboardOptions:KeyboardOptions=KeyboardOptions.Default,imeAction:ImeAction=ImeAction.Done,

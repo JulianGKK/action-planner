@@ -139,3 +139,13 @@ P9-Inhalte müssen bei späterer Lösch-/Freitextprüfung berücksichtigt werden
 keine garantierte Anonymisierung oder physische Überschreibung. Allgemeiner
 Löschworkflow, Fristen, mögliche fachkundige Aufbewahrungsanforderungen und
 technische Bereinigungsnachweise bleiben gesonderte spätere Arbeit.
+
+## P9b — Storagekaskade ohne Retentionengine
+
+[P9b](product-p9b-memory-protocol-implementation.md) setzt Reports/Answers/
+Addenda aktionsgebunden mit CASCADE um. Abschnittspersistenz übersteht Lock,
+ungespeicherte Eingabe wird verworfen; kein Autosave oder Fristneustart.
+Keine konkrete Dauer, Retentionworker oder manuelle Berichtslöschung freigegeben.
+Personendelete verändert authorLabel/Antworttexte nicht. Der spätere allgemeine
+Lösch-/Freitextworkflow muss dies berücksichtigen. Vollständige Aktionslöschung
+bleibt Obergrenze; keine physische Überschreibgarantie. P9a-Restfragen bleiben offen.

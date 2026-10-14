@@ -66,7 +66,7 @@ Pflichtfelder sind nicht zwangsläufig Eingabefelder. Für ausdrücklich offene 
 | `ProtocolOfficialIdentifier` | Beobachtete amtliche Kennung je Fassung, kein Behördenpersonenprofil |
 | `ProtocolReportedByPerson` | Optionaler REPORTED-Quellenbezug auf bestehende Person derselben Aktion |
 | `Expense`, `ExpensePayment` | EUR-Kostenposition mit geordneter Zahlungsaufteilung (P8) |
-| Gedächtnisprotokoll (P9, konzeptionell) | Persönlicher Bericht mit gespeichertem Entwurf, Antworten nach versioniertem Fragebogen und späteren Ergänzungen; keine technische Entity festgelegt |
+| MemoryReportHeader/Detail, MemoryAnswerValue, MemoryAddendum (P9) | Persönlicher Bericht mit gespeichertem Entwurf, Antworten nach versioniertem Fragebogen und späteren Ergänzungen; technische Abbildung in P9b |
 | `RetentionPolicy` | Konzeptionelle Aufbewahrungsregel |
 
 Gemeinsame Schutz- und Retention-Metadaten sind Bestandteile der betroffenen Objekte und erfordern nicht zwangsläufig eigene Entitäten.
@@ -388,10 +388,10 @@ stabile Anfügereihenfolge; keine P6-Revisionsmaschine. Keine Medien/FileAsset-
 Beziehung. Fristen und vollständige manuelle Berichtslöschung offen;
 Aktionslöschung umfasst Entwürfe, Antworten, Ergänzungen und Ableitungen.
 
-Dies sind fachliche Konzepte, keine Room-Tabellen, SQL-Spalten, Migration oder
-Ankündigung einer neuen Schemanummer. Technische Antwortkodierung, endliche
-Textgrenzen, sichere Draft-/Abschlussabläufe und historische Darstellung erst
-P9b. Der implementierte DB-Stand bleibt Schema 9.
+Diese P9a-Elemente sind die fachliche Grundlage. Technische Antwortkodierung,
+endliche Textgrenzen, sichere Draft-/Abschlussabläufe und historische Darstellung
+sind durch [P9b](product-p9b-memory-protocol-implementation.md) umgesetzt.
+Der implementierte DB-Stand ist Schema 10; P9a selbst bleibt unverändert.
 
 ## 12. Expense und ExpensePayment: P8 Kosten-Sammelliste
 
@@ -512,7 +512,7 @@ Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, ke
 
 | Gelöschtes Objekt | Fachliche Folge |
 |---|---|
-| `Action` | Zugehörige Personen, Rollen, Statusdefinitionen, Zuordnungen, Aufgaben, Material, Dokumente, Dateien, Notes, Ausgaben, sämtliche P6-Einträge/Fassungen/Relationen/Kennungen und konzeptionell alle P9-Entwürfe/Berichte/Ergänzungen entfernen |
+| `Action` | Zugehörige Personen, Rollen, Statusdefinitionen, Zuordnungen, Aufgaben, Material, Dokumente, Dateien, Notes, Ausgaben, sämtliche P6-Einträge/Fassungen/Relationen/Kennungen und alle P9-Entwürfe/Berichte/Antworten/Ergänzungen entfernen |
 | Person | PersonRole und personenbezogene Notes entfernen; Personenreferenzen in Aufgaben/Material sowie erforderliche P6-Betroffenen-/Quellenrelationen lösen. P6-Einträge/Fassungen erhalten, Freitext nicht automatisch ändern; manuelle Protokollprüfung erforderlich. P9-Labels/Antworten bleiben eigenständiger Inhalt ohne Person-FK; manuelle P9-Prüfung erforderlich. |
 | Role | P4/P5a: einzelne Rolle nur ohne geplante/operative/Task-Referenzen entfernen; kein stilles Entfernen von Zuordnungen |
 | PersonStatusDefinition | Statusreferenzen entfernen; Personen erhalten |
@@ -718,3 +718,16 @@ gehören jeweils ihrer eigenen Revision. Personcascade entfernt nur Betroffenen-
 Quellenrelationen; Actioncascade entfernt alle P6-Daten. Keine allgemeinen
 Produktlöschworkflows oder Retentiondauer eingeführt. Port/DAO haben keinen normalen
 Update-/Einzel-Deletepfad. Details und Nachweise: [P6c1](product-p6c1-protocol-storage.md).
+
+## P9b — implementierte Gedächtnisprotokolle
+
+[P9b](product-p9b-memory-protocol-implementation.md) konkretisiert die zuvor
+rein konzeptionellen P9a-Elemente. Schema10 ergänzt memory_reports,
+memory_answers und memory_addenda; alle 18 Schema9-Entities/alte Trigger erhalten.
+Reportheader mit technischem revision-CAS und explizitem lastSavedSectionOrdinal,
+V1-Answers key/valueKind/payload, Addenda sequence/content/recordedAt.
+Composite Report-FKs und Action-CASCADE, kein Person-/Protocol-/FileAsset-FK.
+Keine neuen Retentionfelder oder Antwort-Historie. Technischer Codec, Grenzen,
+Sectionersatz, Abschließen und append-only Ergänzung stehen im P9b-Vertrag.
+P9a-Fragekatalog bleibt unverändert. Abschnitt 11.2 beschreibt seine fachliche
+Grundlage; der dort ursprünglich offene technische Vertrag ist durch P9b umgesetzt.

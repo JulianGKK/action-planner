@@ -397,9 +397,26 @@ Sessionverlängerung oder automatischer Reopen nach Reauth. Bewusstes Fortsetzen
 eines gespeicherten ACTIVE-Entwurfs nach COMPLETED, kein stiller Editorübertrag.
 Andere kurze Formulare bleiben RAM-only; P4/P5a/P7/Aktionsdaten read-only nach Abschluss.
 
-Nächster gesonderter Auftrag P9b muss sicheren persistierten Draftvertrag,
-Versionendarstellung, Grenzen, Konflikte und bestehende Gates spezifizieren.
+Der nachfolgende P9b-Slice konkretisiert den sicheren persistierten Draftvertrag,
+Versionendarstellung, Grenzen, Konflikte und bestehende Gates (siehe unten).
 P9a gibt keinen Code, Schema, Migration oder Securityumbau frei. Menschliche
 TalkBack-/Accessibility-Abnahme, juristische/fachkundige Fragebogenprüfung,
 Retentiondauer und allgemeiner Löschworkflow bleiben offen. Abnahme P9a nur
 Dokumentations-/Verweis-/Scope-/Freezeprüfung und git diff --check.
+
+## P9b — Gedächtnisprotokolle in einem Implementierungsslice
+
+[P9b](product-p9b-memory-protocol-implementation.md) setzt P9a um: achte ACTIVE-
+Hubkarte ausschließlich Counts, eigener bewusster Listen-/Berichtsbereich,
+COMPLETED-Einstieg ohne Prefetch. Vor erstem A-Save keine späteren Sectiontitel
+oder Detailprompts; danach Katalogrenderer A–Q, explizite leere Section-Saves,
+Konflikt Behalten/Entfernen, Zusammenfassung und bewusster Abschluss.
+Fachentwürfe verschlüsselt persistent, aktueller ungespeicherter Editor RAM-only.
+Dirty Back bestätigt Verwerfen; Lock/Reauth öffnet keinen Kontext automatisch.
+Gespeicherter ACTIVE-Entwurf wird nach COMPLETED bewusst fortgesetzt, kein Reopen
+oder Öffnung anderer Schreibpfade. Keine Demo-P9-Funktion oder UX-Neuarchitektur.
+Menschliche TalkBack-/Accessibilityabnahme, fachkundige Fragebogenprüfung,
+Retention/Löschworkflow bleiben ausdrücklich offen.
+
+P9b-Automation grün und bereit für Review; Ergebnisse und verbleibende manuelle
+Abnahme sind im verlinkten P9b-Nachweis dokumentiert.

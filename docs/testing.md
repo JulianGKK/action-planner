@@ -186,3 +186,22 @@ Keine Credentials, Echtdaten, pm clear oder Uninstall. Abnahme grün: 839 Unit-T
 P8/P7/UX3/P6c2/P6c3 bei Font Scale1/2 auf Galaxy/API33. Builds/Lint/Architektur/
 Manifeste grün, einschließlich Schema9-Freezevergleich. Ergebnisse und manuelle
 Restabnahme im P8-Nachweis.
+
+## P9b — Questionnaire V1 und persistente Sectionentwürfe
+
+[P9b](product-p9b-memory-protocol-implementation.md): Domain-/Codecchecks gegen
+alle 85 P9a-Zeilen, Unicodegrenzen, Optionen/Dependencies, Progress und Lifecycle;
+generated DAO-Projektionen für minimierte Summary/List. RAM-Model-/echte
+ProductViewModel-Matrizen für Dirty Back, Konfliktentscheidungen, persistente
+Fortsetzung, STALE, Phase/Lock/Generation und abgeschlossene Aktionsisolation.
+MemoryReportStorageTest im synthetischen Data-Testpaket prüft echte SQLCipher/
+Roompfade, Schema10/Migration9→10, atomaren Abschnittsersatz/Abschluss/Append,
+Korruption/CAS/Sequence/Cascade und Commit-/Publication-Revoke.
+P9MemoryReportProbe verwendet echten ProductScreen mit Fakeports und lokaler
+Font Scale1/2: freie Erinnerung zuerst, lange Texte, Dependencies, Save/Lock/
+Reauth/Resume, Abschluss/Ergänzung, Hubprivacy und bewusste COMPLETED-Arbeit.
+Konkrete Ergebnisse und manuelle Restabnahme stehen im P9b-Nachweis.
+
+P9b-Abschlusslauf: 874 Unit-Tests, 131 reale synthetische Storagefälle, P9-/P8-/P7-
+ProductScreen-Probes bei Font Scale 1/2 und P6c2/P6c3/UX3 mit internen 1/2 grün.
+Builds, Lint, Architektur und Manifestprüfungen grün; menschliche Abnahme offen.
