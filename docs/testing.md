@@ -27,7 +27,7 @@ TM-F03/06/08/11/12/13/15/18. Nur synthetische Daten.
 
 ## Echte Storage-/Repositorytests
 
-- Fresh Schema8 und Migration 6→7→8 (sowie historische Upgradepfade) mit echter
+- Fresh Schema9 und Migration 6→7→8→9 (sowie historische Upgradepfade) mit echter
   SQLCipher/Room-Engine: alle alten Tabellen/Rows/Trigger/Ciphertexts erhalten,
   neue P6-Struktur leer; kein destructive fallback. Exportvergleich und tatsächliche
   sqlite_master-Triggerprüfung, nicht nur Room-Schema-Datei.
@@ -113,7 +113,7 @@ stale Snapshot samt Relationstrennung, kontrolliert konkurrierende Appends,
 Childfehler-Rollback, Commitrevoke, Generationspublication, 6→7-Migration/
 Migrationrevoke, P4/P5a-COMPLETED-Regression und logische FK-Kaskaden.
 Historische Migrationfixtures entfernen neue P6-Testtabellen und seit P7 auch
-Materialtabelle/Detach-Trigger vor gezieltem Downgrade und erwarten danach Schema8.
+Materialtabelle/Detach-Trigger vor gezieltem Downgrade und erwarten danach Schema9.
 Keine echten Produktdaten/Gerätecredentials; ursprüngliche P6c1-Ergebnisse bleiben
 im historischen Nachweis auf Schema7 bezogen.
 
@@ -167,8 +167,22 @@ STALE, SAME-ACTION INSERT/UPDATE, Person-/Taskdetach, Actioncascade, Schema8/fre
 und 7→8 mit erhaltenem P6, Commit-/Publicationrevoke, Summaryminimierung,
 COMPLETED ohne Prefetch/Writes, Bereichs-/Lockcleanup, Font Scale 1/2 und Demo.
 Historische Migrationfixtures entfernen nur die neue synthetische Materialstruktur
-samt parentgebundenen Detach-Triggern vor Downgrade und erwarten danach Schema8.
+samt parentgebundenen Detach-Triggern vor Downgrade und erwarten danach Schema9.
 Abnahme grün: 803 Unit-Tests, 38 fokussierte Material-Unit-Tests, 91 echte Storagefälle
 und ProductScreen-Proben P7/UX3/P6c2/P6c3 bei Font Scale 1/2 auf Galaxy/API33.
 Builds, Lint, Architektur und Manifeste grün; Einzelheiten im P7-Nachweis.
 Keine Echtdaten oder Credentialänderung; manuelle TalkBack-/IME-Abnahme bleibt offen.
+
+## P8 — Kosten, EUR-Cents und administrative COMPLETED-Isolation
+
+[P8](product-p8-costs.md): Domain-/Money-/Projectiontests, RAM-Modelmatrix und
+realer ProductViewModel mit verzögerten Fakeports. SQLCipher/Room prüft Fresh9,
+8→9/alte Migrationen, Paymentintegrität/Positionen/exakte Summe, vollständiges
+STALE, atomaren Childersatz, Cascade, Revoke/Retry und unabhängige payerLabels.
+Echter ProductScreen synthetisch bei lokaler Font Scale 1/2 auf Galaxy/API33.
+COMPLETED nur P8 schreibbar; Tasks/Operations/Material/Aktion bleiben gesperrt.
+Keine Credentials, Echtdaten, pm clear oder Uninstall. Abnahme grün: 839 Unit-Tests,
+36 fokussierte P8-Unit-Tests, 110 reale Storagefälle und ProductScreen-Proben
+P8/P7/UX3/P6c2/P6c3 bei Font Scale1/2 auf Galaxy/API33. Builds/Lint/Architektur/
+Manifeste grün, einschließlich Schema9-Freezevergleich. Ergebnisse und manuelle
+Restabnahme im P8-Nachweis.

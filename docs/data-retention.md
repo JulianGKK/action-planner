@@ -33,7 +33,7 @@ Ein vorgeschlagener wirksamer Termin ist der früheste zutreffende Termin aus:
 
 Ein individueller Termin ersetzt nach dieser Empfehlung den normalen Regeltermin, nicht die Obergrenzen. Verwendete Regeln sollen versioniert werden. Bearbeitung eines Inhalts soll keine Frist neu starten; Änderungen sollen bestehende Termine nicht stillschweigend verlängern. Diese Details sind vor Implementierung zu bestätigen.
 
-Standardregeln sollen personenbezogene Daten, allgemeine Organisation, Dokumente und Kosten/Belege nach Zweck unterscheiden. Es werden keine rechtlichen Fristen pauschal aus Datentypen abgeleitet. Vor Kostenaufbewahrung sind tatsächliche Pflichten zu prüfen. Falls Kostenunterlagen länger benötigt werden, ist dies vor vollständiger Aktionslöschung sichtbar zu lösen; der MVP erhält keinen unabhängigen Restbestand.
+Standardregeln sollen personenbezogene Daten, allgemeine Organisation, Dokumente und P8-Kosten nach Zweck unterscheiden. Es werden keine rechtlichen Fristen pauschal aus Datentypen abgeleitet. Vor Kostenaufbewahrung sind tatsächliche Pflichten zu prüfen. Falls Kostenunterlagen länger benötigt werden, ist dies vor vollständiger Aktionslöschung sichtbar zu lösen; der MVP erhält keinen unabhängigen Restbestand.
 
 Die Retention-Attribute aus data-model.md bleiben konzeptionell, bis Anker, Dauerrechnung, Obergrenzen und Überschreibungen konkretisiert sind.
 
@@ -41,7 +41,7 @@ Die Retention-Attribute aus data-model.md bleiben konzeptionell, bis Anker, Daue
 
 Die vollständige Beziehungstabelle steht in [data-model.md, Abschnitt 15](data-model.md#15-beziehungen-integrität-und-löschung) und wird hier nicht dupliziert. Vollständige Aktionslöschung begrenzt gemäß RET-02 die Aufbewahrung aller Kinder.
 
-Personenlöschung entfernt PersonRole und personenbezogene Notes; Aufgaben-/Materialreferenzen werden entfernt, die sachlichen Objekte bleiben. Dokumentlöschung entfernt dessen FileAsset, Ausgabenlöschung den optionalen Beleg. Frühere Beleglöschung lässt die Ausgabe ohne Beleg bestehen. Keine persistierte Aktion mit Status DELETED und keine Wiedereröffnung abgeschlossener Aktionen.
+Personenlöschung entfernt PersonRole und personenbezogene Notes; Aufgaben-/Materialreferenzen werden entfernt, die sachlichen Objekte bleiben. Dokumentlöschung entfernt dessen FileAsset. P8-Kostenlöschung entfernt Parent und Zahlungschildren; P8 besitzt keine Belege. Keine persistierte Aktion mit Status DELETED und keine Wiedereröffnung abgeschlossener Aktionen.
 
 Freitext und Dateien können indirekte Personenbezüge behalten. Referenzlöschung ist keine garantierte Anonymisierung; der ergänzende Prüfablauf bleibt in privacy.md offen.
 
@@ -106,3 +106,13 @@ P4/P5a-Löschabhängigkeiten bleiben unverändert. Keine Retentionfelder/-dauer/
 allgemeine Personen-/Aktionslöschung oder physische Überschreibgarantie.
 Materialbezeichnung/Menge/Ort können nach Detach weiterhin Personenbezüge enthalten;
 Referenzentkopplung ist keine Anonymisierung. Konkrete endliche Retention bleibt offen.
+
+## P8 — Grenze der Kostenaufbewahrung
+
+[P8](product-p8-costs.md) implementiert keine Frist und keinen Retentionworker.
+Kosten können einen anderen legitimen Nachbereitungs-/Aufbewahrungsbedarf als
+Tasks/Material haben. Konkrete Fristen und mögliche rechtliche Pflichten müssen
+vor Retentionimplementierung fachkundig geprüft werden. Actiondelete bleibt die
+Obergrenze und entfernt Expenses/Payments vollständig, kein unabhängiger Restbestand.
+Personenlöschung verändert payerLabel nicht; spätere manuelle Freitextprüfung muss
+Kostenlabels ausdrücklich berücksichtigen. Keine Secure-Overwrite-Garantie.

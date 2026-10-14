@@ -12,7 +12,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private val leadership: LeadershipRepository? = null,
     private val operationsRepository: OperationsRepository? = null,
     private val taskRepository: TaskRepository? = null, private val protocolRepository: ProtocolRepository? = null,
-    private val materialRepository: MaterialRepository? = null, private val begin: (Boolean) -> Unit) : ViewModel() {
+    private val materialRepository: MaterialRepository? = null, private val expenseRepository: ExpenseRepository? = null, private val begin: (Boolean) -> Unit) : ViewModel() {
     var bootstrap by mutableStateOf(initialBootstrap); private set
     fun updateBootstrap(state: ProductStorageState) { bootstrap = state }
     var snapshot by mutableStateOf(session.snapshot()); private set
@@ -58,8 +58,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     var preparationArea by mutableStateOf(PreparationArea.OVERVIEW); private set
     var workspaceRefreshing by mutableStateOf(false); private set
     val preparationAvailable get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.PREPARATION
+    val expensesAvailable get() = expenseRepository != null
     val materialAvailable get() = materialRepository != null
-    val preparationNavigationEnabled get() = preparationAvailable && !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy && !material.busy
+    val preparationNavigationEnabled get() = preparationAvailable && !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy && !material.busy && !expenses.busy
     val preparationContentState: PreparationContentState get() {
         val content = workspace ?: return if (workspaceError) PreparationContentState.ERROR else PreparationContentState.LOADING
         if ((preparationArea == PreparationArea.TASKS && (content.tasks == null || content.operations == null)) ||
@@ -70,13 +71,14 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             PreparationArea.TASKS -> content.tasks?.tasks?.isEmpty() == true
             PreparationArea.ROLES -> content.operations?.roles?.isEmpty() == true
             PreparationArea.MATERIAL -> material.board?.items?.isEmpty() == true
+            PreparationArea.COSTS -> expenses.board?.expenses?.isEmpty() == true
         }
         return if (empty) PreparationContentState.EMPTY else PreparationContentState.CONTENT
     }
     fun preparationArea(area: PreparationArea) {
         val before = snapshot
         val action = selected ?: return
-        if (!preparationNavigationEnabled || (area == PreparationArea.MATERIAL && !materialAvailable)) return
+        if (!preparationNavigationEnabled || (area == PreparationArea.MATERIAL && !materialAvailable) || (area == PreparationArea.COSTS && !expensesAvailable)) return
         interaction()
         if (!preparationNavigationEnabled || snapshot.generation != before.generation || selected?.id != action.id) return
         if (area == preparationArea && !personForm && selectedPerson == null && !sensitiveSetup &&
@@ -87,15 +89,16 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         editing = null; confirming = null; changeError = null
         loadWorkspace()
         if (area == PreparationArea.MATERIAL) material.enter()
+        if (area == PreparationArea.COSTS) expenses.enter()
     }
     var activeArea by mutableStateOf(ActiveArea.HUB); private set
     val activeNavigationEnabled get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.ACTIVE &&
-        !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy && !material.busy
+        !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy && !material.busy && !expenses.busy
     fun activeArea(area: ActiveArea) = navigateActive(area)
     private fun navigateActive(area: ActiveArea, retained: WorkspaceSnapshot? = null) {
         val before = snapshot
         val action = selected ?: return
-        if (!activeNavigationEnabled || (area == ActiveArea.MATERIAL && !materialAvailable)) return
+        if (!activeNavigationEnabled || (area == ActiveArea.MATERIAL && !materialAvailable) || (area == ActiveArea.COSTS && !expensesAvailable)) return
         interaction()
         if (!activeNavigationEnabled || snapshot.generation != before.generation || selected?.id != action.id) return
         clearPersons()
@@ -109,6 +112,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (area != ActiveArea.DETAILS) loadWorkspace()
         if (area == ActiveArea.PROTOCOL) protocol.refresh()
         if (area == ActiveArea.MATERIAL) material.enter()
+        if (area == ActiveArea.COSTS) expenses.enter()
     }
     fun activePersonTasks(personId: String, create: Boolean) {
         val generation = snapshot.generation
@@ -121,7 +125,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     val completedProtocolOpen get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.COMPLETED && protocol.completedFollowUp
     fun openCompletedProtocol() {
-        if (selected?.status != ActionStatus.COMPLETED || protocolRepository == null || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || material.busy) return
+        if (selected?.status != ActionStatus.COMPLETED || protocolRepository == null || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || material.busy || expenses.busy) return
         val retained = workspace
         protocol.openCompletedFollowUp {
             clearPersons()
@@ -131,13 +135,13 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     fun closeCompletedProtocol() {
         val before = snapshot; val a = selected ?: return
-        if (!completedProtocolOpen || protocol.busy) return
+        if (!completedProtocolOpen || protocol.busy || expenses.busy) return
         interaction()
         if (completedProtocolOpen && snapshot.generation == before.generation && selected?.id == a.id) protocol.clear()
     }
     val completedMaterialOpen get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.COMPLETED && material.completedView
     fun openCompletedMaterial() {
-        if (selected?.status != ActionStatus.COMPLETED || !materialAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy) return
+        if (selected?.status != ActionStatus.COMPLETED || !materialAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy || expenses.busy) return
         val retained = workspace
         material.openCompleted {
             clearPersons()
@@ -147,9 +151,25 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     fun closeCompletedMaterial() {
         val before = snapshot; val a = selected ?: return
-        if (!completedMaterialOpen || material.busy) return
+        if (!completedMaterialOpen || material.busy || expenses.busy) return
         interaction()
         if (completedMaterialOpen && snapshot.generation == before.generation && selected?.id == a.id) material.clear()
+    }
+    val completedExpensesOpen get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.COMPLETED && expenses.completedView
+    fun openCompletedExpenses() {
+        if (selected?.status != ActionStatus.COMPLETED || !expensesAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy || material.busy) return
+        val retained = workspace
+        expenses.openCompleted {
+            clearPersons()
+            if (retained?.actionId == selected?.id && retained?.generation == snapshot.generation && retained?.status == ActionStatus.COMPLETED) workspace = retained
+            else loadWorkspace()
+        }
+    }
+    fun closeCompletedExpenses() {
+        val before = snapshot; val a = selected ?: return
+        if (!completedExpensesOpen || expenses.busy) return
+        interaction()
+        if (completedExpensesOpen && snapshot.generation == before.generation && selected?.id == a.id) expenses.clear()
     }
     val protocol = ProtocolModel(protocolRepository, { snapshot }, { selected }, ::interaction, ::loadWorkspace, ::showFeedback)
     val tasks = TaskModel(taskRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
@@ -157,6 +177,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     val operations = OperationsModel(operationsRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
         { workspace?.operations }, ::loadWorkspace, ::showFeedback, ::returnedFromOperationalEdit)
     val material = MaterialModel(materialRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive, ::loadWorkspace, ::showFeedback)
+    val expenses = ExpenseModel(expenseRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive, ::loadWorkspace, ::showFeedback)
     private fun returnedFromOperationalEdit(personId: String?) {
         if (personId != null && selectedPerson?.id == personId && personsVisible) refreshSensitive()
     }
@@ -173,14 +194,14 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private fun clearPersons() {
         preparationArea = PreparationArea.OVERVIEW; activeArea = ActiveArea.HUB; workspaceRefreshing = false
         workspaceRequest++; workspace = null; workspaceError = false; detailLoading = false; personDetailLoading = false
-        tasks.clear(); operations.clear(); protocol.clear(); material.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
+        tasks.clear(); operations.clear(); protocol.clear(); material.clear(); expenses.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
         personForm = false; editingPerson = null; personError = null; personSaving = false
     }
     private fun loadPersons() {
         clearSensitive(); personRequest++
         selectedPerson = null; personForm = false; editingPerson = null; personError = null; personSaving = false
         if (workspace?.status != selected?.status) {
-            workspace = null; tasks.clear(); operations.clear(); protocol.clear(); material.clear()
+            workspace = null; tasks.clear(); operations.clear(); protocol.clear(); material.clear(); expenses.clear()
         }
         loadWorkspace()
     }
@@ -206,6 +227,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val needProtocol = active && activeSection in setOf(ActiveArea.HUB, ActiveArea.PROTOCOL) && protocolRepository != null
         val needMaterial = materialRepository != null && ((active && activeSection in setOf(ActiveArea.HUB, ActiveArea.MATERIAL)) ||
             (preparation && area == PreparationArea.OVERVIEW && selectedPerson == null))
+        val needExpenses = expenseRepository != null && ((active && activeSection in setOf(ActiveArea.HUB, ActiveArea.COSTS)) ||
+            (preparation && area == PreparationArea.OVERVIEW && selectedPerson == null))
+        var expenseSummary = previous?.expenseSummary
+        var expensesDone = !needExpenses
         var materialSummary = previous?.materialSummary
         var materialDone = !needMaterial
         var protocolSummary = previous?.protocolSummary
@@ -225,9 +250,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             workspaceRequest++; personsLoading = false; workspaceRefreshing = false; workspaceError = true
         }
         fun publish() {
-            if (!current() || !peopleDone || !tasksDone || !metadataDone || !protocolDone || !materialDone) return
+            if (!current() || !peopleDone || !tasksDone || !metadataDone || !protocolDone || !materialDone || !expensesDone) return
             androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
-                workspace = WorkspaceSnapshot(action.id, generation, people.orEmpty(), ops, taskBoard, action.status, metadata, protocolSummary, materialSummary)
+                workspace = WorkspaceSnapshot(action.id, generation, people.orEmpty(), ops, taskBoard, action.status, metadata, protocolSummary, materialSummary, expenseSummary)
                 personsLoading = false; workspaceRefreshing = false
                 tasks.reconcileSelection()
             }
@@ -263,6 +288,13 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             if (!current()) return@summary
             when (result) {
                 is OperationsResult.Value -> { materialSummary = result.value; materialDone = true; publish() }
+                is OperationsResult.Rejected -> failed()
+            }
+        }
+        if (needExpenses && current()) expenseRepository.summary(action.id) { result ->
+            if (!current()) return@summary
+            when (result) {
+                is OperationsResult.Value -> { expenseSummary = result.value; expensesDone = true; publish() }
                 is OperationsResult.Rejected -> failed()
             }
         }
@@ -567,5 +599,5 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             loadActions()
         }
     }
-    override fun onCleared() { protocol.clear(); material.clear(); clearSensitive(); subscription.cancel(); session.lock() }
+    override fun onCleared() { protocol.clear(); material.clear(); expenses.clear(); clearSensitive(); subscription.cancel(); session.lock() }
 }

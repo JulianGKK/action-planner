@@ -72,7 +72,7 @@ class MaterialStorageTest {
     @Test fun freshSchemaEightHasOnlyNineMaterialColumnsAndFourTriggers() {
         val i = fixture()
         B2Native.open(i.database, key, context(AccessScope.MAINTENANCE), true).use { d ->
-            assertEquals(8, d.version)
+            assertEquals(9, d.version)
             d.rawQuery("PRAGMA table_info(materials)", emptyArray<String>()).use { c ->
                 val columns = mutableListOf<String>(); while (c.moveToNext()) columns += c.getString(1)
                 assertEquals(listOf("id", "actionId", "name", "quantityLabel", "placeLabel", "responsiblePersonId", "linkedTaskId", "sourceTemplateKey", "createdAt"), columns)
@@ -213,7 +213,7 @@ class MaterialStorageTest {
         downgrade(i); val oldTables = tables(i)
         val nonMaterialTriggers = triggers(i).filterKeys { !it.startsWith("materials_") }
         repo(i).summary("a") { assertEquals(MaterialSummary(0), value(it)) }
-        assertEquals(oldTables + "materials", tables(i)); assertEquals(fresh, materialTriggers(i))
+        assertEquals(oldTables + setOf("materials", "expenses", "expense_payments"), tables(i)); assertEquals(fresh, materialTriggers(i))
         assertEquals(nonMaterialTriggers, triggers(i).filterKeys { !it.startsWith("materials_") })
         assertEquals(before, use(i) { d -> protocolValue(ProtocolStore(d, context()) { time }.detail("a", saved.entryId)) })
         assertEquals(oldTask, task(i)); assertEquals(events, use(i) { it.tasks().events("a") })
@@ -225,7 +225,7 @@ class MaterialStorageTest {
         assertThrows(RuntimeException::class.java) { use(i) {} }; reset()
         B2Native.open(i.database, key, context(AccessScope.MAINTENANCE), true).use { assertEquals(7, it.version) }
         assertFalse(tables(i).contains("materials")); assertEquals(oldTask, task(i)) // ordinary retry upgrades to 8
-        B2Native.open(i.database, key, context(AccessScope.MAINTENANCE), true).use { assertEquals(8, it.version) }
+        B2Native.open(i.database, key, context(AccessScope.MAINTENANCE), true).use { assertEquals(9, it.version) }
     }
     private fun downgrade(i: ProductInventory) = B2Native.open(i.database, key, context(AccessScope.MAINTENANCE)).use { d ->
         d.beginTransaction(); try {

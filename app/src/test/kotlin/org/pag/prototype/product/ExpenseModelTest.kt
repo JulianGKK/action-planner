@@ -1,0 +1,40 @@
+package org.pag.prototype.product
+import org.junit.Assert.*
+import org.junit.Test
+import org.pag.domain.*
+internal class ExpenseFake : ExpenseRepository {
+    var boardReads=0;var summaryReads=0;var writes=0
+    var input:ExpenseInput?=null;var expected:Expense?=null
+    var boardCallback:((OperationsResult<ExpenseBoard>)->Unit)?=null
+    var summaryCallback:((OperationsResult<ExpenseSummary>)->Unit)?=null
+    var saved:((OperationsResult<Expense>)->Unit)?=null
+    var deleted:((OperationsResult<Unit>)->Unit)?=null
+    override fun board(actionId:String,publish:(OperationsResult<ExpenseBoard>)->Unit){boardReads++;boardCallback=publish}
+    override fun summary(actionId:String,publish:(OperationsResult<ExpenseSummary>)->Unit){summaryReads++;summaryCallback=publish}
+    override fun create(actionId:String,input:ExpenseInput,publish:(OperationsResult<Expense>)->Unit){writes++;this.input=input;saved=publish}
+    override fun edit(actionId:String,expected:Expense,input:ExpenseInput,publish:(OperationsResult<Expense>)->Unit){writes++;this.input=input;this.expected=expected;saved=publish}
+    override fun delete(actionId:String,expected:Expense,publish:(OperationsResult<Unit>)->Unit){writes++;this.expected=expected;deleted=publish}
+}
+class ExpenseModelTest {
+    private var session=SessionSnapshot(SessionState.READY,1)
+    private var action=Action("a","synthetic","synthetic",1,2,0,ActionStatus.ACTIVE)
+    private val port=ExpenseFake();private var interactions=0;private var refreshes=0;private var feedbacks=0
+    private var onInteraction:()->Unit={}
+    private val model=ExpenseModel(port,{session},{action},{interactions++;onInteraction()},{},{refreshes++},{feedbacks++})
+    private val item=Expense("e","a","Zugtickets",12000,listOf(ExpensePayment("Meise",5000),ExpensePayment("Motte",7000)),1)
+    private val draft=ExpenseDraft.from(item)
+    private fun start(phase:ActionStatus=ActionStatus.ACTIVE){action=action.copy(status=phase);if(phase==ActionStatus.COMPLETED)model.openCompleted{} else model.enter();if(model.available)port.boardCallback!!(OperationsResult.Value(ExpenseBoard("a",listOf(item))))}
+    @Test fun freeDraftAndPseudonymCopyHaveNoIdOrWrite(){start();model.create();assertEquals(ExpenseDraft(),model.draft);model.change(model.draft!!.copy(title="x",total="1").add("Motte"));model.change(model.draft!!.copy(payments=listOf(ExpensePaymentDraft("Motte","1"))));model.save();assertEquals(listOf(ExpensePaymentInput("Motte",100)),port.input!!.payments);assertEquals(listOf("payerLabel","amountCents"),ExpensePaymentInput::class.java.declaredFields.filter{!it.isSynthetic}.map{it.name})}
+    @Test fun addRemoveAndThirtyTwoLimit(){var d=ExpenseDraft();repeat(32){d=d.add("external")};assertFalse(d.canAdd);assertEquals(d,d.add("33"));d=d.remove(0);assertTrue(d.canAdd);assertEquals(31,d.payments.size)}
+    @Test fun partialMoneyAndMismatchNeverWrite(){start();model.create();for(d in listOf(draft.copy(total="12,"),draft.copy(total="0"),draft.copy(total="121"),draft.copy(payments=emptyList()),draft.copy(payments=listOf(ExpensePaymentDraft("x","1.234"))))){model.change(d);model.save();assertEquals(0,port.writes);assertNotNull(model.draft)};model.change(draft);model.save();assertEquals(item.input(),port.input)}
+    @Test fun feedbackUsesSafeCentsWithoutCorrection(){assertEquals("Zahlungen: 120,00 € von 120,00 €",draft.feedback());assertTrue(draft.copy(total="110").feedback().contains("überschreiten"));assertEquals("Zahlungen: 120,00 € von 130,00 €",draft.copy(total="130").feedback());assertTrue(draft.copy(total="92233720368547758,07",payments=listOf(ExpensePaymentDraft("a","92233720368547758,07"),ExpensePaymentDraft("b","1"))).feedback().contains("zu groß"))}
+    @Test fun createEditDeleteAllThreePhases(){for(s in listOf(ActionStatus.PREPARATION,ActionStatus.ACTIVE,ActionStatus.COMPLETED)){start(s);model.create();model.change(draft);model.save();port.saved!!(OperationsResult.Value(item));model.edit(item);model.change(draft.copy(title="external",payments=listOf(ExpensePaymentDraft("Alex aus der Soligruppe","120"))));model.save();assertEquals(item,port.expected);port.saved!!(OperationsResult.Value(item));model.edit(item);model.requestDelete();model.delete();assertEquals(item,port.expected);port.deleted!!(OperationsResult.Value(Unit));assertFalse(model.form)};assertEquals(9,port.writes)}
+    @Test fun cancelAndDeleteRequireConfirmation(){start();model.create();model.change(draft);model.cancel();model.edit(item);model.delete();model.requestDelete();model.cancelDelete();model.cancel();assertEquals(0,port.writes)}
+    @Test fun staleRetainsFullDraftAndBlocksBlindRetry(){start();model.edit(item);model.change(draft.copy(title="draft"));model.save();port.saved!!(OperationsResult.Rejected(OperationsFailure.STALE));model.save();assertEquals(1,port.writes);assertEquals("draft",model.draft!!.title);assertEquals(item,model.expected);model.reload();assertNull(model.draft);assertNull(model.expected);port.boardCallback!!(OperationsResult.Value(ExpenseBoard("a",listOf(item.copy(title="current")))));model.edit(model.board!!.expenses.single());assertEquals("current",model.draft!!.title)}
+    @Test fun pendingReadAndInvalidMoneyCannotClearStale(){start();model.refresh();val late=port.boardCallback!!;model.edit(item);model.save();port.saved!!(OperationsResult.Rejected(OperationsFailure.STALE));late(OperationsResult.Value(ExpenseBoard("a",emptyList())));model.change(draft.copy(total="12,"));model.save();assertEquals(OperationsFailure.STALE,model.error);model.change(draft);model.save();assertEquals(1,port.writes)}
+    @Test fun completedRequiresExplicitEntryAndForbiddenPhasesHaveNoPath(){action=action.copy(status=ActionStatus.COMPLETED);model.create();model.save();assertEquals(0,port.writes);assertEquals(0,port.boardReads);start(ActionStatus.COMPLETED);assertTrue(model.completedView);assertTrue(model.writable);for(s in listOf(ActionStatus.DRAFT,ActionStatus.DELETION_PENDING)){start(s);model.create();model.edit(item);model.save();assertFalse(model.available);assertNull(model.draft)}}
+    @Test fun lockGenerationActionAndPhaseRejectLateResults(){for(exit in listOf("lock","generation","action","phase")){start();val read=port.boardCallback!!;model.edit(item);model.save();val write=port.saved!!;when(exit){"lock"->session=session.copy(state=SessionState.LOCKED);"generation"->session=session.copy(generation=session.generation+1);"action"->action=action.copy(id="b");else->action=action.copy(status=ActionStatus.COMPLETED)};model.clear();read(OperationsResult.Value(ExpenseBoard("a",listOf(item))));write(OperationsResult.Value(item));assertNull(model.board);assertNull(model.draft);assertNull(model.expected);assertNull(model.selected);assertNull(model.error);assertFalse(model.busy);assertFalse(model.confirmingDelete);assertFalse(model.completedView);session=SessionSnapshot(SessionState.READY,session.generation+1);action=action.copy(id="a")};assertEquals(0,feedbacks)}
+    @Test fun readsAndWritePublicationAreNotInteractionsAndDuplicateIsIgnored(){start();val n=interactions;model.refresh();port.boardCallback!!(OperationsResult.Value(ExpenseBoard("a",listOf(item))));assertEquals(n,interactions);model.edit(item);model.save();val n2=interactions;val cb=port.saved!!;cb(OperationsResult.Value(item));cb(OperationsResult.Value(item));assertEquals(n2,interactions);assertEquals(1,refreshes);assertEquals(1,feedbacks)}
+    @Test fun loadingErrorRetryAndRefreshKeepOldBoard(){model.enter();assertTrue(model.loading);port.boardCallback!!(OperationsResult.Rejected(OperationsFailure.NOT_FOUND));assertNull(model.board);model.reload();port.boardCallback!!(OperationsResult.Value(ExpenseBoard("a",emptyList())));val old=model.board;model.refresh();port.boardCallback!!(OperationsResult.Rejected(OperationsFailure.NOT_FOUND));assertSame(old,model.board)}
+    @Test fun revokingInteractionCannotOpenCompleted(){action=action.copy(status=ActionStatus.COMPLETED);onInteraction={session=session.copy(state=SessionState.LOCKED);model.clear()};model.openCompleted{};assertEquals(0,port.boardReads);assertFalse(model.completedView)}
+}

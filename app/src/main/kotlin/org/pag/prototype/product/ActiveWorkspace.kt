@@ -10,9 +10,9 @@ import androidx.compose.ui.unit.dp
 import org.pag.domain.*
 
 /** Navigation is ephemeral UI state, never session authority. */
-enum class ActiveArea(val label: String) { HUB("Lagebild"), PERSONS("Personen"), TASKS("Aufgaben"), FUNCTIONS("Funktionen"), PROTOCOL("Protokoll"), MATERIAL("Material"), DETAILS("Aktionsdetails") }
+enum class ActiveArea(val label: String) { HUB("Lagebild"), PERSONS("Personen"), TASKS("Aufgaben"), FUNCTIONS("Funktionen"), PROTOCOL("Protokoll"), MATERIAL("Material"), COSTS("Kosten"), DETAILS("Aktionsdetails") }
 internal data class HubCard(val area: ActiveArea, val summary: List<String>, val attention: String? = null)
-internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: TaskBoard, protocol: ProtocolSummary? = null, material: MaterialSummary? = null): List<HubCard> {
+internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: TaskBoard, protocol: ProtocolSummary? = null, material: MaterialSummary? = null, expenses: ExpenseSummary? = null): List<HubCard> {
     val missing = board.persons.count { it.state?.status == null || it.state?.status == OperationalStatus.NO_STATUS }
     val custody = board.count(OperationalStatus.IN_CUSTODY)
     val unreachable = board.count(OperationalStatus.NOT_REACHABLE)
@@ -40,7 +40,8 @@ internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: Task
         HubCard(ActiveArea.TASKS, taskSummary, if (high > 0) "$high " + (if (high == 1) "Aufgabe" else "Aufgaben") + " mit hoher Priorität" else null),
         HubCard(ActiveArea.FUNCTIONS, functionSummary)) +
         (protocol?.let { listOf(HubCard(ActiveArea.PROTOCOL, listOf("${it.keyEventCount} Schlüsselereignisse", it.lastEntryRecordedAt?.let { time -> "Letzter Eintrag erfasst: ${protocolSummaryTime(time)}" } ?: "Noch kein Eintrag"))) } ?: emptyList()) +
-        (material?.let { listOf(HubCard(ActiveArea.MATERIAL, listOf(if (it.count == 0) "Noch kein Material" else "${it.count} Materialeinträge"))) } ?: emptyList()) + listOf(HubCard(ActiveArea.DETAILS,
+        (material?.let { listOf(HubCard(ActiveArea.MATERIAL, listOf(if (it.count == 0) "Noch kein Material" else "${it.count} Materialeinträge"))) } ?: emptyList()) +
+        (expenses?.let { listOf(HubCard(ActiveArea.COSTS, listOf("${it.count} Einträge", "Gesamt: ${EuroMoney.format(it.totalCents)}"))) } ?: emptyList()) + listOf(HubCard(ActiveArea.DETAILS,
             listOf("Beginn: ${formattedTime(action.startAt)}", "Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}", "Aktiv")))
 }
 internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >= 600f && fontScale <= 1.3f) 2 else 1
@@ -56,6 +57,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
         model.operations.screen in setOf(OperationsScreen.ROLES, OperationsScreen.FUNCTION_DETAIL, OperationsScreen.NEW_FUNCTION) -> ActiveArea.FUNCTIONS
         model.protocol.nested -> ActiveArea.PROTOCOL
         model.material.form || model.material.confirmingDelete -> ActiveArea.MATERIAL
+        model.expenses.form || model.expenses.confirmingDelete -> ActiveArea.COSTS
         model.tasks.form || model.tasks.selected != null -> ActiveArea.TASKS
         else -> model.activeArea
     }
@@ -96,11 +98,11 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             ActiveArea.HUB -> {
                 val tasks = content.tasks
                 if (tasks == null) { PagErrorState(); return }
-                val cards = activeHubCards(model.selected ?: return, board, tasks, content.protocolSummary, content.materialSummary)
+                val cards = activeHubCards(model.selected ?: return, board, tasks, content.protocolSummary, content.materialSummary, content.expenseSummary)
                 ActiveHubGrid(cards, model.activeNavigationEnabled) { model.activeArea(it) }
                 model.changeError?.let { Text(changeErrorLabel(it)) }
                 if (model.confirming != null) {
-                    Text("Aktion endgültig abschließen? Danach sind Bearbeitung und Wiedereröffnung ausgeschlossen.")
+                    Text("Aktion endgültig abschließen? Die Aktion bleibt abgeschlossen. Nur Protokoll-Nachbereitung und Kostenverwaltung sind weiterhin möglich.")
                     FormButton(model::confirmAdvance, enabled = !model.saving) { Text("Bestätigen") }
                     FormOutlinedButton(model::cancelAdvance, enabled = !model.saving) { Text("Abbrechen") }
                 } else FormOutlinedButton(model::requestAdvance, enabled = model.activeNavigationEnabled) { Text("Aktion abschließen") }
@@ -110,6 +112,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             ActiveArea.FUNCTIONS -> ActiveFunctionsOverview(model, board)
             ActiveArea.PROTOCOL -> ProtocolSection(model.protocol, content.persons)
             ActiveArea.MATERIAL -> MaterialSection(model.material, content.persons, content.tasks?.tasks.orEmpty())
+            ActiveArea.COSTS -> ExpenseSection(model.expenses, content.persons)
             ActiveArea.DETAILS -> Unit
         }
     }

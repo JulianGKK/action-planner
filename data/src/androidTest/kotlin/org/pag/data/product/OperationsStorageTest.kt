@@ -161,7 +161,7 @@ class OperationsStorageTest {
         }finally{d.endTransaction()}}
         val b=board(i);assertEquals(3,b.count(OperationalStatus.NO_STATUS));assertTrue(b.roles.isEmpty());assertTrue(b.persons.all{it.state!!.updatedAt==0L && it.state!!.currentRoleId==null})
         use(i){d->assertEquals("Motte",d.persons().get("a","Motte")!!.pseudonym);assertTrue(root.envelope.contentEquals(d.leadership().get("a")!!.envelope));assertTrue(area.payload.contentEquals(d.leadership().area("a","Motte","IDENTITY")!!.payload));assertTrue(area.keyEnvelope.contentEquals(d.leadership().area("a","Motte","IDENTITY")!!.keyEnvelope))}
-        B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(8,it.version)}
+        B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(9,it.version)}
     }
     @Test fun compositeForeignKeysRejectDirectCrossActionRelations(){
         val i=fixture();val foreign=role(i,"foreign","b")

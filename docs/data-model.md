@@ -65,7 +65,7 @@ Pflichtfelder sind nicht zwangsläufig Eingabefelder. Für ausdrücklich offene 
 | `ProtocolAffectedPerson` | Betroffenenbezug je Fassung auf bestehende Person derselben Aktion |
 | `ProtocolOfficialIdentifier` | Beobachtete amtliche Kennung je Fassung, kein Behördenpersonenprofil |
 | `ProtocolReportedByPerson` | Optionaler REPORTED-Quellenbezug auf bestehende Person derselben Aktion |
-| `Expense` | Ausgabe mit optionalem Beleg |
+| `Expense`, `ExpensePayment` | EUR-Kostenposition mit geordneter Zahlungsaufteilung (P8) |
 | `RetentionPolicy` | Konzeptionelle Aufbewahrungsregel |
 
 Gemeinsame Schutz- und Retention-Metadaten sind Bestandteile der betroffenen Objekte und erfordern nicht zwangsläufig eigene Entitäten.
@@ -75,6 +75,8 @@ Gemeinsame Schutz- und Retention-Metadaten sind Bestandteile der betroffenen Obj
 `Action`, `Person`, `Role`, `Task`, `Material`, `Document`, `FileAsset`, `Note` und `Expense` sowie P6-Einträge/Fassungen/Relationen besitzen eine Sensitivitätsklasse. Personenbezogene Zuordnungen werden ebenfalls geschützt.
 
 Die folgenden Retention-Attribute sind ein konzeptioneller Vorschlag. Fristen, Fristanker, Vererbung, Überschreibungen, technische Löschzustände und ihre Persistenz werden erst in `data-retention.md` und `security.md` verbindlich festgelegt.
+P8 besitzt ausschließlich die Felder aus Abschnitt 12. SENSITIVE ist sein fester
+Produktvertrag; die folgende konzeptionelle Tabelle ergänzt keine P8-Spalten.
 
 | Attribut | Typ | Pflicht | Bedeutung |
 |---|---|---|---|
@@ -287,7 +289,7 @@ Die Bibliothek ist eine kategorisierte Sicht auf importierte Dokumente. Sie erze
 | `created_at` | Zeitpunkt | P | Import |
 | gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und Retention |
 
-Ein `FileAsset` hat genau einen fachlichen Eigentümer: entweder ein `Document` oder eine `Expense`. Die Eigentümerbeziehung wird über deren Dateireferenz dargestellt und muss exklusiv sein. Es gibt keine aktionsübergreifende Datei-Deduplizierung.
+Ein `FileAsset` hat genau einen fachlichen Eigentümer: ein `Document` (P8-Kosten besitzen keine FileAsset-Beziehung). Die Eigentümerbeziehung wird über deren Dateireferenz dargestellt und muss exklusiv sein. Es gibt keine aktionsübergreifende Datei-Deduplizierung.
 
 Dateinamen und Datei-Metadaten können personenbezogen sein. Der lokale Import schützt oder löscht die externe Quelldatei nicht automatisch. Eine dauerhafte Quell-URI ist im Modell nicht vorgesehen.
 
@@ -357,24 +359,32 @@ Eigene endliche P6-Retentionbetrachtung innerhalb der Aktion, konkrete Dauer off
 Vollständige Aktionslöschung entfernt Einträge, alle Fassungen/Relationen/Kennungen;
 keine P6-Insel oder einzelne versteckte Altfassung, keine Secure-Overwrite-Garantie.
 
-## 12. Expense: Kosten und Belege
+## 12. Expense und ExpensePayment: P8 Kosten-Sammelliste
 
-| Attribut | Typ | Pflicht | Bedeutung |
-|---|---|---|---|
-| `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Aktion |
-| `amount` | Geldbetrag | P | Ausgabenbetrag |
-| `currency_code` | Währungscode | P | Währung; Umfang noch offen |
-| `expense_date` | Datum | P | Fachliches Ausgabedatum |
-| `category` | Text | P | Kategorie im Fachbereich Kosten |
-| `description` | Text | P | Beschreibung |
-| `receipt_file_asset_id` | Referenz | O | Höchstens ein Beleg |
-| `created_at` | Zeitpunkt | P | Erfassung |
-| gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und Retention |
+Verbindlich: [P8](product-p8-costs.md). Expense besitzt ausschließlich id,
+actionId, title (1–120 Unicode-Codepoints), totalCents (positive Long-Cents),
+geordnete payments (1–32) und createdAt. Payment besitzt nur payerLabel
+(1–80 Codepoints) und amountCents (>0). Text getrimmt, exakte overflow-sichere
+Summe aller Zahlungen = totalCents. EUR-only; kein currency_code, Datum,
+Kategorie, separates description-Feld, Beleg/FileAsset oder Erstattung.
+Keine Historie/Auditlog. IDs und createdAt bleiben bei Edit unverändert.
 
-Ausgabedatum und Erfassungszeitpunkt werden unterschieden. Kosten- und Kategoriesummen werden berechnet. Verschiedene Währungen dürfen ohne definierte Umrechnung nicht addiert werden.
+Schema9: expenses mit fünf Parentfeldern, Action-CASCADE und UNIQUE(actionId,id).
+expense_payments mit actionId/expenseId/position/payerLabel/amountCents,
+PK(actionId,expenseId,position), Composite-CASCADE zum Parent. Position exakt
+0..n-1, geordnet gelesen und vollständiger Childersatz in derselben Transaktion.
+Die bisherigen 16 Schema8-Entities und deren Trigger bleiben unverändert.
 
-Pro Ausgabe gibt es höchstens einen Beleg. Belege werden als operative Daten verschlüsselt gespeichert. Die Formulierung „optional verschlüsselt“ in FR-082 begründet keine Ausnahme von dieser Regel. Währungen und Erstattungen bleiben unter OD-05 offen.
+Kein Person-FK: P3a-Pseudonym wird nur im Formular als Text kopiert. Rename/Delete
+lassen payerLabel unverändert; es ist bewusster eigenständiger Kosteninhalt.
+Doppelte Labels erlaubt. Schutzklasse ausdrücklich SENSITIVE, bestehende
+SQLCipher-DB und gültiges READY ohne zusätzlichen Leadership-Step-up als enge
+P8-Freigabe. Keine P3b-Übernahme oder Änderungen anderer Fachbereiche.
+
+Lesen/Schreiben/Löschen PREPARATION/ACTIVE/COMPLETED, letztere nur im bewusst
+geöffneten Kostenbereich. Kein Zugriff DRAFT/DELETION_PENDING. Kein Reopen und
+keine allgemeine COMPLETED-Schreibfreigabe. Retention bleibt konzeptionell,
+keine zusätzlichen Retentionspalten in P8; Actiondelete ist die Obergrenze.
 
 ## 13. RetentionPolicy
 
@@ -447,7 +457,7 @@ Zunächst erfolgt die Klassifizierung auf Objektebene; keine zusätzliche Feldkl
 | ProtocolRevision → ProtocolOfficialIdentifier | 1 : 0..32 |
 | ProtocolRevision → mitteilende Person | 0..1 über ProtocolReportedByPerson, nur REPORTED und gleiche Aktion |
 | `Action` → Expense | 1 : 0..n |
-| Expense → FileAsset als Beleg | 1 : 0..1 |
+| Expense → ExpensePayment | 1 : 1..32, geordnete Children |
 | RetentionPolicy → zugeordnete Objekte | 1 : 0..n |
 
 Jedes operative Kindobjekt gehört genau einer Aktion. Jedes FileAsset besitzt genau einen Eigentümer; die Beziehung zu Dokument und Ausgabe ist exklusiv.
@@ -477,12 +487,11 @@ Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, ke
 | Document | Dokument und zugehöriges FileAsset entfernen |
 | Note | Note entfernen; `Action` und Person erhalten |
 | P6-Bestand bei Retention-/Aktionslöschung | Einträge mit sämtlichen Fassungen, Betroffenen-/Quellenrelationen, Kennungen und Ableitungen entfernen; keine gewöhnliche Einzel-Löschung im P6-Produktpfad |
-| Expense | Ausgabe und optionalen Beleg entfernen |
+| Expense | Kostenposition und Zahlungschildren entfernen |
 | FileAsset eines Dokuments | Dokument ebenfalls entfernen, damit kein funktionsloser Eintrag verbleibt |
-| FileAsset eines Belegs | Belegreferenz entfernen; Ausgabe bleibt bis zu ihrer eigenen Löschung bestehen |
 | RetentionPolicy | Keine Inhaltskaskade; verwendete Regel darf nicht ersatzlos entfernt werden |
 
-Die Entfernung einer Personenreferenz anonymisiert keinen Freitext. Namen oder identifizierende Angaben in Aufgaben, Materialbezeichnung/-menge/-ort, Dateien und Belegen können verbleiben. Eine zuverlässige automatische Erkennung wird nicht vorausgesetzt. Ein Bereinigungsablauf ist unter OD-10 offen. Für P6 muss er ausdrücklich die manuelle Prüfung sämtlicher Protokollfassungen umfassen, ohne automatische Inhaltszerstörung bei Teilnehmerlöschung.
+Die Entfernung einer Personenreferenz anonymisiert keinen Freitext. Namen oder identifizierende Angaben in Aufgaben, Materialbezeichnung/-menge/-ort, Dateien und P8-payerLabels können verbleiben. Eine zuverlässige automatische Erkennung wird nicht vorausgesetzt. Ein Bereinigungsablauf ist unter OD-10 offen. Für P6 muss er ausdrücklich die manuelle Prüfung sämtlicher Protokollfassungen umfassen, ohne automatische Inhaltszerstörung bei Teilnehmerlöschung.
 
 ### 15.4 Technische Löschung: ausdrücklich offen
 
@@ -527,13 +536,14 @@ im [P7-Vertrag](product-p7-material.md).
 
 **Offen:** Konkrete erlaubte Formate, Inhaltsprüfung, maximale Dateigrößen sowie Import-, Fehler- und Bereinigungszustände.
 
-**Empfehlung:** Einen begrenzten Formatumfang nach der Produktpriorität festlegen. Unvollständige Dateien bis zur erfolgreichen Übernahme nicht fachlich sichtbar machen. Technische Zustände in architecture.md und security.md spezifizieren. Exklusives Eigentum, höchstens ein Beleg und keine aktionsübergreifende Deduplizierung sind bereits verbindlich.
+**Empfehlung:** Einen begrenzten Formatumfang nach der Produktpriorität festlegen. Unvollständige Dateien bis zur erfolgreichen Übernahme nicht fachlich sichtbar machen. Technische Zustände in architecture.md und security.md spezifizieren. Exklusives Dokumenteigentum und keine aktionsübergreifende Deduplizierung sind bereits verbindlich.
 
-### OD-05 — Geldbeträge und Währungen
+### OD-05 — Geldbeträge und Währungen: durch P8 entschieden
 
-**Offen:** Währungsumfang, Rundung, null beziehungsweise negative Beträge und Erstattungen.
-
-**Empfehlung:** Eine festgelegte Währung je Aktion und positive Ausgaben verwenden. Beträge exakt speichern. Erstattungen und Umrechnung erst nach eigener fachlicher Spezifikation einführen.
+EUR-only, positive Long-Cents, exakte overflow-sichere Payment-Summe.
+Keine Fremdwährung, Umrechnung, Erstattung oder Schuldenberechnung.
+Keine persistierte Personenrelation; payerLabel ist eigener Kosteninhalt.
+Siehe [P8](product-p8-costs.md).
 
 ### OD-06 — Retention-Regeln und Metadaten
 
