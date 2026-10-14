@@ -420,3 +420,23 @@ Retention/Löschworkflow bleiben ausdrücklich offen.
 
 P9b-Automation grün und bereit für Review; Ergebnisse und verbleibende manuelle
 Abnahme sind im verlinkten P9b-Nachweis dokumentiert.
+
+## P10a — Dokumente: Produkt-/Privacy-/Securityvertrag
+
+[P10a](product-p10a-documents.md) ist ausschließlich Spezifikation. PREPARATION
+später Dokumentbereich, ACTIVE neunte Hubkarte nur Dokumentanzahl, COMPLETED
+„Dokumente verwalten“ ohne Prefetch/Dateiöffnung/Write vor Tap. Bestehender
+responsive Workspacevertrag, keine neue Navigation oder heute tote Karte.
+Bewusste Liste Name/Format/Größe/Importzeit ohne Thumbnails/Inhaltsvorschau,
+Kategorien/Suche/Filter. Import/Umbenennen/Löschen auch COMPLETED ausschließlich
+P10-administrativ; P4/P5a/P7 und Aktionsregeln bleiben unverändert.
+
+P10b muss SAF-/Sessionübergabe, Grenzen/Formatprüfung, sichere File-Key-/Streaming-
+AEAD-Integration, Cross-Store-Recovery und Klartextfreiheit erst konkretisieren
+und nachweisen. Text/JPEG/PNG intern nur bei sicherem RAM-/Decoderpfad; PDF-P10b
+nur Import/Storage/Liste/Umbenennen/Löschen, „PDF gespeichert · Vorschau in dieser
+Version nicht verfügbar.“ Kein externes Öffnen/Share/Export oder Klartexttempfile.
+Möglicher sicherer interner PDF-Viewer separat P10c, kein Verfahren freigegeben.
+Originalquelle bleibt ungeschützt außerhalb PaG; keine persistente URI oder Sync.
+Retentiondauer/allgemeine Löschung, fachkundige Security-/Privacyprüfung und
+menschliche Accessibilityabnahme bleiben gesondert offen. Kein Code durch P10a.

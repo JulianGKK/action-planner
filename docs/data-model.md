@@ -57,8 +57,7 @@ Pflichtfelder sind nicht zwangsläufig Eingabefelder. Für ausdrücklich offene 
 | `PersonRole` | Person-Rollen-Zuordnung |
 | `Task` | Aufgabe |
 | `Material` | Materialposition |
-| `Document` | Dokumenteintrag einschließlich Informationsmaterial |
-| `FileAsset` | Verwalteter lokaler Dateiinhalt |
+| DocumentAsset (P10a, konzeptionell) | Genau aktionsgebundenes Dokument samt verschlüsseltem Inhalt; technische Abbildung erst P10b |
 | `Note` | Allgemeine aktions-/personenbezogene Notiz, getrennt von P6 und P9 |
 | `ProtocolEntry` | Stabile Identität eines bewusst dokumentierten Aktionsvorgangs (P6) |
 | `ProtocolRevision` | Vollständige nachvollziehbare Fassung eines P6-Eintrags |
@@ -73,7 +72,7 @@ Gemeinsame Schutz- und Retention-Metadaten sind Bestandteile der betroffenen Obj
 
 ## 5. Gemeinsame Schutz- und Retention-Metadaten
 
-`Action`, `Person`, `Role`, `Task`, `Material`, `Document`, `FileAsset`, `Note` und `Expense` sowie P6-Einträge/Fassungen/Relationen besitzen eine Sensitivitätsklasse. Personenbezogene Zuordnungen werden ebenfalls geschützt.
+`Action`, `Person`, `Role`, `Task`, `Material`, DocumentAsset, `Note` und `Expense` sowie P6-Einträge/Fassungen/Relationen besitzen eine Sensitivitätsklasse. Personenbezogene Zuordnungen werden ebenfalls geschützt.
 
 Die folgenden Retention-Attribute sind ein konzeptioneller Vorschlag. Fristen, Fristanker, Vererbung, Überschreibungen, technische Löschzustände und ihre Persistenz werden erst in `data-retention.md` und `security.md` verbindlich festgelegt.
 P8 besitzt ausschließlich die Felder aus Abschnitt 12. SENSITIVE ist sein fester
@@ -260,41 +259,47 @@ INSERT/UPDATE. AFTER DELETE auf persons/tasks setzt die jeweilige Referenz null,
 Material bleibt. Keine Pseudonym-/Tasktitelsnapshots oder fremden Mutationen.
 Materialdelete in PREPARATION/ACTIVE nach Bestätigung, COMPLETED nur lesen.
 
-## 10. Dokumente, Dateien und Bibliothek
+## 10. Dokumente: P10a ausschließlich konzeptionell
 
-### 10.1 Document
+Verbindlich: [P10a](product-p10a-documents.md). Sichtbar Dokument/Dokumente,
+später vorzugsweise DocumentAsset. P10a ersetzt die frühere Document-/FileAsset-
+Fachplanung einschließlich kind/category/original_filename und Bibliothekssicht
+für diesen MVP. Keine konkrete Room-Tabelle, Migration oder nächste Schemanummer.
+Der implementierte Bestand bleibt Schema 10, P10 ist noch nicht implementiert.
 
-| Attribut | Typ | Pflicht | Bedeutung |
-|---|---|---|---|
-| `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Aktion |
-| `title` | Text | P | Anzeigename |
-| `kind` | Enum | P | `DOCUMENT` oder `INFORMATION_MATERIAL` |
-| `category` | Text | O | Kategorie im Fachbereich Dokumente |
-| `file_asset_id` | Referenz | P | Zugehöriger lokaler Dateiinhalt |
-| `created_at` | Zeitpunkt | P | Import beziehungsweise Erstellung des Eintrags |
-| gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und Retention |
+| Fachangabe | Bedeutung |
+| --- | --- |
+| id | Interne Dokumentidentität |
+| actionId | Genau eine Aktion |
+| displayName | PaG-eigener Name, Trim, 1–160 Unicode-Codepoints; Providername nur Vorbelegung |
+| format | Geprüftes PDF, JPEG, PNG oder UTF-8-Klartext |
+| plaintextSize | Tatsächlich übernommene Klartextgröße |
+| importedAt | Appseitige Importzeit, keine externe Erstellungszeit |
 
-Die Bibliothek ist eine kategorisierte Sicht auf importierte Dokumente. Sie erzeugt keine zweite Inhaltskopie und keine separate Bibliotheksentität. Die Formatfreigabe bleibt offen; PRODUCT.md priorisiert PDF, Bilder und einfache Textdateien.
+Genau diese sechs Fachangaben. Keine Person-/Task-/Material-/Kosten-/P6-/P9-/
+Rollenrelation, Kategorie, Tags, Beschreibung/Notiz, Autor:innenprofil,
+Originalpfad/-URI/-Provider oder Beweis-Hash. SENSITIVE und enge READY-Freigabe
+sind feste Produktregeln, keine zusätzlichen Felder. Gemeinsame konzeptionelle
+Retentionmetadaten aus Abschnitt 5 ergänzen keine P10-Spalten.
 
-### 10.2 FileAsset
+Jedes Dokument besitzt einen eigenen verschlüsselten Blob und eigenes zufälliges
+nicht persistent klares Schlüsselmaterial als Sicherheitsziel. Metadaten später
+in bestehender SQLCipher-DB, Blob unter opaque ID app-privat/backupausgeschlossen.
+Technisch notwendige Locator-/Key-/Recoveryreferenzen, Integration und Zustände
+legt P10b separat fest; keine zusätzliche Fachentityentscheidung durch P10a.
+Kein persistierter Quellzugriff, Live-Link oder aktionsübergreifende Deduplizierung.
+Dateibytes unverändert; eingebettete Metadaten bleiben ohne Extraktion/Indexierung.
 
-| Attribut | Typ | Pflicht | Bedeutung |
-|---|---|---|---|
-| `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Aktion des Eigentümers |
-| `storage_locator` | Undurchsichtige Referenz | P | Interner Speicherbezug ohne sprechenden Dateinamen |
-| `original_filename` | Text | O | Ursprünglicher Dateiname, sofern benötigt |
-| `mime_type` | Text | P | Geprüfter Inhaltstyp |
-| `size_bytes` | Ganzzahl | P | Größe des ursprünglichen Inhalts |
-| `created_at` | Zeitpunkt | P | Import |
-| gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und Retention |
+Grenzen: 100 Dokumente/Action, 25 MiB Klartext/Dokument, 250 MiB Klartext/Action.
+Import/Lesen/Umbenennen/Löschen PREPARATION/ACTIVE/COMPLETED; letztere nur enge
+P10-Ausnahme. DRAFT/DELETION_PENDING ohne normalen Zugriff. Importfreigabe ist
+keine Viewerfreigabe: P10b PDF ohne Vorschau, PDF-Viewer erst Prüfung in P10c.
+Keine Klartexttempfiles/externe Viewer/Export. FR-060ff Bibliothek bleibt separat.
 
-Ein `FileAsset` hat genau einen fachlichen Eigentümer: ein `Document` (P8-Kosten besitzen keine FileAsset-Beziehung). Die Eigentümerbeziehung wird über deren Dateireferenz dargestellt und muss exklusiv sein. Es gibt keine aktionsübergreifende Datei-Deduplizierung.
-
-Dateinamen und Datei-Metadaten können personenbezogen sein. Der lokale Import schützt oder löscht die externe Quelldatei nicht automatisch. Eine dauerhafte Quell-URI ist im Modell nicht vorgesehen.
-
-Kryptografisches Schlüsselmaterial ist kein Fachattribut. Erforderliche Schlüsselreferenzen, Importzustände und Bereinigungszustände werden separat spezifiziert.
+Action-Löschung entfernt fachlich alle Dokumente/Keys/Blobs, Personenlöschung
+ändert Dokumente nicht. Cross-Store-Abschluss ist wiederanlauffähig, nicht eine
+gemeinsame DB-/Dateisystem-/Keytransaktion. Fristen bleiben offen. Per-File-Key
+beweist keine Secure-Erase-Garantie; historische Verpackungen/DB-Seiten prüfen.
 
 ## 11. Note und eigenständiges Aktionsprotokoll (P6)
 
@@ -481,8 +486,7 @@ Zunächst erfolgt die Klassifizierung auf Objektebene; keine zusätzliche Feldkl
 | `Action` → Material | 1 : 0..n |
 | Person → verantwortetes Material | 1 : 0..n; Material hat 0..1 verantwortliche Person |
 | Task → verknüpftes Material | 1 : 0..n; Material hat 0..1 Task; loses P7-Link |
-| `Action` → Document | 1 : 0..n |
-| Document → FileAsset | 1 : 1 |
+| `Action` → DocumentAsset (P10a) | 1 : 0..100; je Dokument genau ein eigener verschlüsselter Blob |
 | `Action` → Note | 1 : 0..n |
 | Person → Note | 1 : 0..n; Note hat 0..1 Person |
 | `Action` → ProtocolEntry | 1 : 0..n; Eintrag gehört genau einer Aktion |
@@ -494,7 +498,7 @@ Zunächst erfolgt die Klassifizierung auf Objektebene; keine zusätzliche Feldkl
 | Expense → ExpensePayment | 1 : 1..32, geordnete Children |
 | RetentionPolicy → zugeordnete Objekte | 1 : 0..n |
 
-Jedes operative Kindobjekt gehört genau einer Aktion. Jedes FileAsset besitzt genau einen Eigentümer; die Beziehung zu Dokument und Ausgabe ist exklusiv.
+Jedes operative Kindobjekt gehört genau einer Aktion. P10-Dokumentblobs gehören ausschließlich ihrem Dokument; keine Kosten-/P6-/P9-Beziehung.
 
 ### 15.2 Integritätsregeln
 
@@ -518,11 +522,10 @@ Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, ke
 | PersonStatusDefinition | Statusreferenzen entfernen; Personen erhalten |
 | Task | P5a: Aufgabe und TaskEvents vollständig entfernen, nur PREPARATION; Personen erhalten; P7-Materiallink wird null |
 | Material | Nur Materialposition/zugehörige Ableitungen entfernen; Person und Task erhalten |
-| Document | Dokument und zugehöriges FileAsset entfernen |
+| DocumentAsset (P10a) | PaG-Metadaten, zugehörige Keys und verschlüsselten Blob wiederanlauffähig entfernen; Originalquelle bleibt |
 | Note | Note entfernen; `Action` und Person erhalten |
 | P6-Bestand bei Retention-/Aktionslöschung | Einträge mit sämtlichen Fassungen, Betroffenen-/Quellenrelationen, Kennungen und Ableitungen entfernen; keine gewöhnliche Einzel-Löschung im P6-Produktpfad |
 | Expense | Kostenposition und Zahlungschildren entfernen |
-| FileAsset eines Dokuments | Dokument ebenfalls entfernen, damit kein funktionsloser Eintrag verbleibt |
 | RetentionPolicy | Keine Inhaltskaskade; verwendete Regel darf nicht ersatzlos entfernt werden |
 
 Die Entfernung einer Personenreferenz anonymisiert keinen Freitext. Namen oder identifizierende Angaben in Aufgaben, Materialbezeichnung/-menge/-ort, Dateien, P8-payerLabels und P9-authorLabels/Antworten können verbleiben. Eine zuverlässige automatische Erkennung wird nicht vorausgesetzt. Ein Bereinigungsablauf ist unter OD-10 offen. Für P6 muss er ausdrücklich die manuelle Prüfung sämtlicher Protokollfassungen umfassen, ohne automatische Inhaltszerstörung bei Teilnehmerlöschung.
@@ -531,14 +534,15 @@ Die Entfernung einer Personenreferenz anonymisiert keinen Freitext. Namen oder i
 
 Fachliche Entfernung und technische Bereinigung sind zu unterscheiden. Zu berücksichtigen sind strukturierte Daten, Beziehungen, Dateien, entschlüsselte temporäre Inhalte, Vorschauen, Caches, Suchindizes, Schlüsselmaterial und Speicherrückstände einschließlich Datenbankjournalen.
 
-Schlüsselbasierte Dateilöschung setzt eine geeignete Schlüsselstruktur voraus. Diese ist hier nicht festgelegt. Es wird keine garantierte physische Überschreibung von Flash-Speicher behauptet.
+P10a setzt Per-File-Key-Isolation als Ziel. Die konkrete geschützte Integration
+und ein Nachweis einschließlich historischer Schlüsselverpackungen bleiben P10b. Es wird keine garantierte physische Überschreibung von Flash-Speicher behauptet.
 
 Löschgarantien, Wiederanlauf, Fehlermeldung, mögliche minimale Löschprotokolle sowie Verhalten bei gesperrter App oder ausgeschaltetem Gerät werden in `security.md` und `data-retention.md` festgelegt.
 
 ## 16. Abgrenzungen
 
 - Keine gespeicherte Organisation und keine globale Personenkartei im MVP.
-- P7-Material besitzt keine Kategorie. Kategorien anderer geplanter Fachbereiche bleiben getrennt je Fachbereich. Es gibt keine zentrale Taxonomie; Material wird ausschließlich über die in Abschnitt 9 festgelegten P7-Felder dargestellt.
+- P7-Material und P10-Dokumente besitzen keine Kategorie. Eine spätere FR-060ff-Bibliothek bleibt getrennt. Es gibt keine zentrale Taxonomie; Material wird ausschließlich über die in Abschnitt 9 festgelegten P7-Felder dargestellt.
 - Der lokale Admin ist ein technischer Akteur, keine Teilnehmerperson. Kein persönliches Adminprofil wird eingeführt.
 - Authentifizierungsabläufe und Schlüsselreferenzen gehören in ein separates Sicherheitsmodell. PaG zählt keine falschen DEVICE_CREDENTIAL-Eingaben im Systemdialog; eigene Fehlversuchszähler/Sperrfristen wären erst bei einer späteren PaG-Passphrase separat zu spezifizieren. Biometrie bleibt gemäß PRODUCT.md ausgeschlossen.
 - Suche und Dashboard erzeugen keine zusätzlichen fachlichen Stammdaten. Eventuelle persistierte Indizes müssen Schutz und Löschung ihrer Ausgangsdaten berücksichtigen.
@@ -566,11 +570,14 @@ optionaler kurzer Text, keine Ganzzahlpflicht oder Einheitenverwaltung. Lose
 Person-/Tasklinks werden bei Löschung entkoppelt; das Material bleibt. Details
 im [P7-Vertrag](product-p7-material.md).
 
-### OD-04 — Dateiimporte und technische Zustände
+### OD-04 — P10-Importumfang durch P10a entschieden, Technik offen
 
-**Offen:** Konkrete erlaubte Formate, Inhaltsprüfung, maximale Dateigrößen sowie Import-, Fehler- und Bereinigungszustände.
-
-**Empfehlung:** Einen begrenzten Formatumfang nach der Produktpriorität festlegen. Unvollständige Dateien bis zur erfolgreichen Übernahme nicht fachlich sichtbar machen. Technische Zustände in architecture.md und security.md spezifizieren. Exklusives Dokumenteigentum und keine aktionsübergreifende Deduplizierung sind bereits verbindlich.
+PDF/JPEG/PNG/UTF-8-Klartext, 100 Dokumente/Action, 25 MiB/Dokument,
+250 MiB/Action, Name 1–160 Codepoints und unveränderte Bytes sind entschieden.
+P10b muss Formatplausibilisierung, sichere SAF-Übergabe, File-Key-Integration,
+Import-/Delete-Recovery und Text-/Bildviewergrenzen festlegen. Keine Klartexttempfiles;
+PDF in P10b ohne Viewer, mögliche sichere interne Vorschau separat P10c.
+Keine aktuelle Implementierung oder Schemaentscheidung durch P10a.
 
 ### OD-05 — Geldbeträge und Währungen: durch P8 entschieden
 

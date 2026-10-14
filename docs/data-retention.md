@@ -41,7 +41,8 @@ Die Retention-Attribute aus data-model.md bleiben konzeptionell, bis Anker, Daue
 
 Die vollständige Beziehungstabelle steht in [data-model.md, Abschnitt 15](data-model.md#15-beziehungen-integrität-und-löschung) und wird hier nicht dupliziert. Vollständige Aktionslöschung begrenzt gemäß RET-02 die Aufbewahrung aller Kinder.
 
-Personenlöschung entfernt PersonRole und personenbezogene Notes; Aufgaben-/Materialreferenzen werden entfernt, die sachlichen Objekte bleiben. Dokumentlöschung entfernt dessen FileAsset. P8-Kostenlöschung entfernt Parent und Zahlungschildren; P8 besitzt keine Belege. Keine persistierte Aktion mit Status DELETED und keine Wiedereröffnung abgeschlossener Aktionen.
+Personenlöschung entfernt PersonRole und personenbezogene Notes; Aufgaben-/Materialreferenzen werden entfernt, die sachlichen Objekte bleiben. P10-Dokumentlöschung entfernt PaG-Metadaten, zugehörige Keys und Ciphertextblob
+wiederanlauffähig; externe Originalquelle bleibt. P8-Kostenlöschung entfernt Parent und Zahlungschildren; P8 besitzt keine Belege. Keine persistierte Aktion mit Status DELETED und keine Wiedereröffnung abgeschlossener Aktionen.
 
 Freitext und Dateien können indirekte Personenbezüge behalten. Referenzlöschung ist keine garantierte Anonymisierung; der ergänzende Prüfablauf bleibt in privacy.md offen.
 
@@ -149,3 +150,23 @@ Keine konkrete Dauer, Retentionworker oder manuelle Berichtslöschung freigegebe
 Personendelete verändert authorLabel/Antworttexte nicht. Der spätere allgemeine
 Lösch-/Freitextworkflow muss dies berücksichtigen. Vollständige Aktionslöschung
 bleibt Obergrenze; keine physische Überschreibgarantie. P9a-Restfragen bleiben offen.
+
+## P10a — Dokumentlöschung und ehrliche kryptografische Grenze
+
+[P10a](product-p10a-documents.md) sieht manuelle Dokumentlöschung in PREPARATION/
+ACTIVE/COMPLETED nach Bestätigung vor; ausschließlich enge administrative P10-
+Ausnahme, kein Action-Reopen. „Die geschützte PaG-Kopie dieses Dokuments wird
+entfernt. Die ursprüngliche Datei außerhalb von PaG bleibt davon unberührt.“
+Keine konkrete Dauer oder Retentionengine. Dokumente können andere fachliche
+Aufbewahrungsbedarfe als Tasks/Material haben; Fristen/rechtliche Interessen vor
+Retentionumsetzung fachkundig prüfen, keine Aufbewahrung für immer.
+
+Vollständige Action-Löschung bleibt Obergrenze für Metadaten, Keys, Blobs und
+kontrollierte Ableitungen; kein unabhängiger Restbestand. Personenlöschung
+verändert Dokumente nicht. Manueller späterer Datei-/Freitextprüfworkflow nötig.
+P10b muss pending Delete, geschützte Zielreferenzen und belegten Cross-Store-
+Abschluss definieren. DB/Dateisystem/Keys sind keine atomare Gesamttransaktion.
+Per-File-Key ist Ziel, keine fertige Löschgarantie: alte Verpackungen/DB-/WAL-Seiten
+und Kopien prüfen. Keine physische Flashüberschreibung oder forensische
+Unwiederherstellbarkeit. Keine Klartexttempfiles, Quell-URI-Persistenz oder
+sensitive Löschlogs; Recovery verlängert keine Session. Keine Implementierung hier.

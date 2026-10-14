@@ -405,33 +405,59 @@ sind für den aktuellen MVP hiermit ersetzt.
 
 # 11. Dokumente und Dateien
 
-## FR-050 — Datei importieren
+## FR-050 — Dokument importieren (P10a)
 
-Der Admin kann Dateien innerhalb der Anwendung einer Aktion zuordnen.
+Verbindlicher Produkt-/Privacy-/Securityvertrag: [P10a](docs/product-p10a-documents.md).
+Späterer MVP ausschließlich aktionsgebundene PDF, JPEG, PNG und UTF-8-Klartext;
+keine globale Bibliothek oder Beziehungen zu Personen, Tasks, Material, Kosten,
+P6/P9 oder Rollen. SAF/Systempicker ohne breite Speicherpermission, dauerhafte
+Quell-URI oder persistable URI permission. Endung und Provider-MIME untrusted,
+zusätzliche kleine Formatprüfung in P10b. Grenzen: 100 Dokumente/Action,
+25 MiB Klartext/Dokument, 250 MiB Klartext/Action; tatsächliche Streamgröße zählen,
+keine Teilübernahme oder unnötiges vollständiges RAM-Laden (PERF-003).
 
-Unterstützte Formate sollen im MVP zunächst begrenzt werden.
+## FR-051 — Geschützte Kopie und Viewergrenze
 
-Priorität:
+SENSITIVE auch für Namen; gültiges READY ohne Leadership-Step-up als enge P10-
+Freigabe, kein P3b-Read. Fachmetadaten ausschließlich id/actionId/displayName/
+format/plaintextSize/importedAt; Anzeigename Trim, 1–160 Unicode-Codepoints.
+Metadaten später in SQLCipher, authentifiziert verschlüsselter Blob app-privat
+und backupausgeschlossen unter opaque ID. Eigene zufällige geschützte File-Keys
+als Ziel, etablierte Streaming-AEAD-Integration erst nach P10b-Review; keine eigene
+Kryptografie. Keine Klartexttempfiles oder persistente Thumbnails.
 
-1. PDF
-2. Bilder
-3. einfache Textdateien
+Import ≠ Viewerunterstützung: Text/JPEG/PNG nur mit nachgewiesenem sicheren
+internen RAM-/Decoderpfad und Grenzen. P10b **ohne PDF-Viewer/Preview**;
+„PDF gespeichert · Vorschau in dieser Version nicht verfügbar.“ Separater P10c
+prüft einen vertretbaren internen PDF-Pfad; kein Klartexttempfile/externer Fallback.
 
-## FR-051 — Verschlüsselte Dateispeicherung
+## FR-052 — Quelle, Inhaltstreue und Schnittstellen
 
-Sensible Dateien werden verschlüsselt gespeichert.
+„PaG erstellt eine geschützte Kopie. Die ursprüngliche Datei beim ausgewählten
+Anbieter bleibt bestehen und wird von PaG weder geschützt noch gelöscht.“
+Dateibytes unverändert übernehmen, keine stille EXIF-/PDF-/Textbereinigung oder
+Metadatenindexierung. Keine öffentliche Speicherung, externe Klartextöffnung,
+ACTION_VIEW/ACTION_SEND, Share/Export/Druck, FileProvider-Klartext oder Clipboard-
+Dateikopie (SEC-014). Provider kann extern arbeiten; PaG bleibt ohne INTERNET.
 
-## FR-052 — Keine öffentliche Speicherung
+## FR-053 — Dokument verwalten und löschen
 
-Die Anwendung darf sensible Dateien nicht automatisch in öffentliche Android-Medienverzeichnisse kopieren.
+Lesen/Import/Umbenennen/Löschen in PREPARATION, ACTIVE und nach bewusstem Einstieg
+COMPLETED; ausschließlich administrative P10-Ausnahme, keine anderen Lifecycle-
+Regeln ändern, kein Reopen. DRAFT/DELETION_PENDING ohne normalen P10-Zugriff.
+Löschen nur PaG-Kopie nach ausdrücklicher Bestätigung; Original bleibt.
+DB/Files/Keys nicht gemeinsam atomar: P10b muss restartfähige Import-/Delete-
+Koordination definieren, keine halben READY-Dokumente oder falschen Erfolg.
 
-## FR-053 — Dokument löschen
+## FR-054 — Retention, Liste und Datenminimierung
 
-Dokumente können manuell gelöscht werden.
-
-## FR-054 — Dokument-Retention
-
-Dokumente können eigene Speicherfristen besitzen.
+Endliche Aufbewahrungsbedarfe fachkundig prüfen; konkrete Fristen/Retentionengine
+weiter offen. Action-Löschung ist Obergrenze für Dokumentmetadaten, Keys und Blobs,
+keine Dateiinsel. Keine Kategorien, Tags, Suche/Filter oder Inhalts-/Thumbnailvorschau.
+Liste nach importedAt/id: Name, Format, Größe, Importzeit. ACTIVE neunte Hubkarte
+nur Dokumentanzahl aus Summary. COMPLETED „Dokumente verwalten“ ohne Dokumentreads,
+Dateiöffnungen oder Writes vor Tap. P10a spezifiziert ausschließlich, keine heutige
+Dateifunktion oder technische Sicherheitsgarantie.
 
 ---
 
@@ -439,7 +465,9 @@ Dokumente können eigene Speicherfristen besitzen.
 
 ## FR-060 — Informationsmaterial
 
-Allgemeines Informationsmaterial kann innerhalb einer Aktion bereitgestellt werden.
+FR-060ff ist eine spätere getrennte Informations-/Materialbibliothek. P10a gibt
+diese Funktion oder eine kategorisierte Bibliothekssicht nicht frei. Allgemeines
+Informationsmaterial kann perspektivisch innerhalb einer Aktion bereitgestellt werden.
 
 Beispiele:
 
@@ -621,7 +649,14 @@ Nach Ablauf der Speicherfrist werden die betreffenden Daten automatisch aus dem 
 
 ## FR-095 — Schlüsselbasierte Löschung
 
-Für verschlüsselte Dateien soll, soweit technisch sinnvoll, die Löschung von Daten durch Verwerfen des zugehörigen kryptografischen Schlüsselmaterials unterstützt werden.
+P10a setzt eigenes zufälliges geschütztes Schlüsselmaterial je Dokument als Ziel
+für kryptografische Löschung. P10b muss File-Key-Integration, Keykopien, alte
+Verpackungen/DB-Seiten und wiederanlauffähige Entfernung von Keys/Blobs/Metadaten
+prüfen. Bloßes Löschen eines verpackten Keys aus einer weiterhin entschlüsselbaren
+DB genügt nicht als Nachweis. Keine physische Flashüberschreibung, sichere Entfernung
+jeder historischen Kopie oder forensische Unwiederherstellbarkeit zusagen.
+Keine eigene KDF/Cipher-/Envelopekonstruktion; bei unsicherer Integration STOPP/C.
+Siehe [P10a](docs/product-p10a-documents.md).
 
 ## FR-096 — Löschprotokoll
 
@@ -648,8 +683,10 @@ Diese Module sind der perspektivische Produktumfang. Das ACTIVE-UX-Ziel bündelt
 implementierte Bereiche als große Hub-Karten und führt in fokussierte Übersichten;
 noch nicht implementierte Bereiche erscheinen nicht als tote Buttons. Aktuell
 verfügbare Bereiche: Personen, Aufgaben, Funktionen, Protokoll, Material, Kosten,
-Gedächtnisprotokolle und eigene read-only Aktionsdetails. Vorfälle / Beobachtungen, Dokumente, Uploads und weitere
-Module benötigen eigene Freigaben; daraus folgt kein neuer Netzwerkzugriff.
+Gedächtnisprotokolle und eigene read-only Aktionsdetails. Für weitere Module ist
+eine eigene Freigabe nötig; daraus folgt kein Netzwerkzugriff.
+Dokumente sind durch P10a ausschließlich spezifiziert, noch nicht implementiert;
+keine tote Hubkarte. Uploads sind kein P10-MVP-Umfang.
 P9-Gedächtnisprotokolle folgen dem P9a-Fragebogenvertrag und sind durch P9b
 implementiert; die Hubkarte zeigt ausschließlich Entwurfs-/Abschlusszahlen.
 
@@ -664,7 +701,8 @@ Häufige Aktionen sollen maximal wenige Interaktionen benötigen.
 ## FR-110 — Lokale Suche
 
 Personen, Aufgaben und Dokumente sollen perspektivisch lokal durchsucht werden
-können. P7-Material und P8-Kosten besitzen im aktuellen MVP ausdrücklich keine Suche oder Filter.
+können. P7-Material, P8-Kosten und P10-Dokumente besitzen im aktuellen MVP
+ausdrücklich keine Suche oder Filter; Dokumentensuche benötigt einen eigenen Slice.
 
 ## FR-111 — Sensible Suchdaten
 
@@ -1122,14 +1160,13 @@ Material
  ├── sourceTemplateKey (optional)
  └── createdAt
 
-Document
- ├── id
- ├── action_id
- ├── filename
- ├── mime_type
- ├── size
- ├── created_at
- └── retention_until
+DocumentAsset (P10a, nur konzeptionell)
+ ├── id, actionId
+ ├── displayName (1..160 Unicode-Codepoints)
+ ├── format (PDF/JPEG/PNG/UTF-8-Klartext)
+ ├── plaintextSize
+ └── importedAt
+ (Blob-/Key-/Recoveryabbildung erst P10b)
 
 Note
  ├── id
