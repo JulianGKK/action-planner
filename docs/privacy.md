@@ -67,7 +67,7 @@ Die Speicherbereiche sind konzeptionell. Konkrete Pfade und technische Verfahren
 | Note | Allgemeine organisatorische Notiz, getrennt von P6 | Standard SENSITIVE bei ungeprüftem Inhalt/Personenbezug | Wie Aktion | Eigene Frist offen; personenbezogene Note-Kaskade |
 | P6: ProtocolEntry/Revision samt Betroffenen-/Quellenbezügen und Behördenkennungen | Bewusste Ereignisdokumentation und nachvollziehbare Korrektur/Nachbereitung | SENSITIVE; normale Arbeit in gültigem READY ohne zusätzlichen Leadership-Step-up | Bestehende verschlüsselte SQLCipher-Produktstorage | Eigene endliche Retentionbetrachtung, Dauer offen; alle Fassungen/Kennungen gemeinsam, vollständige Aktionslöschung als Obergrenze. Personenlöschung löst notwendige Relationen, keine automatische Textmutation. |
 | P9: Gedächtnisprotokoll, gespeicherte Abschnitte und Ergänzungen | Persönliche rückblickende Erinnerung | SENSITIVE; enge READY-Freigabe ohne Leadership-Step-up | Bestehende SQLCipher-Produkt-DB; Schema10/P9b | Dauer/Workflow offen; Aktionsobergrenze, keine automatische Bereinigung durch Personenlöschung |
-| Document, FileAsset | Offline-Unterlagen, Nachweise | Standard SENSITIVE | Verschlüsselte Metadaten und private verschlüsselte Dateien | Eigene Frist offen; Eigentümerbeziehung beachten |
+| DocumentAsset (P10a, geplant) | Aktionsgebundene Offline-Unterlagen | SENSITIVE; enge READY-Freigabe ohne Leadership-Step-up | Metadaten SQLCipher, eigener Ciphertextblob app-privat/No-Backup; erst P10b | Frist offen, Action-Obergrenze; manuell nur PaG-Kopie löschen |
 | Expense / ExpensePayment (P8) | EUR-Kosten und Zahlungslabels | SENSITIVE, enge READY-Freigabe ohne Leadership-Step-up | Bestehende SQLCipher-DB | Frist offen, aktionsgebunden; kein Beleg |
 | RetentionPolicy, Fristmetadaten | Aufbewahrung steuern | Geschützt; keine sensiblen Freitextbegründungen | Privater geschützter technischer/strukturierter Speicher | Verwendete Regeln nicht ersatzlos löschen; Details offen |
 | Authentifizierungsdaten, Schlüsselreferenzen/-material | Zugriffsschutz | Sicherheitskritisch; keine fachliche Herabstufung | Separater Sicherheitsbereich/Keystore nach Prototyp | Lebenszyklus offen; niemals Klartext-Credentials |
@@ -89,13 +89,20 @@ PUBLIC_CONTENT bezeichnet zur Veröffentlichung geeigneten Inhalt, INTERNAL inte
 
 ## 5. Importierte Dateien und externe Grenzen
 
-**PRIV-08:** System-Dateiimport nach ausdrücklicher Auswahl über Android-Systemmechanismen; zusätzlich bewusst ausgelöster Kameraimport über den bevorzugten CameraX-In-Memory-Prototyp. Beide verwenden denselben kontrollierten Import-Anwendungsfall (ARCH-17 bis ARCH-22). CAMERA ausschließlich für den Kamera-Workflow in READY; kein automatischer externer Kamera-Fallback. Der appseitige Pfad muss ohne persistente Klartext-Zwischendatei und ohne Gate-Umgehung nachgewiesen werden, andernfalls wird Kameraimport verschoben. Es entsteht eine appverwaltete verschlüsselte Kopie mit genau einem Eigentümer gemäß Datenmodell. Bei System-Dateiimport bleibt das externe Original außerhalb der Kontrolle der App; Kameraaufnahme erzeugt keine Galerie-/MediaStore-Kopie. Eine dauerhafte Quell-URI wird nicht als Fachdatum eingeführt.
+**PRIV-08:** P10-MVP importiert ausschließlich bewusst über System-Dateiauswahl/SAF,
+ohne Kamera-/Galerie-Sonderweg. Kein P3a-/P3b-Read nötig, keine breite Speicherpermission,
+Quell-URI-Persistenz oder persistable URI permission. [P10a](product-p10a-documents.md)
+ersetzt für diesen Umfang die frühere allgemeine CameraX-Importplanung; historische
+Prototypen bleiben separate Nachweise, keine P10-Freigabe. Die PaG-Kopie gehört genau
+einer Aktion, keine Person-/Task-/Kosten-/P6-/P9-Relation oder globale Bibliothek.
 
 **PRIV-09:** Importablauf und Benutzerinformation müssen klar unterscheiden zwischen der verwalteten Kopie und dem externen Original. App-Löschung darf nicht als Löschung des Originals dargestellt werden.
 
 Dateinamen, EXIF-Daten, PDF-Metadaten und eingebettete Inhalte können Personenbezüge enthalten. Systempicker können auch Dokumentanbieter mit externem Netzwerkverhalten anbieten. Die App selbst erhält keine INTERNET-Berechtigung, behauptet aber nicht, alle angebotenen Quellen seien lokal. Siehe [Android-Dateiauswahl](https://developer.android.com/training/data-storage/shared/documents-files).
 
-Automatische Metadatenbereinigung ist nicht beschlossen. Im MVP keine externe Klartextöffnung und keine automatische Übergabe an externe Viewer. Intern unterstützte Formate werden im Viewer-/Storage-Prototyp festgelegt; keine Vorschau ist zulässig, wenn sichere interne Darstellung nicht vertretbar möglich ist (SEC-13, ARCH-28). Keine Cloud-Backups, Device-to-Device-Transfers, Recovery-Keys, Exporte operativer Daten oder Recovery-Mechanismen; endgültiger Datenverlust ist akzeptiert, automatische Löschung/Neuinitialisierung bei Fehlern ausgeschlossen (ARCH-26/29).
+P10a entscheidet unveränderte Importbytes: keine stille Metadatenbereinigung,
+EXIF-/GPS-Extraktion oder Indexierung; eingebettete Metadaten bleiben im verschlüsselten Inhalt. Im MVP keine externe Klartextöffnung und keine automatische Übergabe an externe Viewer. P10b importiert PDF/JPEG/PNG/UTF-8-Klartext, aber PDF ausdrücklich ohne Viewer;
+Text/Bild nur mit sicherem RAM-/Decoderpfad, kein Klartexttempfile. Keine Vorschau ist zulässig, wenn sichere interne Darstellung nicht vertretbar möglich ist (SEC-13, ARCH-28). Keine Cloud-Backups, Device-to-Device-Transfers, Recovery-Keys, Exporte operativer Daten oder Recovery-Mechanismen; endgültiger Datenverlust ist akzeptiert, automatische Löschung/Neuinitialisierung bei Fehlern ausgeschlossen (ARCH-26/29).
 
 ## 6. Offene Entscheidungen
 
@@ -104,7 +111,7 @@ Automatische Metadatenbereinigung ist nicht beschlossen. Im MVP keine externe Kl
 | Zweckbezogene Fristen einschließlich Kostenunterlagen | Tatsächlichen Nachbereitungsbedarf und mögliche Aufbewahrungspflichten fachkundig prüfen | Vor Retention-Implementierung |
 | Klassifizierungsänderungen | Keine automatische Herabstufung; ausdrückliche Prüfung | Vor Klassifizierungsfunktion |
 | Personenbezug in verbleibenden Freitexten/Dateien | Nachvollziehbarer manueller Prüfablauf zusätzlich zu Kaskaden | Vor Personenlöschung |
-| Importformate, Größen und Metadatenbehandlung | Begrenzter Formatumfang; Inhaltstreue gegen Bereinigung abwägen | Vor Importimplementierung |
+| P10-Import | Umfang/Grenzen/unveränderte Bytes durch P10a entschieden; technische Prüf- und Viewergrenzen offen | P10b, PDF-Viewer separat P10c |
 | Konkrete Speicherorte | Vollständiges Inventar einschließlich Caches/Journale ergänzen | Vor Speicherung |
 | Datenschutzverantwortlichkeit und Betroffenenabläufe | Zwecke, Verantwortlichkeit, Information, Auskunft und Löschung fachkundig prüfen | Zwecke vor Implementierung; vollständige Prüfung vor Echtdaten |
 
@@ -308,3 +315,20 @@ P3a nur Textkopierhilfe, Rename/Delete ohne P9-Inhaltsänderung. Kein P3b-Read.
 G-Themen dokumentieren gestellte Fragen, keine Gesundheitsdiagnosen.
 SENSITIVE/enge READY-Ausnahme bleibt. Konkrete Fristen und manuelle Freitext-
 prüfung offen; Actioncascade einschließlich Answers/Addenda, keine externe Kopie.
+
+## P10a — Dokumente, externe Originale und eigene sensible Kopie
+
+[P10a](product-p10a-documents.md) ist Dokumentation, keine Import-/Viewerimplementierung.
+Dateinamen und Inhalte bleiben SENSITIVE; READY ohne Leadership-Step-up ist eine enge
+P10-Freigabe, keine allgemeine Öffnung von P3b. Genau sechs Fachmetadaten, keine
+Quellpfade/URIs/Providerprofile oder Tags. Personenlöschung verändert Dokumente nicht;
+spätere manuelle Datei-/Freitextprüfung muss verbleibende Personenbezüge erfassen.
+
+Verbindliche Information: „PaG erstellt eine geschützte Kopie. Die ursprüngliche
+Datei beim ausgewählten Anbieter bleibt bestehen und wird von PaG weder geschützt
+noch gelöscht.“ PaG-Löschung betrifft nur die Kopie. Provider kann Cloud/Netzwerk
+nutzen; PaG erhält weder INTERNET noch Sync. Keine automatische Quellaktualisierung.
+100 Dokumente/Action, 25 MiB/Dokument, 250 MiB/Action. Hub nur Count, keine Namen/
+Typen/Vorschauen; normale COMPLETED-Seite ohne Dokumentreads/-öffnungen/-writes.
+Keine Inhalts-/Provider-/Namenlogs, Thumbnails, externe Viewer oder Exporte.
+Fristen und fachkundige Prüfung offen; keine Beweis-/Secure-Erase-Garantie.

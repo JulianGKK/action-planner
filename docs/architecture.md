@@ -117,7 +117,9 @@ Bereits B1 bis B4 verwenden den B0-Vertrag beziehungsweise kontrollierte Fakes, 
 
 ## 7. Strukturierter Bestand und verschlüsselter FileAsset-Speicher
 
-**ARCH-14 — Single Source of Truth:** Eine verschlüsselte lokale strukturierte Datenquelle ist Single Source of Truth für operative strukturierte Daten. Das Datenmodell bleibt maßgeblich: aktionsgebundene Personen, genau ein Eigentümer je fertigem FileAsset, höchstens ein Beleg je Expense und keine aktionsübergreifende Datei-Deduplizierung. Organisatorische Rollen verleihen keine technischen Zugriffsrechte. Bibliothek, Suche und Dashboard sind geschützte Ableitungen.
+**ARCH-14 — Single Source of Truth:** Eine verschlüsselte lokale strukturierte Datenquelle ist Single Source of Truth für operative strukturierte Daten. Das Datenmodell bleibt maßgeblich: aktionsgebundene Personen; P10a plant
+DocumentAsset mit genau einer Aktion/einem eigenen Blob, keine aktionsübergreifende
+Datei-Deduplizierung. P8 besitzt keine Belege oder FileAsset-Beziehung. Organisatorische Rollen verleihen keine technischen Zugriffsrechte. Bibliothek, Suche und Dashboard sind geschützte Ableitungen.
 
 Mehrteilige strukturierte Änderungen erfolgen transaktional. Metadaten, Indizes, Journale, Migrationen und temporäre Datenbankartefakte sind in das Schutzinventar einzubeziehen. Die Domain kennt keine konkrete Datenbank oder Kryptografiebibliothek.
 
@@ -131,7 +133,8 @@ Direct SQLCipher bleibt Referenz-/Low-Level-Testengine und mögliche spätere Al
 
 Room-/KSP-Abhängigkeiten, kontrollierter Driver-Adapter, d.lck, explizite Commit-Widerrufs-/Rollback-Behandlung und Ausschluss des MultiInstanceInvalidationService sind bewusst akzeptierte Sonderkosten. Room ist nicht automatisch sicher. Upgrades von Room/SQLite/SQLCipher/KSP sind security-relevant: CREATE-vs-OPEN, d.lck/Sidecars, Connection-/Handle-Lifecycle, Commit/Rollback bei Session-Widerruf, Manifest-/Multi-Instance-Komponenten, Migrationen, Close und Key-Lebensdauer werden erneut gegen dieselbe Failure-Matrix geprüft. Spätere Versionen gelten nicht automatisch als gleichwertig. API-30-/37-Nachweise, Power-loss, RAM-/Flash-Grenzen und OEM-Verhalten bleiben offen.
 
-**ARCH-15 — FileAsset-Speicher:** Persistente importierte Dateien und Staging-Inhalte liegen ausschließlich verschlüsselt im internen app-spezifischen Speicher. Physische Dateinamen sind opaque/random und enthalten keine Fach- oder Personeninformationen. Fachliche und ursprüngliche Dateinamen sowie sonstige fachliche Metadaten liegen ausschließlich im geschützten strukturierten Bestand. Ein storage_locator ist kein öffentlich nutzbarer Dateipfad.
+**ARCH-15 — FileAsset-Speicher:** Persistente importierte Dateien und Staging-Inhalte liegen ausschließlich verschlüsselt im internen app-spezifischen Speicher. Physische Dateinamen sind opaque/random und enthalten keine Fach- oder Personeninformationen. P10 speichert ausschließlich seinen eigenen displayName und die fünf weiteren
+Fachangaben im geschützten strukturierten Bestand; kein zusätzliches original_filename. Ein storage_locator ist kein öffentlich nutzbarer Dateipfad.
 
 Keine Klartext-Sidecars, dauerhaften entschlüsselten Dateien oder öffentlichen/gemeinsam genutzten Klartextkopien. Technische Bild-/Containerheader unterscheiden sich von fachlichen Metadaten; erforderliche Bildheader liegen innerhalb des verschlüsselt gespeicherten Bildinhalts. Notwendige technische Verschlüsselungscontainerfelder sind erst mit der Speicherlösung zu spezifizieren und dürfen keine fachlichen Klartextmetadaten aufnehmen. Die fehlende direkte Menschenlesbarkeit gespeicherter Dateien ist erwünscht.
 
@@ -139,7 +142,10 @@ Keine Klartext-Sidecars, dauerhaften entschlüsselten Dateien oder öffentlichen
 
 ## 8. Gemeinsame Importarchitektur
 
-**ARCH-17 — Quellen und Adapter:** Kameraimport und System-Dateiimport verwenden denselben kontrollierten Import-Anwendungsfall. Kamera- und URI-/Picker-Adapter kennen keine Schlüssel und erzeugen keine fertigen FileAssets selbständig. Sie liefern einen begrenzten, kurzlebigen Quellzugriff mit Workflow-/Sitzungszuordnung; dessen konkrete Vertragsform bleibt offen. Quellinhalte, Namen, Größenangaben und MIME-Angaben sind nicht vertrauenswürdig.
+**ARCH-17 — Quellen und Adapter:** Die ältere gemeinsame Kamera-/Systemimportplanung
+ist für den P10-MVP durch [P10a](product-p10a-documents.md) auf System-Dateiauswahl/SAF
+beschränkt. Kameraimport ist kein P10-Umfang. Der kontrollierte Import-Anwendungsfall
+und dessen Schutzgrenzen bleiben maßgeblich. Kamera- und URI-/Picker-Adapter kennen keine Schlüssel und erzeugen keine fertigen FileAssets selbständig. Sie liefern einen begrenzten, kurzlebigen Quellzugriff mit Workflow-/Sitzungszuordnung; dessen konkrete Vertragsform bleibt offen. Quellinhalte, Namen, Größenangaben und MIME-Angaben sind nicht vertrauenswürdig.
 
 Allgemeiner Import erfolgt durch ausdrückliche Auswahl über Android-Systemmechanismen. Lokale Quellen werden bevorzugt; EXTRA_LOCAL_ONLY wird angefordert, soweit der gewählte Mechanismus es zuverlässig unterstützt. Das garantiert nicht, dass fremde Dokumentanbieter kein Netzwerk nutzen. Nach Picker-Rückkehr ist frische Authentifizierung erforderlich. Ohne noch zulässigen Quellzugriff muss neu ausgewählt werden. Keine dauerhafte Quell-URI und keine dauerhaft behaltene URI-Berechtigung nach erfolgreichem Import; keine automatische Wiederaufnahme über gespeicherte Quell-URIs. Externe Originale bleiben außerhalb der App-Kontrolle.
 
@@ -158,7 +164,10 @@ Technischer Importstatus ist kein zusätzlicher fachlicher Aktionsstatus und kei
 
 **ARCH-19 — Keine DB-/Filesystem-Atomizität behaupten:** Eine Datenbanktransaktion umfasst nicht automatisch Dateisystem und Schlüsselzustände. Jeder Übergang benötigt einen definierten Wiederanlauf und Ausfalltests. Nach Process Death darf ein unvollständiger Versuch verloren gehen; das rechtfertigt nur die Bereinigung eindeutig zugeordneter Versuchsreste. Unbekannte Dateien werden nicht allein aufgrund fehlender Zuordnung oder eines gescheiterten DB-Opens gelöscht. Unklare Zustände führen zur geschützten Blockierung. Konkretes Auftragschema, Veröffentlichungstechnik und Haltbarkeits-/Flush-Strategie bleiben offen.
 
-## 9. CameraX-Architektur
+## 9. CameraX-Architektur — ältere getrennte Prototypplanung
+
+Dieser Abschnitt gibt keine Kamera-/Galeriefunktion für P10 frei. P10a beschränkt
+den Dokumenten-MVP auf SAF; eine mögliche spätere Kameraentscheidung bleibt separat.
 
 **ARCH-20 — Bevorzugter Prototyppfad:** CameraX-In-Memory-Aufnahme über OnImageCapturedCallback ist verbindlich bevorzugt. Aufnahme nur in READY nach expliziter Benutzeraktion; CAMERA ist ausschließlich für diesen Workflow zulässig. Ohne aktiven Workflow keine Kamerainitialisierung/-nutzung und keine Hintergrundaufnahme.
 
@@ -206,7 +215,8 @@ Erstinitialisierung muss von vorhandenem, aber nicht lesbarem Bestand unterschei
 
 ## 13. Android-Komponenten, Berechtigungen und Oberflächen
 
-**ARCH-27 — Minimale Schnittstellen:** Im MVP keine INTERNET-, Kontakte-, Telefon-, Standort- oder breite Speicherberechtigung. Keine Networking-Library ohne neue explizite Architekturentscheidung. CAMERA ist die einzige zusätzliche fachliche Runtime-Berechtigung und nur für ARCH-20 zulässig. Keine Telemetrie oder automatische Uploads.
+**ARCH-27 — Minimale Schnittstellen:** Im MVP keine INTERNET-, Kontakte-, Telefon-, Standort- oder breite Speicherberechtigung. Keine Networking-Library ohne neue explizite Architekturentscheidung. P10 fordert keine zusätzliche Runtime-Berechtigung. Die ältere CAMERA-
+Prototypplanung in ARCH-20 ist keine P10-Produktfreigabe. Keine Telemetrie oder automatische Uploads.
 
 Die Launcher-Activity ist nur soweit für den Android-Start erforderlich exportiert; jeder externe Einstieg beginnt geschützt. Sonstige Activities, Services, Receiver und Provider sind standardmäßig nicht exportiert, sofern nicht eine einzeln begründete notwendige Plattformintegration dies verlangt. Keine fachlichen Daten-/Dateiexportschnittstellen, keinen pauschal freigebenden FileProvider und keinen ungeprüften Deep-Link-Zugriff einführen. Zusammengeführtes Manifest einschließlich Dependency-Komponenten, Berechtigungen und automatischer Initializer ist zu prüfen. Keine operativen Direct-Boot-Zugriffe oder Hintergrundkamera.
 
@@ -259,8 +269,11 @@ Reale Keystore-, Kamera-, Lifecycle-, Backup- und Herstellerprüfungen ergänzen
 | ARCH-OD-08 | Konkrete Speicherorte und Backup-/Transferregeln auf der Gerätematrix | Storage-Prototyp, vor persistenter Speicherung |
 | ARCH-OD-09 — P1 entschieden | 3 Minuten absolut / 30 Sekunden READY-Inaktivität; nur echte Vordergrundinteraktion erneuert Inaktivität | elapsedRealtime; App-Verlassen invalidiert sofort; spätere Anpassbarkeit separat |
 
-Die Auswahl SQLCipher direkt versus Room ist mit ARCH-36/37 entschieden. Gemeinsame versus per-Asset FileAsset-Keysets, endgültige Schlüsselhierarchie, Keystore-Operationsbindung versus Autorisierungsfenster, Android-/Hardwareanforderungen und Retention-Fristen bleiben offen. Der B0-Vertrag entscheidet diese übrigen Alternativen nicht.
+Die Auswahl SQLCipher direkt versus Room ist mit ARCH-36/37 entschieden. P10a setzt eigenes zufälliges File-Keymaterial je Dokument als Ziel; dessen
+sichere Integration/Löschgrenzen, endgültige Schlüsselhierarchie, Keystore-Operationsbindung versus Autorisierungsfenster, Android-/Hardwareanforderungen und Retention-Fristen bleiben offen. Der B0-Vertrag entscheidet diese übrigen Alternativen nicht.
 
+P10-Formatumfang/Importgrenzen sind durch P10a entschieden, technische Viewer-/
+Parser-/Recoverygrenzen bleiben P10b, PDF-Viewer separat P10c.
 Weitere fachliche Entscheidungen bleiben in den zuständigen Grundlagen offen: Fristanker/-werte, maximale Lebensdauer, individuelle Fristen, Zeitmodell und Regelversionierung in data-retention.md; Klassifizierungsänderungen, indirekte Personenbezüge und Importmetadatenbehandlung in privacy.md; weitere Aktionsübergänge, Pflichtangaben, Materialstatus und Währungen in data-model.md. Die Architektur entscheidet sie nicht stillschweigend.
 
 ## 17. Präzisierungen und ausdrücklich abgelöste ältere Anforderungen
@@ -269,7 +282,7 @@ Weitere fachliche Entscheidungen bleiben in den zuständigen Grundlagen offen: F
 |---|---|
 | SEC-02 / SEC-OD-03: Gerätecredential oder App-Geheimnis noch offen | DEVICE_CREDENTIAL + Keystore ist bevorzugter erster Prototyp; keine eigene PaG-Passphrase darin; endgültige technische Bindung bleibt offen |
 | SEC-03, TM-10 und ältere Fehlversuchstests | Die ältere Vorgabe einer eigenen appseitigen Fehlversuchsbegrenzung einschließlich Zähler-/Neustartprüfungen wird für DEVICE_CREDENTIAL ausdrücklich abgelöst. Falsche Systemcredential-Eingaben behandelt die Plattform; PaG erzwingt Ablauf-/Sitzungskontrolle gemäß ARCH-11. Eigene progressive Begrenzung nur bei später separat spezifizierter PaG-Passphrase |
-| PRIV-08/SEC-12: Import nur durch System-Dateiauswahl | Die bisherige Beschränkung auf System-Dateiauswahl wird ausdrücklich um bewusst ausgelösten Kameraimport erweitert. System-Dateiimport bleibt bestehen; beide Quellen verwenden denselben Anwendungsfall, Kamera ausschließlich mit CAMERA gemäß ARCH-20/27 |
+| PRIV-08/SEC-12: frühere gemeinsame Kamera-/Systemimportplanung | P10a beschränkt den Dokumenten-MVP ausdrücklich auf SAF ohne Kamera-/Galerie-Sonderweg oder neue Permission; historische CameraX-Prototypplanung ist keine P10-Freigabe |
 | PRIV-09, SEC-13 / SEC-OD-08: externe Öffnung offen | Im MVP ausgeschlossen; keine automatische externe Viewerübergabe |
 | SEC-07: mögliche private Klartext-Renderausnahme empfohlen | Keine solche Ausnahme mit dieser Architektur freigegeben; ungeeignete Vorschau kann entfallen |
 | SEC-09 / SEC-OD-08: Screenshotumfang noch offen | Schutz sensibler Oberflächen verbindlich; konkrete Plattform-/Lifecycle-Nachweise bleiben erforderlich |
@@ -335,3 +348,40 @@ nicht; Leadership-Löschung ist kein Ersatz. P6-FKs erhalten Fassungen bei spät
 Personenreferenzbereinigung und entfernen P6 vollständig bei erfolgreicher Action-
 Gesamtlöschung. Vor Umsetzung Baseline/Version abgleichen. Keine Migration/Code-
 änderung hier; [Prüfplan](testing.md), keine bereits bestandenen P6-Nachweise.
+
+## P10a — geplanter Dokumentbestand über mehrere Speicherbereiche
+
+[P10a](product-p10a-documents.md) konkretisiert FR-050–054/095, SEC-002/014/015/016,
+INT-001–004 und PERF-003 ausschließlich dokumentarisch. Bestehende Runtime/Session/
+SQLCipher-DB wiederverwenden; keine zweite DB/Gateautorität oder heutige Migration.
+SENSITIVE mit enger READY-Freigabe ohne Leadership, keine P3b-/Person-/P6-/P9-Links.
+Fachmodell genau sechs Angaben, technische Metadaten-/Blob-/Key-/Recoveryabbildung
+legt P10b vor Code explizit fest. Eigenes zufälliges geschütztes File-Keymaterial
+je Blob als Ziel; etabliertes Streaming-AEAD bevorzugt mit vorhandenem Tink sofern
+sauber integrierbar, keine eigene KDF/Cipher-/Envelopekonstruktion. Unsichere
+Integration blockiert P10b mit Kategorie C, kein Klartext-/statischer-Key-Workaround.
+
+**Cross-Store-Restartability:** SQLCipher, Dateisystem und Keymaterial sind keine
+atomare Gesamttransaktion. Import/Delete müssen bei Crash/Process Death/Knappheit
+wiederanlaufen. Keine halben READY-Dokumente oder Erfolg vor belegter Koordination;
+verschlüsselte Zwischen-/Orphanblobs sicher zuordnen und bereinigen, pending Delete
+fortsetzen. Bestehendes Fail-closed: kein Orphanscan mit Löschung nach gescheitertem
+DB-Open, unklare Zustände geschützt blockieren. Reihenfolge/Auftragszustände/
+Haltbarkeit und Ausfallpunkte sind P10b-Vertrag, noch keine Implementierung.
+
+**Kein Klartexttempfile:** weder Cache-/Files-/No-Backup-/External-Verzeichnisse
+noch MediaStore/Downloads/`/tmp`. Nur kontrollierte flüchtige RAM-/Decoderbuffers;
+keine persistenten Thumbnails. Metadaten später SQLCipher, Ciphertextblob opaque
+im app-privaten No-Backup-Speicher. Importbytes unverändert. 100 Dokumente/Action,
+25 MiB Klartext/Dokument, 250 MiB/Action; streamend begrenzen, keine Voll-RAM-Pflicht.
+P10b Text/Bilder nur mit sicheren Viewer-/Pixel-/Speichergrenzen; **PDF ohne Viewer**,
+separater P10c-Prototyp. Kein externer Klartextviewer/Provider/Share/Exportfallback.
+
+Picker hat keine Sessionausnahme: nach App-Verlassen reguläre Reauth, alte
+Callbacks invalidiert. P10b muss kurzlebige autorisierte Quellübergabe nachweisen,
+sonst neu auswählen; keine persistente URI-Permission oder automatisches Quellretry.
+Lock schließt Viewer, entfernt erreichbare RAM-/Bitmapreferenzen; kein physischer
+RAM-Löschnachweis. 180s/30s unverändert, Recovery/Callbacks keine Interaction.
+Key-/Ciphertextlöschung mit historischen Verpackungen/DB-Seiten reviewen, keine
+Secure-Erase-Garantie. Backup/Transfer unverändert, tatsächliches Inventar später
+prüfen. Diese Anforderungen behaupten keinen bereits implementierten P10-Schutz.

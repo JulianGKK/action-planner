@@ -42,7 +42,9 @@ PaG verhindert parallele Authentifizierungsflüsse, automatische Prompt-Schleife
 
 Android Keystore wird für geeigneten Schlüsselschutz genutzt. Konkrete Schlüsselhierarchie und Nutzungsbedingungen werden erst nach Security-Prototyp beschlossen. Mindest-Android-Version und erforderliche Hardwarefähigkeiten bleiben offen. Ein schwächerer Fallback darf nicht stillschweigend erfolgen.
 
-Verantwortlichkeiten für Datenbank- und Dateischlüssel werden funktional getrennt; Android Keystore bildet den Root of Trust für geeignetes gerätegebundenes Schlüsselmaterial. **Prüfauftrag:** Individuelle Dateischlüssel auf Nutzen für Löschung prüfen. Das ist ein Untersuchungsauftrag, keine festgelegte Verpackung, Ableitung oder Formatdefinition.
+Verantwortlichkeiten für Datenbank- und Dateischlüssel werden funktional getrennt; Android Keystore bildet den Root of Trust für geeignetes gerätegebundenes Schlüsselmaterial. **P10a-Ziel:** Eigenes zufälliges geschütztes Schlüsselmaterial je Dokumentblob.
+Die sichere Integration und Löschgrenzen bleiben Prüfauftrag für P10b, keine
+festgelegte Verpackung, Ableitung oder Formatdefinition.
 
 Hardwarebindung muss tatsächlich geprüft werden. Nicht exportierbare Keystore-Schlüssel schützen nicht generell vor missbräuchlichen Operationen auf kompromittiertem System. Ein nach Entsperrung im App-Prozess verfügbarer Datenbankschlüssel ist nicht automatisch dauerhaft hardwareisoliert. Siehe [Android Keystore](https://developer.android.com/privacy-and-security/keystore).
 
@@ -82,7 +84,10 @@ Sensible Oberflächen erhalten verbindlich Plattformfensterschutz gegen Screensh
 
 Im MVP keine INTERNET-Berechtigung und keine Kontakte-, Telefon-, Standort- oder breite Speicherberechtigung. Keine Telemetrie, Cloud, versteckte Synchronisation oder Netzwerkfunktion durch Dependencies. Zusammengeführtes Manifest und Laufzeitverhalten sind zu prüfen, nicht nur die eigene Manifestquelle.
 
-System-Dateiimport erfolgt durch ausdrückliche Auswahl über Android-Systemmechanismen. Zusätzlich ist CameraX-In-Memory über OnImageCapturedCallback als Kamera-Prototyp bevorzugt. CAMERA ist die einzige zusätzliche fachliche Runtime-Berechtigung und ausschließlich für den explizit gestarteten Kamera-Workflow in READY zulässig; ohne Workflow keine Kamerainitialisierung, keine Hintergrundaufnahme. Kein automatischer Fallback auf externe Kamera-Apps. Der appseitige Pfad muss ohne persistente Klartext-Zwischendatei und ohne Gate-Umgehung nachgewiesen werden; scheitert der Nachweis, wird Kameraimport verschoben. Details und begrenzte Bildpipeline: ARCH-20 bis ARCH-22. Dokumentanbieter können eigene externe Dienste nutzen; deren Verhalten wird nicht als lokales App-Verhalten ausgegeben. Keine Netzwerkberechtigung zur vermeintlich bequemen Verarbeitung ergänzen.
+System-Dateiimport erfolgt durch ausdrückliche SAF-Auswahl. P10a gibt für den
+Dokumenten-MVP keine Kamera-/Galerie-Sonderwege oder zusätzliche Runtimepermission
+frei; die frühere CameraX-Planung gilt hier nicht als Produktfreigabe. DocumentProvider
+können selbst externe Dienste nutzen; PaG bleibt ohne eigenen Netzwerkpfad.
 
 ### SEC-11 — Backup, Transfer und Recovery
 
@@ -98,11 +103,17 @@ Nachweise benötigen reale Backup-/Restore- und Transferprüfungen auf der spät
 
 Quellinhalt, Dateiname, MIME-Angabe und gemeldete Größe sind nicht vertrauenswürdig. Tatsächlich gelesene Größe begrenzen, Inhaltstyp entsprechend dem Format prüfen, keine Zielpfade aus frei gelieferten Namen ableiten. Aktive Inhalte und externe Verweise dürfen nicht automatisch ausgeführt werden.
 
-Formatliste, Größenlimits, Parser/Renderer und Inhaltsprüfungen bleiben offen. Unterbrochene Imports dürfen nicht als fertige Dokumente erscheinen; Rückstände werden kontrolliert bereinigt. Nach erfolgreichem Systemimport keine dauerhafte URI-Berechtigung behalten; keine automatische Wiederaufnahme über persistierte Quell-URIs. Nach Rückkehr aus dem Picker gilt SEC-01. Kamera- und System-Dateiimport verwenden denselben kontrollierten Import-Anwendungsfall gemäß ARCH-17 bis ARCH-19; Adapter kennen keine Schlüssel und erzeugen keine fertigen FileAssets. Bei Sperrung Kamera/Workflow invalidieren, verspätete Ergebnisse verwerfen und ImageProxy korrekt schließen.
+P10a legt PDF/JPEG/PNG/UTF-8-Klartext und 100 Dokumente/Action, 25 MiB/Dokument,
+250 MiB/Action fest. P10b prüft kleine Signatur-/Formatplausibilisierung und setzt
+konkrete sichere Text-/Bildviewergrenzen; PDF in P10b ohne Viewer. Unterbrochene Imports dürfen nicht als fertige Dokumente erscheinen; Rückstände werden kontrolliert bereinigt. Nach erfolgreichem Systemimport keine dauerhafte URI-Berechtigung behalten; keine automatische Wiederaufnahme über persistierte Quell-URIs. Nach Rückkehr aus dem Picker gilt SEC-01. P10-Systemimport folgt ARCH-17 bis ARCH-19 unter den engeren P10a-Grenzen;
+Adapter kennen keine Keys oder fertigen DocumentAssets. Kein P10-Kamerapfad.
+Workflow bei Sperrung invalidieren, verspätete Ergebnisse verwerfen.
 
 ### SEC-13 — Dateiöffnung und Weitergabe
 
-Im MVP keine externe Klartextöffnung und keine automatische Übergabe sensibler Dateien an externe Viewer. Intern unterstützte Formate, Renderer und Größenlimits werden erst im Viewer-/Storage-Prototyp festgelegt. Falls sichere interne Darstellung ohne unerwünschte Klartextdateien, Disk-Caches oder unverhältnismäßige Komplexität nicht möglich ist, ist keine Vorschau zulässig. Kein universeller eigener Dokumentrenderer; siehe ARCH-28.
+Im MVP keine externe Klartextöffnung und keine automatische Übergabe sensibler Dateien an externe Viewer. P10b erhält ausdrücklich keinen PDF-Viewer/Preview. Text/JPEG/PNG nur nach
+sicherem internem RAM-/Decoder-Nachweis und technischen Viewergrenzen.
+Möglicher PDF-Viewer ist separater P10c, keine gegenwärtige Freigabe. Falls sichere interne Darstellung ohne unerwünschte Klartextdateien, Disk-Caches oder unverhältnismäßige Komplexität nicht möglich ist, ist keine Vorschau zulässig. Kein universeller eigener Dokumentrenderer; siehe ARCH-28.
 
 ### SEC-14 — Abhängigkeiten
 
@@ -410,3 +421,27 @@ Retry oder automatischer Reopen. Keine Änderung an Securitymodul, Auth, Keys,
 Leadership/P3b, Deadlines, FLAG_SECURE, Backup/Transfer oder Produktpermissions.
 Kein INTERNET/Netzwerk/Export/Medien/Notifications. P9a-Zugriffsausnahme bleibt
 eng; keine allgemeine COMPLETED-Schreibfreigabe oder rechtliche Bewertung.
+
+## P10a — geplanter Dokumentvertrag, keine Securityimplementierung
+
+[P10a](product-p10a-documents.md) verlangt SENSITIVE/READY ohne Leadership-Step-up,
+ohne P3b-Öffnung. Metadaten später in SQLCipher, opaque Ciphertextblobs app-privat
+und backupausgeschlossen, Streaming-AEAD mit etablierten Primitiven, bevorzugt
+bestehendes Tink sofern sauber integrierbar. Eigenes zufälliges File-Keymaterial
+nicht persistent klar; Schutz durch vorhandene Hierarchie oder explizit reviewte
+Erweiterung. Keine selbst erfundene KDF/Cipher-/Envelopekonstruktion. Falls sichere
+Integration nicht möglich: P10b STOPP/C, kein Klartext-/statischer-Key-Fallback.
+
+Keine Klartexttempfiles in irgendeinem Speicherbereich, persistenten Thumbnails,
+externen Viewer, ACTION_VIEW/SEND, Share/Export/Druck oder Clipboard-Dateikopie.
+PDF-P10b nur Storage/Liste/Umbenennen/Löschen, ehrlicher Hinweis ohne Vorschau.
+AEAD ist keine Herkunfts-/Beweis-/Timestampgarantie. DB/Files/Keys nicht gemeinsam
+atomar; P10b muss geschützten wiederanlauffähigen Import/Deletevertrag vor Code
+festlegen. Historische Keyverpackungen/DB-Seiten begrenzen Löschbehauptungen;
+kein physisches Secure Erase oder forensische Unwiederherstellbarkeit zugesagt.
+
+SessionCoordinator, Auth, SessionDbKeyOwner, Leadership/P3b, FLAG_SECURE,
+180s/30s, Permissions und Backup/Transfer unverändert. Systempicker keine
+Foreground-/Generationausnahme; sichere Quellübergabe nach regulärer Reauth
+nachweisen, kein blindes URI-Retry. Recovery/Callbacks keine Interaction.
+Dieser Slice verändert ausschließlich Markdown; technische Nachweise erst P10b.
