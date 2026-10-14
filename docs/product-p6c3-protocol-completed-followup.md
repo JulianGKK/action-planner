@@ -113,3 +113,10 @@ P6c4 bleibt für
 übergreifende Integrations-/Accessibilityabnahme, manuelles TalkBack, lange Texte/
 32 Kennungen, größere Historien und weitergehende IME-/Layoutfälle vorgesehen.
 Keine vollständige manuelle Accessibilityabnahme durch diese Proben behauptet.
+
+## Integrationsabnahme P6c4
+
+Der separate [P6c4-Nachweis](product-p6c4-protocol-integration-accessibility.md)
+ergänzt Cross-Area-/Phasen-/Lockmatrizen und synthetische Accessibility-/
+Belastungsprüfungen. Die ursprünglichen Nachweise oben bleiben historisch;
+Retention, Rechtsprüfung und menschliche TalkBackabnahme bleiben eigenständig.

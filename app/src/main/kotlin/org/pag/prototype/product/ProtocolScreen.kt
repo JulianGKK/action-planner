@@ -149,8 +149,7 @@ internal fun protocolTimelinePhase(item: ProtocolTimelineItem) = protocolEntryPh
     key(model.expected?.revision?.id, model.revisionType) { DateTimeField("Ereigniszeit", model.eventTime, model.zone, model::touch, model::changeTime) }
     ProtocolToggle("Zeitpunkt ungefähr", input.occurredAtApproximate, !model.busy) { change(input.copy(occurredAtApproximate = !input.occurredAtApproximate)) }
     FormTextField(input.description.orEmpty(), { change(input.copy(description = it)) }, label = { Text("Beschreibung · optional (max. 2000 Zeichen)") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth(), keyboardOptions = productKeyboard(ProductTextKind.DESCRIPTION))
-    FormButton(model::save, enabled = !model.busy && model.error != ProtocolFailure.STALE) { Text(if (model.busy) "Wird gespeichert …" else "Speichern") }
-    FormOutlinedButton(model::back, enabled = !model.busy) { Text("Abbrechen") }
+    ProtocolFormActions(model)
     if (model.error == ProtocolFailure.STALE) FormOutlinedButton(model::currentVersion, enabled = !model.busy) { Text("Zur aktuellen Fassung · Eingaben verwerfen") }
     FormOutlinedButton(model::toggleFields, modifier = Modifier.semantics { stateDescription = if (model.moreFields) "Ausgeklappt" else "Eingeklappt" }, enabled = !model.busy) { Text("Weitere Angaben") }
     if (!model.moreFields) return
@@ -179,6 +178,12 @@ internal fun protocolTimelinePhase(item: ProtocolTimelineItem) = protocolEntryPh
         FormOutlinedButton({ model.removeIdentifier(index) }, enabled = !model.busy) { Text("Kennung ${index + 1} entfernen") }
     }
     FormOutlinedButton(model::addIdentifier, enabled = !model.busy && input.officialIdentifiers.size < 32) { Text("+ Kennung hinzufügen") }
+    // Long optional sections need an equally reachable completion path at their end.
+    ProtocolFormActions(model)
+}
+@Composable private fun ProtocolFormActions(model: ProtocolModel) {
+    FormButton(model::save, enabled = !model.busy && model.error != ProtocolFailure.STALE) { Text(if (model.busy) "Wird gespeichert …" else "Speichern") }
+    FormOutlinedButton(model::back, enabled = !model.busy) { Text("Abbrechen") }
 }
 @Composable private fun ProtocolToggle(label: String, checked: Boolean, enabled: Boolean, change: () -> Unit) {
     FormOutlinedButton(change, enabled = enabled, modifier = Modifier.fillMaxWidth().semantics { toggleableState = if (checked) androidx.compose.ui.state.ToggleableState.On else androidx.compose.ui.state.ToggleableState.Off }) { Text((if (checked) "✓ " else "□ ") + label) }

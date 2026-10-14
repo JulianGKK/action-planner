@@ -169,3 +169,10 @@ Quellenwechsel, Ansage/Entfernen, Datum/Zeit inklusive DST, lange Texte/32 Kennu
 TalkBack/IME, Cancel/STALE und Lock in allen Editorvarianten. Die synthetische
 Geräteprobe ersetzt keine juristische Echtdatenfreigabe oder vollständige
 manuelle Accessibility-/Performanceabnahme.
+
+## Integrationsabnahme P6c4
+
+Der separate [P6c4-Nachweis](product-p6c4-protocol-integration-accessibility.md)
+ergänzt Cross-Area-/Phasen-/Lockmatrizen und synthetische Accessibility-/
+Belastungsprüfungen. Die ursprünglichen Nachweise oben bleiben historisch;
+Retention, Rechtsprüfung und menschliche TalkBackabnahme bleiben eigenständig.

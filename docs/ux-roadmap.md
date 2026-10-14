@@ -334,3 +334,15 @@ fassungsbezogene Phasenmarker, gemeinsame Formulare und Revisionen. Kein Prefetc
 auf der normalen abgeschlossenen Aktionsseite; Lock/Reauth öffnet nichts automatisch.
 P4/P5a/Aktionsdaten bleiben read-only; Schema7, Domain/Data/Security und Demo bleiben
 unverändert. P6c4 übernimmt die weitere Integration-/Accessibilityabnahme.
+
+## P6c4 — Integration / Accessibility / Abschlussreview
+
+[P6c4](product-p6c4-protocol-integration-accessibility.md) prüft ACTIVE/COMPLETED
+als zusammenhängenden Protokollbereich: Phasen-/Bereichs-/Lockcleanup, STALE,
+Privacyprojektionen, lange Inhalte und Accessibilitysemantik. Ein kleiner UI-Fix
+macht Save/Cancel am Ende langer optionaler Formulare erreichbar. Keine neue
+Fachfunktion oder Änderung von Domain/Data/Schema7/Security/Demo.
+Menschliche TalkBackabnahme, konkrete Retention und Löschworkflows sowie
+juristische Prüfung vor Echtdaten bleiben ausdrücklich getrennte Restpunkte.
+Die dokumentierte automatisierte Abnahme ist grün; P6a/P6b/P6c1–P6c4 sind
+technisch bereit für Abschlussreview. Dies ist keine Freigabe der offenen Restpunkte.
