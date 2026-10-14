@@ -232,24 +232,30 @@ Retention an die Aktion gebunden. Schema 5 → 6 additiv. Der detaillierte Vertr
 in [product-p5a.md](product-p5a.md) ersetzt die früheren Task-Felder Beschreibung,
 Kategorie, assigned_person_id und DISCARDED ausdrücklich.
 
-## 9. Material
+## 9. Material (P7)
 
 | Attribut | Typ | Pflicht | Bedeutung |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `id` | ID | P | Kennung |
-| `action_id` | Referenz | P | Aktion |
-| `name` | Text | P | Nicht leere Bezeichnung |
-| `category` | Text | O | Kategorie im Fachbereich Material |
-| `quantity` | Ganzzahl | P | Anzahl, mindestens null |
-| `location` | Text | O | Manuell erfasster Materialstandort |
-| `responsible_person_id` | Referenz | O | Zuständige Person derselben Aktion |
-| `status` | Enum | P | Materialstatus |
-| `note` | Text | O | Materialbezogene Anmerkung |
-| gemeinsame Metadaten | — | P/B/O/A | Schutzklasse und Retention |
+| `actionId` | Referenz | P | Genau eine Aktion |
+| `name` | Text | P | Trim, 1–120 Unicode-Codepoints |
+| `quantityLabel` | Text | O | Trim, leer → null, maximal 40 Codepoints; keine Mengenrechnung |
+| `placeLabel` | Text | O | Trim, leer → null, maximal 80 Codepoints; manuell, kein GPS |
+| `responsiblePersonId` | Referenz | O | Einzelne P3a-Person derselben Aktion |
+| `linkedTaskId` | Referenz | O | Einzelne Task derselben Aktion, auch DONE/CANCELLED |
+| `sourceTemplateKey` | Text | O | Provenienz, nicht unique/angezeigt, Edit erhält den Key |
+| `createdAt` | Zeitpunkt | P | Repositoryeigener Erstellungszeitpunkt |
 
-Vorgeschlagene Statuswerte entsprechend PRODUCT.md: `AVAILABLE`, `NEEDED`, `BORROWED`, `IN_TRANSIT`, `DEFECTIVE`, `UNKNOWN`. Ob die Wertemenge abschließend ist, bleibt unter OD-03 offen.
+[P7](product-p7-material.md) ersetzt ausdrücklich die frühere Kategorie-/Status-/
+Notiz-/Ganzzahlplanung. Genau diese neun Itemfelder; die konzeptionellen gemeinsamen
+Retention-Metadaten sind noch keine zusätzlichen Materialspalten. INTERNAL ist
+eine feste operative Einordnung, kein nutzeränderbares Feld. Keine Statusmaschine,
+Historie, Einheiten-Domain, Suche/Filter oder automatische Aufgaben.
 
-Materialmengen sind ganzzahlig. Es gibt keine Einheitenverwaltung und keine Ausleihhistorie. Der Materialstandort ist kein Personenstandort und kein GPS-Verlauf. Eine Position beschreibt eine Menge mit gemeinsamem Standort und Status; das Teilmengenverhalten bleibt unter OD-03 offen.
+Schema8 ergänzt nur `materials`; Action-FK CASCADE und Same-Action-Trigger für
+INSERT/UPDATE. AFTER DELETE auf persons/tasks setzt die jeweilige Referenz null,
+Material bleibt. Keine Pseudonym-/Tasktitelsnapshots oder fremden Mutationen.
+Materialdelete in PREPARATION/ACTIVE nach Bestätigung, COMPLETED nur lesen.
 
 ## 10. Dokumente, Dateien und Bibliothek
 
@@ -405,7 +411,9 @@ Personenbezogene Daten, ungeprüfte Freitexte und Importe sind gemäß PRIV-06 v
 - Alle P6-Daten sind SENSITIVE; normale P6-Arbeit in gültigem READY benötigt
   dennoch keinen zusätzlichen P3b-/Leadership-Step-up. Sensitivität und Zugriff
   sind getrennt, keine allgemeine Herabstufung/Öffnung von SENSITIVE (P6a.1).
-- Personenreferenzen in Aufgaben und Material machen die Zuordnung sensibel.
+- Personenreferenzen in Aufgaben und Material bleiben schutzbedürftig. P5a/P7
+  klassifizieren ihren engen operativen Bereich ausdrücklich INTERNAL für READY;
+  P3b-Identitäts-/Kontaktwerte werden dadurch nicht geöffnet oder übernommen.
 - Ungeprüfte Importe und Freitext starten konservativ als `SENSITIVE`.
 - Öffentlich geeigneter Inhalt kann durch seine Aktionszuordnung sensible Metadaten besitzen.
 - Entfernen einer Personenreferenz führt nicht automatisch zu einer Herabstufung.
@@ -428,6 +436,7 @@ Zunächst erfolgt die Klassifizierung auf Objektebene; keine zusätzliche Feldkl
 | Person → zugewiesene Task | 1 : 0..n; Task hat 0..1 zuständige Person oder Rolle |
 | `Action` → Material | 1 : 0..n |
 | Person → verantwortetes Material | 1 : 0..n; Material hat 0..1 verantwortliche Person |
+| Task → verknüpftes Material | 1 : 0..n; Material hat 0..1 Task; loses P7-Link |
 | `Action` → Document | 1 : 0..n |
 | Document → FileAsset | 1 : 1 |
 | `Action` → Note | 1 : 0..n |
@@ -463,8 +472,8 @@ Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, ke
 | Person | PersonRole und personenbezogene Notes entfernen; Personenreferenzen in Aufgaben/Material sowie erforderliche P6-Betroffenen-/Quellenrelationen lösen. P6-Einträge/Fassungen erhalten, Freitext nicht automatisch ändern; manuelle Protokollprüfung erforderlich. |
 | Role | P4/P5a: einzelne Rolle nur ohne geplante/operative/Task-Referenzen entfernen; kein stilles Entfernen von Zuordnungen |
 | PersonStatusDefinition | Statusreferenzen entfernen; Personen erhalten |
-| Task | P5a: Aufgabe und TaskEvents vollständig entfernen, nur PREPARATION; Personen erhalten |
-| Material | Materialposition und abgeleitete Kopien entfernen; Person erhalten |
+| Task | P5a: Aufgabe und TaskEvents vollständig entfernen, nur PREPARATION; Personen erhalten; P7-Materiallink wird null |
+| Material | Nur Materialposition/zugehörige Ableitungen entfernen; Person und Task erhalten |
 | Document | Dokument und zugehöriges FileAsset entfernen |
 | Note | Note entfernen; `Action` und Person erhalten |
 | P6-Bestand bei Retention-/Aktionslöschung | Einträge mit sämtlichen Fassungen, Betroffenen-/Quellenrelationen, Kennungen und Ableitungen entfernen; keine gewöhnliche Einzel-Löschung im P6-Produktpfad |
@@ -473,7 +482,7 @@ Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, ke
 | FileAsset eines Belegs | Belegreferenz entfernen; Ausgabe bleibt bis zu ihrer eigenen Löschung bestehen |
 | RetentionPolicy | Keine Inhaltskaskade; verwendete Regel darf nicht ersatzlos entfernt werden |
 
-Die Entfernung einer Personenreferenz anonymisiert keinen Freitext. Namen oder identifizierende Angaben in Aufgaben, Materialnotizen, Dateien und Belegen können verbleiben. Eine zuverlässige automatische Erkennung wird nicht vorausgesetzt. Ein Bereinigungsablauf ist unter OD-10 offen. Für P6 muss er ausdrücklich die manuelle Prüfung sämtlicher Protokollfassungen umfassen, ohne automatische Inhaltszerstörung bei Teilnehmerlöschung.
+Die Entfernung einer Personenreferenz anonymisiert keinen Freitext. Namen oder identifizierende Angaben in Aufgaben, Materialbezeichnung/-menge/-ort, Dateien und Belegen können verbleiben. Eine zuverlässige automatische Erkennung wird nicht vorausgesetzt. Ein Bereinigungsablauf ist unter OD-10 offen. Für P6 muss er ausdrücklich die manuelle Prüfung sämtlicher Protokollfassungen umfassen, ohne automatische Inhaltszerstörung bei Teilnehmerlöschung.
 
 ### 15.4 Technische Löschung: ausdrücklich offen
 
@@ -486,7 +495,7 @@ Löschgarantien, Wiederanlauf, Fehlermeldung, mögliche minimale Löschprotokoll
 ## 16. Abgrenzungen
 
 - Keine gespeicherte Organisation und keine globale Personenkartei im MVP.
-- Kategorien bleiben getrennt je Fachbereich. Es gibt keine zentrale Taxonomie. Die einfache Darstellung erfolgt zunächst als Kategorieangabe am Objekt.
+- P7-Material besitzt keine Kategorie. Kategorien anderer geplanter Fachbereiche bleiben getrennt je Fachbereich. Es gibt keine zentrale Taxonomie. Die einfache Darstellung erfolgt zunächst als Kategorieangabe am Objekt.
 - Der lokale Admin ist ein technischer Akteur, keine Teilnehmerperson. Kein persönliches Adminprofil wird eingeführt.
 - Authentifizierungsabläufe und Schlüsselreferenzen gehören in ein separates Sicherheitsmodell. PaG zählt keine falschen DEVICE_CREDENTIAL-Eingaben im Systemdialog; eigene Fehlversuchszähler/Sperrfristen wären erst bei einer späteren PaG-Passphrase separat zu spezifizieren. Biometrie bleibt gemäß PRODUCT.md ausgeschlossen.
 - Suche und Dashboard erzeugen keine zusätzlichen fachlichen Stammdaten. Eventuelle persistierte Indizes müssen Schutz und Löschung ihrer Ausgangsdaten berücksichtigen.
@@ -507,11 +516,12 @@ Löschgarantien, Wiederanlauf, Fehlermeldung, mögliche minimale Löschprotokoll
 
 **Empfehlung:** Die angegebenen Pflichtfelder aus FR-001 und FR-030 beibehalten. Falls unvollständige Entwürfe benötigt werden, zustandsabhängige Pflichtregeln ausdrücklich ergänzen. Optionale Verantwortung und Fälligkeit von Tasks sind bereits verbindlich.
 
-### OD-03 — Materialstatus und Teilmengen
+### OD-03 — Vereinfachte Materialliste: durch P7 entschieden
 
-**Offen:** Ob die Beispielstatus abschließend oder konfigurierbar sind; Umgang mit verschiedenen Zuständen und Standorten einer Menge.
-
-**Empfehlung:** Die sechs genannten Werte als feste MVP-Wertemenge verwenden. Unterschiedliche Teilmengen als getrennte Positionen führen. Ganzzahlige Mengen sowie der Ausschluss von Einheitenverwaltung und Ausleihhistorie sind bereits verbindlich.
+Keine Materialstatusmaschine, Kategorien oder Teilmengenlogik. Menge/Anzahl ist
+optionaler kurzer Text, keine Ganzzahlpflicht oder Einheitenverwaltung. Lose
+Person-/Tasklinks werden bei Löschung entkoppelt; das Material bleibt. Details
+im [P7-Vertrag](product-p7-material.md).
 
 ### OD-04 — Dateiimporte und technische Zustände
 

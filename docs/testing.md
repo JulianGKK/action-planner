@@ -27,7 +27,7 @@ TM-F03/06/08/11/12/13/15/18. Nur synthetische Daten.
 
 ## Echte Storage-/Repositorytests
 
-- Fresh Schema7 und Migration 6→7 (sowie historische Upgradepfade) mit echter
+- Fresh Schema8 und Migration 6→7→8 (sowie historische Upgradepfade) mit echter
   SQLCipher/Room-Engine: alle alten Tabellen/Rows/Trigger/Ciphertexts erhalten,
   neue P6-Struktur leer; kein destructive fallback. Exportvergleich und tatsächliche
   sqlite_master-Triggerprüfung, nicht nur Room-Schema-Datei.
@@ -112,8 +112,10 @@ Sequenz/Unveränderlichkeit/Identifier-Slots, Irrtumszustände, persistierte Pha
 stale Snapshot samt Relationstrennung, kontrolliert konkurrierende Appends,
 Childfehler-Rollback, Commitrevoke, Generationspublication, 6→7-Migration/
 Migrationrevoke, P4/P5a-COMPLETED-Regression und logische FK-Kaskaden.
-Historische Migrationfixtures entfernen nur neue P6-Testtabellen vor gezieltem
-Downgrade und erwarten danach Schema7. Keine echten Produktdaten/Gerätecredentials.
+Historische Migrationfixtures entfernen neue P6-Testtabellen und seit P7 auch
+Materialtabelle/Detach-Trigger vor gezieltem Downgrade und erwarten danach Schema8.
+Keine echten Produktdaten/Gerätecredentials; ursprüngliche P6c1-Ergebnisse bleiben
+im historischen Nachweis auf Schema7 bezogen.
 
 Tatsächliche Ergebnisse und Grenzen stehen im [P6c1-Nachweis](product-p6c1-protocol-storage.md).
 Die oben genannten UI-/Last-/Retention-/Rechtsprüfungen sind hierdurch nicht
@@ -154,3 +156,19 @@ Späte Writergebnisse und fremde Editoren beim P6-Einstieg sind ViewModel-Matriz
 Bestehende P6c2/P6c3-Proben und ProtocolStorageTest bilden die Regression.
 Ergebnisse, Freeze, Testgrößen und ausdrücklich manuelle Restabnahme:
 [P6c4](product-p6c4-protocol-integration-accessibility.md).
+
+
+## P7 — einfacher Material-Slice
+
+[P7](product-p7-material.md) bündelt Domain-/Projection-, Model-/Workspace-Tests,
+echte SQLCipher-/Room-Instrumentation und eine synthetische ProductScreen-Probe.
+Prüfumfang: Unicode 120/40/80, zwölf Vorlagen/Provenienz, Lifecycle, vollständiges
+STALE, SAME-ACTION INSERT/UPDATE, Person-/Taskdetach, Actioncascade, Schema8/fresh
+und 7→8 mit erhaltenem P6, Commit-/Publicationrevoke, Summaryminimierung,
+COMPLETED ohne Prefetch/Writes, Bereichs-/Lockcleanup, Font Scale 1/2 und Demo.
+Historische Migrationfixtures entfernen nur die neue synthetische Materialstruktur
+samt parentgebundenen Detach-Triggern vor Downgrade und erwarten danach Schema8.
+Abnahme grün: 803 Unit-Tests, 38 fokussierte Material-Unit-Tests, 91 echte Storagefälle
+und ProductScreen-Proben P7/UX3/P6c2/P6c3 bei Font Scale 1/2 auf Galaxy/API33.
+Builds, Lint, Architektur und Manifeste grün; Einzelheiten im P7-Nachweis.
+Keine Echtdaten oder Credentialänderung; manuelle TalkBack-/IME-Abnahme bleibt offen.

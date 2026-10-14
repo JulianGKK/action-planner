@@ -374,30 +374,27 @@ normaler READY-Zugriff analog P4, keine zusätzliche P3b-Freigabe.
 
 ## FR-040 — Material anlegen
 
-Material kann mit folgenden Informationen verwaltet werden:
+P7 konkretisiert den aktuellen MVP als einfache aktionsgebundene Liste:
+Bezeichnung (Trim, 1–120 Unicode-Codepoints), optionale Menge/Anzahl als Text
+(max. 40), optionaler Ort (max. 80), einzelne verantwortliche P3a-Person und
+einzelne lose Taskverknüpfung derselben Aktion. IDs, sourceTemplateKey und createdAt
+kommen hinzu; keine weiteren Fachfelder. Mengen wie „2 Rollen“ werden nicht berechnet.
 
-* Bezeichnung
-* Kategorie
-* Anzahl
-* Standort
-* Verantwortliche Person
-* Status
-* Notiz
+## FR-041 — Material-Lifecycle und lose Verknüpfungen
 
-## FR-041 — Materialstatus
+Lesen in PREPARATION/ACTIVE/COMPLETED; Create/Edit/Delete nur PREPARATION/ACTIVE.
+COMPLETED ist read-only, DRAFT/DELETION_PENDING ohne Zugriff. Personen-/Tasklöschung
+entkoppelt den jeweiligen Link; Material bleibt. Materialentfernung nach Bestätigung
+verändert keine Person oder Aufgabe. Keine Materialstatusmaschine oder Ausleihlogik.
 
-Beispiele:
+## FR-042 — Materialliste und Vorschläge
 
-* vorhanden
-* benötigt
-* ausgeliehen
-* unterwegs
-* defekt
-* unbekannt
-
-## FR-042 — Materialsuche
-
-Material muss durchsucht und gefiltert werden können.
+Deterministische Liste nach createdAt/id, keine Suche oder Filter. Zwölf statische
+Vorschläge öffnen normale Entwürfe; erst Speichern legt Material an. Provenienzkey
+nicht unique, nicht anzeigen und beim Edit erhalten. Keine Kategorien, Notizen,
+Historie, Events oder automatische Aufgaben. Verbindlicher vollständiger Vertrag:
+[P7 Material](docs/product-p7-material.md). Die früheren breiteren FR-040/041/042
+sind für den aktuellen MVP hiermit ersetzt.
 
 ---
 
@@ -589,7 +586,7 @@ Das Dashboard zeigt mindestens:
 * überfällige Aufgaben
 * Personenanzahl
 * Rollenübersicht
-* Materialstatus
+* Materialanzahl (P7, keine Materialstatusmaschine)
 * anstehende Löschungen
 * Kostenübersicht
 
@@ -610,7 +607,8 @@ Häufige Aktionen sollen maximal wenige Interaktionen benötigen.
 
 ## FR-110 — Lokale Suche
 
-Personen, Aufgaben, Material und Dokumente sollen lokal durchsucht werden können.
+Personen, Aufgaben und Dokumente sollen perspektivisch lokal durchsucht werden
+können. P7-Material besitzt im aktuellen MVP ausdrücklich keine Suche oder Filter.
 
 ## FR-111 — Sensible Suchdaten
 
@@ -1062,12 +1060,11 @@ TaskEvent
  └── id, actionId, taskId, type, occurredAt
 
 Material
- ├── id
- ├── action_id
- ├── name
- ├── quantity
- ├── status
- └── location
+ ├── id, actionId, name
+ ├── quantityLabel, placeLabel (optional, Text)
+ ├── responsiblePersonId, linkedTaskId (optional)
+ ├── sourceTemplateKey (optional)
+ └── createdAt
 
 Document
  ├── id

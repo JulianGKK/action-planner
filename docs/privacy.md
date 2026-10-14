@@ -63,7 +63,7 @@ Die Speicherbereiche sind konzeptionell. Konkrete Pfade und technische Verfahren
 | Person, PersonRole | Personengebundene Koordination | Standard SENSITIVE | Wie Aktion | Frist offen; Personenkaskade |
 | Role, PersonStatusDefinition | Aktionsgebundene Konfiguration | SENSITIVE bei ungeprüftem Freitext; sonst inhaltsabhängig | Wie Aktion | Spätestens mit Aktion; Definition/Zuordnung bereinigen |
 | Task, TaskEvent (P5a) | Operative Aufgabenkoordination und minimale Lifecycle-Chronik | Ausdrücklich INTERNAL, sensible Titel möglich | Bestehende SQLCipher-Produkt-DB | Aktionsgebunden; TaskEvents mit Task entfernen, keine permanente Archivierung |
-| Material | Materialkoordination | SENSITIVE bei Personenbezug/ungeprüftem Freitext | Wie Aktion | Frist offen; Referenzen und Ableitungen bereinigen |
+| P7 Material | Einfache aktionsgebundene Materialkoordination | Ausdrücklich INTERNAL, sensible operative Inhalte möglich | Bestehende SQLCipher-Produkt-DB | Aktionsobergrenze; Person-/Taskdelete entkoppelt Links; Frist offen |
 | Note | Allgemeine organisatorische Notiz, getrennt von P6 | Standard SENSITIVE bei ungeprüftem Inhalt/Personenbezug | Wie Aktion | Eigene Frist offen; personenbezogene Note-Kaskade |
 | P6: ProtocolEntry/Revision samt Betroffenen-/Quellenbezügen und Behördenkennungen | Bewusste Ereignisdokumentation und nachvollziehbare Korrektur/Nachbereitung | SENSITIVE; normale Arbeit in gültigem READY ohne zusätzlichen Leadership-Step-up | Bestehende verschlüsselte SQLCipher-Produktstorage | Eigene endliche Retentionbetrachtung, Dauer offen; alle Fassungen/Kennungen gemeinsam, vollständige Aktionslöschung als Obergrenze. Personenlöschung löst notwendige Relationen, keine automatische Textmutation. |
 | Document, FileAsset, Beleg | Offline-Unterlagen, Nachweise | Standard SENSITIVE | Verschlüsselte Metadaten und private verschlüsselte Dateien | Eigene Frist offen; Eigentümerbeziehung beachten |
@@ -237,3 +237,16 @@ keine automatische Anonymisierung, manuelle Prüfung im späteren Löschworkflow
 weiterhin erforderlich. Keine globale Identifierkartei, Autorenprofile, UI,
 Export/Medien oder neue Erfassungskanäle. Eigene Retentionbetrachtung bleibt innerhalb
 der Aktion, konkrete Frist und Echtdaten-Rechtsprüfung unverändert offen.
+
+
+## P7 — einfache Materialliste
+
+[P7](product-p7-material.md) ist ausdrücklich INTERNAL für normalen gültigen
+READY-Zugriff analog P4/P5a. Bezeichnung/Menge/Ort und Personenbezüge können
+sensibel sein; offene Sitzungen können diese Inhalte offenlegen. Nur bestehende
+P3a-Pseudonyme, kein P3b-Read und keine Namen-/Kontaktkopien. Genau neun Itemfelder,
+keine Notiz, Statusmaschine, Kategorie, Historie, Suche/Filter oder automatische Tasks.
+Summary nur Count, Board nur Materialrows; Anzeige von Links aus bestehenden Boards,
+keine persistierten Pseudonym-/Tasktitelsnapshots. Materialdelete verändert keine
+Person/Task; deren Löschung setzt ausschließlich Links null. Aktionscascade,
+keine eigene Retentionengine, Exporte, Dateien, Netzwerk, Logs oder Außenoberflächen.

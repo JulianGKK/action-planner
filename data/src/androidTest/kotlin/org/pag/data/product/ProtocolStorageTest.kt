@@ -271,6 +271,7 @@ class ProtocolStorageTest {
         use(i) { d -> d.withWriteTransaction { d.leadership().insert(leadership); d.leadership().insertArea(area) } }
         val freshTriggers = triggerNames(i)
         B2Native.open(i.database, key, context(AccessScope.MAINTENANCE)).use { d -> d.beginTransaction(); try {
+            removeMaterialSchemaForLegacyFixture(d)
             tables.forEach { d.execSQL("DROP TABLE $it") }
             d.execSQL("UPDATE room_master_table SET identity_hash='a6428bd5e4667c49b847632f1d851ad2' WHERE id=42")
             d.version = 6; d.setTransactionSuccessful()
@@ -282,11 +283,12 @@ class ProtocolStorageTest {
             assertArrayEquals(area.payload, d.leadership().area("a", "p", "IDENTITY")!!.payload)
         }
         assertEquals(freshTriggers, triggerNames(i)); create(i)
-        B2Native.open(i.database, key, context(AccessScope.MAINTENANCE), true).use { assertEquals(7, it.version) }
+        B2Native.open(i.database, key, context(AccessScope.MAINTENANCE), true).use { assertEquals(8, it.version) }
     }
     @Test fun revokedMigrationSixToSevenRetainsSchemaSixForRetry() {
         val i = fixture()
         B2Native.open(i.database, key, context(AccessScope.MAINTENANCE)).use { d -> d.beginTransaction(); try {
+            removeMaterialSchemaForLegacyFixture(d)
             tables.forEach { d.execSQL("DROP TABLE $it") }
             d.execSQL("UPDATE room_master_table SET identity_hash='a6428bd5e4667c49b847632f1d851ad2' WHERE id=42")
             d.version = 6; d.setTransactionSuccessful()

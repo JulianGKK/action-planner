@@ -95,3 +95,14 @@ Externe Originale, Empfängerkopien und Fotografien liegen außerhalb der Kaskad
 | Löschen bei Schlüsselverlust | Keine unbewiesene Erfolgszusage; kontrollierte Bereinigung prüfen | Ja, mit SEC-OD-04 |
 
 Für testing.md abzuleiten: Fristablauf mit kontrollierbarer Zeit, maximale Lebensdauer, Aktionsobergrenze, Kaskaden, fehlende Warnbestätigung, Neustart/Force-Stop, fehlende Schlüssel, Wiederholung nach jedem Abbruchpunkt, Speicherknappheit und kein Zugriff auf fällige Inhalte vor Nachholung. Physische Flash-Löschung ist kein automatisiert behauptbarer Testnachweis.
+
+
+## P7 — Material innerhalb der Aktionsobergrenze
+
+[P7](product-p7-material.md) implementiert bewusst nur bestätigtes Materialdelete
+in PREPARATION/ACTIVE und automatische Person-/Taskreferenzentkopplung. Das Item
+bleibt nach Detach, vollständige Aktionslöschung entfernt es per CASCADE. Übrige
+P4/P5a-Löschabhängigkeiten bleiben unverändert. Keine Retentionfelder/-dauer/-worker,
+allgemeine Personen-/Aktionslöschung oder physische Überschreibgarantie.
+Materialbezeichnung/Menge/Ort können nach Detach weiterhin Personenbezüge enthalten;
+Referenzentkopplung ist keine Anonymisierung. Konkrete endliche Retention bleibt offen.

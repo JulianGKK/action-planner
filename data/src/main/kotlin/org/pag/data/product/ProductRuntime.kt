@@ -72,6 +72,8 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
         { owner.get() }, worker, main, session::storageFailure)
     val protocol: ProtocolRepository = ProductProtocolRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
+    val material: MaterialRepository = ProductMaterialRepository(activity.applicationContext, session, inventory,
+        { owner.get() }, worker, main, session::storageFailure)
     val operations: OperationsRepository = ProductOperationsRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
     val leadership: LeadershipRepository = ProductLeadershipRepository(activity.applicationContext, session, inventory,

@@ -215,7 +215,7 @@ class PersonStorageTest {
         }
         create(r)
         B2Native.open(inv.database,key,context(AccessScope.MAINTENANCE),true).use { db ->
-            assertEquals(7,db.version)
+            assertEquals(8,db.version)
             db.rawQuery("PRAGMA table_info(persons)",emptyArray<String>()).use { cursor ->
                 val columns=mutableListOf<String>(); while(cursor.moveToNext()) columns.add(cursor.getString(1))
                 assertEquals(listOf("id","actionId","pseudonym","pseudonymNormalized","createdAt"),columns)
