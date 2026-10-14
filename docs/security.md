@@ -372,3 +372,29 @@ Kein Netzwerk, neue Permission/Dependency/Crypto, Backup-/Transferänderung,
 Notification, Clipboard oder Export. FLAG_SECURE unverändert.
 Nur ExpenseRules erlauben administrative COMPLETED-Writes; P4/P5a/P7/Aktionsdaten
 bleiben gesperrt, kein Reopen. Schema8→9 ausschließlich zwei additive Tabellen.
+
+## P9a — SENSITIVE Gedächtnisprotokolle, geplante enge READY-Freigabe
+
+[P9a](product-p9a-memory-protocol.md) ist ausschließlich Produktvertrag.
+Persönliche Erinnerungen/Labels/Antworten/Ergänzungen bleiben SENSITIVE.
+Normale P9-Arbeit in gültigem READY soll analog P6 ohne zusätzlichen Leadership-
+Step-up möglich sein, um direkte Erfassung nach Entlassung zu ermöglichen.
+Keine allgemeine P3b-Öffnung und keine Übernahme sensibler Identitäts-/Kontaktwerte.
+Verschlüsselung ruhender Daten verhindert keine Offenlegung in offener Sitzung.
+
+Bewusst abschnittsweise gespeicherte verschlüsselte Fachentwürfe sind eine enge
+P9-Produktentscheidung, keine gespeicherte Session, Navigation, Authfreigabe oder
+Keykopie. Ungespeicherter Editor wird bei Lock bereinigt; bereits erfolgreich
+bestätigte Speicherung soll überstehen. Nach Reauth bewusste Wahl des Entwurfs,
+kein automatischer Reopen. Konkreter sicherer Draft-/Commit-/Publicationvertrag
+und technische Umsetzung erst P9b; keine neue Storage-/Securityarchitektur hier.
+
+Unverändert: 180 s absolut/30 s READY-Inaktivität, SessionCoordinator,
+SessionDbKeyOwner, Auth, LeadershipGrant, P3b-Crypto, Argon2id/Tink, Keystore,
+SQLCipher, FLAG_SECURE, Backup-/Transferregeln und Produktpermissions.
+Callbacks/Saveergebnisse/Timer verlängern keine Sitzung. ACTIVE/COMPLETED nur
+P9-spezifisch, kein Action-Reopen oder allgemeines Schreibrecht für P4/P5a/P7.
+Kein Zugriff DRAFT/PREPARATION/DELETION_PENDING. Keine Securitycodeänderung,
+neue Kryptografie/Dependency/Permission, INTERNET/Netzwerk, Export, Dateien,
+Medien, Notifications oder sensible Logs. Keine Garantie physischer RAM-/Flash-
+Überschreibung, rechtlicher Bewertung oder externer Zeitbeglaubigung.

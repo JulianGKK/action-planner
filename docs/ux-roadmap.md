@@ -372,3 +372,34 @@ Belege/Dateien, Datum, Buchhaltungshistorie, Erstattung oder Demo-Kosten.
 Automatisierte Abnahme grün: vollständige Unit-/Storage-Regression, ProductScreen
 Font Scale1/2 auf Galaxy/API33, Builds/Lint/Architektur/Manifeste bestanden.
 P8 bereit für Review; manuelle Accessibility/IME und Retention bleiben eigenständig.
+
+## P9a — Gedächtnisprotokolle: Produkt-/Fragebogenvertrag, keine UI
+
+[P9a](product-p9a-memory-protocol.md) spezifiziert den eigenständigen persönlichen
+Rückblick neben P6 und Note. Freie Erinnerung vor strukturierten Abschnitten;
+Questionnaire Version 1 mit stabilen Keys/acht Antworttypen, Unsicherheit und
+überspringbaren Fragen. Keine suggestive Vorauswahl, Diagnoseableitung,
+Rechtsbewertung oder Zusage gerichtlicher Verwertbarkeit.
+
+Künftiger ACTIVE-Einstieg „Gedächtnisprotokolle“ zeigt nur Anzahl Entwürfe und
+abgeschlossener Berichte; keine authorLabels, Antworten oder Textvorschau.
+COMPLETED bewusster Einstieg, normale Seite ohne P9-Prefetch einschließlich
+Summary. Nur ACTIVE/COMPLETED, kein PREPARATION-Pfad. Keine tote Karte jetzt.
+Workspace → Entwurf fortsetzen / Neues Gedächtnisprotokoll / Abgeschlossene
+Berichte. Bericht → Freie Erinnerung → Abschnitte → Zusammenfassung → Abschließen;
+spätere Ergänzung append-only. Kein vollständiges UI-Design durch P9a.
+
+Ausdrückliche enge Fortentwicklung der UX0-RAM-only-Regel ausschließlich für
+P9-Fachentwürfe: verschlüsselte persistente Abschnitte über „Speichern und weiter“.
+Gespeicherte Abschnitte überstehen Lock; ungespeicherte aktuelle Eingabe darf
+verloren gehen. Kein Background-Autosave, gespeicherter Navigations-/Authstate,
+Sessionverlängerung oder automatischer Reopen nach Reauth. Bewusstes Fortsetzen
+eines gespeicherten ACTIVE-Entwurfs nach COMPLETED, kein stiller Editorübertrag.
+Andere kurze Formulare bleiben RAM-only; P4/P5a/P7/Aktionsdaten read-only nach Abschluss.
+
+Nächster gesonderter Auftrag P9b muss sicheren persistierten Draftvertrag,
+Versionendarstellung, Grenzen, Konflikte und bestehende Gates spezifizieren.
+P9a gibt keinen Code, Schema, Migration oder Securityumbau frei. Menschliche
+TalkBack-/Accessibility-Abnahme, juristische/fachkundige Fragebogenprüfung,
+Retentiondauer und allgemeiner Löschworkflow bleiben offen. Abnahme P9a nur
+Dokumentations-/Verweis-/Scope-/Freezeprüfung und git diff --check.

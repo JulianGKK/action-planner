@@ -59,13 +59,14 @@ Pflichtfelder sind nicht zwangsläufig Eingabefelder. Für ausdrücklich offene 
 | `Material` | Materialposition |
 | `Document` | Dokumenteintrag einschließlich Informationsmaterial |
 | `FileAsset` | Verwalteter lokaler Dateiinhalt |
-| `Note` | Allgemeine aktions-/personenbezogene Notiz, getrennt von P6 |
+| `Note` | Allgemeine aktions-/personenbezogene Notiz, getrennt von P6 und P9 |
 | `ProtocolEntry` | Stabile Identität eines bewusst dokumentierten Aktionsvorgangs (P6) |
 | `ProtocolRevision` | Vollständige nachvollziehbare Fassung eines P6-Eintrags |
 | `ProtocolAffectedPerson` | Betroffenenbezug je Fassung auf bestehende Person derselben Aktion |
 | `ProtocolOfficialIdentifier` | Beobachtete amtliche Kennung je Fassung, kein Behördenpersonenprofil |
 | `ProtocolReportedByPerson` | Optionaler REPORTED-Quellenbezug auf bestehende Person derselben Aktion |
 | `Expense`, `ExpensePayment` | EUR-Kostenposition mit geordneter Zahlungsaufteilung (P8) |
+| Gedächtnisprotokoll (P9, konzeptionell) | Persönlicher Bericht mit gespeichertem Entwurf, Antworten nach versioniertem Fragebogen und späteren Ergänzungen; keine technische Entity festgelegt |
 | `RetentionPolicy` | Konzeptionelle Aufbewahrungsregel |
 
 Gemeinsame Schutz- und Retention-Metadaten sind Bestandteile der betroffenen Objekte und erfordern nicht zwangsläufig eigene Entitäten.
@@ -310,6 +311,7 @@ Kryptografisches Schlüsselmaterial ist kein Fachattribut. Erforderliche Schlüs
 
 Ohne Personenzuordnung ist eine Note aktionsbezogen. Mit Personenzuordnung ist sie personenbezogen; die Person gehört derselben Aktion an.
 
+Allgemeine Notes dienen nicht als persönliche Gedächtnisprotokolle (P9).
 Allgemeine Notes erhalten keine Versionshistorie, Teilnehmerlisten oder
 Autorenprofile. Personenbezogene Notizen werden nicht zusätzlich in `Person`
 gespeichert. Die frühere Planung „Protokoll als typisierte Note/MINUTES“ ist durch
@@ -358,6 +360,38 @@ Personenlöschworkflow prüft sämtliche Fassungen manuell auf verbleibende Bez�
 Eigene endliche P6-Retentionbetrachtung innerhalb der Aktion, konkrete Dauer offen.
 Vollständige Aktionslöschung entfernt Einträge, alle Fassungen/Relationen/Kennungen;
 keine P6-Insel oder einzelne versteckte Altfassung, keine Secure-Overwrite-Garantie.
+
+### 11.2 P9: Gedächtnisprotokoll — ausschließlich konzeptionell
+
+Verbindlicher Fach-/Fragebogenvertrag: [P9a](product-p9a-memory-protocol.md).
+P9 ist weder Note noch ProtocolEntry und übernimmt keine P6-Ereignisse automatisch.
+Ein persönlicher Bericht gehört genau einer Aktion; fachlich besitzt er lokale
+Identität, authorLabel (trim, 1–80 Unicode-Codepoints), questionnaireVersion,
+eigenen Berichtsstatus DRAFT/COMPLETED und Antworten mit stabilen Fragekeys.
+Freie Erinnerung kommt vor Detailfragen. Antworttypen, Optionen und Abhängigkeiten
+stehen ausschließlich im versionierten P9a-Katalog; keine Diagnose aus Themenwahl.
+
+P3a-Pseudonym darf als Text in authorLabel kopiert werden, kein persistierter
+Person-FK oder Autorenprofil. Personenrename/-delete verändern Bericht/Label nicht;
+P9 benötigt später eigene manuelle Inhaltsprüfung. SENSITIVE mit enger gültiger
+READY-Freigabe ohne Leadership-Step-up, keine P3b-Übernahme.
+
+Nur ACTIVE/COMPLETED. Bewusst abschnittsweise gespeicherter verschlüsselter
+Fachentwurf bleibt bei Lock erhalten und kann nach ACTIVE→COMPLETED bewusst
+fortgesetzt werden; ungespeicherter Editor und Navigation bleiben flüchtig.
+Nach Reauth kein automatisches Wiederöffnen. Kein Background-Autosave,
+kein Action-Reopen und keine allgemeine COMPLETED-Schreibfähigkeit.
+
+Berichtsabschluss schützt bisherige Antworten/Label vor normalem Überschreiben.
+Spätere Ergänzungen: append-only Freitext mit repositoryeigenem recordedAt,
+stabile Anfügereihenfolge; keine P6-Revisionsmaschine. Keine Medien/FileAsset-
+Beziehung. Fristen und vollständige manuelle Berichtslöschung offen;
+Aktionslöschung umfasst Entwürfe, Antworten, Ergänzungen und Ableitungen.
+
+Dies sind fachliche Konzepte, keine Room-Tabellen, SQL-Spalten, Migration oder
+Ankündigung einer neuen Schemanummer. Technische Antwortkodierung, endliche
+Textgrenzen, sichere Draft-/Abschlussabläufe und historische Darstellung erst
+P9b. Der implementierte DB-Stand bleibt Schema 9.
 
 ## 12. Expense und ExpensePayment: P8 Kosten-Sammelliste
 
@@ -478,8 +512,8 @@ Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, ke
 
 | Gelöschtes Objekt | Fachliche Folge |
 |---|---|
-| `Action` | Zugehörige Personen, Rollen, Statusdefinitionen, Zuordnungen, Aufgaben, Material, Dokumente, Dateien, Notes, Ausgaben und sämtliche P6-Einträge/Fassungen/Relationen/Kennungen entfernen |
-| Person | PersonRole und personenbezogene Notes entfernen; Personenreferenzen in Aufgaben/Material sowie erforderliche P6-Betroffenen-/Quellenrelationen lösen. P6-Einträge/Fassungen erhalten, Freitext nicht automatisch ändern; manuelle Protokollprüfung erforderlich. |
+| `Action` | Zugehörige Personen, Rollen, Statusdefinitionen, Zuordnungen, Aufgaben, Material, Dokumente, Dateien, Notes, Ausgaben, sämtliche P6-Einträge/Fassungen/Relationen/Kennungen und konzeptionell alle P9-Entwürfe/Berichte/Ergänzungen entfernen |
+| Person | PersonRole und personenbezogene Notes entfernen; Personenreferenzen in Aufgaben/Material sowie erforderliche P6-Betroffenen-/Quellenrelationen lösen. P6-Einträge/Fassungen erhalten, Freitext nicht automatisch ändern; manuelle Protokollprüfung erforderlich. P9-Labels/Antworten bleiben eigenständiger Inhalt ohne Person-FK; manuelle P9-Prüfung erforderlich. |
 | Role | P4/P5a: einzelne Rolle nur ohne geplante/operative/Task-Referenzen entfernen; kein stilles Entfernen von Zuordnungen |
 | PersonStatusDefinition | Statusreferenzen entfernen; Personen erhalten |
 | Task | P5a: Aufgabe und TaskEvents vollständig entfernen, nur PREPARATION; Personen erhalten; P7-Materiallink wird null |
@@ -491,7 +525,7 @@ Diese Tabelle beschreibt die fachliche Zielwirkung des freigegebenen Modells, ke
 | FileAsset eines Dokuments | Dokument ebenfalls entfernen, damit kein funktionsloser Eintrag verbleibt |
 | RetentionPolicy | Keine Inhaltskaskade; verwendete Regel darf nicht ersatzlos entfernt werden |
 
-Die Entfernung einer Personenreferenz anonymisiert keinen Freitext. Namen oder identifizierende Angaben in Aufgaben, Materialbezeichnung/-menge/-ort, Dateien und P8-payerLabels können verbleiben. Eine zuverlässige automatische Erkennung wird nicht vorausgesetzt. Ein Bereinigungsablauf ist unter OD-10 offen. Für P6 muss er ausdrücklich die manuelle Prüfung sämtlicher Protokollfassungen umfassen, ohne automatische Inhaltszerstörung bei Teilnehmerlöschung.
+Die Entfernung einer Personenreferenz anonymisiert keinen Freitext. Namen oder identifizierende Angaben in Aufgaben, Materialbezeichnung/-menge/-ort, Dateien, P8-payerLabels und P9-authorLabels/Antworten können verbleiben. Eine zuverlässige automatische Erkennung wird nicht vorausgesetzt. Ein Bereinigungsablauf ist unter OD-10 offen. Für P6 muss er ausdrücklich die manuelle Prüfung sämtlicher Protokollfassungen umfassen, ohne automatische Inhaltszerstörung bei Teilnehmerlöschung.
 
 ### 15.4 Technische Löschung: ausdrücklich offen
 

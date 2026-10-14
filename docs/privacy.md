@@ -66,6 +66,7 @@ Die Speicherbereiche sind konzeptionell. Konkrete Pfade und technische Verfahren
 | P7 Material | Einfache aktionsgebundene Materialkoordination | Ausdrücklich INTERNAL, sensible operative Inhalte möglich | Bestehende SQLCipher-Produkt-DB | Aktionsobergrenze; Person-/Taskdelete entkoppelt Links; Frist offen |
 | Note | Allgemeine organisatorische Notiz, getrennt von P6 | Standard SENSITIVE bei ungeprüftem Inhalt/Personenbezug | Wie Aktion | Eigene Frist offen; personenbezogene Note-Kaskade |
 | P6: ProtocolEntry/Revision samt Betroffenen-/Quellenbezügen und Behördenkennungen | Bewusste Ereignisdokumentation und nachvollziehbare Korrektur/Nachbereitung | SENSITIVE; normale Arbeit in gültigem READY ohne zusätzlichen Leadership-Step-up | Bestehende verschlüsselte SQLCipher-Produktstorage | Eigene endliche Retentionbetrachtung, Dauer offen; alle Fassungen/Kennungen gemeinsam, vollständige Aktionslöschung als Obergrenze. Personenlöschung löst notwendige Relationen, keine automatische Textmutation. |
+| P9 (konzeptionell): Gedächtnisprotokoll, gespeicherte Abschnitte und Ergänzungen | Persönliche rückblickende Erinnerung | SENSITIVE; enge READY-Freigabe ohne Leadership-Step-up | Geplanter bestehender verschlüsselter Produktbestand; Technik erst P9b | Dauer/Workflow offen; Aktionsobergrenze, keine automatische Bereinigung durch Personenlöschung |
 | Document, FileAsset | Offline-Unterlagen, Nachweise | Standard SENSITIVE | Verschlüsselte Metadaten und private verschlüsselte Dateien | Eigene Frist offen; Eigentümerbeziehung beachten |
 | Expense / ExpensePayment (P8) | EUR-Kosten und Zahlungslabels | SENSITIVE, enge READY-Freigabe ohne Leadership-Step-up | Bestehende SQLCipher-DB | Frist offen, aktionsgebunden; kein Beleg |
 | RetentionPolicy, Fristmetadaten | Aufbewahrung steuern | Geschützt; keine sensiblen Freitextbegründungen | Privater geschützter technischer/strukturierter Speicher | Verwendete Regeln nicht ersatzlos löschen; Details offen |
@@ -263,3 +264,36 @@ Kein P3b-Read. Gültiges READY ohne Leadership-Step-up ist eine enge ausdrückli
 P8-Freigabe, keine allgemeine Öffnung von P3b. Hub ausschließlich Anzahl/Gesamtsumme,
 keine Titel/Labels/Payments; normaler COMPLETED-Bildschirm ohne Kostenprefetch.
 Keine Inhalte in Logs, Notifications, Clipboard oder Export. Retentiondauer offen.
+
+## P9a — persönliche Gedächtnisprotokolle (Produktentscheidung)
+
+[P9a](product-p9a-memory-protocol.md) definiert einen eigenen SENSITIVE-Bereich
+für persönliche rückblickende Erinnerungen, getrennt von Note und P6.
+Zweck: zeitnahes Festhalten des eigenen Erlebens, unter anderem für spätere
+rechtliche Beratung. Freie Erinnerung zuerst, danach optionale versionierte
+Fragen; keine Rechtsbewertung oder Zusage lückenloser Erinnerung.
+Gesundheits-/Sexualitätsauswahlen erfassen gestellte Fragen, keine Diagnosen
+oder tatsächlichen Gesundheitszustände. Fremde sensible Angaben vermeiden;
+Beobachtungen anderer nur optionaler Freitext, keine Personenakte.
+
+Enge P9-Ausnahme zu PRIV-06: normale Arbeit in gültigem READY ohne Leadership-
+Step-up für praktische Erfassung nach Entlassung, weiterhin SENSITIVE.
+Keine allgemeine P3b-Öffnung, kein automatischer Read/Transfer von Vollname,
+Telefonnummer, Geburtsdatum oder Notfallkontakt. Offene Sitzungen können Inhalte
+preisgeben; verschlüsselte Persistenz verhindert diese Offenlegung nicht.
+
+authorLabel ist eigenständiger Berichtsinhalt (trim, 1–80 Codepoints), kein
+Autorenprofil oder Person-FK. P3a-Pseudonyme dienen nur als Textkopierhilfe;
+Personenrename/-delete ändern Label/Antworten nicht. Allgemeine Lösch-/Freitext-
+prüfung muss P9 berücksichtigen. Pseudonymisierung bedeutet keine Anonymität.
+
+Inventar: authorLabel, freie Erinnerung, versionierte Antworten, ausdrücklich
+persistierte Abschnitte und spätere Ergänzungen dienen diesem Berichtszweck,
+sind SENSITIVE und sollen im bestehenden verschlüsselten Produktbestand liegen.
+P9a speichert noch nichts; technische Abbildung erst P9b. Bewusstes „Speichern
+und weiter“ ist die enge Ausnahme zu RAM-only-Fachentwürfen, nicht zu flüchtigem
+Navigations-/Authstate. Gespeicherte Abschnitte bleiben bei Lock, aktueller
+ungespeicherter Text darf verloren gehen; Reauth öffnet nichts automatisch.
+Keine Logs/Notifications/Clipboardfunktion/Exporte oder Datei-/Medienanhänge.
+Fristen offen; Aktionslöschung umfasst alle P9-Inhalte und kontrollierten
+Ableitungen. Fachkundige Privacy-/Fragebogenprüfung vor Echtdaten bleibt erforderlich.
