@@ -495,7 +495,7 @@ Löschgarantien, Wiederanlauf, Fehlermeldung, mögliche minimale Löschprotokoll
 ## 16. Abgrenzungen
 
 - Keine gespeicherte Organisation und keine globale Personenkartei im MVP.
-- P7-Material besitzt keine Kategorie. Kategorien anderer geplanter Fachbereiche bleiben getrennt je Fachbereich. Es gibt keine zentrale Taxonomie. Die einfache Darstellung erfolgt zunächst als Kategorieangabe am Objekt.
+- P7-Material besitzt keine Kategorie. Kategorien anderer geplanter Fachbereiche bleiben getrennt je Fachbereich. Es gibt keine zentrale Taxonomie; Material wird ausschließlich über die in Abschnitt 9 festgelegten P7-Felder dargestellt.
 - Der lokale Admin ist ein technischer Akteur, keine Teilnehmerperson. Kein persönliches Adminprofil wird eingeführt.
 - Authentifizierungsabläufe und Schlüsselreferenzen gehören in ein separates Sicherheitsmodell. PaG zählt keine falschen DEVICE_CREDENTIAL-Eingaben im Systemdialog; eigene Fehlversuchszähler/Sperrfristen wären erst bei einer späteren PaG-Passphrase separat zu spezifizieren. Biometrie bleibt gemäß PRODUCT.md ausgeschlossen.
 - Suche und Dashboard erzeugen keine zusätzlichen fachlichen Stammdaten. Eventuelle persistierte Indizes müssen Schutz und Löschung ihrer Ausgangsdaten berücksichtigen.
