@@ -738,3 +738,15 @@ Keine neuen Retentionfelder oder Antwort-Historie. Technischer Codec, Grenzen,
 Sectionersatz, Abschließen und append-only Ergänzung stehen im P9b-Vertrag.
 P9a-Fragekatalog bleibt unverändert. Abschnitt 11.2 beschreibt seine fachliche
 Grundlage; der dort ursprünglich offene technische Vertrag ist durch P9b umgesetzt.
+
+## P10b1 — minimale geplante Storageabbildung
+
+[P10b1](product-p10b1-documents-storage-design.md) spezifiziert bevorzugt documents
+mit den sechs P10a-Fachangaben plus blobName/fileKey und document_jobs mit minimalen
+technischen Recoveryangaben. fileKey exakt 32 Byte ausschließlich in SQLCipher;
+kein Person-/P6-/P9-FK, URI oder persistierte Sessiongeneration. Documents-Row
+bedeutet READY, aktive Delete-Jobs verbergen sie. Importjob→Document und Jobdelete
+atomar in DB; File-I/O bleibt getrennt. Action-FKs RESTRICT statt blinder CASCADE,
+damit spätere vollständige Aktionslöschung zuerst bekannten Blob-/Jobcleanup
+abschließt. Keine heutige Action-Deletion, Room-Entity, Migration oder neue
+Schemanummer; implementierter Bestand bleibt Schema 10. P10a unverändert.
