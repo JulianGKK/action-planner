@@ -647,11 +647,11 @@ Das Dashboard zeigt mindestens:
 Diese Module sind der perspektivische Produktumfang. Das ACTIVE-UX-Ziel bündelt
 implementierte Bereiche als große Hub-Karten und führt in fokussierte Übersichten;
 noch nicht implementierte Bereiche erscheinen nicht als tote Buttons. Aktuell
-verfügbare Bereiche: Personen, Aufgaben, Funktionen, Protokoll, Material, Kosten
-und eigene read-only Aktionsdetails. Vorfälle / Beobachtungen, Dokumente, Uploads und weitere
+verfügbare Bereiche: Personen, Aufgaben, Funktionen, Protokoll, Material, Kosten,
+Gedächtnisprotokolle und eigene read-only Aktionsdetails. Vorfälle / Beobachtungen, Dokumente, Uploads und weitere
 Module benötigen eigene Freigaben; daraus folgt kein neuer Netzwerkzugriff.
-P9-Gedächtnisprotokolle sind durch P9a fachlich spezifiziert, noch nicht als
-Hubkarte implementiert.
+P9-Gedächtnisprotokolle folgen dem P9a-Fragebogenvertrag und sind durch P9b
+implementiert; die Hubkarte zeigt ausschließlich Entwurfs-/Abschlusszahlen.
 
 ## FR-101 — Schnelle Bedienung
 
@@ -1458,3 +1458,16 @@ oder automatisches Tracking. Vorlagen sind Auswahlhilfen, keine Pflichtrollen.
 Normale gültige PaG-Session genügt für diesen ausdrücklich freigegebenen INTERNAL-
 Zugriff; sensible Identitäts-/Kontaktbereiche bleiben unter P3b-Step-up.
 Details, Grenzen und Tests: [product-p4.md](docs/product-p4.md).
+
+## P9b — Gedächtnisprotokolle implementiert
+
+[P9b](docs/product-p9b-memory-protocol-implementation.md) setzt den unveränderten
+P9a-Vertrag technisch in einem Slice um: exakt 85 V1-Keys/A–Q, freie Erinnerung
+vor Offenlegung späterer Abschnitte, explizit gespeicherte verschlüsselte
+Fachentwürfe, Zusammenfassung/Abschluss und append-only Ergänzungen.
+Schema10 ergänzt ausschließlich drei aktionsgebundene P9-Tabellen.
+ACTIVE bekommt die achte Hubkarte mit Counts; COMPLETED bewussten Einstieg ohne
+P9-Prefetch. authorLabel nur Text, kein Person-FK/P3b-Read. P4/P5a/P7/Action-
+COMPLETED-Regeln bleiben unverändert. P9a-Abschnitt oben beschreibt den
+Produktentscheid; P9b ist dessen nun implementierte technische Ausgestaltung.
+Keine Medien/Exporte/Rechtsbewertung, Retentiondauer oder Berichtslöschfunktion.

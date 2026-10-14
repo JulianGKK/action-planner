@@ -87,6 +87,7 @@ class P8ExpenseProbe : Instrumentation() {
         override fun delete(actionId:String,expected:MaterialItem,publish:(OperationsResult<Unit>)->Unit){error("No P8 material write")}
     }
     private fun nodes(): List<AccessibilityNodeInfo> {
+        runOnMainSync { androidx.compose.runtime.snapshots.Snapshot.sendApplyNotifications() }
         if (android.os.Build.VERSION.SDK_INT >= 34) uiAutomation.clearCache()
         val result = mutableListOf<AccessibilityNodeInfo>()
         fun walk(node: AccessibilityNodeInfo?) { if (node == null || !node.refresh()) return; result += node; repeat(node.childCount) { walk(node.getChild(it)) } }
@@ -112,11 +113,19 @@ class P8ExpenseProbe : Instrumentation() {
         }
         error("Expense label unreachable")
     }
+    private var matchSeen=false
+    private var enabledSeen=false
+    private var controlClass="none"
     private fun click(label: String, backwards: Boolean = label.startsWith("‹") || label == "Übersicht") {
+        matchSeen=false;enabledSeen=false
         repeat(80) {
             nodes().filter { match(it, label) }.forEach { node ->
+                matchSeen=true
                 var control: AccessibilityNodeInfo? = node
                 while (control != null && !control.isClickable) control = control.parent
+                control?.refresh()
+                controlClass=control?.className?.toString().orEmpty()
+                if(control?.isEnabled==true)enabledSeen=true
                 if (control != null && control.isEnabled && bounds(control).height() > 0) {
                     val rect = bounds(control); check(rect.left >= 0 && rect.right <= targetContext.resources.displayMetrics.widthPixels)
                     if (control.performAction(AccessibilityNodeInfo.ACTION_CLICK)) { waitForIdleSync(); SystemClock.sleep(150); return }
@@ -132,20 +141,20 @@ class P8ExpenseProbe : Instrumentation() {
         while (editable != null && !editable.isEditable) editable = editable.parent
         check(editable != null)
         check(editable!!.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply { putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, value) }))
-        waitForIdleSync(); editable!!.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id); waitForIdleSync()
+        waitForIdleSync(); SystemClock.sleep(100); editable!!.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id); waitForIdleSync(); SystemClock.sleep(100)
     }
     private fun privateHub() {
         val forbidden = listOf("Zugtickets", "Meise", "Motte", "Alex aus der Soligruppe", "Transporter")
         check(nodes().none { n -> forbidden.any { (n.text?.toString().orEmpty() + n.contentDescription?.toString().orEmpty()).contains(it) } })
     }
     override fun onStart() {
-        var activity:MainActivity?=null;var phase="entry";var font=1f
+        var activity:MainActivity?=null;var phase="entry";var font=1f;var diagnosticModel:ProductViewModel?=null
         try {
             val launched=startActivitySync(Intent(targetContext,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity;activity=launched
             val density=targetContext.resources.displayMetrics.density
             for(scale in listOf(1f,2f).filter{requestedScale==null||requestedScale==it}) {
                 font=scale;val session=Session();val actions=Actions();val port=Expenses(actions);lateinit var model:ProductViewModel
-                runOnMainSync { model=ProductViewModel(session,actions,ProductStorageState.READY_TO_OPEN,People(),operationsRepository=Ops(actions),taskRepository=Tasks(),protocolRepository=Protocols(),materialRepository=Materials(),expenseRepository=port){session.ready()};model.detail("synthetic");launched.setContent{CompositionLocalProvider(LocalDensity provides Density(density,scale)){ProductScreen(model)}} }
+                runOnMainSync { launched.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);model=ProductViewModel(session,actions,ProductStorageState.READY_TO_OPEN,People(),operationsRepository=Ops(actions),taskRepository=Tasks(),protocolRepository=Protocols(),materialRepository=Materials(),expenseRepository=port){session.ready()};diagnosticModel=model;model.detail("synthetic");launched.setContent{CompositionLocalProvider(LocalDensity provides Density(density,scale)){ProductScreen(model)}} }
                 phase="preparation-area";waitForIdleSync();click("Kosten")
                 phase="preparation-draft";click("+ Kosten eintragen")
                 phase="preparation-title";field("Bezeichnung","Zugtickets")
@@ -159,10 +168,10 @@ class P8ExpenseProbe : Instrumentation() {
                 phase="edit-external";click("Zugtickets");field("Bezahlt von · Zahlung 2","Alex aus der Soligruppe");click("Speichern");visible("Alex aus der Soligruppe · 70,00 €")
                 phase="active-hub";top();click("Übersicht");click("Aktion starten");click("Bestätigen");visible("Lagebild");privateHub();visible("Gesamt: 120,00 €");val reads=port.boardReads
                 runOnMainSync { check(model.workspace!!.expenseSummary==ExpenseSummary(1,12000));check(port.boardReads==reads) }
-                phase="active-create";click("Kosten öffnen");click("+ Kosten eintragen");field("Bezeichnung","Transporter");field("Gesamtbetrag","180");click("+ freie Person / Bezeichnung");field("Bezahlt von · Zahlung 1","Privat vorgestreckt");field("Betrag · Zahlung 1","180");click("Speichern");top();click("‹ Zum Lagebild");visible("Gesamt: 300,00 €");privateHub()
+                phase="active-costs-open";click("Kosten öffnen");phase="active-create-open";click("+ Kosten eintragen");phase="active-create-title";field("Bezeichnung","Transporter");phase="active-create-total";field("Gesamtbetrag","180");phase="active-create-payment";click("+ freie Person / Bezeichnung");phase="active-create-payer";field("Bezahlt von · Zahlung 1","Privat vorgestreckt");phase="active-create-amount";field("Betrag · Zahlung 1","180");phase="active-create-save";click("Speichern");phase="active-create-back";top();click("‹ Zum Lagebild");visible("Gesamt: 300,00 €");privateHub()
                 phase="active-draft-completion";click("Kosten öffnen");click("+ Kosten eintragen");field("Bezeichnung","Nicht speichern");top();click("‹ Zum Lagebild");click("Aktion abschließen");click("Bestätigen");visible("Abgeschlossen")
                 runOnMainSync { check(model.expenses.draft==null&&!model.completedExpensesOpen&&port.completedReads==0) };bottom();top();runOnMainSync{check(port.completedReads==0)}
-                phase="completed-administration";click("Kosten verwalten");visible("Kosten können auch nach Abschluss ergänzt oder korrigiert werden. Die Aktion selbst bleibt abgeschlossen.");click("Zugtickets");field("Bezeichnung","Zugtickets korrigiert");click("Speichern");click("+ Kosten eintragen");field("Bezeichnung","Synthetische Nachbereitung");field("Gesamtbetrag","0,50");click("Motte");field("Betrag · Zahlung 1","0,50");click("Speichern")
+                phase="completed-open";click("Kosten verwalten");phase="completed-notice";visible("Kosten können auch nach Abschluss ergänzt oder korrigiert werden. Die Aktion selbst bleibt abgeschlossen.");phase="completed-edit-open";click("Zugtickets");phase="completed-edit-field";field("Bezeichnung","Zugtickets korrigiert");phase="completed-edit-save";click("Speichern");phase="completed-create-open";click("+ Kosten eintragen");phase="completed-create-fields";field("Bezeichnung","Synthetische Nachbereitung");field("Gesamtbetrag","0,50");phase="completed-create-person";click("Motte");phase="completed-create-amount";field("Betrag · Zahlung 1","0,50");phase="completed-create-save";click("Speichern")
                 runOnMainSync { check(actions.row.status==ActionStatus.COMPLETED&&port.items.size==3);check(!model.tasks.writable&&!model.material.writable&&!model.operations.live&&!model.operations.planning);model.edit();check(model.editing==null) }
                 phase="delete-cancel";click("Synthetische Nachbereitung");click("Kostenposition entfernen");visible("Der Kosteneintrag und seine Zahlungsaufteilung werden entfernt.");click("Eintrag behalten");click("Abbrechen");runOnMainSync{check(port.items.size==3)}
                 phase="maximum-payment-controls";click("+ Kosten eintragen")
@@ -177,6 +186,6 @@ class P8ExpenseProbe : Instrumentation() {
                 phase="lock-reauth";click("Sperren",true);visible("PaG");runOnMainSync{check(model.snapshot.state==SessionState.LOCKED&&model.expenses.board==null&&model.expenses.draft==null&&model.expenses.expected==null&&!model.completedExpensesOpen)};privateHub();phase="reauth-action-list";runOnMainSync{session.ready()};visible("Übungsaktion · Abgeschlossen");runOnMainSync{check(model.selected==null&&!model.completedExpensesOpen&&model.expenses.board==null)}
             }
             runOnMainSync{launched.finish()};finish(-1,Bundle().apply{putString("stream","P8 synthetic ProductScreen preparation/cent input/pseudonym/external label/active privacy/server summary/completed administration/isolation/delete cancel/lock/reauth/font=${requestedScale ?: "1+2"}: OK\n")})
-        } catch(failure:Exception) {activity?.let{runOnMainSync{it.finish()}};finish(0,Bundle().apply{putString("stream","P8 probe failed; font=$font; phase=$phase; lines=${failure.stackTrace.filter{it.className==P8ExpenseProbe::class.java.name}.take(5).map{it.lineNumber}}; no expense/payer/input values logged\n")})}
+        } catch(failure:Exception) {var state="unavailable";runOnMainSync{diagnosticModel?.let{state="session=${it.snapshot.state};area=${it.preparationArea};active=${it.activeArea};error=${it.expenses.error};form=${it.expenses.form};busy=${it.expenses.busy};valid=${it.expenses.draft?.input()!=null};focused=${activity?.window?.decorView?.hasWindowFocus()}"}};val root=uiAutomation.rootInActiveWindow?.packageName;activity?.let{runOnMainSync{it.finish()}};finish(0,Bundle().apply{putString("stream","P8 probe failed; font=$font; phase=$phase; technical=$state; match=$matchSeen; enabled=$enabledSeen; control=$controlClass; root=$root; lines=${failure.stackTrace.filter{it.className==P8ExpenseProbe::class.java.name}.take(5).map{it.lineNumber}}; no expense/payer/input values logged\n")})}
     }
 }

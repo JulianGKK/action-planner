@@ -66,7 +66,7 @@ Die Speicherbereiche sind konzeptionell. Konkrete Pfade und technische Verfahren
 | P7 Material | Einfache aktionsgebundene Materialkoordination | Ausdrücklich INTERNAL, sensible operative Inhalte möglich | Bestehende SQLCipher-Produkt-DB | Aktionsobergrenze; Person-/Taskdelete entkoppelt Links; Frist offen |
 | Note | Allgemeine organisatorische Notiz, getrennt von P6 | Standard SENSITIVE bei ungeprüftem Inhalt/Personenbezug | Wie Aktion | Eigene Frist offen; personenbezogene Note-Kaskade |
 | P6: ProtocolEntry/Revision samt Betroffenen-/Quellenbezügen und Behördenkennungen | Bewusste Ereignisdokumentation und nachvollziehbare Korrektur/Nachbereitung | SENSITIVE; normale Arbeit in gültigem READY ohne zusätzlichen Leadership-Step-up | Bestehende verschlüsselte SQLCipher-Produktstorage | Eigene endliche Retentionbetrachtung, Dauer offen; alle Fassungen/Kennungen gemeinsam, vollständige Aktionslöschung als Obergrenze. Personenlöschung löst notwendige Relationen, keine automatische Textmutation. |
-| P9 (konzeptionell): Gedächtnisprotokoll, gespeicherte Abschnitte und Ergänzungen | Persönliche rückblickende Erinnerung | SENSITIVE; enge READY-Freigabe ohne Leadership-Step-up | Geplanter bestehender verschlüsselter Produktbestand; Technik erst P9b | Dauer/Workflow offen; Aktionsobergrenze, keine automatische Bereinigung durch Personenlöschung |
+| P9: Gedächtnisprotokoll, gespeicherte Abschnitte und Ergänzungen | Persönliche rückblickende Erinnerung | SENSITIVE; enge READY-Freigabe ohne Leadership-Step-up | Bestehende SQLCipher-Produkt-DB; Schema10/P9b | Dauer/Workflow offen; Aktionsobergrenze, keine automatische Bereinigung durch Personenlöschung |
 | Document, FileAsset | Offline-Unterlagen, Nachweise | Standard SENSITIVE | Verschlüsselte Metadaten und private verschlüsselte Dateien | Eigene Frist offen; Eigentümerbeziehung beachten |
 | Expense / ExpensePayment (P8) | EUR-Kosten und Zahlungslabels | SENSITIVE, enge READY-Freigabe ohne Leadership-Step-up | Bestehende SQLCipher-DB | Frist offen, aktionsgebunden; kein Beleg |
 | RetentionPolicy, Fristmetadaten | Aufbewahrung steuern | Geschützt; keine sensiblen Freitextbegründungen | Privater geschützter technischer/strukturierter Speicher | Verwendete Regeln nicht ersatzlos löschen; Details offen |
@@ -297,3 +297,14 @@ ungespeicherter Text darf verloren gehen; Reauth öffnet nichts automatisch.
 Keine Logs/Notifications/Clipboardfunktion/Exporte oder Datei-/Medienanhänge.
 Fristen offen; Aktionslöschung umfasst alle P9-Inhalte und kontrollierten
 Ableitungen. Fachkundige Privacy-/Fragebogenprüfung vor Echtdaten bleibt erforderlich.
+
+## P9b — technische Umsetzung der P9a-Grenzen
+
+[P9b](product-p9b-memory-protocol-implementation.md): genau 85 eingefrorene
+Fragekeys, explizite verschlüsselte Sectionpersistenz in derselben Produkt-DB,
+keine persistierte Navigation/Sessionfreigabe. Summary Counts, List Header,
+Detail erst bewusst; keine Inhalte/Labels im Hub oder COMPLETED-Prefetch.
+P3a nur Textkopierhilfe, Rename/Delete ohne P9-Inhaltsänderung. Kein P3b-Read.
+G-Themen dokumentieren gestellte Fragen, keine Gesundheitsdiagnosen.
+SENSITIVE/enge READY-Ausnahme bleibt. Konkrete Fristen und manuelle Freitext-
+prüfung offen; Actioncascade einschließlich Answers/Addenda, keine externe Kopie.

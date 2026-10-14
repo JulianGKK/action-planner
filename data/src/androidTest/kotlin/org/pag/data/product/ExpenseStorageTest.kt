@@ -70,7 +70,7 @@ class ExpenseStorageTest {
     private fun reset() { allowed = true; denyCommit = false; generation++ }
     @After fun wipe() { owners.forEach { it.invalidate() }; key.fill(0) }
     @Test fun freshNineHasExactlyTwoNewTablesAndNoPersonFk() {
-        val i=fixture();B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use { d ->assertEquals(9,d.version)
+        val i=fixture();B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use { d ->assertEquals(10,d.version)
             for((table,columns) in mapOf("expenses" to listOf("id","actionId","title","totalCents","createdAt"),"expense_payments" to listOf("actionId","expenseId","position","payerLabel","amountCents"))) {
                 val names=mutableListOf<String>();d.rawQuery("PRAGMA table_info($table)",emptyArray<String>()).use { while(it.moveToNext())names+=it.getString(1) };assertEquals(columns,names)
                 d.rawQuery("PRAGMA foreign_key_list($table)",emptyArray<String>()).use { while(it.moveToNext())assertEquals(if(table=="expenses")"actions" else "expenses",it.getString(2)) }
@@ -105,11 +105,11 @@ class ExpenseStorageTest {
         use(i){d->assertTrue(d.advanceAction("a",ActionStatus.PREPARATION,context()) is ActionChangeResult.Applied)}
         val entry=use(i){d->d.withWriteTransaction { protocolValue(ProtocolStore(d,context()){time}.create("a",ActionStatus.ACTIVE,ProtocolInput(ProtocolClassification.KEY_EVENT,"synthetic protocol",10,description="synthetic preserved"))) }}
         val before=use(i){d->protocolValue(ProtocolStore(d,context()){time}.detail("a",entry.entryId))};val oldTask=task(i);downgrade(i);val tables=tableNames(i);val triggers=triggers(i)
-        assertEquals(ExpenseSummary(0,0),value(use(i){ExpenseStore(it,context()){time}.summary("a")}));assertEquals(tables+setOf("expenses","expense_payments"),tableNames(i));assertEquals(triggers,triggers(i))
+        assertEquals(ExpenseSummary(0,0),value(use(i){ExpenseStore(it,context()){time}.summary("a")}));assertEquals(tables+setOf("expenses","expense_payments","memory_reports","memory_answers","memory_addenda"),tableNames(i));assertEquals(triggers,triggers(i))
         assertEquals(material,value(use(i){MaterialStore(it,context()){time}.board("a")}).items.single());assertEquals(oldTask,task(i));assertEquals(before,use(i){d->protocolValue(ProtocolStore(d,context()){time}.detail("a",entry.entryId))});create(i)
     }
     private suspend fun taskId(d:ActionDatabase)=d.tasks().list("a").single().id
-    @Test fun migrationRevokeAndRetryRetainsEightWithoutReplacement(){val i=fixture();val t=task(i);downgrade(i);denyCommit=true;assertThrows(RuntimeException::class.java){use(i){}};reset();B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(8,it.version)};assertFalse(tableNames(i).contains("expenses"));assertEquals(t,task(i));B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(9,it.version)}}
+    @Test fun migrationRevokeAndRetryRetainsEightWithoutReplacement(){val i=fixture();val t=task(i);downgrade(i);denyCommit=true;assertThrows(RuntimeException::class.java){use(i){}};reset();B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(8,it.version)};assertFalse(tableNames(i).contains("expenses"));assertEquals(t,task(i));B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(10,it.version)}}
     private fun downgrade(i:ProductInventory)=B2Native.open(i.database,key,context(AccessScope.MAINTENANCE)).use{d->d.beginTransaction();try{removeExpenseSchemaForLegacyFixture(d);d.execSQL("UPDATE room_master_table SET identity_hash='f05ba9d6758029cbc9074a9d90911194' WHERE id=42");d.version=8;d.setTransactionSuccessful()}finally{d.endTransaction()}}
     private fun tableNames(i:ProductInventory):Set<String> = B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{d->val names=mutableSetOf<String>();d.rawQuery("SELECT name FROM sqlite_master WHERE type='table'",emptyArray<String>()).use{while(it.moveToNext())names+=it.getString(0)};names}
     private fun triggers(i:ProductInventory):Map<String,String> = B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{d->val rows=mutableMapOf<String,String>();d.rawQuery("SELECT name,sql FROM sqlite_master WHERE type='trigger'",emptyArray<String>()).use{while(it.moveToNext())rows[it.getString(0)]=it.getString(1)};rows}
