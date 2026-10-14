@@ -140,3 +140,17 @@ Callbacks. Reale ViewModel-Fakeports verweigern weiterhin P4/P5a/Action-Writes.
 P6c3ProtocolProbe verwendet echte ProductScreen-Komposition mit synthetischen
 Ports bei Font Scale 1/2; P6c2ProtocolProbe bleibt die separate ACTIVE-Regression.
 Details und Restgrenzen: [P6c3](product-p6c3-protocol-completed-followup.md).
+
+## P6c4 — Integration / Accessibilityautomation
+
+P6c4ProtocolIntegrationTest schichtet echte ViewModel-/Fakeportmatrizen für
+Cross-Area, Phasenwechsel, Lock/Reauth, STALE, neue Summarypublication, DST und
+Unicodegrenzen über die vorhandenen Einzeltests. P6c4ProtocolIntegrationProbe
+prüft echten ProductScreen mit Privacy-Sentinels, 60 Timelineitems, 24 Fassungen,
+32 Personen/Kennungen und maximalen Texten bei kompakter Breite/Font Scale 1/2.
+Zusätzlich prüft sie 599/601dp Hub-Inhaltsbreiten um die exakt unitgetestete
+600dp-Schwelle und Scroll bis Save/Cancel mit per WindowInsets sichtbarer IME.
+Späte Writergebnisse und fremde Editoren beim P6-Einstieg sind ViewModel-Matrizen.
+Bestehende P6c2/P6c3-Proben und ProtocolStorageTest bilden die Regression.
+Ergebnisse, Freeze, Testgrößen und ausdrücklich manuelle Restabnahme:
+[P6c4](product-p6c4-protocol-integration-accessibility.md).
