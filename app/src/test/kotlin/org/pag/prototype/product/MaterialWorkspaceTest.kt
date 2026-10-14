@@ -92,7 +92,7 @@ class MaterialWorkspaceTest {
         assertNull(model.workspace); assertEquals(1, port.summaryReads); assertEquals(0, port.boardReads)
         port.summaryCallback!!(OperationsResult.Value(MaterialSummary(7)))
         val cards = activeHubCards(actions.row, opBoard, taskBoard, model.workspace!!.protocolSummary, model.workspace!!.materialSummary)
-        assertEquals(ActiveArea.entries.drop(1), cards.map { it.area })
+        assertEquals(ActiveArea.entries.drop(1).filter { it != ActiveArea.COSTS }, cards.map { it.area })
         assertEquals(listOf("7 Materialeinträge"), cards.single { it.area == ActiveArea.MATERIAL }.summary)
         assertFalse(cards.toString().contains("MATERIAL-SENTINEL")); assertEquals(0, port.boardReads)
     }

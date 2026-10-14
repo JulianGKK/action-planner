@@ -95,7 +95,7 @@ class PreparationWorkspaceTest {
         assertEquals(PreparationContentState.LOADING, model.preparationContentState)
     }
     @Test fun preparationAreasIncludeMaterialAndStartAtOverview() {
-        open(); assertTrue(model.preparationAvailable); assertEquals(5, PreparationArea.entries.size)
+        open(); assertTrue(model.preparationAvailable); assertEquals(6, PreparationArea.entries.size)
         assertEquals(PreparationArea.OVERVIEW, model.preparationArea); assertEquals(PreparationContentState.LOADING, model.preparationContentState)
     }
     @Test fun overviewStagesAllThreeReadsBeforeOneReveal() {

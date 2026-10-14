@@ -236,7 +236,7 @@ Das Abschließen löst die definierte Nachbereitungs- und Retention-Logik aus.
 P6a.1 definiert eine ausschließlich protokollbezogene COMPLETED-Ausnahme:
 bewusste Korrekturen/Ergänzungen und gekennzeichnete neue Nachträge sind fachlich
 zulässig. Dies öffnet weder P4/P5a-Schreibpfade noch den Aktionslebenszyklus erneut;
-Umsetzung folgt separat. Siehe [P6](docs/product-p6a-protocol.md).
+P8 ergänzt eine getrennte administrative Kosten-Ausnahme ohne allgemeinen Reopen. Siehe [P6](docs/product-p6a-protocol.md).
 
 
 ---
@@ -513,29 +513,36 @@ separate Implementierungsspezifikation, noch keine technische Umsetzung.
 
 ---
 
-# 14. Kostentracker
+# 14. Kosten-Sammelliste (P8)
 
-## FR-080 — Ausgabe erfassen
+## FR-080 — Kostenposition erfassen
 
-Eine Ausgabe besitzt:
+Eine aktionsgebundene Kostenposition enthält ausschließlich ID, actionId,
+Bezeichnung (Trim, 1–120 Unicode-Codepoints), positiven Gesamtbetrag in Long-Cents,
+1–32 Zahlungen und createdAt. Jede Zahlung enthält nur payerLabel (Trim, 1–80
+Codepoints) und positiven Centbetrag. EUR-only, kein Währungsfeld, keine
+Float-/Double-Arithmetik. Zahlungsreihenfolge erhalten; doppelte Labels erlaubt.
+Die overflow-sicher geprüfte Zahlungssumme muss exakt dem Gesamtbetrag entsprechen.
 
-* Betrag
-* Datum
-* Kategorie
-* Beschreibung
-* optionalen Beleg
-* Aktion
+## FR-081 — Summen und administrative Nachbereitung
 
-## FR-081 — Summen
+Gesamtsumme und Anzahl aus den Kostenpositionen, ohne Kategorien/Filter/Suche.
+PREPARATION, ACTIVE und bewusst geöffnete COMPLETED-Kostenverwaltung erlauben
+Create/Edit/Delete: Kosten werden oft erst nach Abschluss vollständig gesammelt.
+Diese enge P8-Ausnahme öffnet weder P4/P5a/P7 noch Aktionsbearbeitung/Reopen.
+DRAFT/DELETION_PENDING ohne Zugriff. Alte ACTIVE-Entwürfe werden beim Abschluss
+verworfen. Kein Kostenprefetch auf der normalen COMPLETED-Seite.
 
-Die Anwendung berechnet:
+## FR-082 — Zahlungsaufteilung und Datenschutz
 
-* Gesamtkosten
-* Kosten nach Kategorie
-
-## FR-082 — Belege
-
-Ein Beleg ist optional; gespeicherte Belege werden wie alle operativen Daten verschlüsselt.
+payerLabel ist eigener expense-lokaler Text. P3a-Pseudonyme dienen ausschließlich
+als optionale Kopierhilfe; kein Person-FK, keine P3b-Identitätsübernahme.
+Personenrename/-delete ändern Kostenlabels nicht. Externe kurze Bezeichnungen
+sind erlaubt. P8 ist SENSITIVE in derselben SQLCipher-DB; gültiges READY genügt
+als ausdrücklich enge Freigabe ohne Leadership-Step-up.
+Keine Datumsfelder, Belege/Dateien, Kategorien, Notizen, Erstattungen, Historie,
+Buchhaltung oder Export. Die früheren breiteren FR-080/081/082 sind durch
+[P8](docs/product-p8-costs.md) für den aktuellen MVP vollständig ersetzt.
 
 ---
 
@@ -593,8 +600,8 @@ Das Dashboard zeigt mindestens:
 Diese Module sind der perspektivische Produktumfang. Das ACTIVE-UX-Ziel bündelt
 implementierte Bereiche als große Hub-Karten und führt in fokussierte Übersichten;
 noch nicht implementierte Bereiche erscheinen nicht als tote Buttons. Aktuell
-verfügbare Bereiche: Personen, Aufgaben, Funktionen und eigene read-only
-Aktionsdetails. Protokoll, Vorfälle / Beobachtungen, Dokumente, Uploads und weitere
+verfügbare Bereiche: Personen, Aufgaben, Funktionen, Protokoll, Material, Kosten
+und eigene read-only Aktionsdetails. Vorfälle / Beobachtungen, Dokumente, Uploads und weitere
 Module benötigen eigene Freigaben; daraus folgt kein neuer Netzwerkzugriff.
 
 ## FR-101 — Schnelle Bedienung
@@ -608,7 +615,7 @@ Häufige Aktionen sollen maximal wenige Interaktionen benötigen.
 ## FR-110 — Lokale Suche
 
 Personen, Aufgaben und Dokumente sollen perspektivisch lokal durchsucht werden
-können. P7-Material besitzt im aktuellen MVP ausdrücklich keine Suche oder Filter.
+können. P7-Material und P8-Kosten besitzen im aktuellen MVP ausdrücklich keine Suche oder Filter.
 
 ## FR-111 — Sensible Suchdaten
 
@@ -1084,11 +1091,11 @@ Note
 
 Expense
  ├── id
- ├── action_id
- ├── amount
- ├── category
- ├── description
- └── created_at
+ ├── actionId
+ ├── title
+ ├── totalCents (EUR)
+ ├── payments (payerLabel, amountCents; 1..32)
+ └── createdAt
 
 RetentionPolicy
  ├── id

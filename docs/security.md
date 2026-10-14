@@ -360,3 +360,15 @@ Argon2id/Tink, Permissions oder Backupregeln. Schema 7→8 rein additiv mit eine
 Materialtabelle. Same-Action-/Detach-Trigger sind Relationsintegrität, keine neue
 Securityarchitektur. Kein Netzwerk/INTERNET, Export, Datei-/Medienpfad, neue Dependency
 oder sensitive Logausgabe. COMPLETED read-only; Materialwrites verlängern keine Session.
+
+## P8 — SENSITIVE Kosten mit enger READY-Freigabe
+
+[P8](product-p8-costs.md): Finanzbeträge und eigenständige payerLabels sind SENSITIVE.
+Normale Kostenarbeit in gültigem READY benötigt bewusst keinen Leadership-Step-up.
+Diese enge P8-Freigabe ändert P3b/Auth/LeadershipGrant/Crypto und deren Gates nicht.
+Bestehende SQLCipher-DB, kurze DbKey-Leases, OPERATION/STEP/COMMIT/Publication,
+Generation/Revoke wie P7. Keine Person-/P3b-Abfrage im Kostenrepository.
+Kein Netzwerk, neue Permission/Dependency/Crypto, Backup-/Transferänderung,
+Notification, Clipboard oder Export. FLAG_SECURE unverändert.
+Nur ExpenseRules erlauben administrative COMPLETED-Writes; P4/P5a/P7/Aktionsdaten
+bleiben gesperrt, kein Reopen. Schema8→9 ausschließlich zwei additive Tabellen.

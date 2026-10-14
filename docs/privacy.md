@@ -66,15 +66,15 @@ Die Speicherbereiche sind konzeptionell. Konkrete Pfade und technische Verfahren
 | P7 Material | Einfache aktionsgebundene Materialkoordination | Ausdrücklich INTERNAL, sensible operative Inhalte möglich | Bestehende SQLCipher-Produkt-DB | Aktionsobergrenze; Person-/Taskdelete entkoppelt Links; Frist offen |
 | Note | Allgemeine organisatorische Notiz, getrennt von P6 | Standard SENSITIVE bei ungeprüftem Inhalt/Personenbezug | Wie Aktion | Eigene Frist offen; personenbezogene Note-Kaskade |
 | P6: ProtocolEntry/Revision samt Betroffenen-/Quellenbezügen und Behördenkennungen | Bewusste Ereignisdokumentation und nachvollziehbare Korrektur/Nachbereitung | SENSITIVE; normale Arbeit in gültigem READY ohne zusätzlichen Leadership-Step-up | Bestehende verschlüsselte SQLCipher-Produktstorage | Eigene endliche Retentionbetrachtung, Dauer offen; alle Fassungen/Kennungen gemeinsam, vollständige Aktionslöschung als Obergrenze. Personenlöschung löst notwendige Relationen, keine automatische Textmutation. |
-| Document, FileAsset, Beleg | Offline-Unterlagen, Nachweise | Standard SENSITIVE | Verschlüsselte Metadaten und private verschlüsselte Dateien | Eigene Frist offen; Eigentümerbeziehung beachten |
-| Expense | Ausgaben und Summen | SENSITIVE bei ungeprüftem Freitext/Personenbezug | Verschlüsselter strukturierter Speicher | Frist offen; optionalen Beleg mitlöschen |
+| Document, FileAsset | Offline-Unterlagen, Nachweise | Standard SENSITIVE | Verschlüsselte Metadaten und private verschlüsselte Dateien | Eigene Frist offen; Eigentümerbeziehung beachten |
+| Expense / ExpensePayment (P8) | EUR-Kosten und Zahlungslabels | SENSITIVE, enge READY-Freigabe ohne Leadership-Step-up | Bestehende SQLCipher-DB | Frist offen, aktionsgebunden; kein Beleg |
 | RetentionPolicy, Fristmetadaten | Aufbewahrung steuern | Geschützt; keine sensiblen Freitextbegründungen | Privater geschützter technischer/strukturierter Speicher | Verwendete Regeln nicht ersatzlos löschen; Details offen |
 | Authentifizierungsdaten, Schlüsselreferenzen/-material | Zugriffsschutz | Sicherheitskritisch; keine fachliche Herabstufung | Separater Sicherheitsbereich/Keystore nach Prototyp | Lebenszyklus offen; niemals Klartext-Credentials |
 | Löscharbeitsstatus | Wiederanlauf | Geschützte minimale technische Daten | Privater geschützter Bereich | Nur für Bereinigung erforderlich; keine dauerhafte detaillierte Historie |
 | Suchindizes, Vorschauen, UI-Ableitungen | Suche/Anzeige | Schutz mindestens entsprechend Ausgangsdaten | Speicher oder geschützter privater Bereich | Mit Ausgangsdaten bereinigen; keine ungeschützten persistenten Kopien |
 | Temporärer entschlüsselter Inhalt | Notwendige Verarbeitung/Anzeige | Entsprechend Ausgangsdaten | Kontrollierte Streams/Arbeitsspeicher; keine freigegebene Klartext-Dateiausnahme | Kürzest mögliche Nutzung; Abschluss-/Wiederanlaufbereinigung |
 
-Ausgaben- und Belegzwecke rechtfertigen keine zusätzliche Erfassung von Teilnehmeridentitäten. Kosten können sachlich bleiben; Freitext und Belege können trotzdem Personenbezüge enthalten.
+Kostenzwecke rechtfertigen keine zusätzliche Erfassung von Teilnehmeridentitäten. Kosten können sachlich bleiben; Bezeichnung und payerLabels können trotzdem Personenbezüge enthalten.
 
 Das technische Inventar muss auch WAL/Journal/Temp/Staging, RAM-/Stream-/Flow-/UI-Caches, Logs/Exceptions und mögliche Backup-/Transferreste erfassen. Screenshots/Recents, Clipboard, fremde IME/Tastatur und Import-/CameraX-Puffer sind eigene Offenlegungsgrenzen. Eine fremde Tastatur kann fachliche Eingaben verarbeiten; PaG kontrolliert weder deren Verarbeitung noch bereits erzeugte externe Kopien. Forensische Szenarien und Garantiegrenzen stehen in TM-F01 bis TM-F18.
 
@@ -250,3 +250,16 @@ Summary nur Count, Board nur Materialrows; Anzeige von Links aus bestehenden Boa
 keine persistierten Pseudonym-/Tasktitelsnapshots. Materialdelete verändert keine
 Person/Task; deren Löschung setzt ausschließlich Links null. Aktionscascade,
 keine eigene Retentionengine, Exporte, Dateien, Netzwerk, Logs oder Außenoberflächen.
+
+## P8 — SENSITIVE Kosten und eigenständige Zahlungslabels
+
+[P8](product-p8-costs.md) speichert nur Bezeichnung, EUR-Cents und 1–32 Text-/Cent-
+Zahlungen. Keine Belege/Kategorien/Datumsfelder. payerLabel ist bewusster lokaler
+Snapshot, keine Personrelation. P3a-Pseudonyme dienen nur im App-Formular als
+Kopierhilfe; freie externe Labels erlaubt, kurze Pseudonyme/Bezeichnungen empfohlen.
+Personenrename/-delete bereinigen payerLabel nicht. Spätere Lösch-/Freitextprüfung
+muss diese eigenständigen Inhalte berücksichtigen; keine automatische Anonymisierung.
+Kein P3b-Read. Gültiges READY ohne Leadership-Step-up ist eine enge ausdrückliche
+P8-Freigabe, keine allgemeine Öffnung von P3b. Hub ausschließlich Anzahl/Gesamtsumme,
+keine Titel/Labels/Payments; normaler COMPLETED-Bildschirm ohne Kostenprefetch.
+Keine Inhalte in Logs, Notifications, Clipboard oder Export. Retentiondauer offen.

@@ -19,4 +19,5 @@
     <instrumentation android:name="org.pag.prototype.P6c3ProtocolProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P6c4ProtocolIntegrationProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P7MaterialProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P8ExpenseProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

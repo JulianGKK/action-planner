@@ -30,7 +30,7 @@ internal data class ActionRow(@PrimaryKey val id: String, val title: String, val
     @Insert suspend fun insert(row: ActionRow)
     @Update suspend fun update(row: ActionRow): Int
 }
-@Database(entities = [ActionRow::class, PersonRow::class, LeadershipRow::class, SensitiveRow::class, RoleRow::class, PlannedRoleRow::class, RolePlanRow::class, OperationalRow::class, TaskRow::class, TaskEventRow::class, ProtocolEntryRow::class, ProtocolRevisionRow::class, ProtocolAffectedRow::class, ProtocolIdentifierRow::class, ProtocolReportedRow::class, MaterialRow::class], version = 8, exportSchema = true)
+@Database(entities = [ActionRow::class, PersonRow::class, LeadershipRow::class, SensitiveRow::class, RoleRow::class, PlannedRoleRow::class, RolePlanRow::class, OperationalRow::class, TaskRow::class, TaskEventRow::class, ProtocolEntryRow::class, ProtocolRevisionRow::class, ProtocolAffectedRow::class, ProtocolIdentifierRow::class, ProtocolReportedRow::class, MaterialRow::class, ExpenseRow::class, ExpensePaymentRow::class], version = 9, exportSchema = true)
 internal abstract class ActionDatabase : RoomDatabase() {
     abstract fun actions(): ActionDao
     abstract fun persons(): PersonDao
@@ -39,6 +39,7 @@ internal abstract class ActionDatabase : RoomDatabase() {
     abstract fun tasks(): TaskDao
     abstract fun protocol(): ProtocolDao
     abstract fun materials(): MaterialDao
+    abstract fun expenses(): ExpenseDao
 }
 internal val ACTION_MIGRATION_1_2 = object : Migration(1, 2) {
     override suspend fun migrate(connection: SQLiteConnection) {
@@ -77,7 +78,7 @@ internal class ActionDatabaseAccess(private val app: Context,
             try {
                 preflight.completed(ActionPreflightStep.OPEN)
                 driverContext.requireB2(AccessPoint.STEP)
-                if (native.version !in 1..8) throw ProductStorageFailure()
+                if (native.version !in 1..9) throw ProductStorageFailure()
                 preflight.completed(ActionPreflightStep.VERSION)
                 driverContext.requireB2(AccessPoint.STEP)
                 native.rawQuery("PRAGMA cipher_integrity_check", emptyArray<String>()).use {
@@ -109,7 +110,7 @@ internal class ActionDatabaseAccess(private val app: Context,
         try {
             room = Room.databaseBuilder(app, ActionDatabase::class.java, file.path).setDriver(driver)
                 .setQueryCoroutineContext(Dispatchers.IO + parent + lifecycle.handler { parent.cancel() })
-                .addMigrations(ACTION_MIGRATION_1_2, ACTION_MIGRATION_2_3, ACTION_MIGRATION_3_4, ACTION_MIGRATION_4_5, ACTION_MIGRATION_5_6, ACTION_MIGRATION_6_7, ACTION_MIGRATION_7_8)
+                .addMigrations(ACTION_MIGRATION_1_2, ACTION_MIGRATION_2_3, ACTION_MIGRATION_3_4, ACTION_MIGRATION_4_5, ACTION_MIGRATION_5_6, ACTION_MIGRATION_6_7, ACTION_MIGRATION_7_8, ACTION_MIGRATION_8_9)
                 .addCallback(TASK_DATABASE_CALLBACK)
                 .addCallback(PROTOCOL_DATABASE_CALLBACK)
                 .addCallback(MATERIAL_DATABASE_CALLBACK)

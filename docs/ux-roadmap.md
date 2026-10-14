@@ -359,3 +359,16 @@ Suche/Filter, Historie, automatische Aufgaben oder Demo-Materialdaten. P7 wird n
 in weitere a/b/c-Slices aufgeteilt; manuelle Accessibility/Retention bleiben getrennt.
 Automatisierte P7-Abnahme grün und bereit für Review: vollständige Unit-/Storage-
 Regression sowie ProductScreen bei Font Scale 1/2 auf Galaxy/API33 bestanden.
+
+## P8 — einfache Kosten-Sammelliste, ein Slice
+
+[P8](product-p8-costs.md) bündelt Produktvertrag, Domain, Storage, Repository, UI
+und Abnahme. PREPARATION-Kostenbereich, siebte ACTIVE-Hubkarte ausschließlich mit
+Count/EUR-Gesamtsumme, vorhandener responsive Vertrag und stabile Reihenfolge.
+COMPLETED bietet bewusst „Kosten verwalten“, administrative P8-Ausnahme ohne
+Reopen/Öffnung anderer Bereiche. Liste/Form ohne eigene Detailnavigation,
+1–32 Zahlungen und P3a-Pseudonyme nur als Textkopierhilfe. Keine Kategorien,
+Belege/Dateien, Datum, Buchhaltungshistorie, Erstattung oder Demo-Kosten.
+Automatisierte Abnahme grün: vollständige Unit-/Storage-Regression, ProductScreen
+Font Scale1/2 auf Galaxy/API33, Builds/Lint/Architektur/Manifeste bestanden.
+P8 bereit für Review; manuelle Accessibility/IME und Retention bleiben eigenständig.

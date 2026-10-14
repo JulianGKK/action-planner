@@ -12,7 +12,7 @@ import org.pag.domain.*
 
 /** Session-local navigation only; never persisted or restored after lock. */
 enum class PreparationArea(val label: String) {
-    OVERVIEW("Übersicht"), PERSONS("Personen"), TASKS("Aufgaben"), ROLES("Rollen"), MATERIAL("Material")
+    OVERVIEW("Übersicht"), PERSONS("Personen"), TASKS("Aufgaben"), ROLES("Rollen"), MATERIAL("Material"), COSTS("Kosten")
 }
 enum class PreparationContentState { LOADING, CONTENT, EMPTY, ERROR }
 internal data class PreparationSummary(val persons: Int, val roles: Int?, val withoutPrimaryRole: Int?,
@@ -33,7 +33,7 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
 }
 @Composable internal fun ActionWorkspaceHeader(model: ProductViewModel) {
     val action = model.selected ?: return
-    FormOutlinedButton(model::back, enabled = !model.saving && !model.personSaving && !model.sensitiveBusy && !model.operations.busy && !model.tasks.busy && !model.protocol.busy && !model.material.busy) { Text("‹ Aktionen") }
+    FormOutlinedButton(model::back, enabled = !model.saving && !model.personSaving && !model.sensitiveBusy && !model.operations.busy && !model.tasks.busy && !model.protocol.busy && !model.material.busy && !model.expenses.busy) { Text("‹ Aktionen") }
     Text(action.title, Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineMedium)
     Text(statusLabel(action.status).uppercase(), style = MaterialTheme.typography.labelLarge)
 }
@@ -51,7 +51,7 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     // Wrapping full controls instead of shrinking tabs or clipping large text.
     FlowRow(Modifier.fillMaxWidth().semantics { selectableGroup() },
         horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        PreparationArea.entries.filter { it != PreparationArea.MATERIAL || model.materialAvailable }.forEach { area ->
+        PreparationArea.entries.filter { (it != PreparationArea.MATERIAL || model.materialAvailable) && (it != PreparationArea.COSTS || model.expensesAvailable) }.forEach { area ->
             val chosen = model.preparationArea == area
             FormOutlinedButton({ model.preparationArea(area) }, enabled = model.preparationNavigationEnabled,
                 modifier = Modifier.heightIn(min = 48.dp).semantics { selected = chosen; role = androidx.compose.ui.semantics.Role.Tab }) {
@@ -81,6 +81,7 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
             PreparationArea.TASKS -> content.operations?.let { TaskSection(model.tasks, it) }
             PreparationArea.ROLES -> content.operations?.let { PreparationRoles(model, it) }
             PreparationArea.MATERIAL -> MaterialSection(model.material, content.persons, content.tasks?.tasks.orEmpty())
+            PreparationArea.COSTS -> ExpenseSection(model.expenses, content.persons)
         }
     }
 }
@@ -99,6 +100,9 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     FormOutlinedButton({ model.preparationArea(PreparationArea.ROLES) }, modifier = Modifier.fillMaxWidth()) { Text(summary.roles?.let { "Rollen · $it angelegt" } ?: "Rollenstatus nicht verfügbar") }
     FormOutlinedButton({ model.preparationArea(PreparationArea.TASKS) }, modifier = Modifier.fillMaxWidth()) {
         Text(summary.open?.let { "Aufgaben · $it offen · ${summary.inProgress} in Arbeit · ${summary.high} hohe Priorität" } ?: "Aufgabenstatus nicht verfügbar")
+    }
+    content.expenseSummary?.let { summary ->
+        FormOutlinedButton({ model.preparationArea(PreparationArea.COSTS) }) { Text("Kosten · ${summary.count} Einträge · ${EuroMoney.format(summary.totalCents)}") }
     }
     content.materialSummary?.let { summary -> FormOutlinedButton({ model.preparationArea(PreparationArea.MATERIAL) }, modifier = Modifier.fillMaxWidth()) {
         Text(if (summary.count == 0) "Material · Noch kein Material" else "Material · ${summary.count} Materialeinträge")
