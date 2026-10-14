@@ -155,12 +155,13 @@ class OperationsStorageTest {
         val area=SensitiveRow("a","Motte","IDENTITY",1,1,ByteArray(60){4},ByteArray(40){5})
         use(i){d->d.withWriteTransaction{d.leadership().insert(root);d.leadership().insertArea(area);d.actions().update(d.actions().get("a")!!.copy(status="ACTIVE"))}}
         B2Native.open(i.database,key,context(AccessScope.MAINTENANCE)).use{d->d.beginTransaction();try{
+            removeMaterialSchemaForLegacyFixture(d)
             listOf("protocol_official_identifiers","protocol_affected_persons","protocol_reported_by_persons","protocol_revisions","protocol_entries","task_events","tasks","person_role_plans","person_operational_states","person_planned_roles","roles").forEach{d.execSQL("DROP TABLE $it")}
             d.execSQL("UPDATE room_master_table SET identity_hash='c78d1afc42f01358bdf04e85f2948fac' WHERE id=42");d.version=4;d.setTransactionSuccessful()
         }finally{d.endTransaction()}}
         val b=board(i);assertEquals(3,b.count(OperationalStatus.NO_STATUS));assertTrue(b.roles.isEmpty());assertTrue(b.persons.all{it.state!!.updatedAt==0L && it.state!!.currentRoleId==null})
         use(i){d->assertEquals("Motte",d.persons().get("a","Motte")!!.pseudonym);assertTrue(root.envelope.contentEquals(d.leadership().get("a")!!.envelope));assertTrue(area.payload.contentEquals(d.leadership().area("a","Motte","IDENTITY")!!.payload));assertTrue(area.keyEnvelope.contentEquals(d.leadership().area("a","Motte","IDENTITY")!!.keyEnvelope))}
-        B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(7,it.version)}
+        B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(8,it.version)}
     }
     @Test fun compositeForeignKeysRejectDirectCrossActionRelations(){
         val i=fixture();val foreign=role(i,"foreign","b")

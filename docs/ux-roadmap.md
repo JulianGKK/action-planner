@@ -346,3 +346,16 @@ Menschliche TalkBackabnahme, konkrete Retention und Löschworkflows sowie
 juristische Prüfung vor Echtdaten bleiben ausdrücklich getrennte Restpunkte.
 Die dokumentierte automatisierte Abnahme ist grün; P6a/P6b/P6c1–P6c4 sind
 technisch bereit für Abschlussreview. Dies ist keine Freigabe der offenen Restpunkte.
+
+
+## P7 — einfache Materialverwaltung in einem Slice
+
+[P7](product-p7-material.md) ergänzt den bestehenden PREPARATION-Bereich und eine
+sechste ACTIVE-Hubkarte ausschließlich mit Count. Der bewusst geöffnete Materialbereich
+nutzt einfache Liste/Form/Vorschläge; COMPLETED erhält „Material ansehen“ read-only
+und keinen zweiten Hub oder Boardprefetch. Gleiche bestehende Workspace-/Input-/
+Sessionmuster, kein allgemeines UX-Redesign. Keine Materialstatusmaschine, Kategorien,
+Suche/Filter, Historie, automatische Aufgaben oder Demo-Materialdaten. P7 wird nicht
+in weitere a/b/c-Slices aufgeteilt; manuelle Accessibility/Retention bleiben getrennt.
+Automatisierte P7-Abnahme grün und bereit für Review: vollständige Unit-/Storage-
+Regression sowie ProductScreen bei Font Scale 1/2 auf Galaxy/API33 bestanden.

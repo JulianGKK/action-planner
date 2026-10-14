@@ -161,13 +161,14 @@ class TaskStorageTest {
         use(i){d->d.withWriteTransaction{d.leadership().insert(leadership);d.leadership().insertArea(area)}}
         val before=use(i){it.operations().states("a")}
         B2Native.open(i.database,key,context(AccessScope.MAINTENANCE)).use{d->d.beginTransaction();try{
+            removeMaterialSchemaForLegacyFixture(d)
             listOf("protocol_official_identifiers","protocol_affected_persons","protocol_reported_by_persons","protocol_revisions","protocol_entries").forEach{d.execSQL("DROP TABLE $it")}
             d.execSQL("DROP TABLE task_events");d.execSQL("DROP TABLE tasks")
             d.execSQL("UPDATE room_master_table SET identity_hash='${schemaFiveHash}' WHERE id=42");d.version=5;d.setTransactionSuccessful()
         }finally{d.endTransaction()}}
         assertTrue(board(i).tasks.isEmpty());assertTrue(board(i).events.isEmpty())
         use(i){d->assertEquals(before,d.operations().states("a"));assertEquals(r,d.operations().role("a",r.id)!!.model());assertEquals("Motte",d.persons().get("a","Motte")!!.pseudonym);assertTrue(leadership.envelope.contentEquals(d.leadership().get("a")!!.envelope));assertTrue(area.payload.contentEquals(d.leadership().area("a","Motte","IDENTITY")!!.payload));assertTrue(area.keyEnvelope.contentEquals(d.leadership().area("a","Motte","IDENTITY")!!.keyEnvelope))}
-        B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(7,it.version)}
+        B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(8,it.version)}
     }
     companion object { private const val schemaFiveHash="7399e9b523fe04f70ede81805a3ceffd" }
 }

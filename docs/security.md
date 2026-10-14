@@ -348,3 +348,15 @@ Auth, Manifest/Permissions oder Backup-/Transferregeln. Runtimeänderung ist nur
 Portverdrahtung; ActionDatabaseänderung nur additiver Schema-/Migrationanschluss.
 SENSITIVE trotz READY-Zugriff bleibt der explizite P6a.1-Trade-off. Keine zusätzliche
 Kryptografie oder Beweis-/Timestamp-/Forensik-/Secure-Overwrite-Garantie.
+
+
+## P7 — bestehende READY-Gates für Material
+
+[P7](product-p7-material.md) verwendet dieselbe SQLCipher-DB, StorageAccess READY,
+OPERATION/STEP/COMMIT/Publication, kurze DB-Key-Leases und Generationbindung wie
+Tasks. INTERNAL mit normalem READY, kein Leadership-Step-up/P3b-Read. Keine
+Änderung an Auth, Coordinator, Key-Owner, LeadershipGrant, Crypto/Keystore,
+Argon2id/Tink, Permissions oder Backupregeln. Schema 7→8 rein additiv mit einer
+Materialtabelle. Same-Action-/Detach-Trigger sind Relationsintegrität, keine neue
+Securityarchitektur. Kein Netzwerk/INTERNET, Export, Datei-/Medienpfad, neue Dependency
+oder sensitive Logausgabe. COMPLETED read-only; Materialwrites verlängern keine Session.

@@ -93,11 +93,11 @@ class ActiveWorkspaceTest {
         tasks.loads.last()(OperationsResult.Value(taskBoard)); assertNull(model.workspace)
         summaries.last()(ProtocolResult.Value(ProtocolSummary(3, 1000))); assertNotNull(model.workspace)
         assertTrue(protection.states.isEmpty()); assertEquals(0, protection.inventories)
-        assertEquals(ActiveArea.entries.drop(1).filter { it != ActiveArea.PROTOCOL }, activeHubCards(actions.row, board, taskBoard).map { it.area })
+        assertEquals(ActiveArea.entries.drop(1).filter { it !in setOf(ActiveArea.PROTOCOL, ActiveArea.MATERIAL) }, activeHubCards(actions.row, board, taskBoard).map { it.area })
     }
     @Test fun allActiveAreasReturnToHubAndDetailsNeedNoBoardRead() {
         open(); complete()
-        ActiveArea.entries.drop(1).forEach { area ->
+        ActiveArea.entries.drop(1).filter { it != ActiveArea.MATERIAL }.forEach { area ->
             val reads = ops.loads.size
             model.activeArea(area); assertEquals(area, model.activeArea)
             if (area == ActiveArea.DETAILS) assertEquals(reads, ops.loads.size) else complete()
@@ -216,7 +216,7 @@ class ActiveWorkspaceTest {
         open(); complete()
         val content = model.workspace!!
         val cards = activeHubCards(actions.row, content.operations!!, content.tasks!!, content.protocolSummary)
-        assertEquals(ActiveArea.entries.drop(1), cards.map { it.area })
+        assertEquals(ActiveArea.entries.drop(1).filter { it != ActiveArea.MATERIAL }, cards.map { it.area })
         assertEquals("3 Schlüsselereignisse", cards.single { it.area == ActiveArea.PROTOCOL }.summary.first())
         model.activeArea(ActiveArea.PROTOCOL); complete(); model.protocol.create("POLICE_ARRIVED")
         assertTrue(model.protocol.form); assertEquals(0, protocolDelegate.detailReads)
