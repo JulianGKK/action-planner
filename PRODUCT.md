@@ -27,7 +27,8 @@ Die Anwendung soll insbesondere die organisatorische Arbeit vor, während und na
 * relevante Dokumente bereitstellen
 * organisatorische Statusinformationen erfassen
 * Kosten dokumentieren
-* Informationen und Protokolle einer Aktion verwalten
+* Informationen und Aktionsprotokolle einer Aktion verwalten
+* persönliche Gedächtnisprotokolle als eigenständigen Bereich erfassen (P9a: spezifiziert, noch nicht umgesetzt)
 * Daten nach definierten Speicherfristen automatisch entfernen
 
 Die Anwendung verfolgt einen **Privacy-by-Design- und Security-by-Design-Ansatz**.
@@ -165,6 +166,10 @@ Organisation
          ├── Material
          │
          ├── Dokumente
+         │
+         ├── Aktionsprotokoll (P6)
+         │
+         ├── Gedächtnisprotokolle (P9, konzeptionell)
          │
          ├── Kosten
          │
@@ -458,7 +463,9 @@ Einmal importiertes Material ist offline verfügbar.
 
 ## FR-070 — Notiz erstellen
 
-Notizen können einer Aktion oder Person zugeordnet werden.
+Allgemeine organisatorische Notizen können einer Aktion oder Person zugeordnet
+werden. Persönliche rückblickende Berichte gehören ausschließlich zum eigenen
+P9-Bereich, nicht zu Note oder P6.
 
 ## FR-071 — Sensible Notizen
 
@@ -510,6 +517,46 @@ Freitextvorschau. Keine Medien, Exporte, neue Permissions oder Securityarchitekt
 Keine Beweis-/Forensik-/Timestamp-/Verwertbarkeitsgarantie; konkrete rechtliche
 Prüfung vor Echtdaten erforderlich. Nächster Schritt ist ausschließlich die
 separate Implementierungsspezifikation, noch keine technische Umsetzung.
+
+### P9a — eigenständige Gedächtnisprotokolle (Produktspezifikation)
+
+Verbindlich: [P9a Produkt- und Fragebogenvertrag](docs/product-p9a-memory-protocol.md).
+Persönlicher rückblickender Bericht über eigenes Erleben während/nach einer
+Aktion, insbesondere nach Maßnahmen, Transport, Gewahrsam oder Entlassung.
+Eigener Fachbereich neben P6; kein automatischer Austausch mit P6, keine Note.
+Freie Erinnerung steht vor den strukturierten Fragen; Questionnaire Version 1
+mit stabilen Keys, acht Antworttypen und Abschnitten A–P sowie optionalen
+Beobachtungen anderer. Ungewissheit, Erinnerungslücken und offene Antworten
+sind zulässig. Keine Rechtsbewertung oder Zusage gerichtlicher Verwertbarkeit.
+Gesundheits-/Sexualitätsthemen dokumentieren gestellte Fragen, keine Diagnosen.
+
+Lokales authorLabel: trim, 1–80 Unicode-Codepoints; P3a-Pseudonyme nur als
+Textkopierhilfe, kein Person-FK. Rename/Delete verändern Berichtsinhalt nicht.
+SENSITIVE; enge P9-Freigabe in gültigem READY ohne Leadership-Step-up,
+keine allgemeine P3b-Öffnung oder Identitäts-/Kontaktübernahme.
+
+Nur ACTIVE/COMPLETED, kein Zugriff DRAFT/PREPARATION/DELETION_PENDING.
+Bericht besitzt eigenen DRAFT-/COMPLETED-Status. Bewusstes abschnittsweises
+„Speichern und weiter“ soll verschlüsselte persistente Fachentwürfe ermöglichen;
+kein Background-Autosave, keine Sessionverlängerung oder SavedState-/Login-
+Persistenz. Gespeicherte Abschnitte bleiben bei Lock, aktuelle ungespeicherte
+Eingaben dürfen verloren gehen. Reauth öffnet nichts automatisch. Während ACTIVE
+gespeicherter Entwurf kann nach Aktionsabschluss bewusst fortgesetzt werden;
+kein stiller Editorübertrag und kein allgemeiner Action-Reopen.
+
+Abgeschlossene Berichte im normalen Pfad nicht überschreiben; spätere Freitext-
+Ergänzungen append-only mit repositoryeigenem recordedAt und stabiler Reihenfolge.
+Keine P6-Revisionsmaschine. Vollständige Aktionslöschung bleibt Obergrenze;
+konkrete Fristen, allgemeiner Löschworkflow und manuelles vollständiges Löschen
+abgeschlossener Berichte bleiben offen. Die allgemeine PRIV-005-Anforderung
+entscheidet diese P9-Frage nicht vorweg.
+
+Künftiger ACTIVE-Hub nur Entwurfs-/Abschlusszahlen, keine Labels/Antworten.
+COMPLETED bewusst „Gedächtnisprotokolle“, ohne P9-Prefetch auf der normalen Seite.
+Keine Medien, Dateien, Export, Signierung oder neue Securityarchitektur.
+P9a verändert nur Dokumentation; persistierter Draftvertrag/Technik erst P9b.
+Juristische/fachkundige Fragebogenprüfung und menschliche Accessibilityabnahme
+stehen aus. P4/P5a/P7/Aktionsdaten bleiben in COMPLETED read-only.
 
 ---
 
@@ -603,6 +650,8 @@ noch nicht implementierte Bereiche erscheinen nicht als tote Buttons. Aktuell
 verfügbare Bereiche: Personen, Aufgaben, Funktionen, Protokoll, Material, Kosten
 und eigene read-only Aktionsdetails. Vorfälle / Beobachtungen, Dokumente, Uploads und weitere
 Module benötigen eigene Freigaben; daraus folgt kein neuer Netzwerkzugriff.
+P9-Gedächtnisprotokolle sind durch P9a fachlich spezifiziert, noch nicht als
+Hubkarte implementiert.
 
 ## FR-101 — Schnelle Bedienung
 

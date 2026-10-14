@@ -116,3 +116,26 @@ vor Retentionimplementierung fachkundig geprüft werden. Actiondelete bleibt die
 Obergrenze und entfernt Expenses/Payments vollständig, kein unabhängiger Restbestand.
 Personenlöschung verändert payerLabel nicht; spätere manuelle Freitextprüfung muss
 Kostenlabels ausdrücklich berücksichtigen. Keine Secure-Overwrite-Garantie.
+
+## P9a — Gedächtnisprotokolle: Entwürfe und abgeschlossene Berichte
+
+[P9a](product-p9a-memory-protocol.md) entscheidet verschlüsselte persistente
+Fachentwürfe durch ausdrückliches abschnittsweises „Speichern und weiter“.
+Lock entfernt ungespeicherte Eingabe/Anzeige, nicht bereits gespeicherte Abschnitte.
+Dies ist keine unbegrenzte Aufbewahrung, Retentionimplementierung oder automatische
+Verlängerung durch Speichern/Ergänzen. Keine konkrete Dauer/Fristanker festgelegt.
+Der Nachbereitungsbedarf ist vor Retentionumsetzung fachkundig zu prüfen.
+
+Vollständige Aktionslöschung bleibt Obergrenze für authorLabel, gespeicherte
+Entwürfe, abgeschlossene Antworten, sämtliche Ergänzungen und kontrollierte
+Ableitungen. Keine unabhängige Archivinsel. Append-only im normalen Produktpfad
+hebt notwendige Privacy-/Retentionlöschung nicht auf. Ob abgeschlossene Berichte
+manuell als Ganzes gelöscht werden dürfen, bleibt ausdrücklich offen; RET-01
+nimmt diesen künftigen P9-Workflow nicht vorweg. Keine normale Einzel-Löschung
+von Ergänzungen zunächst vorgesehen.
+
+Kein Person-FK: Personenrename/-delete ändern authorLabel/Antworten nicht.
+P9-Inhalte müssen bei späterer Lösch-/Freitextprüfung berücksichtigt werden;
+keine garantierte Anonymisierung oder physische Überschreibung. Allgemeiner
+Löschworkflow, Fristen, mögliche fachkundige Aufbewahrungsanforderungen und
+technische Bereinigungsnachweise bleiben gesonderte spätere Arbeit.
