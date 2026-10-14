@@ -445,3 +445,18 @@ SessionCoordinator, Auth, SessionDbKeyOwner, Leadership/P3b, FLAG_SECURE,
 Foreground-/Generationausnahme; sichere Quellübergabe nach regulärer Reauth
 nachweisen, kein blindes URI-Retry. Recovery/Callbacks keine Interaction.
 Dieser Slice verändert ausschließlich Markdown; technische Nachweise erst P10b.
+
+## P10b1 — empfohlene File-DEK-Schutzintegration
+
+[Storage-/Recoverydesign](product-p10b1-documents-storage-design.md): unabhängiger
+zufälliger 32-Byte DEK je Dokument, persistent nur als BLOB innerhalb SQLCipher;
+keine separate Keydatei, persistentes Tink-Keyset, eigene KDF oder zusätzlicher
+File-Root-Key. Kurze autorisierte DEK-Kopie in bestehenden FileStreamingCipher,
+danach best-effort wipe/close; Tink-/JVM-Kopien bleiben Grenze. Kein zweiter
+Authprompt/Alias oder paralleler Session-Key-Owner. Dies konkretisiert das offene
+P10a-Ziel, ändert weder P10a noch Securityimplementierung/B3-Prototypnachweise.
+Live-DEK-Rowdelete plus Ciphertext-unlink ist ausdrücklich kein bewiesenes
+kryptografisches Secure Erase: alte SQLCipher-/WAL-/Flashreste möglich.
+URI ausschließlich eng begrenzter RAM-Handoff ohne Inhaltsreads unter LOCKED;
+neues READY und bewusste Bestätigung autorisieren erst den Import. Unknownfiles
+fail closed, DB-Open-Fehler erlaubt keine Filebereinigung; PDF weiterhin ohne Viewer.

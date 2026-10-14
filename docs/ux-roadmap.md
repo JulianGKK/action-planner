@@ -440,3 +440,14 @@ Möglicher sicherer interner PDF-Viewer separat P10c, kein Verfahren freigegeben
 Originalquelle bleibt ungeschützt außerhalb PaG; keine persistente URI oder Sync.
 Retentiondauer/allgemeine Löschung, fachkundige Security-/Privacyprüfung und
 menschliche Accessibilityabnahme bleiben gesondert offen. Kein Code durch P10a.
+
+## P10b1 — Storage/Recovery vor Produktimplementierung
+
+[P10b1](product-p10b1-documents-storage-design.md) legt File-DEK in SQLCipher,
+opaque Ciphertextroot, minimale Jobs, Import/Delete-Recovery und Sessiongrenzen
+fest. P10a bleibt unverändert. Nächster Implementierungsauftrag P10b2 folgt dem
+fokussierten Prüfplan statt vollständiger historischer Testkampagnen.
+Systempicker sperrt: einzig URI+Ziel-actionId als enger RAM-Handoff, kein Read
+unter LOCKED, reguläre Reauth und bewusster „Import fortsetzen“-Tap vor neuem
+Import. Kein gespeichertes Sessionrecht oder automatischer Resume. Keine neue
+UI in P10b1; Text-/Bildviewer eigener kleiner Folge-Slice, PDF separat P10c.

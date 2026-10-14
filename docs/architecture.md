@@ -385,3 +385,17 @@ RAM-Löschnachweis. 180s/30s unverändert, Recovery/Callbacks keine Interaction.
 Key-/Ciphertextlöschung mit historischen Verpackungen/DB-Seiten reviewen, keine
 Secure-Erase-Garantie. Backup/Transfer unverändert, tatsächliches Inventar später
 prüfen. Diese Anforderungen behaupten keinen bereits implementierten P10-Schutz.
+
+## P10b1 — Storage-/Recoverydesign vor Implementierung
+
+[P10b1](product-p10b1-documents-storage-design.md) konkretisiert P10a ohne Code:
+32-Byte File-DEK je Dokument ausschließlich SQLCipher-at-rest, bestehender
+FileStreamingCipher und DB-Authpfad, kein zusätzlicher Alias/Prompt/Key-Owner.
+Minimal geplante documents/document_jobs, Action-FKs RESTRICT für spätere
+Cross-Store-Gesamtlöschung. Vier Import-/zwei Deletephasen; WRITING wird sicher
+abgebrochen, CLOSED/PUBLISHED vollständig erneut geprüft. Jobs nur unter bestehendem
+MAINTENANCE reconciliieren; unbekannter Bestand blockiert ohne Löschheuristik.
+B4-Room-3.0.3-Background-Fault-/Closepfad im vorhandenen ActionDatabaseAccess
+pro kurzem DB-Schritt übernehmen, kein Room während File-I/O. Enger RAM-only
+Pickerhandoff ist kein Zugriffsrecht; reguläre Reauth und bewusste neue Operation.
+Keine Klartexttempfiles, starke Crypto-Erase-Behauptung oder Viewerfreigabe.

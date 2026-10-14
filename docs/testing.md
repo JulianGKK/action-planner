@@ -205,3 +205,18 @@ Konkrete Ergebnisse und manuelle Restabnahme stehen im P9b-Nachweis.
 P9b-Abschlusslauf: 874 Unit-Tests, 131 reale synthetische Storagefälle, P9-/P8-/P7-
 ProductScreen-Probes bei Font Scale 1/2 und P6c2/P6c3/UX3 mit internen 1/2 grün.
 Builds, Lint, Architektur und Manifestprüfungen grün; menschliche Abnahme offen.
+
+## P10b1 — fokussierter späterer P10b2-Prüfplan
+
+[Storage-/Recoverydesign](product-p10b1-documents-storage-design.md#15-fokussierte-spätere-p10b2-abnahme)
+legt 18 gebündelte Übergangsfälle fest: Import/Abort/WRITING-Cleanup/CLOSED-
+Verifikation/Rename/PUBLISHED, Delete reserve/Parent-Keydelete/unlink, Unknownfiles,
+DB-unavailable, Revoke/Publication, Idempotenz/alte Worker, Konkurrenzlimits und
+Roomrefresh. Dazu kleine Domain-/FileStreamingCipher-/Formatchecks, genau ein
+additiver Upgradepfad vom Schema 10 und ein synthetischer Import/List/Delete-
+Smoke inklusive Pickerhandoff, COMPLETED-No-Prefetch und ACTIVE-Count-only.
+Kein wiederholter 874+-Gesamtlauf, keine komplette B1–B4-Matrix oder historische
+Galaxykampagne ohne konkreten Anlass. Vor Merge höchstens ein kompakter Lauf der
+direkt berührten Module; neue Fehler/Upgrades können gezielte Zusatzprüfung begründen.
+P10b1 selbst: ausschließlich Dokumentreview und git diff --check, keine Tests,
+Builds, Lint, Instrumentation oder ADB-/Geräteprüfung ausgeführt.
