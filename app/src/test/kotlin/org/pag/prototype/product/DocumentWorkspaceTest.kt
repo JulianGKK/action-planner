@@ -61,11 +61,15 @@ class DocumentWorkspaceTest {
         override fun importDocument(actionId:String,name:String,format:DocumentFormat,source:DocumentSource,publish:(DocumentResult<Unit>)->Unit) { error("No implicit import") }
         override fun deleteDocument(actionId:String,expected:DocumentAsset,publish:(DocumentResult<Unit>)->Unit) { error("No implicit delete") }
     }
+    private val handoff=PendingDocumentPicker<String>()
     private val picker=object:DocumentPicker {
-        override fun launch(actionId:String,generation:Long) {}
-        override fun available(actionId:String,generation:Long)=false
+        override fun launch(actionId:String,generation:Long) {
+            handoff.begin(actionId,generation)
+            session.lock()
+        }
+        override fun available(actionId:String,generation:Long)=handoff.available(actionId,generation)
         override fun consume(actionId:String,generation:Long):DocumentSource?=null
-        override fun cancel() {}
+        override fun cancel() { handoff.clear() }
     }
     private val session=Session();private val actions=Actions();private val docs=Documents();private val ops=Ops();private val tasks=Tasks()
     private fun model(status:ActionStatus):ProductViewModel {
@@ -106,6 +110,33 @@ class DocumentWorkspaceTest {
         assertEquals(9,cards.size);assertEquals("Dokumente",cards[7].label);assertEquals(listOf("4 Dokumente"),cards[7].summary)
         assertTrue(cards[7].documents);assertEquals(ActiveArea.DETAILS,cards.last().area)
         assertEquals(8,cards.filterNot{it.documents}.size)
+    }
+    @Test fun leavingActionDiscardsPickerHandoffEvenWhenSameActionIsReopened() {
+        val m=model(ActionStatus.ACTIVE)
+        m.openDocuments()
+        m.documents.chooseFile()
+        assertEquals(SessionState.LOCKED,m.snapshot.state)
+        assertNull(m.selected)
+        handoff.returned("synthetic source")
+
+        // The intended picker -> lock -> fresh READY -> deliberate entry still works.
+        session.emit(SessionState.READY)
+        handoff.ready(session.value.generation)
+        assertNull(m.selected)
+        m.detail("a")
+        m.openDocuments()
+        assertTrue(m.documents.canContinueImport)
+
+        // Clearing only DocumentModel would leave this Activity-RAM source available.
+        m.back()
+        assertNull(m.selected)
+        assertNull(m.documents.items)
+        assertFalse(handoff.available("a",session.value.generation))
+        m.detail("a")
+        m.openDocuments()
+        assertFalse(m.documents.canContinueImport)
+        m.documents.continueImport()
+        assertFalse(m.documents.importing)
     }
     @Test fun lockAndNewActionDiscardListAndLateSummary() {
         val m=model(ActionStatus.ACTIVE);supplyWorkspace();val old=docs.pending!!
