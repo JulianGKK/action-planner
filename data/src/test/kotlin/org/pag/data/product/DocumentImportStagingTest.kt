@@ -28,6 +28,8 @@ class DocumentImportStagingTest {
         var status = "ACTIVE"
         var docs = mutableListOf<DocumentRow>()
         var jobs = mutableListOf<DocumentJobRow>()
+        override suspend fun insertPublishedDocument(row: DocumentRow): Unit = error("Not used here")
+        override suspend fun deletePublishedJob(id: String): Int = error("Not used here")
         override suspend fun count(a: String) = docs.size
         override suspend fun list(a: String) = emptyList<DocumentMetadataRow>()
         override suspend fun get(a: String,id: String): DocumentMetadataRow? = null

@@ -33,13 +33,28 @@ internal interface DocumentImportDatabase {
     fun advance(c: StorageContext, expected: DocumentJobRow, size: Long?)
 }
 internal class SqlCipherDocumentImportDatabase(app: Context, private val inventory: ProductInventory,
-    private val owner: () -> SessionDbKeyOwner?) : DocumentImportDatabase {
+    private val owner: () -> SessionDbKeyOwner?, private val now: () -> Long = System::currentTimeMillis) : DocumentImportDatabase, DocumentPublicationDatabase {
     private val access = ActionDatabaseAccess(app.applicationContext)
     private fun <T> use(c: StorageContext, work: suspend (ActionDatabase) -> T): T {
         if (c.scope != AccessScope.READY || inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
         return (owner() ?: throw ProductStorageFailure()).withDbKey(c) { key ->
             access.use(inventory.database,key,c,work=work)
         }
+    }
+    override fun snapshot(c: StorageContext, id: String, phase: String, expected: DocumentJobRow?): DocumentPublicationSnapshot {
+        var leased: DocumentPublicationSnapshot? = null
+        var returned = false
+        try {
+            val result = use(c) { db -> db.documents().publicationSnapshot(id,phase,expected,c).also { leased = it } }
+            returned = true
+            return result
+        } finally { if (!returned) leased?.close() }
+    }
+    override fun markPublished(c: StorageContext, expected: DocumentJobRow) = use(c) { db ->
+        db.withWriteTransaction { db.documents().markFilePublished(expected,c) }
+    }
+    override fun finish(c: StorageContext, expected: DocumentJobRow) = use(c) { db ->
+        db.withWriteTransaction { db.documents().commitPublishedDocument(expected,now(),c) }
     }
     override fun inventory(c: StorageContext) = use(c) { db -> db.documents().importInventory(c) }
     override fun reserve(c: StorageContext, job: DocumentJobRow) = use(c) { db ->
