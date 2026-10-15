@@ -26,7 +26,8 @@ data class WorkspaceSnapshot(val actionId: String, val generation: Long, val per
     val leadershipState: org.pag.domain.SensitiveResult<org.pag.domain.SensitiveState>? = null,
     val protocolSummary: org.pag.domain.ProtocolSummary? = null,
     val materialSummary: org.pag.domain.MaterialSummary? = null, val expenseSummary: org.pag.domain.ExpenseSummary? = null,
-    val memoryReportSummary: org.pag.domain.MemoryReportSummary? = null)
+    val memoryReportSummary: org.pag.domain.MemoryReportSummary? = null,
+    val documentSummary: org.pag.domain.DocumentSummary? = null)
 
 sealed interface ActionListState {
     data object Loading : ActionListState

@@ -33,7 +33,7 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
 }
 @Composable internal fun ActionWorkspaceHeader(model: ProductViewModel) {
     val action = model.selected ?: return
-    FormOutlinedButton(model::back, enabled = !model.saving && !model.personSaving && !model.sensitiveBusy && !model.operations.busy && !model.tasks.busy && !model.protocol.busy && !model.material.busy && !model.expenses.busy && !model.memoryReports.busy) { Text("‹ Aktionen") }
+    FormOutlinedButton(model::back, enabled = !model.saving && !model.personSaving && !model.sensitiveBusy && !model.operations.busy && !model.tasks.busy && !model.protocol.busy && !model.material.busy && !model.expenses.busy && !model.memoryReports.busy && !model.documents.busy) { Text("‹ Aktionen") }
     Text(action.title, Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineMedium)
     Text(statusLabel(action.status).uppercase(), style = MaterialTheme.typography.labelLarge)
 }
@@ -51,6 +51,7 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     // Wrapping full controls instead of shrinking tabs or clipping large text.
     FlowRow(Modifier.fillMaxWidth().semantics { selectableGroup() },
         horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (model.documentsAvailable) FormOutlinedButton(model::openDocuments, enabled=model.preparationNavigationEnabled) { Text("Dokumente") }
         PreparationArea.entries.filter { (it != PreparationArea.MATERIAL || model.materialAvailable) && (it != PreparationArea.COSTS || model.expensesAvailable) }.forEach { area ->
             val chosen = model.preparationArea == area
             FormOutlinedButton({ model.preparationArea(area) }, enabled = model.preparationNavigationEnabled,
@@ -87,6 +88,9 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
 }
 @Composable private fun PreparationOverview(model: ProductViewModel, content: WorkspaceSnapshot) {
     val action = model.selected ?: return
+    content.documentSummary?.let { summary ->
+        FormOutlinedButton(model::openDocuments) { Text("Dokumente · ${summary.count} Dokumente") }
+    }
     val summary = preparationSummary(content)
     PreparationHeading("Vorbereitung im Überblick")
     Text(action.description, maxLines = 2, overflow = TextOverflow.Ellipsis)

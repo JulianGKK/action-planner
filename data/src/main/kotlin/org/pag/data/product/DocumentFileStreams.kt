@@ -29,7 +29,15 @@ internal fun documentFileGate(c: StorageContext, generation: Long, point: Access
 /** No causes/suppressed provider exceptions, paths or input values escape this boundary. */
 internal inline fun <T> documentFileBoundary(work: () -> T): T = try { work() }
 catch (_: StorageAccessRevoked) { throw StorageAccessRevoked() }
+catch (failure: DocumentInputFailure) {
+    // Multiple neutral provider failures may coincide (read + close). An additional
+    // ciphertext/sync/unknown failure must still dominate the expected input error.
+    if (failure.suppressed.any { it !is DocumentInputFailure || it.suppressed.isNotEmpty() }) throw ProductStorageFailure()
+    throw DocumentInputFailure(failure.reason)
+}
 catch (_: Exception) { throw ProductStorageFailure() }
+
+internal class DocumentInputFailure(val reason: org.pag.domain.DocumentFailure) : RuntimeException()
 
 /** Stream primitives only. Caller owns prior DB/job admission and safe stream acquisition.
  * No file creation, root setup, phase mutation, persistence or publication here.
@@ -66,32 +74,41 @@ internal object DocumentFileStreams {
 
     /** Owns and closes both supplied streams even on early denial; result is only actual byte count. */
     fun encrypt(c: StorageContext, documentId: String, key: ByteArray, source: InputStream,
-        destination: OutputStream): Long = documentFileBoundary {
+        destination: OutputStream, format: DocumentFormat? = null): Long = documentFileBoundary {
         val generation = c.generation
         source.use { input -> destination.use { output ->
             cipher(c, generation, documentId, key) { cipher, aad ->
                 val buffer = ByteArray(BUFFER_BYTES)
                 try {
                     var length = 0L
-                    cipher.encrypt(output, aad).use { encrypted ->
-                        while (true) {
+                    val formatCheck = format?.let { DocumentFormatCheck(it, true) }
+                    try {
+                        cipher.encrypt(output, aad).use { encrypted ->
+                            while (true) {
+                                documentFileGate(c, generation)
+                                // Read at most one byte past the hard limit, including at exact maximum.
+                                val maximumRead = minOf(buffer.size.toLong(), DocumentRules.MAX_DOCUMENT_BYTES - length + 1).toInt()
+                                val count = input.read(buffer, 0, maximumRead)
+                                documentFileGate(c, generation)
+                                if (count == -1) break
+                                if (count <= 0 || count > maximumRead) throw ProductStorageFailure()
+                                if (count > DocumentRules.MAX_DOCUMENT_BYTES - length) {
+                                    if (format == null) throw ProductStorageFailure()
+                                    throw DocumentInputFailure(org.pag.domain.DocumentFailure.TOO_LARGE)
+                                }
+                                formatCheck?.accept(buffer,count)
+                                length += count
+                                documentFileGate(c, generation)
+                                encrypted.write(buffer, 0, count)
+                                buffer.fill(0)
+                                documentFileGate(c, generation)
+                            }
+                            formatCheck?.finish()
                             documentFileGate(c, generation)
-                            // Read at most one byte past the hard limit, including at exact maximum.
-                            val maximumRead = minOf(buffer.size.toLong(), DocumentRules.MAX_DOCUMENT_BYTES - length + 1).toInt()
-                            val count = input.read(buffer, 0, maximumRead)
-                            documentFileGate(c, generation)
-                            if (count == -1) break
-                            if (count <= 0 || count > maximumRead || count > DocumentRules.MAX_DOCUMENT_BYTES - length) throw ProductStorageFailure()
-                            length += count
-                            documentFileGate(c, generation)
-                            encrypted.write(buffer, 0, count)
-                            buffer.fill(0)
-                            documentFileGate(c, generation)
-                        }
+                        } // close may physically finish a last segment after revoke; it grants nothing.
                         documentFileGate(c, generation)
-                    } // close may physically finish a last segment after revoke; it grants nothing.
-                    documentFileGate(c, generation)
-                    length
+                        length
+                    } finally { formatCheck?.close() }
                 } finally { buffer.fill(0) }
             }
         } }.also { documentFileGate(c, generation) }
@@ -136,7 +153,8 @@ internal object DocumentFileStreams {
 }
 
 /** Small binary prefix check, or full incremental strict UTF-8. No renderer or sanitizer. */
-private class DocumentFormatCheck(private val format: DocumentFormat) : AutoCloseable {
+private class DocumentFormatCheck(private val format: DocumentFormat, private val sourceValidation: Boolean = false) : AutoCloseable {
+    private fun invalid(): Nothing { if (sourceValidation) throw DocumentInputFailure(org.pag.domain.DocumentFailure.FORMAT); throw ProductStorageFailure() }
     private val prefix = when (format) {
         DocumentFormat.PDF -> "%PDF-".toByteArray(Charsets.US_ASCII)
         DocumentFormat.PNG -> byteArrayOf(0x89.toByte(),0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a)
@@ -152,7 +170,7 @@ private class DocumentFormatCheck(private val format: DocumentFormat) : AutoClos
     fun accept(bytes: ByteArray, count: Int) {
         if (decoder == null) {
             for (i in 0 until minOf(count,prefix.size - prefixRead)) {
-                if (bytes[i] != prefix[prefixRead++]) throw ProductStorageFailure()
+                if (bytes[i] != prefix[prefixRead++]) invalid()
             }
         } else {
             pending!!.put(bytes,0,count); pending.flip()
@@ -165,7 +183,7 @@ private class DocumentFormatCheck(private val format: DocumentFormat) : AutoClos
         output.flip()
         while (output.hasRemaining()) {
             val n = output.get().code
-            if ((n in 0..31 && n != 9 && n != 10 && n != 13) || n == 127) throw ProductStorageFailure()
+            if ((n in 0..31 && n != 9 && n != 10 && n != 13) || n == 127) invalid()
         }
         output.array().fill('\u0000'); output.clear()
     }
@@ -173,20 +191,20 @@ private class DocumentFormatCheck(private val format: DocumentFormat) : AutoClos
         while (true) {
             val result = decoder!!.decode(pending!!,chars!!,end)
             checkChars()
-            if (result.isError) throw ProductStorageFailure()
+            if (result.isError) invalid()
             if (result.isUnderflow) break
         }
     }
     fun finish() {
         if (decoder == null) {
-            if (prefixRead != prefix.size) throw ProductStorageFailure()
+            if (prefixRead != prefix.size) invalid()
         } else {
             pending!!.flip(); decode(true)
-            if (pending.hasRemaining()) throw ProductStorageFailure()
+            if (pending.hasRemaining()) invalid()
             while (true) {
                 val result = decoder.flush(chars!!)
                 checkChars()
-                if (result.isError) throw ProductStorageFailure()
+                if (result.isError) invalid()
                 if (result.isUnderflow) break
             }
         }
