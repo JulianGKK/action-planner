@@ -3,6 +3,7 @@ package org.pag.data.product
 import android.app.Activity
 import android.os.SystemClock
 import androidx.room3.withWriteTransaction
+import org.pag.data.prototype.b2.StorageAccessRevoked
 import org.pag.data.SessionCoordinator
 import org.pag.domain.*
 import org.pag.security.*
@@ -30,25 +31,40 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
             worker.execute {
                 var success = false
                 try {
+                    var maintenanceError:Exception?=null
                     val result = operation.useUnwrappedKey({ !cancelled.get() && context.check(AccessPoint.STEP) }) { key ->
-                        if (initializing) inventory.prepareDatabaseDirectory()
-                        else if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
-                        database.use(inventory.database, key, context, initializing) { db ->
-                            // No product content publication during MAINTENANCE.
-                            db.actions().list().forEach { it.model() }
-                        }
-                        if (initializing) {
-                            database.use(inventory.database, key, context) { db -> db.actions().list().forEach { it.model() } }
-                            inventory.finish(context)
-                        }
-                        if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
-                        val next = SessionDbKeyOwner.bind(context, key)
-                        if (!context.publish { owner.getAndSet(next)?.invalidate() }) {
-                            next.invalidate(); throw ProductStorageFailure()
-                        }
+                        try {
+                            documentMaintenanceBarrier(context,{
+                                withDocumentMaintenanceKey(context,key) { keyStep ->
+                                    val steps=SqlCipherDocumentDeleteDatabase(activity.applicationContext,inventory,{null},keyStep)
+                                    val recovery=SqlCipherDocumentReconciliationDatabase(steps)
+                                    DocumentReconciliation(recovery,steps,activity.noBackupFilesDir).run(context) {
+                                        if(initializing)inventory.prepareDatabaseDirectory()
+                                        else if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
+                                        fun preflight(creates:Boolean=false) {
+                                            val copy=key.copyOf()
+                                            try { database.use(inventory.database,copy,context,creates){db->db.actions().list().forEach{it.model()}} }
+                                            finally {copy.fill(0)}
+                                        }
+                                        preflight(initializing)
+                                        if(initializing){preflight();inventory.finish(context)}
+                                    }
+                                }
+                            },{
+                                if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
+                                val next=SessionDbKeyOwner.bind(context,key)
+                                if(!context.publish { owner.getAndSet(next)?.invalidate() }) {
+                                    next.invalidate();throw ProductStorageFailure()
+                                }
+                            })
+                        } catch(error:Exception) { maintenanceError=error;throw error }
                     }
+                    // The envelope reports FAILED for consumer exceptions. Preserve their actual
+                    // type: unexpected Room faults must never become a fabricated session revoke.
+                    maintenanceError?.let { throw it }
                     success = result == OperationResult.SUCCEEDED && context.check(AccessPoint.STEP)
-                } catch (_: Exception) { success = false }
+                } catch (_: StorageAccessRevoked) { success = false }
+                  catch (_: Exception) { success = false } // valid MAINTENANCE + failure -> existing BLOCKED
                 finally { operation.release(); if (!success) owner.getAndSet(null)?.invalidate() }
                 main.execute { if (!cancelled.get()) done(success) }
             }

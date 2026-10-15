@@ -200,6 +200,66 @@ internal object DocumentStorageRules {
         requireDocumentDelete(c,AccessPoint.COMMIT)
     }
 
+    @Query("DELETE FROM document_jobs WHERE id=:id AND phase=:phase AND operation='IMPORT'")
+    protected abstract suspend fun removeInterruptedImport(id:String,phase:String):Int
+
+    private suspend fun <T> maintenanceState(c:StorageContext,work:suspend(List<DocumentRow>,List<DocumentJobRow>)->T):T {
+        if(c.scope!=AccessScope.MAINTENANCE)throw ProductStorageFailure()
+        documentFileGate(c,c.generation,AccessPoint.OPERATION)
+        val docs=inventoryDocuments();var jobs=emptyList<DocumentJobRow>()
+        try {
+            jobs=inventoryJobs()
+            DocumentStorageRules.validateBindings(docs,jobs)
+            (docs.map{it.actionId}+jobs.map{it.actionId}).toSet().forEach { a ->
+                DocumentStorageRules.capacity(docs.filter{it.actionId==a},jobs.filter{it.actionId==a})
+                if(actionStatus(a) !in setOf("PREPARATION","ACTIVE","COMPLETED","DELETION_PENDING"))throw ProductStorageFailure()
+            }
+            documentFileGate(c,c.generation)
+            return work(docs,jobs)
+        } finally { docs.forEach{it.fileKey.fill(0)};jobs.forEach{it.fileKey?.fill(0)} }
+    }
+    @Transaction open suspend fun reconciliationSnapshot(c:StorageContext):DocumentRecoverySnapshot=maintenanceState(c){docs,jobs->
+        DocumentRecoverySnapshot(docs.map{it.blobName}.toSet(),jobs.map{it.recoveryHeader()}.sortedBy{it.id})
+    }
+    @Transaction open suspend fun abortInterruptedImport(expected:DocumentRecoveryJob,c:StorageContext) {
+        maintenanceState(c){_,jobs->
+            val j=jobs.singleOrNull{it.id==expected.id}?:throw ProductStorageFailure()
+            if(j.operation!="IMPORT" || j.phase !in setOf("IMPORT_RESERVED","IMPORT_WRITING") || j.recoveryHeader()!=expected)throw ProductStorageFailure()
+            documentFileGate(c,c.generation,AccessPoint.COMMIT)
+            if(removeInterruptedImport(j.id,j.phase)!=1)throw ProductStorageFailure()
+            documentFileGate(c,c.generation,AccessPoint.COMMIT)
+        }
+    }
+    @Transaction open suspend fun maintenancePublicationSnapshot(id:String,phase:String,expected:DocumentJobRow?,c:StorageContext):DocumentPublicationSnapshot=maintenanceState(c){docs,jobs->
+        val j=jobs.singleOrNull{it.id==id}?:throw ProductStorageFailure()
+        if(j.operation!="IMPORT" || j.phase!=phase || phase !in setOf("IMPORT_CLOSED","FILE_PUBLISHED") ||
+            (expected!=null && !sameDocumentImport(j,expected)) || actionStatus(j.actionId) !in setOf("PREPARATION","ACTIVE","COMPLETED"))throw ProductStorageFailure()
+        val copy=DocumentJobRow(j.id,j.actionId,j.documentId,j.operation,j.phase,j.stagingName,j.blobName,j.displayName,j.format,j.plaintextSize,j.fileKey!!.copyOf())
+        DocumentPublicationSnapshot(copy,DocumentImportInventory(docs.map{it.blobName}.toSet()+jobs.map{it.blobName},jobs.mapNotNull{it.stagingName}.toSet()))
+    }
+    @Transaction open suspend fun maintenanceMarkPublished(expected:DocumentJobRow,c:StorageContext) {
+        maintenancePublicationSnapshot(expected.id,"IMPORT_CLOSED",expected,c).use { markPublicationRow(it.job,c) }
+    }
+    @Transaction open suspend fun maintenanceCommitDocument(expected:DocumentJobRow,importedAt:Long,c:StorageContext) {
+        maintenancePublicationSnapshot(expected.id,"FILE_PUBLISHED",expected,c).use { commitPublicationRow(it.job,importedAt,c) }
+    }
+    private suspend fun markPublicationRow(j:DocumentJobRow,c:StorageContext) {
+        documentFileGate(c,c.generation)
+        if(changeImportPhase(j.id,"IMPORT_CLOSED","FILE_PUBLISHED",j.plaintextSize)!=1)throw ProductStorageFailure()
+        documentFileGate(c,c.generation,AccessPoint.COMMIT)
+    }
+    private suspend fun commitPublicationRow(j:DocumentJobRow,importedAt:Long,c:StorageContext) {
+        if(importedAt<0)throw ProductStorageFailure()
+        documentFileGate(c,c.generation,AccessPoint.COMMIT)
+        val row=DocumentRow(j.documentId,j.actionId,j.displayName!!,j.format!!,j.plaintextSize!!,importedAt,j.blobName,j.fileKey!!.copyOf())
+        try {
+            insertPublishedDocument(row)
+            documentFileGate(c,c.generation)
+            if(deletePublishedJob(j.id)!=1)throw ProductStorageFailure()
+            documentFileGate(c,c.generation,AccessPoint.COMMIT)
+        } finally { row.fileKey.fill(0) }
+    }
+
     /** Only internal coordination receives the scoped DEK; never a product projection. */
     @Transaction open suspend fun publicationSnapshot(id: String, phase: String, expected: DocumentJobRow?, c: StorageContext): DocumentPublicationSnapshot {
         requireOperations(c,AccessPoint.OPERATION)
@@ -228,27 +288,11 @@ internal object DocumentStorageRules {
     }
 
     @Transaction open suspend fun markFilePublished(expected: DocumentJobRow, c: StorageContext) {
-        publicationSnapshot(expected.id,"IMPORT_CLOSED",expected,c).use { snapshot ->
-            requireOperations(c)
-            if (changeImportPhase(snapshot.job.id,"IMPORT_CLOSED","FILE_PUBLISHED",snapshot.job.plaintextSize) != 1) throw ProductStorageFailure()
-            requireOperations(c,AccessPoint.COMMIT)
-        }
+        publicationSnapshot(expected.id,"IMPORT_CLOSED",expected,c).use { markPublicationRow(it.job,c) }
     }
-
-    /** Parent insert and key transfer/job removal are a single Room write transaction. */
+    /** Parent insert and key transfer/job removal remain one Room write transaction. */
     @Transaction open suspend fun commitPublishedDocument(expected: DocumentJobRow, importedAt: Long, c: StorageContext) {
-        publicationSnapshot(expected.id,"FILE_PUBLISHED",expected,c).use { snapshot ->
-            val j = snapshot.job
-            if (importedAt < 0) throw ProductStorageFailure()
-            requireOperations(c,AccessPoint.COMMIT)
-            val row = DocumentRow(j.documentId,j.actionId,j.displayName!!,j.format!!,j.plaintextSize!!,importedAt,j.blobName,j.fileKey!!.copyOf())
-            try {
-                insertPublishedDocument(row) // Existing documents_import_parent trigger remains active.
-                requireOperations(c)
-                if (deletePublishedJob(j.id) != 1) throw ProductStorageFailure()
-                requireOperations(c,AccessPoint.COMMIT)
-            } finally { row.fileKey.fill(0) }
-        }
+        publicationSnapshot(expected.id,"FILE_PUBLISHED",expected,c).use { commitPublicationRow(it.job,importedAt,c) }
     }
 
     /** Key-free, fully checked namespace snapshot. No file I/O inside this transaction. */
