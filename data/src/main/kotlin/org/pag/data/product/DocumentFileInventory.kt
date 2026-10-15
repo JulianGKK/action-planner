@@ -86,23 +86,26 @@ internal class DocumentFileInventory(noBackupFilesDir: File) {
         knownFiles: Set<String>, documentId: String, key: ByteArray, expectedSize: Long,
         format: DocumentFormat): DocumentVerification = documentFileBoundary {
         val generation = c.generation
-        documentFileGate(c,generation,AccessPoint.OPERATION)
-        val staging = knownStaging.toSet(); val files = knownFiles.toSet()
-        val before = inspect(c,staging,files)
-        val available = if (area == DocumentFileArea.STAGING) before.staging else before.files
-        if (!DocumentStorageRules.opaque(name) || name !in available) throw ProductStorageFailure()
-        val path = root.resolve(if (area == DocumentFileArea.STAGING) "staging" else "files").resolve(name)
-        val attributes = checked(c,generation,path,false)
-        documentFileGate(c,generation)
-        val result = Files.newByteChannel(path,setOf(READ,NOFOLLOW_LINKS)).use { channel ->
-            unchanged(c,generation,path,false,attributes)
+        val ticket = DocumentNamespaceLane.ticket()
+        DocumentNamespaceLane.exclusive(ticket) {
+            documentFileGate(c,generation,AccessPoint.OPERATION)
+            val staging = knownStaging.toSet(); val files = knownFiles.toSet()
+            val before = inspect(c,staging,files)
+            val available = if (area == DocumentFileArea.STAGING) before.staging else before.files
+            if (!DocumentStorageRules.opaque(name) || name !in available) throw ProductStorageFailure()
+            val path = root.resolve(if (area == DocumentFileArea.STAGING) "staging" else "files").resolve(name)
+            val attributes = checked(c,generation,path,false)
             documentFileGate(c,generation)
-            DocumentFileStreams.verify(c,documentId,key,Channels.newInputStream(channel),expectedSize,format)
+            val result = Files.newByteChannel(path,setOf(READ,NOFOLLOW_LINKS)).use { channel ->
+                unchanged(c,generation,path,false,attributes)
+                documentFileGate(c,generation)
+                DocumentFileStreams.verify(c,documentId,key,Channels.newInputStream(channel),expectedSize,format)
+            }
+            documentFileGate(c,generation)
+            unchanged(c,generation,path,false,attributes)
+            if (inspect(c,staging,files) != before) throw ProductStorageFailure()
+            result.requireCurrent(c)
+            result
         }
-        documentFileGate(c,generation)
-        unchanged(c,generation,path,false,attributes)
-        if (inspect(c,staging,files) != before) throw ProductStorageFailure()
-        result.requireCurrent(c)
-        result
     }
 }
