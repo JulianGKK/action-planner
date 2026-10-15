@@ -123,6 +123,83 @@ internal object DocumentStorageRules {
     @Query("DELETE FROM document_jobs WHERE id=:id AND phase='FILE_PUBLISHED'")
     protected abstract suspend fun deletePublishedJob(id: String): Int
 
+    @Query("DELETE FROM documents WHERE actionId=:actionId AND id=:documentId")
+    protected abstract suspend fun removeDeleteParent(actionId: String, documentId: String): Int
+    @Query("UPDATE document_jobs SET phase='DELETE_FILE_PENDING' WHERE id=:id AND phase='DELETE_RESERVED'")
+    protected abstract suspend fun markDeletePending(id: String): Int
+    @Query("DELETE FROM document_jobs WHERE id=:id AND phase='DELETE_FILE_PENDING'")
+    protected abstract suspend fun removeDeleteJob(id: String): Int
+
+    /** Keys are validated and wiped internally, never returned to deletion coordination. */
+    private suspend fun <T> deleteState(c: StorageContext, work: suspend (List<DocumentRow>,List<DocumentJobRow>) -> T): T {
+        requireDocumentDelete(c,AccessPoint.OPERATION)
+        val docs = inventoryDocuments()
+        var jobs = emptyList<DocumentJobRow>()
+        try {
+            jobs = inventoryJobs()
+            DocumentStorageRules.validateBindings(docs,jobs)
+            (docs.map { it.actionId } + jobs.map { it.actionId }).toSet().forEach { a ->
+                DocumentStorageRules.capacity(docs.filter { it.actionId == a },jobs.filter { it.actionId == a })
+            }
+            if (jobs.any { it.operation == "IMPORT" && it.phase !in setOf("IMPORT_CLOSED","FILE_PUBLISHED") }) throw ProductStorageFailure()
+            requireDocumentDelete(c)
+            return work(docs,jobs)
+        } finally { docs.forEach { it.fileKey.fill(0) }; jobs.forEach { it.fileKey?.fill(0) } }
+    }
+    private suspend fun deletePermission(c: StorageContext, actionId: String) {
+        val status = actionStatus(actionId)
+        val allowed = status in setOf("PREPARATION","ACTIVE","COMPLETED") ||
+            (c.scope == AccessScope.MAINTENANCE && status == "DELETION_PENDING")
+        if (!allowed) throw ProductStorageFailure()
+        requireDocumentDelete(c)
+    }
+    private fun deleteView(job: DocumentJobRow, docs: List<DocumentRow>, jobs: List<DocumentJobRow>): DocumentDeleteSnapshot {
+        val parent = docs.singleOrNull { it.id == job.documentId }?.let {
+            DocumentMetadataRow(it.id,it.actionId,it.displayName,it.format,it.plaintextSize,it.importedAt)
+        }
+        val required = docs.map { it.blobName }.toSet() + jobs.filter { it.phase == "FILE_PUBLISHED" }.map { it.blobName }
+        val optional = jobs.filter { it.phase == "DELETE_FILE_PENDING" }.map { it.blobName }.toSet()
+        val staging = jobs.filter { it.phase == "IMPORT_CLOSED" }.map { it.stagingName!! }.toSet()
+        val safeJob = DocumentJobRow(job.id,job.actionId,job.documentId,job.operation,job.phase,null,job.blobName,null,null,job.plaintextSize,null)
+        return DocumentDeleteSnapshot(safeJob,parent,DocumentDeleteInventory(required,optional,staging))
+    }
+    @Transaction open suspend fun reserveDelete(actionId: String, expected: DocumentAsset, jobId: String, c: StorageContext): DocumentDeleteSnapshot = deleteState(c) { docs,jobs ->
+        if (c.scope != AccessScope.READY || expected.actionId != actionId || !DocumentStorageRules.opaque(jobId) || !DocumentRules.valid(expected)) throw ProductStorageFailure()
+        deletePermission(c,actionId)
+        val parent = docs.singleOrNull { it.actionId == actionId && it.id == expected.id } ?: throw ProductStorageFailure()
+        if (DocumentMetadataRow(parent.id,parent.actionId,parent.displayName,parent.format,parent.plaintextSize,parent.importedAt).model() != expected ||
+            jobs.any { it.documentId == parent.id || it.id == jobId }) throw ProductStorageFailure()
+        val job = DocumentJobRow(jobId,actionId,parent.id,"DELETE","DELETE_RESERVED",null,parent.blobName,null,null,parent.plaintextSize,null)
+        requireDocumentDelete(c)
+        insertJob(job)
+        requireDocumentDelete(c,AccessPoint.COMMIT)
+        deleteView(job,docs,jobs + job)
+    }
+    @Transaction open suspend fun deleteSnapshot(id: String, expected: DocumentDeleteSnapshot?, c: StorageContext): DocumentDeleteSnapshot = deleteState(c) { docs,jobs ->
+        val job = jobs.singleOrNull { it.id == id } ?: throw ProductStorageFailure()
+        if (!DocumentStorageRules.opaque(id) || job.operation != "DELETE") throw ProductStorageFailure()
+        deletePermission(c,job.actionId)
+        val snapshot = deleteView(job,docs,jobs)
+        if (expected != null && !sameDocumentDelete(snapshot,expected)) throw ProductStorageFailure()
+        snapshot
+    }
+    @Transaction open suspend fun detachDeleteParent(expected: DocumentDeleteSnapshot, c: StorageContext) {
+        val current = deleteSnapshot(expected.job.id,expected,c)
+        if (current.job.phase != "DELETE_RESERVED" || current.parent == null) throw ProductStorageFailure()
+        requireDocumentDelete(c,AccessPoint.COMMIT)
+        if (removeDeleteParent(current.job.actionId,current.job.documentId) != 1) throw ProductStorageFailure()
+        requireDocumentDelete(c)
+        if (markDeletePending(current.job.id) != 1) throw ProductStorageFailure()
+        requireDocumentDelete(c,AccessPoint.COMMIT)
+    }
+    @Transaction open suspend fun finishDelete(expected: DocumentDeleteSnapshot, c: StorageContext) {
+        val current = deleteSnapshot(expected.job.id,expected,c)
+        if (current.job.phase != "DELETE_FILE_PENDING" || current.parent != null) throw ProductStorageFailure()
+        requireDocumentDelete(c,AccessPoint.COMMIT)
+        if (removeDeleteJob(current.job.id) != 1) throw ProductStorageFailure()
+        requireDocumentDelete(c,AccessPoint.COMMIT)
+    }
+
     /** Only internal coordination receives the scoped DEK; never a product projection. */
     @Transaction open suspend fun publicationSnapshot(id: String, phase: String, expected: DocumentJobRow?, c: StorageContext): DocumentPublicationSnapshot {
         requireOperations(c,AccessPoint.OPERATION)
