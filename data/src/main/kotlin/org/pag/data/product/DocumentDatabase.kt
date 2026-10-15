@@ -116,6 +116,58 @@ internal object DocumentStorageRules {
     @Query("SELECT status FROM actions WHERE id=:a") protected abstract suspend fun actionStatus(a: String): String?
     @Insert protected abstract suspend fun insertJob(job: DocumentJobRow)
 
+    @Query("UPDATE document_jobs SET phase=:next,plaintextSize=:size WHERE id=:id AND phase=:old")
+    protected abstract suspend fun changeImportPhase(id: String, old: String, next: String, size: Long?): Int
+
+    /** Key-free, fully checked namespace snapshot. No file I/O inside this transaction. */
+    @Transaction open suspend fun importInventory(c: StorageContext): DocumentImportInventory {
+        requireOperations(c)
+        val docs = inventoryDocuments()
+        var jobs = emptyList<DocumentJobRow>()
+        try {
+            jobs = inventoryJobs()
+            DocumentStorageRules.validateBindings(docs,jobs)
+            (docs.map { it.actionId } + jobs.map { it.actionId }).toSet().forEach { a ->
+                DocumentStorageRules.capacity(docs.filter { it.actionId == a },jobs.filter { it.actionId == a })
+            }
+            // Interrupted work must be reconciled first; this slice never resumes it.
+            if (jobs.any { it.operation != "IMPORT" || it.phase != "IMPORT_CLOSED" }) throw ProductStorageFailure()
+            requireOperations(c)
+            return DocumentImportInventory(docs.map { it.blobName }.toSet(),jobs.map { it.stagingName!! }.toSet())
+        } finally { docs.forEach { it.fileKey.fill(0) }; jobs.forEach { it.fileKey?.fill(0) } }
+    }
+
+    @Transaction open suspend fun advanceImport(expected: DocumentJobRow, closedSize: Long?, c: StorageContext) {
+        val key = expected.fileKey?.copyOf()
+        val frozen = DocumentJobRow(expected.id,expected.actionId,expected.documentId,expected.operation,expected.phase,
+            expected.stagingName,expected.blobName,expected.displayName,expected.format,expected.plaintextSize,key)
+        try { advanceFrozenImport(frozen,closedSize,c) } finally { key?.fill(0) }
+    }
+    private suspend fun advanceFrozenImport(expected: DocumentJobRow, closedSize: Long?, c: StorageContext) {
+        requireOperations(c,AccessPoint.OPERATION)
+        if (c.scope != AccessScope.READY || !DocumentStorageRules.valid(expected) ||
+            expected.operation != "IMPORT" || expected.phase !in setOf("IMPORT_RESERVED","IMPORT_WRITING") ||
+            (expected.phase == "IMPORT_RESERVED" && closedSize != null) ||
+            (expected.phase == "IMPORT_WRITING" && (closedSize == null || !DocumentRules.validSize(closedSize)))) throw ProductStorageFailure()
+        val status = actionStatus(expected.actionId)
+        if (status !in setOf("PREPARATION","ACTIVE","COMPLETED")) throw ProductStorageFailure()
+        val docs = inventoryDocuments()
+        var jobs = emptyList<DocumentJobRow>()
+        try {
+            jobs = inventoryJobs()
+            DocumentStorageRules.validateBindings(docs,jobs)
+            (docs.map { it.actionId } + jobs.map { it.actionId }).toSet().forEach { a ->
+                DocumentStorageRules.capacity(docs.filter { it.actionId == a },jobs.filter { it.actionId == a })
+            }
+            val current = jobs.singleOrNull { it.id == expected.id } ?: throw ProductStorageFailure()
+            if (!sameDocumentImport(current,expected)) throw ProductStorageFailure()
+            requireOperations(c)
+            val next = if (expected.phase == "IMPORT_RESERVED") "IMPORT_WRITING" else "IMPORT_CLOSED"
+            if (changeImportPhase(expected.id,expected.phase,next,closedSize) != 1) throw ProductStorageFailure()
+            requireOperations(c,AccessPoint.COMMIT)
+        } finally { docs.forEach { it.fileKey.fill(0) }; jobs.forEach { it.fileKey?.fill(0) } }
+    }
+
     /** Internal reservation only; cannot create a READY document. Writer transaction serializes capacity checks. */
     @Transaction open suspend fun reserveImport(job: DocumentJobRow, c: StorageContext): OperationsResult<Unit> {
         val key = job.fileKey?.copyOf()
