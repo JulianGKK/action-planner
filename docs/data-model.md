@@ -750,3 +750,13 @@ atomar in DB; File-I/O bleibt getrennt. Action-FKs RESTRICT statt blinder CASCAD
 damit spätere vollständige Aktionslöschung zuerst bekannten Blob-/Jobcleanup
 abschließt. Keine heutige Action-Deletion, Room-Entity, Migration oder neue
 Schemanummer; implementierter Bestand bleibt Schema 10. P10a unverändert.
+
+## P10b2a — DB-Fundament implementiert, Dokumentenworkflow noch nicht
+
+[P10b2a](product-p10b2a-documents-db-foundation.md) ergänzt nun Schema 11 mit
+documents/document_jobs; alle 21 bisherigen Entitydefinitionen unverändert.
+Fachmodell sechs Angaben, interne technische Blobnamen/32-Byte-DEKs ausschließlich
+SQLCipher, Action-FKs RESTRICT und keyfreie Fachprojektionen mit Deletejob-Ausschluss.
+Nur interne Importreservierung/DB-Constraints, kein READY-Erzeugungsport,
+Dateipipeline, Recovery, Runtime- oder UI-Workflow. Historische Schema10-Aussagen
+oben beschreiben den damaligen P10a/P10b1-Stand; Source-of-Truth-Dokumente bleiben erhalten.

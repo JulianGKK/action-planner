@@ -220,3 +220,13 @@ Galaxykampagne ohne konkreten Anlass. Vor Merge höchstens ein kompakter Lauf de
 direkt berührten Module; neue Fehler/Upgrades können gezielte Zusatzprüfung begründen.
 P10b1 selbst: ausschließlich Dokumentreview und git diff --check, keine Tests,
 Builds, Lint, Instrumentation oder ADB-/Geräteprüfung ausgeführt.
+
+## P10b2a — fokussiertes DB-Fundament
+
+[Nachweis](product-p10b2a-documents-db-foundation.md): DocumentFoundationTest
+prüft Domain-/Reservierungs-/Key-Lifetime-Regeln und KSP-DAO-Projektionen;
+`tools/p10b2a/check_document_database.py` führt produktives DDL/Constraint-SQL
+auf Host-SQLite aus, einschließlich additivem Schema10→11-Vergleich und
+konkurrierender Reservierung. Kein Android-SQLCipher-Runtime-Nachweis daraus.
+Nur gezielte Data-/Test-/Fixturekompilierung, keine historische Gesamtsuite
+oder Instrumentation/Galaxy/ADB. Produkt-Dateipipeline weiterhin nicht implementiert.

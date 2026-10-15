@@ -16,6 +16,9 @@ internal fun removeExpenseSchemaForLegacyFixture(db: net.zetetic.database.sqlcip
 }
 
 internal fun removeMemorySchemaForLegacyFixture(db: net.zetetic.database.sqlcipher.SQLiteDatabase) {
+    // New product tables only in synthetic downgrade fixtures; DROP also removes their own triggers.
+    db.execSQL("DROP TABLE IF EXISTS document_jobs")
+    db.execSQL("DROP TABLE IF EXISTS documents")
     db.execSQL("DROP TABLE IF EXISTS memory_addenda")
     db.execSQL("DROP TABLE IF EXISTS memory_answers")
     db.execSQL("DROP TABLE IF EXISTS memory_reports")
