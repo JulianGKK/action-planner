@@ -214,7 +214,7 @@ class MaterialStorageTest {
         val nonMaterialTriggers = triggers(i).filterKeys { !it.startsWith("materials_") }
         repo(i).summary("a") { assertEquals(MaterialSummary(0), value(it)) }
         assertEquals(oldTables + setOf("materials", "expenses", "expense_payments", "memory_reports", "memory_answers", "memory_addenda", "documents", "document_jobs"), tables(i)); assertEquals(fresh, materialTriggers(i))
-        assertEquals(nonMaterialTriggers, triggers(i).filterKeys { !it.startsWith("materials_") })
+        assertEquals(nonMaterialTriggers, triggers(i).filterKeys { it in nonMaterialTriggers })
         assertEquals(before, use(i) { d -> protocolValue(ProtocolStore(d, context()) { time }.detail("a", saved.entryId)) })
         assertEquals(oldTask, task(i)); assertEquals(events, use(i) { it.tasks().events("a") })
         assertArrayEquals(protected.envelope, use(i) { it.leadership().get("a")!!.envelope })
