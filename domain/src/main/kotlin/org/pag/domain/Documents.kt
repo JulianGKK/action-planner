@@ -25,3 +25,19 @@ object DocumentRules {
     fun mayDelete(status: ActionStatus) = mayRead(status)
     val order = compareBy<DocumentAsset> { it.importedAt }.thenBy { it.id }
 }
+
+/** One attempt only; opened by the authorized worker after durable WRITING, never by UI. */
+fun interface DocumentSource { fun open(): java.io.InputStream }
+enum class DocumentFailure { INVALID, NOT_ALLOWED, NOT_FOUND, STALE, CAPACITY, MAINTENANCE_REQUIRED, SOURCE_UNAVAILABLE, TOO_LARGE, FORMAT }
+sealed interface DocumentResult<out T> {
+    data class Value<T>(val value: T) : DocumentResult<T>
+    data class Rejected(val reason: DocumentFailure) : DocumentResult<Nothing>
+}
+/** Key-free product port. No URI, blob names, jobs or cryptographic data. */
+interface DocumentRepository {
+    fun summary(actionId: String, publish: (DocumentResult<DocumentSummary>) -> Unit)
+    fun list(actionId: String, publish: (DocumentResult<List<DocumentAsset>>) -> Unit)
+    fun importDocument(actionId: String, name: String, format: DocumentFormat, source: DocumentSource,
+        publish: (DocumentResult<Unit>) -> Unit)
+    fun deleteDocument(actionId: String, expected: DocumentAsset, publish: (DocumentResult<Unit>) -> Unit)
+}

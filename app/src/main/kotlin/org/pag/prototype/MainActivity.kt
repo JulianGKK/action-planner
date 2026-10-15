@@ -10,6 +10,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.WindowManager
+import android.net.Uri
+import androidx.activity.result.contract.ActivityResultContracts
+import org.pag.prototype.product.DocumentPicker
+import org.pag.prototype.product.PendingDocumentPicker
+import org.pag.domain.DocumentSource
+import java.io.FileNotFoundException
+import java.util.concurrent.atomic.AtomicReference
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import org.pag.data.product.ProductRuntime
@@ -27,8 +34,34 @@ class MainActivity : ComponentActivity() {
     private lateinit var model: ProductViewModel
     private val worker by lazy { Executors.newSingleThreadExecutor() }
     private val handler by lazy { Handler(Looper.getMainLooper()) }
+    private var documentSession: org.pag.domain.Subscription? = null
     private var demo: DemoState? = null
     private var resumed = false
+    private val pendingDocument = PendingDocumentPicker<Uri>()
+    private val openDocumentContract = ActivityResultContracts.OpenDocument()
+    private var pickerRequest: Int? = null
+    private var nextPickerRequest = 20_000
+    // Direct result dispatch avoids ActivityResultRegistry's saved pending-result Bundle.
+    // No callback registration or source survives Activity recreation.
+    @Deprecated("Uses direct OpenDocument dispatch to keep pending URI results out of SavedState")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode in 20_001..30_000) {
+            if (requestCode == pickerRequest) {
+                pickerRequest=null
+                if (::runtime.isInitialized) {
+                    pendingDocument.returned(openDocumentContract.parseResult(resultCode,data)?.takeIf { it.scheme == "content" })
+                    val current=runtime.session.snapshot()
+                    if(current.state==SessionState.READY) pendingDocument.ready(current.generation)
+                }
+                else pendingDocument.clear()
+            }
+            return
+        }
+        super.onActivityResult(requestCode,resultCode,data)
+    }
+    private fun discardOnExternalLeave() {
+        if (::runtime.isInitialized) pendingDocument.leaving(runtime.session.snapshot().state==SessionState.AUTHENTICATING)
+    }
     private val expiry = object : Runnable {
         override fun run() {
             if (!resumed) return
@@ -38,7 +71,7 @@ class MainActivity : ComponentActivity() {
         }
     }
     private val screenOff = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) { runtime.session.foreground(false) }
+        override fun onReceive(context: Context, intent: Intent) { pendingDocument.clear(); runtime.session.foreground(false) }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(null)
@@ -59,6 +92,47 @@ class MainActivity : ComponentActivity() {
         val state = runtime.inventory.state()
         if (state == ProductStorageState.PARTIAL_OR_INVALID) runtime.session.storageFailure()
         model = ProductViewModel(runtime.session, runtime.actions, state, runtime.persons, runtime.leadership, runtime.operations, runtime.tasks, runtime.protocol, runtime.material, runtime.expenses, runtime.memoryReports, runtime::start)
+        model.bindDocuments(runtime.documents, object : DocumentPicker {
+            override fun launch(actionId: String, generation: Long) {
+                val current=runtime.session.snapshot()
+                if(current.state!=SessionState.READY || current.generation!=generation || model.selected?.id!=actionId) return
+                if (pickerRequest != null || nextPickerRequest >= 30_000) return
+                val request=++nextPickerRequest
+                pickerRequest=request
+                pendingDocument.begin(actionId,generation)
+                // The picker is never treated as a continuation of this READY session.
+                runtime.session.lock()
+                try {
+                    @Suppress("DEPRECATION")
+                    startActivityForResult(openDocumentContract.createIntent(this@MainActivity,
+                        arrayOf("application/pdf","image/jpeg","image/png","text/plain")),request)
+                }
+                catch (_: android.content.ActivityNotFoundException) { pickerRequest=null; pendingDocument.clear() }
+            }
+            override fun available(actionId: String, generation: Long) = pendingDocument.available(actionId,generation)
+            override fun consume(actionId: String, generation: Long): DocumentSource? {
+                val current=runtime.session.snapshot()
+                if(current.state!=SessionState.READY || current.generation!=generation || model.selected?.id!=actionId) return null
+                val uri=pendingDocument.consume(actionId,generation) ?: return null
+                val once=AtomicReference<Uri?>(uri)
+                return DocumentSource {
+                    val selected=once.getAndSet(null) ?: throw FileNotFoundException()
+                    val ready=runtime.session.snapshot()
+                    if(ready.state!=SessionState.READY || ready.generation!=generation) throw FileNotFoundException()
+                    contentResolver.openInputStream(selected) ?: throw FileNotFoundException()
+                }
+            }
+            override fun actionSelected(actionId: String) { pendingDocument.actionSelected(actionId) }
+            override fun cancel() { pickerRequest=null; pendingDocument.clear() }
+        })
+        documentSession=runtime.session.observe { state ->
+            when(state.state) {
+                SessionState.READY -> pendingDocument.ready(state.generation)
+                SessionState.LOCKED -> pendingDocument.locked()
+                SessionState.BLOCKED -> pendingDocument.clear()
+                else -> Unit
+            }
+        }
         val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenOff, filter, Context.RECEIVER_NOT_EXPORTED)
         else registerReceiver(screenOff, filter)
@@ -77,6 +151,7 @@ class MainActivity : ComponentActivity() {
         handler.removeCallbacks(expiry); handler.post(expiry)
     }
     override fun onPause() {
+        discardOnExternalLeave()
         resumed = false
         if (::runtime.isInitialized) {
             handler.removeCallbacks(expiry)
@@ -85,7 +160,7 @@ class MainActivity : ComponentActivity() {
         super.onPause()
     }
     override fun onStop() { if (::runtime.isInitialized) runtime.session.foreground(false); demo?.end(); super.onStop() }
-    override fun onUserLeaveHint() { if (::runtime.isInitialized) runtime.session.foreground(false); super.onUserLeaveHint() }
+    override fun onUserLeaveHint() { discardOnExternalLeave(); if (::runtime.isInitialized) runtime.session.foreground(false); super.onUserLeaveHint() }
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (!::runtime.isInitialized) return
@@ -97,6 +172,8 @@ class MainActivity : ComponentActivity() {
     }
     override fun onUserInteraction() { super.onUserInteraction(); if (::model.isInitialized && resumed) model.interaction() }
     override fun onDestroy() {
+        documentSession?.cancel(); documentSession=null
+        pendingDocument.clear()
         demo?.end(); demo = null
         if (::runtime.isInitialized) {
             handler.removeCallbacks(expiry)

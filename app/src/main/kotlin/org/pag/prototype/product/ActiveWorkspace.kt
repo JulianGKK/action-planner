@@ -11,8 +11,10 @@ import org.pag.domain.*
 
 /** Navigation is ephemeral UI state, never session authority. */
 enum class ActiveArea(val label: String) { HUB("Lagebild"), PERSONS("Personen"), TASKS("Aufgaben"), FUNCTIONS("Funktionen"), PROTOCOL("Protokoll"), MATERIAL("Material"), COSTS("Kosten"), MEMORY_REPORTS("Gedächtnisprotokolle"), DETAILS("Aktionsdetails") }
-internal data class HubCard(val area: ActiveArea, val summary: List<String>, val attention: String? = null)
-internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: TaskBoard, protocol: ProtocolSummary? = null, material: MaterialSummary? = null, expenses: ExpenseSummary? = null, memory: MemoryReportSummary? = null): List<HubCard> {
+internal data class HubCard(val area: ActiveArea, val summary: List<String>, val attention: String? = null, val documents: Boolean = false) {
+    val label get() = if (documents) "Dokumente" else area.label
+}
+internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: TaskBoard, protocol: ProtocolSummary? = null, material: MaterialSummary? = null, expenses: ExpenseSummary? = null, memory: MemoryReportSummary? = null, documents: DocumentSummary? = null): List<HubCard> {
     val missing = board.persons.count { it.state?.status == null || it.state?.status == OperationalStatus.NO_STATUS }
     val custody = board.count(OperationalStatus.IN_CUSTODY)
     val unreachable = board.count(OperationalStatus.NOT_REACHABLE)
@@ -42,7 +44,8 @@ internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: Task
         (protocol?.let { listOf(HubCard(ActiveArea.PROTOCOL, listOf("${it.keyEventCount} Schlüsselereignisse", it.lastEntryRecordedAt?.let { time -> "Letzter Eintrag erfasst: ${protocolSummaryTime(time)}" } ?: "Noch kein Eintrag"))) } ?: emptyList()) +
         (material?.let { listOf(HubCard(ActiveArea.MATERIAL, listOf(if (it.count == 0) "Noch kein Material" else "${it.count} Materialeinträge"))) } ?: emptyList()) +
         (expenses?.let { listOf(HubCard(ActiveArea.COSTS, listOf("${it.count} Einträge", "Gesamt: ${EuroMoney.format(it.totalCents)}"))) } ?: emptyList()) +
-        (memory?.let { listOf(HubCard(ActiveArea.MEMORY_REPORTS, listOf(if (it.draftCount == 0 && it.completedCount == 0) "Noch keine Gedächtnisprotokolle" else "${it.draftCount} Entwürfe · ${it.completedCount} abgeschlossen"))) } ?: emptyList()) + listOf(HubCard(ActiveArea.DETAILS,
+        (memory?.let { listOf(HubCard(ActiveArea.MEMORY_REPORTS, listOf(if (it.draftCount == 0 && it.completedCount == 0) "Noch keine Gedächtnisprotokolle" else "${it.draftCount} Entwürfe · ${it.completedCount} abgeschlossen"))) } ?: emptyList()) +
+        (documents?.let { listOf(HubCard(ActiveArea.HUB, listOf("${it.count} Dokumente"), documents=true)) } ?: emptyList()) + listOf(HubCard(ActiveArea.DETAILS,
             listOf("Beginn: ${formattedTime(action.startAt)}", "Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}", "Aktiv")))
 }
 internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >= 600f && fontScale <= 1.3f) 2 else 1
@@ -99,8 +102,8 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             ActiveArea.HUB -> {
                 val tasks = content.tasks
                 if (tasks == null) { PagErrorState(); return }
-                val cards = activeHubCards(model.selected ?: return, board, tasks, content.protocolSummary, content.materialSummary, content.expenseSummary, content.memoryReportSummary)
-                ActiveHubGrid(cards, model.activeNavigationEnabled) { model.activeArea(it) }
+                val cards = activeHubCards(model.selected ?: return, board, tasks, content.protocolSummary, content.materialSummary, content.expenseSummary, content.memoryReportSummary, content.documentSummary)
+                ActiveHubGrid(cards, model.activeNavigationEnabled, onDocuments = model::openDocuments) { model.activeArea(it) }
                 model.changeError?.let { Text(changeErrorLabel(it)) }
                 if (model.confirming != null) {
                     Text("Aktion endgültig abschließen? Die Aktion bleibt abgeschlossen. Protokoll-Nachbereitung, Kostenverwaltung und Gedächtnisprotokolle bleiben möglich.")
@@ -121,7 +124,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
 }
 
 /** Shared stateless hub presentation; no session, repository or demo capability. */
-@Composable internal fun ActiveHubGrid(cards: List<HubCard>, enabled: Boolean = true, onOpen: (ActiveArea) -> Unit) {
+@Composable internal fun ActiveHubGrid(cards: List<HubCard>, enabled: Boolean = true, onDocuments: () -> Unit = {}, onOpen: (ActiveArea) -> Unit) {
     val fontScale = LocalDensity.current.fontScale
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val columns = activeHubColumns(maxWidth.value, fontScale)
@@ -129,13 +132,13 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             cards.chunked(columns).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     row.forEach { card ->
-                        FormOutlinedButton({ onOpen(card.area) }, enabled = enabled,
+                        FormOutlinedButton({ if (card.documents) onDocuments() else onOpen(card.area) }, enabled = enabled,
                             modifier = Modifier.weight(1f).heightIn(min = 96.dp)) {
                             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                PreparationHeading(card.area.label)
+                                PreparationHeading(card.label)
                                 card.summary.forEach { Text(it) }
                                 card.attention?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-                                Text("${card.area.label} öffnen")
+                                Text("${card.label} öffnen")
                             }
                         }
                     }

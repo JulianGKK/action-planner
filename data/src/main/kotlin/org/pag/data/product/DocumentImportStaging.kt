@@ -124,7 +124,7 @@ internal class DocumentImportStaging(private val database: DocumentImportDatabas
                             output.use {
                                 documentFileGate(c,generation)
                                 val input = source() // exactly one invocation, only after WRITING and exclusive create
-                                DocumentFileStreams.encrypt(c,writing.documentId,key,input,it)
+                                DocumentFileStreams.encrypt(c,writing.documentId,key,input,it,format)
                             }
                         }
                         documentFileGate(c,generation)

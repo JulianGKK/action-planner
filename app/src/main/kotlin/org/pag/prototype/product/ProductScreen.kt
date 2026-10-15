@@ -20,7 +20,7 @@ import java.util.Locale
 @Composable fun ProductScreen(model: ProductViewModel) {
     MaterialTheme {
         val screen=listOf(model.snapshot.state,model.snapshot.generation,model.selected?.id,model.selectedPerson?.id,
-            model.actionListState::class,model.preparationArea,model.activeArea,model.personDetailLoading,model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter,model.protocol.mode,model.protocol.form,model.protocol.detail?.entry?.id,model.protocol.historical?.revision?.id,model.expenses.form,model.expenses.selected?.id,model.expenses.confirmingDelete,model.completedExpensesOpen,model.material.form,model.material.selected?.id,model.material.confirmingDelete,model.completedMaterialOpen,model.memoryReports.mode,model.memoryReports.sectionOrdinal,model.memoryReports.expected?.id,model.completedMemoryReportsOpen)
+            model.actionListState::class,model.preparationArea,model.activeArea,model.personDetailLoading,model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter,model.protocol.mode,model.protocol.form,model.protocol.detail?.entry?.id,model.protocol.historical?.revision?.id,model.expenses.form,model.expenses.selected?.id,model.expenses.confirmingDelete,model.completedExpensesOpen,model.material.form,model.material.selected?.id,model.material.confirmingDelete,model.completedMaterialOpen,model.memoryReports.mode,model.memoryReports.sectionOrdinal,model.memoryReports.expected?.id,model.completedMemoryReportsOpen,model.documents.available,model.documents.importing,model.documents.confirmingDelete)
         ProductInputScope(screen) {
             LaunchedEffect(model.snapshot.state, model.snapshot.generation) {
                 if (model.snapshot.state == SessionState.READY) while (true) {
@@ -51,7 +51,7 @@ import java.util.Locale
                         PagWorkspace(model.feedback.takeIf { model.snapshot.state == SessionState.READY },
                             model::dismissFeedback, Modifier.fillMaxWidth().weight(1f)) {
                         val scroll=rememberScrollState()
-                        LaunchedEffect(model.preparationArea,model.activeArea,model.operations.screen,model.operations.personId,model.operations.functionFocus,model.selectedPerson?.id,model.personDetailLoading,model.tasks.form,model.tasks.selected?.id,model.tasks.selected?.status,model.tasks.filter,model.protocol.mode,model.protocol.form,model.protocol.detail?.entry?.id,model.protocol.historical?.revision?.id,model.expenses.form,model.expenses.selected?.id,model.expenses.confirmingDelete,model.completedExpensesOpen,model.material.form,model.material.selected?.id,model.material.confirmingDelete,model.completedMaterialOpen,model.memoryReports.mode,model.memoryReports.sectionOrdinal,model.memoryReports.expected?.id,model.completedMemoryReportsOpen){scroll.scrollTo(0)}
+                        LaunchedEffect(model.preparationArea,model.activeArea,model.operations.screen,model.operations.personId,model.operations.functionFocus,model.selectedPerson?.id,model.personDetailLoading,model.tasks.form,model.tasks.selected?.id,model.tasks.selected?.status,model.tasks.filter,model.protocol.mode,model.protocol.form,model.protocol.detail?.entry?.id,model.protocol.historical?.revision?.id,model.expenses.form,model.expenses.selected?.id,model.expenses.confirmingDelete,model.completedExpensesOpen,model.material.form,model.material.selected?.id,model.material.confirmingDelete,model.completedMaterialOpen,model.memoryReports.mode,model.memoryReports.sectionOrdinal,model.memoryReports.expected?.id,model.completedMemoryReportsOpen,model.documents.available,model.documents.importing,model.documents.confirmingDelete){scroll.scrollTo(0)}
                         Column(Modifier.padding(24.dp).verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             when (model.snapshot.state) {
                                 SessionState.BLOCKED -> PagErrorState()
@@ -60,6 +60,7 @@ import java.util.Locale
                                 SessionState.MAINTENANCE -> PagLoadingState()
                                 SessionState.READY -> {
                                     when {
+                                        model.documents.available -> DocumentWorkspace(model)
                                         model.creating || model.editing != null -> ActionForm(model)
                                         model.detailLoading -> PagLoadingState()
                                         model.selected?.status == ActionStatus.DRAFT -> DraftWorkspace(model)
@@ -87,6 +88,7 @@ import java.util.Locale
                                             if (action.status == ActionStatus.COMPLETED) {
                                                 model.protocol.error?.let { Text(protocolFailure(it)) }
                                                 FormOutlinedButton(model::openCompletedProtocol) { Text("Protokoll ansehen / nachbereiten") }
+                                                if (model.documentsAvailable) FormOutlinedButton(model::openDocuments) { Text("Dokumente verwalten") }
                                                 if (model.expensesAvailable) FormOutlinedButton(model::openCompletedExpenses) { Text("Kosten verwalten") }
                                                 if (model.memoryReportsAvailable) FormOutlinedButton(model::openCompletedMemoryReports) { Text("Gedächtnisprotokolle") }
                                                 if (model.materialAvailable) FormOutlinedButton(model::openCompletedMaterial) { Text("Material ansehen") }
