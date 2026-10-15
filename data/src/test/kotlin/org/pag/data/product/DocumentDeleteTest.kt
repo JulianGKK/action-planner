@@ -36,6 +36,7 @@ class DocumentDeleteTest {
         var failPending=false;var failFinish=false
         private fun visible(a:String)=docs.filter { d->d.actionId==a && jobs.none { it.documentId==d.id && it.operation=="DELETE" } }
         private fun metadata(d:DocumentRow)=DocumentMetadataRow(d.id,d.actionId,d.displayName,d.format,d.plaintextSize,d.importedAt)
+        override suspend fun removeInterruptedImport(id:String,phase:String):Int=error("Not used here")
         override suspend fun count(a:String)=visible(a).size
         override suspend fun list(a:String)=visible(a).sortedWith(compareBy<DocumentRow>{it.importedAt}.thenBy{it.id}).map {metadata(it)}
         override suspend fun get(a:String,id:String)=visible(a).singleOrNull { it.id==id }?.let {metadata(it)}

@@ -71,6 +71,7 @@ internal class SqlCipherDocumentImportDatabase(app: Context, private val invento
 internal object DocumentNamespaceLane {
     private val monitor = Any()
     @Volatile private var epoch = 0L
+    fun requireExclusive() { if (!Thread.holdsLock(monitor)) throw ProductStorageFailure() }
     fun ticket() = epoch
     fun <T> exclusive(ticket: Long, work: () -> T): T = synchronized(monitor) {
         if (ticket != epoch) throw ProductStorageFailure()

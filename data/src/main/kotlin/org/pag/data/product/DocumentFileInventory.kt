@@ -38,7 +38,23 @@ internal class DocumentFileInventory(noBackupFilesDir: File) {
     private fun knownNames(staging: Set<String>, files: Set<String>) {
         if ((staging + files).any { !DocumentStorageRules.opaque(it) } || staging.intersect(files).isNotEmpty()) throw ProductStorageFailure()
     }
-    fun inspect(c: StorageContext, knownStaging: Set<String>, knownFiles: Set<String>): DocumentNamespaceSnapshot = documentFileBoundary {
+    fun inspect(c: StorageContext, knownStaging: Set<String>, knownFiles: Set<String>): DocumentNamespaceSnapshot = inspectInternal(c,knownStaging,knownFiles,false)
+    internal fun inspectRecovery(c:StorageContext, knownStaging:Set<String>, knownFiles:Set<String>):DocumentNamespaceSnapshot {
+        if(c.scope!=org.pag.domain.AccessScope.MAINTENANCE)throw ProductStorageFailure()
+        val g=c.generation
+        val result=inspectInternal(c,knownStaging,knownFiles,true)
+        val identities=mutableSetOf<Any>()
+        if(result.rootPresent) for((area,names) in listOf("staging" to result.staging,"files" to result.files)) {
+            for(name in names) {
+                val attributes=checked(c,g,root.resolve(area).resolve(name),false)
+                val identity=attributes.fileKey()?:throw ProductStorageFailure()
+                if(!identities.add(identity))throw ProductStorageFailure()
+            }
+        }
+        documentFileGate(c,g)
+        return result
+    }
+    private fun inspectInternal(c: StorageContext, knownStaging: Set<String>, knownFiles: Set<String>, allowMissingRoot:Boolean): DocumentNamespaceSnapshot = documentFileBoundary {
         val generation = c.generation
         documentFileGate(c,generation,AccessPoint.OPERATION)
         val expectedStaging = knownStaging.toSet(); val expectedFiles = knownFiles.toSet()
@@ -46,7 +62,7 @@ internal class DocumentFileInventory(noBackupFilesDir: File) {
         checked(c,generation,base,true)
         val rootAttributes = try { checked(c,generation,root,true) } catch (_: NoSuchFileException) { null }
         if (rootAttributes == null) {
-            if (expectedStaging.isNotEmpty() || expectedFiles.isNotEmpty()) throw ProductStorageFailure()
+            if (!allowMissingRoot && (expectedStaging.isNotEmpty() || expectedFiles.isNotEmpty())) throw ProductStorageFailure()
             documentFileGate(c,generation)
             DocumentNamespaceSnapshot(false,emptySet(),emptySet())
         } else {

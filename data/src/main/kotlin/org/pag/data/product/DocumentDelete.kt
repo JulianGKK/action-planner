@@ -55,6 +55,10 @@ internal class SqlCipherDocumentDeleteDatabase(app: Context, private val invento
         @Suppress("UNCHECKED_CAST")
         return result as T
     }
+    internal fun <T> maintenanceStep(c:StorageContext, work:suspend(ActionDatabase)->T):T {
+        if(c.scope!=AccessScope.MAINTENANCE)throw ProductStorageFailure()
+        return use(c,work)
+    }
     override fun reserve(c:StorageContext,actionId:String,expected:DocumentAsset,jobId:String)=use(c) { db ->
         db.withWriteTransaction { db.documents().reserveDelete(actionId,expected,jobId,c) }
     }
@@ -83,9 +87,15 @@ internal class DocumentDelete(private val database: DocumentDeleteDatabase,noBac
         gate(c,g,AccessScope.MAINTENANCE)
         DocumentNamespaceLane.drainAndFence {
             gate(c,g,AccessScope.MAINTENANCE)
-            val snapshot=database.snapshot(c,jobId)
-            continueDelete(c,g,snapshot,AccessScope.MAINTENANCE)
+            recoverInsideLane(c,jobId)
         }
+    }
+    internal fun recoverInsideLane(c:StorageContext,jobId:String) {
+        DocumentNamespaceLane.requireExclusive()
+        val g=c.generation
+        gate(c,g,AccessScope.MAINTENANCE)
+        val snapshot=database.snapshot(c,jobId)
+        continueDelete(c,g,snapshot,AccessScope.MAINTENANCE)
     }
     private fun gate(c:StorageContext,g:Long,scope:AccessScope) {
         documentFileGate(c,g,AccessPoint.OPERATION)
