@@ -168,7 +168,7 @@ class TaskStorageTest {
         }finally{d.endTransaction()}}
         assertTrue(board(i).tasks.isEmpty());assertTrue(board(i).events.isEmpty())
         use(i){d->assertEquals(before,d.operations().states("a"));assertEquals(r,d.operations().role("a",r.id)!!.model());assertEquals("Motte",d.persons().get("a","Motte")!!.pseudonym);assertTrue(leadership.envelope.contentEquals(d.leadership().get("a")!!.envelope));assertTrue(area.payload.contentEquals(d.leadership().area("a","Motte","IDENTITY")!!.payload));assertTrue(area.keyEnvelope.contentEquals(d.leadership().area("a","Motte","IDENTITY")!!.keyEnvelope))}
-        B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(10,it.version)}
+        B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(11,it.version)}
     }
     companion object { private const val schemaFiveHash="7399e9b523fe04f70ede81805a3ceffd" }
 }

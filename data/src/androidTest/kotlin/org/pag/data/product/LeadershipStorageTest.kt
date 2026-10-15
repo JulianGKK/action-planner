@@ -294,7 +294,7 @@ class LeadershipStorageTest {
             assertEquals("synthetic other",db.actions().get(other)!!.title)
             assertNull(db.leadership().get(id));assertTrue(db.leadership().all(id).isEmpty())
         }
-        org.pag.data.prototype.b2.B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(10,it.version)}
+        org.pag.data.prototype.b2.B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(11,it.version)}
     }
     @Test fun explicitSetupAndAllThreeAreasPersistAcrossNewRuntime() {
         val i=inv();val device=Device();var r=repo(i,device)
