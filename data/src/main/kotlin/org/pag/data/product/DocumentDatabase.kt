@@ -119,6 +119,61 @@ internal object DocumentStorageRules {
     @Query("UPDATE document_jobs SET phase=:next,plaintextSize=:size WHERE id=:id AND phase=:old")
     protected abstract suspend fun changeImportPhase(id: String, old: String, next: String, size: Long?): Int
 
+    @Insert protected abstract suspend fun insertPublishedDocument(row: DocumentRow)
+    @Query("DELETE FROM document_jobs WHERE id=:id AND phase='FILE_PUBLISHED'")
+    protected abstract suspend fun deletePublishedJob(id: String): Int
+
+    /** Only internal coordination receives the scoped DEK; never a product projection. */
+    @Transaction open suspend fun publicationSnapshot(id: String, phase: String, expected: DocumentJobRow?, c: StorageContext): DocumentPublicationSnapshot {
+        requireOperations(c,AccessPoint.OPERATION)
+        if (c.scope != AccessScope.READY || !DocumentStorageRules.opaque(id) || phase !in setOf("IMPORT_CLOSED","FILE_PUBLISHED")) throw ProductStorageFailure()
+        val docs = inventoryDocuments()
+        var jobs = emptyList<DocumentJobRow>()
+        try {
+            jobs = inventoryJobs()
+            DocumentStorageRules.validateBindings(docs,jobs)
+            (docs.map { it.actionId } + jobs.map { it.actionId }).toSet().forEach { a ->
+                DocumentStorageRules.capacity(docs.filter { it.actionId == a },jobs.filter { it.actionId == a })
+            }
+            // Other interrupted phases require later reconciliation, never guessing a file layout.
+            if (jobs.any { it.operation != "IMPORT" || it.phase !in setOf("IMPORT_CLOSED","FILE_PUBLISHED") }) throw ProductStorageFailure()
+            val job = jobs.singleOrNull { it.id == id } ?: throw ProductStorageFailure()
+            if (job.phase != phase || docs.any { it.id == job.documentId } ||
+                (expected != null && !sameDocumentImport(job,expected)) ||
+                actionStatus(job.actionId) !in setOf("PREPARATION","ACTIVE","COMPLETED")) throw ProductStorageFailure()
+            val files = docs.map { it.blobName }.toSet() + jobs.filter { it.phase == "FILE_PUBLISHED" }.map { it.blobName }
+            val staging = jobs.filter { it.phase == "IMPORT_CLOSED" }.map { it.stagingName!! }.toSet()
+            requireOperations(c)
+            val copy = DocumentJobRow(job.id,job.actionId,job.documentId,job.operation,job.phase,job.stagingName,job.blobName,
+                job.displayName,job.format,job.plaintextSize,job.fileKey!!.copyOf())
+            return DocumentPublicationSnapshot(copy,DocumentImportInventory(files,staging))
+        } finally { docs.forEach { it.fileKey.fill(0) }; jobs.forEach { it.fileKey?.fill(0) } }
+    }
+
+    @Transaction open suspend fun markFilePublished(expected: DocumentJobRow, c: StorageContext) {
+        publicationSnapshot(expected.id,"IMPORT_CLOSED",expected,c).use { snapshot ->
+            requireOperations(c)
+            if (changeImportPhase(snapshot.job.id,"IMPORT_CLOSED","FILE_PUBLISHED",snapshot.job.plaintextSize) != 1) throw ProductStorageFailure()
+            requireOperations(c,AccessPoint.COMMIT)
+        }
+    }
+
+    /** Parent insert and key transfer/job removal are a single Room write transaction. */
+    @Transaction open suspend fun commitPublishedDocument(expected: DocumentJobRow, importedAt: Long, c: StorageContext) {
+        publicationSnapshot(expected.id,"FILE_PUBLISHED",expected,c).use { snapshot ->
+            val j = snapshot.job
+            if (importedAt < 0) throw ProductStorageFailure()
+            requireOperations(c,AccessPoint.COMMIT)
+            val row = DocumentRow(j.documentId,j.actionId,j.displayName!!,j.format!!,j.plaintextSize!!,importedAt,j.blobName,j.fileKey!!.copyOf())
+            try {
+                insertPublishedDocument(row) // Existing documents_import_parent trigger remains active.
+                requireOperations(c)
+                if (deletePublishedJob(j.id) != 1) throw ProductStorageFailure()
+                requireOperations(c,AccessPoint.COMMIT)
+            } finally { row.fileKey.fill(0) }
+        }
+    }
+
     /** Key-free, fully checked namespace snapshot. No file I/O inside this transaction. */
     @Transaction open suspend fun importInventory(c: StorageContext): DocumentImportInventory {
         requireOperations(c)
