@@ -1,0 +1,195 @@
+package org.pag.data.product
+
+import org.pag.data.prototype.b2.StorageAccessRevoked
+import org.pag.domain.AccessPoint
+import org.pag.domain.StorageContext
+import org.pag.domain.DocumentFormat
+import org.pag.domain.DocumentRules
+import org.pag.security.FileStreamingCipher
+import java.io.InputStream
+import java.io.OutputStream
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
+import java.nio.charset.CodingErrorAction
+import java.security.SecureRandom
+
+/** Technical observation, never a commit/publication permission or persisted proof. */
+internal class DocumentVerification internal constructor(val documentId: String, val format: DocumentFormat,
+    val plaintextSize: Long, private val context: StorageContext, private val generation: Long) {
+    fun requireCurrent(candidate: StorageContext) {
+        if (candidate !== context) throw StorageAccessRevoked()
+        documentFileGate(candidate, generation)
+    }
+}
+
+internal fun documentFileGate(c: StorageContext, generation: Long, point: AccessPoint = AccessPoint.STEP) {
+    if (generation < 0 || c.generation != generation || !c.check(point) || c.generation != generation) throw StorageAccessRevoked()
+}
+
+/** No causes/suppressed provider exceptions, paths or input values escape this boundary. */
+internal inline fun <T> documentFileBoundary(work: () -> T): T = try { work() }
+catch (_: StorageAccessRevoked) { throw StorageAccessRevoked() }
+catch (_: Exception) { throw ProductStorageFailure() }
+
+/** Stream primitives only. Caller owns prior DB/job admission and safe stream acquisition.
+ * No file creation, root setup, phase mutation, persistence or publication here.
+ */
+internal object DocumentFileStreams {
+    const val BUFFER_BYTES = 32 * 1024
+
+    fun <T> withNewKey(c: StorageContext, consume: (ByteArray) -> T): T = documentFileBoundary {
+        val generation = c.generation
+        documentFileGate(c, generation, AccessPoint.OPERATION)
+        val key = ByteArray(32)
+        try {
+            documentFileGate(c, generation)
+            SecureRandom().nextBytes(key)
+            documentFileGate(c, generation)
+            val result = consume(key)
+            documentFileGate(c, generation)
+            result
+        } finally { key.fill(0) }
+    }
+
+    private fun <T> cipher(c: StorageContext, generation: Long, documentId: String, key: ByteArray,
+        consume: (FileStreamingCipher, ByteArray) -> T): T {
+        if (!DocumentStorageRules.opaque(documentId) || key.size != 32) throw ProductStorageFailure()
+        val copy = key.copyOf()
+        try {
+            documentFileGate(c, generation, AccessPoint.OPERATION)
+            FileStreamingCipher.fromUnwrappedKey(copy).use { cipher ->
+                documentFileGate(c, generation)
+                return consume(cipher, documentId.toByteArray(Charsets.UTF_8))
+            }
+        } finally { copy.fill(0) }
+    }
+
+    /** Owns and closes both supplied streams even on early denial; result is only actual byte count. */
+    fun encrypt(c: StorageContext, documentId: String, key: ByteArray, source: InputStream,
+        destination: OutputStream): Long = documentFileBoundary {
+        val generation = c.generation
+        source.use { input -> destination.use { output ->
+            cipher(c, generation, documentId, key) { cipher, aad ->
+                val buffer = ByteArray(BUFFER_BYTES)
+                try {
+                    var length = 0L
+                    cipher.encrypt(output, aad).use { encrypted ->
+                        while (true) {
+                            documentFileGate(c, generation)
+                            // Read at most one byte past the hard limit, including at exact maximum.
+                            val maximumRead = minOf(buffer.size.toLong(), DocumentRules.MAX_DOCUMENT_BYTES - length + 1).toInt()
+                            val count = input.read(buffer, 0, maximumRead)
+                            documentFileGate(c, generation)
+                            if (count == -1) break
+                            if (count <= 0 || count > maximumRead || count > DocumentRules.MAX_DOCUMENT_BYTES - length) throw ProductStorageFailure()
+                            length += count
+                            documentFileGate(c, generation)
+                            encrypted.write(buffer, 0, count)
+                            buffer.fill(0)
+                            documentFileGate(c, generation)
+                        }
+                        documentFileGate(c, generation)
+                    } // close may physically finish a last segment after revoke; it grants nothing.
+                    documentFileGate(c, generation)
+                    length
+                } finally { buffer.fill(0) }
+            }
+        } }.also { documentFileGate(c, generation) }
+    }
+
+    /** No plaintext consumer. Only full authenticated EOF + exact length + format may return. */
+    fun verify(c: StorageContext, documentId: String, key: ByteArray, source: InputStream,
+        expectedSize: Long, format: DocumentFormat): DocumentVerification = documentFileBoundary {
+        val generation = c.generation
+        source.use { raw ->
+            if (!DocumentRules.validSize(expectedSize)) throw ProductStorageFailure()
+            cipher(c, generation, documentId, key) { cipher, aad ->
+                val buffer = ByteArray(BUFFER_BYTES)
+                DocumentFormatCheck(format).use { formatCheck ->
+                    try {
+                        var length = 0L
+                        cipher.decrypt(raw, aad).use { plaintext ->
+                            while (true) {
+                                documentFileGate(c, generation)
+                                val maximumRead = minOf(buffer.size.toLong(), DocumentRules.MAX_DOCUMENT_BYTES - length + 1).toInt()
+                                val count = plaintext.read(buffer, 0, maximumRead)
+                                documentFileGate(c, generation)
+                                if (count == -1) break // Exceptions/zero reads are never EOF.
+                                if (count <= 0 || count > maximumRead || count > expectedSize - length) throw ProductStorageFailure()
+                                length += count
+                                formatCheck.accept(buffer, count)
+                                buffer.fill(0)
+                                documentFileGate(c, generation)
+                            }
+                            if (length != expectedSize) throw ProductStorageFailure()
+                            documentFileGate(c, generation)
+                            formatCheck.finish()
+                            documentFileGate(c, generation)
+                        }
+                    } finally { buffer.fill(0) }
+                }
+            }
+        }
+        documentFileGate(c, generation)
+        DocumentVerification(documentId,format,expectedSize,c,generation)
+    }
+}
+
+/** Small binary prefix check, or full incremental strict UTF-8. No renderer or sanitizer. */
+private class DocumentFormatCheck(private val format: DocumentFormat) : AutoCloseable {
+    private val prefix = when (format) {
+        DocumentFormat.PDF -> "%PDF-".toByteArray(Charsets.US_ASCII)
+        DocumentFormat.PNG -> byteArrayOf(0x89.toByte(),0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a)
+        DocumentFormat.JPEG -> byteArrayOf(0xff.toByte(),0xd8.toByte(),0xff.toByte())
+        DocumentFormat.TEXT -> byteArrayOf()
+    }
+    private var prefixRead = 0
+    private val decoder = if (format == DocumentFormat.TEXT) Charsets.UTF_8.newDecoder()
+        .onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT) else null
+    private val pending = if (decoder != null) ByteBuffer.allocate(DocumentFileStreams.BUFFER_BYTES + 4) else null
+    private val chars = if (decoder != null) CharBuffer.allocate(DocumentFileStreams.BUFFER_BYTES) else null
+
+    fun accept(bytes: ByteArray, count: Int) {
+        if (decoder == null) {
+            for (i in 0 until minOf(count,prefix.size - prefixRead)) {
+                if (bytes[i] != prefix[prefixRead++]) throw ProductStorageFailure()
+            }
+        } else {
+            pending!!.put(bytes,0,count); pending.flip()
+            decode(false)
+            pending.compact()
+        }
+    }
+    private fun checkChars() {
+        val output = chars!!
+        output.flip()
+        while (output.hasRemaining()) {
+            val n = output.get().code
+            if ((n in 0..31 && n != 9 && n != 10 && n != 13) || n == 127) throw ProductStorageFailure()
+        }
+        output.array().fill('\u0000'); output.clear()
+    }
+    private fun decode(end: Boolean) {
+        while (true) {
+            val result = decoder!!.decode(pending!!,chars!!,end)
+            checkChars()
+            if (result.isError) throw ProductStorageFailure()
+            if (result.isUnderflow) break
+        }
+    }
+    fun finish() {
+        if (decoder == null) {
+            if (prefixRead != prefix.size) throw ProductStorageFailure()
+        } else {
+            pending!!.flip(); decode(true)
+            if (pending.hasRemaining()) throw ProductStorageFailure()
+            while (true) {
+                val result = decoder.flush(chars!!)
+                checkChars()
+                if (result.isError) throw ProductStorageFailure()
+                if (result.isUnderflow) break
+            }
+        }
+    }
+    override fun close() { pending?.array()?.fill(0); chars?.array()?.fill('\u0000'); prefix.fill(0) }
+}
