@@ -29,6 +29,8 @@ internal fun documentFileGate(c: StorageContext, generation: Long, point: Access
 /** No causes/suppressed provider exceptions, paths or input values escape this boundary. */
 internal inline fun <T> documentFileBoundary(work: () -> T): T = try { work() }
 catch (_: StorageAccessRevoked) { throw StorageAccessRevoked() }
+catch (_: DocumentTextUnavailable) { throw DocumentTextUnavailable() }
+catch (_: DocumentTextFormatFailure) { throw DocumentTextFormatFailure() }
 catch (failure: DocumentInputFailure) {
     // Multiple neutral provider failures may coincide (read + close). An additional
     // ciphertext/sync/unknown failure must still dominate the expected input error.
@@ -134,14 +136,38 @@ internal object DocumentFileStreams {
         } catch (failure:Throwable) { bytes?.fill(0);throw failure }
     }
 
+    /** Extract only one page while the existing strict UTF-8 validator authenticates all bytes. */
+    fun readText(c:StorageContext,documentId:String,key:ByteArray,source:InputStream,expectedSize:Long,page:Int,
+        request:org.pag.domain.DocumentTextRequest?=null):org.pag.domain.DocumentTextPage {
+        var result:org.pag.domain.DocumentTextPage?=null
+        try {
+            source.use {
+                DocumentTextPagination(page) {documentFileGate(c,c.generation)}.use { pages ->
+                    var utf8Nanos=0L;var pageNanos=0L
+                    verifyInto(c,documentId,key,it,expectedSize,DocumentFormat.TEXT,null,{chars,count ->
+                        val start=System.nanoTime()
+                        try {pages.accept(chars,count)}finally {pageNanos+=System.nanoTime()-start}
+                    },{utf8Nanos+=it}).requireCurrent(c)
+                    request?.duration(org.pag.domain.DocumentTextPhase.UTF8_DECODE,maxOf(0,utf8Nanos-pageNanos))
+                    val preparing=System.nanoTime()
+                    result=pages.finish()
+                    request?.duration(org.pag.domain.DocumentTextPhase.PAGE_PREPARE,pageNanos+System.nanoTime()-preparing)
+                }
+            }
+            return result!!
+        } catch(failure:Throwable) {result?.close();throw failure}
+    }
+
     private fun verifyInto(c: StorageContext, documentId: String, key: ByteArray, source: InputStream,
-        expectedSize: Long, format: DocumentFormat, destination:ByteArray?): DocumentVerification = documentFileBoundary {
+        expectedSize: Long, format: DocumentFormat, destination:ByteArray?,text:((CharArray,Int)->Unit)?=null,
+        utf8:((Long)->Unit)?=null): DocumentVerification = documentFileBoundary {
         val generation = c.generation
+        var invalidText=false
         source.use { raw ->
             if (!DocumentRules.validSize(expectedSize)) throw ProductStorageFailure()
             cipher(c, generation, documentId, key) { cipher, aad ->
                 val buffer = ByteArray(BUFFER_BYTES)
-                DocumentFormatCheck(format).use { formatCheck ->
+                DocumentFormatCheck(format,text=text,utf8=utf8,textReader=text!=null).use { formatCheck ->
                     try {
                         var length = 0L
                         cipher.decrypt(raw, aad).use { plaintext ->
@@ -154,13 +180,13 @@ internal object DocumentFileStreams {
                                 if (count <= 0 || count > maximumRead || count > expectedSize - length) throw ProductStorageFailure()
                                 destination?.let { buffer.copyInto(it,length.toInt(),0,count) }
                                 length += count
-                                formatCheck.accept(buffer, count)
+                                if(!invalidText)try {formatCheck.accept(buffer,count)}catch(_:DocumentTextFormatFailure){invalidText=true}
                                 buffer.fill(0)
                                 documentFileGate(c, generation)
                             }
                             if (length != expectedSize) throw ProductStorageFailure()
                             documentFileGate(c, generation)
-                            formatCheck.finish()
+                            if(!invalidText)try {formatCheck.finish()}catch(_:DocumentTextFormatFailure){invalidText=true}
                             documentFileGate(c, generation)
                         }
                     } finally { buffer.fill(0) }
@@ -168,13 +194,20 @@ internal object DocumentFileStreams {
             }
         }
         documentFileGate(c, generation)
+        if(invalidText)throw DocumentTextFormatFailure()
         DocumentVerification(documentId,format,expectedSize,c,generation)
     }
 }
 
 /** Small binary prefix check, or full incremental strict UTF-8. No renderer or sanitizer. */
-private class DocumentFormatCheck(private val format: DocumentFormat, private val sourceValidation: Boolean = false) : AutoCloseable {
-    private fun invalid(): Nothing { if (sourceValidation) throw DocumentInputFailure(org.pag.domain.DocumentFailure.FORMAT); throw ProductStorageFailure() }
+private class DocumentFormatCheck(private val format: DocumentFormat, private val sourceValidation: Boolean = false,
+    private val text:((CharArray,Int)->Unit)?=null,private val utf8:((Long)->Unit)?=null,
+    private val textReader:Boolean=false) : AutoCloseable {
+    private fun invalid(): Nothing {
+        if(sourceValidation)throw DocumentInputFailure(org.pag.domain.DocumentFailure.FORMAT)
+        if(textReader)throw DocumentTextFormatFailure()
+        throw ProductStorageFailure()
+    }
     private val prefix = when (format) {
         DocumentFormat.PDF -> "%PDF-".toByteArray(Charsets.US_ASCII)
         DocumentFormat.PNG -> byteArrayOf(0x89.toByte(),0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a)
@@ -205,15 +238,19 @@ private class DocumentFormatCheck(private val format: DocumentFormat, private va
             val n = output.get().code
             if ((n in 0..31 && n != 9 && n != 10 && n != 13) || n == 127) invalid()
         }
+        text?.invoke(output.array(),output.limit())
         output.array().fill('\u0000'); output.clear()
     }
     private fun decode(end: Boolean) {
+        val started=if(utf8!=null)System.nanoTime() else 0L
+        try {
         while (true) {
             val result = decoder!!.decode(pending!!,chars!!,end)
             checkChars()
             if (result.isError) invalid()
             if (result.isUnderflow) break
         }
+        }finally {if(utf8!=null)utf8.invoke(System.nanoTime()-started)}
     }
     fun finish() {
         if (decoder == null) {

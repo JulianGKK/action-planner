@@ -28,7 +28,7 @@ class DocumentImageReadTest {
         val base=temporary.newFolder().canonicalFile
         File(base,"pag-documents-v1/staging").mkdirs();File(base,"pag-documents-v1/files").mkdir()
         val file=File(base,"pag-documents-v1/files/$blob");val ciphertext=encrypted();file.writeBytes(ciphertext)
-        val s=DocumentImageSnapshot(DocumentAsset(id,"a","synthetic",DocumentFormat.JPEG,bytes.size.toLong(),1),blob,key.copyOf(),setOf(blob),emptySet(),emptySet())
+        val s=DocumentReadSnapshot(DocumentAsset(id,"a","synthetic",DocumentFormat.JPEG,bytes.size.toLong(),1),blob,key.copyOf(),setOf(blob),emptySet(),emptySet())
         lateinit var borrowed:ByteArray
         val result=DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()) {
             DocumentImageRead(base).decode(c,s,DocumentImageDecoder { data,_,check ->
@@ -70,7 +70,7 @@ class DocumentImageReadTest {
         val base=temporary.newFolder().canonicalFile
         File(base,"pag-documents-v1/staging").mkdirs();val dir=File(base,"pag-documents-v1/files");dir.mkdir()
         val file=File(dir,blob);file.writeBytes(encrypted());val extra=File(dir,UUID.randomUUID().toString());extra.writeBytes(byteArrayOf(1))
-        val s=DocumentImageSnapshot(DocumentAsset(id,"a","synthetic",DocumentFormat.JPEG,bytes.size.toLong(),1),blob,key.copyOf(),setOf(blob),emptySet(),emptySet())
+        val s=DocumentReadSnapshot(DocumentAsset(id,"a","synthetic",DocumentFormat.JPEG,bytes.size.toLong(),1),blob,key.copyOf(),setOf(blob),emptySet(),emptySet())
         fun denied()=DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()) {
             assertThrows(ProductStorageFailure::class.java){DocumentImageRead(base).decode(c,s,DocumentImageDecoder{_,_,_->error("No decoder")})}
         }

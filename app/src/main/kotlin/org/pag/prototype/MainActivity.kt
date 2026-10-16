@@ -159,7 +159,7 @@ class MainActivity : ComponentActivity() {
         handler.removeCallbacks(expiry); handler.post(expiry)
     }
     override fun onPause() {
-        if (::model.isInitialized) { model.documents.clearImage();model.documents.camera.clear() }
+        if (::model.isInitialized) { model.documents.clearViewers();model.documents.camera.clear() }
         discardOnExternalLeave()
         resumed = false
         if (::runtime.isInitialized) {
@@ -183,7 +183,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         documentSession?.cancel(); documentSession=null
         pendingDocument.clear()
-        if (::model.isInitialized) { model.documents.clearImage();model.documents.camera.clear() }
+        if (::model.isInitialized) { model.documents.clearViewers();model.documents.camera.clear() }
         demo?.end(); demo = null
         if (::runtime.isInitialized) {
             handler.removeCallbacks(expiry)

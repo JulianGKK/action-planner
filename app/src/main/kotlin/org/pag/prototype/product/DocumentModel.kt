@@ -11,6 +11,58 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit,
     private val cameraAuthority: () -> Boolean = { true }) {
     private var cameraImportTime: Long? = null
+    internal var textViewed by mutableStateOf<DocumentAsset?>(null); private set
+    internal var text by mutableStateOf<String?>(null); private set
+    internal var textLoading by mutableStateOf(false); private set
+    internal var textPageIndex by mutableStateOf(0); private set
+    internal var textPageCount by mutableStateOf(0); private set
+    private var textRequest:DocumentTextRequest?=null
+    private var textStarted=0L
+    private var textFrameReported=false
+    internal fun clearText() {
+        val started=System.nanoTime();val request=textRequest
+        request?.cancel();textRequest=null;text=null;textViewed=null;textLoading=false;textPageIndex=0;textPageCount=0
+        request?.measured(DocumentTextPhase.CLEANUP,started)
+    }
+    internal fun clearViewers() {clearImage();clearText()}
+    internal fun closeText()=act {clearText();error=null}
+    internal fun viewText(item:DocumentAsset)=act {
+        if(!cameraAuthority() || item !in items.orEmpty() || item.format!=DocumentFormat.TEXT)return@act
+        clearViewers();camera.clear();error=null;textViewed=item;readTextPage(0)
+    }
+    internal fun nextTextPage()=act {if(!textLoading && textPageIndex+1<textPageCount)readTextPage(textPageIndex+1)}
+    internal fun previousTextPage()=act {if(!textLoading && textPageIndex>0)readTextPage(textPageIndex-1)}
+    internal fun textFrame() {
+        if(!textFrameReported && available && cameraAuthority() && text!=null) {
+            textFrameReported=true;textRequest?.measured(DocumentTextPhase.VISIBLE,textStarted)
+        }
+    }
+    private fun readTextPage(page:Int) {
+        if(!available || !cameraAuthority())return
+        val item=textViewed ?: return
+        textRequest?.cancel();text=null;textLoading=true;textPageIndex=page;error=null
+        textStarted=System.nanoTime();textFrameReported=false
+        val started=textStarted
+        val attempt=DocumentTextRequest(generation) {phase,ms ->
+            if(org.pag.prototype.BuildConfig.DEBUG && android.util.Log.isLoggable("PaGTextTiming",android.util.Log.DEBUG))android.util.Log.i("PaGTextTiming","${phase.name} ms=$ms")
+        };textRequest=attempt
+        val e=epoch;val g=generation
+        repository()!!.readText(boundId!!,item,page,attempt) {result ->
+            if(!attempt.active || textRequest!==attempt || !available || !cameraAuthority() || e!=epoch || g!=generation || textViewed!=item) {
+                (result as? DocumentResult.Value)?.value?.close();return@readText
+            }
+            textLoading=false
+            when(result) {
+                is DocumentResult.Value -> result.value.use {value ->
+                    if(value.index!=page || value.pageCount !in 1..DocumentTextLimits.MAX_PAGES) {error=DocumentFailure.TEXT_UNSUPPORTED;return@use}
+                    text=value.text();textPageCount=value.pageCount
+                }
+                is DocumentResult.Rejected -> error=result.reason
+            }
+            attempt.measured(DocumentTextPhase.PUBLICATION,started)
+            if(page>0)attempt.measured(DocumentTextPhase.PAGE_CHANGE,started)
+        }
+    }
     internal var viewed by mutableStateOf<DocumentAsset?>(null); private set
     internal var image by mutableStateOf<DocumentImage?>(null); private set
     internal var imageLoading by mutableStateOf(false); private set
@@ -25,7 +77,7 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
     internal fun closeImage() = act {clearImage();error=null}
     internal fun viewImage(item:DocumentAsset) = act {
         if(!cameraAuthority() || item !in items.orEmpty() || item.format !in setOf(DocumentFormat.JPEG,DocumentFormat.PNG))return@act
-        clearImage();camera.clear();error=null
+        clearViewers();camera.clear();error=null
         viewed=item;imageLoading=true
         val started=System.nanoTime()
         val attempt=DocumentImageRequest(generation=generation) {phase,ms ->
@@ -87,7 +139,7 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
     val selectionUnavailable get() = available && picker()?.unavailable(boundId!!)==true
     val canSave get() = importing && DocumentRules.validName(name) && format!=null && !busy
     fun clear() {
-        clearImage()
+        clearViewers()
         camera.clear(); cameraImportTime=null
         epoch++; request++; opened=false; boundId=null; boundStatus=null; generation=-1
         items=null; loading=false; busy=false; error=null; importing=false; name=""; format=null; confirmingDelete=null

@@ -119,6 +119,23 @@ internal class DocumentFileInventory(noBackupFilesDir: File) {
         } catch (failure:Throwable) { bytes?.fill(0);throw failure }
     }
 
+    fun readText(c:StorageContext,name:String,knownStaging:Set<String>,knownFiles:Set<String>,
+        documentId:String,key:ByteArray,expectedSize:Long,page:Int,request:org.pag.domain.DocumentTextRequest?=null):org.pag.domain.DocumentTextPage {
+        var result:org.pag.domain.DocumentTextPage?=null
+        var deferred:org.pag.domain.DocumentFailure?=null
+        try {
+            val value=readExisting(c,DocumentFileArea.FILES,name,knownStaging,knownFiles) {
+                try {DocumentFileStreams.readText(c,documentId,key,it,expectedSize,page,request).also {result=it}}
+                catch(_:DocumentTextFormatFailure){deferred=org.pag.domain.DocumentFailure.TEXT_FORMAT;null}
+                catch(_:DocumentTextUnavailable){deferred=org.pag.domain.DocumentFailure.TEXT_UNSUPPORTED;null}
+            }
+            // A normal viewer error must not bypass the final identity/inventory checks.
+            if(deferred==org.pag.domain.DocumentFailure.TEXT_FORMAT)throw DocumentTextFormatFailure()
+            if(deferred!=null)throw DocumentTextUnavailable()
+            return value ?: throw ProductStorageFailure()
+        }catch(failure:Throwable){result?.close();throw failure}
+    }
+
     private fun <T> readExisting(c: StorageContext, area: DocumentFileArea, name: String,
         knownStaging:Set<String>, knownFiles:Set<String>, read:(java.io.InputStream)->T):T = documentFileBoundary {
         val generation = c.generation

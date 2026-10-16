@@ -65,7 +65,7 @@ Speicherberechtigung oder ein eigener Scanpfad der App erforderlich.
 ## Kann ich gespeicherte Dokumente schon anzeigen?
 
 Ab P10c1 lassen sich JPEG und PNG über „Bild ansehen“ innerhalb von PaG öffnen.
-PDF- und Textviewer sind weiterhin nicht implementiert. Import, Liste und
+Ab P10c2 ergänzt „Text ansehen“ die UTF-8-Textanzeige; PDF bleibt ohne Vorschau. Import, Liste und
 bestätigtes Löschen der verschlüsselten PaG-Kopie bleiben verfügbar.
 Die Originaldatei außerhalb von PaG bleibt beim Import und beim Löschen der
 PaG-Kopie unverändert bestehen.
@@ -108,7 +108,7 @@ Details und tatsächliche Testgrenzen: [P10d](product-p10d-camera-import.md).
 JPEG und PNG können über „Bild ansehen“ bewusst innerhalb von PaG geöffnet
 werden, unabhängig vom ursprünglichen SAF-/Kameraimport. Es wird ausschließlich
 die verschlüsselte PaG-Kopie gelesen. Keine externe App und kein Klartextcache.
-PDF und UTF-8-Text haben weiterhin keine Vorschau.
+PDF hat weiterhin keine Vorschau; UTF-8-Text wird ab P10c2 getrennt über „Text ansehen“ geöffnet.
 
 Große Bilder werden für die Anzeige verkleinert; das gespeicherte Original
 bleibt unverändert. „Dieses Bild ist für die sichere Anzeige zu groß oder wird
@@ -119,3 +119,32 @@ Beim Sperren, Appwechsel oder Verlassen der Aktion schließt die Bildansicht.
 Nach regulärem Entsperren bewusst neu öffnen. Keine zusätzliche Permission,
 kein USB-Debugging und keine Entwickleroption für die Anzeige nötig.
 Details und tatsächliche Testgrenzen: [P10c1](product-p10c1-secure-image-viewer.md).
+
+
+## UTF-8-Text ansehen (P10c2)
+
+„Text ansehen“ öffnet ausschließlich die verschlüsselte PaG-Kopie als Plaintext.
+Keine Links/HTML/Markdown-Ausführung, Zwischenablage oder externe App. Die Ansicht
+zeigt jeweils eine begrenzte Seite; „Seite weiter“/„Seite zurück“ laden bewusst
+neu. Leere Texte erhalten einen Leerzustand. Bei großen Dateien dauert jeder
+Seitenwechsel länger, weil die gesamte Datei erneut authentifiziert wird.
+
+Nach Sperren oder Verlassen der Aktion wird kein Text automatisch wieder
+angezeigt. Regulär entsperren und bewusst neu öffnen; Beginn bei Seite 1.
+Keine Entwickleroption, neue Permission oder USB-Debugging für die Anzeige nötig.
+Ungültiger UTF-8-Text wird nicht durch Ersatzzeichen repariert. Integritätsfehler
+bleiben sicher abgewiesen; keine Datei löschen/ersetzen, um einen Fehler zu verdecken.
+
+Die bekannte langsame Bildanzeige ist mit P10c2 nicht optimiert. Messung und
+Performanceumbau bleiben separat. Details, Ressourcenlimits und tatsächliche
+Testabnahme: [P10c2](product-p10c2-secure-text-viewer.md).
+
+### Vorbereitung synthetischer Gerätetests
+
+ADB-Übertragung allein belegt nicht die Sichtbarkeit in Androids Dateiauswahl.
+Bei P10c2 waren die vorhandenen Textdateien zunächst nicht sichtbar; nach
+gezielter Neuerfassung waren alle drei als `text/plain` im Dateiindex bestätigt.
+Künftig die Dateien vor Testbeginn in **Eigene Dateien und im SAF-Picker**
+auf Sichtbarkeit und tatsächliche Auswählbarkeit prüfen. Das ist ein offener
+Punkt der Testvorbereitung, keine Voraussetzung für normale Nutzerdateien
+und kein Anlass für zusätzliche PaG-Berechtigungen.
