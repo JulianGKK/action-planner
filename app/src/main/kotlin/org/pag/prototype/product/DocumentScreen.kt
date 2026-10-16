@@ -18,6 +18,7 @@ import org.pag.domain.*
     d.error?.let { Text(documentFailure(it)) }
     val expected=d.confirmingDelete
     when {
+        d.camera.mode != CameraMode.CLOSED -> CameraCapturePane(d)
         expected!=null -> {
             Text(expected.displayName)
             Text("Die geschützte PaG-Kopie dieses Dokuments wird entfernt.\n\nDie ursprüngliche Datei außerhalb von PaG bleibt davon unberührt.")
@@ -46,6 +47,8 @@ import org.pag.domain.*
                 FormOutlinedButton(d::cancelImport,enabled=!d.busy) { Text("Dateiauswahl verwerfen") }
             }
             if(d.selectionUnavailable) Text("Die Dateiauswahl ist nicht mehr verfügbar. Bitte die Datei erneut auswählen.")
+            d.camera.error?.let { Text(cameraFailure(it)) }
+            if(d.cameraSupported) FormButton(d::takePhoto,enabled=!d.busy) { Text("Foto aufnehmen") }
             FormButton(d::chooseFile,enabled=!d.busy) { Text("Dokument importieren") }
             Text("PaG erstellt eine verschlüsselte Kopie. Die Originaldatei außerhalb von PaG bleibt bestehen.")
             if(d.loading) Text("Dokumente werden geladen …")

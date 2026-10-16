@@ -72,8 +72,16 @@ val verifyPrototypeManifest = tasks.register("verifyPrototypeManifest") {
         val actual = (0 until permissions.length).map {
             (permissions.item(it) as org.w3c.dom.Element).getAttributeNS(namespace, "name")
         }.toSet()
-        check(actual == setOf("android.permission.USE_BIOMETRIC",
+        check(actual == setOf("android.permission.USE_BIOMETRIC", "android.permission.CAMERA",
             "org.pag.prototype.a.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION")) { "Unexpected permissions: $actual" }
+        val cameraFeatures = document.getElementsByTagName("uses-feature")
+        val optionalFeatures = (0 until cameraFeatures.length).associate {
+            val feature = cameraFeatures.item(it) as org.w3c.dom.Element
+            feature.getAttributeNS(namespace,"name") to feature.getAttributeNS(namespace,"required")
+        }
+        listOf("android.hardware.camera", "android.hardware.camera.any", "android.hardware.camera.autofocus").forEach {
+            check(optionalFeatures[it] == "false") { "Camera hardware must remain optional" }
+        }
         val activities = document.getElementsByTagName("activity")
         check(activities.length == 1)
         val launcher = activities.item(0) as org.w3c.dom.Element
@@ -94,6 +102,10 @@ dependencies {
     implementation(project(":data"))
     implementation(project(":security"))
     implementation("androidx.activity:activity-compose:1.13.0")
+    implementation("androidx.camera:camera-core:1.6.2")
+    implementation("androidx.camera:camera-camera2:1.6.2")
+    implementation("androidx.camera:camera-lifecycle:1.6.2")
+    implementation("androidx.camera:camera-view:1.6.2")
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")

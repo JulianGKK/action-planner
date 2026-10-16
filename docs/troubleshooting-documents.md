@@ -68,3 +68,36 @@ Noch nicht. P10b2e unterstützt Import, Liste und bestätigtes Löschen der
 verschlüsselten PaG-Kopie. PDF-, Bild- und Textviewer sind nicht implementiert.
 Die Originaldatei außerhalb von PaG bleibt beim Import und beim Löschen der
 PaG-Kopie unverändert bestehen.
+
+## Direkte Kameraaufnahme (P10d)
+
+„Foto aufnehmen“ öffnet die interne Kamera; „Dokument importieren“ behält den
+bisherigen Systempicker-Ablauf. Kamera ist in PREPARATION, ACTIVE und nach
+bewusstem Einstieg COMPLETED verfügbar. Keine Dokumenten-/Fotoanzeige in P10d.
+
+Beim ersten Kamerastart fordert Android ausschließlich CAMERA an. Falls dabei
+PaG gesperrt wird: regulär neu authentifizieren, dieselbe Aktion/Dokumente öffnen
+und „Foto aufnehmen“ bewusst erneut wählen. Eine Berechtigungsantwort startet
+niemals automatisch die Kamera. Bei dauerhafter Ablehnung unter Android-
+App-Einstellungen → PaG → Berechtigungen die Kamera erlauben; keine Galerie-,
+Speicher-, Mikrofon-, Standort- oder Netzwerkberechtigung hinzufügen.
+
+- Keine Kamera / Kamera belegt / Startfehler: Fehlermeldung beachten, den
+  Kameraeinstieg abbrechen und später bewusst neu öffnen; SAF bleibt verfügbar.
+- Foto aufgenommen: „Aufnahme übernehmen“, Namen vergeben und ausdrücklich
+  „Verschlüsselt speichern“. Auslösen allein speichert noch nichts.
+- „Erneut aufnehmen“ und „Abbrechen“ verwerfen die alte Aufnahme und den Namen.
+- Lock, Sessionablauf, App-Verlassen, Aktions-/Bereichswechsel oder Neustart:
+  Kamera wird geschlossen, noch nicht gespeichertes Foto wird verworfen.
+  Kein automatisches Wiederöffnen nach Entsperrung. Keine Sessionverlängerung.
+- Über 25 MiB, unzulässiger JPEG-/Pixelheader oder nicht zuverlässig übernehmbare
+  Orientierung: Aufnahme wird verworfen; keine Teilübernahme oder automatische
+  Bildneukodierung. Kamerabilder sind zusätzlich auf 16 Mio. Pixel begrenzt.
+- Unterbrochener verschlüsselter Import: regulär sperren und neu entsperren,
+  damit bestehende Maintenance abgleichen kann; nicht blind erneut speichern.
+
+Die interne Kamera erfordert keine aktivierten Entwickleroptionen oder
+USB-Debugging. Der obige Hinweis „Aktivitäten nicht speichern“ bleibt für
+RAM-Lebensdauer und insbesondere den externen SAF-Picker wichtig. Das Deaktivieren
+dieser Android-Entwickleroption hebt PaGs eigene App-Sperre nicht auf.
+Details und tatsächliche Testgrenzen: [P10d](product-p10d-camera-import.md).

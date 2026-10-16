@@ -113,4 +113,40 @@ class DocumentModelTest {
         } finally { observer.stop() }
     }
 
+    private fun cameraPhoto():CameraPhoto = CameraPhoto.capture(object:CameraFrame {
+        override val jpeg=true;override val rotation=0
+        override val buffer=java.nio.ByteBuffer.wrap(byteArrayOf(0xff.toByte(),0xd8.toByte(),0xff.toByte(),0xff.toByte(),0xd9.toByte()))
+        override fun close(){}
+    },CameraCaptureTicket()){0}!!
+    @Test fun cameraRequiresCaptureReviewNameAndExplicitSaveThroughExistingRepository() {
+        model.bindCameraPermission(object:CameraPermission {override fun granted()=true;override fun request(){error("Already granted")}})
+        model.enter();model.takePhoto();val c=model.camera;val e=c.currentEpoch();c.previewReady(e)
+        val ticket=c.beginCapture()!!;c.captured(e,ticket,cameraPhoto());assertEquals(0,writes)
+        c.accept();model.saveCamera();assertEquals(0,writes)
+        model.changeName(" new ");model.saveCamera();assertEquals(1,writes);assertEquals(0,feedback)
+        deferred!!(DocumentResult.Value(Unit));assertEquals(1,feedback);assertEquals(CameraMode.CLOSED,c.mode)
+    }
+    @Test fun cameraPermissionResponseDoesNotAutomaticallyOpenCameraAfterLock() {
+        var granted=false;var requests=0
+        model.bindCameraPermission(object:CameraPermission {override fun granted()=granted;override fun request(){requests++}})
+        model.enter();model.takePhoto();assertEquals(1,requests);assertEquals(CameraMode.CLOSED,model.camera.mode)
+        state=SessionSnapshot(SessionState.LOCKED,2);model.clear();granted=true
+        state=SessionSnapshot(SessionState.READY,3);model.enter();assertEquals(CameraMode.CLOSED,model.camera.mode)
+        model.takePhoto();assertEquals(CameraMode.PREVIEW,model.camera.mode);assertEquals(0,writes)
+    }
+    @Test fun actionChangeAndLateCameraImportCallbackDoNotPublish() {
+        model.bindCameraPermission(object:CameraPermission {override fun granted()=true;override fun request(){}})
+        model.enter();model.takePhoto();val c=model.camera;val e=c.currentEpoch();c.previewReady(e)
+        c.captured(e,c.beginCapture()!!,cameraPhoto());c.accept();model.changeName("new");model.saveCamera()
+        action=action.copy(id="other");model.clear();deferred!!(DocumentResult.Value(Unit))
+        assertEquals(0,feedback);assertEquals(CameraMode.CLOSED,c.mode);assertNull(model.items)
+    }
+
+    @Test fun cancellingCameraAlsoClearsDocumentNameAndNeverWrites() {
+        model.bindCameraPermission(object:CameraPermission {override fun granted()=true;override fun request(){}})
+        model.enter();model.takePhoto();val c=model.camera;val e=c.currentEpoch();c.previewReady(e)
+        val photo=cameraPhoto();c.captured(e,c.beginCapture()!!,photo);c.accept();model.changeName("synthetic name")
+        model.cancelCamera();assertEquals("",model.name);assertEquals(0,photo.size);assertEquals(0,writes)
+    }
+
 }

@@ -22,7 +22,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         documentRepository=repository; documentPicker=picker
     }
     val documents = DocumentModel({ documentRepository }, { documentPicker }, { snapshot }, { selected },
-        ::interaction, ::loadWorkspace, ::showFeedback)
+        ::interaction, ::loadWorkspace, ::showFeedback, cameraAuthority = {
+            val current=session.snapshot()
+            current.state == SessionState.READY && current.generation == snapshot.generation
+        })
     fun openDocuments() {
         val a=selected ?: return; val before=snapshot
         if (!documentsAvailable || before.state!=SessionState.READY || !DocumentRules.mayRead(a.status) ||

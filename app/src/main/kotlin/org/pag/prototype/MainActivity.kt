@@ -126,6 +126,13 @@ class MainActivity : ComponentActivity() {
             override fun actionSelected(actionId: String) { pendingDocument.actionSelected(actionId) }
             override fun cancel() { pickerRequest=null; pendingDocument.clear() }
         })
+        model.documents.bindCameraPermission(object : org.pag.prototype.product.CameraPermission {
+            override fun granted() = checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            override fun request() {
+                @Suppress("DEPRECATION")
+                requestPermissions(arrayOf(android.Manifest.permission.CAMERA),31_001)
+            }
+        })
         documentSession=runtime.session.observe { state ->
             when(state.state) {
                 SessionState.READY -> pendingDocument.ready(state.generation)
@@ -152,6 +159,7 @@ class MainActivity : ComponentActivity() {
         handler.removeCallbacks(expiry); handler.post(expiry)
     }
     override fun onPause() {
+        if (::model.isInitialized) model.documents.camera.clear()
         discardOnExternalLeave()
         resumed = false
         if (::runtime.isInitialized) {
@@ -175,6 +183,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         documentSession?.cancel(); documentSession=null
         pendingDocument.clear()
+        if (::model.isInitialized) model.documents.camera.clear()
         demo?.end(); demo = null
         if (::runtime.isInitialized) {
             handler.removeCallbacks(expiry)

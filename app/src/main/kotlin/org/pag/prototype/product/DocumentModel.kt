@@ -8,7 +8,29 @@ import org.pag.domain.*
 /** RAM-only metadata/forms. The exceptional picker source lives only in Activity RAM. */
 class DocumentModel(private val repository: () -> DocumentRepository?, private val picker: () -> DocumentPicker?,
     private val session: () -> SessionSnapshot, private val action: () -> Action?, private val interaction: () -> Unit,
-    private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit) {
+    private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit,
+    private val cameraAuthority: () -> Boolean = { true }) {
+    private var cameraImportTime: Long? = null
+    val cameraSupported get() = cameraPermission != null
+    private var cameraPermission: CameraPermission? = null
+    internal val camera = DocumentCameraModel({ available && cameraAuthority() }, interaction)
+    fun bindCameraPermission(value: CameraPermission) { cameraPermission = value }
+    fun takePhoto() = act {
+        if (importing || confirmingDelete != null) return@act
+        val permission = cameraPermission ?: return@act
+        if (!permission.granted()) { camera.permissionMissing(); permission.request(); return@act }
+        picker()?.cancel(); error=null; name=""; format=null; camera.start()
+    }
+    internal fun cancelCamera() = act { camera.clear();name="";format=null;error=null;cameraImportTime=null }
+    internal fun retakeCamera() = act { camera.retake();name="";format=null;error=null }
+    internal fun saveCamera() = act {
+        if (!DocumentRules.validName(name)) { error=DocumentFailure.INVALID; return@act }
+        val source=camera.sourceForSave() ?: return@act
+        cameraImportTime=System.nanoTime()
+        write("Dokument gespeichert.") { callback ->
+            repository()!!.importDocument(boundId!!,name.trim(),DocumentFormat.JPEG,source,callback)
+        }
+    }
     var items by mutableStateOf<List<DocumentAsset>?>(null); private set
     var loading by mutableStateOf(false); private set
     var busy by mutableStateOf(false); private set
@@ -30,6 +52,7 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
     val selectionUnavailable get() = available && picker()?.unavailable(boundId!!)==true
     val canSave get() = importing && DocumentRules.validName(name) && format!=null && !busy
     fun clear() {
+        camera.clear(); cameraImportTime=null
         epoch++; request++; opened=false; boundId=null; boundStatus=null; generation=-1
         items=null; loading=false; busy=false; error=null; importing=false; name=""; format=null; confirmingDelete=null
     }
@@ -57,12 +80,13 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
                 is DocumentResult.Value -> {
                     if (result.value.any { it.actionId!=boundId || !DocumentRules.valid(it) }) { error=DocumentFailure.INVALID; return@list }
                     items=result.value.sortedWith(DocumentRules.order)
+                    cameraImportTime?.let { cameraTime(CameraTime.IMPORT_LIST,it);cameraImportTime=null }
                 }
                 is DocumentResult.Rejected -> error=result.reason
             }
         }
     }
-    fun chooseFile() = act { picker()?.launch(boundId!!,generation) }
+    fun chooseFile() = act { camera.clear(); picker()?.launch(boundId!!,generation) }
     fun continueImport() = act {
         if (!canContinueImport) return@act
         importing=true; name=""; format=null; error=null; confirmingDelete=null
@@ -88,13 +112,15 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
         work { result ->
             if (!current(e,r)) return@work
             busy=false
+            camera.clear()
             when(result) {
                 is DocumentResult.Value -> {
+                    cameraImportTime?.let { cameraTime(CameraTime.IMPORT_COMMIT,it) }
                     importing=false; name=""; format=null; confirmingDelete=null
                     refresh(); refreshWorkspace(); feedback(message)
                 }
                 is DocumentResult.Rejected -> {
-                    error=result.reason
+                    error=result.reason; cameraImportTime=null
                     // One attempt has been consumed; re-selection is always explicit.
                     if (importing) { importing=false; name=""; format=null }
                 }

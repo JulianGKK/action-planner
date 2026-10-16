@@ -2,7 +2,13 @@
     xmlns:tools="http://schemas.android.com/tools">
     <!-- Required by the platform API, even when only DEVICE_CREDENTIAL is enabled. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <application android:label="PaG" android:theme="@style/PrototypeTheme"
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Transitive library declares this; camera capture has no network-state use. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+    <application android:name="org.pag.prototype.PagApplication" android:label="PaG" android:theme="@style/PrototypeTheme"
         android:icon="@android:drawable/ic_lock_lock"
         android:allowBackup="false" android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules" android:usesCleartextTraffic="false">
@@ -12,6 +18,8 @@
         <receiver android:name="androidx.profileinstaller.ProfileInstallReceiver" tools:node="remove" tools:ignore="MissingClass" />
         <!-- B2 has one process and no observable queries; never enable Room multi-instance invalidation. -->
         <service android:name="androidx.room3.MultiInstanceInvalidationService" tools:node="remove" tools:ignore="MissingClass" />
+        <!-- CameraX configuration comes from PagApplication; no metadata-only service needed. -->
+        <service android:name="androidx.camera.core.impl.MetadataHolderService" tools:node="remove" tools:ignore="MissingClass" />
         <activity android:name="org.pag.prototype.MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -86,7 +86,9 @@ Im MVP keine INTERNET-Berechtigung und keine Kontakte-, Telefon-, Standort- oder
 
 System-Dateiimport erfolgt durch ausdrückliche SAF-Auswahl. P10a gibt für den
 Dokumenten-MVP keine Kamera-/Galerie-Sonderwege oder zusätzliche Runtimepermission
-frei; die frühere CameraX-Planung gilt hier nicht als Produktfreigabe. DocumentProvider
+frei; diese historische Grenze wird gezielt durch [P10d](product-p10d-camera-import.md)
+um CAMERA bei bewusster Aktion und internen In-Memory-JPEG-Capture erweitert.
+Keine weitere Permission, externer Kamerapfad oder neue Sessionfreigabe. DocumentProvider
 können selbst externe Dienste nutzen; PaG bleibt ohne eigenen Netzwerkpfad.
 
 ### SEC-11 — Backup, Transfer und Recovery
@@ -106,7 +108,9 @@ Quellinhalt, Dateiname, MIME-Angabe und gemeldete Größe sind nicht vertrauensw
 P10a legt PDF/JPEG/PNG/UTF-8-Klartext und 100 Dokumente/Action, 25 MiB/Dokument,
 250 MiB/Action fest. P10b prüft kleine Signatur-/Formatplausibilisierung und setzt
 konkrete sichere Text-/Bildviewergrenzen; PDF in P10b ohne Viewer. Unterbrochene Imports dürfen nicht als fertige Dokumente erscheinen; Rückstände werden kontrolliert bereinigt. Nach erfolgreichem Systemimport keine dauerhafte URI-Berechtigung behalten; keine automatische Wiederaufnahme über persistierte Quell-URIs. Nach Rückkehr aus dem Picker gilt SEC-01. P10-Systemimport folgt ARCH-17 bis ARCH-19 unter den engeren P10a-Grenzen;
-Adapter kennen keine Keys oder fertigen DocumentAssets. Kein P10-Kamerapfad.
+Adapter kennen keine Keys oder fertigen DocumentAssets. Der zusätzliche
+[P10d-Kamerapfad](product-p10d-camera-import.md) liefert nur einen einmaligen
+RAM-DocumentSource an dieselbe Pipeline; kein Keyzugriff in CameraX-Callbacks.
 Workflow bei Sperrung invalidieren, verspätete Ergebnisse verwerfen.
 
 ### SEC-13 — Dateiöffnung und Weitergabe

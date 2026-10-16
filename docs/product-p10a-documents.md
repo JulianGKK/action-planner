@@ -1,5 +1,11 @@
 # P10a — Dokumente: Produkt-, Privacy- und Security-Vertrag
 
+> Gezielte spätere Erweiterung: [P10d](product-p10d-camera-import.md) erlaubt einen
+> direkten internen JPEG-Kameraimport mit CAMERA-Runtimepermission und begrenztem
+> RAM-Puffer. Die folgenden Kameraausschlüsse beschreiben den historischen
+> P10a/P10b-Scope. Alle übrigen Schutzanforderungen bleiben gültig.
+
+
 ## 1. Status, Baseline und Verbindlichkeit
 
 P10a ist ausschließlich Spezifikation/Dokumentation. Baseline: Branch

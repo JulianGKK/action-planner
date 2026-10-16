@@ -89,8 +89,10 @@ PUBLIC_CONTENT bezeichnet zur Veröffentlichung geeigneten Inhalt, INTERNAL inte
 
 ## 5. Importierte Dateien und externe Grenzen
 
-**PRIV-08:** P10-MVP importiert ausschließlich bewusst über System-Dateiauswahl/SAF,
-ohne Kamera-/Galerie-Sonderweg. Kein P3a-/P3b-Read nötig, keine breite Speicherpermission,
+**PRIV-08:** Der ursprüngliche P10-MVP verwendet bewussten System-Dateiimport/SAF.
+[P10d](product-p10d-camera-import.md) ergänzt ausschließlich internen JPEG-Capture
+mit CAMERA nach Benutzeraktion: ein begrenzter RAM-Puffer, keine Galerie,
+Klartextdatei, Standorterhebung oder persistente Thumbnailkopie. Kein P3a-/P3b-Read nötig, keine breite Speicherpermission,
 Quell-URI-Persistenz oder persistable URI permission. [P10a](product-p10a-documents.md)
 ersetzt für diesen Umfang die frühere allgemeine CameraX-Importplanung; historische
 Prototypen bleiben separate Nachweise, keine P10-Freigabe. Die PaG-Kopie gehört genau
