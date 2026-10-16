@@ -1,6 +1,7 @@
 package org.pag.data.product
 
 import android.app.Activity
+import android.util.Log
 import android.os.SystemClock
 import androidx.room3.withWriteTransaction
 import org.pag.data.prototype.b2.StorageAccessRevoked
@@ -16,7 +17,8 @@ import java.util.concurrent.atomic.AtomicReference
 /** Activity-owned composition. No global key/database registry, no retained session. */
 class ProductRuntime(activity: Activity, private val worker: Executor, private val main: Executor,
     foreground: () -> Boolean) {
-    private val root = File(activity.noBackupFilesDir.canonicalFile, "pag-db-v1")
+    private val noBackupRoot = productNoBackupRoot(activity.noBackupFilesDir)
+    private val root = File(noBackupRoot, "pag-db-v1")
     private val envelope = ProductDbEnvelope(root, "org.pag.product.database.rsa.v1")
     val inventory = ProductInventory(root, envelope::aliasPresent, envelope::structurallyValid)
     private val database = ActionDatabaseAccess(activity.applicationContext)
@@ -29,6 +31,10 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
         authorizedMaintenance = { context, operation, done ->
             val cancelled = AtomicBoolean(false)
             worker.execute {
+                val probe = MaintenanceProbe(maintenanceProbeEnabled(activity.applicationInfo.flags)) {
+                    Log.w(MaintenanceProbe.TAG, it)
+                }
+                var failureCode = MaintenanceFailureCode.KEY_OPERATION_INCOMPLETE
                 var success = false
                 try {
                     var maintenanceError:Exception?=null
@@ -38,7 +44,7 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
                                 withDocumentMaintenanceKey(context,key) { keyStep ->
                                     val steps=SqlCipherDocumentDeleteDatabase(activity.applicationContext,inventory,{null},keyStep)
                                     val recovery=SqlCipherDocumentReconciliationDatabase(steps)
-                                    DocumentReconciliation(recovery,steps,activity.noBackupFilesDir).run(context) {
+                                    DocumentReconciliation(recovery,steps,noBackupRoot, observePhase=probe::enter).run(context) {
                                         if(initializing)inventory.prepareDatabaseDirectory()
                                         else if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
                                         fun preflight(creates:Boolean=false) {
@@ -51,6 +57,7 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
                                     }
                                 }
                             },{
+                                probe.enter(MaintenancePhase.M07_READY_OWNER)
                                 if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
                                 val next=SessionDbKeyOwner.bind(context,key)
                                 if(!context.publish { owner.getAndSet(next)?.invalidate() }) {
@@ -63,9 +70,13 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
                     // type: unexpected Room faults must never become a fabricated session revoke.
                     maintenanceError?.let { throw it }
                     success = result == OperationResult.SUCCEEDED && context.check(AccessPoint.STEP)
-                } catch (_: StorageAccessRevoked) { success = false }
-                  catch (_: Exception) { success = false } // valid MAINTENANCE + failure -> existing BLOCKED
-                finally { operation.release(); if (!success) owner.getAndSet(null)?.invalidate() }
+                    if (!success && result == OperationResult.SUCCEEDED) failureCode = MaintenanceFailureCode.SESSION_REVOKED
+                } catch (error: StorageAccessRevoked) { success = false; failureCode = maintenanceFailureCode(error) }
+                  catch (error: Exception) { success = false; failureCode = maintenanceFailureCode(error) } // valid MAINTENANCE + failure -> existing BLOCKED
+                finally {
+                    if (!success) probe.failed(failureCode)
+                    operation.release(); if (!success) owner.getAndSet(null)?.invalidate()
+                }
                 main.execute { if (!cancelled.get()) done(success) }
             }
             Subscription { cancelled.set(true); owner.getAndSet(null)?.invalidate() }

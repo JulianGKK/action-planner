@@ -70,7 +70,7 @@ class DocumentReconciliationTest {
     }
     private var links=0;private var unlinks=0;private var syncs=0
     private val ops=object:DocumentPublishFileOps {
-        override fun link(source:Path,destination:Path){check(!inDb);links++;Files.createLink(destination,source)}
+        override fun moveNoReplace(source:Path,destination:Path){check(!inDb);links++;Files.move(source,destination)}
         override fun unlink(source:Path){check(!inDb);unlinks++;Files.delete(source)}
         override fun syncDirectory(directory:Path){check(!inDb);syncs++;FileChannel.open(directory,READ).use{it.force(true)}}
     }

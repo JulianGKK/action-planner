@@ -14,7 +14,7 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption.READ
 import java.util.UUID
 
-/** Real Tink and host Linux hardlink/fsync, simulated DAO transaction rollback. No Android claim. */
+/** Real Tink with host move/fsync test doubles and simulated DAO rollback. Native no-replace is tested on Android. */
 class DocumentPublicationTest {
     @get:Rule val temp = TemporaryFolder()
     private class Access : StorageContext {
@@ -92,7 +92,7 @@ class DocumentPublicationTest {
         }
     }
     private val ops=object:DocumentPublishFileOps {
-        override fun link(source:Path,destination:Path) { check(!inDb);Files.createLink(destination,source) }
+        override fun moveNoReplace(source:Path,destination:Path) { check(!inDb);Files.move(source,destination) }
         override fun unlink(source:Path) { check(!inDb);Files.delete(source) }
         override fun syncDirectory(directory:Path) { check(!inDb);FileChannel.open(directory,READ).use { it.force(true) } }
     }
@@ -147,11 +147,11 @@ class DocumentPublicationTest {
         val j=fixture();final(j).writeBytes(byteArrayOf(41))
         invalid { complete(j) };assertArrayEquals(byteArrayOf(41),final(j).readBytes());assertTrue(staging(j).exists())
     }
-    @Test fun racingCollisionAtLinkIsNotOverwritten() {
+    @Test fun racingCollisionAtAtomicMoveIsNotOverwritten() {
         val j=fixture()
         val collision=object:DocumentPublishFileOps by ops {
-            override fun link(source:Path,destination:Path) {
-                Files.write(destination,byteArrayOf(42));ops.link(source,destination)
+            override fun moveNoReplace(source:Path,destination:Path) {
+                Files.write(destination,byteArrayOf(42));ops.moveNoReplace(source,destination)
             }
         }
         invalid { complete(j,collision) }
@@ -164,16 +164,16 @@ class DocumentPublicationTest {
         val outside=temp.newFile();Files.createSymbolicLink(unknown.toPath(),outside.toPath())
         invalid { complete(j) };assertTrue(Files.isSymbolicLink(unknown.toPath()));assertTrue(staging(j).exists())
     }
-    @Test fun linkFailureLeavesStagingAndClosed() {
+    @Test fun moveFailureLeavesStagingAndClosed() {
         val j=fixture()
-        val fail=object:DocumentPublishFileOps by ops { override fun link(source:Path,destination:Path) { throw IOException("synthetic") } }
+        val fail=object:DocumentPublishFileOps by ops { override fun moveNoReplace(source:Path,destination:Path) { throw IOException("synthetic") } }
         invalid { complete(j,fail) };assertTrue(staging(j).exists());assertFalse(final(j).exists());assertEquals("IMPORT_CLOSED",dao.jobs.single().phase)
     }
-    @Test fun syncFailureDoesNotCommitPublishedOrRepairDoubleNames() {
+    @Test fun syncFailureLeavesClosedFinalOnlyWithoutFalseCommit() {
         val j=fixture()
         val fail=object:DocumentPublishFileOps by ops { override fun syncDirectory(directory:Path) { throw IOException("sync") } }
-        invalid { complete(j,fail) };assertTrue(staging(j).exists());assertTrue(final(j).exists())
-        assertTrue(Files.isSameFile(staging(j).toPath(),final(j).toPath()));assertEquals("IMPORT_CLOSED",dao.jobs.single().phase)
+        invalid { complete(j,fail) };assertFalse(staging(j).exists());assertTrue(final(j).exists())
+        assertEquals("IMPORT_CLOSED",dao.jobs.single().phase)
         invalid { complete(j) };assertTrue(dao.docs.isEmpty())
     }
     @Test fun markCommitFailureLeavesClosedFinalOnly() {

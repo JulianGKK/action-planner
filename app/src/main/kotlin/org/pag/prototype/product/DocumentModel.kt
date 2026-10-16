@@ -17,7 +17,7 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
     var name by mutableStateOf(""); private set
     var format by mutableStateOf<DocumentFormat?>(null); private set
     var confirmingDelete by mutableStateOf<DocumentAsset?>(null); private set
-    private var opened=false
+    private var opened by mutableStateOf(false)
     private var boundId: String?=null
     private var boundStatus: ActionStatus?=null
     private var generation=-1L
@@ -27,6 +27,7 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
         session().generation==generation && action()?.id==boundId && action()?.status==boundStatus &&
         action()?.let { DocumentRules.mayRead(it.status) }==true
     val canContinueImport get() = available && picker()?.available(boundId!!,generation)==true
+    val selectionUnavailable get() = available && picker()?.unavailable(boundId!!)==true
     val canSave get() = importing && DocumentRules.validName(name) && format!=null && !busy
     fun clear() {
         epoch++; request++; opened=false; boundId=null; boundStatus=null; generation=-1

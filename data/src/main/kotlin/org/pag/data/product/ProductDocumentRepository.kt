@@ -18,10 +18,11 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
     private var interruptedGeneration: Long? = null
     private val dispatch = DocumentProductDispatch(access,worker,main,blocked)
     private val database = ActionDatabaseAccess(app.applicationContext)
+    private val noBackupRoot = productNoBackupRoot(app.noBackupFilesDir)
     private val steps = SqlCipherDocumentImportDatabase(app, inventory, owner)
-    private val staging = DocumentImportStaging(steps, app.noBackupFilesDir)
-    private val publication = DocumentPublication(steps, app.noBackupFilesDir)
-    private val deletion = DocumentDelete(SqlCipherDocumentDeleteDatabase(app, inventory, owner), app.noBackupFilesDir)
+    private val staging = DocumentImportStaging(steps, noBackupRoot)
+    private val publication = DocumentPublication(steps, noBackupRoot)
+    private val deletion = DocumentDelete(SqlCipherDocumentDeleteDatabase(app, inventory, owner), noBackupRoot)
     private fun <T> read(c: StorageContext, work: suspend (ActionDatabase) -> T): T {
         requireOperations(c, AccessPoint.OPERATION)
         if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()

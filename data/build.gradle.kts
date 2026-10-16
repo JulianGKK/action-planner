@@ -2,6 +2,8 @@ plugins { id("com.android.library"); id("com.google.devtools.ksp") }
 android {
     namespace = "org.pag.data"
     compileSdk = 37
+    ndkVersion = "28.2.13676358"
+    externalNativeBuild { ndkBuild { path = file("src/main/cpp/Android.mk") } }
     defaultConfig {
         minSdk = 30
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

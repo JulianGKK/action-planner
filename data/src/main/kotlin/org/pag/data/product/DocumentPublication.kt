@@ -19,16 +19,16 @@ internal interface DocumentPublicationDatabase {
     fun finish(c: StorageContext, expected: DocumentJobRow)
 }
 
-/** Narrow platform boundary; production uses Android Linux link/unlink/fsync (API 21+).
- * link fails for existing destinations. No rename/copy fallback, even if unsupported.
+/** Narrow platform boundary: kernel atomic RENAME_NOREPLACE (Android API 30+).
+ * Existing targets fail, including racing collisions. No copy/overwrite fallback.
  */
 internal interface DocumentPublishFileOps {
-    fun link(source: Path, destination: Path)
+    fun moveNoReplace(source: Path, destination: Path)
     fun unlink(source: Path)
     fun syncDirectory(directory: Path)
 }
 internal object AndroidDocumentPublishFileOps : DocumentPublishFileOps {
-    override fun link(source: Path, destination: Path) = Os.link(source.toString(),destination.toString())
+    override fun moveNoReplace(source: Path, destination: Path) = DocumentAtomicRename.move(source,destination)
     override fun unlink(source: Path) = Files.delete(source)
     override fun syncDirectory(directory: Path) {
         val fd = Os.open(directory.toString(),OsConstants.O_RDONLY or OsConstants.O_NOFOLLOW,0)
@@ -116,16 +116,13 @@ internal class DocumentPublication(private val database: DocumentPublicationData
         val target = root.resolve("files").resolve(j.blobName)
         val before = attributes(c,g,source,scope)
         gate(c,g,scope)
-        fileOps.link(source,target) // Atomic no-overwrite destination insertion, not check-then-rename.
+        fileOps.moveNoReplace(source,target) // One kernel operation: atomic move AND no-replace.
         gate(c,g,scope)
         val after = attributes(c,g,target,scope)
         if (before.fileKey() != after.fileKey() || before.size() != after.size() || before.lastModifiedTime() != after.lastModifiedTime()) throw ProductStorageFailure()
-        requireInventory(c,DocumentImportInventory(snapshot.inventory.files + j.blobName,snapshot.inventory.staging))
-        fileOps.syncDirectory(root.resolve("files")) // Make new name durable before dropping old name.
-        gate(c,g,scope)
-        val original = attributes(c,g,source,scope)
-        if (original.fileKey() != before.fileKey() || original.size() != before.size() || original.lastModifiedTime() != before.lastModifiedTime()) throw ProductStorageFailure()
-        fileOps.unlink(source)
+        // Rename preserves inode and removes the staging name atomically. No both-name window.
+        requireInventory(c,DocumentImportInventory(snapshot.inventory.files + j.blobName,snapshot.inventory.staging - j.stagingName))
+        fileOps.syncDirectory(root.resolve("files"))
         gate(c,g,scope)
         fileOps.syncDirectory(root.resolve("staging"))
         gate(c,g,scope)

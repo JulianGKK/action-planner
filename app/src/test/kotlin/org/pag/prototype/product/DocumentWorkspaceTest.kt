@@ -1,5 +1,7 @@
 package org.pag.prototype.product
 
+import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.runtime.snapshots.SnapshotStateObserver
 import org.junit.Assert.*
 import org.junit.Test
 import org.pag.domain.*
@@ -81,6 +83,30 @@ class DocumentWorkspaceTest {
     private fun supplyWorkspace() {
         ops.reads.last()(OperationsResult.Value(OperationalBoard("a",actions.row.status,emptyList(),emptyList())))
         if(tasks.reads.isNotEmpty())tasks.reads.last()(OperationsResult.Value(TaskBoard("a",emptyList(),emptyList())))
+    }
+    @Test fun documentEntryAndExitInvalidateTheObservedScreenRoute() {
+        for(status in listOf(ActionStatus.PREPARATION,ActionStatus.ACTIVE,ActionStatus.COMPLETED)) {
+            val m=model(status)
+            val observer=SnapshotStateObserver { it() }
+            val scope=Any()
+            var invalidations=0
+            observer.start()
+            try {
+                // ProductScreen observes this route before DocumentWorkspace is composed.
+                observer.observeReads(scope,{ invalidations++ }) { assertFalse(m.documents.available) }
+                m.openDocuments()
+                assertTrue(m.documents.available)
+                Snapshot.sendApplyNotifications()
+                assertTrue("Opening documents must invalidate the screen route",invalidations>0)
+
+                invalidations=0
+                observer.observeReads(scope,{ invalidations++ }) { assertTrue(m.documents.available) }
+                m.closeDocuments()
+                Snapshot.sendApplyNotifications()
+                assertFalse(m.documents.available)
+                assertTrue("Closing documents must invalidate the screen route",invalidations>0)
+            } finally { observer.stop();observer.clear() }
+        }
     }
     @Test fun completedHasZeroDocumentReadsUntilDeliberateOpen() {
         val m=model(ActionStatus.COMPLETED);supplyWorkspace()
