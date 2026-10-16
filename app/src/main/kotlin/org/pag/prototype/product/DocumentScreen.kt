@@ -3,6 +3,10 @@ package org.pag.prototype.product
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -18,6 +22,15 @@ import org.pag.domain.*
     d.error?.let { Text(documentFailure(it)) }
     val expected=d.confirmingDelete
     when {
+        d.viewed!=null -> {
+            PreparationHeading(d.viewed!!.displayName)
+            FormOutlinedButton(d::closeImage) {Text("‹ Zur Dokumentenliste")}
+            if(d.imageLoading) Text("Bild wird sicher gelesen …")
+            (d.image as? BitmapDocumentImage)?.forDisplay()?.let {bitmap ->
+                Image(bitmap.asImageBitmap(),contentDescription="Gespeichertes Bild",contentScale=ContentScale.Fit,
+                    modifier=Modifier.fillMaxWidth().heightIn(max=480.dp).aspectRatio(bitmap.width.toFloat()/bitmap.height))
+            }
+        }
         d.camera.mode != CameraMode.CLOSED -> CameraCapturePane(d)
         expected!=null -> {
             Text(expected.displayName)
@@ -57,7 +70,9 @@ import org.pag.domain.*
                 PreparationHeading(item.displayName)
                 Text("${documentFormat(item.format)} · ${item.plaintextSize} Bytes")
                 Text("Importiert am: ${formattedTime(item.importedAt)}")
-                Text(if(item.format==DocumentFormat.PDF) "PDF gespeichert · Vorschau in dieser Version nicht verfügbar." else "Vorschau in dieser Version nicht verfügbar.")
+                if(item.format in setOf(DocumentFormat.JPEG,DocumentFormat.PNG)) {
+                    FormOutlinedButton({d.viewImage(item)},enabled=!d.busy) {Text("Bild ansehen")}
+                } else Text("Vorschau in dieser Version noch nicht verfügbar.")
                 FormOutlinedButton({d.requestDelete(item)},enabled=!d.busy) { Text("Löschen") }
             }
             FormOutlinedButton({model.interaction();d.refresh()},enabled=!d.busy && !d.loading) { Text("Aktualisieren") }
@@ -66,6 +81,7 @@ import org.pag.domain.*
 }
 internal fun documentFormat(format: DocumentFormat) = when(format) { DocumentFormat.TEXT -> "UTF-8-Text"; else -> format.name }
 internal fun documentFailure(reason: DocumentFailure) = when(reason) {
+    DocumentFailure.IMAGE_UNSUPPORTED -> "Dieses Bild ist für die sichere Anzeige zu groß oder wird nicht unterstützt."
     DocumentFailure.INVALID -> "Bitte einen Dokumentnamen mit 1–160 Zeichen und ein unterstütztes Format angeben."
     DocumentFailure.CAPACITY -> "Die Dokumentanzahl oder Speichergrenze dieser Aktion ist erreicht."
     DocumentFailure.MAINTENANCE_REQUIRED -> "Bitte PaG sperren und erneut entsperren. Ein unterbrochener Import muss zuerst abgeglichen werden."

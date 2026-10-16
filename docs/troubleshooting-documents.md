@@ -64,8 +64,9 @@ Speicherberechtigung oder ein eigener Scanpfad der App erforderlich.
 
 ## Kann ich gespeicherte Dokumente schon anzeigen?
 
-Noch nicht. P10b2e unterstützt Import, Liste und bestätigtes Löschen der
-verschlüsselten PaG-Kopie. PDF-, Bild- und Textviewer sind nicht implementiert.
+Ab P10c1 lassen sich JPEG und PNG über „Bild ansehen“ innerhalb von PaG öffnen.
+PDF- und Textviewer sind weiterhin nicht implementiert. Import, Liste und
+bestätigtes Löschen der verschlüsselten PaG-Kopie bleiben verfügbar.
 Die Originaldatei außerhalb von PaG bleibt beim Import und beim Löschen der
 PaG-Kopie unverändert bestehen.
 
@@ -101,3 +102,20 @@ USB-Debugging. Der obige Hinweis „Aktivitäten nicht speichern“ bleibt für
 RAM-Lebensdauer und insbesondere den externen SAF-Picker wichtig. Das Deaktivieren
 dieser Android-Entwickleroption hebt PaGs eigene App-Sperre nicht auf.
 Details und tatsächliche Testgrenzen: [P10d](product-p10d-camera-import.md).
+
+## Geschützte Bildanzeige (P10c1)
+
+JPEG und PNG können über „Bild ansehen“ bewusst innerhalb von PaG geöffnet
+werden, unabhängig vom ursprünglichen SAF-/Kameraimport. Es wird ausschließlich
+die verschlüsselte PaG-Kopie gelesen. Keine externe App und kein Klartextcache.
+PDF und UTF-8-Text haben weiterhin keine Vorschau.
+
+Große Bilder werden für die Anzeige verkleinert; das gespeicherte Original
+bleibt unverändert. „Dieses Bild ist für die sichere Anzeige zu groß oder wird
+nicht unterstützt“ lässt das Dokument erhalten. Nicht automatisch erneut
+öffnen. Unklare Integritäts-/Speicherfehler werden weiterhin sicher abgewiesen.
+
+Beim Sperren, Appwechsel oder Verlassen der Aktion schließt die Bildansicht.
+Nach regulärem Entsperren bewusst neu öffnen. Keine zusätzliche Permission,
+kein USB-Debugging und keine Entwickleroption für die Anzeige nötig.
+Details und tatsächliche Testgrenzen: [P10c1](product-p10c1-secure-image-viewer.md).

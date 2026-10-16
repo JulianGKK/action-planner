@@ -103,6 +103,27 @@ internal object DocumentStorageRules {
 }
 
 @Dao internal abstract class DocumentDao {
+    /** Technical snapshot only. Existing binding/capacity validation wipes all other row keys. */
+    // The caller supplies withReadTransaction; @Transaction would request a write transaction.
+    suspend fun imageSnapshot(actionId:String, expected:DocumentAsset, c:StorageContext):DocumentResult<DocumentImageSnapshot> {
+        requireOperations(c,AccessPoint.OPERATION)
+        return deleteState(c) { docs,jobs ->
+            val status=actionStatus(actionId) ?: return@deleteState DocumentResult.Rejected(DocumentFailure.NOT_FOUND)
+            if(status !in setOf("PREPARATION","ACTIVE","COMPLETED")) return@deleteState DocumentResult.Rejected(DocumentFailure.NOT_ALLOWED)
+            if(expected.actionId!=actionId || !DocumentRules.valid(expected)) return@deleteState DocumentResult.Rejected(DocumentFailure.INVALID)
+            val row=docs.singleOrNull {it.actionId==actionId && it.id==expected.id}
+                ?: return@deleteState DocumentResult.Rejected(DocumentFailure.NOT_FOUND)
+            if(jobs.any {it.documentId==row.id}) return@deleteState DocumentResult.Rejected(DocumentFailure.NOT_FOUND)
+            if(DocumentMetadataRow(row.id,row.actionId,row.displayName,row.format,row.plaintextSize,row.importedAt).model()!=expected)
+                return@deleteState DocumentResult.Rejected(DocumentFailure.STALE)
+            if(expected.format !in setOf(DocumentFormat.JPEG,DocumentFormat.PNG)) return@deleteState DocumentResult.Rejected(DocumentFailure.NOT_ALLOWED)
+            val required=docs.map {it.blobName}.toSet()+jobs.filter {it.phase=="FILE_PUBLISHED"}.map {it.blobName}
+            val optional=jobs.filter {it.phase=="DELETE_FILE_PENDING"}.map {it.blobName}.toSet()
+            val staging=jobs.filter {it.phase=="IMPORT_CLOSED"}.map {it.stagingName!!}.toSet()
+            requireOperations(c)
+            DocumentResult.Value(DocumentImageSnapshot(expected,row.blobName,row.fileKey.copyOf(),required,optional,staging))
+        }
+    }
     @Query("SELECT COUNT(*) FROM documents d WHERE d.actionId=:a AND NOT EXISTS (SELECT 1 FROM document_jobs j WHERE j.documentId=d.id AND j.operation='DELETE')")
     abstract suspend fun count(a: String): Int
     @Query("SELECT d.id,d.actionId,d.displayName,d.format,d.plaintextSize,d.importedAt FROM documents d WHERE d.actionId=:a AND NOT EXISTS (SELECT 1 FROM document_jobs j WHERE j.documentId=d.id AND j.operation='DELETE') ORDER BY d.importedAt,d.id")

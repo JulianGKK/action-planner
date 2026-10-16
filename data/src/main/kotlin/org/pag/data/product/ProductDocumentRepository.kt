@@ -23,6 +23,26 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
     private val staging = DocumentImportStaging(steps, noBackupRoot)
     private val publication = DocumentPublication(steps, noBackupRoot)
     private val deletion = DocumentDelete(SqlCipherDocumentDeleteDatabase(app, inventory, owner), noBackupRoot)
+    override fun readImage(actionId:String, expected:DocumentAsset, request:DocumentImageRequest,
+        decoder:DocumentImageDecoder, publish:(DocumentResult<DocumentImage>)->Unit) {
+        val requested=System.nanoTime()
+        DocumentImageDispatch(access,worker,main,blocked).run(request,publish) { c ->
+            if(interruptedGeneration==c.generation) return@run DocumentResult.Rejected(DocumentFailure.MAINTENANCE_REQUIRED)
+            request.measured(DocumentImagePhase.WORKER_START,requested)
+            var held:DocumentImageSnapshot?=null
+            try {
+                val started=System.nanoTime()
+                val snapshot=read(c) { db ->
+                    db.documents().imageSnapshot(actionId,expected,c).also {if(it is DocumentResult.Value) held=it.value}
+                }
+                request.measured(DocumentImagePhase.DB_SNAPSHOT,started)
+                when(snapshot) {
+                    is DocumentResult.Rejected -> snapshot
+                    is DocumentResult.Value -> DocumentResult.Value(DocumentImageRead(noBackupRoot).decode(c,snapshot.value,decoder,request))
+                }
+            } finally {held?.close()}
+        }
+    }
     private fun <T> read(c: StorageContext, work: suspend (ActionDatabase) -> T): T {
         requireOperations(c, AccessPoint.OPERATION)
         if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
