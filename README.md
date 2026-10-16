@@ -24,6 +24,16 @@ The current alpha includes:
 
 Planned areas include action protocols (`Protokoll`), factual observations/incidents, documents and materials, post-action review and retention, and further UX refinement.
 
+## Direct camera import (P10d working branch)
+
+The documents workspace adds an internal JPEG camera route alongside the SAF
+file picker. Camera permission is requested only on “Foto aufnehmen”. A captured
+photo stays in bounded RAM until explicit confirmation and uses the existing
+encrypted document import. No gallery autosave or document viewer is included.
+This is a local development change, not a new published release.
+See the [P10d contract and test record](docs/product-p10d-camera-import.md) and
+[document troubleshooting](docs/troubleshooting-documents.md).
+
 ## Try the demo
 
 A separate **PaG Demo** APK is provided with selected pre-releases. It uses its own Android application ID and can be installed alongside the product app.

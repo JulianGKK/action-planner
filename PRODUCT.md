@@ -405,9 +405,15 @@ sind für den aktuellen MVP hiermit ersetzt.
 
 # 11. Dokumente und Dateien
 
-## FR-050 — Dokument importieren (P10a)
+## FR-050 — Dokument importieren (P10a; Kameraerweiterung P10d)
 
-Verbindlicher Produkt-/Privacy-/Securityvertrag: [P10a](docs/product-p10a-documents.md).
+Verbindlicher ursprünglicher Produkt-/Privacy-/Securityvertrag: [P10a](docs/product-p10a-documents.md).
+Die gezielte Erweiterung [P10d](docs/product-p10d-camera-import.md) ergänzt
+internen JPEG-Capture ohne Klartextdatei: „Foto aufnehmen“, Aufnahme bestätigen,
+Dokumentname und „Verschlüsselt speichern“. CAMERA nur nach Benutzeraktion,
+kein Galerieautosave, kein Viewer, keine eigene Import-/Kryptoarchitektur.
+Die folgende P10a-Planung bleibt als fachlicher Ursprung erhalten; die vorhandene
+Dateiimportimplementierung ist in P10b2e dokumentiert.
 Späterer MVP ausschließlich aktionsgebundene PDF, JPEG, PNG und UTF-8-Klartext;
 keine globale Bibliothek oder Beziehungen zu Personen, Tasks, Material, Kosten,
 P6/P9 oder Rollen. SAF/Systempicker ohne breite Speicherpermission, dauerhafte
