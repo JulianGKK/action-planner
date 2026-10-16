@@ -41,10 +41,11 @@ import org.pag.domain.*
         }
         else -> {
             if(d.canContinueImport) {
-                Text("Dateiauswahl vorhanden. Der Import benötigt deine erneute Bestätigung.")
+                Text("Datei ausgewählt – Import noch nicht abgeschlossen.")
                 FormButton(d::continueImport,enabled=!d.busy) { Text("Import fortsetzen") }
                 FormOutlinedButton(d::cancelImport,enabled=!d.busy) { Text("Dateiauswahl verwerfen") }
             }
+            if(d.selectionUnavailable) Text("Die Dateiauswahl ist nicht mehr verfügbar. Bitte die Datei erneut auswählen.")
             FormButton(d::chooseFile,enabled=!d.busy) { Text("Dokument importieren") }
             Text("PaG erstellt eine verschlüsselte Kopie. Die Originaldatei außerhalb von PaG bleibt bestehen.")
             if(d.loading) Text("Dokumente werden geladen …")
@@ -67,7 +68,7 @@ internal fun documentFailure(reason: DocumentFailure) = when(reason) {
     DocumentFailure.MAINTENANCE_REQUIRED -> "Bitte PaG sperren und erneut entsperren. Ein unterbrochener Import muss zuerst abgeglichen werden."
     DocumentFailure.TOO_LARGE -> "Die Datei überschreitet 25 MiB. Bitte eine kleinere Datei auswählen."
     DocumentFailure.FORMAT -> "Die Datei passt nicht zum gewählten Format. Unterstützt werden PDF, JPEG, PNG und UTF-8-Text."
-    DocumentFailure.SOURCE_UNAVAILABLE -> "Die ausgewählte Datei ist nicht mehr lesbar. Bitte erneut auswählen."
+    DocumentFailure.SOURCE_UNAVAILABLE -> "Die Dateiauswahl ist nicht mehr verfügbar. Bitte die Datei erneut auswählen."
     DocumentFailure.NOT_ALLOWED -> "Dokumente sind in diesem Aktionsstatus nicht verfügbar."
     DocumentFailure.NOT_FOUND -> "Das Dokument oder die Aktion ist nicht mehr vorhanden."
     DocumentFailure.STALE -> "Der Dokumentbestand hat sich geändert. Bitte die Liste aktualisieren."

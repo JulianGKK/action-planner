@@ -107,8 +107,9 @@ class MainActivity : ComponentActivity() {
                     startActivityForResult(openDocumentContract.createIntent(this@MainActivity,
                         arrayOf("application/pdf","image/jpeg","image/png","text/plain")),request)
                 }
-                catch (_: android.content.ActivityNotFoundException) { pickerRequest=null; pendingDocument.clear() }
+                catch (_: android.content.ActivityNotFoundException) { pickerRequest=null; pendingDocument.returned(null) }
             }
+            override fun unavailable(actionId: String) = pendingDocument.unavailable(actionId)
             override fun available(actionId: String, generation: Long) = pendingDocument.available(actionId,generation)
             override fun consume(actionId: String, generation: Long): DocumentSource? {
                 val current=runtime.session.snapshot()

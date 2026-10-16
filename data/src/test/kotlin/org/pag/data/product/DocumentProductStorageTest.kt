@@ -95,7 +95,7 @@ class DocumentProductStorageTest {
         }
     }
     private val ops=object:DocumentPublishFileOps {
-        override fun link(source:Path,destination:Path) { check(!inDb);Files.createLink(destination,source) }
+        override fun moveNoReplace(source:Path,destination:Path) { check(!inDb);Files.move(source,destination) }
         override fun unlink(source:Path) { check(!inDb);Files.delete(source) }
         override fun syncDirectory(directory:Path) { check(!inDb);FileChannel.open(directory,READ).use { it.force(true) } }
     }

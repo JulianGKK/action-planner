@@ -81,7 +81,7 @@ class DocumentDeleteTest {
     }
     private var unlinks=0;private var syncs=0
     private val ops=object:DocumentPublishFileOps {
-        override fun link(source:Path,destination:Path):Unit=error("Delete never links")
+        override fun moveNoReplace(source:Path,destination:Path):Unit=error("Delete never links")
         override fun unlink(source:Path){check(!inDb);unlinks++;assertTrue(dao.docs.none{it.blobName==source.fileName.toString()});assertEquals("DELETE_FILE_PENDING",dao.jobs.single{it.blobName==source.fileName.toString()}.phase);Files.delete(source)}
         override fun syncDirectory(directory:Path){check(!inDb);syncs++;FileChannel.open(directory,READ).use{it.force(true)}}
     }

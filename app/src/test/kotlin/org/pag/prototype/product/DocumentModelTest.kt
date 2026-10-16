@@ -14,6 +14,7 @@ class DocumentModelTest {
     private var rows=listOf(DocumentAsset("d","a","synthetic",DocumentFormat.TEXT,3,1))
     private val picker=object:DocumentPicker {
         override fun launch(actionId:String,generation:Long) { handoff.begin(actionId,generation);state=SessionSnapshot(SessionState.LOCKED,generation+1);model.clear() }
+        override fun unavailable(actionId:String)=handoff.unavailable(actionId)
         override fun available(actionId:String,generation:Long)=handoff.available(actionId,generation)
         override fun consume(actionId:String,generation:Long):DocumentSource? = handoff.consume(actionId,generation)?.let { DocumentSource { opens++;ByteArrayInputStream(it.toByteArray()) } }
         override fun cancel()=handoff.clear()
@@ -35,6 +36,7 @@ class DocumentModelTest {
     @Test fun pickerCallbackNeverImportsAndOldGenerationCannotConsume() {
         handoff.begin("a",1);handoff.returned("source")
         assertFalse(handoff.available("a",1));assertNull(handoff.consume("a",1));assertNull(handoff.consume("b",3))
+        assertNull(handoff.consume("a",3));handoff.ready(3)
         assertEquals("source",handoff.consume("a",3));assertNull(handoff.consume("a",3));assertEquals(0,opens)
     }
     @Test fun newGenerationStillNeedsExplicitAreaAndConfirmation() {
@@ -79,7 +81,7 @@ class DocumentModelTest {
         for(status in listOf(ActionStatus.DRAFT,ActionStatus.DELETION_PENDING)) { action=action.copy(status=status);model.enter();assertFalse(model.available);assertNull(model.items) }
     }
     @Test fun handoffDiesWithSecondLeaveCancellationOrNextSession() {
-        handoff.begin("a",1);handoff.leaving(false);handoff.returned("source");handoff.leaving(true);assertTrue(handoff.available("a",3))
+        handoff.begin("a",1);handoff.leaving(false);handoff.returned("source");handoff.leaving(true);handoff.ready(3);assertTrue(handoff.available("a",3))
         handoff.ready(3);handoff.locked();assertFalse(handoff.available("a",5))
         handoff.begin("a",5);handoff.returned("source");handoff.leaving(false);assertFalse(handoff.available("a",7))
         handoff.begin("a",7);handoff.returned("source");handoff.actionSelected("b");assertFalse(handoff.available("a",9))
@@ -91,4 +93,24 @@ class DocumentModelTest {
     @Test fun clearedAreaRejectsOlderRequestEvenAfterReopen() {
         draft();model.save();val old=deferred!!;model.clear();model.enter();old(DocumentResult.Value(Unit));assertEquals(0,feedback);assertFalse(model.importing)
     }
+    @Test fun pickerCancellationIsVisibleOnlyInsideSameActionAndNeverOpensSource() {
+        model.enter();model.chooseFile();handoff.returned(null)
+        state=SessionSnapshot(SessionState.READY,3);handoff.ready(3);model.enter()
+        assertTrue(model.selectionUnavailable);assertFalse(model.canContinueImport)
+        assertEquals(0,opens);assertEquals(0,writes)
+        handoff.actionSelected("other");assertFalse(model.selectionUnavailable)
+    }
+    @Test fun readyBindingAndLatePickerResultInvalidateObservedAvailability() {
+        var invalidations=0
+        val observer=androidx.compose.runtime.snapshots.SnapshotStateObserver { it() }
+        observer.start()
+        try {
+            handoff.begin("a",1);handoff.ready(3)
+            observer.observeReads(Any(),{ _:Any -> invalidations++ }) { assertFalse(handoff.available("a",3)) }
+            handoff.returned("synthetic");handoff.ready(3)
+            androidx.compose.runtime.snapshots.Snapshot.sendApplyNotifications()
+            assertTrue(invalidations>0);assertTrue(handoff.available("a",3));assertEquals(0,opens)
+        } finally { observer.stop() }
+    }
+
 }

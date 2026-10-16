@@ -40,7 +40,8 @@ internal class SqlCipherDocumentReconciliationDatabase(private val steps:SqlCiph
 /** Global maintenance only. No source URI, key owner, READY publication or root creation. */
 internal class DocumentReconciliation(private val database:DocumentReconciliationDatabase,
     deleteDatabase:DocumentDeleteDatabase,private val noBackupFilesDir:File,
-    private val fileOps:DocumentPublishFileOps=AndroidDocumentPublishFileOps) {
+    private val fileOps:DocumentPublishFileOps=AndroidDocumentPublishFileOps,
+    private val observePhase:(MaintenancePhase)->Unit={}) {
     private val files=DocumentFileInventory(noBackupFilesDir)
     private val root=noBackupFilesDir.toPath().toAbsolutePath().resolve("pag-documents-v1")
     private val deletion=DocumentDelete(deleteDatabase,noBackupFilesDir,fileOps)
@@ -49,10 +50,12 @@ internal class DocumentReconciliation(private val database:DocumentReconciliatio
         if(c.scope!=AccessScope.MAINTENANCE)throw ProductStorageFailure()
         documentFileGate(c,g)
     }
-    private fun checked(c:StorageContext,g:Long):Pair<DocumentRecoverySnapshot,DocumentNamespaceSnapshot> {
+    private fun checked(c:StorageContext,g:Long,observe:Boolean=false):Pair<DocumentRecoverySnapshot,DocumentNamespaceSnapshot> {
         gate(c,g)
+        if(observe)observePhase(MaintenancePhase.M03_DB_DOCUMENT_SNAPSHOT)
         val db=database.inventory(c) // Room is closed before touching the file namespace.
         gate(c,g)
+        if(observe)observePhase(MaintenancePhase.M04_FILE_INVENTORY)
         val actual=files.inspectRecovery(c,db.jobs.mapNotNull{it.stagingName}.toSet(),db.documents+db.jobs.map{it.blobName})
         if(!actual.rootPresent && (db.documents.isNotEmpty() || db.jobs.any{it.phase!="IMPORT_RESERVED"}))throw ProductStorageFailure()
         if(!actual.files.containsAll(db.documents))throw ProductStorageFailure()
@@ -75,9 +78,10 @@ internal class DocumentReconciliation(private val database:DocumentReconciliatio
         val g=c.generation;gate(c,g)
         DocumentNamespaceLane.drainAndFence {
             gate(c,g)
+            observePhase(MaintenancePhase.M02_DB_PREFLIGHT)
             preflight() // Existing runtime DB preflight also runs only after old workers drain.
             gate(c,g)
-            val first=checked(c,g).first // Validate ALL states before any mutation.
+            val first=checked(c,g,observe=true).first // Validate ALL states before any mutation.
             val ordered=first.jobs.sortedWith(compareBy<DocumentRecoveryJob>{
                 when(it.phase){"IMPORT_RESERVED","IMPORT_WRITING"->0;"IMPORT_CLOSED","FILE_PUBLISHED"->1;else->2}
             }.thenBy{it.id})
@@ -93,6 +97,7 @@ internal class DocumentReconciliation(private val database:DocumentReconciliatio
                 override fun finish(c:StorageContext,expected:DocumentJobRow)=database.commit(c,expected)
             },noBackupFilesDir,fileOps)
             ordered.forEach { job ->
+                observePhase(MaintenancePhase.M05_JOB_RECOVERY)
                 gate(c,g)
                 val (current,actual)=checked(c,g)
                 if(current.jobs.singleOrNull{it.id==job.id}!=job)throw ProductStorageFailure()
@@ -112,6 +117,7 @@ internal class DocumentReconciliation(private val database:DocumentReconciliatio
                 }
                 gate(c,g)
             }
+            observePhase(MaintenancePhase.M06_FINAL_INVENTORY)
             val (last,actual)=checked(c,g)
             if(last.jobs.isNotEmpty() || actual.staging.isNotEmpty() || actual.files!=last.documents)throw ProductStorageFailure()
             gate(c,g)

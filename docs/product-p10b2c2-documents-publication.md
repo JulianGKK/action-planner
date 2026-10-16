@@ -1,5 +1,11 @@
 # P10b2c2 — vollständige Verifikation und atomare Dokumenten-Publication
 
+> Fortschreibung P10b2e: Die hier historisch dokumentierte Hardlink-Publication
+> wird auf Android durch atomisches `renameat2(RENAME_NOREPLACE)` ersetzt.
+> Recovery akzeptiert weiterhin ausschließlich die eindeutig zugeordneten
+> staging-only-/final-only-Zustände; Details und tatsächliche Gerätenachweise
+> stehen im [P10b2e-Vertrag](product-p10b2e-android-document-import-fix.md).
+
 ## Stand und Umfang
 
 Baseline: sauberer Branch `p10b2c2-documents-publication`, HEAD `13d5ee3`

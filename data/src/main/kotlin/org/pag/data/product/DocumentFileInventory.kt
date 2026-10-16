@@ -12,6 +12,11 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption.READ
 import java.nio.file.attribute.BasicFileAttributes
 
+/** Resolve Android's trusted app-directory alias once at composition, as for the DB root.
+ * Never apply this to document roots/children: their no-symlink/canonical checks remain strict.
+ */
+internal fun productNoBackupRoot(platformNoBackupFilesDir: File): File = platformNoBackupFilesDir.canonicalFile
+
 internal enum class DocumentFileArea { STAGING, FILES }
 internal data class DocumentNamespaceSnapshot(val rootPresent: Boolean, val staging: Set<String>, val files: Set<String>)
 

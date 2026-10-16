@@ -1,5 +1,11 @@
 # P10b2c4 — globale Dokument-Reconciliation vor READY
 
+> Fortschreibung P10b2e: Die hier historisch dokumentierte Hardlink-Publication
+> wird auf Android durch atomisches `renameat2(RENAME_NOREPLACE)` ersetzt.
+> Recovery akzeptiert weiterhin ausschließlich die eindeutig zugeordneten
+> staging-only-/final-only-Zustände; Details und tatsächliche Gerätenachweise
+> stehen im [P10b2e-Vertrag](product-p10b2e-android-document-import-fix.md).
+
 ## Baseline und Umfang
 
 Branch `p10b2c4-documents-reconciliation`, sauberer Ausgangsbaum auf `9f0730b`
