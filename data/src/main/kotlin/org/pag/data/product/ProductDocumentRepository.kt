@@ -23,13 +23,43 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
     private val staging = DocumentImportStaging(steps, noBackupRoot)
     private val publication = DocumentPublication(steps, noBackupRoot)
     private val deletion = DocumentDelete(SqlCipherDocumentDeleteDatabase(app, inventory, owner), noBackupRoot)
+    override fun readText(actionId:String,expected:DocumentAsset,page:Int,request:DocumentTextRequest,
+        publish:(DocumentResult<DocumentTextPage>)->Unit) {
+        val started=System.nanoTime()
+        DocumentReadDispatch(access,worker,main,blocked).run(request,publish) {c ->
+            request.measured(DocumentTextPhase.WORKER_START,started)
+            if(page !in 0 until DocumentTextLimits.MAX_PAGES)return@run DocumentResult.Rejected(DocumentFailure.TEXT_UNSUPPORTED)
+            if(interruptedGeneration==c.generation)return@run DocumentResult.Rejected(DocumentFailure.MAINTENANCE_REQUIRED)
+            var held:DocumentReadSnapshot?=null
+            try {
+                val dbStarted=System.nanoTime()
+                val snapshot=read(c) {db -> db.documents().textSnapshot(actionId,expected,c).also {if(it is DocumentResult.Value)held=it.value}}
+                request.measured(DocumentTextPhase.DB_SNAPSHOT,dbStarted)
+                when(snapshot) {
+                    is DocumentResult.Rejected -> snapshot
+                    is DocumentResult.Value -> {
+                        val s=snapshot.value;val inv=DocumentFileInventory(noBackupRoot)
+                        val invStarted=System.nanoTime()
+                        val files=inv.inspect(c,s.staging,s.required+s.optional)
+                        if(!files.rootPresent || files.staging!=s.staging || !files.files.containsAll(s.required))throw ProductStorageFailure()
+                        request.measured(DocumentTextPhase.INVENTORY,invStarted)
+                        requireOperations(c)
+                        val readStarted=System.nanoTime()
+                        val result=inv.readText(c,s.blob,s.staging,files.files,s.asset.id,s.key,s.asset.plaintextSize,page,request)
+                        request.measured(DocumentTextPhase.READ_AUTH_UTF8_PAGE,readStarted)
+                        DocumentResult.Value(result)
+                    }
+                }
+            } finally {held?.close()}
+        }
+    }
     override fun readImage(actionId:String, expected:DocumentAsset, request:DocumentImageRequest,
         decoder:DocumentImageDecoder, publish:(DocumentResult<DocumentImage>)->Unit) {
         val requested=System.nanoTime()
-        DocumentImageDispatch(access,worker,main,blocked).run(request,publish) { c ->
+        DocumentReadDispatch(access,worker,main,blocked).run(request,publish) { c ->
             if(interruptedGeneration==c.generation) return@run DocumentResult.Rejected(DocumentFailure.MAINTENANCE_REQUIRED)
             request.measured(DocumentImagePhase.WORKER_START,requested)
-            var held:DocumentImageSnapshot?=null
+            var held:DocumentReadSnapshot?=null
             try {
                 val started=System.nanoTime()
                 val snapshot=read(c) { db ->
@@ -46,7 +76,7 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
     private fun <T> read(c: StorageContext, work: suspend (ActionDatabase) -> T): T {
         requireOperations(c, AccessPoint.OPERATION)
         if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
-        return (owner() ?: throw ProductStorageFailure()).withDbKey(c) { key ->
+        return withDocumentReadKey(owner() ?: throw ProductStorageFailure(),c) { key ->
             database.use(inventory.database, key, c) { db -> db.withReadTransaction { work(db) } }
         }
     }

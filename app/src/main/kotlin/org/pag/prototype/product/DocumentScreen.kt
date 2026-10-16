@@ -3,6 +3,11 @@ package org.pag.prototype.product
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -22,6 +27,7 @@ import org.pag.domain.*
     d.error?.let { Text(documentFailure(it)) }
     val expected=d.confirmingDelete
     when {
+        d.textViewed!=null -> DocumentTextPane(d)
         d.viewed!=null -> {
             PreparationHeading(d.viewed!!.displayName)
             FormOutlinedButton(d::closeImage) {Text("‹ Zur Dokumentenliste")}
@@ -72,6 +78,8 @@ import org.pag.domain.*
                 Text("Importiert am: ${formattedTime(item.importedAt)}")
                 if(item.format in setOf(DocumentFormat.JPEG,DocumentFormat.PNG)) {
                     FormOutlinedButton({d.viewImage(item)},enabled=!d.busy) {Text("Bild ansehen")}
+                } else if(item.format==DocumentFormat.TEXT) {
+                    FormOutlinedButton({d.viewText(item)},enabled=!d.busy) {Text("Text ansehen")}
                 } else Text("Vorschau in dieser Version noch nicht verfügbar.")
                 FormOutlinedButton({d.requestDelete(item)},enabled=!d.busy) { Text("Löschen") }
             }
@@ -81,6 +89,8 @@ import org.pag.domain.*
 }
 internal fun documentFormat(format: DocumentFormat) = when(format) { DocumentFormat.TEXT -> "UTF-8-Text"; else -> format.name }
 internal fun documentFailure(reason: DocumentFailure) = when(reason) {
+    DocumentFailure.TEXT_FORMAT -> "Dieses Dokument enthält keinen gültigen UTF-8-Klartext und kann nicht angezeigt werden."
+    DocumentFailure.TEXT_UNSUPPORTED -> "Diese Textseite kann nicht angezeigt werden. Bitte das Dokument erneut bewusst öffnen."
     DocumentFailure.IMAGE_UNSUPPORTED -> "Dieses Bild ist für die sichere Anzeige zu groß oder wird nicht unterstützt."
     DocumentFailure.INVALID -> "Bitte einen Dokumentnamen mit 1–160 Zeichen und ein unterstütztes Format angeben."
     DocumentFailure.CAPACITY -> "Die Dokumentanzahl oder Speichergrenze dieser Aktion ist erreicht."
@@ -91,4 +101,29 @@ internal fun documentFailure(reason: DocumentFailure) = when(reason) {
     DocumentFailure.NOT_ALLOWED -> "Dokumente sind in diesem Aktionsstatus nicht verfügbar."
     DocumentFailure.NOT_FOUND -> "Das Dokument oder die Aktion ist nicht mehr vorhanden."
     DocumentFailure.STALE -> "Der Dokumentbestand hat sich geändert. Bitte die Liste aktualisieren."
+}
+
+@Composable internal fun DocumentTextPane(d:DocumentModel) {
+    PreparationHeading(d.textViewed?.displayName.orEmpty())
+    FormOutlinedButton(d::closeText) {Text("‹ Zur Dokumentenliste")}
+    Text(if(d.textPageCount>0) "Seite ${d.textPageIndex+1} von ${d.textPageCount}" else "Seite ${d.textPageIndex+1}")
+    @Composable fun navigation() {
+        FormOutlinedButton(d::previousTextPage,enabled=!d.textLoading && d.textPageIndex>0) {Text("‹ Seite zurück")}
+        FormOutlinedButton(d::nextTextPage,enabled=!d.textLoading && d.textPageIndex+1<d.textPageCount) {Text("Seite weiter ›")}
+    }
+    navigation()
+    if(d.textLoading) Text("Text wird sicher gelesen …")
+    d.text?.let {content ->
+        LaunchedEffect(d.textViewed?.id,d.textPageIndex,content) {withFrameNanos {};d.textFrame()}
+        if(content.isEmpty())Text("Dieses Textdokument ist leer.") else {
+            val rows=remember(content) {documentTextRows(content)}
+            androidx.compose.runtime.key(d.textPageIndex) {
+                LazyColumn(Modifier.fillMaxWidth().height(360.dp)) {
+                    items(rows.size) {index->Text(rows[index],modifier=Modifier.fillMaxWidth())}
+                }
+            }
+        }
+        navigation()
+        FormOutlinedButton(d::closeText) {Text("‹ Zur Dokumentenliste")}
+    }
 }

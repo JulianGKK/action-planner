@@ -105,7 +105,11 @@ internal object DocumentStorageRules {
 @Dao internal abstract class DocumentDao {
     /** Technical snapshot only. Existing binding/capacity validation wipes all other row keys. */
     // The caller supplies withReadTransaction; @Transaction would request a write transaction.
-    suspend fun imageSnapshot(actionId:String, expected:DocumentAsset, c:StorageContext):DocumentResult<DocumentImageSnapshot> {
+    suspend fun imageSnapshot(actionId:String, expected:DocumentAsset, c:StorageContext)=
+        viewerSnapshot(actionId,expected,c,setOf(DocumentFormat.JPEG,DocumentFormat.PNG))
+    suspend fun textSnapshot(actionId:String, expected:DocumentAsset,c:StorageContext)=
+        viewerSnapshot(actionId,expected,c,setOf(DocumentFormat.TEXT))
+    private suspend fun viewerSnapshot(actionId:String,expected:DocumentAsset,c:StorageContext,formats:Set<DocumentFormat>):DocumentResult<DocumentReadSnapshot> {
         requireOperations(c,AccessPoint.OPERATION)
         return deleteState(c) { docs,jobs ->
             val status=actionStatus(actionId) ?: return@deleteState DocumentResult.Rejected(DocumentFailure.NOT_FOUND)
@@ -116,12 +120,12 @@ internal object DocumentStorageRules {
             if(jobs.any {it.documentId==row.id}) return@deleteState DocumentResult.Rejected(DocumentFailure.NOT_FOUND)
             if(DocumentMetadataRow(row.id,row.actionId,row.displayName,row.format,row.plaintextSize,row.importedAt).model()!=expected)
                 return@deleteState DocumentResult.Rejected(DocumentFailure.STALE)
-            if(expected.format !in setOf(DocumentFormat.JPEG,DocumentFormat.PNG)) return@deleteState DocumentResult.Rejected(DocumentFailure.NOT_ALLOWED)
+            if(expected.format !in formats) return@deleteState DocumentResult.Rejected(DocumentFailure.NOT_ALLOWED)
             val required=docs.map {it.blobName}.toSet()+jobs.filter {it.phase=="FILE_PUBLISHED"}.map {it.blobName}
             val optional=jobs.filter {it.phase=="DELETE_FILE_PENDING"}.map {it.blobName}.toSet()
             val staging=jobs.filter {it.phase=="IMPORT_CLOSED"}.map {it.stagingName!!}.toSet()
             requireOperations(c)
-            DocumentResult.Value(DocumentImageSnapshot(expected,row.blobName,row.fileKey.copyOf(),required,optional,staging))
+            DocumentResult.Value(DocumentReadSnapshot(expected,row.blobName,row.fileKey.copyOf(),required,optional,staging))
         }
     }
     @Query("SELECT COUNT(*) FROM documents d WHERE d.actionId=:a AND NOT EXISTS (SELECT 1 FROM document_jobs j WHERE j.documentId=d.id AND j.operation='DELETE')")

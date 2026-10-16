@@ -5,7 +5,7 @@ import org.pag.domain.*
 import java.io.File
 
 /** Internal key-bearing lease, never a domain projection. */
-internal class DocumentImageSnapshot(val asset:DocumentAsset, val blob:String, val key:ByteArray,
+internal class DocumentReadSnapshot(val asset:DocumentAsset, val blob:String, val key:ByteArray,
     val required:Set<String>, val optional:Set<String>, val staging:Set<String>):AutoCloseable {
     override fun close() { key.fill(0) }
 }
@@ -13,7 +13,7 @@ internal class DocumentImageSnapshot(val asset:DocumentAsset, val blob:String, v
 /** Caller holds the one namespace lane. DB/key owner already closed before this call. */
 internal class DocumentImageRead(root:File) {
     private val inventory=DocumentFileInventory(root)
-    fun decode(c:StorageContext,s:DocumentImageSnapshot,decoder:DocumentImageDecoder,request:DocumentImageRequest?=null):DocumentImage {
+    fun decode(c:StorageContext,s:DocumentReadSnapshot,decoder:DocumentImageDecoder,request:DocumentImageRequest?=null):DocumentImage {
         DocumentNamespaceLane.requireExclusive()
         requireOperations(c,AccessPoint.OPERATION)
         val files=inventory.inspect(c,s.staging,s.required+s.optional)
@@ -37,23 +37,37 @@ internal class DocumentImageRead(root:File) {
 }
 
 /** Cancellation narrows an existing READY context; it never creates storage authority. */
-internal fun imageContext(original:StorageContext,request:DocumentImageRequest):StorageContext = object:StorageContext {
+internal interface DocumentReadContext:StorageContext {val sessionAuthority:StorageContext}
+internal fun documentReadContext(original:StorageContext,request:DocumentReadRequest):StorageContext = object:DocumentReadContext {
+    override val sessionAuthority=original
     override val generation=original.generation
     override val scope=original.scope
     override fun check(point:AccessPoint)=request.active && original.generation==generation && original.check(point)
     override fun publish(result:()->Unit):Boolean=original.publish {if(request.active && original.generation==generation) result()}
 }
 
+/** Request cancellation is not session revocation. DB/worker still use the narrower context;
+ * the existing key owner validates the actual session, and its short lease always ends here. */
+internal fun <T> withDocumentReadKey(owner:SessionDbKeyOwner,c:StorageContext,work:(ByteArray)->T):T {
+    requireOperations(c)
+    val result=owner.withDbKey((c as? DocumentReadContext)?.sessionAuthority ?: c) {key->
+        requireOperations(c)
+        work(key)
+    }
+    requireOperations(c)
+    return result
+}
+
 /** Resource-aware variant of the established executor/publication boundary. */
-internal class DocumentImageDispatch(private val access:StorageAccess,private val worker:java.util.concurrent.Executor,
+internal class DocumentReadDispatch(private val access:StorageAccess,private val worker:java.util.concurrent.Executor,
     private val main:java.util.concurrent.Executor,private val blocked:()->Unit) {
-    fun run(request:DocumentImageRequest,publish:(DocumentResult<DocumentImage>)->Unit,
-        work:(StorageContext)->DocumentResult<DocumentImage>) {
+    fun <T:AutoCloseable> run(request:DocumentReadRequest,publish:(DocumentResult<T>)->Unit,
+        work:(StorageContext)->DocumentResult<T>) {
         val original=access.acquire(AccessScope.READY) ?: return
         if(request.generation!=null && request.generation!=original.generation)return
-        val c=imageContext(original,request);val ticket=DocumentNamespaceLane.ticket()
+        val c=documentReadContext(original,request);val ticket=DocumentNamespaceLane.ticket()
         worker.execute {
-            var image:DocumentImage?=null
+            var image:T?=null
             try {
                 val result=DocumentNamespaceLane.exclusive(ticket) {
                     requireOperations(c,AccessPoint.OPERATION)
@@ -68,6 +82,12 @@ internal class DocumentImageDispatch(private val access:StorageAccess,private va
               catch (_:DocumentImageUnsupported) {
                   image?.close()
                   main.execute {c.publish {if(request.active)publish(DocumentResult.Rejected(DocumentFailure.IMAGE_UNSUPPORTED))}}
+              } catch (_:DocumentTextUnavailable) {
+                  image?.close()
+                  main.execute {c.publish {if(request.active)publish(DocumentResult.Rejected(DocumentFailure.TEXT_UNSUPPORTED))}}
+              } catch (_:DocumentTextFormatFailure) {
+                  image?.close()
+                  main.execute {c.publish {if(request.active)publish(DocumentResult.Rejected(DocumentFailure.TEXT_FORMAT))}}
               } catch (_:Exception) {
                   image?.close()
                   main.execute {if(c.check(AccessPoint.STEP))blocked()}

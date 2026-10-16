@@ -28,13 +28,17 @@ object DocumentRules {
 
 /** One attempt only; opened by the authorized worker after durable WRITING, never by UI. */
 fun interface DocumentSource { fun open(): java.io.InputStream }
-enum class DocumentFailure { INVALID, NOT_ALLOWED, NOT_FOUND, STALE, CAPACITY, MAINTENANCE_REQUIRED, SOURCE_UNAVAILABLE, TOO_LARGE, FORMAT, IMAGE_UNSUPPORTED }
+enum class DocumentFailure { INVALID, NOT_ALLOWED, NOT_FOUND, STALE, CAPACITY, MAINTENANCE_REQUIRED, SOURCE_UNAVAILABLE, TOO_LARGE, FORMAT, IMAGE_UNSUPPORTED, TEXT_UNSUPPORTED, TEXT_FORMAT }
 sealed interface DocumentResult<out T> {
     data class Value<T>(val value: T) : DocumentResult<T>
     data class Rejected(val reason: DocumentFailure) : DocumentResult<Nothing>
 }
 /** Key-free product port. No URI, blob names, jobs or cryptographic data. */
 interface DocumentRepository {
+    fun readText(actionId:String, expected:DocumentAsset, page:Int, request:DocumentTextRequest,
+        publish:(DocumentResult<DocumentTextPage>)->Unit) {
+        publish(DocumentResult.Rejected(DocumentFailure.NOT_ALLOWED))
+    }
     /** Explicit image open only. Decoder runs on the storage worker after authenticated EOF.
      * No key or locator crosses this boundary. The caller owns/cancels the request and result. */
     fun readImage(actionId: String, expected: DocumentAsset, request: DocumentImageRequest,
@@ -56,12 +60,32 @@ fun interface DocumentImageDecoder {
 }
 class DocumentImageUnsupported : RuntimeException()
 enum class DocumentImagePhase { WORKER_START, DB_SNAPSHOT, READ_AND_AUTH, DECODE, TOTAL, CLEANUP }
-class DocumentImageRequest(val generation:Long?=null, private val timing:(DocumentImagePhase,Long)->Unit = {_,_->}) {
+interface DocumentReadRequest { val generation:Long?;val active:Boolean }
+class DocumentImageRequest(override val generation:Long?=null, private val timing:(DocumentImagePhase,Long)->Unit = {_,_->}):DocumentReadRequest {
     private val cancelled = java.util.concurrent.atomic.AtomicBoolean(false)
-    val active get() = !cancelled.get()
+    override val active get() = !cancelled.get()
     fun cancel() { cancelled.set(true) }
     /** Diagnostic durations only, never an authority or interaction signal. */
     fun measured(phase:DocumentImagePhase,started:Long) {
         try {timing(phase,(System.nanoTime()-started)/1_000_000)} catch (_:RuntimeException) {}
     }
+}
+
+object DocumentTextLimits { const val PAGE_BYTES=32_768;const val MAX_PAGES=1024 }
+enum class DocumentTextPhase { WORKER_START, DB_SNAPSHOT, INVENTORY, READ_AUTH_UTF8_PAGE, UTF8_DECODE, PAGE_PREPARE, PUBLICATION, VISIBLE, PAGE_CHANGE, CLEANUP }
+class DocumentTextRequest(override val generation:Long?=null,private val timing:(DocumentTextPhase,Long)->Unit={_,_->}):DocumentReadRequest {
+    private val cancelled=java.util.concurrent.atomic.AtomicBoolean(false)
+    override val active get() = !cancelled.get()
+    fun cancel() {cancelled.set(true)}
+    fun measured(phase:DocumentTextPhase,started:Long) {
+        duration(phase,System.nanoTime()-started)
+    }
+    fun duration(phase:DocumentTextPhase,nanos:Long) {try {timing(phase,nanos/1_000_000)}catch(_:RuntimeException){}}
+}
+/** Owns one bounded mutable page. Only the UI's necessary String copy is immutable. */
+class DocumentTextPage(val index:Int,val pageCount:Int,chars:CharArray):AutoCloseable {
+    init { require(index>=0 && pageCount in 1..DocumentTextLimits.MAX_PAGES && index<pageCount && chars.size<=DocumentTextLimits.PAGE_BYTES) }
+    private var content:CharArray?=chars
+    @Synchronized fun text():String?=content?.let {String(it)}
+    @Synchronized override fun close() {content?.fill('\u0000');content=null}
 }
