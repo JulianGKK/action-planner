@@ -1,5 +1,10 @@
 # P10a — Dokumente: Produkt-, Privacy- und Security-Vertrag
 
+Gezielte spätere Viewerweiterentwicklung: [P10c1](product-p10c1-secure-image-viewer.md)
+ergänzt ausschließlich JPEG-/PNG-Anzeige über einen vollständig authentifizierten,
+begrenzten RAM-Pfad. PDF-/Textviewer und externe Klartextübergabe bleiben gesperrt.
+Der folgende ursprüngliche P10a-Vertrag bleibt als historischer Ausgangspunkt erhalten.
+
 > Gezielte spätere Erweiterung: [P10d](product-p10d-camera-import.md) erlaubt einen
 > direkten internen JPEG-Kameraimport mit CAMERA-Runtimepermission und begrenztem
 > RAM-Puffer. Die folgenden Kameraausschlüsse beschreiben den historischen

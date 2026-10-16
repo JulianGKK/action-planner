@@ -116,7 +116,26 @@ internal object DocumentFileStreams {
 
     /** No plaintext consumer. Only full authenticated EOF + exact length + format may return. */
     fun verify(c: StorageContext, documentId: String, key: ByteArray, source: InputStream,
-        expectedSize: Long, format: DocumentFormat): DocumentVerification = documentFileBoundary {
+        expectedSize: Long, format: DocumentFormat): DocumentVerification = verifyInto(c,documentId,key,source,expectedSize,format,null)
+
+    /** Bounded owned RAM; never returns before full authentication, EOF and format validation. */
+    fun readImage(c: StorageContext, documentId: String, key: ByteArray, source: InputStream,
+        expectedSize: Long, format: DocumentFormat): ByteArray {
+        if (!DocumentRules.validSize(expectedSize) || format !in setOf(DocumentFormat.JPEG,DocumentFormat.PNG)) {
+            source.close(); throw ProductStorageFailure()
+        }
+        var bytes:ByteArray?=null
+        try {
+            source.use {
+                bytes=ByteArray(expectedSize.toInt())
+                verifyInto(c,documentId,key,it,expectedSize,format,bytes).requireCurrent(c)
+            }
+            return bytes!!
+        } catch (failure:Throwable) { bytes?.fill(0);throw failure }
+    }
+
+    private fun verifyInto(c: StorageContext, documentId: String, key: ByteArray, source: InputStream,
+        expectedSize: Long, format: DocumentFormat, destination:ByteArray?): DocumentVerification = documentFileBoundary {
         val generation = c.generation
         source.use { raw ->
             if (!DocumentRules.validSize(expectedSize)) throw ProductStorageFailure()
@@ -133,6 +152,7 @@ internal object DocumentFileStreams {
                                 documentFileGate(c, generation)
                                 if (count == -1) break // Exceptions/zero reads are never EOF.
                                 if (count <= 0 || count > maximumRead || count > expectedSize - length) throw ProductStorageFailure()
+                                destination?.let { buffer.copyInto(it,length.toInt(),0,count) }
                                 length += count
                                 formatCheck.accept(buffer, count)
                                 buffer.fill(0)

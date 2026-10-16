@@ -102,10 +102,25 @@ internal class DocumentFileInventory(noBackupFilesDir: File) {
         return names.toSet()
     }
 
-    /** Opens existing ciphertext read-only with NOFOLLOW; no path or plaintext escapes. */
+    /** Same strict namespace/identity checks for verification and explicit image reads. */
     fun verifyExisting(c: StorageContext, area: DocumentFileArea, name: String, knownStaging: Set<String>,
         knownFiles: Set<String>, documentId: String, key: ByteArray, expectedSize: Long,
-        format: DocumentFormat): DocumentVerification = documentFileBoundary {
+        format: DocumentFormat): DocumentVerification = readExisting(c,area,name,knownStaging,knownFiles) {
+            DocumentFileStreams.verify(c,documentId,key,it,expectedSize,format)
+        }
+
+    fun readImage(c: StorageContext, name: String, knownStaging: Set<String>, knownFiles: Set<String>,
+        documentId: String, key: ByteArray, expectedSize: Long, format: DocumentFormat): ByteArray {
+        var bytes:ByteArray?=null
+        try {
+            return readExisting(c,DocumentFileArea.FILES,name,knownStaging,knownFiles) {
+                DocumentFileStreams.readImage(c,documentId,key,it,expectedSize,format).also { bytes=it }
+            }
+        } catch (failure:Throwable) { bytes?.fill(0);throw failure }
+    }
+
+    private fun <T> readExisting(c: StorageContext, area: DocumentFileArea, name: String,
+        knownStaging:Set<String>, knownFiles:Set<String>, read:(java.io.InputStream)->T):T = documentFileBoundary {
         val generation = c.generation
         val ticket = DocumentNamespaceLane.ticket()
         DocumentNamespaceLane.exclusive(ticket) {
@@ -120,12 +135,12 @@ internal class DocumentFileInventory(noBackupFilesDir: File) {
             val result = Files.newByteChannel(path,setOf(READ,NOFOLLOW_LINKS)).use { channel ->
                 unchanged(c,generation,path,false,attributes)
                 documentFileGate(c,generation)
-                DocumentFileStreams.verify(c,documentId,key,Channels.newInputStream(channel),expectedSize,format)
+                read(Channels.newInputStream(channel))
             }
             documentFileGate(c,generation)
             unchanged(c,generation,path,false,attributes)
             if (inspect(c,staging,files) != before) throw ProductStorageFailure()
-            result.requireCurrent(c)
+            documentFileGate(c,generation)
             result
         }
     }

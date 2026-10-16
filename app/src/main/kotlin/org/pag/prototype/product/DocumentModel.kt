@@ -11,6 +11,41 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit,
     private val cameraAuthority: () -> Boolean = { true }) {
     private var cameraImportTime: Long? = null
+    internal var viewed by mutableStateOf<DocumentAsset?>(null); private set
+    internal var image by mutableStateOf<DocumentImage?>(null); private set
+    internal var imageLoading by mutableStateOf(false); private set
+    private var imageRequest:DocumentImageRequest?=null
+    internal fun clearImage() {
+        val started=System.nanoTime()
+        val request=imageRequest
+        imageRequest?.cancel();imageRequest=null
+        image?.close();image=null;viewed=null;imageLoading=false
+        request?.measured(DocumentImagePhase.CLEANUP,started)
+    }
+    internal fun closeImage() = act {clearImage();error=null}
+    internal fun viewImage(item:DocumentAsset) = act {
+        if(!cameraAuthority() || item !in items.orEmpty() || item.format !in setOf(DocumentFormat.JPEG,DocumentFormat.PNG))return@act
+        clearImage();camera.clear();error=null
+        viewed=item;imageLoading=true
+        val started=System.nanoTime()
+        val attempt=DocumentImageRequest(generation=generation) {phase,ms ->
+            if(org.pag.prototype.BuildConfig.DEBUG) android.util.Log.i("PaGImageTiming","${phase.name} ms=$ms")
+        };imageRequest=attempt
+        val e=epoch;val g=generation
+        repository()!!.readImage(boundId!!,item,attempt,AndroidDocumentImageDecoder) {result ->
+            if(!attempt.active || imageRequest!==attempt || !available || !cameraAuthority() || e!=epoch || g!=generation) {
+                (result as? DocumentResult.Value)?.value?.close();return@readImage
+            }
+            imageLoading=false
+            attempt.measured(DocumentImagePhase.TOTAL,started)
+            when(result) {
+                is DocumentResult.Value -> {
+                    image=result.value
+                }
+                is DocumentResult.Rejected -> error=result.reason
+            }
+        }
+    }
     val cameraSupported get() = cameraPermission != null
     private var cameraPermission: CameraPermission? = null
     internal val camera = DocumentCameraModel({ available && cameraAuthority() }, interaction)
@@ -52,6 +87,7 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
     val selectionUnavailable get() = available && picker()?.unavailable(boundId!!)==true
     val canSave get() = importing && DocumentRules.validName(name) && format!=null && !busy
     fun clear() {
+        clearImage()
         camera.clear(); cameraImportTime=null
         epoch++; request++; opened=false; boundId=null; boundStatus=null; generation=-1
         items=null; loading=false; busy=false; error=null; importing=false; name=""; format=null; confirmingDelete=null

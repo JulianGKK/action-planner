@@ -28,16 +28,40 @@ object DocumentRules {
 
 /** One attempt only; opened by the authorized worker after durable WRITING, never by UI. */
 fun interface DocumentSource { fun open(): java.io.InputStream }
-enum class DocumentFailure { INVALID, NOT_ALLOWED, NOT_FOUND, STALE, CAPACITY, MAINTENANCE_REQUIRED, SOURCE_UNAVAILABLE, TOO_LARGE, FORMAT }
+enum class DocumentFailure { INVALID, NOT_ALLOWED, NOT_FOUND, STALE, CAPACITY, MAINTENANCE_REQUIRED, SOURCE_UNAVAILABLE, TOO_LARGE, FORMAT, IMAGE_UNSUPPORTED }
 sealed interface DocumentResult<out T> {
     data class Value<T>(val value: T) : DocumentResult<T>
     data class Rejected(val reason: DocumentFailure) : DocumentResult<Nothing>
 }
 /** Key-free product port. No URI, blob names, jobs or cryptographic data. */
 interface DocumentRepository {
+    /** Explicit image open only. Decoder runs on the storage worker after authenticated EOF.
+     * No key or locator crosses this boundary. The caller owns/cancels the request and result. */
+    fun readImage(actionId: String, expected: DocumentAsset, request: DocumentImageRequest,
+        decoder: DocumentImageDecoder, publish: (DocumentResult<DocumentImage>) -> Unit) {
+        publish(DocumentResult.Rejected(DocumentFailure.NOT_ALLOWED))
+    }
     fun summary(actionId: String, publish: (DocumentResult<DocumentSummary>) -> Unit)
     fun list(actionId: String, publish: (DocumentResult<List<DocumentAsset>>) -> Unit)
     fun importDocument(actionId: String, name: String, format: DocumentFormat, source: DocumentSource,
         publish: (DocumentResult<Unit>) -> Unit)
     fun deleteDocument(actionId: String, expected: DocumentAsset, publish: (DocumentResult<Unit>) -> Unit)
+}
+
+interface DocumentImage : AutoCloseable
+fun interface DocumentImageDecoder {
+    /** Bytes are borrowed for this synchronous call and wiped by data immediately afterwards.
+     * Check cancellation around every expensive operation; never retain bytes or write files. */
+    fun decode(bytes: ByteArray, format: DocumentFormat, check: () -> Unit): DocumentImage
+}
+class DocumentImageUnsupported : RuntimeException()
+enum class DocumentImagePhase { WORKER_START, DB_SNAPSHOT, READ_AND_AUTH, DECODE, TOTAL, CLEANUP }
+class DocumentImageRequest(val generation:Long?=null, private val timing:(DocumentImagePhase,Long)->Unit = {_,_->}) {
+    private val cancelled = java.util.concurrent.atomic.AtomicBoolean(false)
+    val active get() = !cancelled.get()
+    fun cancel() { cancelled.set(true) }
+    /** Diagnostic durations only, never an authority or interaction signal. */
+    fun measured(phase:DocumentImagePhase,started:Long) {
+        try {timing(phase,(System.nanoTime()-started)/1_000_000)} catch (_:RuntimeException) {}
+    }
 }
