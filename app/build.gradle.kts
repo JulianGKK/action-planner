@@ -6,8 +6,8 @@ android {
         applicationId = "org.pag.prototype.a"
         minSdk = 30
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1-stage-a"
+        versionCode = 2
+        versionName = "0.1.0-alpha.2"
         testInstrumentationRunner = "org.pag.prototype.I3LifecycleProbe"
     }
     buildFeatures { compose = true; buildConfig = true }
