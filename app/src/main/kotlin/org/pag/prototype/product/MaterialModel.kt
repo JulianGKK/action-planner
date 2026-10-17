@@ -33,12 +33,18 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
         board = null; loading = false; discard(); busy = false; error = null
     }
     private fun discard() { selected = null; input = null; expected = null; confirmingDelete = false }
-    internal fun enter() {
+    internal fun enter(deferRead:Boolean=false) {
         clear()
         val s = session(); val a = action() ?: return
         if (repository == null || s.state != SessionState.READY || !MaterialRules.mayRead(a.status)) return
         boundAction = a.id; boundStatus = a.status; boundGeneration = s.generation; opened = true
-        refresh()
+        if(deferRead)loading=true else refresh()
+    }
+    internal fun acceptWorkspaceBoard(actionId:String,generation:Long,value:MaterialBoard):Boolean {
+        if(!available || boundAction!=actionId || boundGeneration!=generation || !loading || board!=null ||
+            form || selected!=null || value.actionId!=actionId || value.items.any{it.actionId!=actionId})return false
+        readRequest++;board=value;loading=false;error=null
+        return true
     }
     fun openCompleted(prepare: () -> Unit) {
         val s = session(); val a = action() ?: return; val token = epoch

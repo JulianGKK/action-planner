@@ -26,4 +26,9 @@
     <instrumentation android:name="org.pag.prototype.P10c2TextProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P10c3PdfFeasibilityProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P10c3PdfViewerProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P11PerformanceProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P11ViewerPhaseProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P11UnlockProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P11LoadingGeometryProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P11PdfVariantProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

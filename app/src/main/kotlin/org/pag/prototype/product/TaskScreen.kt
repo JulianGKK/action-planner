@@ -44,14 +44,16 @@ import java.time.format.FormatStyle
     }
     if(model.writable)FormButton({model.add()},enabled=!model.busy){Text("+ Aufgabe")}
     Text("Dringende / offene Aufgaben",style=MaterialTheme.typography.titleMedium)
-    Text("Hoch offen / in Arbeit: ${board.active.count{it.priority==TaskPriority.HIGH}} · Offen: ${board.active.count{it.status==TaskStatus.OPEN}} · In Arbeit: ${board.active.count{it.status==TaskStatus.IN_PROGRESS}}")
+    val activeTasks=board.active
+    val closedTasks=board.closed
+    Text("Hoch offen / in Arbeit: ${activeTasks.count{it.priority==TaskPriority.HIGH}} · Offen: ${activeTasks.count{it.status==TaskStatus.OPEN}} · In Arbeit: ${activeTasks.count{it.status==TaskStatus.IN_PROGRESS}}")
     model.filter?.let{id->Text("Betrifft: ${people.persons.find{it.person.id==id}?.person?.pseudonym.orEmpty()}");FormOutlinedButton({model.showPerson(null)}){Text("Alle Aufgaben")}}
-    val active=board.active.filter{model.filter==null || it.affectedPersonId==model.filter}
+    val active=activeTasks.filter{model.filter==null || it.affectedPersonId==model.filter}
     active.forEach{t->FormOutlinedButton({model.open(t)},modifier=Modifier.fillMaxWidth(),enabled=!model.busy){TaskSummary(t,people)}}
     if(active.isEmpty())Text(if(board.tasks.isEmpty() && people.status==ActionStatus.PREPARATION)"Noch keine Aufgaben." else "Keine offenen Aufgaben.")
     var closed by remember{mutableStateOf(false)}
-    FormTextButton({model.touch();closed=!closed}){Text("Erledigt / Entfällt (${board.closed.size}) ${if(closed)"▴" else "▾"}")}
-    if(closed)board.closed.filter{model.filter==null || it.affectedPersonId==model.filter}.forEach{t->FormOutlinedButton({model.open(t)},modifier=Modifier.fillMaxWidth()){TaskSummary(t,people)}}
+    FormTextButton({model.touch();closed=!closed}){Text("Erledigt / Entfällt (${closedTasks.size}) ${if(closed)"▴" else "▾"}")}
+    if(closed)closedTasks.filter{model.filter==null || it.affectedPersonId==model.filter}.forEach{t->FormOutlinedButton({model.open(t)},modifier=Modifier.fillMaxWidth()){TaskSummary(t,people)}}
     if(people.status==ActionStatus.PREPARATION){
         var templates by remember{mutableStateOf(false)}
         FormTextButton({model.touch();templates=!templates}){Text("Aufgaben aus Vorlagen")}

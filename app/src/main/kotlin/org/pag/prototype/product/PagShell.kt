@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.semantics.*
@@ -54,13 +55,18 @@ internal fun countdownText(millis: Long): String {
     FormTextButton(onClick, modifier = Modifier.heightIn(min = 48.dp)) { Text(label) }
 }
 
-@Composable internal fun PagLoadingState() {
-    Column(Modifier.fillMaxWidth().heightIn(min = 160.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Geschützter Speicher wird geprüft", style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.semantics { heading() })
-        LinearProgressIndicator(Modifier.fillMaxWidth())
+/** Reserve the actual label geometry immediately; reveal changes pixels/semantics only. */
+@Composable internal fun PagReadStatus(loading:Boolean,label:String) {
+    var visible by remember(loading,label){mutableStateOf(false)}
+    LaunchedEffect(loading,label){if(loading){delay(200);visible=true}}
+    Box(Modifier.fillMaxWidth().heightIn(min=48.dp)) {
+        Text(label,style=MaterialTheme.typography.bodyMedium,
+            modifier=Modifier.alpha(if(loading && visible)1f else 0f).clearAndSetSemantics {
+                if(loading && visible){text=androidx.compose.ui.text.AnnotatedString(label);liveRegion=LiveRegionMode.Polite;heading()}
+            })
     }
 }
+@Composable internal fun PagLoadingState(label:String="Inhalt wird geladen …")=PagReadStatus(true,label)
 @Composable internal fun PagEmptyState(onCreate: () -> Unit) {
     Column(Modifier.fillMaxWidth().heightIn(min = 160.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Noch keine Aktionen", style = MaterialTheme.typography.titleLarge,
@@ -117,7 +123,8 @@ internal const val FEEDBACK_MIN_DURATION_MILLIS = 5000L
 internal fun bannerProgress(elapsedMillis: Long, duration: Long): Float =
     if (duration <= 0) 0f else (1.0 - elapsedMillis.coerceAtLeast(0).toDouble() / duration).coerceIn(0.0, 1.0).toFloat()
 
-internal suspend fun expireFeedback(id: Long, duration: Long, dismiss: (Long) -> Unit, progress: (Float) -> Unit = {}) {
+internal suspend fun expireFeedback(id: Long, duration: Long, dismiss: (Long) -> Unit, progress: ((Float) -> Unit)? = null) {
+    if (progress == null) { delay(duration.coerceAtLeast(0)); dismiss(id); return }
     // UX lifetime only. This clock never supplies a session deadline or interaction.
     val start = System.nanoTime()
     progress(1f)
@@ -148,18 +155,16 @@ internal suspend fun expireFeedback(id: Long, duration: Long, dismiss: (Long) ->
     }
 }
 
-/** Ephemeral result feedback only. Text announces once; progress has no accessibility node. */
+/** Ephemeral result feedback, one announcement and one expiry wakeup. */
 @Composable internal fun PagStatusBanner(feedback: StatusFeedback, dismiss: (Long) -> Unit) {
     val accessibility = LocalAccessibilityManager.current
     val duration = accessibility?.calculateRecommendedTimeoutMillis(FEEDBACK_MIN_DURATION_MILLIS,
         containsIcons = false, containsText = true, containsControls = false) ?: FEEDBACK_MIN_DURATION_MILLIS
-    var progress by remember(feedback.id) { mutableFloatStateOf(1f) }
-    LaunchedEffect(feedback.id, duration) { expireFeedback(feedback.id, duration, dismiss) { progress=it } }
+    LaunchedEffect(feedback.id, duration) { expireFeedback(feedback.id, duration, dismiss) }
     Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(4.dp), shadowElevation=2.dp) {
         Column {
             Text("✓ ${feedback.text}", Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=12.dp)
                 .semantics { liveRegion = LiveRegionMode.Polite })
-            LinearProgressIndicator(progress={progress}, modifier=Modifier.fillMaxWidth().height(2.dp).clearAndSetSemantics {})
         }
     }
 }

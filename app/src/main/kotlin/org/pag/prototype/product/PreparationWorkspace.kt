@@ -17,12 +17,15 @@ enum class PreparationArea(val label: String) {
 enum class PreparationContentState { LOADING, CONTENT, EMPTY, ERROR }
 internal data class PreparationSummary(val persons: Int, val roles: Int?, val withoutPrimaryRole: Int?,
     val open: Int?, val inProgress: Int?, val high: Int?)
-internal fun preparationSummary(snapshot: WorkspaceSnapshot) = PreparationSummary(
+internal fun preparationSummary(snapshot: WorkspaceSnapshot): PreparationSummary {
+    val activeTasks = snapshot.tasks?.active
+    return PreparationSummary(
     snapshot.persons.size, snapshot.operations?.roles?.size,
     snapshot.operations?.persons?.count { it.plan.primaryRoleId == null },
-    snapshot.tasks?.active?.count { it.status == TaskStatus.OPEN },
-    snapshot.tasks?.active?.count { it.status == TaskStatus.IN_PROGRESS },
-    snapshot.tasks?.active?.count { it.priority == TaskPriority.HIGH })
+    activeTasks?.count { it.status == TaskStatus.OPEN },
+    activeTasks?.count { it.status == TaskStatus.IN_PROGRESS },
+    activeTasks?.count { it.priority == TaskPriority.HIGH })
+}
 internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): String? {
     val roles = board.roles.filter { it.id in person.plan.roleIds }
         .sortedBy { it.id != person.plan.primaryRoleId }

@@ -21,7 +21,6 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
     private val root = File(noBackupRoot, "pag-db-v1")
     private val envelope = ProductDbEnvelope(root, "org.pag.product.database.rsa.v1")
     val inventory = ProductInventory(root, envelope::aliasPresent, envelope::structurallyValid)
-    private val database = ActionDatabaseAccess(activity.applicationContext)
     private val owner = AtomicReference<SessionDbKeyOwner?>()
     val authentication = ProductCredentialAuthentication(activity, envelope, worker, foreground,
         inventory::reserve, { inventory.state() == ProductStorageState.READY_TO_OPEN })
@@ -40,30 +39,14 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
                     var maintenanceError:Exception?=null
                     val result = operation.useUnwrappedKey({ !cancelled.get() && context.check(AccessPoint.STEP) }) { key ->
                         try {
-                            documentMaintenanceBarrier(context,{
-                                withDocumentMaintenanceKey(context,key) { keyStep ->
-                                    val steps=SqlCipherDocumentDeleteDatabase(activity.applicationContext,inventory,{null},keyStep)
-                                    val recovery=SqlCipherDocumentReconciliationDatabase(steps)
-                                    DocumentReconciliation(recovery,steps,noBackupRoot, observePhase=probe::enter).run(context) {
-                                        if(initializing)inventory.prepareDatabaseDirectory()
-                                        else if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
-                                        fun preflight(creates:Boolean=false) {
-                                            val copy=key.copyOf()
-                                            try { database.use(inventory.database,copy,context,creates){db->db.actions().list().forEach{it.model()}} }
-                                            finally {copy.fill(0)}
-                                        }
-                                        preflight(initializing)
-                                        if(initializing){preflight();inventory.finish(context)}
-                                    }
-                                }
-                            },{
+                            reconcileProductDocuments(activity.applicationContext,inventory,noBackupRoot,context,key,initializing,probe::enter) {
                                 probe.enter(MaintenancePhase.M07_READY_OWNER)
                                 if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
                                 val next=SessionDbKeyOwner.bind(context,key)
-                                if(!context.publish { owner.getAndSet(next)?.invalidate() }) {
+                                if (!context.publish { owner.getAndSet(next)?.invalidate() }) {
                                     next.invalidate();throw ProductStorageFailure()
                                 }
-                            })
+                            }
                         } catch(error:Exception) { maintenanceError=error;throw error }
                     }
                     // The envelope reports FAILED for consumer exceptions. Preserve their actual
@@ -93,6 +76,8 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
     fun close() { session.lock(); keyLifetime.cancel(); leadershipLifetime.cancel(); leadership.revoke(); owner.getAndSet(null)?.invalidate() }
     val actions: ActionRepository = ProductActionRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
+    val workspace:WorkspaceRepository=ProductWorkspaceRepository(activity.applicationContext,session,inventory,
+        {owner.get()},worker,main,session::storageFailure)
     val persons: PersonRepository = ProductPersonRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
     val tasks: TaskRepository = ProductTaskRepository(activity.applicationContext, session, inventory,

@@ -15,7 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * One owner; no public driver, DAO or statement leaves :data.
  */
 internal class B2Driver(private val file: File, key: ByteArray,
-    private val context: StorageContext, private val hooks: B2Hooks) : SQLiteDriver, AutoCloseable {
+    private val context: StorageContext, private val hooks: B2Hooks,
+    private val timing:B2OpenTiming?=null) : SQLiteDriver, AutoCloseable {
     private val bytes = key.copyOf()
     private val connections = CopyOnWriteArrayList<SQLiteConnection>()
     private val nativeConnections = CopyOnWriteArrayList<net.zetetic.database.sqlcipher.SQLiteDatabase>()
@@ -25,7 +26,7 @@ internal class B2Driver(private val file: File, key: ByteArray,
     override fun open(fileName: String): SQLiteConnection = sanitizedB2 {
         if (closed || fileName != file.path) throw B2Exception(B2Failure.CLOSED)
         context.requireB2(AccessPoint.OPERATION)
-        val native = B2Native.open(file, bytes, context)
+        val native = B2Native.open(file, bytes, context,timing=timing)
         nativeConnections.add(native)
         val delegate = SQLCipherConnection(native)
         val connection = object : SQLiteConnection by delegate {

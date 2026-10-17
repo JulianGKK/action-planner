@@ -28,3 +28,29 @@ internal fun documentMaintenanceBarrier(c:StorageContext,reconcile:()->Unit,prep
     documentFileGate(c,g)
     prepareReadyOwner()
 }
+
+/** Shared product entrypoint. The debug unlock probe calls this exact pipeline with its own store/key.
+ * No authorization is supplied here: the caller must already own the maintenance context/key scope. */
+internal fun reconcileProductDocuments(app:android.content.Context,inventory:ProductInventory,noBackupRoot:java.io.File,
+    c:StorageContext,key:ByteArray,initializing:Boolean,phase:(MaintenancePhase)->Unit={},
+    timing:((ActionDatabasePhase,Long)->Unit)?=null,ready:()->Unit) {
+    val database=ActionDatabaseAccess(app,ActionPreflightHooks(timing=timing))
+    documentMaintenanceBarrier(c,{
+        withDocumentMaintenanceKey(c,key){keyStep->
+            val steps=SqlCipherDocumentDeleteDatabase(app,inventory,{null},keyStep,ActionPreflightHooks(timing=timing))
+            val recovery=SqlCipherDocumentReconciliationDatabase(steps,validateOpeningActions=!initializing)
+            DocumentReconciliation(recovery,steps,noBackupRoot,observePhase=phase).run(c) {
+                if(initializing)inventory.prepareDatabaseDirectory()
+                else if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
+                fun preflight(creates:Boolean=false) {
+                    val copy=key.copyOf()
+                    try{database.use(inventory.database,copy,c,creates){db->db.actions().list().forEach{it.model()}}}
+                    finally{copy.fill(0)}
+                }
+                // Reopen action validation is part of the first fully preflighted inventory
+                // operation. The final fresh inventory and every recovery-step preflight remain.
+                if(initializing){preflight(true);preflight();inventory.finish(c)}
+            }
+        }
+    },ready)
+}

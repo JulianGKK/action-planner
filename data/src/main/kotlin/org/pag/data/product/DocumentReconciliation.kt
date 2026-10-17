@@ -17,8 +17,22 @@ internal interface DocumentReconciliationDatabase {
     fun commit(c:StorageContext,expected:DocumentJobRow)
 }
 internal class SqlCipherDocumentReconciliationDatabase(private val steps:SqlCipherDocumentDeleteDatabase,
-    private val now:()->Long=System::currentTimeMillis):DocumentReconciliationDatabase {
-    override fun inventory(c:StorageContext)=steps.maintenanceStep(c){it.documents().reconciliationSnapshot(c)}
+    private val now:()->Long=System::currentTimeMillis,
+    private var validateOpeningActions:Boolean=false):DocumentReconciliationDatabase {
+    override fun inventory(c:StorageContext):DocumentRecoverySnapshot {
+        val validate=validateOpeningActions
+        val result=steps.maintenanceStep(c){db->
+            if(!validate)db.documents().reconciliationSnapshot(c)
+            else db.withWriteTransaction {
+                // The original DAO snapshot also owns a Room transaction. No mutation here;
+                // validate actions before recovery can touch a file, in the same short operation.
+                db.actions().list().forEach{requireDocumentDelete(c);it.model()}
+                db.documents().reconciliationSnapshot(c)
+            }
+        }
+        if(validate)validateOpeningActions=false
+        return result
+    }
     override fun abort(c:StorageContext,expected:DocumentRecoveryJob)=steps.maintenanceStep(c){ db ->
         db.withWriteTransaction { db.documents().abortInterruptedImport(expected,c) }
     }

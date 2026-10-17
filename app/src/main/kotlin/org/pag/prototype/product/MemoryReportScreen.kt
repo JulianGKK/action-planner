@@ -10,8 +10,8 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.input.KeyboardType
 import org.pag.domain.*
 
-@Composable internal fun MemoryReportSection(model: MemoryReportModel, persons: List<Person>) {
-    PreparationHeading("Gedächtnisprotokolle")
+@Composable internal fun MemoryReportSection(model: MemoryReportModel, persons: List<Person>,showHeading:Boolean=true) {
+    if(showHeading)PreparationHeading("Gedächtnisprotokolle")
     if (model.confirmingDiscard) {
         Text("Ungespeicherte Änderungen verwerfen?")
         FormButton(model::confirmDiscard) { Text("Änderungen verwerfen") }
@@ -28,7 +28,7 @@ import org.pag.domain.*
         FormOutlinedButton(model::reload, enabled = !model.busy && !model.loading) { Text(if (it == OperationsFailure.STALE) "Zur aktuellen Berichtsliste · Eingaben verwerfen" else "Berichtsliste erneut laden · Eingaben verwerfen") }
     }
     if (model.loading && (model.mode != MemoryReportMode.LIST || model.headers == null)) { PagLoadingState(); return }
-    if (model.loading) Text("Berichtsliste wird aktualisiert …")
+    PagReadStatus(model.loading,"Berichtsliste wird aktualisiert …")
     val enabled = !model.busy && !model.loading && model.error != OperationsFailure.STALE
     when (model.mode) {
         MemoryReportMode.LIST -> {

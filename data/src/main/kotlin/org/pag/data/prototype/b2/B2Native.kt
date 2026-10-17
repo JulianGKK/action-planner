@@ -10,9 +10,17 @@ import org.pag.domain.StorageContext
 import org.pag.domain.AccessPoint
 import java.io.File
 
+internal enum class B2OpenPhase { OPEN, PRE_KEY, POST_KEY }
+/** Fixed phase names/durations only; observation cannot grant access or skip work. */
+internal class B2OpenTiming(private val report:(B2OpenPhase,Long)->Unit) {
+    fun duration(phase:B2OpenPhase,start:Long) {try {report(phase,System.nanoTime()-start)}catch(_:RuntimeException){}}
+}
+
 /** Both variants use exactly this native open/configuration/preflight. No openOrCreate. */
 internal object B2Native {
-    fun open(file: File, key: ByteArray, context: StorageContext, readOnly: Boolean = false): SQLiteDatabase {
+    fun open(file: File, key: ByteArray, context: StorageContext, readOnly: Boolean = false,
+        timing:B2OpenTiming?=null): SQLiteDatabase {
+        val started=if(timing!=null)System.nanoTime() else 0L
         context.requireB2(AccessPoint.OPERATION)
         if (key.isEmpty()) throw B2Exception(B2Failure.KEY_MISSING)
         Logger.setTarget(object : LogTarget {
@@ -20,19 +28,25 @@ internal object B2Native {
             override fun log(priority: Int, tag: String?, message: String?, throwable: Throwable?) {}
         })
         System.loadLibrary("sqlcipher")
-        return SQLiteDatabase.openDatabase(file.path, key, null,
+        val result=SQLiteDatabase.openDatabase(file.path, key, null,
             (if (readOnly) SQLiteDatabase.OPEN_READONLY else SQLiteDatabase.OPEN_READWRITE) or SQLiteDatabase.NO_LOCALIZED_COLLATORS,
             DatabaseErrorHandler { _, _ -> }, object : SQLiteDatabaseHook {
                 override fun preKey(connection: SQLiteConnection) {
+                    val phaseStart=if(timing!=null)System.nanoTime() else 0L
                     context.requireB2(); connection.executeForLong("PRAGMA cipher_log_level = NONE", null, null)
+                    timing?.duration(B2OpenPhase.PRE_KEY,phaseStart)
                 }
                 override fun postKey(connection: SQLiteConnection) {
+                    val phaseStart=if(timing!=null)System.nanoTime() else 0L
                     context.requireB2()
                     if (connection.executeForLong("PRAGMA cipher_status", null, null) != 1L) throw B2Exception(B2Failure.BLOCKED)
                     connection.execute("PRAGMA temp_store = MEMORY", null, null)
                     if (connection.executeForLong("PRAGMA temp_store", null, null) != 2L) throw B2Exception(B2Failure.BLOCKED)
+                    timing?.duration(B2OpenPhase.POST_KEY,phaseStart)
                 }
             })
+        timing?.duration(B2OpenPhase.OPEN,started)
+        return result
     }
     fun preflight(file: File, key: ByteArray, context: StorageContext, target: Int, migrates: Boolean) {
         open(file, key, context, true).use { db ->

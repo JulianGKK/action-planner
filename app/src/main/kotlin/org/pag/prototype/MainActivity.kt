@@ -92,6 +92,7 @@ class MainActivity : ComponentActivity() {
         val state = runtime.inventory.state()
         if (state == ProductStorageState.PARTIAL_OR_INVALID) runtime.session.storageFailure()
         model = ProductViewModel(runtime.session, runtime.actions, state, runtime.persons, runtime.leadership, runtime.operations, runtime.tasks, runtime.protocol, runtime.material, runtime.expenses, runtime.memoryReports, runtime::start)
+        model.bindWorkspace(runtime.workspace)
         model.bindDocuments(runtime.documents, object : DocumentPicker {
             override fun launch(actionId: String, generation: Long) {
                 val current=runtime.session.snapshot()

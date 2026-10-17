@@ -119,7 +119,7 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
         viewed=item;imageLoading=true
         val started=System.nanoTime()
         val attempt=DocumentImageRequest(generation=generation) {phase,ms ->
-            if(org.pag.prototype.BuildConfig.DEBUG) android.util.Log.i("PaGImageTiming","${phase.name} ms=$ms")
+            if(org.pag.prototype.BuildConfig.DEBUG && android.util.Log.isLoggable("PaGImageTiming",android.util.Log.DEBUG)) android.util.Log.i("PaGImageTiming","${phase.name} ms=$ms")
         };imageRequest=attempt
         val e=epoch;val g=generation
         repository()!!.readImage(boundId!!,item,attempt,AndroidDocumentImageDecoder) {result ->

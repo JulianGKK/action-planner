@@ -11,9 +11,12 @@ import java.nio.ByteBuffer
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 
+internal enum class PdfClientPhase { OUTPUT_MEMFD, BIND_CONNECTED, IPC_RESPONSE, PIXEL_ARRAY, PIXEL_READ, BITMAP_ALLOC, PIXEL_COPY }
+
 /** Captures application context only. No file paths, data keys or persisted viewer state. */
-internal class AndroidDocumentPdfRenderer(context:Context,private val diagnostic:(Int)->Unit={},private val timing:(DocumentPdfPhase,Long)->Unit=::pdfTiming):DocumentPdfRenderer {
+internal class AndroidDocumentPdfRenderer(context:Context,private val diagnostic:(Int)->Unit={},private val timing:(DocumentPdfPhase,Long)->Unit=::pdfTiming,private val clientTiming:((PdfClientPhase,Long)->Unit)?=null):DocumentPdfRenderer {
     private val app=context.applicationContext
+    private fun clientMeasured(phase:PdfClientPhase,start:Long) {try{clientTiming?.invoke(phase,System.nanoTime()-start)}catch(_:RuntimeException){}}
     override fun create(size:Long):DocumentPdfInput {
         if(size !in 1..DocumentRules.MAX_DOCUMENT_BYTES)throw DocumentPdfUnsupported()
         val fd=try {Os.memfd_create("pag-pdf",OsConstants.MFD_CLOEXEC)}catch(_:Exception){throw DocumentPdfUnsupported(DocumentFailure.PDF_MEMORY_UNAVAILABLE)}
@@ -78,17 +81,23 @@ internal class AndroidDocumentPdfRenderer(context:Context,private val diagnostic
                 true
             })
             diagnostic(1)
+            var clientStart=if(clientTiming!=null)System.nanoTime() else 0L
             try {output=Os.memfd_create("pag-pixels",OsConstants.MFD_CLOEXEC);Os.ftruncate(output,PdfRenderLimits.BYTES)}
             catch(_:Exception){throw DocumentPdfUnsupported(DocumentFailure.PDF_MEMORY_UNAVAILABLE)}
+            clientMeasured(PdfClientPhase.OUTPUT_MEMFD,clientStart)
+            clientStart=if(clientTiming!=null)System.nanoTime() else 0L
             // Unique isolated instance per page; no reusable parser or plaintext cache.
             diagnostic(2);bound=app.bindIsolatedService(Intent(app,PdfRenderService::class.java),Context.BIND_AUTO_CREATE,
                 "pdf_"+java.util.UUID.randomUUID().toString().replace("-",""),app.mainExecutor,connection)
             if(!bound)throw DocumentPdfUnsupported(DocumentFailure.PDF_RENDERER_ERROR)
             diagnostic(3);val remote=Messenger(await(connected));check()
+            clientMeasured(PdfClientPhase.BIND_CONNECTED,clientStart)
+            clientStart=if(clientTiming!=null)System.nanoTime() else 0L
             ParcelFileDescriptor.dup(input).use {source -> ParcelFileDescriptor.dup(output).use {target ->
                 remote.send(Message.obtain().apply{arg1=page;replyTo=receiver;data=Bundle().apply{putParcelable("input",source);putParcelable("output",target)}})
             }}
             diagnostic(4);val result=await(answers);reply=result;diagnostic(100+result.getInt("phase"));check()
+            clientMeasured(PdfClientPhase.IPC_RESPONSE,clientStart)
             if(!result.getBoolean("ok")) {
                 val reason=when(result.getString("failure")) {
                     "password" -> DocumentFailure.PDF_PASSWORD_PROTECTED
@@ -102,12 +111,20 @@ internal class AndroidDocumentPdfRenderer(context:Context,private val diagnostic
             diagnostic(5);val w=result.getInt("width");val h=result.getInt("height");val count=result.getInt("pages")
             PdfRenderLimits.validate(w,h)
             if(count !in 1..10000 || page !in 0 until count || Os.fstat(output).st_size!=PdfRenderLimits.BYTES)throw DocumentPdfUnsupported()
+            clientStart=if(clientTiming!=null)System.nanoTime() else 0L
             diagnostic(6);pixels=ByteArray(Math.multiplyExact(Math.multiplyExact(w,h),4))
+            clientMeasured(PdfClientPhase.PIXEL_ARRAY,clientStart)
+            clientStart=if(clientTiming!=null)System.nanoTime() else 0L
             var position=0
             while(position<pixels.size){check();val n=Os.pread(output,pixels,position,minOf(32768,pixels.size-position),position.toLong());if(n<=0)throw DocumentPdfUnsupported();position+=n}
+            clientMeasured(PdfClientPhase.PIXEL_READ,clientStart)
+            clientStart=if(clientTiming!=null)System.nanoTime() else 0L
             diagnostic(7);check();bitmap=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888)
             if(bitmap.allocationByteCount.toLong()>PdfRenderLimits.BYTES)throw DocumentPdfUnsupported()
+            clientMeasured(PdfClientPhase.BITMAP_ALLOC,clientStart)
+            clientStart=if(clientTiming!=null)System.nanoTime() else 0L
             bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(pixels));check()
+            clientMeasured(PdfClientPhase.PIXEL_COPY,clientStart)
             timing(DocumentPdfPhase.IPC_AND_BITMAP,(System.nanoTime()-started)/1_000_000)
             return DocumentPdfPage(page,count,BitmapDocumentImage(bitmap)).also{bitmap=null}
         }catch(failure:org.pag.data.prototype.b2.StorageAccessRevoked){throw failure}

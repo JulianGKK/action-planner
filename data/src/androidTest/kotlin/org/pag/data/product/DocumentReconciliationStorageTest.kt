@@ -231,4 +231,33 @@ class DocumentReconciliationStorageTest {
         } finally { owner.invalidate() }
     }
 
+    @Test fun productReopenBatchesActionValidationAndFirstInventoryButKeepsFreshFinalPreflight() {
+        val inv=initialized();val phases=mutableMapOf<ActionDatabasePhase,Int>();var ready=false
+        reconcileProductDocuments(app,inv,base,maintenance,key,false,timing={phase,_->phases[phase]=(phases[phase]?:0)+1}){ready=true}
+        assertTrue(ready)
+        for(phase in listOf(ActionDatabasePhase.NATIVE_OPEN,ActionDatabasePhase.VERSION,ActionDatabasePhase.CIPHER_INTEGRITY,
+            ActionDatabasePhase.SQLITE_INTEGRITY,ActionDatabasePhase.FOREIGN_KEYS,ActionDatabasePhase.NATIVE_CLOSE,ActionDatabasePhase.CLEANUP)) {
+            assertEquals("FULL_CHECK_PER_OPERATION",2,phases[phase])
+        }
+    }
+    @Test fun invalidActionStillBlocksBeforeAnyRecoveryMutation() {
+        val inv=initialized();staged(inv)
+        ActionDatabaseAccess(app).use(inv.database,key,maintenance){db->val a=db.actions().get(actionId)!!;db.actions().update(a.copy(title=""))}
+        fun encryptedFiles()=base.walkTopDown().filter{it.isFile && it.parentFile?.name in setOf("staging","files")}
+            .associate{it.name to java.security.MessageDigest.getInstance("SHA-256").digest(it.readBytes()).toList()}
+        val before=encryptedFiles();var ready=false
+        assertThrows(ProductStorageFailure::class.java){reconcileProductDocuments(app,inv,base,maintenance,key,false){ready=true}}
+        assertFalse(ready);assertTrue("ENCRYPTED_FILES_UNCHANGED",before==encryptedFiles())
+    }
+    @Test fun revokeDuringCombinedPreflightClosesNativeAndCannotPublishReady() {
+        val inv=initialized();var closed=0;var ready=false
+        assertThrows(StorageAccessRevoked::class.java){
+            reconcileProductDocuments(app,inv,base,maintenance,key,false,timing={phase,_->
+                if(phase==ActionDatabasePhase.CIPHER_INTEGRITY)maintenance.allowed=false
+                if(phase==ActionDatabasePhase.NATIVE_CLOSE)closed++
+            }){ready=true}
+        }
+        assertFalse(ready);assertEquals(1,closed)
+    }
+
 }

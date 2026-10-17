@@ -1,0 +1,27 @@
+gradle.beforeProject { p ->
+    p.plugins.withId('com.android.application') {
+        if(p.path==':app')p.extensions.getByName('androidComponents').finalizeDsl { dsl ->
+            dsl.defaultConfig.applicationId='org.pag.perf.p11probe'
+            dsl.defaultConfig.testApplicationId='org.pag.perf.p11probe.test'
+            dsl.defaultConfig.testInstrumentationRunner='org.pag.prototype.ActiveWorkspaceAssessmentProbe'
+            dsl.defaultConfig.manifestPlaceholders.put('pagTestTargetPackage','org.pag.perf.p11probe')
+        }
+    }
+    p.plugins.withId('com.android.library') {
+        if(p.path==':data')p.extensions.getByName('android').defaultConfig.testApplicationId='org.pag.data.unlockprobe'
+    }
+}
+
+gradle.beforeProject { p ->
+    p.plugins.withId('com.android.application') {
+        if(p.path==':app') {
+            def a=p.extensions.getByName('android')
+            a.sourceSets.getByName('androidTest').kotlin.srcDirs += [new File(p.rootDir,'tools/p11assessment/shared'),new File(p.rootDir,'tools/p11assessment/android')]
+            a.sourceSets.getByName('test').kotlin.srcDirs += [new File(p.rootDir,'tools/p11assessment/shared'),new File(p.rootDir,'tools/p11assessment/test')]
+            a.sourceSets.getByName('androidTest').manifest.srcFile(new File(p.rootDir,'tools/p11assessment/AndroidManifest.xml'))
+        }
+    }
+    p.plugins.withId('com.android.library') {
+        if(p.path==':data')p.extensions.getByName('android').sourceSets.getByName('debug').kotlin.srcDir(new File(p.rootDir,'tools/p11assessment/fixture'))
+    }
+}

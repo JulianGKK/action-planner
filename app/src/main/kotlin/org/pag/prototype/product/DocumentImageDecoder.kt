@@ -37,36 +37,47 @@ internal object ImageDecodeLimits {
     }
 }
 
+internal enum class ImageDecodePhase { BOUNDS, DOWNSAMPLE, EXIF, BITMAP, ORIENTATION }
+private inline fun <T> imagePhase(noinline timing:((ImageDecodePhase,Long)->Unit)?,phase:ImageDecodePhase,work:()->T):T {
+    if(timing==null)return work()
+    val start=System.nanoTime()
+    try{return work()}finally{try{timing(phase,System.nanoTime()-start)}catch(_:RuntimeException){}}
+}
+
 /** Invoked synchronously on the existing data worker, only after authenticated EOF. */
 internal object AndroidDocumentImageDecoder:DocumentImageDecoder {
-    override fun decode(bytes:ByteArray,format:DocumentFormat,check:()->Unit):DocumentImage {
+    override fun decode(bytes:ByteArray,format:DocumentFormat,check:()->Unit):DocumentImage = decodeTimed(bytes,format,check,null)
+    internal fun decodeTimed(bytes:ByteArray,format:DocumentFormat,check:()->Unit,timing:((ImageDecodePhase,Long)->Unit)?):DocumentImage {
         if(format !in setOf(DocumentFormat.JPEG,DocumentFormat.PNG))throw DocumentImageUnsupported()
         var bitmap:Bitmap?=null
         try {
             check()
             val bounds=BitmapFactory.Options().apply {inJustDecodeBounds=true;inScaled=false}
-            BitmapFactory.decodeByteArray(bytes,0,bytes.size,bounds)
+            imagePhase(timing,ImageDecodePhase.BOUNDS){BitmapFactory.decodeByteArray(bytes,0,bytes.size,bounds)}
             check()
             val expected=if(format==DocumentFormat.JPEG) "image/jpeg" else "image/png"
             if(bounds.outMimeType!=expected)throw DocumentImageUnsupported()
-            val sample=ImageDecodeLimits.sample(bounds.outWidth,bounds.outHeight)
-            val orientation=if(format==DocumentFormat.JPEG) ByteArrayInputStream(bytes).use {
+            val sample=imagePhase(timing,ImageDecodePhase.DOWNSAMPLE){ImageDecodeLimits.sample(bounds.outWidth,bounds.outHeight)}
+            val orientation=imagePhase(timing,ImageDecodePhase.EXIF){if(format==DocumentFormat.JPEG) ByteArrayInputStream(bytes).use {
                 ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION,ExifInterface.ORIENTATION_NORMAL)
-            } else ExifInterface.ORIENTATION_NORMAL
+            } else ExifInterface.ORIENTATION_NORMAL}
             check()
             val options=BitmapFactory.Options().apply {
                 inSampleSize=sample;inScaled=false;inPreferredConfig=Bitmap.Config.ARGB_8888
                 inPreferredColorSpace=ColorSpace.get(ColorSpace.Named.SRGB)
             }
-            bitmap=BitmapFactory.decodeByteArray(bytes,0,bytes.size,options) ?: throw DocumentImageUnsupported()
+            bitmap=imagePhase(timing,ImageDecodePhase.BITMAP){BitmapFactory.decodeByteArray(bytes,0,bytes.size,options)} ?: throw DocumentImageUnsupported()
             validate(bitmap);check()
-            val matrix=orientationMatrix(orientation)
-            if(!matrix.isIdentity) {
-                val rotated=Bitmap.createBitmap(bitmap,0,0,bitmap.width,bitmap.height,matrix,false)
-                if(rotated!==bitmap) {val old=bitmap;bitmap=rotated;old.recycle()}
-                validate(bitmap);check()
+            imagePhase(timing,ImageDecodePhase.ORIENTATION) {
+                val matrix=orientationMatrix(orientation)
+                if(!matrix.isIdentity) {
+                    val source=bitmap!!
+                    val rotated=Bitmap.createBitmap(source,0,0,source.width,source.height,matrix,false)
+                    if(rotated!==source) {bitmap=rotated;source.recycle()}
+                    validate(bitmap!!);check()
+                }
             }
-            return BitmapDocumentImage(bitmap).also {bitmap=null}
+            return BitmapDocumentImage(bitmap!!).also {bitmap=null}
         } catch (_:OutOfMemoryError) {throw DocumentImageUnsupported()}
           catch (_:IllegalArgumentException) {throw DocumentImageUnsupported()}
           catch (_:java.io.IOException) {throw DocumentImageUnsupported()}

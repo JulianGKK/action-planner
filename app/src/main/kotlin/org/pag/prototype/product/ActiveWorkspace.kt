@@ -29,10 +29,11 @@ internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: Task
         missing > 0 -> "$missing " + (if (missing == 1) "Person" else "Personen") + " ohne aktuelle Lage"
         else -> null
     }
-    val open = tasks.active.count { it.status == TaskStatus.OPEN }
-    val progress = tasks.active.count { it.status == TaskStatus.IN_PROGRESS }
-    val high = tasks.active.count { it.priority == TaskPriority.HIGH }
-    val taskSummary = if (tasks.active.isEmpty()) listOf("Keine offenen Aufgaben") else buildList {
+    val activeTasks = tasks.active
+    val open = activeTasks.count { it.status == TaskStatus.OPEN }
+    val progress = activeTasks.count { it.status == TaskStatus.IN_PROGRESS }
+    val high = activeTasks.count { it.priority == TaskPriority.HIGH }
+    val taskSummary = if (activeTasks.isEmpty()) listOf("Keine offenen Aufgaben") else buildList {
         add("$open offen"); if (progress > 0) add("$progress in Arbeit"); if (high > 0) add("$high hohe Priorität")
     }
     val functions = board.roles.mapNotNull { role -> board.roleCount(role.id).takeIf { it > 0 }?.let { "$it ${role.name}" } }
@@ -117,7 +118,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             ActiveArea.PROTOCOL -> ProtocolSection(model.protocol, content.persons)
             ActiveArea.MATERIAL -> MaterialSection(model.material, content.persons, content.tasks?.tasks.orEmpty())
             ActiveArea.COSTS -> ExpenseSection(model.expenses, content.persons)
-            ActiveArea.MEMORY_REPORTS -> MemoryReportSection(model.memoryReports, content.persons)
+            ActiveArea.MEMORY_REPORTS -> MemoryReportSection(model.memoryReports, content.persons,showHeading=false)
             ActiveArea.DETAILS -> Unit
         }
     }

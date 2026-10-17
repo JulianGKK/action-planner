@@ -47,10 +47,17 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
         mode = MemoryReportMode.LIST; detail = null; sectionOrdinal = 0; answers = emptyMap(); authorLabel = ""
         addendum = ""; dirty = false; decisions = emptySet(); confirmingComplete = false; confirmingDiscard = false; pendingBack = null
     }
-    internal fun enter() {
+    internal fun enter(deferList:Boolean=false) {
         clear(); val a = action() ?: return; val s = session()
         if (repository == null || s.state != SessionState.READY || !MemoryReportRules.mayRead(a.status)) return
-        boundAction = a.id; boundStatus = a.status; generation = s.generation; opened = true; readList()
+        boundAction = a.id; boundStatus = a.status; generation = s.generation; opened = true; if(deferList)loading=true else readList()
+    }
+    /** Explicit selected-area batch only; no detail answers or cached previous list. */
+    internal fun acceptWorkspaceHeaders(actionId:String,sessionGeneration:Long,values:List<MemoryReportHeader>):Boolean {
+        if(!available || boundAction!=actionId || generation!=sessionGeneration || !loading || headers!=null || mode!=MemoryReportMode.LIST ||
+            values.any{it.actionId!=actionId || !MemoryReportRules.headerValid(it)})return false
+        request++;headers=values;loading=false;error=null
+        return true
     }
     fun openCompleted(prepare: () -> Unit) {
         val a = action() ?: return; val s = session(); val token = epoch

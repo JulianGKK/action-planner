@@ -54,18 +54,35 @@ internal val ACTION_MIGRATION_1_2 = object : Migration(1, 2) {
  * context. It only adapts the historical driver's maintenance-only type assertion.
  */
 internal enum class ActionPreflightStep { OPEN, VERSION, CIPHER_INTEGRITY, SQLITE_INTEGRITY, FOREIGN_KEYS }
+internal enum class ActionDatabasePhase { INVENTORY, NATIVE_OPEN, NATIVE_PRE_KEY, NATIVE_POST_KEY,
+    VERSION, CIPHER_INTEGRITY, SQLITE_INTEGRITY, FOREIGN_KEYS, NATIVE_CLOSE,
+    ROOM_BUILDER, ROOM_NATIVE_OPEN, ROOM_PRE_KEY, ROOM_POST_KEY, ROOM_OPEN_SCHEMA,
+    QUERY_TRANSACTION, CLEANUP }
 /** Internal observation seam: no keys/handles escape, no authority or exported hook. */
 internal class ActionPreflightHooks(
     val completed: (ActionPreflightStep) -> Unit = {},
-    val closed: (Boolean) -> Unit = {}
-)
+    val closed: (Boolean) -> Unit = {},
+    val timing: ((ActionDatabasePhase,Long) -> Unit)? = null
+) {
+    fun measured(phase:ActionDatabasePhase,start:Long) {try {timing?.invoke(phase,System.nanoTime()-start)}catch(_:RuntimeException){}}
+    fun native(room:Boolean)=if(timing==null)null else B2OpenTiming {phase,nanos ->
+        val mapped=when(phase) {
+            B2OpenPhase.OPEN -> if(room)ActionDatabasePhase.ROOM_NATIVE_OPEN else ActionDatabasePhase.NATIVE_OPEN
+            B2OpenPhase.PRE_KEY -> if(room)ActionDatabasePhase.ROOM_PRE_KEY else ActionDatabasePhase.NATIVE_PRE_KEY
+            B2OpenPhase.POST_KEY -> if(room)ActionDatabasePhase.ROOM_POST_KEY else ActionDatabasePhase.NATIVE_POST_KEY
+        }
+        timing.invoke(mapped,nanos)
+    }
+}
 internal class ActionDatabaseAccess(private val app: Context,
     private val preflight: ActionPreflightHooks = ActionPreflightHooks()) {
     fun <T> use(file: File, key: ByteArray, context: StorageContext, creates: Boolean = false,
         work: suspend (ActionDatabase) -> T): T {
         if (!context.check(AccessPoint.OPERATION)) throw StorageAccessRevoked()
         if (creates && context.scope != AccessScope.MAINTENANCE) throw ProductStorageFailure()
+        var phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
         inventory(file, creates, true)
+        preflight.measured(ActionDatabasePhase.INVENTORY,phaseStarted)
         val driverContext = object : StorageContext {
             override val scope = AccessScope.MAINTENANCE
             override val generation = context.generation
@@ -76,40 +93,51 @@ internal class ActionDatabaseAccess(private val app: Context,
             if (!file.createNewFile()) throw ProductStorageFailure()
         } else {
             driverContext.requireB2(AccessPoint.STEP)
-            val native = B2Native.open(file, key, driverContext, true)
+            val native = B2Native.open(file, key, driverContext, true,preflight.native(false))
             try {
                 preflight.completed(ActionPreflightStep.OPEN)
                 driverContext.requireB2(AccessPoint.STEP)
+                phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
                 if (native.version !in 1..11) throw ProductStorageFailure()
+                preflight.measured(ActionDatabasePhase.VERSION,phaseStarted)
                 preflight.completed(ActionPreflightStep.VERSION)
                 driverContext.requireB2(AccessPoint.STEP)
+                phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
                 native.rawQuery("PRAGMA cipher_integrity_check", emptyArray<String>()).use {
                     if (it.moveToFirst()) throw ProductStorageFailure()
                 }
+                preflight.measured(ActionDatabasePhase.CIPHER_INTEGRITY,phaseStarted)
                 preflight.completed(ActionPreflightStep.CIPHER_INTEGRITY)
                 driverContext.requireB2(AccessPoint.STEP)
+                phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
                 native.rawQuery("PRAGMA integrity_check", emptyArray<String>()).use {
                     if (!it.moveToFirst() || it.getString(0) != "ok" || it.moveToNext()) throw ProductStorageFailure()
                 }
+                preflight.measured(ActionDatabasePhase.SQLITE_INTEGRITY,phaseStarted)
                 preflight.completed(ActionPreflightStep.SQLITE_INTEGRITY)
                 driverContext.requireB2(AccessPoint.STEP)
+                phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
                 native.rawQuery("PRAGMA foreign_key_check", emptyArray<String>()).use {
                     if (it.moveToFirst()) throw ProductStorageFailure()
                 }
+                preflight.measured(ActionDatabasePhase.FOREIGN_KEYS,phaseStarted)
                 preflight.completed(ActionPreflightStep.FOREIGN_KEYS)
             } finally {
                 // Cleanup is unconditional, even if the gate or a test observation rejects.
+                phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
                 native.close()
+                preflight.measured(ActionDatabasePhase.NATIVE_CLOSE,phaseStarted)
                 preflight.closed(!native.isOpen)
             }
         }
         driverContext.requireB2(AccessPoint.STEP)
         val lifecycle = B4RoomLifecycle()
         val parent = SupervisorJob()
-        val driver = B2Driver(file, key, lifecycle.guard(driverContext), B2Hooks())
+        val driver = B2Driver(file, key, lifecycle.guard(driverContext), B2Hooks(),preflight.native(true))
         var room: ActionDatabase? = null
         var result: T
         try {
+            phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
             room = Room.databaseBuilder(app, ActionDatabase::class.java, file.path).setDriver(driver)
                 .setQueryCoroutineContext(Dispatchers.IO + parent + lifecycle.handler { parent.cancel() })
                 .addMigrations(ACTION_MIGRATION_1_2, ACTION_MIGRATION_2_3, ACTION_MIGRATION_3_4, ACTION_MIGRATION_4_5, ACTION_MIGRATION_5_6, ACTION_MIGRATION_6_7, ACTION_MIGRATION_7_8, ACTION_MIGRATION_8_9, ACTION_MIGRATION_9_10, ACTION_MIGRATION_10_11)
@@ -118,17 +146,22 @@ internal class ActionDatabaseAccess(private val app: Context,
                 .addCallback(MATERIAL_DATABASE_CALLBACK)
                 .addCallback(DOCUMENT_DATABASE_CALLBACK)
                 .setJournalMode(RoomDatabase.JournalMode.TRUNCATE).build()
+            preflight.measured(ActionDatabasePhase.ROOM_BUILDER,phaseStarted)
             result = runBlocking {
                 lifecycle.requireOpen()
                 if (!context.check(AccessPoint.STEP)) throw StorageAccessRevoked()
                 // Force Room's generated schema validation even for a maintenance-only open.
+                val opening=if(preflight.timing!=null)System.nanoTime() else 0L
                 room.actions().get("")
-                work(room)
+                preflight.measured(ActionDatabasePhase.ROOM_OPEN_SCHEMA,opening)
+                val querying=if(preflight.timing!=null)System.nanoTime() else 0L
+                work(room).also {preflight.measured(ActionDatabasePhase.QUERY_TRANSACTION,querying)}
             }
         } finally {
+            val cleaning=if(preflight.timing!=null)System.nanoTime() else 0L
             lifecycle.beginClose()
             try { room?.close() } finally {
-                try { runBlocking { parent.cancelAndJoin() } } finally { driver.close() }
+                try { runBlocking { parent.cancelAndJoin() } } finally { driver.close();preflight.measured(ActionDatabasePhase.CLEANUP,cleaning) }
             }
         }
         lifecycle.requireHealthy()

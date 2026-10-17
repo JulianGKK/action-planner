@@ -31,8 +31,9 @@ internal interface DocumentDeleteDatabase {
  */
 internal class SqlCipherDocumentDeleteDatabase(app: Context, private val inventory: ProductInventory,
     private val owner: () -> SessionDbKeyOwner?,
-    private val maintenanceKeyForStep: ((StorageContext,(ByteArray) -> Unit) -> Unit)? = null) : DocumentDeleteDatabase {
-    private val access=ActionDatabaseAccess(app.applicationContext)
+    private val maintenanceKeyForStep: ((StorageContext,(ByteArray) -> Unit) -> Unit)? = null,
+    preflight:ActionPreflightHooks=ActionPreflightHooks()) : DocumentDeleteDatabase {
+    private val access=ActionDatabaseAccess(app.applicationContext,preflight)
     private fun <T> use(c: StorageContext,work:suspend (ActionDatabase)->T): T {
         requireDocumentDelete(c,AccessPoint.OPERATION)
         if (inventory.state()!=ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()

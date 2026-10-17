@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -17,7 +18,11 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 
+internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>{null}
+
 @Composable fun ProductScreen(model: ProductViewModel) {
+    val observation=LocalProductObservation.current
+    SideEffect { observation?.invoke("COMPOSITION") }
     MaterialTheme {
         val screen=listOf(model.snapshot.state,model.snapshot.generation,model.selected?.id,model.selectedPerson?.id,
             model.actionListState::class,model.preparationArea,model.activeArea,model.personDetailLoading,model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter,model.protocol.mode,model.protocol.form,model.protocol.detail?.entry?.id,model.protocol.historical?.revision?.id,model.expenses.form,model.expenses.selected?.id,model.expenses.confirmingDelete,model.completedExpensesOpen,model.material.form,model.material.selected?.id,model.material.confirmingDelete,model.completedMaterialOpen,model.memoryReports.mode,model.memoryReports.sectionOrdinal,model.memoryReports.expected?.id,model.completedMemoryReportsOpen,model.documents.available,model.documents.importing,model.documents.confirmingDelete,model.documents.camera.mode,model.documents.viewed?.id,model.documents.textViewed?.id,model.documents.textPageIndex,model.documents.pdfViewed?.id,model.documents.pdfIndex)
@@ -51,13 +56,13 @@ import java.util.Locale
                         PagWorkspace(model.feedback.takeIf { model.snapshot.state == SessionState.READY },
                             model::dismissFeedback, Modifier.fillMaxWidth().weight(1f)) {
                         val scroll=rememberScrollState()
-                        LaunchedEffect(model.preparationArea,model.activeArea,model.operations.screen,model.operations.personId,model.operations.functionFocus,model.selectedPerson?.id,model.personDetailLoading,model.tasks.form,model.tasks.selected?.id,model.tasks.selected?.status,model.tasks.filter,model.protocol.mode,model.protocol.form,model.protocol.detail?.entry?.id,model.protocol.historical?.revision?.id,model.expenses.form,model.expenses.selected?.id,model.expenses.confirmingDelete,model.completedExpensesOpen,model.material.form,model.material.selected?.id,model.material.confirmingDelete,model.completedMaterialOpen,model.memoryReports.mode,model.memoryReports.sectionOrdinal,model.memoryReports.expected?.id,model.completedMemoryReportsOpen,model.documents.available,model.documents.importing,model.documents.confirmingDelete,model.documents.camera.mode,model.documents.viewed?.id,model.documents.textViewed?.id,model.documents.textPageIndex,model.documents.pdfViewed?.id,model.documents.pdfIndex){scroll.scrollTo(0)}
-                        Column(Modifier.padding(24.dp).verticalScroll(scroll), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        val geometry=productScrollGeometry(model,scroll)
+                        Column(Modifier.padding(24.dp).verticalScroll(scroll).then(geometry), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             when (model.snapshot.state) {
                                 SessionState.BLOCKED -> PagErrorState()
                                 SessionState.LOCKED -> Unit
                                 SessionState.AUTHENTICATING -> Text("Bitte bestätige den Gerätesperrcode im Android-Dialog.")
-                                SessionState.MAINTENANCE -> PagLoadingState()
+                                SessionState.MAINTENANCE -> PagLoadingState("Geschützter Speicher wird geprüft")
                                 SessionState.READY -> {
                                     when {
                                         model.documents.available -> DocumentWorkspace(model)
@@ -118,8 +123,9 @@ import java.util.Locale
                                                 ActionListState.Empty -> PagEmptyState(model::createScreen)
                                                 ActionListState.Error -> PagErrorState()
                                                 is ActionListState.Content -> {
-                                                    state.actions.forEach { action ->
-                                                        PagSecondaryButton("${action.title} · ${statusLabel(action.status)}", { model.detail(action.id) }, modifier=Modifier.fillMaxWidth())
+                                                    SideEffect { observation?.invoke("LIST_COMMIT") }
+                                                    state.actions.forEachIndexed { index,action ->
+                                                        PagSecondaryButton("${action.title} · ${statusLabel(action.status)}", { model.detail(action.id) }, modifier=Modifier.fillMaxWidth().then(if(index==0 && observation!=null)Modifier.onGloballyPositioned{observation("LIST_LAYOUT")} else Modifier))
                                                     }
                                                     PagPrimaryButton("Aktion planen", model::createScreen)
                                                 }

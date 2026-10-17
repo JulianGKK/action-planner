@@ -15,6 +15,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private val materialRepository: MaterialRepository? = null, private val expenseRepository: ExpenseRepository? = null, private val memoryReportRepository: MemoryReportRepository? = null, private val begin: (Boolean) -> Unit) : ViewModel() {
     private var documentRepository: DocumentRepository? = null
     private var documentPicker: DocumentPicker? = null
+    private var workspaceRepository:WorkspaceRepository?=null
+    fun bindWorkspace(repository:WorkspaceRepository) {check(workspaceRepository==null);workspaceRepository=repository}
     val documentsAvailable get() = documentRepository != null
     /** Composition-time optional port, preserving all existing test/demo constructors. */
     fun bindDocuments(repository: DocumentRepository, picker: DocumentPicker) {
@@ -80,6 +82,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     val personsVisible get() = snapshot.state == SessionState.READY && selected?.let { PersonRules.mayRead(it.status) } == true
     val personsEditable get() = snapshot.state == SessionState.READY && selected?.let { PersonRules.mayManage(it.status) } == true
     private var workspaceRequest = 0L
+    private var workspaceTicket:WorkspaceReadTicket?=null
     var detailLoading by mutableStateOf(false); private set
     var personDetailLoading by mutableStateOf(false); private set
     var workspace by mutableStateOf<WorkspaceSnapshot?>(null); private set
@@ -117,9 +120,14 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (!preparationAvailable || snapshot.generation != before.generation || selected?.id != action.id) return
         preparationArea = area
         editing = null; confirming = null; changeError = null
+        if(workspaceRepository!=null)when(area) {
+            PreparationArea.MATERIAL->material.enter(deferRead=true)
+            PreparationArea.COSTS->expenses.enter(deferRead=true)
+            else->Unit
+        }
         loadWorkspace()
-        if (area == PreparationArea.MATERIAL) material.enter()
-        if (area == PreparationArea.COSTS) expenses.enter()
+        if (area == PreparationArea.MATERIAL && workspaceRepository==null) material.enter()
+        if (area == PreparationArea.COSTS && workspaceRepository==null) expenses.enter()
     }
     var activeArea by mutableStateOf(ActiveArea.HUB); private set
     val activeNavigationEnabled get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.ACTIVE &&
@@ -140,11 +148,18 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         // its synchronous form opening needs no interaction from a load callback.
         if (area == ActiveArea.TASKS && retained?.actionId == action.id && retained.generation == before.generation &&
             retained.operations != null && retained.tasks != null) workspace = retained
+        if(area==ActiveArea.MEMORY_REPORTS && workspaceRepository!=null)memoryReports.enter(deferList=true)
+        if(workspaceRepository!=null)when(area) {
+            ActiveArea.PROTOCOL->protocol.prepareWorkspaceTimeline()
+            ActiveArea.MATERIAL->material.enter(deferRead=true)
+            ActiveArea.COSTS->expenses.enter(deferRead=true)
+            else->Unit
+        }
         if (area != ActiveArea.DETAILS) loadWorkspace()
-        if (area == ActiveArea.PROTOCOL) protocol.refresh()
-        if (area == ActiveArea.MATERIAL) material.enter()
-        if (area == ActiveArea.COSTS) expenses.enter()
-        if (area == ActiveArea.MEMORY_REPORTS) memoryReports.enter()
+        if (area == ActiveArea.PROTOCOL && workspaceRepository==null) protocol.refresh()
+        if (area == ActiveArea.MATERIAL && workspaceRepository==null) material.enter()
+        if (area == ActiveArea.COSTS && workspaceRepository==null) expenses.enter()
+        if (area == ActiveArea.MEMORY_REPORTS && workspaceRepository==null) memoryReports.enter()
     }
     fun activePersonTasks(personId: String, create: Boolean) {
         val generation = snapshot.generation
@@ -239,6 +254,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (snapshot.state == SessionState.READY) feedback = StatusFeedback(++feedbackId, text)
     }
     private fun clearPersons() {
+        workspaceTicket?.cancel();workspaceTicket=null
         preparationArea = PreparationArea.OVERVIEW; activeArea = ActiveArea.HUB; workspaceRefreshing = false
         workspaceRequest++; workspace = null; workspaceError = false; detailLoading = false; personDetailLoading = false
         tasks.clear(); operations.clear(); protocol.clear(); material.clear(); expenses.clear(); memoryReports.clear(); documents.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
@@ -253,7 +269,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         loadWorkspace()
     }
     /** Stage short gated reads locally. Only a complete current snapshot enters Compose state. */
-    internal fun loadWorkspace() {
+    internal fun loadWorkspace()=readWorkspace()
+    private fun readWorkspace(expectedAction:Action?=null,onOpeningRejected:(()->Unit)?=null) {
         val action = selected?.takeIf { personsVisible } ?: return
         val generation = snapshot.generation
         val request = ++workspaceRequest
@@ -267,7 +284,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         personsLoading = previous == null
         workspaceError = false
         val needTasks = taskRepository != null && operations.screen == OperationsScreen.OVERVIEW &&
-            (!active || activeSection != ActiveArea.FUNCTIONS) &&
+            (!active || (activeSection != ActiveArea.FUNCTIONS && (workspaceRepository==null || activeSection in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.TASKS,ActiveArea.MATERIAL)))) &&
             (!preparation || (selectedPerson == null && area in setOf(PreparationArea.OVERVIEW, PreparationArea.TASKS, PreparationArea.MATERIAL)))
         val needMetadata = preparation && area == PreparationArea.OVERVIEW && selectedPerson == null &&
             operations.screen == OperationsScreen.OVERVIEW && leadership != null
@@ -278,6 +295,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             (preparation && area == PreparationArea.OVERVIEW && selectedPerson == null))
         val needDocuments = documentRepository != null && ((active && activeSection == ActiveArea.HUB) ||
             (preparation && area == PreparationArea.OVERVIEW && selectedPerson == null))
+        val needMemoryHeaders=workspaceRepository!=null && memoryReportRepository!=null && active && activeSection==ActiveArea.MEMORY_REPORTS && memoryReports.mode==MemoryReportMode.LIST && memoryReports.loading && memoryReports.headers==null
+        val needTimeline=workspaceRepository!=null && protocolRepository!=null && active && activeSection==ActiveArea.PROTOCOL && protocol.loading && protocol.timeline==null && !protocol.nested
+        val needMaterialBoard=workspaceRepository!=null && materialRepository!=null && ((active && activeSection==ActiveArea.MATERIAL) || (preparation && area==PreparationArea.MATERIAL)) && material.available && material.loading && material.board==null && !material.form && material.selected==null
+        val needExpenseBoard=workspaceRepository!=null && expenseRepository!=null && ((active && activeSection==ActiveArea.COSTS) || (preparation && area==PreparationArea.COSTS)) && expenses.available && expenses.loading && expenses.board==null && !expenses.form && expenses.selected==null
         var documentSummary = previous?.documentSummary
         var documentsDone = !needDocuments
         val needMemory = memoryReportRepository != null && active && activeSection == ActiveArea.HUB
@@ -294,6 +315,11 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         var people: List<Person>? = null
         var ops: OperationalBoard? = null
         var taskBoard: TaskBoard? = if (needTasks) null else previous?.tasks
+        var loadedMemoryHeaders:List<MemoryReportHeader>?=null
+        var loadedTimeline:List<ProtocolTimelineItem>?=null
+        var loadedMaterial:MaterialBoard?=null
+        var loadedExpenses:ExpenseBoard?=null
+        var published=false
         var peopleDone = false
         var tasksDone = !needTasks
         fun current() = snapshot.state == SessionState.READY && snapshot.generation == generation &&
@@ -302,14 +328,77 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         fun failed() {
             if (!current()) return
             workspaceRequest++; personsLoading = false; workspaceRefreshing = false; workspaceError = true
+            if(expectedAction!=null)detailLoading=false
         }
         fun publish() {
-            if (!current() || !peopleDone || !tasksDone || !metadataDone || !protocolDone || !materialDone || !expensesDone || !memoryDone || !documentsDone) return
+            if ((workspaceRepository!=null && published) || !current() || !peopleDone || !tasksDone || !metadataDone || !protocolDone || !materialDone || !expensesDone || !memoryDone || !documentsDone) return
             androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
+                if(needMemoryHeaders && !memoryReports.acceptWorkspaceHeaders(action.id,generation,loadedMemoryHeaders!!)){failed();return@withMutableSnapshot}
+                if(needTimeline && !protocol.acceptWorkspaceTimeline(action.id,generation,loadedTimeline!!)){failed();return@withMutableSnapshot}
+                if(needMaterialBoard && !material.acceptWorkspaceBoard(action.id,generation,loadedMaterial!!)){failed();return@withMutableSnapshot}
+                if(needExpenseBoard && !expenses.acceptWorkspaceBoard(action.id,generation,loadedExpenses!!)){failed();return@withMutableSnapshot}
+                if(expectedAction!=null)detailLoading=false
                 workspace = WorkspaceSnapshot(action.id, generation, people.orEmpty(), ops, taskBoard, action.status, metadata, protocolSummary, materialSummary, expenseSummary, memorySummary, documentSummary)
                 personsLoading = false; workspaceRefreshing = false
+                published=workspaceRepository!=null
                 tasks.reconcileSelection()
             }
+        }
+        val combined=workspaceRepository
+        if(combined!=null) {
+            workspaceTicket?.cancel()
+            val ticket=WorkspaceReadTicket().also{workspaceTicket=it}
+            val parts=buildSet {
+                if(needTasks)add(WorkspacePart.TASKS)
+                if(needProtocol)add(WorkspacePart.PROTOCOL_SUMMARY)
+                if(needMaterial)add(WorkspacePart.MATERIAL_SUMMARY)
+                if(needExpenses)add(WorkspacePart.EXPENSE_SUMMARY)
+                if(needMemory)add(WorkspacePart.MEMORY_SUMMARY)
+                if(needDocuments)add(WorkspacePart.DOCUMENT_SUMMARY)
+                if(needMemoryHeaders)add(WorkspacePart.MEMORY_HEADERS)
+                if(needTimeline)add(WorkspacePart.PROTOCOL_TIMELINE)
+                if(needMaterialBoard)add(WorkspacePart.MATERIAL_BOARD)
+                if(needExpenseBoard)add(WorkspacePart.EXPENSE_BOARD)
+            }
+            combined.read(WorkspaceReadRequest(action.id,action.status,generation,parts,expectedAction,ticket)) { result ->
+                if(!current() || published)return@read
+                when(result) {
+                    is WorkspaceResult.Rejected->{
+                        if(expectedAction!=null && onOpeningRejected!=null){workspaceRequest++;onOpeningRejected()}
+                        else failed()
+                    }
+                    is WorkspaceResult.Value->{
+                        val loaded=result.value
+                        if(loaded.actionId!=action.id || loaded.status!=action.status || loaded.generation!=generation || loaded.parts!=parts ||
+                            loaded.operations.actionId!=action.id || loaded.operations.status!=action.status ||
+                            (needTasks && loaded.tasks?.actionId!=action.id) || (needProtocol && loaded.protocol==null) ||
+                            (needMaterial && loaded.material==null) || (needExpenses && loaded.expenses==null) ||
+                            (needMemory && loaded.memory==null) || (needDocuments && loaded.documents==null) || (needMemoryHeaders && loaded.memoryHeaders==null) ||
+                            (needTimeline && loaded.protocolTimeline==null) || (needMaterialBoard && loaded.materialBoard==null) || (needExpenseBoard && loaded.expenseBoard==null)) {failed();return@read}
+                        if(needMemoryHeaders)loadedMemoryHeaders=loaded.memoryHeaders
+                        if(needTimeline)loadedTimeline=loaded.protocolTimeline
+                        if(needMaterialBoard)loadedMaterial=loaded.materialBoard
+                        if(needExpenseBoard)loadedExpenses=loaded.expenseBoard
+                        ops=loaded.operations;people=loaded.operations.persons.map{it.person};peopleDone=true
+                        if(needTasks)taskBoard=loaded.tasks
+                        if(needProtocol)protocolSummary=loaded.protocol
+                        if(needMaterial)materialSummary=loaded.material
+                        if(needExpenses)expenseSummary=loaded.expenses
+                        if(needMemory)memorySummary=loaded.memory
+                        if(needDocuments)documentSummary=loaded.documents
+                        tasksDone=true;protocolDone=true;materialDone=true;expensesDone=true;memoryDone=true;documentsDone=true
+                        if(expectedAction!=null && needMetadata)leadership!!.actionState(action.id){metadataResult->
+                            if(current()){metadata=metadataResult;metadataDone=true;publish()}
+                        }
+                        publish()
+                    }
+                }
+            }
+            // Preserve the independent Leadership metadata/revoke contract. No P3b data in the batch.
+            if(needMetadata && expectedAction==null && current())leadership!!.actionState(action.id) {result->
+                if(current()){metadata=result;metadataDone=true;publish()}
+            }
+            return
         }
         if (operationsRepository != null) operationsRepository.board(action.id) { result ->
             if (!current()) return@board
@@ -641,18 +730,29 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         }
     }
     fun detail(id: String) {
-        documentPicker?.actionSelected(id)
         interaction()
-        if (snapshot.state != SessionState.READY) return
+        if(snapshot.state==SessionState.READY)openAction(id,true)
+    }
+    private fun openAction(id:String,allowCombined:Boolean) {
         clearPersons(); selected = null; detailLoading = true
+        creating=false;editing=null;confirming=null;changeError=null
         val generation = snapshot.generation
         val request = personRequest
+        val candidate=actions.singleOrNull{it.id==id}
+        if(allowCombined && workspaceRepository!=null && candidate!=null && PersonRules.mayRead(candidate.status)) {
+            selected=candidate
+            readWorkspace(candidate){
+                if(snapshot.state==SessionState.READY && snapshot.generation==generation && personRequest==request)openAction(id,false)
+            }
+            return
+        }
         repository.getAction(id) {
             if (snapshot.state != SessionState.READY || snapshot.generation != generation || request != personRequest) return@getAction
             selected = it; detailLoading = false; creating = false; editing = null; confirming = null; changeError = null
             loadPersons()
         }
     }
+
     fun save(input: NewAction) {
         interaction()
         if (snapshot.state != SessionState.READY || saving || !input.valid()) return
@@ -668,5 +768,5 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             loadActions()
         }
     }
-    override fun onCleared() { protocol.clear(); material.clear(); expenses.clear(); memoryReports.clear(); documents.clear(); clearSensitive(); subscription.cancel(); session.lock() }
+    override fun onCleared() { workspaceTicket?.cancel();workspaceTicket=null;protocol.clear(); material.clear(); expenses.clear(); memoryReports.clear(); documents.clear(); clearSensitive(); subscription.cancel(); session.lock() }
 }

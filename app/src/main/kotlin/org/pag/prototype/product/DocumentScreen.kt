@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import org.pag.domain.*
@@ -32,10 +33,12 @@ import org.pag.domain.*
         d.viewed!=null -> {
             PreparationHeading(d.viewed!!.displayName)
             FormOutlinedButton(d::closeImage) {Text("‹ Zur Dokumentenliste")}
-            if(d.imageLoading) Text("Bild wird sicher gelesen …")
+            PagReadStatus(d.imageLoading,"Bild wird geladen …")
+            Box(Modifier.fillMaxWidth().height(480.dp),contentAlignment=Alignment.Center) {
             (d.image as? BitmapDocumentImage)?.forDisplay()?.let {bitmap ->
                 Image(bitmap.asImageBitmap(),contentDescription="Gespeichertes Bild",contentScale=ContentScale.Fit,
-                    modifier=Modifier.fillMaxWidth().heightIn(max=480.dp).aspectRatio(bitmap.width.toFloat()/bitmap.height))
+                    modifier=Modifier.fillMaxSize())
+            }
             }
         }
         d.camera.mode != CameraMode.CLOSED -> CameraCapturePane(d)
@@ -71,7 +74,7 @@ import org.pag.domain.*
             if(d.cameraSupported) FormButton(d::takePhoto,enabled=!d.busy) { Text("Foto aufnehmen") }
             FormButton(d::chooseFile,enabled=!d.busy) { Text("Dokument importieren") }
             Text("PaG erstellt eine verschlüsselte Kopie. Die Originaldatei außerhalb von PaG bleibt bestehen.")
-            if(d.loading) Text("Dokumente werden geladen …")
+            PagReadStatus(d.loading,"Dokumente werden geladen …")
             if(d.items?.isEmpty()==true) Text("Noch keine Dokumente gespeichert.")
             d.items.orEmpty().forEach { item ->
                 PreparationHeading(item.displayName)
@@ -120,7 +123,8 @@ internal fun documentFailure(reason: DocumentFailure) = when(reason) {
         FormOutlinedButton(d::nextTextPage,enabled=!d.textLoading && d.textPageIndex+1<d.textPageCount) {Text("Seite weiter ›")}
     }
     navigation()
-    if(d.textLoading) Text("Text wird sicher gelesen …")
+    PagReadStatus(d.textLoading,"Text wird geladen …")
+    Box(Modifier.fillMaxWidth().height(360.dp)) {
     d.text?.let {content ->
         LaunchedEffect(d.textViewed?.id,d.textPageIndex,content) {withFrameNanos {};d.textFrame()}
         if(content.isEmpty())Text("Dieses Textdokument ist leer.") else {
@@ -131,9 +135,10 @@ internal fun documentFailure(reason: DocumentFailure) = when(reason) {
                 }
             }
         }
-        navigation()
-        FormOutlinedButton(d::closeText) {Text("‹ Zur Dokumentenliste")}
     }
+    }
+    navigation()
+    FormOutlinedButton(d::closeText) {Text("‹ Zur Dokumentenliste")}
 }
 
 @Composable internal fun DocumentPdfPane(d:DocumentModel){
@@ -142,11 +147,13 @@ internal fun documentFailure(reason: DocumentFailure) = when(reason) {
     Text(if(d.pdfCount>0)"Seite ${d.pdfIndex+1} von ${d.pdfCount}" else "Seite ${d.pdfIndex+1}")
     FormOutlinedButton(d::previousPdfPage,enabled=!d.pdfLoading && d.pdfIndex>0){Text("‹ Seite zurück")}
     FormOutlinedButton(d::nextPdfPage,enabled=!d.pdfLoading && d.pdfIndex+1<d.pdfCount){Text("Seite weiter ›")}
-    if(d.pdfLoading)Text("PDF wird sicher gelesen …")
+    PagReadStatus(d.pdfLoading,"PDF-Seite wird geladen …")
+    Box(Modifier.fillMaxWidth().height(480.dp),contentAlignment=Alignment.Center) {
     (d.pdfPage?.image as? BitmapDocumentImage)?.forDisplay()?.let{bitmap ->
         LaunchedEffect(d.pdfViewed?.id,d.pdfIndex,bitmap){withFrameNanos{};d.pdfFrame()}
         Image(bitmap.asImageBitmap(),contentDescription="PDF-Seite ${d.pdfIndex+1}",contentScale=ContentScale.Fit,
-            modifier=Modifier.fillMaxWidth().heightIn(max=480.dp).aspectRatio(bitmap.width.toFloat()/bitmap.height))
+            modifier=Modifier.fillMaxSize())
+    }
     }
     FormOutlinedButton(d::closePdf){Text("‹ Zur Dokumentenliste")}
 }

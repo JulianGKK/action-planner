@@ -1,0 +1,6 @@
+// Host-only source injection; preserve the product BuildConfig/application-id contract.
+gradle.beforeProject { p ->
+    p.plugins.withId('com.android.application') {
+        if(p.path==':app')p.extensions.getByName('android').sourceSets.getByName('test').kotlin.srcDirs += [new File(p.rootDir,'tools/p11assessment/shared'),new File(p.rootDir,'tools/p11assessment/test')]
+    }
+}

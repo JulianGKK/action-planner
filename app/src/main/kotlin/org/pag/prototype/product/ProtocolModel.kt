@@ -87,6 +87,16 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
         interaction()
         if (current()) block()
     }
+    internal fun prepareWorkspaceTimeline() {
+        if(binding()==null || mode!=ProtocolUiMode.ACTIVE || nested || timeline!=null)return
+        timelineRequest++;loading=true
+    }
+    internal fun acceptWorkspaceTimeline(actionId:String,generation:Long,value:List<ProtocolTimelineItem>):Boolean {
+        if(binding()==null || action()?.id!=actionId || session().generation!=generation ||
+            mode!=ProtocolUiMode.ACTIVE || !loading || timeline!=null || nested)return false
+        timelineRequest++;timeline=value;loading=false;error=null
+        return true
+    }
     fun refresh() {
         val current = binding() ?: return; val id = action()!!.id; val request = ++timelineRequest
         loading = true
