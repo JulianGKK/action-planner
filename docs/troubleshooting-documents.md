@@ -65,7 +65,8 @@ Speicherberechtigung oder ein eigener Scanpfad der App erforderlich.
 ## Kann ich gespeicherte Dokumente schon anzeigen?
 
 Ab P10c1 lassen sich JPEG und PNG über „Bild ansehen“ innerhalb von PaG öffnen.
-Ab P10c2 ergänzt „Text ansehen“ die UTF-8-Textanzeige; PDF bleibt ohne Vorschau. Import, Liste und
+Ab P10c2 ergänzt „Text ansehen“ die UTF-8-Textanzeige; P10c3 ergänzt „PDF ansehen“.
+Import, Liste und
 bestätigtes Löschen der verschlüsselten PaG-Kopie bleiben verfügbar.
 Die Originaldatei außerhalb von PaG bleibt beim Import und beim Löschen der
 PaG-Kopie unverändert bestehen.
@@ -108,7 +109,7 @@ Details und tatsächliche Testgrenzen: [P10d](product-p10d-camera-import.md).
 JPEG und PNG können über „Bild ansehen“ bewusst innerhalb von PaG geöffnet
 werden, unabhängig vom ursprünglichen SAF-/Kameraimport. Es wird ausschließlich
 die verschlüsselte PaG-Kopie gelesen. Keine externe App und kein Klartextcache.
-PDF hat weiterhin keine Vorschau; UTF-8-Text wird ab P10c2 getrennt über „Text ansehen“ geöffnet.
+PDF wird ab P10c3 getrennt über „PDF ansehen“, UTF-8-Text ab P10c2 über „Text ansehen“ geöffnet.
 
 Große Bilder werden für die Anzeige verkleinert; das gespeicherte Original
 bleibt unverändert. „Dieses Bild ist für die sichere Anzeige zu groß oder wird
@@ -148,3 +149,27 @@ Künftig die Dateien vor Testbeginn in **Eigene Dateien und im SAF-Picker**
 auf Sichtbarkeit und tatsächliche Auswählbarkeit prüfen. Das ist ein offener
 Punkt der Testvorbereitung, keine Voraussetzung für normale Nutzerdateien
 und kein Anlass für zusätzliche PaG-Berechtigungen.
+
+## Geschützte PDF-Anzeige (P10c3)
+
+Gespeichertes PDF bewusst auswählen und „PDF ansehen“ antippen. PaG zeigt genau
+eine Seite; „Seite weiter“/„Seite zurück“ laden die gewählte Seite erneut sicher.
+„Zur Dokumentenliste“ beendet die Ansicht. Keine externe Viewer-App, Freigabe,
+Druckfunktion oder Klartext-PDF-Datei. Links, Formulare und Anhänge sind nicht bedienbar.
+
+Bei zusätzlichem PDF-Passwortschutz, nicht unterstütztem PDF oder nicht sicher
+darstellbarer Seite bleibt die verschlüsselte PaG-Kopie unverändert erhalten.
+Keine automatische Reparatur oder Löschung. Bei beendetem Renderer oder momentan
+nicht verfügbarer geschützter Anzeige später bewusst erneut öffnen; kein externer
+Fallback. Integritäts-/Bestandsfehler folgen weiterhin dem sicheren Sperrvertrag.
+
+Nach Sperren, Appwechsel oder Sessionablauf regulär erneut entsperren und das PDF
+bewusst öffnen. Die vorherige Seite erscheint nicht automatisch. Große Dokumente
+können bei jedem Seitenwechsel länger benötigen, weil die vollständige Datei erneut
+authentifiziert wird. Keine Entwickleroption oder zusätzliche Permission erforderlich.
+
+Synthetische P10c3-Importdateien: **Interner Speicher → Download →
+PaG-P10c3-synthetic**, `PaG-P10c3-Einseitig.pdf` und `PaG-P10c3-Mehrseitig.pdf`.
+Dieser öffentliche Testordner enthält ausschließlich unkritische Importoriginale;
+er ist kein Speicherort des PaG-Viewers. Details und tatsächlicher Abnahmestand:
+[P10c3](product-p10c3-secure-pdf-viewer.md).

@@ -87,9 +87,16 @@ val verifyPrototypeManifest = tasks.register("verifyPrototypeManifest") {
         val launcher = activities.item(0) as org.w3c.dom.Element
         check(launcher.getAttributeNS(namespace, "name") == "org.pag.prototype.MainActivity")
         check(launcher.getAttributeNS(namespace, "exported") == "true")
-        listOf("activity-alias", "provider", "receiver", "service").forEach {
+        listOf("activity-alias", "provider", "receiver").forEach {
             check(document.getElementsByTagName(it).length == 0) { "Unexpected component: $it" }
         }
+        val services=document.getElementsByTagName("service")
+        check(services.length==1)
+        val renderer=services.item(0) as org.w3c.dom.Element
+        check(renderer.getAttributeNS(namespace,"name")=="org.pag.prototype.product.PdfRenderService")
+        check(renderer.getAttributeNS(namespace,"exported")=="false")
+        check(renderer.getAttributeNS(namespace,"isolatedProcess")=="true")
+        check(renderer.getAttributeNS(namespace,"process")==":pdf_renderer")
         val application = document.getElementsByTagName("application").item(0) as org.w3c.dom.Element
         check(application.getAttributeNS(namespace, "allowBackup") == "false")
         check(application.getAttributeNS(namespace, "fullBackupContent") == "@xml/backup_rules")

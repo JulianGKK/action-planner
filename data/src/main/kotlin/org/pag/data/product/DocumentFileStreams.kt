@@ -31,6 +31,7 @@ internal inline fun <T> documentFileBoundary(work: () -> T): T = try { work() }
 catch (_: StorageAccessRevoked) { throw StorageAccessRevoked() }
 catch (_: DocumentTextUnavailable) { throw DocumentTextUnavailable() }
 catch (_: DocumentTextFormatFailure) { throw DocumentTextFormatFailure() }
+catch (failure: org.pag.domain.DocumentPdfUnsupported) { throw org.pag.domain.DocumentPdfUnsupported(failure.reason) }
 catch (failure: DocumentInputFailure) {
     // Multiple neutral provider failures may coincide (read + close). An additional
     // ciphertext/sync/unknown failure must still dominate the expected input error.
@@ -136,7 +137,11 @@ internal object DocumentFileStreams {
         } catch (failure:Throwable) { bytes?.fill(0);throw failure }
     }
 
-    /** Extract only one page while the existing strict UTF-8 validator authenticates all bytes. */
+    /** Fills an inaccessible anonymous sink; only the caller may render after final inventory. */
+    fun readPdf(c:StorageContext,documentId:String,key:ByteArray,source:InputStream,expectedSize:Long,input:org.pag.domain.DocumentPdfInput) {
+        verifyInto(c,documentId,key,source,expectedSize,DocumentFormat.PDF,null,pdf=input).requireCurrent(c)
+    }
+
     fun readText(c:StorageContext,documentId:String,key:ByteArray,source:InputStream,expectedSize:Long,page:Int,
         request:org.pag.domain.DocumentTextRequest?=null):org.pag.domain.DocumentTextPage {
         var result:org.pag.domain.DocumentTextPage?=null
@@ -160,9 +165,10 @@ internal object DocumentFileStreams {
 
     private fun verifyInto(c: StorageContext, documentId: String, key: ByteArray, source: InputStream,
         expectedSize: Long, format: DocumentFormat, destination:ByteArray?,text:((CharArray,Int)->Unit)?=null,
-        utf8:((Long)->Unit)?=null): DocumentVerification = documentFileBoundary {
+        utf8:((Long)->Unit)?=null,pdf:org.pag.domain.DocumentPdfInput?=null): DocumentVerification = documentFileBoundary {
         val generation = c.generation
         var invalidText=false
+        var pdfFailure:org.pag.domain.DocumentPdfUnsupported?=null
         source.use { raw ->
             if (!DocumentRules.validSize(expectedSize)) throw ProductStorageFailure()
             cipher(c, generation, documentId, key) { cipher, aad ->
@@ -180,6 +186,8 @@ internal object DocumentFileStreams {
                                 if (count <= 0 || count > maximumRead || count > expectedSize - length) throw ProductStorageFailure()
                                 destination?.let { buffer.copyInto(it,length.toInt(),0,count) }
                                 length += count
+                                if(pdfFailure==null)try {pdf?.write(buffer,0,count)}
+                                    catch(failure:org.pag.domain.DocumentPdfUnsupported){pdfFailure=failure}
                                 if(!invalidText)try {formatCheck.accept(buffer,count)}catch(_:DocumentTextFormatFailure){invalidText=true}
                                 buffer.fill(0)
                                 documentFileGate(c, generation)
@@ -195,6 +203,7 @@ internal object DocumentFileStreams {
         }
         documentFileGate(c, generation)
         if(invalidText)throw DocumentTextFormatFailure()
+        pdfFailure?.let {throw it}
         DocumentVerification(documentId,format,expectedSize,c,generation)
     }
 }

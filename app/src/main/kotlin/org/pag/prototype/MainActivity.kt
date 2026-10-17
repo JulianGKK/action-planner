@@ -126,6 +126,7 @@ class MainActivity : ComponentActivity() {
             override fun actionSelected(actionId: String) { pendingDocument.actionSelected(actionId) }
             override fun cancel() { pickerRequest=null; pendingDocument.clear() }
         })
+        model.documents.bindPdfRenderer(org.pag.prototype.product.AndroidDocumentPdfRenderer(this))
         model.documents.bindCameraPermission(object : org.pag.prototype.product.CameraPermission {
             override fun granted() = checkSelfPermission(android.Manifest.permission.CAMERA) == android.content.pm.PackageManager.PERMISSION_GRANTED
             override fun request() {

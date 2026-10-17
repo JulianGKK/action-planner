@@ -24,4 +24,6 @@
     <instrumentation android:name="org.pag.prototype.P10dCameraProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P10c1ImageProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P10c2TextProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P10c3PdfFeasibilityProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P10c3PdfViewerProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

@@ -135,20 +135,20 @@ class DocumentImportStagingTest {
     }
     @Test fun syncFailureLeavesWritingWithMaximumReservation() {
         val db=Database()
-        invalid { DocumentImportStaging(db,temp.root) { throw IOException("sync") }.stage(c,"a","x",DocumentFormat.TEXT,source(db,byteArrayOf(1))) }
+        invalid { DocumentImportStaging(db,temp.root) { throw IOException("sync") }.stage(c,"a","x",DocumentFormat.TEXT,source(db,"x".toByteArray())) }
         assertEquals("IMPORT_WRITING",db.dao.jobs.single().phase)
         assertEquals(DocumentRules.MAX_DOCUMENT_BYTES,DocumentStorageRules.capacity(emptyList(),db.dao.jobs).plaintextBytes)
     }
     @Test fun sourceCloseFailureLeavesWriting() {
         val db=Database()
         invalid { DocumentImportStaging(db,temp.root).stage(c,"a","x",DocumentFormat.TEXT) {
-            object:ByteArrayInputStream(byteArrayOf(1)) { override fun close() { throw IOException("close") } }
+            object:ByteArrayInputStream("x".toByteArray()) { override fun close() { throw IOException("close") } }
         } }
         assertEquals("IMPORT_WRITING",db.dao.jobs.single().phase)
     }
     @Test fun revokeBeforeClosedCommitRollsBackPhaseAndSize() {
         val db=Database();db.beforeAdvance = { if(it.phase == "IMPORT_WRITING") c.commitAllowed=false }
-        assertThrows(StorageAccessRevoked::class.java) { DocumentImportStaging(db,temp.root).stage(c,"a","x",DocumentFormat.TEXT,source(db,byteArrayOf(1))) }
+        assertThrows(StorageAccessRevoked::class.java) { DocumentImportStaging(db,temp.root).stage(c,"a","x",DocumentFormat.TEXT,source(db,"x".toByteArray())) }
         assertEquals("IMPORT_WRITING",db.dao.jobs.single().phase);assertNull(db.dao.jobs.single().plaintextSize)
     }
     @Test fun changedBindingAndActionBlockClosed() {
@@ -157,7 +157,7 @@ class DocumentImportStagingTest {
             db.beforeAdvance = { if(it.phase == "IMPORT_WRITING") {
                 if(changeKey) db.dao.jobs.single().fileKey!![0] = (it.fileKey!![0].toInt() xor 1).toByte() else db.dao.status="DELETION_PENDING"
             } }
-            invalid { DocumentImportStaging(db,base).stage(c,"a","x",DocumentFormat.TEXT,source(db,byteArrayOf(1))) }
+            invalid { DocumentImportStaging(db,base).stage(c,"a","x",DocumentFormat.TEXT,source(db,"x".toByteArray())) }
             assertEquals("IMPORT_WRITING",db.dao.jobs.single().phase)
         }
     }
@@ -274,7 +274,8 @@ class DocumentImportStagingTest {
                     }
                 }
             };Unit }
-            if(extra==0)work() else invalid(work)
+            if(extra==0)work() else assertEquals(DocumentFailure.TOO_LARGE,
+                assertThrows(DocumentInputFailure::class.java,work).reason)
             assertEquals(total,read)
             assertEquals(if(extra==0)"IMPORT_CLOSED" else "IMPORT_WRITING",db.dao.jobs.single().phase)
         }
