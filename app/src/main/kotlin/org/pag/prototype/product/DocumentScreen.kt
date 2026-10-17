@@ -27,6 +27,7 @@ import org.pag.domain.*
     d.error?.let { Text(documentFailure(it)) }
     val expected=d.confirmingDelete
     when {
+        d.pdfViewed!=null -> DocumentPdfPane(d)
         d.textViewed!=null -> DocumentTextPane(d)
         d.viewed!=null -> {
             PreparationHeading(d.viewed!!.displayName)
@@ -80,6 +81,8 @@ import org.pag.domain.*
                     FormOutlinedButton({d.viewImage(item)},enabled=!d.busy) {Text("Bild ansehen")}
                 } else if(item.format==DocumentFormat.TEXT) {
                     FormOutlinedButton({d.viewText(item)},enabled=!d.busy) {Text("Text ansehen")}
+                } else if(item.format==DocumentFormat.PDF) {
+                    FormOutlinedButton({d.viewPdf(item)},enabled=!d.busy) {Text("PDF ansehen")}
                 } else Text("Vorschau in dieser Version noch nicht verfügbar.")
                 FormOutlinedButton({d.requestDelete(item)},enabled=!d.busy) { Text("Löschen") }
             }
@@ -89,6 +92,11 @@ import org.pag.domain.*
 }
 internal fun documentFormat(format: DocumentFormat) = when(format) { DocumentFormat.TEXT -> "UTF-8-Text"; else -> format.name }
 internal fun documentFailure(reason: DocumentFailure) = when(reason) {
+    DocumentFailure.PDF_PASSWORD_PROTECTED -> "Dieses PDF ist geschützt und kann nicht angezeigt werden."
+    DocumentFailure.PDF_PAGE_TOO_LARGE -> "Diese PDF-Seite kann nicht sicher angezeigt werden."
+    DocumentFailure.PDF_MEMORY_UNAVAILABLE -> "Die geschützte PDF-Anzeige ist derzeit nicht verfügbar. Bitte später erneut versuchen."
+    DocumentFailure.PDF_RENDERER_ERROR -> "Die PDF-Anzeige wurde beendet. Bitte das Dokument erneut bewusst öffnen."
+    DocumentFailure.PDF_UNSUPPORTED -> "Diese PDF-Seite kann nicht sicher angezeigt werden. Das PDF ist möglicherweise geschützt oder wird nicht unterstützt."
     DocumentFailure.TEXT_FORMAT -> "Dieses Dokument enthält keinen gültigen UTF-8-Klartext und kann nicht angezeigt werden."
     DocumentFailure.TEXT_UNSUPPORTED -> "Diese Textseite kann nicht angezeigt werden. Bitte das Dokument erneut bewusst öffnen."
     DocumentFailure.IMAGE_UNSUPPORTED -> "Dieses Bild ist für die sichere Anzeige zu groß oder wird nicht unterstützt."
@@ -126,4 +134,19 @@ internal fun documentFailure(reason: DocumentFailure) = when(reason) {
         navigation()
         FormOutlinedButton(d::closeText) {Text("‹ Zur Dokumentenliste")}
     }
+}
+
+@Composable internal fun DocumentPdfPane(d:DocumentModel){
+    PreparationHeading(d.pdfViewed?.displayName.orEmpty())
+    FormOutlinedButton(d::closePdf){Text("‹ Zur Dokumentenliste")}
+    Text(if(d.pdfCount>0)"Seite ${d.pdfIndex+1} von ${d.pdfCount}" else "Seite ${d.pdfIndex+1}")
+    FormOutlinedButton(d::previousPdfPage,enabled=!d.pdfLoading && d.pdfIndex>0){Text("‹ Seite zurück")}
+    FormOutlinedButton(d::nextPdfPage,enabled=!d.pdfLoading && d.pdfIndex+1<d.pdfCount){Text("Seite weiter ›")}
+    if(d.pdfLoading)Text("PDF wird sicher gelesen …")
+    (d.pdfPage?.image as? BitmapDocumentImage)?.forDisplay()?.let{bitmap ->
+        LaunchedEffect(d.pdfViewed?.id,d.pdfIndex,bitmap){withFrameNanos{};d.pdfFrame()}
+        Image(bitmap.asImageBitmap(),contentDescription="PDF-Seite ${d.pdfIndex+1}",contentScale=ContentScale.Fit,
+            modifier=Modifier.fillMaxWidth().heightIn(max=480.dp).aspectRatio(bitmap.width.toFloat()/bitmap.height))
+    }
+    FormOutlinedButton(d::closePdf){Text("‹ Zur Dokumentenliste")}
 }

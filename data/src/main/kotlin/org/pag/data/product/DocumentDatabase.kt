@@ -109,6 +109,8 @@ internal object DocumentStorageRules {
         viewerSnapshot(actionId,expected,c,setOf(DocumentFormat.JPEG,DocumentFormat.PNG))
     suspend fun textSnapshot(actionId:String, expected:DocumentAsset,c:StorageContext)=
         viewerSnapshot(actionId,expected,c,setOf(DocumentFormat.TEXT))
+    suspend fun pdfSnapshot(actionId:String,expected:DocumentAsset,c:StorageContext)=
+        viewerSnapshot(actionId,expected,c,setOf(DocumentFormat.PDF))
     private suspend fun viewerSnapshot(actionId:String,expected:DocumentAsset,c:StorageContext,formats:Set<DocumentFormat>):DocumentResult<DocumentReadSnapshot> {
         requireOperations(c,AccessPoint.OPERATION)
         return deleteState(c) { docs,jobs ->

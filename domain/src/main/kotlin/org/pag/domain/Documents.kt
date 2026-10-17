@@ -28,13 +28,17 @@ object DocumentRules {
 
 /** One attempt only; opened by the authorized worker after durable WRITING, never by UI. */
 fun interface DocumentSource { fun open(): java.io.InputStream }
-enum class DocumentFailure { INVALID, NOT_ALLOWED, NOT_FOUND, STALE, CAPACITY, MAINTENANCE_REQUIRED, SOURCE_UNAVAILABLE, TOO_LARGE, FORMAT, IMAGE_UNSUPPORTED, TEXT_UNSUPPORTED, TEXT_FORMAT }
+enum class DocumentFailure { INVALID, NOT_ALLOWED, NOT_FOUND, STALE, CAPACITY, MAINTENANCE_REQUIRED, SOURCE_UNAVAILABLE, TOO_LARGE, FORMAT, IMAGE_UNSUPPORTED, TEXT_UNSUPPORTED, TEXT_FORMAT, PDF_UNSUPPORTED, PDF_PASSWORD_PROTECTED, PDF_PAGE_TOO_LARGE, PDF_MEMORY_UNAVAILABLE, PDF_RENDERER_ERROR }
 sealed interface DocumentResult<out T> {
     data class Value<T>(val value: T) : DocumentResult<T>
     data class Rejected(val reason: DocumentFailure) : DocumentResult<Nothing>
 }
 /** Key-free product port. No URI, blob names, jobs or cryptographic data. */
 interface DocumentRepository {
+    fun readPdf(actionId:String, expected:DocumentAsset, page:Int, request:DocumentPdfRequest,
+        renderer:DocumentPdfRenderer,publish:(DocumentResult<DocumentPdfPage>)->Unit) {
+        publish(DocumentResult.Rejected(DocumentFailure.NOT_ALLOWED))
+    }
     fun readText(actionId:String, expected:DocumentAsset, page:Int, request:DocumentTextRequest,
         publish:(DocumentResult<DocumentTextPage>)->Unit) {
         publish(DocumentResult.Rejected(DocumentFailure.NOT_ALLOWED))
@@ -50,6 +54,28 @@ interface DocumentRepository {
     fun importDocument(actionId: String, name: String, format: DocumentFormat, source: DocumentSource,
         publish: (DocumentResult<Unit>) -> Unit)
     fun deleteDocument(actionId: String, expected: DocumentAsset, publish: (DocumentResult<Unit>) -> Unit)
+}
+
+/** Internal RAM sink; render is called only after authenticated EOF and final inventory. */
+interface DocumentPdfInput:AutoCloseable {
+    fun write(bytes:ByteArray,offset:Int,count:Int)
+    fun render(page:Int,check:()->Unit):DocumentPdfPage
+}
+fun interface DocumentPdfRenderer { fun create(size:Long):DocumentPdfInput }
+class DocumentPdfUnsupported(val reason:DocumentFailure=DocumentFailure.PDF_UNSUPPORTED):RuntimeException() {
+    init { require(reason in setOf(DocumentFailure.PDF_UNSUPPORTED, DocumentFailure.PDF_PASSWORD_PROTECTED,
+        DocumentFailure.PDF_PAGE_TOO_LARGE, DocumentFailure.PDF_MEMORY_UNAVAILABLE, DocumentFailure.PDF_RENDERER_ERROR)) }
+}
+class DocumentPdfPage(val index:Int,val pageCount:Int,val image:DocumentImage):AutoCloseable {
+    init {require(pageCount in 1..10000 && index in 0 until pageCount)}
+    override fun close()=image.close()
+}
+enum class DocumentPdfPhase { WORKER_START, DB_SNAPSHOT, INVENTORY, AUTH_AND_MEMFD, MEMFD_FILL, RENDERER_INIT, PAGE_OPEN, PAGE_RENDER, IPC_AND_BITMAP, PUBLICATION, VISIBLE, PAGE_CHANGE, CLEANUP }
+class DocumentPdfRequest(override val generation:Long?=null,private val timing:(DocumentPdfPhase,Long)->Unit={_,_->}):DocumentReadRequest {
+    private val cancelled=java.util.concurrent.atomic.AtomicBoolean(false)
+    override val active get()=!cancelled.get()
+    fun cancel(){cancelled.set(true)}
+    fun measured(phase:DocumentPdfPhase,start:Long){try{timing(phase,(System.nanoTime()-start)/1_000_000)}catch(_:RuntimeException){}}
 }
 
 interface DocumentImage : AutoCloseable

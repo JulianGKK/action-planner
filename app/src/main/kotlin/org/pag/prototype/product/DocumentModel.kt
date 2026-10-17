@@ -10,6 +10,44 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
     private val session: () -> SessionSnapshot, private val action: () -> Action?, private val interaction: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit,
     private val cameraAuthority: () -> Boolean = { true }) {
+    private var pdfRenderer:DocumentPdfRenderer?=null
+    internal fun bindPdfRenderer(renderer:DocumentPdfRenderer){pdfRenderer=renderer}
+    internal var pdfViewed by mutableStateOf<DocumentAsset?>(null);private set
+    internal var pdfPage by mutableStateOf<DocumentPdfPage?>(null);private set
+    internal var pdfLoading by mutableStateOf(false);private set
+    internal var pdfIndex by mutableStateOf(0);private set
+    internal var pdfCount by mutableStateOf(0);private set
+    private var pdfRequest:DocumentPdfRequest?=null
+    private var pdfStarted=0L;private var pdfFrameReported=false
+    internal fun pdfFrame(){if(!pdfFrameReported && available && cameraAuthority() && pdfPage!=null){pdfFrameReported=true;pdfRequest?.measured(DocumentPdfPhase.VISIBLE,pdfStarted)}}
+    internal fun clearPdf(){val start=System.nanoTime();val request=pdfRequest;pdfRequest?.cancel();pdfRequest=null;pdfPage?.close();pdfPage=null;pdfViewed=null;pdfLoading=false;pdfIndex=0;pdfCount=0;request?.measured(DocumentPdfPhase.CLEANUP,start)}
+    internal fun closePdf()=act{clearPdf();error=null}
+    internal fun viewPdf(item:DocumentAsset)=act{
+        if(!cameraAuthority() || item !in items.orEmpty() || item.format!=DocumentFormat.PDF || pdfRenderer==null)return@act
+        clearViewers();camera.clear();error=null;pdfViewed=item;readPdfPage(0)
+    }
+    internal fun nextPdfPage()=act{if(!pdfLoading && pdfIndex+1<pdfCount)readPdfPage(pdfIndex+1)}
+    internal fun previousPdfPage()=act{if(!pdfLoading && pdfIndex>0)readPdfPage(pdfIndex-1)}
+    private fun readPdfPage(page:Int){
+        if(!available || !cameraAuthority())return
+        val item=pdfViewed ?: return;val renderer=pdfRenderer ?: return
+        val changing=pdfCount>0
+        pdfRequest?.cancel();pdfPage?.close();pdfPage=null;pdfLoading=true;pdfIndex=page;error=null
+        val started=System.nanoTime();pdfStarted=started;pdfFrameReported=false;val attempt=DocumentPdfRequest(generation,::pdfTiming);pdfRequest=attempt;val e=epoch;val g=generation
+        repository()!!.readPdf(boundId!!,item,page,attempt,renderer){result ->
+            if(!attempt.active || pdfRequest!==attempt || !available || !cameraAuthority() || e!=epoch || g!=generation || pdfViewed!=item){
+                (result as? DocumentResult.Value)?.value?.close();return@readPdf
+            }
+            pdfLoading=false
+            attempt.measured(DocumentPdfPhase.PUBLICATION,started)
+            if(changing)attempt.measured(DocumentPdfPhase.PAGE_CHANGE,started)
+            when(result){
+                is DocumentResult.Value -> if(result.value.index==page){pdfPage=result.value;pdfCount=result.value.pageCount}
+                    else {result.value.close();error=DocumentFailure.PDF_UNSUPPORTED}
+                is DocumentResult.Rejected -> error=result.reason
+            }
+        }
+    }
     private var cameraImportTime: Long? = null
     internal var textViewed by mutableStateOf<DocumentAsset?>(null); private set
     internal var text by mutableStateOf<String?>(null); private set
@@ -24,7 +62,7 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
         request?.cancel();textRequest=null;text=null;textViewed=null;textLoading=false;textPageIndex=0;textPageCount=0
         request?.measured(DocumentTextPhase.CLEANUP,started)
     }
-    internal fun clearViewers() {clearImage();clearText()}
+    internal fun clearViewers() {clearImage();clearText();clearPdf()}
     internal fun closeText()=act {clearText();error=null}
     internal fun viewText(item:DocumentAsset)=act {
         if(!cameraAuthority() || item !in items.orEmpty() || item.format!=DocumentFormat.TEXT)return@act

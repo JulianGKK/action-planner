@@ -1,0 +1,18 @@
+// Isolated synthetic tests only. Never use this override for the product APK.
+gradle.beforeProject { p ->
+    p.plugins.withId('com.android.application') {
+        if (p.path == ':app') {
+            p.extensions.getByName('androidComponents').finalizeDsl { dsl ->
+                dsl.sourceSets.getByName('debug').manifest.srcFile(p.rootProject.file('tools/p10c3/probe-manifest.xml'))
+                dsl.defaultConfig.applicationId = 'org.pag.pdf.p10c3probe'
+                dsl.defaultConfig.testApplicationId = 'org.pag.pdf.p10c3probe.test'
+                dsl.defaultConfig.manifestPlaceholders.put('pagTestTargetPackage','org.pag.pdf.p10c3probe')
+            }
+        }
+    }
+    p.plugins.withId('com.android.library') {
+        if (p.path == ':data') {
+            p.extensions.getByName('android').defaultConfig.testApplicationId = 'org.pag.data.unlockprobe'
+        }
+    }
+}

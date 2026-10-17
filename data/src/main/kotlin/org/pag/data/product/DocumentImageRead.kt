@@ -82,6 +82,9 @@ internal class DocumentReadDispatch(private val access:StorageAccess,private val
               catch (_:DocumentImageUnsupported) {
                   image?.close()
                   main.execute {c.publish {if(request.active)publish(DocumentResult.Rejected(DocumentFailure.IMAGE_UNSUPPORTED))}}
+              } catch (failure:DocumentPdfUnsupported) {
+                  image?.close()
+                  main.execute {c.publish {if(request.active)publish(DocumentResult.Rejected(failure.reason))}}
               } catch (_:DocumentTextUnavailable) {
                   image?.close()
                   main.execute {c.publish {if(request.active)publish(DocumentResult.Rejected(DocumentFailure.TEXT_UNSUPPORTED))}}

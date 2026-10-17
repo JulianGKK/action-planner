@@ -1,0 +1,2 @@
+# Preserve exact PDF fixture bytes, including fixed-width xref records.
+app/src/androidTest/assets/p10c3/*.pdf binary

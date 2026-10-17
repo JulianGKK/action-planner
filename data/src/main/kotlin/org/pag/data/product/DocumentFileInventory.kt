@@ -119,6 +119,16 @@ internal class DocumentFileInventory(noBackupFilesDir: File) {
         } catch (failure:Throwable) { bytes?.fill(0);throw failure }
     }
 
+    fun readPdf(c:StorageContext,name:String,knownStaging:Set<String>,knownFiles:Set<String>,documentId:String,key:ByteArray,
+        expectedSize:Long,input:org.pag.domain.DocumentPdfInput) {
+        var deferred:org.pag.domain.DocumentPdfUnsupported?=null
+        readExisting(c,DocumentFileArea.FILES,name,knownStaging,knownFiles) {
+            try {DocumentFileStreams.readPdf(c,documentId,key,it,expectedSize,input)}
+            catch(failure:org.pag.domain.DocumentPdfUnsupported){deferred=failure}
+        }
+        deferred?.let {throw it}
+    }
+
     fun readText(c:StorageContext,name:String,knownStaging:Set<String>,knownFiles:Set<String>,
         documentId:String,key:ByteArray,expectedSize:Long,page:Int,request:org.pag.domain.DocumentTextRequest?=null):org.pag.domain.DocumentTextPage {
         var result:org.pag.domain.DocumentTextPage?=null

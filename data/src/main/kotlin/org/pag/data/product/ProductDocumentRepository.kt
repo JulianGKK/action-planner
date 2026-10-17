@@ -23,6 +23,25 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
     private val staging = DocumentImportStaging(steps, noBackupRoot)
     private val publication = DocumentPublication(steps, noBackupRoot)
     private val deletion = DocumentDelete(SqlCipherDocumentDeleteDatabase(app, inventory, owner), noBackupRoot)
+    override fun readPdf(actionId:String,expected:DocumentAsset,page:Int,request:DocumentPdfRequest,
+        renderer:DocumentPdfRenderer,publish:(DocumentResult<DocumentPdfPage>)->Unit) {
+        val requested=System.nanoTime()
+        DocumentReadDispatch(access,worker,main,blocked).run(request,publish) {c ->
+            request.measured(DocumentPdfPhase.WORKER_START,requested)
+            if(page !in 0 until 10000)return@run DocumentResult.Rejected(DocumentFailure.PDF_UNSUPPORTED)
+            if(interruptedGeneration==c.generation)return@run DocumentResult.Rejected(DocumentFailure.MAINTENANCE_REQUIRED)
+            var held:DocumentReadSnapshot?=null
+            try {
+                val started=System.nanoTime()
+                val snapshot=read(c) {db->db.documents().pdfSnapshot(actionId,expected,c).also {if(it is DocumentResult.Value)held=it.value}}
+                request.measured(DocumentPdfPhase.DB_SNAPSHOT,started)
+                when(snapshot) {
+                    is DocumentResult.Rejected -> snapshot
+                    is DocumentResult.Value -> DocumentResult.Value(DocumentPdfRead(noBackupRoot).render(c,snapshot.value,page,renderer,request))
+                }
+            } finally {held?.close()}
+        }
+    }
     override fun readText(actionId:String,expected:DocumentAsset,page:Int,request:DocumentTextRequest,
         publish:(DocumentResult<DocumentTextPage>)->Unit) {
         val started=System.nanoTime()

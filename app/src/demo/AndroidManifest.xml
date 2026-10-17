@@ -4,5 +4,5 @@
     <uses-feature android:name="android.hardware.camera" tools:node="remove" />
     <uses-feature android:name="android.hardware.camera.autofocus" tools:node="remove" />
     <uses-feature android:name="android.hardware.camera.any" tools:node="remove" />
-    <application android:label="PaG Demo" tools:replace="android:label" />
+    <application android:label="PaG Demo" tools:replace="android:label"><service android:name="org.pag.prototype.product.PdfRenderService" tools:node="remove" /></application>
 </manifest>
