@@ -64,9 +64,10 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
         }
     }
 }
-@Composable internal fun PreparationWorkspace(model: ProductViewModel) {
+@Composable internal fun PreparationWorkspace(model: ProductViewModel, renderContent:Boolean=true) {
     ActionWorkspaceHeader(model)
     PreparationNavigation(model)
+    if(!renderContent)return
     if (model.personDetailLoading) { PagLoadingState(); return }
     when (model.preparationContentState) {
         PreparationContentState.LOADING -> { PagLoadingState(); return }

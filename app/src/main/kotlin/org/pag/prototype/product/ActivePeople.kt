@@ -52,7 +52,7 @@ internal fun activePersonCard(person: OperationalPerson, board: OperationalBoard
 }
 
 /** Display clock only. Composition disposal cancels the minute job; no model/port calls. */
-@Composable private fun peopleDisplayTime(): Long {
+@Composable internal fun peopleDisplayTime(): Long {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(60_000); now = System.currentTimeMillis() } }
     return now
@@ -62,7 +62,11 @@ internal fun activePersonCard(person: OperationalPerson, board: OperationalBoard
     val now = peopleDisplayTime()
     val zone = ZoneId.systemDefault()
     activePeopleSummary(board).forEach { Text(it) }
-    board.persons.forEach { person ->
+    board.persons.forEach { person -> ActivePersonListRow(model,board,person,now,zone) }
+
+}
+
+@Composable internal fun ActivePersonListRow(model:ProductViewModel,board:OperationalBoard,person:OperationalPerson,now:Long,zone:ZoneId) {
         val card = activePersonCard(person, board, now, zone)
         FormOutlinedButton({ model.operations.focus(card.id) }, enabled = model.activeNavigationEnabled,
             modifier = Modifier.fillMaxWidth().semantics { onClick(label = "${card.name} öffnen", action = null) }) {
@@ -74,7 +78,6 @@ internal fun activePersonCard(person: OperationalPerson, board: OperationalBoard
                 activeAffectedTaskLabel(model.tasks.board, card.id)?.let { Text(it) }
             }
         }
-    }
 }
 
 @Composable internal fun ActivePersonWorkspace(model: ProductViewModel, board: OperationalBoard) {

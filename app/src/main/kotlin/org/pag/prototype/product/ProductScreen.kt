@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.contentDescription
@@ -55,8 +56,13 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                         }
                         PagWorkspace(model.feedback.takeIf { model.snapshot.state == SessionState.READY },
                             model::dismissFeedback, Modifier.fillMaxWidth().weight(1f)) {
+                        BoxWithConstraints(Modifier.fillMaxSize()) {
+                        val viewport=loadingViewportMinimum(constraints.maxHeight,with(LocalDensity.current){48.dp.roundToPx()})
+                        val listPositions=remember(model.snapshot.generation,model.selected?.id){ProductScrollPositions()}
+                        if(productEntityListRoute(model)) ProductEntityList(model,listPositions)
+                        else {
                         val scroll=rememberScrollState()
-                        val geometry=productScrollGeometry(model,scroll)
+                        val geometry=productScrollGeometry(model,scroll,viewport,listPositions)
                         Column(Modifier.padding(24.dp).verticalScroll(scroll).then(geometry), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             when (model.snapshot.state) {
                                 SessionState.BLOCKED -> PagErrorState()
@@ -134,6 +140,8 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                                     }
                                 }
                             }
+                        }
+                        }
                         }
                         }
                     }

@@ -1,13 +1,16 @@
 # Isoliertes Active-Workspace-Assessment
 
-Keine Produktaktivierung. Init-Skripte werden nur ausdrücklich aufgerufen.
+Keine Produktaktivierung. Vor Aufruf `ADB` auf das lokale adb-Programm und
+`ANDROID_SERIAL` auf das bewusst gewählte Testgerät setzen; alternativ
+`--adb` und `--serial` verwenden. Keine Gerätekennung oder benutzerspezifischen
+SDK-Pfade im Repository hinterlegen. Init-Skripte werden nur ausdrücklich aufgerufen.
 Produkt-App, Credentials, DB, Schlüssel und Dateien sind kein Testmaterial.
 Keine neue Dependency/Permission; kein Netzwerk, kein SavedState/Disk-Cache.
 
 ```sh
 ./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest -I tools/p11assessment/host.init.gradle --offline
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest -I tools/p11assessment/probe.init.gradle --offline
-python3 tools/p11assessment/run.py --install
+python3 tools/p11assessment/run.py --adb "$ADB" --serial "$ANDROID_SERIAL" --install
 python3 tools/p11assessment/summarize.py .prototype-cache/assessment-small-A.txt .prototype-cache/assessment-small-B.txt .prototype-cache/assessment-small-C.txt
 ```
 
@@ -19,8 +22,13 @@ nach der Probe geschlossen/entfernt; der Produktpfad wird nicht geöffnet.
 Zusätzlich nach demselben isolierten Build/Update des Testpakets:
 
 ```sh
-adb -s RFCT1186YRJ shell am instrument -w org.pag.perf.p11probe.test/org.pag.prototype.AssessmentMemoryProbe
-adb -s RFCT1186YRJ shell am instrument -w -e variant C -e size large -e scrollOnly true org.pag.perf.p11probe.test/org.pag.prototype.ActiveWorkspaceAssessmentProbe
+"$ADB" -s "$ANDROID_SERIAL" shell am instrument -w org.pag.perf.p11probe.test/org.pag.prototype.AssessmentMemoryProbe
+"$ADB" -s "$ANDROID_SERIAL" shell am instrument -w -e variant C -e size large -e scrollOnly true org.pag.perf.p11probe.test/org.pag.prototype.ActiveWorkspaceAssessmentProbe
+"$ADB" -s "$ANDROID_SERIAL" shell am instrument -w org.pag.perf.p11probe.test/org.pag.prototype.ListStabilityProbe
+"$ADB" -s "$ANDROID_SERIAL" shell am instrument -w org.pag.perf.p11probe.test/org.pag.prototype.ProjectionProfileProbe
+"$ADB" -s "$ANDROID_SERIAL" shell am instrument -w org.pag.perf.p11probe.test/org.pag.prototype.Ux3cTasksProbe
+"$ADB" -s "$ANDROID_SERIAL" shell am instrument -w org.pag.perf.p11probe.test/org.pag.prototype.Ux3dFunctionsProbe
+"$ADB" -s "$ANDROID_SERIAL" shell am instrument -w org.pag.perf.p11probe.test/org.pag.prototype.P9MemoryReportProbe
 ```
 
 Für vergleichbare Scrollreihen A/B/C jeweils dieselbe Größe verwenden.

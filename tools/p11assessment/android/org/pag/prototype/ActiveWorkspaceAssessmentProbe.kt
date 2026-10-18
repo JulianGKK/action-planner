@@ -15,10 +15,10 @@ import java.util.concurrent.*
 
 /** Synthetic package only. Real SQLCipher/VM/Compose; simulated READY events, no credentials. */
 class ActiveWorkspaceAssessmentProbe:Instrumentation() {
-    private var variant="A";private var size="typical";private var scrollOnly=false
-    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);scrollOnly=arguments?.getString("scrollOnly")=="true";variant=arguments?.getString("variant")?:"A";size=arguments?.getString("size")?:"typical";check(variant in setOf("A","B","C"));check(size in setOf("small","typical","large"));start()}
+    private var variant="A";private var size="typical";private var scrollOnly=false;private var geometryTrace=false
+    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);geometryTrace=arguments?.getString("geometryTrace")=="true";scrollOnly=arguments?.getString("scrollOnly")=="true";variant=arguments?.getString("variant")?:"A";size=arguments?.getString("size")?:"typical";check(variant in setOf("A","B","C"));check(size in setOf("small","typical","large"));start()}
     private fun emit(name:String,i:Int,value:Double){sendStatus(0,Bundle().apply{putString("stream","ASSESS,$variant,$size,$name,$i,$value\n")})}
-    private class Session:SessionPort,StorageAccess {
+    internal class Session:SessionPort,StorageAccess {
         var state=SessionSnapshot(SessionState.LOCKED,1)
         val observers=mutableListOf<(SessionSnapshot)->Unit>()
         override fun snapshot()=state
@@ -58,8 +58,8 @@ class ActiveWorkspaceAssessmentProbe:Instrumentation() {
             val f=fixture
             host=startActivitySync(Intent(targetContext,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
             val activity=host
-            val scrolling=java.util.concurrent.atomic.AtomicBoolean(false);val scrollFrames=mutableListOf<Long>();val totals=mutableListOf<Long>();val deadlines=mutableListOf<Long>();var lost=0L
-            runOnMainSync{activity.window.addOnFrameMetricsAvailableListener({_,m,d->synchronized(totals){totals+=m.getMetric(FrameMetrics.TOTAL_DURATION);if(scrolling.get())scrollFrames+=m.getMetric(FrameMetrics.TOTAL_DURATION);deadlines+=m.getMetric(FrameMetrics.DEADLINE);lost+=d}},Handler(frameThread.looper))}
+            val scrolling=java.util.concurrent.atomic.AtomicBoolean(false);val scrollFrames=mutableListOf<Long>();val layouts=mutableListOf<Long>();val totals=mutableListOf<Long>();val deadlines=mutableListOf<Long>();var lost=0L
+            runOnMainSync{activity.window.addOnFrameMetricsAvailableListener({_,m,d->synchronized(totals){totals+=m.getMetric(FrameMetrics.TOTAL_DURATION);layouts+=m.getMetric(FrameMetrics.LAYOUT_MEASURE_DURATION);if(scrolling.get())scrollFrames+=m.getMetric(FrameMetrics.TOTAL_DURATION);deadlines+=m.getMetric(FrameMetrics.DEADLINE);lost+=d}},Handler(frameThread.looper))}
             fun meta(name:String,v:Long)=emit(name,-1,v.toDouble())
             meta("NATIVE_START",Debug.getNativeHeapAllocatedSize());meta("GC_COUNT_START",Debug.getRuntimeStat("art.gc.gc-count").toLong());meta("GC_TIME_START",Debug.getRuntimeStat("art.gc.gc-time").toLong());meta("FD_START",java.io.File("/proc/self/fd").list()!!.size.toLong())
             meta("THERMAL_START",targetContext.getSystemService(PowerManager::class.java).currentThermalStatus.toLong())
@@ -92,7 +92,9 @@ class ActiveWorkspaceAssessmentProbe:Instrumentation() {
                 runOnMainSync{
                     model=ProductViewModel(session,f.actions,ProductStorageState.READY_TO_OPEN,f.persons,null,f.operations,f.tasks,f.protocol,f.material,f.expenses,f.memoryReports){}
                     model.bindWorkspace(repo)
-                    activity.setContent{val complete=pending.value?.invoke()==true;SideEffect{if(complete)composed.set(true)};ProductScreen(model)}
+                    activity.setContent{val complete=pending.value?.invoke()==true;SideEffect{if(complete)composed.set(true)};CompositionLocalProvider(LocalScrollDiagnostic provides (if(geometryTrace) { minimum,c ->
+                        if(minimum>100000)sendStatus(0,Bundle().apply{putString("stream","GEOMETRY,$minimum,${c.minWidth},${c.maxWidth},${c.minHeight},${c.maxHeight}\n")})
+                    } else null)){ProductScreen(model)}}
                 }
                 fun measure(name:String,action:()->Unit,done:()->Boolean){
                     phase=name
@@ -148,7 +150,7 @@ class ActiveWorkspaceAssessmentProbe:Instrumentation() {
                 emit("REVOKE",iteration,(System.nanoTime()-start)/1e6)
                 emit("WORKSPACE_DB_READS",iteration,reads.toDouble());emit("WORKSPACE_HITS",iteration,hits.toDouble())
             }
-            synchronized(totals){scrollFrames.forEachIndexed{i,v->emit("SCROLL_FRAME_MS",i,v/1e6)};totals.forEachIndexed{i,v->emit("FRAME_TOTAL_MS",i,v/1e6)};emit("FRAME_OVER_DEADLINE_PERCENT",-1,100.0*totals.indices.count{totals[it]>deadlines[it]}/totals.size);meta("FRAME_METRICS_DROPPED",lost)}
+            synchronized(totals){layouts.forEachIndexed{i,v->emit("FRAME_LAYOUT_MS",i,v/1e6)};scrollFrames.forEachIndexed{i,v->emit("SCROLL_FRAME_MS",i,v/1e6)};totals.forEachIndexed{i,v->emit("FRAME_TOTAL_MS",i,v/1e6)};emit("FRAME_OVER_DEADLINE_PERCENT",-1,100.0*totals.indices.count{totals[it]>deadlines[it]}/totals.size);meta("FRAME_METRICS_DROPPED",lost)}
             meta("GC_COUNT_END",Debug.getRuntimeStat("art.gc.gc-count").toLong());meta("GC_TIME_END",Debug.getRuntimeStat("art.gc.gc-time").toLong());meta("FD_END",java.io.File("/proc/self/fd").list()!!.size.toLong());meta("NATIVE_END",Debug.getNativeHeapAllocatedSize());meta("THERMAL_END",targetContext.getSystemService(PowerManager::class.java).currentThermalStatus.toLong())
             output.putString("stream","ASSESSMENT_PASS\n")
         }catch(_:Throwable){output.putString("stream","ASSESSMENT_FAILED_PHASE_$phase\n")}

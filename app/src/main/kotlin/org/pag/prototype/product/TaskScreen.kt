@@ -60,7 +60,7 @@ import java.time.format.FormatStyle
         if(templates){Text("Organisatorische Vorschläge · Die Leitung entscheidet selbst.");TaskRules.templates.forEach{t->FormOutlinedButton({model.add(template=t)},enabled=!model.busy){Text(t.title)}}}
     }
 }
-@Composable private fun TaskSummary(t:Task,people:OperationalBoard) {
+@Composable internal fun TaskSummary(t:Task,people:OperationalBoard) {
     Column {
         Text("${priorityLabel(t.priority)} · ${t.title}",style=MaterialTheme.typography.titleMedium)
         t.affectedPersonId?.let{id->Text("Betrifft: ${people.persons.find{it.person.id==id}?.person?.pseudonym.orEmpty()}")}

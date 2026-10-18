@@ -16,7 +16,7 @@ data class TaskTemplate(val key:String,val title:String) { fun input()=TaskInput
 data class TaskBoard(val actionId:String,val tasks:List<Task>,val events:List<TaskEvent>) {
     val active get()=tasks.filter{TaskRules.active(it.status)}.sortedWith(TaskRules.order)
     val closed get()=tasks.filterNot{TaskRules.active(it.status)}.sortedByDescending{it.updatedAt}
-    fun affectedCount(personId:String)=active.count{it.affectedPersonId==personId}
+    fun affectedCount(personId:String)=tasks.count{TaskRules.active(it.status) && it.affectedPersonId==personId}
 }
 object TaskRules {
     fun valid(input:TaskInput)=input.title.trim().let{it.isNotEmpty() && Character.codePointCount(it,0,it.length)<=120} &&

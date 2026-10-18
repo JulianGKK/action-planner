@@ -51,7 +51,7 @@ internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: Task
 }
 internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >= 600f && fontScale <= 1.3f) 2 else 1
 
-@Composable internal fun ActiveWorkspace(model: ProductViewModel) {
+@Composable internal fun ActiveWorkspace(model: ProductViewModel, renderContent:Boolean=true) {
     ActionWorkspaceHeader(model)
     if (model.activeArea != ActiveArea.HUB || model.operations.screen != OperationsScreen.OVERVIEW ||
         model.selectedPerson != null || model.tasks.form || model.tasks.selected != null) {
@@ -88,6 +88,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
         Text("Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}")
         return
     }
+    if(!renderContent)return
     if (model.personDetailLoading) { PagLoadingState(); return }
     val content = model.workspace
     if (content == null) { if (model.workspaceError) PagErrorState() else PagLoadingState(); return }

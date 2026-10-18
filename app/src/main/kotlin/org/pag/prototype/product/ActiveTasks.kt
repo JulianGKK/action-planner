@@ -91,7 +91,7 @@ internal fun activeTaskActions(status: TaskStatus): List<TaskStatus> = TaskStatu
     }
 }
 
-@Composable private fun ActiveTaskListCard(task: Task, people: OperationalBoard, now: Long, zone: ZoneId, model: TaskModel) {
+@Composable internal fun ActiveTaskListCard(task: Task, people: OperationalBoard, now: Long, zone: ZoneId, model: TaskModel) {
     val card = activeTaskCard(task, people, now, zone)
     FormOutlinedButton({ model.open(task) }, enabled = !model.busy,
         modifier = Modifier.fillMaxWidth().semantics { onClick(label = "Aufgabe ${card.title} öffnen", action = null) }) {

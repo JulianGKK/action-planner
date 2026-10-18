@@ -93,14 +93,13 @@ class Ux3dFunctionsProbe : Instrumentation() {
         // individual opening label. Click the actual enabled Button ancestor.
         return text == label || text == "✓ $label" || text.split("\n").contains(label) || (label == "Weitere Funktionen" && text.startsWith(label))
     }
-    private fun visible(label: String): AccessibilityNodeInfo {
+    private fun visible(label: String, backwards: Boolean = label.startsWith("Rundgang") || label in listOf("PaG Demo", "Lagebild", "Vorbereitung im Überblick")): AccessibilityNodeInfo {
         repeat(50) { attempt ->
             val tree = nodes(); tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
             // Let the accessibility frame catch up before scrolling away from a
             // newly published heading. Tour/home headings live at the top.
             if (attempt >= 5) tree.firstOrNull { it.isScrollable }?.performAction(
-                if (label.startsWith("Rundgang") || label in listOf("PaG Demo", "Lagebild", "Vorbereitung im Überblick"))
-                    AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                if (backwards) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
             waitForIdleSync(); SystemClock.sleep(80)
         }
         error("Synthetic demo label not reachable")
@@ -146,7 +145,13 @@ class Ux3dFunctionsProbe : Instrumentation() {
             finalTree.filter { it.isClickable }.take(12).joinToString { "${bounds(it)}:len=${it.text?.length ?: 0}:opens=${it.text?.contains(" öffnen") == true}" }
         error("Synthetic demo control not reachable")
     }
+    private fun reportUncaught(error: Throwable) {
+        sendStatus(0, Bundle().apply { putString("stream", "UI_UNCAUGHT," + error.javaClass.simpleName + "," + error.stackTrace.take(12).joinToString("|") { it.className + "." + it.methodName + ":" + it.lineNumber } + "\n") })
+    }
+    override fun onException(obj: Any?, error: Throwable): Boolean { reportUncaught(error); return super.onException(obj, error) }
     override fun onStart() {
+        val originalHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, error -> runCatching { reportUncaught(error) }; originalHandler?.uncaughtException(thread, error) }
         var activity: MainActivity? = null; var scaleUnderTest = 1f; var phase = "entry"
         try {
             check(!BuildConfig.PAG_DEMO_ONLY)
@@ -177,7 +182,7 @@ class Ux3dFunctionsProbe : Instrumentation() {
                 top(); click("‹ Ohne Funktion"); visible("1 Person aktuell vor Ort"); top(); click("‹ Funktionen")
                 phase = "new-function"; top(); click("+ Neue Funktion", backwards = false); name("Übungsfunktion")
                 runOnMainSync { check(model.operations.newFunctionName == "Übungsfunktion") }
-                click("Funktion anlegen", backwards = false); visible("Wer übernimmt gerade was?")
+                click("Funktion anlegen", backwards = false); top(); visible("Wer übernimmt gerade was?", backwards = true)
                 phase = "other-functions"; click("Weitere Funktionen", backwards = false); visible("Übungsfunktion")
                 runOnMainSync { check(model.operations.moreFunctionsExpanded && ops.roles.any { it.name == "Übungsfunktion" }) }
                 phase = "status-group"; top(); click("Blockierende · 1", backwards = false); visible("1 Person aktuell vor Ort"); click("Motte", backwards = false); visible("Aktuelle Funktion: Blockierende"); phase = "status"

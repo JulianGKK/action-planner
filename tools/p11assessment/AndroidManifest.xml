@@ -2,4 +2,9 @@
     <!-- Explicit init-script overlay only; never part of a normal product build. -->
     <instrumentation android:name="org.pag.prototype.ActiveWorkspaceAssessmentProbe" tools:replace="android:name" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.AssessmentMemoryProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.ProjectionProfileProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.ListStabilityProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.Ux3cTasksProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.Ux3dFunctionsProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P9MemoryReportProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

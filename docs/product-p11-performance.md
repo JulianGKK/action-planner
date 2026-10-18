@@ -1,5 +1,12 @@
 # P11 — Performance bei unverändertem Sicherheitsvertrag
 
+**Aktueller Abschluss 18.10.2026: BLOCKER UI-Stabilität.** Der große Constraintsfall
+ist korrigiert; ein zusätzlicher sporadischer Material3-Semantikabsturz ist offen.
+Widerlegte Lifecycle-Versuche wurden entfernt. Keine Produkt-/Stufe2-Freigabe.
+Aktueller WIP-Ausgangspunkt: `1025941def4c6788917fd607bf2c61d792b70515`;
+die älteren Stand-/HEAD-Angaben unten sind historisch. Nachweise und Einordnung:
+[Assessment26](product-p11-active-workspace-assessment.md#26-abschluss-zusätzlicher-ui-stabilitätsblocker).
+
 Zweite Klasse-A-Runde: messbare Verbesserungen bei Entsperren/Aktionsöffnung/
 Gedächtnisprotokollen; verbleibender Jank und Viewer-Latenzen offen. Manuelle
 Abnahme der zweiten Runde und unabhängige Sicherheitsprüfung offen.
@@ -42,7 +49,7 @@ verbindliche Gesamt-Release-Gate vor Version 1.0.
 
 ## Baseline und Messmethode
 
-Samsung SM-M526BR, Android 13/API 33, Serienziel RFCT1186YRJ.
+Samsung SM-M526BR, Android 13/API 33, Serienziel lokal über `ANDROID_SERIAL`.
 Baselineaufnahme: USB versorgt, 100 % Batterie, Batterietemperatur 29,7 °C,
 alle drei System-Animationsskalen bereits 0,0; durch P11 nicht verändert.
 Build: debuggable, keine Aussage über Releaseoptimierung oder andere OEMs.
@@ -702,7 +709,7 @@ SHA256 `a296e242d1a5dfeae24471e435e4ae427f29df812ec1c5a8557c59bce3f2deb7`.
 Neue Produkt-APK SHA256:
 `6119b589463892b222de4f98aa39350dee08c7db51d6004bd3780e47dbc7b8d5`.
 
-`adb -s RFCT1186YRJ install -r` meldete **Success**. Produkt-App nicht automatisch
+`adb -s "$ANDROID_SERIAL" install -r` meldete **Success**. Produkt-App nicht automatisch
 entsperrt; keine Credential-Eingabe und keine manuelle P11-Abnahme vorweggenommen.
 Kein App-Datenreset, keine Deinstallation oder Änderung produktiver Bestände durch
 eine Testfixture. Ein Hash-/Inhaltsvergleich der Produktdaten wurde bewusst nicht
@@ -1208,7 +1215,7 @@ unverändert, SHA256:
 Produkt-APK SHA256:
 `37821b50e8152f8739063df0764cbd8bb51bf93c277746dba3522c276d26ee76`.
 
-`adb -s RFCT1186YRJ install -r` meldete **Success**. Kein Uninstall, pm clear,
+`adb -s "$ANDROID_SERIAL" install -r` meldete **Success**. Kein Uninstall, pm clear,
 Datenbankreset, Keystorewechsel oder automatisches Produktentsperren. Kein
 automatisches Lesen/Mutieren produktiver Bestände und deshalb kein behaupteter
 Hash-/Inhaltsnachweis über deren reale Daten. Timing-Tags für Bild, Text, PDF und
@@ -1307,3 +1314,58 @@ synthetisch und testexklusiv; keine produktive Stufe-2-Freigabe oder Installatio
 Codebefunde, A/B/C-Vergleich, geänderte Integritätserkennungszeitpunkte und
 Freigabeentscheidungen stehen im
 [Active-Workspace-Assessment](product-p11-active-workspace-assessment.md).
+
+
+## UI-Stabilisierung nach WIP 1025941 (18.10.2026)
+
+Die folgende Runde enthält keine produktive Stufe2 und verändert keinen
+SQLCipher-/Session-/Dokumentvertrag. Vollständiger Nachweis, Mutationsmatrix,
+Admission-Spezifikation und Dateiliste: [Assessment, Abschnitte18–25](product-p11-active-workspace-assessment.md#18-ui-stabilisierung-nach-wip-1025941-18102026).
+
+**GEMESSEN:** Samsung/API33, gleiche synthetische große Aktion200Personen/
+1000Tasks, jeweils zehn vollständige Läufe. Der Constraintsabsturz entsteht aus
+269909px alter Inhaltshöhe als `heightIn(min=...)` bei954px Breite; Korrektur auf
+tatsächliche Viewportgeometrie. Große Personen-/Taskübersichten sind jetzt lazy,
+mit identischen Zeilen/Schlüsseln und generations-/aktionsgebundenen rein
+numerischen Scrollankern. Kein neuer remembered Domainindex/Cache.
+
+| Produktpfad große Aktion | Vorher Median/P95 ms | Nachher Median/P95 ms |
+|---|---:|---:|
+| Personen | 1681,77 / 1972,66 | 1281,28 / 1304,30 |
+| Aufgaben | 1670,68 / 2041,84 | 1290,36 / 1302,41 |
+| Aufgaben erneut | 1653,56 / 1811,66 | 1283,31 / 1294,70 |
+| Frame-P95 gesamtes Navigationsfenster | 886,59 | 111,64 |
+
+VorherA enthält ausschließlich den zuvor separat geprüften Viewportfix, damit
+überhaupt eine vollständige valide große Vergleichsreihe möglich ist. Der
+unveränderte DB-Pfad bleibt dominant; initiales Öffnen und Hubrückkehr sind nicht
+messbar verbessert. In rein test-only RAM-VarianteC fallen Personen407,17→15,99ms
+und Aufgaben422,27→19,09ms (Mediane); dies ist keine Produktlatenz und keine
+Stufe2-Freigabe. Andere Bereiche verursachen weiterhin Framelastspitzen, C-Frame-
+P95 bleibt222,25ms; kein jankfreies Gesamtprodukt behauptet.
+
+**Tatsächlich erneut geprüft:**1266 Hosttests bestanden; zwölf isolierte
+SQLCipher-/Room-/Revokefälle bestanden, warme FD83→83. Small/Typical/Large×A/B/C
+mit je zehn Sequenzen sowie zwei Scrollreihen bestanden. Große Schrift und
+Accessibilitysemantik werden isoliert geprüft, keine neue manuelle TalkBack-
+Abnahme behauptet. Aktuelle P11-Diagnosewerkzeuge verwenden ADB/ANDROID_SERIAL
+oder CLI-Parameter statt persönlicher Geräte-/SDK-Kennungen. Bereits öffentliche
+Git-Commits bleiben dadurch unverändert sichtbar.
+
+**OFFEN:** Stufe2-Zulassung, vollständige Writer-/Recoveryintegration,
+Personrename-Konfliktvertrag, belastbare Admission vor Materialisierung,
+unbeschränkte Bestände/Felder, weitere Material-/Kosten-/Frameoptimierung,
+unabhängiger Securityreview und spätere manuelle Produktabnahme. Kein
+Produktupdate in dieser Runde. Issue#26 bleibt Release-Gate vor1.0.
+
+**BLOCKER UI-Stabilität:** Im erweiterten Aufgabenlauf ist ein sporadischer echter
+Material3-`ChildSemanticsNode`-Absturz nachgewiesen. Breite und auf Aufgaben
+begrenzte Destinationsbindung waren nicht zuverlässig und wurden verworfen; die
+breite Variante verursachte zusätzlich eine Fragebogenregression. Keine solche
+Bindung bleibt im Produktcode. Die obigen Zahlen betreffen den beibehaltenen
+Viewport-/Lazy-WIP-Stand; Performanceerfolg ersetzt keinen fehlerfreien erweiterten
+UI-Lauf. Kontrolllauf mit gesicherter Vorher-APK bestanden, bei sporadischem Fehler
+keine eindeutige Ursachenzuordnung. Belege, fehlgeschlagene/erfolgreiche Läufe und
+nötige weitere Prüfung siehe Assessment26. Keine Produkt-/Stufe2-Freigabe,
+kein Produktupdate. Keine Semantik entfernt, keine Exception im Produkt maskiert,
+kein Frameworkpatch/Dependencywechsel.

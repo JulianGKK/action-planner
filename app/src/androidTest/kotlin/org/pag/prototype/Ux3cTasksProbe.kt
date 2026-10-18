@@ -16,7 +16,8 @@ import org.pag.prototype.product.*
 
 /** Real ProductScreen with synthetic ports only. No credentials, DB writes or system font change. */
 class Ux3cTasksProbe : Instrumentation() {
-    override fun onCreate(arguments: Bundle?) { super.onCreate(arguments); start() }
+    private var requestedScale: Float? = null
+    override fun onCreate(arguments: Bundle?) { super.onCreate(arguments); requestedScale = arguments?.getString("font")?.toFloat(); require(requestedScale == null || requestedScale == 1f || requestedScale == 2f); start() }
     private class Session : SessionPort {
         var value = SessionSnapshot(SessionState.READY, 1)
         var observer: ((SessionSnapshot) -> Unit)? = null
@@ -98,7 +99,7 @@ class Ux3cTasksProbe : Instrumentation() {
         }))
         waitForIdleSync()
         // Finish text entry like the keyboard's Done action; preserve the form.
-        field!!.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id)
+        check(nodes().first { it.isEditable }.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id))
         waitForIdleSync()
     }
     private fun nodes(): List<AccessibilityNodeInfo> {
@@ -113,16 +114,16 @@ class Ux3cTasksProbe : Instrumentation() {
         // individual opening label. Click the actual enabled Button ancestor.
         return text == label || text == "✓ $label" || text.split("\n").contains(label) || (label == "Erledigt / Entfallen" && text.startsWith(label))
     }
-    private fun visible(label: String): AccessibilityNodeInfo {
+    private fun visible(label: String, backwards: Boolean = label.startsWith("Rundgang") || label in listOf("PaG Demo", "Lagebild", "Vorbereitung im Überblick")): AccessibilityNodeInfo {
         repeat(50) { attempt ->
             val tree = nodes(); tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
             // Let the accessibility frame catch up before scrolling away from a
             // newly published heading. Tour/home headings live at the top.
             if (attempt >= 5) tree.firstOrNull { it.isScrollable }?.performAction(
-                if (label.startsWith("Rundgang") || label in listOf("PaG Demo", "Lagebild", "Vorbereitung im Überblick"))
-                    AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                if (backwards) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
             waitForIdleSync(); SystemClock.sleep(80)
         }
+        clickDiagnostic = "labelNodes=${nodes().size},scrolls=${nodes().count { it.isScrollable }},matches=${nodes().count { match(it,label) }}"
         error("Synthetic demo label not reachable")
     }
     private fun smallScroll(backwards: Boolean) {
@@ -145,7 +146,7 @@ class Ux3cTasksProbe : Instrumentation() {
         SystemClock.sleep(150); inject(MotionEvent.ACTION_MOVE, to)
         SystemClock.sleep(100); inject(MotionEvent.ACTION_UP, to); waitForIdleSync()
     }
-    private fun top() { repeat(25) { val scroll = nodes().firstOrNull { it.isScrollable } ?: return; if (!scroll.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)) return; waitForIdleSync(); SystemClock.sleep(50) } }
+    private fun top() { repeat(25) { val scroll = nodes().firstOrNull { it.isScrollable } ?: return; if (scroll.actionList.none { it.id == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD }) return; if (!scroll.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)) return; waitForIdleSync(); SystemClock.sleep(50) } }
     private var clickDiagnostic = ""
     private fun click(label: String, backwards: Boolean = label.startsWith("‹") || label in listOf("Übersicht", "Personen", "Aufgaben", "Rollen")) {
         repeat(50) {
@@ -158,7 +159,9 @@ class Ux3cTasksProbe : Instrumentation() {
                     check(control.performAction(AccessibilityNodeInfo.ACTION_CLICK)); waitForIdleSync(); return
                 }
             }
-            smallScroll(backwards)
+            val direction = if (backwards) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+            // Use the actual accessibility scroll action, independent of IME/window gesture coordinates.
+            if (tree.firstOrNull { it.isScrollable }?.performAction(direction) != true) smallScroll(backwards)
             waitForIdleSync(); SystemClock.sleep(180)
         }
         val finalTree = nodes()
@@ -166,14 +169,20 @@ class Ux3cTasksProbe : Instrumentation() {
             finalTree.filter { it.isClickable }.take(12).joinToString { "${bounds(it)}:len=${it.text?.length ?: 0}:opens=${it.text?.contains(" öffnen") == true}" }
         error("Synthetic demo control not reachable")
     }
+    private fun reportUncaught(error: Throwable) {
+        sendStatus(0, Bundle().apply { putString("stream", "UI_UNCAUGHT," + error.javaClass.simpleName + "," + error.stackTrace.take(12).joinToString("|") { it.className + "." + it.methodName + ":" + it.lineNumber } + "\n") })
+    }
+    override fun onException(obj: Any?, error: Throwable): Boolean { reportUncaught(error); return super.onException(obj, error) }
     override fun onStart() {
+        val originalHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, error -> runCatching { reportUncaught(error) }; originalHandler?.uncaughtException(thread, error) }
         var activity: MainActivity? = null; var scaleUnderTest = 1f; var phase = "entry"
         try {
             check(!BuildConfig.PAG_DEMO_ONLY)
             val launched = startActivitySync(Intent(targetContext, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
             activity = launched
             val density = targetContext.resources.displayMetrics.density
-            for (scale in listOf(1f, 2f)) {
+            for (scale in listOf(1f, 2f).filter { requestedScale == null || requestedScale == it }) {
                 scaleUnderTest = scale
                 val session = Session(); val ops = Ops(); val tasks = Tasks()
                 lateinit var model: ProductViewModel
@@ -201,13 +210,16 @@ class Ux3cTasksProbe : Instrumentation() {
                 top(); click("‹ Aufgaben")
                 phase = "create"; top(); click("+ Aufgabe", backwards = false); title("Neue Übungsaufgabe")
                 runOnMainSync { check(model.tasks.input.priority == TaskPriority.NORMAL && model.tasks.input.title == "Neue Übungsaufgabe") }
-                click("Speichern", backwards = false); visible("Neue Übungsaufgabe"); runOnMainSync { check(model.tasks.selected?.title == "Neue Übungsaufgabe") }; top(); click("‹ Aufgaben"); visible("2 offen · 1 in Arbeit")
+                phase = "create-save"; click("Speichern", backwards = false); phase = "create-detail"; visible("Neue Übungsaufgabe"); runOnMainSync { check(model.tasks.selected?.title == "Neue Übungsaufgabe") }; // A list return preserves its scroll anchor; explicitly seek the summary before asserting it.
+                phase = "create-return"; top(); click("‹ Aufgaben"); top()
+                runOnMainSync { check(model.tasks.selected == null); check(model.tasks.board!!.active.count { it.status == TaskStatus.OPEN } == 2) }
+                phase = "create-return-label"; visible("2 offen · 1 in Arbeit", backwards = true)
                 runOnMainSync { check(tasks.rows.any { it.title == "Neue Übungsaufgabe" && it.status == TaskStatus.OPEN }) }
                 phase = "person-filter"; top(); click("‹ Zum Lagebild"); visible("Lagebild"); top(); click("Personen", backwards = false)
                 visible("Motte"); click("Motte", backwards = true); visible("Aktuelle Funktion: Support")
                 click("Aufgaben ansehen", backwards = false); visible("Filter · Betrifft: Motte")
                 runOnMainSync { check(model.tasks.filter == "p" && activeTaskContent(model.tasks.board!!, "p").active.map { it.id } == listOf("t")) }
-                click("Alle Aufgaben anzeigen", backwards = false); visible("2 offen · 1 in Arbeit")
+                click("Alle Aufgaben anzeigen", backwards = false); visible("2 offen · 1 in Arbeit", backwards = true)
                 runOnMainSync { check(model.tasks.filter == null) }
                 phase = "lock-detail"; top(); click("Übungsaufgabe geändert", backwards = false)
                 runOnMainSync { session.lock(); check(model.tasks.selected == null && model.workspace == null && model.tasks.filter == null) }
@@ -221,7 +233,7 @@ class Ux3cTasksProbe : Instrumentation() {
                 visible("PaG")
             }
             runOnMainSync { launched.finish() }
-            finish(-1, Bundle().apply { putString("stream", "UX3c synthetic real ProductScreen: hub/tasks/card/start/done/reopen/edit/create/closed/person-filter/back/lock detail+form/font 1+2: OK\n") })
+            finish(-1, Bundle().apply { putString("stream", "UX3c synthetic real ProductScreen: hub/tasks/card/start/done/reopen/edit/create/closed/person-filter/back/lock detail+form/font=${requestedScale ?: "1+2"}: OK\n") })
         } catch (failure: Exception) {
             activity?.let { runOnMainSync { it.finish() } }
             finish(0, Bundle().apply { putString("stream", "UX3c probe failed; font=$scaleUnderTest; phase=$phase; lines=${failure.stackTrace.filter { it.className == Ux3cTasksProbe::class.java.name }.take(5).map { it.lineNumber }}; $clickDiagnostic; no input data logged\n") })

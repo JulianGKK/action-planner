@@ -1,5 +1,12 @@
 # P11 — Active Action Workspace Assessment
 
+**Aktueller Abschluss 18.10.2026: BLOCKER UI-Stabilität.** Der große Constraintsfall
+ist korrigiert; ein zusätzlicher sporadischer Material3-Semantikabsturz ist offen.
+Widerlegte Lifecycle-Versuche wurden entfernt. Keine Produkt-/Stufe2-Freigabe.
+Aktueller WIP-Ausgangspunkt: `1025941def4c6788917fd607bf2c61d792b70515`;
+die älteren Stand-/HEAD-Angaben unten sind historisch. Nachweise und Einordnung:
+[Assessment26](product-p11-active-workspace-assessment.md#26-abschluss-zusätzlicher-ui-stabilitätsblocker).
+
 Stand: 17./18.10.2026. Lokaler Arbeitsbranch `p11-performance-optimization`, HEAD
 `b3a8c19105e755bc3df6c7207ac0c7e3969702a0`. Grundlage ist der **uncommittete
 lokale P11-Stand**, einschließlich Runde 2. Kein produktiver Stufe-2-Store,
@@ -315,7 +322,7 @@ mehrere Textfelder besitzen die oben genannten Längenlimits. Ein „größter
 zulässiger Aktionsbestand“ ist deshalb derzeit nicht endlich definiert. Large
 ist ein erlaubter Lastfall, **kein** Nachweis für jede erlaubte Aktion.
 
-Samsung SM-M526BR, RFCT1186YRJ, API33. Je Variante/Größe zehn Wiederholungen,
+Samsung SM-M526BR, API33 (Serienziel lokal gewählt). Je Variante/Größe zehn Wiederholungen,
 reihenweise A→B→C, gleicher Fixturegenerator und Sequenz. Reales SQLCipher inkl.
 KDF/Preflight bleibt pro Miss unverändert. Erstaufruf/JIT enthalten, kein
 ungeprüfter Warmup-Abzug. Kein randomisiertes Cross-over; zeitliche Geräte-/JIT-
@@ -877,3 +884,549 @@ Git-Dateiliste im ignorierten Arbeitsbestand, nicht in einem Commit.
 | `tools/p11assessment/summarize.py` | Assessment neu |
 | `tools/p11assessment/test/org/pag/assessment/AssessmentSessionTest.kt` | Assessment neu |
 | `tools/p11assessment/test/org/pag/assessment/AssessmentStoreTest.kt` | Assessment neu |
+
+## 18. UI-Stabilisierung nach WIP 1025941 (18.10.2026)
+
+Dieser Nachtrag ersetzt keine Stufe-2-Freigabe. Produktiv geändert werden nur
+Layout/Scroll-Metadaten, sichtbare Listenkomposition und eine semantisch äquivalente
+Taskzählung. Keine Mutationsepoch, kein ActionSessionStore, keine neue DB-/Key-/
+Dokumentvorhaltung. Die historischen Tabellen oben bleiben als damalige Befunde
+stehen; neue Nachweise sind ausdrücklich separat.
+
+**GEMESSEN:** Erneute isolierte Reproduktion auf Samsung SM-M526BR/API33:
+`heightIn(min=269909 px)` bei eingehenden Constraints `(minWidth=0,maxWidth=954,
+minHeight=0,maxHeight=Int.MAX_VALUE)` löst `IllegalArgumentException` in
+`ConstraintsKt.createConstraints → SizeNode.measure` aus. Die Messung erfolgt vor
+dem fehlschlagenden Modifier, ohne Exceptionmaskierung oder Dateninhalte.
+Der exakt gleiche Zahlenfall ist zusätzlich als fokussierter Hosttest enthalten.
+Damit ist die bisherige Hypothese zur übernommenen **gesamten Inhaltshöhe** bestätigt.
+
+**Korrektur:** `ProductScreen` bestimmt die echte, begrenzte Viewporthöhe mittels
+`BoxWithConstraints`, abzüglich des bestehenden vertikalen Paddings. Nur diese
+Höhe darf während eines Reads als Layoutminimum dienen. `ProductScroll` speichert
+keine Inhaltshöhe mehr. Es gibt keinen künstlichen 100000-/262000-px-Ersatzwert,
+kein Abschneiden von Inhalten und keinen catch-Fallback. Pixelpositionen werden
+nach dem Contentlayout wiederhergestellt; während des Loads wird nicht gegen eine
+kurze Platzhalterliste auf null zurückgescrollt.
+
+**GEMESSEN:** Der vorher abbrechende große A-Fall besteht mit **nur** dieser
+Viewportkorrektur zehn vollständige Sequenzen. Dieser getrennte Zwischenstand
+lief vor der Lazy-Optimierung und dient als valide A-Vergleichsbasis. Reine
+Crashbehebung beseitigt die große Listenkomposition noch nicht.
+
+**BEOBACHTET:** Personen-/Taskübersichten werden bisher vollständig in einer
+`Column.verticalScroll` komponiert. `affectedCount` hat pro Aufruf erneut
+`active` gefiltert und sortiert, obwohl eine Zählung keine Sortierung benötigt.
+Die isolierte Android-CPU-Probe vergleicht eingefrorenen alten Algorithmus und
+unsortierten Scan auf denselben 200 Personen/1000 Aufgaben, fünf Warmups, zwanzig
+Messungen, alternierende Reihenfolge. Ergebnis für alle 200 Counts zusammen:
+75,75 / 77,90 ms Median/P95 → 11,32 / 13,28 ms. Das ist ein Methodenprofil,
+**keine UI-Latenz**; die Status-/Referenzverteilung dieser CPU-Fixture ist nicht
+mit einer Produktgesamtzeit addierbar. Gleichheit aller Zähler wird geprüft.
+
+**Listenänderung:** Personen-/Taskübersichten in ACTIVE und PREPARATION haben
+jetzt einen einzigen begrenzten `LazyColumn`-Root, nicht eine Lazy-Liste unter
+unbegrenztem `verticalScroll`. Stabile typisierte Entitykeys, gleiche Reihenfolge,
+gleiche Zeilen-/Button-/Headingsemantik; Formulare/Details bleiben im bisherigen
+Pfad. Header und Navigation werden wiederverwendet, Footer/Vorlagen/abgeschlossene
+Aufgaben bleiben erreichbar. Taskzählung scannt direkt; keine neue Domain-Map,
+kein remembered Payloadindex, kein Ergebnis- oder aktionsübergreifender Cache.
+Abgeleitete Aufgabenlisten werden weiterhin nur als aktuelle UI-Projektion
+berechnet, nicht über das Verlassen der Ansicht hinaus vorgehalten. Workspace-
+Reads, Berechtigungen, SQLCipher-/Tink-/PDF-Lifecycle sind unverändert.
+
+Scrollrückkehr speichert ausschließlich feste Destinationnamen und numerische
+Pixel-/Lazyindex-/Offsetanker, begrenzt auf 64 Einträge, gebunden an aktuelle
+Generation/Action. Keine Entity-IDs oder Inhalte in dieser Ankerkarte, kein
+SavedState/rememberSaveable. Lock/Actionwechsel verwirft die Komposition samt
+Ankerkarte. Bei unverändertem Bestand wird Index/Offset exakt restauriert; bei
+verändertem Bestand gelten die normalen Lazy-Key-/Indexbegrenzungen, keine
+Zusicherung, dass eine gelöschte Zeile weiter als Anker existiert.
+
+**GEMESSEN:** Isolierte UI-Probe bei lokalen Schriftfaktoren 1, 2 und 3,5 erreicht
+jeweils die letzten der 1000 Aufgaben und 200 Personen, navigiert dreimal
+Aufgaben→Lagebild→Aufgaben und prüft Index/Offset (≤2 px Toleranz), Labels und
+Scroll-Actions im Accessibilitybaum. Testfenster-Paketprüfung vor Baumzugriff;
+keine Analyse anderer Apps. Lock während schneller Navigation, wartender realer
+SQLCipher-Read/late Callback, neue synthetische READY-Generation ohne Autoopen,
+keine Formulardaten/P3b-Freigabe nach Lock werden geprüft. Keine Änderung der
+Systemschrift oder realen Credentials. Die Session dieser Geräteprobe bleibt
+synthetisch; echte Deadlines/Coordinator-Gates bleiben separate Hostregression.
+Die erste Accessibilityabfrage war vor der Baumaktualisierung erfolgt; der Test
+wartet jetzt auf tatsächliche Semantik statt die Anforderung zu entfernen.
+**NICHT GETESTET:** Neue manuelle TalkBack-Endabnahme; strukturierte Semantiktests
+sind keine vollständige Screenreader-Bedienungsabnahme.
+
+## 19. Vollständiger zukünftiger Mutations-/Invalidierungsvertrag
+
+**Spezifikation + test-only Proof, keine produktive Integration.** Zuständig ist
+später ein instanzlokaler `ActionMutationObserver` im bestehenden Composition Root,
+auf einem serialisierten Owner, ausschließlich Metadata: Action/Generation,
+Berechtigungsrevision, Sequenz/Epoch, betroffene Projektionsbits, Pending/Outcome.
+Keine Domain-Payload, DB-/Key-Lease oder eigene Securitypolicy darin. Nur Data/
+Usecase-Adapter dürfen Transaktionsergebnisse melden; Compose erhält niemals einen
+Port, mit dem es einen Commit behaupten oder eine Berechtigung schaffen kann.
+
+Projektionscodes: **A** Action/Status; **P** Personen/Pseudonyme; **O** Rollen,
+Funktionen, Pläne und Status; **T** Tasks/Events; **Z** Hub-/Personen-Aufgabenzähler;
+**M** Material/Summary; **K** Kosten/Payments/Summe; **R** Protokollheader/Summary;
+**G** Gedächtnisprotokollheader/Summary; **D** Dokumentasset-Metadaten/Summary.
+P3b-State/Inventory/Grants sind ein separater Owner, kein allgemeiner Workspace.
+
+Gemeinsamer Vertrag für jede folgende Zeile:
+
+- **BEGIN:** Nach originaler Scope-/Syntaxzulassung, vor Queue/erster Sideeffect,
+  Pendingtoken erzeugen und betroffene Projektionen dirty markieren. Alte Reads
+  verlieren ihre Epoch. Keine weitere hitfähige Projektion aus dem betroffenen
+  Zustand und keine zweite implizite Writeausführung. Observer ersetzt keine
+  Fach-/Storageprüfung; unzulässige Mutation bleibt unzulässig.
+- **Bestätigung:** Native COMMIT-/Transaktionsrückkehr ist von vollständigem
+  DB-/Lease-Cleanup und originalem `StorageContext.publish` zu unterscheiden.
+  Ein erfolgreicher Commit kann ohne UI-Publication enden. Keine Meldung
+  „gespeichert“ vor tatsächlichem bestätigtem Commit und gültiger Publication.
+- **Fehler:** Sicher abgelehnt/rollback → kein Erfolg, betroffene Projektion
+  konservativ dirty bis genau einem autorisierten Reload. Commit-Ausgang unklar/
+  Cleanupfehler → kein Erfolg, Scope unbrauchbar; originalen Storage-/BLOCKED-
+  Vertrag beachten, kein automatischer Retry/zweiter Write. Fachliche INVALID/
+  STALE-Ablehnung ist nicht automatisch Storagekorruption.
+- **Revoke:** Alle Tickets unbrauchbar; alte Commit-/Readcallbacks dürfen den
+  neuen Scope nicht ändern. Bestätigter DB-Commit bleibt DB-Wahrheit, auch wenn
+  seine UI-Bestätigung widerrufen wurde. Neue Authentifizierung liest bewusst neu.
+- **Aktualisierung:** Nur vollständiger bestätigter Projektionspatch für die
+  aktuelle Epoch oder einmaliger kontrollierter Reload. Keine Teilpatches, die
+  veraltete Counts als aktuell markieren. Rechenarbeit außerhalb des Coordinator-
+  Monitors; im Gate nur kurze Gültigkeitsprüfung und atomarer Referenzwechsel.
+
+| Mutation / tatsächlicher heutiger Einstieg | Betroffen / benötigte Invalidierung | Bestätigungspunkt und besondere Fehler-/Widerrufsgrenze |
+|---|---|---|
+| `ProductActionRepository.createAction` | Aktionsliste; neuer Draft nicht im aktiven Workspace | Autorisierte Inserttransaktion + Cleanup + Publication; kein automatischer Aktions-/Storewechsel |
+| `updateAction` / `changeAction(expected,changes)` | A, ggf. gesamter abgeleiteter Header | Frische persistierte Action und bestehender Expectedvergleich; kein Update aus alter Formularversion |
+| `advanceActionStatus` / `advanceAction(id,expectedStatus)` | Gesamter Scope inkl. aller Rechte/Editoren/Zähler | Persistierter Statusvergleich, Transaktion, Publication; kein PREPARATION-Write aus ACTIVE/C |
+| `ProductPersonRepository.createPerson` | P/O/Z, Formularoptionen T/M, Hub | Originale Pseudonym-/Duplicate-/Statusprüfung, Insertcommit |
+| `updatePerson` / `changePerson` | P/O, T-/M-Labels, sichtbare R-Referenzprojektionen, Z | **Kein vollständiger Expected-Person-CAS heute.** Frische Existenz/Duplicate/Statusprüfung ist keine universelle Konfliktgarantie |
+| P3a-Person löschen | Würde P/O/T/Z/M/R und Formularreferenzen betreffen | **Kein allgemeiner P3a-Delete-Port im heutigen PersonRepository/DAO.** Nur Zukunftsspezifikation, keine bereits vorhandene Lösch-/CAS-Garantie behaupten |
+| `ProductOperationsRepository.createRole` | O/Z und T-/Formularoptionen | PREPARATION/ACTIVE gemäß Originalregeln, fachlicher Duplicatecheck/Commit |
+| `renameRole`, `deleteRole` | O, T-/M-Labels, Rollen-/Funktionszähler | Heute PREPARATION; Löschung nur ohne verbotene Referenzen; In-use bleibt Ablehnung, keine implizite Löschung |
+| `planRoles` | O, Hauptrollen-/Hubprojektion | PREPARATION, gültige actionlokale Referenzen, atomarer Plancommit |
+| `updateSnapshot(expected, status, role, place)` | O/Z, Status-/Funktions-/Ortsprojektion | ACTIVE, exakter bestehender OperationalState-Vergleich; keine Statusmutation aus stale Formular |
+| `ProductTaskRepository.create` | T/Z, P-Aufgabenzähler, M-Taskoptionen | Task+CREATED-Event in derselben Transaktion, korrekte Actionreferenzen |
+| `edit(expected,input)` | T/Z, Personen-/Rollenlabels, M-Verknüpfungsanzeige | Bestehender voller Taskvergleich, Originalstatusregeln; keine optimistic-save-Bestätigung |
+| `transition(expected,status)` | T/Events/Z/P-Aufgabenzähler | Taskstatus und minimales Event atomar; einmaliges Event, kein Callback-Retrywrite |
+| `delete(expected)` | T/Events/Z/M-Referenzoptionen | Nur PREPARATION gemäß heute; kein stilles Entfernen im Cache vor Commit |
+| `ProductMaterialRepository.create/edit/delete` | M/Count, Hub, betroffene Formularoptionen | PREPARATION/ACTIVE; edit/delete erwartete Position. Andere Fachbereiche nicht stillschweigend mitmutieren |
+| `ProductExpenseRepository.create/edit/delete` | K/Payments/Count/Summe, Hub | P/A/C gemäß P8; erwartete Position bei edit/delete, Total-/Paymentvalidierung bleibt Data |
+| `ProductProtocolRepository.createEntry` | R/Summary und gezielt Detailowner | ACTIVE/COMPLETED bewusst; Entry/Originalrevision/Relationen atomar |
+| `reviseEntry`, `markMistaken` | R, betroffene aktuelle Revision/Detailanzeige | Erwartete Revision + Actionstatus, append-only; keine Historie überschreiben/normal löschen |
+| `ProductMemoryReportRepository.create` | G/Count, neuer Detailowner | Erste Section/Header in originaler Transaktion, keine vorzeitige Draftzähleränderung |
+| `saveSection(expected,section)` | G/Revision/Summary und genau dieser Editor | Persistierte Headerrevision/Fragebogen-/Conflictregeln, kein doppeltes Section-save durch Refresh |
+| `complete(expected)` | G/Draft-/Completedcount, Detailowner | Nur vollständiger DRAFT nach Regeln, bestätigte neue Headerrevision |
+| `addAddendum(expected,text)` | G/Revision, betroffener Detailowner | Append-only, ursprünglicher Text bleibt, kein generischer Volltextcache |
+| Einzelnes Gedächtnisprotokoll löschen | Würde G/Detailowner betreffen | Kein solcher öffentlicher Port heute; zukünftiger Pfad muss explizit angebunden werden |
+| `ProductDocumentRepository.importDocument` / Staging/Publication | D ab Beginn dirty; kein READY-Asset aus Reservephase | Mehrere DB-/Dateisystemschritte: Reserve/Write/Publish/Mark/Finish. Logischer Erfolg erst nach kompletter Publication + finalem Originalgate; Zwischencommit ist kein fertiger Import |
+| `deleteDocument(expected)` / DocumentDelete | D + betroffener Viewerrequest, Counts erst nach bestätigtem Schritt | Deletejournal/Dateiarbeit/Jobabschluss nach bestehender Lane; Fehler/Abbruch bleiben recoverybedürftig, kein alter Assethit während Delete |
+| `DocumentReconciliation.run`, `reconcileProductDocuments`, Maintenancebarrier | Gesamter Scope unzugänglich; D/Recoverybestand neu | MAINTENANCE ist nie READY; keine Storeübernahme in neue Generation; jeder Recoverycommit behält Originalgates |
+| `ProductLeadershipRepository.setup` | Separater Leadership-State/Inventoryowner, ggf. sichtbarer Status | Passphrase/Keystore-/Root-/Epochvertrag unverändert, nie Payload oder Passphrase im Observer |
+| `save(grant,data)`, `deleteArea(grant)` | Nur betreffende P3b-Area/Inventory/Grantowner | Originaler Grant, Lifetime, Expectedroot/Revision und COMMIT-/Publicationgates; normale Navigation erteilt kein P3b-Recht |
+| Leadership `deletePerson` | Löscht **nur sensible Areas dieser Person**, nicht P3a-Person | DAO `removePerson` betrifft `sensitive_person_areas`; Pseudonym/Taskzähler nicht als gelöschte Person darstellen |
+| Leadership `deleteAction` | Löscht **nur Leitungsschutz/sensible Areas**, nicht ActionRow | DELETE_PENDING-Intent/Keystorelöschung/Rootcleanup; nicht mit allgemeiner Aktionslöschung verwechseln |
+| Allgemeine Aktions-/Retentionlöschung | Gesamter zukünftiger Scope, alle Referenzen | Noch kein allgemeiner öffentlicher ActionRepository-Delete-Port heute; vor späterem Anschluss zwingender Gate-/Recovery-/Observerprüfpunkt |
+
+Diese Matrix ergänzt und präzisiert die groben hypothetischen Deletezeilen aus
+Abschnitt 8: Methodennamen allein beweisen keine fachliche Personen-/Aktionslöschung.
+Die Produktwriter wurden für diesen Auftrag nicht umgebaut.
+
+### Konkreter Port-/Zustandsentwurf
+
+`begin(scope, expectedProjectionVersions, affectedParts) -> MutationTicket?`
+(identitätsgebundenes, einmaliges Ticket),
+`recordOutcome(ticket, ConfirmedCommit | DefiniteRollback | Unknown)`,
+`publishCommittedProjection(ticket, completeProjectionPatch, context)` und
+`requestAuthoritativeRead(scope, parts) -> ReadTicket` als getrennte Ereignisse.
+Scope = Action-ID + READY-Generation + bestehende Fachrechte/Revision;
+Ticket = Scope + monotoner Epoch/Sequence + betroffene Allowlist-Teile.
+Versionen sind lokale Invalidierungsmetadaten, **kein** DB-Manipulationsnachweis.
+Alle Daten-/Commitautorität verbleibt bei Originalrepositories/StorageAccess.
+
+Vorläufig ein aktiver Write pro Scope; weitere bewusste Writes nicht automatisch
+wiederholen, sondern bestehende Busy-/Bestätigungsverträge anwenden. Ein aktiver
+Reload pro Scope/Version; gleiche Anforderungen coalescen, nach Querybeginn neu
+angeforderte Teile höchstens in einem nachfolgenden autorisierten Read, kein
+unbegrenztes Fan-out und kein stiller Prefetch. Mutation widerruft alte Readtickets;
+auch derselbe Callback darf nur einmal publizieren. Frischer Reload invalidiert
+verspätete alte Projektionspatches. Scopewechsel/Lock/Storage-Revoke widerrufen alle
+Tickets. Bei mehrstufiger Dokumentarbeit bleibt Pending über die gesamte logische
+Operation bestehen; Subcommitmeldungen dürfen keinen fertigen Cacheeintrag schaffen.
+
+`MutationContractProof` unter `tools/p11assessment/shared` enthält nur diese
+Metadata-Zustandsmaschine; Tests prüfen Pendinghits, Single-flight/Readcoalescing,
+Commit vs Publication, Rollback/Unknown, vollständige Patches, alte/doppelte
+Callbacks, neue Mutation, Action-/Permission-/Generationswechsel und Revoke nach
+Commit. Das sind isolierte Protokolltests, **keine** real integrierten SQLCipher-
+Write-/Commit-/Recoverytests. Insbesondere wird Personrename dadurch nicht zu CAS.
+Die vollständige produktive Integration bleibt unfreigegeben und ungetestet.
+
+## 20. Testbarer Budget-/Admissionvertrag (noch nicht produktiv)
+
+8 MiB retained Domain-Payload bleiben ein **Vorschlag**, keine nachgewiesene harte
+ART-/Compose-/Nativegrenze. Produktlimits unverändert: Dokumente100/Action,
+25MiB/Dokument, 250MiB/Action; Payments1–32/Position, Task-/Kosten-/Materialtitel120,
+Paymentlabel80, Materialmenge40/Ort80, Protokoll-/Fragebogenfeldlimits wie oben.
+Person-/Task-/Role-/Material-/Expense-/Revision-/Reportgesamtzahlen bleiben
+unbeschränkt; manche Action-/Pseudonym-/Rollentexte besitzen kein generelles
+Längenmaximum. Ein einzelner riesiger Wert darf Admission nicht erst nach seiner
+vollständigen Materialisierung scheitern lassen.
+
+Verbindliche spätere Phasen innerhalb derselben autorisierten Readtransaktion:
+
+1. Zulässige Kategorien und Actionstatus bestimmen, Counts/Relationen sowie
+   Textlängenaggregate lesen, noch keine unbeschränkte `List<Row>` erstellen.
+   Aggregate müssen eindeutige Einheit tragen: SQL-Codepoints, UTF16-Codeunits,
+   UTF8-Bytes nicht gleichsetzen. Jede Konvertierung/Add/Mul overflowfest in Long.
+2. Typbezogenen konservativen Charge für Objekte, Strings/Backingarrays,
+   Referenzen, Maps/Lists/Hash-Kapazität und Alignment prüfen. Bis vier Nutzbytes
+   je Unicode-Codepoint; bei UTF16-Einheiten absichtlich konservativ überzählen.
+   Keine Stringinterner-/Deduplikationsannahme. Geteilte Referenzen dürfen nur
+   nach explizitem Ownershipnachweis entlasten; zunächst jede Repräsentation
+   separat belasten. Formularkopien, Compose und Übergangssnapshots separat.
+3. Nur bei ausreichender Admission in begrenzten Batches materialisieren;
+   vor der nächsten Row Kosten/Längen nachprüfen und zwischen Schritten Original-
+   Storagegates prüfen. Ein Cursor-/DAO-Pfad, der davor bereits ganze unbeschränkte
+   Strings/Listen liest, erfüllt diesen Vertrag nicht. Keine DB-/Key-Lease über
+   UI-Navigation oder langes Warten halten; bei Überschreitung geordnet schließen.
+4. Budget REFUSED: kein Teilergebnis als vollständig/leer präsentieren, keine
+   Hintergrund-Writes, keine höhere Grenze automatisch, keine zweite Action.
+   Betroffenen Bereich explizit NOT_LOADED/bedarfsgeladen über bisherigen Port
+   bereitstellen. Verweigert Admission vor dem vollen Snapshot, bleibt ein
+   nachfolgender Bereichsread eine echte autorisierte DB-Operation mit unverändertem
+   Preflight. Kein unkontrolliertes Retry-/Refreshloop. Auch dessen bisherige
+   unbeschränkte Materialisierung ist vor einem solchen automatischen Fallback
+   gesondert zu begrenzen. Solange der Originalport keine ausreichende Grenze
+   durchsetzen kann, bleibt der Teil kontrolliert nicht verfügbar statt den
+   verweigerten großen Bestand sofort doch vollständig zu laden. Eine bewusste
+   Bereichsauswahl ist keine Erlaubnis für unbeschränkte Allokation. Die
+   Budgetentscheidung beweist keine beliebige Gesamt-App-OOM-Freiheit.
+5. Ungültige negative Counts/inkonsistente Rows/Inventar-/DB-Fehler sind **nicht**
+   normale Budgetknappheit: originale Validierung/fail-closed. Bloßer Chargeoverflow
+   oder gültiger, aber zu großer Bestand ist Budgetverweigerung ohne behauptete
+   Korruption. Ein SQL-Aggregatfehler wird nicht pauschal als Budget REFUSED maskiert.
+
+`BudgetContractProof` ist ausschließlich ein isoliertes Prüfmodell mit expliziten
+128-/64-/8-/4-Byte-Chargeannahmen; **keine** zertifizierte tatsächliche Objektgröße.
+Es prüft Boundary, Überlauf, negative Aggregate, supplementary Unicode, konservative
+Doppelrepräsentation und sticky Refusal vor weiterer Materialisierung. Vor
+produktiver Umsetzung müssen DTO-/ART-Gewichte und Maximalfelder kalibriert und
+alle Reader wirklich begrenzt sein. Keine neuen Produktlimits/Migrationen oder
+Cacheaktivierung erfolgen hier. Budgetfehler verleihen keine Storage-/Sessionrechte.
+
+## 21. Öffentliche Diagnoseangaben
+
+Aktuelle P11-Dateien wurden auf gerätespezifische Serienkennungen und absolute
+benutzerspezifische Home-/SDK-Pfade geprüft. `run.py` und `extras.py` beziehen ADB
+über `--adb`/`ADB`, Serienziel über `--serial`/`ANDROID_SERIAL`; fehlendes Ziel wird
+abgelehnt, kein willkürliches erstes Gerät. Zusätzliche Auswahl-/Ausgabeparameter
+ändern nicht Fixturegrößen oder Messergebnisse. README/Installbeispiele nutzen
+neutrale Umgebungsvariablen. Gerätemodell/API, Messzahlen und technische Aussagen
+bleiben erhalten. Keine echten Kennungen durch erfundene echte Kennungen ersetzt.
+
+**Wichtig:** Bereinigung aktueller Dateien entfernt frühere Inhalte nicht aus dem
+bereits veröffentlichten WIP-Commit oder dessen Kopien. Keine History-Rewrite-,
+Force-Push- oder destruktive Repositorybereinigung. Git-Autor-Metadaten und frühere
+veröffentlichte Kennungen sind eine getrennte Datenschutzentscheidung, falls
+weiterer Bereinigungsbedarf besteht. Zertifikats-/Buildfingerprints sind keine
+privaten Schlüssel; es wurden weder Keystore noch Credentials ins Repo übernommen.
+
+## 22. Einschränkungen und offene Freigaben
+
+Stufe2 bleibt unfreigegeben: zusätzliche gleichzeitige RAM-Klartexte, längere
+Retention, spätere DB-Integritätsfehlererkennung auf Hits, belastbares Budget und
+vollständige Writerintegration brauchen gemeinsame Entscheidung und unabhängigen
+Review. Die neuen test-only Modelle sind keine produktive Versions-/CAS-Garantie.
+Personrename und zukünftige P3a-/Aktionslöschung erfordern besonders sorgfältige
+Spezifikation. Keine bestehende Deadline, KDF/Keyformat, SQLCipherprüfung, Room-
+Lebensdauer, P3b-, Tink-, Namespace-, PDF-, Backup-/Permissiongrenze geändert.
+
+Kein Produktupdate in diesem Auftrag; keine neue manuelle Geräteabnahme vorweggenommen.
+Issue #26 bleibt Gesamt-Release-Gate. Große unbeschränkte Texte/Role-/Historybestände
+und vollständige reale TalkBackbedienung sind nicht durch die 200/1000-Row-Fixture
+bewiesen. Neue A/B/C-Daten bleiben isolierte Tests, keine automatische Analyse
+realer Produktdaten. Verbliebene DB-Latenz wird ohne Sicherheitsabbau ausgewiesen.
+
+## 23. Neue Gerätemessungen der UI-Stabilisierung
+
+**GEMESSEN, 18.10.2026:** Samsung SM-M526BR, Android13/API33; unveränderte
+Small/Typical/Large-Fixtures und Sequenz aus Abschnitt10, jeweils zehn vollständige
+Wiederholungen für A/B/C. Alle neun Reihen bestehen. Vorher großes A separat mit
+nur Viewportfix vollständig ausgeführt; vorher großes C unveränderter WIP-Pfad,
+ebenfalls frisch zehnmal gemessen. Keine verkürzte Fixture und kein Ausschluss
+langsamer Wiederholungen. P95 ist nearest rank, bei n=10 also der Maximalwert.
+Reihenfolge statt randomisiertem Cross-over; JIT/GC/zeitliche Geräteeffekte bleiben.
+Android-Thermalstatus jeweils0 an Reihenanfang/-ende, keine Garantie konstanter
+CPU-Frequenz. Schriftfaktor für Lastmessungen unverändert; die separaten lokalen
+1/2/3,5-Schrifttests sind keine manipulierten schnelleren Lastfixtures.
+
+### Direkter Vorher-/Nachhervergleich großer Aktionen
+
+Millisekunden Median / P95 bis Content-OnDraw; gleiche reale UI und SQLCipher.
+A = Produktpfad, C = ausschließlich test-only vorbereiteter RAM-Bestand.
+
+| Pfad | Vorher | Nachher | Mediandifferenz | Verbesserung |
+|---|---:|---:|---:|---:|
+| A Initiale Öffnung | 1285.74 / 1348.31 | 1291.57 / 1347.39 | -5.83 ms | -0.5% |
+| A Personen | 1681.77 / 1972.66 | 1281.28 / 1304.30 | 400.49 ms | 23.8% |
+| A Aufgaben | 1670.68 / 2041.84 | 1290.36 / 1302.41 | 380.32 ms | 22.8% |
+| A Funktionen | 1258.50 / 1275.07 | 1261.89 / 1276.10 | -3.39 ms | -0.3% |
+| A Lagebild zurück | 1280.81 / 1295.01 | 1284.82 / 1295.33 | -4.01 ms | -0.3% |
+| A Aufgaben erneut | 1653.56 / 1811.66 | 1283.30 / 1294.70 | 370.26 ms | 22.4% |
+| C Initiale Öffnung | 1346.02 / 1385.13 | 1346.77 / 1393.00 | -0.75 ms | -0.1% |
+| C Personen | 407.17 / 726.78 | 15.99 / 43.03 | 391.18 ms | 96.1% |
+| C Aufgaben | 422.27 / 820.28 | 19.09 / 35.79 | 403.18 ms | 95.5% |
+| C Funktionen | 115.03 / 178.94 | 19.13 / 28.68 | 95.90 ms | 83.4% |
+| C Lagebild zurück | 34.57 / 43.72 | 38.10 / 67.05 | -3.53 ms | -10.2% |
+| C Aufgaben erneut | 413.67 / 559.05 | 19.65 / 34.47 | 394.02 ms | 95.2% |
+
+Negative Differenz ist keine Verbesserung: Hub C und initiale Öffnung werden
+nicht als optimiert behauptet. A bleibt DB-basiert und erreicht kein allgemeines
+<150-ms-Ziel. C zeigt den isolierten UI-Anteil, **keine produktive Cachefreigabe**.
+
+### Vollständige neue Größen-/Variantenreferenz
+
+Jeweils Content-OnDraw Median / P95 in ms. B/C sind allein Testvarianten.
+Historische Small-/Typical-Vorherwerte stehen in Abschnitt15; es wird dafür keine
+zusätzliche frische Vorhermessung behauptet. Der direkte neue Vorher-/Nachher-
+Nachweis oben gilt für den zuvor problematischen großen Lastfall.
+
+| Größe/Variante | Initial öffnen | Personen | Aufgaben | Funktionen | Hub zurück | Aufgaben erneut |
+|---|---:|---:|---:|---:|---:|---:|
+| small A | 1206.54 / 1264.25 | 1202.41 / 1238.66 | 1205.55 / 1211.23 | 1204.24 / 1213.66 | 1206.59 / 1213.93 | 1204.57 / 1217.51 |
+| small B | 1215.24 / 1258.96 | 24.09 / 47.27 | 21.24 / 27.56 | 23.59 / 26.30 | 16.40 / 34.51 | 21.25 / 27.97 |
+| small C | 1214.79 / 1269.59 | 23.45 / 48.72 | 18.26 / 27.79 | 19.52 / 31.75 | 20.23 / 24.21 | 19.95 / 23.63 |
+| typical A | 1220.42 / 1251.57 | 1211.22 / 1246.21 | 1211.60 / 1230.85 | 1204.33 / 1213.37 | 1214.07 / 1222.27 | 1212.76 / 1220.03 |
+| typical B | 1219.90 / 1253.94 | 20.28 / 46.04 | 17.75 / 27.23 | 22.13 / 27.73 | 16.81 / 27.20 | 18.71 / 22.38 |
+| typical C | 1230.11 / 1262.25 | 20.06 / 44.18 | 17.58 / 26.29 | 19.16 / 27.33 | 23.08 / 30.41 | 19.60 / 25.22 |
+| large A | 1291.57 / 1347.39 | 1281.28 / 1304.30 | 1290.36 / 1302.41 | 1261.89 / 1276.10 | 1284.82 / 1295.33 | 1283.30 / 1294.70 |
+| large B | 1290.08 / 1324.17 | 20.98 / 33.66 | 22.64 / 36.60 | 20.27 / 25.99 | 37.36 / 68.03 | 20.22 / 23.86 |
+| large C | 1346.77 / 1393.00 | 15.99 / 43.03 | 19.09 / 35.79 | 19.13 / 28.68 | 38.10 / 67.05 | 19.65 / 34.47 |
+
+Zusätzliche tatsächliche Interaktionsphasen des großen Produktpfads A:
+
+| Ablauf | Tap-Rückkehr Median/P95 | Erster Draw Median/P95 | Content-OnDraw Median/P95 |
+|---|---:|---:|---:|
+| Personen | 3.62 / 8.63 | 13.96 / 21.38 | 1281.28 / 1304.30 |
+| Aufgaben | 1.97 / 6.52 | 15.16 / 21.08 | 1290.36 / 1302.41 |
+| Funktionen | 1.58 / 6.84 | 17.64 / 21.71 | 1261.89 / 1276.10 |
+| Hub zurück | 1.21 / 1.55 | 33.29 / 60.96 | 1284.82 / 1295.33 |
+| Schnelle Wechsel | 8.17 / 14.47 | 12.31 / 18.35 | 1287.44 / 1304.82 |
+| Bestehende Aufgabe | 0.91 / 1.32 | 37.69 / 113.10 | 37.71 / 113.11 |
+| Neue Aufgabe | 0.68 / 1.14 | 18.01 / 21.70 | 18.03 / 21.71 |
+| Bestehende Person | 1.71 / 9.19 | 15.68 / 26.55 | 1262.53 / 1286.79 |
+
+Die Personenmaske bleibt bewusst DB-basiert; die vorhandenen Taskformulare nutzen
+den schon bestehenden Formularpfad. Kein zusätzliches Vorladen zur Maskenöffnung.
+Tap-Rückkehr ist Callback/Main-Queue-Messung, kein Nachweis gefühlter Bedienung;
+OnDraw ist der oben definierte UI-Proxy und kein physischer Display-Present.
+
+### Frames und Scrollen
+
+| Reihe | Frames | Frame-Median / P95 ms | Über gemeldeter Deadline |
+|---|---:|---:|---:|
+| Groß A vorher (Viewportfix) | 717 | 22.01 / 886.59 | 54.67% |
+| Groß A nachher | 726 | 18.47 / 111.64 | 51.52% |
+| Groß C vorher | 504 | 22.19 / 1072.65 | 54.17% |
+| Groß C nachher | 511 | 19.89 / 222.25 | 52.25% |
+
+A Frame-P95 886,59→111,64 ms (−87,4%); C 1072,65→222,25 ms (−79,3%).
+Diese Fenster enthalten auch Material/Kosten/Editoren und Initialisierung, nicht
+nur Personen/Tasks. Weiterhin hohe Deadlineüberschreitungsanteile sind ein offener
+Befund und werden nicht als jankfrei ausgegeben. Nachher Layout-Measure-P95 großes
+A0,387 / C0,346 ms; keine entsprechende alte Layout-Unterphase aufgezeichnet,
+daher kein erfundener prozentualer Layoutgewinn. Keine verlorenen FrameMetrics-
+Callbacks in diesen Reihen; das beweist keine null verlorenen Displayframes.
+
+Separate gleiche Scrollgesten, zehn Wiederholungen C:
+Typical Scroll-Frame Median/P95 6,98/11,34 ms; Large7,04/11,27 ms.
+Gesamte Scrollfenster 5,06% / 4,87% über Deadline, null verlorene Messcallbacks.
+Historisches Typical-Scrollen7,51/11,46 ms ist nur Referenz aus Abschnitt15;
+keine frische große Vorher-Scrollreihe verfügbar. Daher kein belegter großer
+Scroll-Prozentgewinn. Echte manuelle Flüssigkeit/TalkBack bleibt abnahmepflichtig.
+
+### Heap, GC und FD-Grenzen der Messung
+
+| Große Reihe | FD Start→Ende | Native Heap Start→Ende MiB | GC-Anzahl Δ / GC-Zeit Δ ms |
+|---|---:|---:|---:|
+| A vorher | 110→140 | 9.92→8.54 | 133 / 7162 |
+| A nachher | 110→139 | 9.74→3.29 | 50 / 1603 |
+| C vorher | 113→141 | 9.75→13.19 | 112 / 7171 |
+| C nachher | 110→141 | 9.74→11.09 | 24 / 1036 |
+
+Die Navigation enthält explizite GC-Anforderungen für Heapmessungen und komplette
+Prozess-/Compose-/Framework-Warmups. Daher keine reine natürliche GC-Rate und kein
+Leakbeweis aus Endpunkten. Java-Open-Delta großes C vorher3,15/3,38 MiB Median/P95,
+nachher3,16/3,38 MiB: keine nachgewiesene Domain-RAM-Ersparnis. A-Nachher-Median
+negativ wegen GC/Heaprauschen, **nicht** als Speichergewinn verwendbar. Exakte
+Objektallokationszahlen wurden nicht profiliert; Slot-/Rowbedarf wird durch Lazy
+begrenzt, aber keine exakte Allocation-Prozentzahl behauptet. FD-Wachstum in UI-
+Prozessreihen bleibt Frameworkwarmup/weiter zu prüfen, kein vollständiger FD-
+Leakfreiheitsnachweis. Getrennte warme Storage-FD-Regression unten.
+
+Rohmessungen und APKs liegen ausschließlich lokal ignoriert unter
+`.prototype-cache/p11ui-before`, `p11ui-viewport-only`, `p11ui-after`;
+keine Logs, APKs, Credentials, Test-PDFs oder Produktbestände im Versionsumfang.
+
+## 24. Regressionsstand und Sicherheitsabgrenzung dieser Runde
+
+**Tatsächlich erneut ausgeführt:** vollständige Hostregression mit erzwungener
+Ausführung und separatem Host-Init-Skript: **1266 Tests**, davon App612, Data650,
+Security4, null Fehler/Failures/Skips. Gegenüber1239 sind27 fokussierte Tests für
+Viewport3, Listenkonsistenz4, Mutationsprotokoll13 und Admission7 hinzugekommen.
+Keine bestehende Prüfaussage entfernt oder abgeschwächt. Die zusätzlichen
+Protokolltests liegen ausschließlich im test-only Assessment-Quellensatz.
+
+**Tatsächlich erneut ausgeführt:** reale isolierte SQLCipher-/Room-
+`P11WorkspaceStorageTest` **12/12**, 84,555 s. Warme20-Read-Resourceprobe
+FD83→83; PSS64471→65275 KiB. Batchgleichheit, minimale angeforderte Daten,
+Action-/Status-/Generationsbindung, Revoke vor/bei DB-Operation/Publication und
+originale Integritäts-/Cleanupverträge bleiben Bestandteil dieser Suite.
+Dies ist ein begrenzter synthetischer Test, keine beliebige Leak-/OOM-Garantie.
+
+Die neun Navigationsreihen und zwei Scrollreihen sind vollständig bestanden.
+Die abschließende große ListStability-Probe ist bestanden und prüft ACTIVE- und
+PREPARATION-Listen bei Schrift1/2/3,5 einschließlich
+letzter Zeile, mehrfacher Rückkehr, numerischer Scrollanker, Semantik, Lock während
+Navigation, später DB-Rückkehr, neuer READY-Generation und ohne Autoopen/Formular-
+Reanimation. Neue manuelle Geräteabnahme wird daraus nicht abgeleitet.
+Zusätzliche ältere UI-Probes werden getrennt ausgewiesen, nicht stillschweigend
+als durch diese Navigationsmessungen abgedeckt behauptet.
+
+**BEOBACHTET:** Die ersten zusätzlichen Ux3c/Ux3d-Läufe scheiterten bei Schrift2
+am Auffinden einer Übersichtszusammenfassung nach Create/Zurück (Task-create-return
+bzw. neue Funktion). Die Liste kehrt nun absichtlich zum vorherigen Scrollanker
+zurück; die gesuchte Zusammenfassung lag oberhalb dieser Position. Die Probes
+suchen deshalb vor derselben Inhaltsassertion explizit rückwärts zur
+Zusammenfassung. Ein einmaliges `top()` direkt im Clickcallback genügte bei
+verzögertem Accessibilitybaum nicht. Der gesonderte Diagnoselauf bestätigt
+vor der Textsuche zwei offene Tasks und geschlossene Detailauswahl im Modell;
+der reine Textsuchlauf scheiterte mit null passenden sichtbaren Nodes.
+Keine Status-/Write-/Count-/Text-/Lockassertion wurde entfernt. Ux3c beendet das
+Top-Suchen außerdem erst dann ohne weitere Scrollaktion, wenn der reale
+Accessibilityknoten keine Backward-Scrollaktion mehr anbietet. Ein früher erster
+Ux3c-Aufruf endete mit Android-„Process crashed“ ohne verwertbaren Crashpuffer;
+daraus wird keine weitere gesicherte native/Compose-Root-Cause erfunden.
+Gedächtnisprotokollprobe P9 mit Schrift1+2 ist erneut vollständig bestanden
+(Fragebogen/Abhängigkeiten/Entwürfe/Abschluss/Ergänzung/Statuswechsel/Lock).
+
+Frische Android-Einzelprobes für JPEG/PNG, UTF8, PDF und Kamera/SAF wurden in
+dieser UI-Runde nicht erneut ausgeführt; frühere P11-Nachweise bleiben historisch.
+Die zugehörigen Hostregressionen sind Teil des erneut ausgeführten Bestands.
+
+**Quellabgleich:** Keine Änderung an SessionCoordinator, DEVICE_CREDENTIAL,
+Deadlines, StorageAccess, SessionDbKeyOwner, SQLCipher-/Room-/Key-Lifecycle,
+P3b-Grants, Tink, Dokumentblobformat, PDF-Isolation, Namespace-Lane, Recovery,
+Manifest-/Permission-/Backup-/Signaturvertrag. Schema11 unverändert. Einzige
+Domainänderung ist semantisch äquivalente Taskzählung ohne unnötige Sortierung;
+produktive UI-Daten bleiben durch Originalrepositories autorisiert. Nur numerische
+Scrollmetadaten werden generations-/aktionslokal gehalten, keine neue Domain-
+Retention oder produktive Mutation-/Stage2-Integration.
+
+Keystorefingerprint vor/nach identisch; keine Produktinstallation und keine
+Produktdaten/Credentials benutzt. Öffentliche P11-Quellen/Berichte frei von der
+zuvor enthaltenen Serienkennung und persönlichen SDK-/Homepfaden; lokale ignorierte
+Diagnosen bleiben lokal. Die Bereinigung entfernt alte öffentliche Gitinhalte
+nicht. Kein Commit/Push/History-Rewrite in diesem Auftrag.
+
+## 25. Vollständige geänderte Dateiliste dieser Runde
+
+Relativ zu WIP `1025941def4c6788917fd607bf2c61d792b70515`: 26 Quellen, Tests,
+Testkonfigurationen und Berichte. Abschnitt17 bleibt die historische WIP-Dateiliste.
+Keine Buildartefakte/Keystores/Produktbestände/Logs werden hinzugefügt.
+
+- `app/src/androidTest/kotlin/org/pag/prototype/Ux3cTasksProbe.kt`
+- `app/src/androidTest/kotlin/org/pag/prototype/Ux3dFunctionsProbe.kt`
+- `app/src/main/kotlin/org/pag/prototype/product/ActivePeople.kt`
+- `app/src/main/kotlin/org/pag/prototype/product/ActiveTasks.kt`
+- `app/src/main/kotlin/org/pag/prototype/product/ActiveWorkspace.kt`
+- `app/src/main/kotlin/org/pag/prototype/product/PreparationWorkspace.kt`
+- `app/src/main/kotlin/org/pag/prototype/product/ProductEntityList.kt`
+- `app/src/main/kotlin/org/pag/prototype/product/ProductScreen.kt`
+- `app/src/main/kotlin/org/pag/prototype/product/ProductScroll.kt`
+- `app/src/main/kotlin/org/pag/prototype/product/TaskScreen.kt`
+- `app/src/test/kotlin/org/pag/prototype/product/ProductEntityListTest.kt`
+- `app/src/test/kotlin/org/pag/prototype/product/ProductViewportTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+- `docs/product-p11-performance.md`
+- `domain/src/main/kotlin/org/pag/domain/Tasks.kt`
+- `tools/p11assessment/AndroidManifest.xml`
+- `tools/p11assessment/README.md`
+- `tools/p11assessment/android/org/pag/prototype/ActiveWorkspaceAssessmentProbe.kt`
+- `tools/p11assessment/android/org/pag/prototype/ListStabilityProbe.kt`
+- `tools/p11assessment/android/org/pag/prototype/ProjectionProfileProbe.kt`
+- `tools/p11assessment/extras.py`
+- `tools/p11assessment/run.py`
+- `tools/p11assessment/shared/org/pag/assessment/BudgetContractProof.kt`
+- `tools/p11assessment/shared/org/pag/assessment/MutationContractProof.kt`
+- `tools/p11assessment/test/org/pag/assessment/BudgetContractTest.kt`
+- `tools/p11assessment/test/org/pag/assessment/MutationContractTest.kt`
+
+## 26. Abschluss: zusätzlicher UI-Stabilitätsblocker
+
+**BLOCKER – keine Produkt-/Stufe2-Freigabe.** Der ursprüngliche große Constraints-
+Absturz ist zahlenbasiert nachgewiesen und korrigiert (Abschnitt18). Im erweiterten
+Aufgabenlauf tritt jedoch ein weiterer sporadischer echter Appabsturz auf:
+
+`IllegalStateException → ChildSemanticsNode.applySemantics:92 →
+TraversableNodeKt.traverseAncestors:380 →
+LayoutNode.calculateSemanticsConfiguration/invalidateSemantics →
+SnapshotStateObserver.notifyInvalidatedScopes`.
+
+**GEMESSEN:** Android meldet APP CRASH(EXCEPTION) für das isolierte Paket;
+Uncaught-Beobachtung gibt den Fehler an die originale Android-Behandlung weiter,
+kein catch im Produkt. Offline tatsächlich aufgelöste Abhängigkeiten:
+Material3-android1.4.0, Compose-UI1.12.1. Die vorhandenen AndroidX-Sources zeigen
+für die Traversierung die Vorbedingung `node.isAttached`. Das ist ein anderer
+Stack als die Constraints-Exception, kein nachgewiesener SQLCipher-/Sessionfehler.
+
+**Untersucht und verworfen:** Breite Compose-Gruppen pro Destination bestanden
+zunächst zwei vollständige Aufgabenläufe, Funktionen, große Listen und neun
+Messreihen. Der nachfolgende vollständige P9-Fragebogenlauf scheiterte aber in
+`all-empty-sections`. Die engere Trennung nur für Aufgabenliste/-detail/-formular
+bestand P9 und einen Aufgabenlauf; nach einer weiteren Testscrollkorrektur trat
+der echte obenstehende Semantikabsturz erneut auf. Diese Korrekturhypothese ist
+somit nicht belastbar und wurde vollständig aus dem Produktcode entfernt, ebenso
+die beiden ausschließlich dafür hinzugefügten Owner-Tests. Kein Zurücksetzen/
+Überschreiben fremder P11-Arbeiten. Die Viewportkorrektur, Lazy-WIP-Optimierung,
+Taskzählung, Datenschutzbereinigung und test-only Verträge bleiben reviewbar.
+
+**Kontrollmessung:** Paketgeprüfte gesicherte Vorher-APK im isolierten Paket,
+gleiche aktuelle Aufgabenprobe mit Schrift1+2: ein kompletter Lauf bestanden.
+Ein erfolgreicher Kontrolllauf beweist bei einem sporadischen Fehler weder dessen
+Abwesenheit im WIP noch, dass allein Lazy-Recycling ihn verursacht. Zusammenhang
+mit Wiederverwendung/Disposition von Material3-Semantikknoten ist eine begründete
+**HYPOTHESE**, keine vollständig bewiesene spezifische Row-/Frameworkursache.
+
+**Testgrenzen:** Aufgabenprobe sucht nach Rückkehr gezielt rückwärts zur Summary,
+prüft IME-Done auf Erfolg an einem frischen Editable-Node und nutzt echte
+Accessibility-Scrollaktionen (Gestenfallback). Save-/Status-/Count-/Lockassertionen
+bleiben erhalten; frühere falsche Suchrichtung und ein nicht erreichter Savebutton
+werden nicht als bestandene Läufe umgedeutet. Kein Nachweis manueller Touch-/IME-
+Bedienung daraus. Neue Crashbeobachtung protokolliert nur Klasse/Stackfundstellen,
+keine Exceptioninhalte, Namen oder IDs.
+
+**Verbindlicher Abschlussstand:** Abschnitt23 enthält die tatsächlich vollständig
+bestandenen neun Navigations-/zwei Scrollreihen des beibehaltenen Viewport-/Lazy-
+Stands ohne die verworfene Destinationsbindung. Sie sind Performancebelege, keine
+vollständige funktionale GRÜN-Bewertung. Große ACTIVE-/PREPARATION-Listen,
+Schrift1/2/3,5, Scrollanker, Lock/late Callback/kein Autoopen bestanden in den
+separaten Probes; zusätzliche vollständige Aufgabenregression ist wegen des
+sporadischen Absturzes **nicht bestanden**. Der P9-Lauf des ursprünglichen
+beibehaltenen UI-Stands bestand; spätere Versuchsstände sind klar getrennt.
+
+**Nächster notwendiger Schritt:** Minimale isolierte Material3-/Lazy-/Snapshot-
+Reproduktion und belegte Lifecycle-/Upstreamkorrektur, danach sämtliche Task-/
+Formular-/A11y-/Fragebogen- und Lastregressionen. Ein Bibliothekswechsel braucht
+Abhängigkeits-/TM-F17-Prüfung; kein ungeprüftes Alpha-/Downgrade und kein Entfernen
+von Semantik, catch-Fallback oder Frameworkpatch in diesem Auftrag. Bis zur
+Klärung kein Produktupdate und keine produktive Erprobung von Stufe2.
+
+Unabhängiger Review, belastbare Admission, komplette Write-/Recoveryintegration,
+Personrename-Konfliktvertrag, hohe restliche Frame-/DB-Latenz und spätere manuelle
+Produkt-/TalkBackabnahme bleiben offen. Schema11 und Sicherheitsverträge unverändert;
+keine Produktdaten/Credentials/Installation verändert, kein Commit/Push/Merge/Release.

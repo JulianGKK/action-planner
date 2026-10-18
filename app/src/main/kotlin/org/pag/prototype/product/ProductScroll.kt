@@ -3,7 +3,8 @@ package org.pag.prototype.product
 import androidx.compose.runtime.*
 import androidx.compose.foundation.ScrollState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -46,28 +47,37 @@ internal fun productReadPending(m:ProductViewModel):Boolean = when {
     m.personsVisible && m.workspace==null->true
     else->m.memoryReports.loading || m.protocol.loading || m.material.loading || m.expenses.loading
 }
-private class ScrollGeometry(var position:Int=0,var height:Int=0)
+/** Opt-in test observation only; no content/IDs, no authority, null in the product. */
+internal val LocalScrollDiagnostic = staticCompositionLocalOf<((Int, Constraints) -> Unit)?> { null }
+
 
 /** Generation/action-scoped pixels only. Read results are always loaded through existing gates.
  * Keep the old viewport extent while blank/loading, never the old sensitive display. */
-@Composable internal fun productScrollGeometry(model:ProductViewModel,scroll:ScrollState):Modifier {
-    val positions=remember(model.snapshot.generation,model.selected?.id){mutableMapOf<String,ScrollGeometry>()}
+internal fun loadingViewportMinimum(viewportHeightPx:Int, verticalPaddingPx:Int):Int =
+    if(viewportHeightPx==Constraints.Infinity)0 else (viewportHeightPx-verticalPaddingPx).coerceAtLeast(0)
+
+@Composable internal fun productScrollGeometry(model:ProductViewModel,scroll:ScrollState,viewportHeightPx:Int,positions:ProductScrollPositions):Modifier {
     val destination=productNavigationKey(model)
     val waiting=productReadPending(model)
     // Overview return positions are useful. A deliberate editor/section entry starts
     // at its context/heading, rather than restoring the old submission footer.
     val retain=destination.startsWith("ACTIVE_") || destination.startsWith("PREPARATION_") ||
         destination in setOf("ACTIONS","DOCUMENTS","COMPLETED_MEMORY","COMPLETED_PROTOCOL","COMPLETED_MATERIAL","COMPLETED_EXPENSES")
-    val transient=remember(destination,model.snapshot.generation,model.selected?.id){ScrollGeometry()}
-    val geometry=if(!retain)transient else positions.getOrPut(destination){
-        if(positions.size>=64)positions.clear()
-        ScrollGeometry()
-    }
+    val transient=remember(destination,model.snapshot.generation,model.selected?.id){ProductScrollPositions.Anchor()}
+    val geometry=if(!retain)transient else positions.at(destination)
     DisposableEffect(geometry,waiting) {
         val savePosition = !waiting
-        onDispose{if(savePosition)geometry.position=scroll.value}
+        onDispose{if(savePosition)geometry.pixel=scroll.value}
     }
-    LaunchedEffect(geometry,waiting){scroll.scrollTo(geometry.position)}
-    val minimum=if(waiting)with(LocalDensity.current){geometry.height.toDp()} else 0.dp
-    return Modifier.heightIn(min=minimum).onSizeChanged{if(!waiting)geometry.height=it.height}
+    LaunchedEffect(geometry,waiting){
+        if(!waiting){withFrameNanos{};scroll.scrollTo(geometry.pixel)}
+    }
+    val minimum=if(waiting)with(LocalDensity.current){viewportHeightPx.toDp()} else 0.dp
+    val observe=LocalScrollDiagnostic.current
+    val diagnostic=if(observe==null)Modifier else Modifier.layout { measurable,constraints ->
+        observe(with(this){minimum.roundToPx()},constraints)
+        val child=measurable.measure(constraints)
+        layout(child.width,child.height){child.placeRelative(0,0)}
+    }
+    return diagnostic.heightIn(min=minimum)
 }
