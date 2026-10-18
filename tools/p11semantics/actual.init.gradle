@@ -1,0 +1,13 @@
+// Combine explicitly with tools/p11assessment/probe.init.gradle; never normal product builds.
+gradle.beforeProject { p ->
+    p.plugins.withId('com.android.application') {
+        if(p.path==':app') {
+            p.extensions.getByName('androidComponents').finalizeDsl { dsl ->
+                dsl.defaultConfig.testInstrumentationRunner='org.pag.prototype.SemanticsActualProbe'
+            }
+            def a=p.extensions.getByName('android')
+            a.sourceSets.getByName('androidTest').kotlin.srcDir(new File(p.rootDir,'tools/p11semantics/actual'))
+            a.sourceSets.getByName('androidTest').manifest.srcFile(new File(p.rootDir,'tools/p11semantics/ActualTestManifest.xml'))
+        }
+    }
+}

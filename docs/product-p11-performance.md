@@ -1,11 +1,15 @@
 # P11 — Performance bei unverändertem Sicherheitsvertrag
 
-**Aktueller Abschluss 18.10.2026: BLOCKER UI-Stabilität.** Der große Constraintsfall
-ist korrigiert; ein zusätzlicher sporadischer Material3-Semantikabsturz ist offen.
-Widerlegte Lifecycle-Versuche wurden entfernt. Keine Produkt-/Stufe2-Freigabe.
-Aktueller WIP-Ausgangspunkt: `1025941def4c6788917fd607bf2c61d792b70515`;
-die älteren Stand-/HEAD-Angaben unten sind historisch. Nachweise und Einordnung:
-[Assessment26](product-p11-active-workspace-assessment.md#26-abschluss-zusätzlicher-ui-stabilitätsblocker).
+**Aktueller Abschluss 18.10.2026: Gesamtregression weiterhin BLOCKER.** Der
+Semantik-Auslöser ist unabhängig reproduziert und minimal korrigiert: tatsächlicher
+Produkt-Footer vorher50/50 Crashes, nachher0/50 bei identischer Test-APK.
+Vollständige Aufgabenläufe Schrift1/2, Funktionen und große Listen bestanden;
+Aufgaben-Vollpfad Schrift3,5 und P9-Ergänzungsprüfung sind nicht bestanden.
+Keine Produkt-/Stufe2-Freigabe. WIP-Ausgangspunkt dieser Untersuchung:
+`365341f942c78ec189a3990c160d222a9a18f59d`; ältere Stand-/HEAD-Angaben und
+Commitverbote unten sind historisch. Diese WIP-Sicherung ist ausdrücklich beauftragt.
+Aktuelle Nachweise: [Assessment27](product-p11-active-workspace-assessment.md#27-unabhängige-semantikeingrenzung-und-gezielte-korrektur);
+die widerlegten früheren Lifecycle-Versuche bleiben in Abschnitt26 dokumentiert.
 
 Zweite Klasse-A-Runde: messbare Verbesserungen bei Entsperren/Aktionsöffnung/
 Gedächtnisprotokollen; verbleibender Jank und Viewer-Latenzen offen. Manuelle
@@ -1369,3 +1373,16 @@ keine eindeutige Ursachenzuordnung. Belege, fehlgeschlagene/erfolgreiche Läufe 
 nötige weitere Prüfung siehe Assessment26. Keine Produkt-/Stufe2-Freigabe,
 kein Produktupdate. Keine Semantik entfernt, keine Exception im Produkt maskiert,
 kein Frameworkpatch/Dependencywechsel.
+
+
+## Semantik-Untersuchung nach WIP365341f
+
+Aktueller Befund und vollständige neue Teststatistik stehen in Assessment27.
+Kein weiterer Performanceumbau in dieser Untersuchung. Der direkte Snapshot-Read
+im Semantikblock des deaktivierten Lazy-Aufgabenfooters erzeugt den dokumentierten
+Appcrash auch ohne Accessibility-Automation. Kontrolliert50/50 Crashes vor und
+0/50 nach Übergabe eines während Composition berechneten Semantiktexts, gleiche
+Test-APK. Accessibility-Status bleibt ausdrücklich geprüft. Die früheren
+Root-Key-Hypothesen bleiben verworfen. Der aktuelle Header ersetzt die historische
+Blockereinschätzung des vorherigen Abschlusses; Gesamtfreigabe wegen fehlgeschlagener
+Erreichbarkeitsregressionen und ausstehendem Review weiterhin offen.

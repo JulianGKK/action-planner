@@ -112,7 +112,10 @@ internal fun entityRowKey(kind:String,id:String)="$kind:$id"
                 if(active)ActiveTaskListCard(task,board,now,zone,model.tasks) else FormOutlinedButton({model.tasks.open(task)},modifier=Modifier.fillMaxWidth(),enabled=!model.tasks.busy){TaskSummary(task,board)}
             }
             if(taskContent.closed.isNotEmpty() || !active)item(key="closed-toggle") {
-                FormOutlinedButton(model.tasks::toggleClosed,enabled=!model.tasks.busy,modifier=Modifier.fillMaxWidth().semantics{stateDescription=if(model.tasks.closedExpanded)"Ausgeklappt" else "Eingeklappt"}) {
+                // Read Snapshot state in composition, not from a semantics observer that can
+                // outlive this Lazy item's attachment. Preserve the same accessibility state.
+                val closedStateDescription=if(model.tasks.closedExpanded)"Ausgeklappt" else "Eingeklappt"
+                FormOutlinedButton(model.tasks::toggleClosed,enabled=!model.tasks.busy,modifier=Modifier.fillMaxWidth().semantics{stateDescription=closedStateDescription}) {
                     Text((if(active)"Erledigt / Entfallen" else "Erledigt / Entfällt")+" (${if(active)taskContent.closed.size else tasks.tasks.count{!TaskRules.active(it.status)}}) ${if(model.tasks.closedExpanded)"▴" else "▾"}")
                 }
             }

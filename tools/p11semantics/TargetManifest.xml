@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" tools:node="remove" />
+    <uses-permission android:name="android.permission.CAMERA" tools:node="remove" />
+    <permission android:name="${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" tools:node="remove" />
+    <uses-permission android:name="${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" tools:node="remove" />
+    <application android:name="android.app.Application" android:label="Synthetic semantics probe" tools:replace="android:name,android:label">
+        <activity android:name="org.pag.prototype.MainActivity" tools:node="remove" />
+        <service android:name="org.pag.prototype.product.PdfRenderService" tools:node="remove" />
+        <activity android:name="org.pag.semantics.SemanticsProbeActivity" android:exported="false" />
+    </application>
+</manifest>

@@ -1,0 +1,3 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <instrumentation android:name="org.pag.semantics.SemanticsProbe" tools:replace="android:name" android:targetPackage="${pagTestTargetPackage}" />
+</manifest>

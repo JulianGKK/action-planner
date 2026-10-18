@@ -1,11 +1,15 @@
 # P11 — Active Action Workspace Assessment
 
-**Aktueller Abschluss 18.10.2026: BLOCKER UI-Stabilität.** Der große Constraintsfall
-ist korrigiert; ein zusätzlicher sporadischer Material3-Semantikabsturz ist offen.
-Widerlegte Lifecycle-Versuche wurden entfernt. Keine Produkt-/Stufe2-Freigabe.
-Aktueller WIP-Ausgangspunkt: `1025941def4c6788917fd607bf2c61d792b70515`;
-die älteren Stand-/HEAD-Angaben unten sind historisch. Nachweise und Einordnung:
-[Assessment26](product-p11-active-workspace-assessment.md#26-abschluss-zusätzlicher-ui-stabilitätsblocker).
+**Aktueller Abschluss 18.10.2026: Gesamtregression weiterhin BLOCKER.** Der
+Semantik-Auslöser ist unabhängig reproduziert und minimal korrigiert: tatsächlicher
+Produkt-Footer vorher50/50 Crashes, nachher0/50 bei identischer Test-APK.
+Vollständige Aufgabenläufe Schrift1/2, Funktionen und große Listen bestanden;
+Aufgaben-Vollpfad Schrift3,5 und P9-Ergänzungsprüfung sind nicht bestanden.
+Keine Produkt-/Stufe2-Freigabe. WIP-Ausgangspunkt dieser Untersuchung:
+`365341f942c78ec189a3990c160d222a9a18f59d`; ältere Stand-/HEAD-Angaben und
+Commitverbote unten sind historisch. Diese WIP-Sicherung ist ausdrücklich beauftragt.
+Aktuelle Nachweise: [Assessment27](#27-unabhängige-semantikeingrenzung-und-gezielte-korrektur);
+die widerlegten früheren Lifecycle-Versuche bleiben in Abschnitt26 dokumentiert.
 
 Stand: 17./18.10.2026. Lokaler Arbeitsbranch `p11-performance-optimization`, HEAD
 `b3a8c19105e755bc3df6c7207ac0c7e3969702a0`. Grundlage ist der **uncommittete
@@ -1430,3 +1434,316 @@ Unabhängiger Review, belastbare Admission, komplette Write-/Recoveryintegration
 Personrename-Konfliktvertrag, hohe restliche Frame-/DB-Latenz und spätere manuelle
 Produkt-/TalkBackabnahme bleiben offen. Schema11 und Sicherheitsverträge unverändert;
 keine Produktdaten/Credentials/Installation verändert, kein Commit/Push/Merge/Release.
+
+## 27. Unabhängige Semantikeingrenzung und gezielte Korrektur
+
+Stand: 18.10.2026. Ausgangspunkt dieser Untersuchung ist WIP
+`365341f942c78ec189a3990c160d222a9a18f59d`. Abschnitt26 bleibt als historischer
+Fehler-/Versuchsbericht erhalten. Die beiden dort widerlegten Lifecycle-Ansätze
+wurden nicht wieder eingeführt. Keine allgemeine Performanceoptimierung und keine
+produktive Stufe2-Integration in dieser Runde.
+
+### 27.1 Reproduktion und Methodik
+
+**GEMESSEN:** Samsung SM-M526BR, Android13/API33. Nur isolierte Pakete
+`org.pag.test.p11semantics` und `org.pag.perf.p11probe` mit ihren Testpaketen.
+Keine Produktinstallation, Credentials oder Produktdatenbank. Die Minimal-App
+nutzt `android.app.Application`, eine nicht exportierte synthetische Activity,
+keine Produkt-MainActivity, keinen Renderer und keine Permissions. Buildinjektion
+nur durch explizite Gradle-Init-Skripte; normale Produktkonfiguration unverändert.
+
+Die A–F-Probe enthält 32 synthetische Zeilen mit eindeutigen stabilen Keys und
+einem ContentType. Reihenfolge: Liste zeichnen, ans Ende scrollen, State ändern,
+zurückscrollen, optional Liste → Detail → Formular → Detail → Liste. Frische
+Activity pro Versuch; Schriftfaktor lokal über LocalDensity, keine globale
+Geräteänderung. Kein setContent-Schriftwechsel innerhalb dieser ersten Matrix.
+
+| Variante | Kontrollierter Unterschied | Accessibility-Automation |
+|---|---|---|
+| A | LazyColumn mit Text | Frische gleichzeitige Baumabfragen |
+| B | Material3-OutlinedButtons | Wie A |
+| C | B + bisheriges onClick-Label + Heading am Kindtext | Wie A |
+| D | C + Detail-/Formularnavigation über Modellkommandos | Wie A |
+| E | Gleiche Navigation wie D | Kein Zugriff auf uiAutomation |
+| F | Gleiche Navigation, frische Accessibility-Clickaktionen | Gleichzeitige Baumabfragen |
+| G | D + Snapshot-State direkt innerhalb stateDescription-Semantik | Kontrolliert an/aus |
+| H | G, aber State in Composition gelesen, Beschreibung als Wert übergeben | Kontrolliert an/aus |
+
+G/H unterscheiden allein die Stelle der Zustandsabfrage. Beide behalten
+onClick-Label, Heading und stateDescription. Zusätzlicher G/H-Vergleich mit
+vollständig komponierter scrollbarer Column statt LazyColumn, gleiches Fixture.
+Keine Navigation-Root-Keys, entfernte Semantik, catch-Fallbacks oder Frameworkpatches.
+
+**Harnesskontrolle:** Zustandsänderungen und Modellassertionen auf Main;
+Composition-/Draw-Versionsfence und Idle-Prüfung vor dem nächsten Schritt.
+Accessibility-Abfragen besitzen ihre jeweils frisch geholten Nodes und geben
+sie im finally frei; keine Nodes über Navigation behalten. API33-recycle ist
+bereits deprecated, wird zur expliziten Eigentümerschaft dennoch aufgerufen.
+Gleichzeitige Abfragen sind gezielter Stress für asynchrone Semantikupdates.
+Ohne Automation wird die uiAutomation-Verbindung überhaupt nicht angefordert.
+Polling wird vor Activity-Ende gestoppt/joined; Activity-Destroy wird abgewartet.
+
+Ein anfänglicher Pilot mit je zwei A–F-Versuchen scheiterte zwölfmal an einer
+fehlerhaften **Test-Fence**: Der Versions-State wurde erst im SideEffect gelesen,
+nicht während Composition. Kein Appcrash, keine gültige Produktstatistik. Nach
+explizitem Composition-State-Read und Draw-Fence bestanden zwölf korrigierte
+Piloten; nur anschließend gestartete vollständige Reihen zählen unten.
+Synchrone Test-/Modellfehler werden getrennt als HARNESS_FAIL ausgegeben.
+Asynchrone UI-Ausnahmen gehen nach anonymisiertem Klassen-/Stackbeleg an den
+originalen Android-Uncaught-Handler; Appcrashes werden niemals verschluckt.
+Ein Prozesscrash wird als fehlgeschlagener Versuch gezählt, danach startet der
+Host den nächsten unabhängigen Versuch. Keine Wiederholung bis GRÜN statt Zählung.
+
+### 27.2 Kontrollierte Häufigkeiten
+
+**GEMESSEN:** A–F jeweils 50 vollständige Versuche bei Schrift1, 2 und3,5:
+900/900 bestanden, 0 Appcrashes, 0 Harnessfehler. Das beweist nicht die
+Fehlerfreiheit des vollständigen Produkt-/Aufgabenpfads.
+
+| Minimalfall, Schrift2 | Versuche | Bestanden | Appcrash | Harnessfehler |
+|---|---:|---:|---:|---:|
+| G Lazy, direkte State-Abfrage, Automation an | 50 | 0 | 50 | 0 |
+| H Lazy, in Composition berechneter Text, Automation an | 50 | 50 | 0 | 0 |
+| G Column, direkte State-Abfrage, Automation an | 50 | 50 | 0 | 0 |
+| H Column, in Composition berechneter Text, Automation an | 50 | 50 | 0 | 0 |
+| G Lazy, direkte State-Abfrage, Automation aus | 50 | 0 | 50 | 0 |
+| H Lazy, in Composition berechneter Text, Automation aus | 50 | 50 | 0 | 0 |
+
+Alle G-Lazy-Crashes entstehen im Schritt `INVALIDATE` auf Thread `main`, nachdem
+zuvor sichtbare Buttons aus dem Viewport gescrollt wurden. Übereinstimmender
+bereinigter Stackkern:
+
+```text
+IllegalStateException (main)
+TraversableNodeKt.traverseAncestors:380
+ChildSemanticsNode.applySemantics:92
+LayoutNode.calculateSemanticsConfiguration:482
+LayoutNode.invalidateSemantics:442
+OwnerSnapshotObserver.onCommitAffectingSemantics:47
+SnapshotStateObserver.ObservedScopeMap.notifyInvalidatedScopes:1176
+```
+
+**BEOBACHTET / quellengestützt:** Ein direkter Snapshot-Read innerhalb der
+Semantik wird durch den Semantik-Snapshotobserver beobachtet. Die anschließende
+Zustandsänderung invalidiert auch den aus dem Lazy-Viewport entfernten
+Material3-Semantikknoten. Die Traversierung setzt einen angehängten Modifiernode
+voraus. Gleichbleibende Keys/ContentTypes, Standardbuttons allein und zusätzliche
+statische onClick-/Heading-Semantik allein erzeugen den Fehler in dieser Matrix
+nicht. Der genaue interne AndroidX-Lifecycle ist damit nicht pauschal für alle
+Widgets/Versionen bewiesen; der anwendungsseitige Auslöser ist reproduziert.
+
+### 27.3 Nachweis am tatsächlichen Produktpfad
+
+`SemanticsProductRepro` verwendet echtes ProductScreen/TaskModel und die
+synthetischen Ux3c-Ports, keine Datenbank. 67 ACTIVE-Aufgaben: drei bestehende
+synthetische Aufgaben plus 64 synthetische offene Kopien mit eindeutigen IDs.
+Über die bereits vorhandene nullable LocalProductListObservation wird nur
+LazyListState beobachtet. Der Runner komponiert den geschlossenen Aufgabenfooter
+am Listenende, scrollt ihn aus dem Viewport und ruft dann das echte
+`TaskModel.toggleClosed()` auf. Keine Accessibility-Automation im maßgeblichen
+Vorher-/Nachhervergleich.
+
+**GEMESSEN, Schrift2, identische eingefrorene Test-APK:**
+
+| Tatsächlicher Produkt-Footer | Versuche | Bestanden | Appcrash | Harnessfehler |
+|---|---:|---:|---:|---:|
+| WIP vor Korrektur | 50 | 0 | 50 | 0 |
+| Eng begrenzte Korrektur | 50 | 50 | 0 | 0 |
+
+Vorher jeweils `INVALIDATE_FOOTER`, `main`, derselbe Stackkern wie oben.
+Nachher zusätzlich Lock-Cleanup-Assertion erfüllt. Der Fehler ist daher kein
+rein unzulässiger Accessibility-Harnessablauf. Die Reproduktion ist eigenständig
+vom früheren Constraints-Absturz und benötigt keine großen alten Mindesthöhen.
+
+**Korrektur:** Ausschließlich im `closed-toggle`-Lazy-Item von ProductEntityList
+wird `model.tasks.closedExpanded` während Composition in den bisherigen deutschen
+Semantiktext umgesetzt. Das semantics-Lambda erhält diesen unveränderlichen
+Wert. Dadurch abonniert es nicht mehr selbst diesen Snapshot-State. Beschriftung,
+onClick, Heading, Buttonrolle und Aus-/Eingeklappt-Information bleiben erhalten.
+Keine zusätzlichen Domainprojektionen oder längere Payload-Lebensdauer.
+Die alte Column-Darstellung wird nicht pauschal umgebaut. Viewport-, Lazy-,
+Scrollanker-, Formular- und Sessionverträge bleiben bestehen.
+
+Zur Identifikation eingefrorener lokaler Artefakte (APKs selbst nicht im Repo):
+
+| Artefakt | SHA256 |
+|---|---|
+| Gesicherte alte isolierte Vorher-APK | `9c79a95181fb4d81d3142398dbd190a385def4cd917013d8d489338c572d96bd` |
+| WIP-Ziel vor diesem Fix | `9cdecf178ef3a1a6862b4068e8c1793057df734761329fcabd32bada6783c81e` |
+| Ziel mit minimalem Fix | `e3160b230ab0445fbccd17504e7d6be981bbbe18e50a1e689b874200a91318a2` |
+| Identische Test-APK des maßgeblichen Vorher/Nachher-Repros | `5dba97283b0920ab8fab106932f7947f850227d2e76851582c2514f039cfa240` |
+
+Die alte gesicherte isolierte APK ist ein binärer Assessment-Vergleich, kein
+nachträglich attestierter exakter Quellcommit. Ihr früheres isoliertes
+Diagnoseinstrument ist im normalen Testpfad inaktiv. Der Footer-Repro benötigt
+die neue Lazy-Beobachtung und wird nicht gegen die alte Column-APK ausgeführt.
+Der separate SemanticsActualProbe nutzt dieselbe Test-APK für beide alten/neuen
+Ziele und nur deren gemeinsame öffentliche Modell-/ProductScreen-Schnittstelle.
+
+### 27.4 AndroidX-/Dependencybefund
+
+**GEMESSEN:** Offline aufgelöster debugRuntimeClasspath: Compose-BOM2026.09.00,
+Material3-android1.4.0, UI/Runtime/Foundation-android jeweils1.12.1. Dieselben vier
+Version-Marker sind direkt aus alter und aktueller isolierter APK geprüft.
+Material3 verlangt im transitiven Graphen teilweise Foundation1.8.1; die
+aufgelöste BOM-Version ist1.12.1. Kein zweites gleichzeitig ausgewähltes UI-
+Versionsset, aber daraus folgt keine pauschale Kompatibilitäts-/Fehlerfreiheitsgarantie.
+
+Die vorhandenen offiziellen Sources-JARs zeigen:
+
+- Material3 ChildParentSemantics.kt:91–98 traversiert in applySemantics Vorfahren.
+- UI DelegatableNode.kt:101 prüft node.isAttached vor dieser Traversierung.
+- LayoutNode.kt:430–447 invalidiert Semantik, außerhalb Modifierupdates sofort
+  über calculateSemanticsConfiguration; der Getter der Semantik hat bereits
+  einen Attached-/Deactivated-Guard. Der unmittelbare Invalidierungspfad und der
+  Getter sind unterschiedliche Pfade.
+- LayoutNode.kt:473–482 beobachtet Semantik-State-Reads und wendet Modifiersemantik an.
+- LayoutNode.kt:1487–1496 setzt bei onDeactivate isDeactivated und ruft
+  resetModifierState auf; NodeChain.kt:242–245 führt dabei den Detach-Lifecycle
+  aus und markiert die Modifiernodes als detached. Der LayoutNode kann weiterhin
+  attached sein. LayoutNode.isValidOwnerScope prüft an633–634 nur dieses
+  LayoutNode-isAttached. OwnerSnapshotObserver.kt:45–47 lässt damit die
+  Semantikinvalidierung passieren, obwohl die Modifierkette deaktiviert ist.
+  Das erklärt den reproduzierten Unterschied zwischen Lazy und Column und die
+  fehlgeschlagene Modifier-isAttached-Vorbedingung. Keine Reflection oder privaten
+  Runtimezugriffe für diese Analyse; ausschließlich die gelieferten Sources.
+
+**Offiziell belegte historische verwandte Fehler:** AndroidX-Commit
+[7e18d15](https://github.com/androidx/androidx/commit/7e18d15aa986445a345990c9837368e48468f731)
+führte 2024 vorübergehend einen catch um diese Traversierung ein.
+[ddc49c9](https://github.com/androidx/androidx/commit/ddc49c903f3d3e853ff6440720699de8f17ee1c9)
+ergänzte den Attached-/Deactivated-Guard im damaligen collapsedSemantics-Getter
+(Bugs353595612/353538515).
+[f12a2f9](https://github.com/androidx/androidx/commit/f12a2f984b82171e3624efa69908d2c8117f992c)
+entfernte den catch anschließend wieder zugunsten der UI-seitigen Prüfung.
+Der entsprechende Getter-Guard existiert in unseren1.12.1-Quellen bereits.
+Diese historischen Commits sind daher **kein Nachweis einer noch zu installierenden
+Korrektur** für den aktuellen Invalidierungsstack. Der ebenfalls gefundene
+[725b701](https://github.com/androidx/androidx/commit/725b7018e95f5108ed022670789f2050ab9e58d6)
+betrifft InspectorInfo statt Laufzeitsemantik und ist als Lösung verworfen.
+Keine geprüfte aktuelle Upstreamkorrektur für genau unseren Versions-/Reprofall
+nachgewiesen. Kein Upgrade, Downgrade, Alpha, Fork oder Patch. Ein solcher Wechsel
+bleibt eine eigene TM-F17-Entscheidung.
+
+### 27.5 Weitere Nachtests und Grenzen
+
+**GEMESSEN:** Identische SemanticsActualProbe-Test-APK gegen alte isolierte
+Column-APK und WIP vor dem Fix: jeweils50/50 bestanden, 0 Crashes/Harnessfehler.
+Jeweils dieselbe Activity, setContent mit alternierender Schrift1/2, gleichzeitige
+frische Accessibility-Baumabfragen. Reale ProductScreen-/Modellpfade für Status,
+Bearbeiten, Speichern, Erstellen, Filter und Lock; die Portdaten sind synthetisch.
+**Grenze:** Modellkommandos ersetzen nicht sämtliche Accessibility-/IME-Aktionen
+von Ux3c und erzwingen keine Footer-Deaktivierung. Die Kontrollreihe widerlegt
+keine seltenen Vollpfadfehler. Die bloße Activity-/setContent-Wiederverwendung
+reproduziert den Crash in dieser kontrollierten Reihe nicht.
+
+**GEMESSEN:** Zusätzliche Produkt-Footer-Reihen mit Fix, jeweils50/50 bestanden
+bei Schrift1 und3,5. Hier wird mit frischen eigenen Accessibility-Nodes vor/nach
+dem Aufklappen ausdrücklich stateDescription=Eingeklappt/Ausgeklappt geprüft.
+0 Crashes, 0 Harnessfehler; Lock-Cleanup ebenfalls geprüft.
+
+**Tatsächlich erneut ausgeführte Hostregression:** app612 + data650 + security4
+=1266 Tests, 0 Failures/Errors/Skipped, Offline-Build erfolgreich. App neu
+ausgeführt; zunächst gecachte Data-/Security-Ergebnisse anschließend ausdrücklich
+mit --rerun neu ausgeführt. Keine Tests
+entfernt oder abgeschwächt. Die vorhandene Ux3c-Probe akzeptiert zusätzlich den
+expliziten Schriftfaktor3,5; Standard1+2 und alle bestehenden Assertions bleiben.
+Keine neuen kryptografischen/DB-Verträge.
+
+**Vollständige Ux3c-Geräteläufe:** Schrift1 und2 jeweils drei vollständige
+Accessibility-/IME-getriebene Läufe bestanden. Schrift3,5: drei von drei Läufen
+scheitern in phase=hub an einer Erreichbarkeitsassertion (visible/click,
+Probezeilen127/117/195), **ohne Appcrash**. Diese neu zusätzlich versuchte
+Großschrift-Vollregression ist nicht bestanden; die erfolgreichen Footer- und
+Lastprobes ersetzen sie nicht. Die identische neue Test-APK scheitert auch in einem Kontrolllauf gegen den
+unveränderten WIP vor dem Fix exakt an phase=hub/Zeilen127/117/195. Damit ist
+diese Abweichung nicht neu durch den Footer-Fix eingeführt. Die genaue Produkt-/
+Harnessursache bleibt offen; ein Vorherlauf ist keine Häufigkeitsstudie.
+Keine weitere spekulative Produktkorrektur in diesem Auftrag.
+
+
+**Weitere vollständig ausgeführte Gerätereihen:** Ux3d mit Schrift1+2 bestanden.
+ListStabilityProbe mit200 Personen/1000 Aufgaben/200 Rollen je synthetischer Aktion
+bestand bei Schrift1/2/3,5: wiederholter Tasks-/Hub-Einstieg, gleiche numerische
+Scrollanker, echte Scroll-/Labelsemantik, bestehendes Formular, ACTIVE- und
+PREPARATION-Personen-/Aufgabenlisten, schnelle Navigation, Lock während laufendem
+Read, späte Callback-Verwerfung, READY-Wechsel ohne Action-/Formular-/P3b-Autoopen.
+Keine neue manuelle TalkBack-/Produktabnahme daraus abgeleitet.
+
+**P9-Vollregression nicht bestanden:** Ein kompletter Lauf Schrift1+2 erreicht
+bei Schrift2 die Phase addendum und scheitert an der Erreichbarkeit eines Controls
+(Probezeilen130/117/176). Kein Appcrash; die vollständige Reihe ist dennoch fehlgeschlagen.
+Kein Ersatz durch erfolgreiche Minimal-/Modell-/Listenprobes. **Kontrolllauf mit identischer Test-APK gegen unveränderten WIP vor dem Fix:
+Schrift1+2 vollständig bestanden (ein Lauf).** Vorher1/1 bestanden gegenüber
+Nachher0/1 bestanden ist ausdrücklich kein stabiler Kausalitätsnachweis bei
+asynchroner UI-/Scrollinstrumentierung. Es erlaubt weder die Behauptung einer
+nachgewiesenen neuen P9-Produktursache noch das Wegerklären des fehlgeschlagenen
+Nachtests als reines Harnessproblem. Der neue P9-Befund betrifft addendum und
+ist getrennt von der früheren all-empty-sections-Regression der verworfenen
+Root-Key-Variante. **P9 bleibt ein offener Regressionsblocker.** Keine Wiederholung
+bis GRÜN und kein spekulativer zusätzlicher Produktfix.
+
+| Vollpfadkontrolle, identische Instrumentierung | Vorher-WIP | Minimalfix |
+|---|---|---|
+| Ux3c explizit Schrift3,5 | 0/1 bestanden, phase=hub | 0/3 bestanden, phase=hub |
+| P9 Standard Schrift1+2 | 1/1 bestanden | 0/1 bestanden, Schrift2/addendum |
+
+Diese kleinen Vollpfad-Kontrollzahlen werden nicht mit den50er-Reproreihen
+vermengt. Die alten isolierten Column-/WIP-Modellkontrollen mit je50 Läufen sind
+keine vollständigen P9-/Ux3c-Accessibility-/IME-Vollpfadkontrollen.
+
+### 27.6 Sicherheitsgrenzen und offene Freigabe
+
+Nur der Leseort eines UI-Statuswerts im Lazy-Footer ist produktiv geändert.
+Keine Veränderung an SessionCoordinator/180s/30s, Generation-/Storagegates,
+SessionDbKeyOwner, SQLCipher-Preflight/Room-/Key-Lease, Tink, Leadership/P3b,
+Dokumentisolation/NamespaceLane, Recovery, Schema11, Permissions, App-ID oder
+Signatur. Bestehender Keystore unverändert. Keine neuen Produktdependencies,
+RAM-Caches, Klartextdateien, Produktinstallation oder Produktdatenzugriffe.
+Keine volle physische RAM-Löschung oder umfassende Sicherheitsprüfung behauptet.
+Die Tests sind synthetisch; aktuelle neue Quellen/Belege enthalten keine
+Geräteseriennummern, Home-/SDK-Pfade, Credentials oder Rohlogs.
+
+**Empfehlung:** Den nachgewiesenen eng begrenzten Semantikfix unabhängig reviewen;
+keine Rückkehr zu den beiden widerlegten Root-Key-Versuchen. Der gelieferte
+Frameworkpfad bleibt außerhalb dieser Anwendungskorrektur ein Upstream-Thema.
+Die Quell-/Commitsuche ist keine vollständige Prüfung aller AndroidX-Bugtracker.
+Ein Dependencywechsel bleibt gesondert freigabepflichtig(TM-F17).
+
+**BLOCKER/offen:** Fehlgeschlagene Großschrift-Aufgaben- und P9-Vollregression,
+Abgrenzung ihrer genauen UI-/Harnessursache und unabhängiger Review. Kein pauschales
+GRÜN, keine Produkt-/Stufe2-Erprobung. Weitere allgemeine Performance-, Admission-,
+Write-/Recovery- und Securityentscheidungen bleiben gemäß älteren Abschnitten offen.
+Issue#26 bleibt Release-Gate vor1.0. Kein Merge/Release/Produktupdate.
+
+**Nächster kleinster Diagnoseschritt:** Die zwei kombinierten Erreichbarkeitsphasen
+in test-only feste Unterphasen zerlegen (Aufgaben-Summary gegenüber Titel;
+P9 Ergänzung öffnen/speichern/Bestätigung). Nach jedem Schritt Modellroute,
+Zeichenfence und ausschließlich eigene Node-/Scroll-Geometrie getrennt prüfen.
+Keine Texte/Produktdaten loggen, keine pauschalen Delays, keine Assertions entfernen
+und keinen weiteren Produktfix ohne kontrollierten Nachweis erzwingen.
+
+### 27.7 Vollständige Dateiliste dieser Untersuchungsrunde
+
+- `app/src/main/kotlin/org/pag/prototype/product/ProductEntityList.kt`
+- `app/src/androidTest/kotlin/org/pag/prototype/Ux3cTasksProbe.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+- `docs/product-p11-performance.md`
+- `tools/p11semantics/README.md`
+- `tools/p11semantics/probe.init.gradle`
+- `tools/p11semantics/TargetManifest.xml`
+- `tools/p11semantics/TestManifest.xml`
+- `tools/p11semantics/target/org/pag/semantics/SemanticsProbeActivity.kt`
+- `tools/p11semantics/android/org/pag/semantics/SemanticsProbe.kt`
+- `tools/p11semantics/run.py`
+- `tools/p11semantics/actual.init.gradle`
+- `tools/p11semantics/ActualTestManifest.xml`
+- `tools/p11semantics/actual/org/pag/prototype/SemanticsActualProbe.kt`
+- `tools/p11semantics/actual/org/pag/prototype/SemanticsProductRepro.kt`
+- `tools/p11semantics/actual.py`
+- `tools/p11semantics/regressions.py`
+
+17 Textdateien. APKs, eingefrorene Testartefakte, Rohlogs, lokale Runner und
+maschinelle Messzusammenfassungen verbleiben ausschließlich im ignorierten
+lokalen Diagnosebereich; keine Veröffentlichung dieser Dateien. Anonymisierte
+Häufigkeiten/Stackfundstellen stehen oben. Keine Git-History-Bereinigung.

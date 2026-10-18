@@ -17,7 +17,7 @@ import org.pag.prototype.product.*
 /** Real ProductScreen with synthetic ports only. No credentials, DB writes or system font change. */
 class Ux3cTasksProbe : Instrumentation() {
     private var requestedScale: Float? = null
-    override fun onCreate(arguments: Bundle?) { super.onCreate(arguments); requestedScale = arguments?.getString("font")?.toFloat(); require(requestedScale == null || requestedScale == 1f || requestedScale == 2f); start() }
+    override fun onCreate(arguments: Bundle?) { super.onCreate(arguments); requestedScale = arguments?.getString("font")?.toFloat(); require(requestedScale == null || requestedScale == 1f || requestedScale == 2f || requestedScale == 3.5f); start() }
     private class Session : SessionPort {
         var value = SessionSnapshot(SessionState.READY, 1)
         var observer: ((SessionSnapshot) -> Unit)? = null
@@ -182,7 +182,7 @@ class Ux3cTasksProbe : Instrumentation() {
             val launched = startActivitySync(Intent(targetContext, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
             activity = launched
             val density = targetContext.resources.displayMetrics.density
-            for (scale in listOf(1f, 2f).filter { requestedScale == null || requestedScale == it }) {
+            for (scale in (requestedScale?.let { listOf(it) } ?: listOf(1f, 2f))) {
                 scaleUnderTest = scale
                 val session = Session(); val ops = Ops(); val tasks = Tasks()
                 lateinit var model: ProductViewModel
