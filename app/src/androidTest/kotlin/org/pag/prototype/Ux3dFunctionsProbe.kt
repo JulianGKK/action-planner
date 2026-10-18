@@ -16,7 +16,14 @@ import org.pag.prototype.product.*
 
 /** Real ProductScreen with synthetic ports only. No credentials, DB writes or system font change. */
 class Ux3dFunctionsProbe : Instrumentation() {
-    override fun onCreate(arguments: Bundle?) { super.onCreate(arguments); start() }
+    private var requestedScale:Float?=null
+    private var failureKind="ASSERTION"
+    private val trace by lazy{UiReachabilityTrace(this,"FUNCTIONS")}
+    override fun onCreate(arguments: Bundle?) { super.onCreate(arguments)
+        requestedScale=arguments?.getString("font")?.toFloat();require(requestedScale==null || requestedScale in listOf(1f,2f))
+        trace.refreshAncestors=arguments?.getString("navigation")=="parents";trace.refreshTree=arguments?.getString("navigation")=="nodes"
+        trace.enabled=arguments?.getString("diagnostics")!="off";trace.detailed=arguments?.getString("diagnostics")=="detailed";start()
+    }
     private class Session : SessionPort {
         var value = SessionSnapshot(SessionState.READY, 1)
         var observer: ((SessionSnapshot) -> Unit)? = null
@@ -83,8 +90,10 @@ class Ux3dFunctionsProbe : Instrumentation() {
     }
     private fun nodes(): List<AccessibilityNodeInfo> {
         val result = mutableListOf<AccessibilityNodeInfo>()
-        fun walk(node: AccessibilityNodeInfo?) { if (node == null) return; result += node; repeat(node.childCount) { walk(node.getChild(it)) } }
-        walk(uiAutomation.rootInActiveWindow); return result
+        fun walk(node: AccessibilityNodeInfo?) { if (node == null) return; if(trace.refreshTree && !trace.node("TREE_NODE",node,true))return; result += node; repeat(node.childCount) { walk(node.getChild(it)) } }
+        val root=uiAutomation.rootInActiveWindow
+        if(root?.packageName?.toString()!=targetContext.packageName)return emptyList()
+        walk(root); return result
     }
     private fun bounds(node: AccessibilityNodeInfo) = Rect().also(node::getBoundsInScreen)
     private fun match(node: AccessibilityNodeInfo, label: String): Boolean {
@@ -95,14 +104,13 @@ class Ux3dFunctionsProbe : Instrumentation() {
     }
     private fun visible(label: String, backwards: Boolean = label.startsWith("Rundgang") || label in listOf("PaG Demo", "Lagebild", "Vorbereitung im Überblick")): AccessibilityNodeInfo {
         repeat(50) { attempt ->
-            val tree = nodes(); tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
+            val tree = nodes();trace.search(tree,label,backwards,attempt); tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
             // Let the accessibility frame catch up before scrolling away from a
             // newly published heading. Tour/home headings live at the top.
-            if (attempt >= 5) tree.firstOrNull { it.isScrollable }?.performAction(
-                if (backwards) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+            if (attempt >= 5) trace.scroll(tree.firstOrNull { it.isScrollable },if(backwards) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
             waitForIdleSync(); SystemClock.sleep(80)
         }
-        error("Synthetic demo label not reachable")
+        failureKind="UNREACHABLE";error("Synthetic demo label not reachable")
     }
     private fun smallScroll(backwards: Boolean) {
         val rect = nodes().firstOrNull { it.isScrollable }?.let(::bounds) ?: return
@@ -128,10 +136,14 @@ class Ux3dFunctionsProbe : Instrumentation() {
     private var clickDiagnostic = ""
     private fun click(label: String, backwards: Boolean = label.startsWith("‹") || label in listOf("Übersicht", "Personen", "Aufgaben", "Rollen")) {
         repeat(50) {
-            val tree = nodes()
+            val tree = nodes();trace.search(tree,label,backwards,it)
             for (node in tree.filter { match(it, label) }) {
                 var control: AccessibilityNodeInfo? = node
-                while (control != null && !control.isClickable) control = control.parent
+                while(control!=null){
+                    if(!trace.node("CLICK_ANCESTOR",control,trace.refreshAncestors)){control=null;break}
+                    if(control.isClickable)break
+                    control=control.parent
+                }
                 if (control != null && control.isEnabled && bounds(control).height() > 0) {
                     val rect = bounds(control); check(rect.left >= 0 && rect.right <= targetContext.resources.displayMetrics.widthPixels)
                     check(control.performAction(AccessibilityNodeInfo.ACTION_CLICK)); waitForIdleSync(); return
@@ -143,7 +155,7 @@ class Ux3dFunctionsProbe : Instrumentation() {
         val finalTree = nodes()
         clickDiagnostic = "nodes=${finalTree.size},scrolls=${finalTree.count { it.isScrollable }},matches=${finalTree.count { match(it, label) }},buttons=" +
             finalTree.filter { it.isClickable }.take(12).joinToString { "${bounds(it)}:len=${it.text?.length ?: 0}:opens=${it.text?.contains(" öffnen") == true}" }
-        error("Synthetic demo control not reachable")
+        failureKind="UNREACHABLE";error("Synthetic demo control not reachable")
     }
     private fun reportUncaught(error: Throwable) {
         sendStatus(0, Bundle().apply { putString("stream", "UI_UNCAUGHT," + error.javaClass.simpleName + "," + error.stackTrace.take(12).joinToString("|") { it.className + "." + it.methodName + ":" + it.lineNumber } + "\n") })
@@ -154,47 +166,58 @@ class Ux3dFunctionsProbe : Instrumentation() {
         Thread.setDefaultUncaughtExceptionHandler { thread, error -> runCatching { reportUncaught(error) }; originalHandler?.uncaughtException(thread, error) }
         var activity: MainActivity? = null; var scaleUnderTest = 1f; var phase = "entry"
         try {
-            check(!BuildConfig.PAG_DEMO_ONLY)
+            check(!BuildConfig.PAG_DEMO_ONLY);trace.start()
             val launched = startActivitySync(Intent(targetContext, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
-            activity = launched
+            activity = launched;trace.attach(launched)
             val density = targetContext.resources.displayMetrics.density
-            for (scale in listOf(1f, 2f)) {
-                scaleUnderTest = scale
+            for (scale in (requestedScale?.let{listOf(it)}?:listOf(1f,2f))) {
+                scaleUnderTest = scale;trace.font=scale
                 val session = Session(); val ops = Ops()
                 lateinit var model: ProductViewModel
                 runOnMainSync {
                     model = ProductViewModel(session, Actions(), ProductStorageState.READY_TO_OPEN, People(), operationsRepository = ops, taskRepository = Tasks()) {}
-                    model.detail("synthetic")
-                    launched.setContent { CompositionLocalProvider(LocalDensity provides Density(density, scale)) { ProductScreen(model) } }
+                    trace.model=model;model.detail("synthetic")
+                    launched.setContent { CompositionLocalProvider(LocalDensity provides Density(density, scale)) { trace.Content(model) } }
                 }
-                phase = "hub"; waitForIdleSync(); visible("Lagebild"); top(); click("Funktionen", backwards = false)
+                phase = "hub";trace.phase=phase; waitForIdleSync(); visible("Lagebild"); top(); click("Funktionen", backwards = false)
                 visible("2 Personen vor Ort"); visible("1 mit Funktion"); visible("1 ohne Funktion")
                 check(nodes().none { it.text?.toString()?.startsWith("Geplant:") == true })
-                phase = "group"; click("Support · 1", backwards = false); visible("1 Person aktuell vor Ort")
+                phase = "group";trace.phase=phase; click("Support · 1", backwards = false); visible("1 Person aktuell vor Ort")
                 click("Motte", backwards = false); visible("Aktuelle Funktion: Support")
-                phase = "change-function"; click("Funktion ändern", backwards = false); click("Blockierende", backwards = false); click("Übernehmen", backwards = false)
+                phase = "change-function";trace.phase=phase; click("Funktion ändern", backwards = false); click("Blockierende", backwards = false); click("Übernehmen", backwards = false)
                 visible("Aktuelle Funktion: Blockierende")
                 runOnMainSync { check(ops.person.state!!.currentRoleId == "plan") }
-                phase = "return-old-group"; top(); click("‹ Support"); visible("Derzeit niemand in dieser Funktion vor Ort.")
+                phase = "return-old-group";trace.phase=phase; top(); click("‹ Support"); visible("Derzeit niemand in dieser Funktion vor Ort.")
                 top(); click("‹ Funktionen"); visible("Blockierende · 1")
-                phase = "without"; click("Ohne Funktion · 1", backwards = false); visible("1 Person aktuell vor Ort")
+                phase = "without";trace.phase=phase; click("Ohne Funktion · 1", backwards = false); visible("1 Person aktuell vor Ort")
                 click("Klee", backwards = false); visible("Aktuelle Funktion: Keine Funktion")
                 top(); click("‹ Ohne Funktion"); visible("1 Person aktuell vor Ort"); top(); click("‹ Funktionen")
-                phase = "new-function"; top(); click("+ Neue Funktion", backwards = false); name("Übungsfunktion")
+                phase = "new-function";trace.phase=phase; top(); click("+ Neue Funktion", backwards = false); name("Übungsfunktion")
                 runOnMainSync { check(model.operations.newFunctionName == "Übungsfunktion") }
                 click("Funktion anlegen", backwards = false); top(); visible("Wer übernimmt gerade was?", backwards = true)
-                phase = "other-functions"; click("Weitere Funktionen", backwards = false); visible("Übungsfunktion")
+                phase = "other-functions";trace.phase=phase; click("Weitere Funktionen", backwards = false); visible("Übungsfunktion")
                 runOnMainSync { check(model.operations.moreFunctionsExpanded && ops.roles.any { it.name == "Übungsfunktion" }) }
-                phase = "status-group"; top(); click("Blockierende · 1", backwards = false); visible("1 Person aktuell vor Ort"); click("Motte", backwards = false); visible("Aktuelle Funktion: Blockierende"); phase = "status"
+                fun step(name:String,work:()->Unit){phase=name;trace.phase=name;trace.event("BEGIN");work();trace.event("PASS")}
+                step("SG_A_OVERVIEW"){runOnMainSync{check(model.activeArea==ActiveArea.FUNCTIONS && model.operations.screen==OperationsScreen.OVERVIEW)}}
+                step("SG_B_DOMAIN_GROUP"){runOnMainSync{check(model.operations.board!!.persons.single{it.person.id=="p"}.state!!.currentRoleId=="plan")}}
+                step("SG_C_GROUP_TREE"){if(trace.detailed)trace.search(nodes(),"Blockierende · 1",false,0)}
+                step("SG_D_GROUP_REACH"){top();if(trace.detailed)trace.search(nodes(),"Blockierende · 1",false,0)}
+                step("SG_E_GROUP_CLICK"){click("Blockierende · 1",backwards=false)}
+                step("SG_F_GROUP_MODEL"){runOnMainSync{check(model.operations.screen==OperationsScreen.FUNCTION_DETAIL && model.operations.functionFocus?.roleId=="plan")}}
+                step("SG_G_PERSON_DOMAIN"){runOnMainSync{check(model.operations.board!!.persons.any{it.person.id=="p" && it.state?.status==OperationalStatus.ON_SITE})};visible("1 Person aktuell vor Ort")}
+                step("SG_H_PERSON_REACH"){if(trace.detailed)trace.search(nodes(),"Motte",false,0)}
+                step("SG_I_PERSON_OPEN"){click("Motte",backwards=false);runOnMainSync{check(model.operations.personId=="p" && model.operations.screen==OperationsScreen.PERSON)}}
+                step("SG_J_FUNCTION"){visible("Aktuelle Funktion: Blockierende")}
+                phase="status";trace.phase=phase
                 click("Lage ändern", backwards = false); visible("Lage aktualisieren"); click("In Gewahrsam", backwards = false); click("Übernehmen", backwards = false)
                 visible("Aktuelle Lage: In Gewahrsam"); top(); click("‹ Blockierende"); visible("Derzeit niemand in dieser Funktion vor Ort.")
                 top(); click("‹ Funktionen"); visible("1 Person vor Ort"); visible("0 mit Funktion"); visible("1 ohne Funktion")
                 runOnMainSync { check(ops.person.state!!.currentRoleId == null && activeFunctionContent(model.operations.board!!).without.map { it.person.id } == listOf("q")) }
-                phase = "hub-after-change"; top(); click("‹ Zum Lagebild"); visible("Lagebild"); visible("Noch keine aktuellen Funktionen")
-                phase = "lock-detail"; top(); click("Funktionen", backwards = false); click("Ohne Funktion · 1", backwards = false)
+                phase = "hub-after-change";trace.phase=phase; top(); click("‹ Zum Lagebild"); visible("Lagebild"); visible("Noch keine aktuellen Funktionen")
+                phase = "lock-detail";trace.phase=phase; top(); click("Funktionen", backwards = false); click("Ohne Funktion · 1", backwards = false)
                 runOnMainSync { session.lock(); check(model.workspace == null && model.operations.functionFocus == null && model.operations.personId == null) }
                 visible("PaG")
-                phase = "lock-form"; runOnMainSync {
+                phase = "lock-form";trace.phase=phase; runOnMainSync {
                     session.value = SessionSnapshot(SessionState.READY, session.value.generation + 1); session.observer!!(session.value)
                     model.detail("synthetic"); model.activeArea(ActiveArea.FUNCTIONS)
                 }
@@ -202,11 +225,11 @@ class Ux3dFunctionsProbe : Instrumentation() {
                 runOnMainSync { session.lock(); check(model.operations.newFunctionName.isEmpty() && model.operations.functionFocus == null && !model.operations.moreFunctionsExpanded) }
                 visible("PaG")
             }
-            runOnMainSync { launched.finish() }
-            finish(-1, Bundle().apply { putString("stream", "UX3d synthetic real ProductScreen: hub/distribution/group/person/function change/return empty group/without/new function/other/status/hub/lock detail+form/font 1+2: OK\n") })
+            trace.stop();runOnMainSync { launched.finish() }
+            finish(-1, Bundle().apply { putString("stream", "UX3d synthetic real ProductScreen: hub/distribution/group/person/function change/return empty group/without/new function/other/status/hub/lock detail+form/font=${requestedScale ?: "1+2"}: OK\n") })
         } catch (failure: Exception) {
-            activity?.let { runOnMainSync { it.finish() } }
-            finish(0, Bundle().apply { putString("stream", "UX3d probe failed; font=$scaleUnderTest; phase=$phase; lines=${failure.stackTrace.filter { it.className == Ux3dFunctionsProbe::class.java.name }.take(5).map { it.lineNumber }}; $clickDiagnostic; no input data logged\n") })
+            trace.event("FAIL","category=$failureKind;exception=${failure.javaClass.simpleName}");trace.stop();activity?.let { runOnMainSync { it.finish() } }
+            finish(0, Bundle().apply { putString("stream", "UX3d probe failed; font=$scaleUnderTest; phase=$phase; category=$failureKind; lines=${failure.stackTrace.filter { it.className == Ux3dFunctionsProbe::class.java.name }.take(5).map { it.lineNumber }}; $clickDiagnostic; no input data logged\n") })
         }
     }
 }

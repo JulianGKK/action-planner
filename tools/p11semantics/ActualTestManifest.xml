@@ -7,4 +7,5 @@
     <instrumentation android:name="org.pag.prototype.ListStabilityProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.ActiveWorkspaceAssessmentProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.UiScrollViewportProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.UiFeedbackOcclusionProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

@@ -17,9 +17,13 @@ import org.pag.prototype.product.*
 /** Real ProductScreen with synthetic ports only. No credentials, DB writes or system font change. */
 class Ux3cTasksProbe : Instrumentation() {
     private var requestedScale: Float? = null
+    private var directed=false
+    private var summaryOnly=false
+    private var touchReturn=false
+    private var sweep=false
     private val trace by lazy { UiReachabilityTrace(this,"TASKS") }
     private var failureKind="ASSERTION"
-    override fun onCreate(arguments: Bundle?) { super.onCreate(arguments);trace.detailed=arguments?.getString("diagnostics")=="detailed"; requestedScale = arguments?.getString("font")?.toFloat(); require(requestedScale == null || requestedScale == 1f || requestedScale == 2f || requestedScale == 3.5f); start() }
+    override fun onCreate(arguments: Bundle?) { super.onCreate(arguments);summaryOnly=arguments?.getString("checkpoint")=="summary";sweep=arguments?.getString("navigation") in listOf(null,"auto","sweep");touchReturn=arguments?.getString("navigation")=="touch";directed=sweep || touchReturn || arguments?.getString("navigation")=="directed";trace.refreshAncestors=directed || arguments?.getString("navigation")=="parents";trace.refreshTree=directed || arguments?.getString("navigation") in listOf(null,"auto","nodes");trace.enabled=arguments?.getString("diagnostics")!="off";trace.detailed=arguments?.getString("diagnostics")=="detailed"; requestedScale = arguments?.getString("font")?.toFloat(); require(requestedScale == null || requestedScale == 1f || requestedScale == 2f || requestedScale == 3.5f); start() }
     private class Session : SessionPort {
         var value = SessionSnapshot(SessionState.READY, 1)
         var observer: ((SessionSnapshot) -> Unit)? = null
@@ -90,9 +94,14 @@ class Ux3cTasksProbe : Instrumentation() {
     }
     private fun title(value: String) {
         var field: AccessibilityNodeInfo? = null
-        repeat(50) {
-            field = nodes().firstOrNull { it.isEditable }
-            if (field != null) return@repeat
+        if(!directed)repeat(50){
+            field=nodes().firstOrNull{it.isEditable}
+            if(field!=null)return@repeat
+            waitForIdleSync();SystemClock.sleep(80)
+        } else for(attempt in 0 until 50) {
+            val tree=nodes();field = tree.firstOrNull { it.isEditable }
+            if (field != null) break
+            if(directed && attempt>=5)trace.scroll(tree.firstOrNull{it.isScrollable},AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
             waitForIdleSync(); SystemClock.sleep(80)
         }
         check(field != null)
@@ -106,8 +115,10 @@ class Ux3cTasksProbe : Instrumentation() {
     }
     private fun nodes(): List<AccessibilityNodeInfo> {
         val result = mutableListOf<AccessibilityNodeInfo>()
-        fun walk(node: AccessibilityNodeInfo?) { if (node == null) return; result += node; repeat(node.childCount) { walk(node.getChild(it)) } }
-        walk(uiAutomation.rootInActiveWindow); return result
+        fun walk(node: AccessibilityNodeInfo?) { if (node == null) return; if(trace.refreshTree && !trace.node("TREE_NODE",node,true))return; result += node; repeat(node.childCount) { walk(node.getChild(it)) } }
+        val root=uiAutomation.rootInActiveWindow
+        if(root?.packageName?.toString()!=targetContext.packageName)return emptyList()
+        walk(root); return result
     }
     private fun bounds(node: AccessibilityNodeInfo) = Rect().also(node::getBoundsInScreen)
     private fun match(node: AccessibilityNodeInfo, label: String): Boolean {
@@ -117,12 +128,16 @@ class Ux3cTasksProbe : Instrumentation() {
         return text == label || text == "✓ $label" || text.split("\n").contains(label) || (label == "Erledigt / Entfallen" && text.startsWith(label))
     }
     private fun visible(label: String, backwards: Boolean = label.startsWith("Rundgang") || label in listOf("PaG Demo", "Lagebild", "Vorbereitung im Überblick")): AccessibilityNodeInfo {
+        var back=backwards
         repeat(50) { attempt ->
-            val tree = nodes();trace.search(tree,label,backwards,attempt); tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
+            val tree = nodes();trace.search(tree,label,back,attempt); tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
             // Let the accessibility frame catch up before scrolling away from a
             // newly published heading. Tour/home headings live at the top.
-            if (attempt >= 5) tree.firstOrNull { it.isScrollable }?.performAction(
-                if (backwards) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+            if (attempt >= 5){
+                val scroll=tree.firstOrNull{it.isScrollable}
+                val accepted=trace.scroll(scroll,if(back)AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                if(sweep && scroll!=null && !accepted)back=!back
+            }
             waitForIdleSync(); SystemClock.sleep(80)
         }
         clickDiagnostic = "labelNodes=${nodes().size},scrolls=${nodes().count { it.isScrollable }},matches=${nodes().count { match(it,label) }}"
@@ -151,19 +166,30 @@ class Ux3cTasksProbe : Instrumentation() {
     private fun top() { repeat(25) { val scroll = nodes().firstOrNull { it.isScrollable } ?: return; if (scroll.actionList.none { it.id == AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD }) return; if (!scroll.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)) return; waitForIdleSync(); SystemClock.sleep(50) } }
     private var clickDiagnostic = ""
     private fun click(label: String, backwards: Boolean = label.startsWith("‹") || label in listOf("Übersicht", "Personen", "Aufgaben", "Rollen")) {
+        var back=backwards
         repeat(50) {
-            val tree = nodes()
+            val tree = nodes();trace.search(tree,label,back,it)
             for (node in tree.filter { match(it, label) }) {
                 var control: AccessibilityNodeInfo? = node
-                while (control != null && !control.isClickable) control = control.parent
+                while(control!=null){
+                    if(!trace.node("CLICK_ANCESTOR",control,trace.refreshAncestors)){control=null;break}
+                    if(control.isClickable)break
+                    control=control.parent
+                }
                 if (control != null && control.isEnabled && bounds(control).height() > 0) {
                     val rect = bounds(control); check(rect.left >= 0 && rect.right <= targetContext.resources.displayMetrics.widthPixels)
                     check(control.performAction(AccessibilityNodeInfo.ACTION_CLICK)); waitForIdleSync(); return
                 }
             }
-            val direction = if (backwards) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+            val direction = if (back) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
             // Use the actual accessibility scroll action, independent of IME/window gesture coordinates.
-            if (tree.firstOrNull { it.isScrollable }?.performAction(direction) != true) smallScroll(backwards)
+            if(touchReturn && label=="‹ Aufgaben")smallScroll(back)
+            else {
+                val scroll=tree.firstOrNull{it.isScrollable}
+                val accepted=trace.scroll(scroll,direction)
+                if(sweep){if(scroll!=null && !accepted)back=!back}
+                else if(!accepted)smallScroll(back)
+            }
             waitForIdleSync(); SystemClock.sleep(180)
         }
         val finalTree = nodes()
@@ -203,26 +229,29 @@ class Ux3cTasksProbe : Instrumentation() {
                 phase="F_SUMMARY_MEASUREMENT";trace.phase=phase;trace.event("OBSERVE")
                 phase="G_SUMMARY_TREE";trace.phase=phase;trace.search(nodes(),"1 offen · 1 in Arbeit",false,0)
                 step("H_SUMMARY_REACH"){visible("1 offen · 1 in Arbeit");trace.event("VIEWPORT")}
+                if(summaryOnly){trace.stop();runOnMainSync{launched.finish()};finish(-1,Bundle().apply{putString("stream","TASK_SUMMARY_DIAGNOSTIC_PASS\n")});return}
                 step("I_FIRST_TASK"){visible("Übungsaufgabe A")}
                 check(nodes().none { it.isClickable && it.text?.toString() in listOf("Erledigt", "In Arbeit", "Entfällt") })
                 step("J_FIRST_TASK_OPEN"){click("Übungsaufgabe A", backwards = true); visible("Zuständig: Support");runOnMainSync{check(model.tasks.selected?.id=="t")}}
-                phase="start";trace.phase=phase; click("In Arbeit", backwards = false); visible("Hoch · In Arbeit")
-                phase="done";trace.phase=phase; click("Erledigt", backwards = false); visible("Hoch · Erledigt")
+                phase="start";trace.phase=phase; click("In Arbeit", backwards = false); visible("Hoch · In Arbeit",backwards=directed)
+                phase="done";trace.phase=phase; click("Erledigt", backwards = false); visible("Hoch · Erledigt",backwards=directed)
                 runOnMainSync { check(model.tasks.selected!!.status == TaskStatus.DONE && model.tasks.board!!.events.any { it.type == TaskEventType.COMPLETED }) }
-                phase="reopen";trace.phase=phase; click("Wieder öffnen", backwards = false); visible("Hoch · Offen")
+                phase="reopen";trace.phase=phase; click("Wieder öffnen", backwards = false); visible("Hoch · Offen",backwards=directed)
                 phase="edit";trace.phase=phase; click("Aufgabe bearbeiten", backwards = false); title("Übungsaufgabe geändert")
                 runOnMainSync { check(model.tasks.form && model.tasks.input.title == "Übungsaufgabe geändert") }
                 click("Speichern", backwards = false); visible("Übungsaufgabe geändert")
                 runOnMainSync { check(model.tasks.selected!!.title == "Übungsaufgabe geändert" && !model.tasks.form) }
-                top(); click("‹ Aufgaben"); visible("1 offen · 1 in Arbeit")
+                phase="EDIT_RETURN_TOP";trace.phase=phase;trace.event("BEGIN");top();trace.event("AFTER_TOP")
+                phase="EDIT_RETURN_CLICK";trace.phase=phase;click("‹ Aufgaben",backwards=!directed);trace.event("AFTER_CLICK")
+                phase="EDIT_RETURN_SUMMARY";trace.phase=phase;visible("1 offen · 1 in Arbeit",backwards=directed)
                 phase="closed";trace.phase=phase; click("Erledigt / Entfallen", backwards = false); visible("Übungsaufgabe erledigt")
                 runOnMainSync { check(model.tasks.closedExpanded) }
                 click("Übungsaufgabe erledigt", backwards = false); visible("Niedrig · Erledigt")
-                top(); click("‹ Aufgaben")
+                top(); click("‹ Aufgaben",backwards=!directed)
                 phase="create";trace.phase=phase; top(); click("+ Aufgabe", backwards = false); title("Neue Übungsaufgabe")
                 runOnMainSync { check(model.tasks.input.priority == TaskPriority.NORMAL && model.tasks.input.title == "Neue Übungsaufgabe") }
                 phase="create-save";trace.phase=phase; click("Speichern", backwards = false); phase="create-detail";trace.phase=phase; visible("Neue Übungsaufgabe"); runOnMainSync { check(model.tasks.selected?.title == "Neue Übungsaufgabe") }; // A list return preserves its scroll anchor; explicitly seek the summary before asserting it.
-                phase="create-return";trace.phase=phase; top(); click("‹ Aufgaben"); top()
+                phase="create-return";trace.phase=phase; top(); click("‹ Aufgaben",backwards=!directed); top()
                 runOnMainSync { check(model.tasks.selected == null); check(model.tasks.board!!.active.count { it.status == TaskStatus.OPEN } == 2) }
                 phase="create-return-label";trace.phase=phase; visible("2 offen · 1 in Arbeit", backwards = true)
                 runOnMainSync { check(tasks.rows.any { it.title == "Neue Übungsaufgabe" && it.status == TaskStatus.OPEN }) }

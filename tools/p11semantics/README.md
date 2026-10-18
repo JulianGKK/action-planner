@@ -153,3 +153,37 @@ not a product fix. All 30 static cases produced the correct viewport-sized delta
 the broad wrong-content-height hypothesis was rejected. Dynamic full-flow reachability
 remains outside that isolated measurement. See assessment 28 for unsuccessful task
 experiments and the additional failed functions regression; no overall green result.
+
+## Remaining UI reachability diagnosis (assessment section 29)
+
+Section 28 describes the historical driver. The Tasks `auto` driver uses the validated bounded sweep described below, including
+fresh owned-tree/ancestor nodes; `legacy` preserves the original control.
+`nodes` enables only tree refresh; `parents` only refreshes newly fetched click
+ancestors (Functions keeps its legacy behavior under `auto`). `directed` and `touch`
+remain failed diagnostic Tasks controls. `sweep` is the explicit Tasks `auto` alias.
+These are test navigation strategies, never product UI or security changes:
+
+- `directed`: known status labels are sought backwards, offscreen editor fields
+  forwards, and return controls forwards from top.
+- `touch`: additionally uses the existing small touch scroll for the Tasks return
+  control. This is not an accessibility-scroll-only or manual TalkBack proof.
+- `sweep`: at a rejected scroll action on an existing container, reverse the search
+  direction within the original 50 attempts. Missing containers are not boundaries.
+
+No accepted click/write is retried. Original field, status, event, count, save and
+lock assertions remain. These switches never navigate through a ViewModel command.
+`--diagnostics off` disables trace observers and the wrapper; `phases` records
+model/phase scalars; `detailed` adds node/ancestor/scroll geometry. Compare observer
+modes separately: timing can change, and a successful diagnostic pilot is not a fix.
+
+`--task-checkpoint summary` explicitly stops after the original A–H assertions and
+uses TASK_SUMMARY_DIAGNOSTIC_PASS / SUMMARY_DIAGNOSTIC. It never produces the full
+UX3c success marker. `--function-font 1|2|both` and `--function-runs N` control full
+Functions repetitions; `both` preserves the original same-Activity 1→2 sequence.
+
+The opt-in `--suites occlusion` runs a synthetic geometry ablation with the existing
+PagWorkspace feedback overlay, fixed spacers/marker and no ViewModel/repositories.
+It reports actual ScrollState delta/viewport and marker availability after page
+scroll and small touch scroll. GEOMETRY_DIAGNOSTIC is not a complete Tasks pass.
+Only isolated package manifests are accepted; raw evidence stays ignored locally.
+See assessment 29 for actual outcomes, failed attempts and remaining blockers.
