@@ -18,9 +18,13 @@ import org.pag.prototype.product.*
 class Ux3dFunctionsProbe : Instrumentation() {
     private var requestedScale:Float?=null
     private var failureKind="ASSERTION"
+    private var witness=false
+    private var minimalHubObservation=false
     private val trace by lazy{UiReachabilityTrace(this,"FUNCTIONS")}
     override fun onCreate(arguments: Bundle?) { super.onCreate(arguments)
         requestedScale=arguments?.getString("font")?.toFloat();require(requestedScale==null || requestedScale in listOf(1f,2f))
+        witness=arguments?.getString("witness")=="paired"
+        minimalHubObservation=arguments?.getString("hubObservation")=="minimal"
         trace.refreshAncestors=arguments?.getString("navigation")=="parents";trace.refreshTree=arguments?.getString("navigation")=="nodes"
         trace.enabled=arguments?.getString("diagnostics")!="off";trace.detailed=arguments?.getString("diagnostics")=="detailed";start()
     }
@@ -55,6 +59,7 @@ class Ux3dFunctionsProbe : Instrumentation() {
             PersonOperationalState("synthetic", "p", "current", OperationalStatus.ON_SITE, null, System.currentTimeMillis()))
         var other = OperationalPerson(Person("q", "synthetic", "Klee", 0), PersonRolePlan(emptySet(), null), PersonOperationalState("synthetic", "q", null, OperationalStatus.ON_SITE, null, 0))
         var reads = 0
+        var statusCommits = 0
         override fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit) { reads++; publish(OperationsResult.Value(OperationalBoard(actionId, ActionStatus.ACTIVE, roles, listOf(person, other)))) }
         override fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit) {
             check(OperationalRules.validName(name))
@@ -67,6 +72,7 @@ class Ux3dFunctionsProbe : Instrumentation() {
         override fun updateSnapshot(actionId: String, personId: String, expected: PersonOperationalState, status: OperationalStatus, roleId: String?, place: String, publish: (OperationsResult<Unit>) -> Unit) {
             check(expected == person.state)
             person = person.copy(state = expected.copy(status = status, currentRoleId = roleId.takeIf { OperationalRules.roleAllowed(status) }, currentPlaceLabel = OperationalRules.place(place, status), updatedAt = System.currentTimeMillis()))
+            statusCommits++
             publish(OperationsResult.Value(Unit))
         }
     }
@@ -92,7 +98,8 @@ class Ux3dFunctionsProbe : Instrumentation() {
         val result = mutableListOf<AccessibilityNodeInfo>()
         fun walk(node: AccessibilityNodeInfo?) { if (node == null) return; if(trace.refreshTree && !trace.node("TREE_NODE",node,true))return; result += node; repeat(node.childCount) { walk(node.getChild(it)) } }
         val root=uiAutomation.rootInActiveWindow
-        if(root?.packageName?.toString()!=targetContext.packageName)return emptyList()
+        trace.lastRootOwned=root?.packageName?.toString()==targetContext.packageName
+        if(trace.lastRootOwned!=true)return emptyList()
         walk(root); return result
     }
     private fun bounds(node: AccessibilityNodeInfo) = Rect().also(node::getBoundsInScreen)
@@ -103,14 +110,22 @@ class Ux3dFunctionsProbe : Instrumentation() {
         return text == label || text == "✓ $label" || text.split("\n").contains(label) || (label == "Weitere Funktionen" && text.startsWith(label))
     }
     private fun visible(label: String, backwards: Boolean = label.startsWith("Rundgang") || label in listOf("PaG Demo", "Lagebild", "Vorbereitung im Überblick")): AccessibilityNodeInfo {
+        var lastMissingTree=emptyList<AccessibilityNodeInfo>()
         repeat(50) { attempt ->
-            val tree = nodes();trace.search(tree,label,backwards,attempt); tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
+            val tree = nodes();trace.search(tree,label,backwards,attempt)
+            if (!minimalHubObservation && trace.phase.startsWith("HC_") && (attempt in listOf(0,5,49) || (witness && attempt>=5)))
+                trace.reachSnapshot(tree,label,witness)
+            tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
+            if(minimalHubObservation)lastMissingTree=tree
             // Let the accessibility frame catch up before scrolling away from a
             // newly published heading. Tour/home headings live at the top.
             if (attempt >= 5) trace.scroll(tree.firstOrNull { it.isScrollable },if(backwards) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
             waitForIdleSync(); SystemClock.sleep(80)
         }
-        failureKind="UNREACHABLE";error("Synthetic demo label not reachable")
+        failureKind="UNREACHABLE"
+        // After the original search has already failed: cannot turn failure into PASS.
+        if(minimalHubObservation)trace.reachSnapshot(lastMissingTree,label,true)
+        error("Synthetic demo label not reachable")
     }
     private fun smallScroll(backwards: Boolean) {
         val rect = nodes().firstOrNull { it.isScrollable }?.let(::bounds) ?: return
@@ -137,6 +152,8 @@ class Ux3dFunctionsProbe : Instrumentation() {
     private fun click(label: String, backwards: Boolean = label.startsWith("‹") || label in listOf("Übersicht", "Personen", "Aufgaben", "Rollen")) {
         repeat(50) {
             val tree = nodes();trace.search(tree,label,backwards,it)
+            if (!minimalHubObservation && trace.phase in listOf("SG_E_GROUP_CLICK","SG_I_PERSON_OPEN") && it in listOf(0,49))
+                trace.reachSnapshot(tree,label,witness)
             for (node in tree.filter { match(it, label) }) {
                 var control: AccessibilityNodeInfo? = node
                 while(control!=null){
@@ -213,7 +230,27 @@ class Ux3dFunctionsProbe : Instrumentation() {
                 visible("Aktuelle Lage: In Gewahrsam"); top(); click("‹ Blockierende"); visible("Derzeit niemand in dieser Funktion vor Ort.")
                 top(); click("‹ Funktionen"); visible("1 Person vor Ort"); visible("0 mit Funktion"); visible("1 ohne Funktion")
                 runOnMainSync { check(ops.person.state!!.currentRoleId == null && activeFunctionContent(model.operations.board!!).without.map { it.person.id } == listOf("q")) }
-                phase = "hub-after-change";trace.phase=phase; top(); click("‹ Zum Lagebild"); visible("Lagebild"); visible("Noch keine aktuellen Funktionen")
+                if(minimalHubObservation){
+                    // Original hub sequence, no extra main-thread checks/publications before search.
+                    phase="HC_C_BACK_CLICK";trace.phase=phase;top();click("‹ Zum Lagebild")
+                    phase="HC_L1_HEADING";trace.phase=phase;visible("Lagebild")
+                    phase="HC_L2_CONTENT";trace.phase=phase;visible("Noch keine aktuellen Funktionen")
+                }else{
+                step("HC_A_COMMIT"){runOnMainSync{check(ops.statusCommits==2 && ops.person.state!!.status==OperationalStatus.IN_CUSTODY)}}
+                step("HC_B_OPERATIONS"){runOnMainSync{check(model.operations.screen==OperationsScreen.OVERVIEW && model.operations.personId==null && model.operations.functionFocus==null)}}
+                step("HC_C_BACK_CLICK"){top();click("‹ Zum Lagebild")}
+                step("HC_D_ROUTE"){runOnMainSync{check(model.activeArea==ActiveArea.HUB && model.operations.screen==OperationsScreen.OVERVIEW)}}
+                step("HC_E_WORKSPACE"){runOnMainSync{val workspace=checkNotNull(model.workspace);check(workspace.generation==session.value.generation && workspace.operations==model.operations.board && workspace.status==ActionStatus.ACTIVE && workspace.tasks!=null)}}
+                step("HC_F_DOMAIN"){runOnMainSync{val content=activeFunctionContent(model.operations.board!!);check(content.without.size==1 && content.groups.isEmpty());val workspace=model.workspace!!;check(activeHubCards(model.selected!!,workspace.operations!!,workspace.tasks!!).single{it.area==ActiveArea.FUNCTIONS}.summary==listOf("Noch keine aktuellen Funktionen"))}}
+                // Root draw counters are a measurement proxy, not a per-card Compose callback.
+                step("HC_G_DRAW"){trace.event("DRAW_PROXY")}
+                step("HC_H_TREE"){if(trace.detailed)trace.reachSnapshot(nodes(),"Noch keine aktuellen Funktionen",false)}
+                step("HC_I_REFRESH"){if(witness)trace.reachSnapshot(nodes(),"Noch keine aktuellen Funktionen",true)}
+                step("HC_J_GEOMETRY"){trace.event("VIEWPORT")}
+                step("HC_K_FEEDBACK"){trace.event("FEEDBACK")}
+                step("HC_L1_HEADING"){visible("Lagebild")}
+                step("HC_L2_CONTENT"){visible("Noch keine aktuellen Funktionen")}
+                }
                 phase = "lock-detail";trace.phase=phase; top(); click("Funktionen", backwards = false); click("Ohne Funktion · 1", backwards = false)
                 runOnMainSync { session.lock(); check(model.workspace == null && model.operations.functionFocus == null && model.operations.personId == null) }
                 visible("PaG")

@@ -25,6 +25,7 @@ internal class UiReachabilityTrace(private val probe:Instrumentation,private val
     var detailed=false
     var enabled=true
     var summaryObserved=false;private set
+    var lastRootOwned:Boolean?=null
     var font=1f
     var model:ProductViewModel?=null
     private var list:LazyListState?=null
@@ -56,7 +57,7 @@ internal class UiReachabilityTrace(private val probe:Instrumentation,private val
         if(!enabled)return
         var state="none"
         probe.runOnMainSync{
-            activity?.window?.decorView?.let{v->state="focus=${v.findFocus()!=null};ime=${v.rootWindowInsets?.isVisible(android.view.WindowInsets.Type.ime())}"}
+            activity?.window?.decorView?.let{v->state="focus=${v.findFocus()!=null};windowFocus=${v.hasWindowFocus()};ime=${v.rootWindowInsets?.isVisible(android.view.WindowInsets.Type.ime())}"}
             model?.let{m->
                 val board=m.tasks.board
                 state+=";route=${productNavigationKey(m)};feedback=${m.feedback!=null};opsBusy=${m.operations.busy};ops=${m.operations.screen};group=${m.operations.functionFocus!=null};personFocus=${m.operations.personId!=null};taskSelected=${m.tasks.selected!=null};taskForm=${m.tasks.form};area=${m.activeArea};workspace=${m.workspace!=null};board=${board!=null};open=${board?.active?.count{it.status==org.pag.domain.TaskStatus.OPEN}};progress=${board?.active?.count{it.status==org.pag.domain.TaskStatus.IN_PROGRESS}};memory=${m.memoryReports.mode};busy=${m.memoryReports.busy};loading=${m.memoryReports.loading};completed=${m.memoryReports.expected?.status==org.pag.domain.MemoryReportStatus.COMPLETED};addenda=${m.memoryReports.detail?.addenda?.size}"
@@ -83,6 +84,29 @@ internal class UiReachabilityTrace(private val probe:Instrumentation,private val
         val accepted=node?.performAction(direction)==true
         if(detailed)event("SCROLL_ACCEPTED","back=${direction==AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD};accepted=$accepted")
         return accepted
+    }
+    /** Paired control only: refresh can change UIAutomation's cache even if not used by navigation. */
+    fun reachSnapshot(nodes:List<AccessibilityNodeInfo>,label:String,paired:Boolean){
+        if(!enabled)return
+        fun matches(n:AccessibilityNodeInfo)=n.text?.toString()?.let{it==label || it.split("\n").contains(label)}==true
+        fun describe(tree:List<AccessibilityNodeInfo>):String {
+            val targets=tree.filter(::matches)
+            val scrollers=tree.filter{it.isScrollable}
+            fun rect(n:AccessibilityNodeInfo)=Rect().also(n::getBoundsInScreen)
+            return "nodes=${tree.size};targets=${targets.size};targetBounds=${targets.map(::rect)};visible=${targets.count{it.isVisibleToUser}};enabled=${targets.count{it.isEnabled}};scrollers=${scrollers.size};scrollBounds=${scrollers.map(::rect)};back=${scrollers.count{n->n.actionList.any{it.id==AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD}}};forward=${scrollers.count{n->n.actionList.any{it.id==AccessibilityNodeInfo.ACTION_SCROLL_FORWARD}}}"
+        }
+        val before=describe(nodes)+";sampleDraw=${draws.get()};ownedRoot=$lastRootOwned"
+        if(!paired){event("POSITION_BEFORE",before);return}
+        // Same instances, no click/scroll/wait between the paired scalar snapshots.
+        val refreshed=nodes.count{it.refresh()}
+        val same="refreshed=$refreshed;"+describe(nodes)+";sampleDraw=${draws.get()}"
+        val fresh=mutableListOf<AccessibilityNodeInfo>()
+        fun walk(n:AccessibilityNodeInfo?){if(n==null || !n.refresh())return;fresh+=n;repeat(n.childCount){walk(n.getChild(it))}}
+        val root=probe.uiAutomation.rootInActiveWindow
+        if(root?.packageName?.toString()==probe.targetContext.packageName)walk(root)
+        val after=describe(fresh)+";sampleDraw=${draws.get()};ownedRoot=${root?.packageName?.toString()==probe.targetContext.packageName}"
+        // Emit only after all samples: logging must not insert a main-thread fence between them.
+        event("POSITION_BEFORE",before);event("SAME_NODES_AFTER",same);event("FRESH_TREE_AFTER",after)
     }
     fun search(nodes:List<AccessibilityNodeInfo>,label:String,backwards:Boolean,attempt:Int){
         if(!detailed)return

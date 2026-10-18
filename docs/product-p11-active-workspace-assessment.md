@@ -1,6 +1,16 @@
 # P11 — Active Action Workspace Assessment
 
-**Aktueller Abschluss Abschnitt29, 18.10.2026: Gesamtstatus weiterhin BLOCKER.**
+**Aktueller Abschluss Abschnitt30, 19.10.2026: Gesamtstatus weiterhin BLOCKER.**
+Veraltete Accessibilityprojektion am Hub kontrolliert nachgewiesen; die vollständige
+Ursache der alten hub-after-change-Ausfälle und der historischen status-group-
+Fehler bleibt unzugeordnet. Unveränderte alte Baseline8/10; erste Diagnose-APK legacy10/10 und dritte APK
+minimal10/10 getrennt bewertet, keine daraus erfundene Korrektur. Nur Tests,
+Diagnose-Runner und Bericht geändert; keine produktive Stufe2/Produktänderung.
+Die zwei temporär benötigten isolierten Testpakete wieder entfernt; ausschließlich
+Produkt-App verbleibt im PaG-Paketbestand. Details und Grenzen:
+[Abschnitt30](#30-funktionsnavigation-erreichbarkeit-und-feedback-overlay).
+
+**Historischer Abschluss Abschnitt29, 18.10.2026: Gesamtstatus weiterhin BLOCKER.**
 Aufgaben3,5: Teststeuerungsfehler eingegrenzt und testseitig korrigiert;
 identische Test-APK besteht jeweils10/10 vollständige Läufe auf beiden Zielständen,
 Standardalias zusätzlich bei Schrift1/2/3,5 bestanden. Funktionen: historischer
@@ -2444,3 +2454,400 @@ Allowlist verbleiben ausschließlich im ignorierten Diagnosebereich. Keine
 Datenbanken, Keys/Keystores, Credentials, Produktdaten, Gerätekennungen,
 persönlichen Pfade oder Buildartefakte im vorgesehenen Commitumfang.
 Keine alten Veröffentlichungen oder Git-Historie umgeschrieben.
+
+
+## 30. Funktionsnavigation: Erreichbarkeit und Feedback-Overlay
+
+### 30.1 Auftrag und unveränderte Grenzen
+
+Ausgangspunkt `e1dc8a8d9bacefc05ded82465ac0c1ac16666577`. Ausschließlich
+Funktions-UI-Erreichbarkeit untersuchen; kein Produktfix auf Verdacht. Die
+historischen fehlgeschlagenen Versuche in26–29 bleiben erhalten. Insbesondere
+belegen weder9/10 gegenüber10/10 noch ein einzelner späterer Erfolg eine
+Kausalität des Footerfixes. Keine produktive Stufe2, keine neue RAM-Vorhaltung,
+keine Änderung an Session, SQLCipher, Dependencies oder Produktinstallation.
+
+### 30.2 Testseitige Unterphasen und Beobachtungsgrenzen
+
+Die ursprüngliche vollständige synthetische Funktionsfolge bleibt erhalten:
+Gruppen-/Personenöffnung, Funktionsänderung, Rückkehr zur leeren Gruppe,
+Ohne-Funktion-Gruppe, neue Funktion, weitere Funktionen, Statusänderung,
+Hubinformationen sowie Lock im Detail und im Formular. Keine akzeptierte oder
+unklar zugestellte Schreibaktion wird erneut ausgeführt. Ursprüngliche50
+Suchversuche und Pollintervalle bleiben unverändert. Keine neue künstliche
+Wartezeit oder direkte ViewModel-Navigation im untersuchten Benutzerpfad.
+
+| Unterphase | Zusätzlicher Nachweis |
+|---|---|
+| HC_A_COMMIT | Genau2 bestätigte synthetische Status-/Funktionsupdates, erwarteter letzter Status |
+| HC_B_OPERATIONS | OVERVIEW, kein verbliebener Personen-/Gruppenfokus |
+| HC_C_BACK_CLICK | Ursprüngliches top() und echte Rückknopfaktion |
+| HC_D_ROUTE | HUB und Operations-OVERVIEW |
+| HC_E_WORKSPACE | Workspace vorhanden, gleiche Generation, ACTIVE, Operationsboard stimmt überein, Taskboard vorhanden |
+| HC_F_DOMAIN | Erwartete Verteilung und originale Hubcardprojektion fachlich korrekt |
+| HC_G_DRAW | Root-Draw-/Compositionzähler als begrenzter Proxy |
+| HC_H_TREE | Bei Detaildiagnostik reine geometrische Baumbeobachtung |
+| HC_I_REFRESH | Nur expliziter Paired-Kontrollarm: dieselben Nodes aktualisieren, anschließend frischen Baum abfragen |
+| HC_J_GEOMETRY | Viewport-/Scrollereignis-/Fokus-/IME-Snapshot |
+| HC_K_FEEDBACK | Feedbackstatus zum aktuellen Modellzeitpunkt |
+| HC_L1_HEADING | Ursprüngliche sichtbare Lagebildüberschrift |
+| HC_L2_CONTENT | Ursprünglicher sichtbarer Funktionsinhalt |
+
+**Grenzen:** Der Fake-Repositoryzähler ist kein SQLCipher-Commitnachweis und keine
+produktive Write-Regression. Root-Draws beweisen keine Messung einer bestimmten
+Hubcard. Accessibility-Bounds sind die zugängliche Geometrie; der zuletzt gemeldete
+Scroll-Eventwert ist kein direkter Compose-ScrollState-Read. Die Probe behauptet
+keine noch nicht beobachteten Itemkoordinaten. Der vollständige Funktionslauf bleibt
+erforderlich; zusätzliche Modellassertionen ersetzen keine UI-Erreichbarkeit.
+
+`--witness paired` ist eine eigene Diagnosevariable, keine inerte Beobachtung:
+refresh() kann den UIAutomation-Cache verändern. Vor einer weiteren Scrollaktion
+werden feste Counts, Bounds, Sichtbarkeit, Enabled-Status und Scrollaktionen zuerst
+an den vorhandenen Instanzen, dann nach refresh() an denselben Instanzen und am
+neu abgefragten aktualisierten Baum aufgezeichnet. Dazwischen keine Click-/Scroll-
+aktion, aber keine atomare Sperre gegen asynchrone Layout-/Semantikpublication.
+Drawzähler und Geometrien sind deshalb mit zu vergleichen. Dasselbe optionale
+Verfahren ist an den ursprünglichen Gruppen-/Personenclicks anschaltbar.
+Die Navigation verwendet standardmäßig weiterhin keine Funktions-Refreshkorrektur.
+Feste Matcherliterale bleiben nur intern; Inhalte/IDs werden nicht ausgegeben.
+
+### 30.3 Vergleichsmethodik
+
+Samsung SM-M526BR, Android13/API33. Ein eingefrorenes isoliertes Ziel mit dem
+belegten Footerfix; identische synthetische Fixtures. Unveränderte historische
+Test-APK zuerst als eigene Baseline, anschließend eine einzige neue Diagnose-APK
+für sämtliche Ein-Variablen-Kontrollen. Keine Erfolgsquoten über APK-/Beobachter-
+versionen addieren. Einzelfont2 startet eine frische Activity; `both` durchläuft
+1→2 in derselben Activity und ist eine andere Konfiguration.
+
+Der Runner prüft beide Paket-IDs und beide APK-Signaturen **vor** der ersten
+Installation; nur `org.pag.perf.p11probe` und dessen `.test` zugelassen, identische
+verifizierte Zertifikate erforderlich. Resultate enthalten Ziel-/Test-APK-SHA256,
+Kontrollflags, Fehlerkategorie und konkrete Fehlerphase. Rohbelege ausschließlich
+im ignorierten lokalen Diagnosebereich. Ein Diagnoselauf darf durch Beobachterlast
+anders verlaufen; daraus folgt noch keine Produktkorrektur.
+
+
+### 30.4 Unveränderte Baseline vor jeder Korrektur
+
+**GEMESSEN:** Zehn vorab festgelegte vollständige Schrift2-Läufe auf dem Fix-Ziel,
+Navigation legacy, nur Phasenbeobachter, unveränderte Test-APK aus29.8: 8/10
+bestanden,2/10 UNREACHABLE in hub-after-change (Versuche2 und8 bei einsbasierter
+Zählung). Keine Appcrashes, Harness-/Assertion-/Timeoutfehler. Alle zehn passieren
+sämtliche status-group-Unterphasen. Die Baseline wird nicht mit der älteren9/10-
+Reihe addiert und beweist weiterhin keinen Zusammenhang mit dem Footerfix.
+
+Ziel-SHA256:
+`e3160b230ab0445fbccd17504e7d6be981bbbe18e50a1e689b874200a91318a2`.
+Unveränderte Baseline-Test-SHA256:
+`7ff8e77640bd540fb828bdbd64e7b54d5d2380d663b01f6b759ac5b52f36a453`.
+Neue Diagnose-Test-SHA256 für alle nachfolgenden Ein-Variablen-Piloten:
+`78551cfdf1040401e8bf4c1d49f9db429d610e33c6ef2cfb00bcab29eaf15bf7`.
+
+**BEOBACHTET an beiden Fehlerabschlüssen:** Route ACTIVE_HUB, Workspace und
+Taskboard vorhanden, Operations-OVERVIEW, kein Personen-/Gruppenfokus,
+feedback=false, focus=false, ime=false. Die ursprüngliche kombinierte
+visible()-Fundstelle trennt Überschrift und Funktionsinhalt noch nicht. Im Modell war am
+Fehlerabschluss kein Feedback aktiv; direkte Bannergeometrie dieser Fehlversuche fehlt; damit ist ein
+früherer Einfluss von Overlay, Scrollposition oder Semantikcache nicht ausgeschlossen.
+Keine Produktkorrektur aus diesem Befund abgeleitet.
+
+
+### 30.5 Geometrie und erster Paired-Kontrollarm
+
+**GEMESSEN, erste Diagnose-APK,2 vollständige Schrift2-Piloten mit detaillierter
+Diagnostik und Paired-Kontrolle:** Beide bestanden. Dabei keine neue akzeptierte
+Click-/Scrollaktion zwischen den jeweiligen Vorher-/Refresh-Nachher-Snapshots.
+
+| Messstelle | Vorher | Dieselben Nodes nach Refresh / frischer Baum |
+|---|---|---|
+| Statusgruppe, erster Clickversuch |1 Ziel, enabled=true, sichtbar; Bounds(126,2145–770,2211)|Unverändert, gleicher Drawzähler220|
+| Person der Statusgruppe |1 Ziel, enabled=true, sichtbar; Bounds(421,1640–660,1757)|Unverändert, gleicher Drawzähler222|
+| Hub direkt nach Rückkehr |Zielinhalt nicht im zugänglichen Ausschnitt; Scrollbounds(63,293–1017,2211), back=false/forward=true|Weiterhin kein Ziel, gleiche Bounds/Draw320|
+| Hubüberschrift |1 Ziel, Bounds(63,784–407,901)|Unverändert, gleicher Draw320|
+
+Gruppenphase feedback=true; Hubphase feedback=false, focus=false, ime=false.
+Die Gruppe liegt in diesen Aufnahmen am unteren Viewportrand, nicht im oberen
+Bannerbereich. Das beweist nicht die Lage im historischen status-group-Ausfall.
+Ein P9-ähnlicher Aktualitätswechsel des beobachteten Zielnodes ist hier nicht
+aufgetreten. Für beliebige neu abgefragte Elterninstanzen entsteht daraus keine
+allgemeine Aktualitätsgarantie. Im Vorfahren-Kontrollarm wird refresh() tatsächlich
+auf jedem neu geholten Clickvorfahren ausgeführt; erfolgreiche Volltests allein
+beweisen aber noch keinen vorher vorhandenen Vorfahrenfehler.
+
+**BEOBACHTET:** Die erste reine Hub-Baumabfrage enthält29 Nodes, die nächste bereits
+34; Draw bleibt320, ohne Scrollaktion dazwischen. Das geschieht bereits **vor**
+dem Paired-Refresh und beweist keine dadurch verursachte Reparatur. Zielinhalt
+wird in beiden Abfragen noch nicht im zugänglichen Baum gefunden.
+
+**GEMESSEN, identischer Verlauf in beiden Detailpiloten:**
+
+| Suchversuch (nullbasiert) | Beobachtung |
+|---|---|
+|0–5|Hubinhalt nicht im Baum; Taskmarker noch y1750–1867; Draw320|
+|Nach5|Normale ACTION_SCROLL_FORWARD akzeptiert|
+|6|Noch alte Accessibilitygeometrie, Ziel fehlt; Draw bereits322; nächste Scrollaktion abgelehnt|
+|7|Ziel bei(126,732–954,928) vorhanden; Taskmarker jetzt y230–282; Draw weiterhin322|
+
+Zwischen6 und7 keine weitere **akzeptierte** Scrollaktion. Damit ist ein
+zeitversetzter Accessibility-Geometriewechsel beobachtet, ohne neue Drawzähler-
+änderung in diesem Intervall. Das ist **kein** Beweis, dass genau dieser Übergang
+die beiden Baseline-Ausfälle verursacht oder dass ein Ziel grundsätzlich
+unerreichbar wäre. Der unveränderte Test erreicht es hier regulär.
+Die Scrollbounds sind zugängliche Bounds, keine direkte Messung des Compose-
+ScrollState oder einer gesamten Inhaltshöhe. Kein Rückgriff auf die widerlegte
+Whole-content-Constraints-Hypothese.
+
+**Eng begrenzte zusätzliche Diagnose, keine Navigationkorrektur:** Die erste
+Paired-Fassung beobachtet0/5/49 und verpasst damit den gerade relevanten Punkt6.
+Die zweite Diagnose-Test-APK erfasst im optionalen Paired-Arm auch jeden weiteren
+Hub-Suchversuch ab5 unmittelbar vor einer möglichen Scrollaktion. `none` behält
+seinen bisherigen Pfad. Für diese neue Instrumentierung werden eigene gleich große
+Detailkontrollen ohne/mit Paired-Refresh verwendet; keine Zusammenlegung mit der
+ersten APK. SHA256:
+`3057dd6da2303f7034d4138e09a3af8a32e425708761636b9b679fd79b2f5539`.
+
+
+### 30.6 Getrennte Ein-Variablen-Vergleiche
+
+**GEMESSEN**, erste Diagnose-Test-APK `78551c…`, identisches Ziel und Fixtures:
+
+| Konfiguration | Vollständige Versuche | Ergebnis |
+|---|---:|---|
+| A: legacy, Phasenlogs, frische Activity direkt Schrift2 |2 initial +8 vorab festgelegte Ergänzung|10/10 PASS|
+| B: ausschließlich Baum-Refresh, sonst wie A |2|2/2 PASS|
+| C: ausschließlich Clickvorfahren-Refresh, sonst wie A |2|2/2 PASS|
+| D: ausschließlich Diagnose aus, legacy/Schrift2 |2|2/2 PASS|
+| E: legacy/Phasenlogs, Schrift1→2 in derselben Activity |2 vollständige Doppelfontläufe|2/2 PASS|
+| F: legacy/Phasenlogs, frische Activity direkt Schrift1 |2|2/2 PASS|
+| Eigener Pilot: legacy/Detaildiagnostik, erstes Paired-Intervall |2|2/2 PASS|
+
+Alle enthalten die ursprüngliche gesamte Funktionsfolge einschließlich
+status-group, Hub nach Statusänderung sowie Lock im Detail und Formular.
+Keine Appcrashes, Harness-/Assertion-/Erreichbarkeits-/Timeoutfehler in diesen
+Kontrollarmen. A wurde nach den kleinen Kontrollarmen ergänzt; der zeitliche
+Blockwechsel wird ausdrücklich nicht verschwiegen. Beide A-Blöcke verwenden
+dieselbe APK und exakt dieselben Flags. Keine Vermengung mit der alten Baseline,
+der zweiten Diagnose-APK oder anderen Schriftkonfigurationen.
+
+D deaktiviert den bestehenden Trace samt Event-/Drawbeobachtern und zusätzlichem
+Compose-Wrapper; ProductScreen läuft direkt. Das ist der definierte vorhandene
+Observer-off-Modus, keine Behauptung, ein einzelner Eventlistener erkläre den
+Fehler. Die zusätzlichen fachlichen Diagnoseassertionen bleiben auch in D bestehen.
+
+**Auswertung:** 8/10 der alten gegenüber10/10 der neuen unveränderten Navigation
+sind kein belastbarer Nachweis eines Beobachtereffekts und keine Fehlerfreiheits-
+garantie. Neue Modellchecks/Phasenpublications können Timing beeinflussen; die
+seltenen Fehler können auch in einer begrenzten Reihe ausbleiben. In B/C fehlt
+ein reproduzierbar fehlschlagender gleich instrumentierter Kontrollarm. Deshalb
+weder Baum- noch Vorfahren-Refresh als bewiesenen Funktionsfix aktivieren.
+Die2er-Piloten für Schrift1 und1→2 ersetzen keine zehnfache Post-Fix-Abnahme.
+Es gibt hier bislang keine nachgewiesene Korrektur, die eine solche Abnahme
+bereits rechtfertigen würde.
+
+
+### 30.7 Punktgenaue Refresh-/Vorfahrenkontrollen
+
+**GEMESSEN**, zweite Diagnose-APK `3057dd…`, identisches Ziel:
+
+| Variante, jeweils Schrift2 | Vollständige Versuche | Ergebnis |
+|---|---:|---|
+| legacy, detailliert, ohne Paired |2|2/2 PASS|
+| legacy, detailliert, Paired vor jedem weiteren Hubscroll ab5 |2|2/2 PASS|
+| Nur Vorfahren-Refresh, detailliert, ohne Paired |2|2/2 PASS|
+
+Keine Crashes/Harness-/Assertion-/Erreichbarkeits-/Timeoutfehler. Die Daten werden
+nicht mit der ersten APK verrechnet. Beide Vorfahrenläufe beobachten jeweils52
+Clickvorfahren; kein enabled=false→true, clickable=false→true oder fehlgeschlagenes
+refresh() in diesen Aufnahmen. Das widerlegt keinen seltenen anderen Verlauf.
+
+**GEMESSEN, beide Paired-Läufe am zuvor ausgelassenen Suchversuch6:**
+
+| Abfrage vor einer weiteren Scrollaktion | Nodes/Ziel | Scrollaktionen |
+|---|---|---|
+| Vorhandene Projektion |34 Nodes,0 Ziele|back=false, forward=true|
+| Dieselben Instanzen nach refresh() |20/34 noch aktualisierbar,0 Ziele in der alten Liste|back=true, forward=false|
+| Neu aufgebauter aktualisierter Baum |32 Nodes,1 sichtbares/enabled Ziel bei(126,732–954,928)|back=true, forward=false|
+
+Bounds des Scrollcontainers unverändert(63,293–1017,2211); kein Click/Scroll
+zwischen den drei Abfragen; Draw bleibt je nach Lauf321 bzw.322. Feedback=false,
+Viewfocus=false, IME=false, Modell ACTIVE_HUB/OVERVIEW, Workspace vorhanden.
+**Nachgewiesen ist eine zeitweise veraltete Accessibilityprojektion:** Eine alte
+flach gesammelte Nodeliste wird durch Refresh ihrer überlebenden Elemente nicht
+zu einer vollständigen aktuellen Liste. Entfernte/neu zugängliche Kinder erfordern
+eine neue Baumabfrage. Das Ziel ist an diesem Punkt regulär vorhanden und nicht
+von einem aktiven Banner verdeckt. Die unveränderte Vollprobe hätte hier jedoch
+auch ohne prophylaktischen Refresh bestanden. Daher noch **keine bewiesene
+Zuordnung der vollständigen Baseline-Ausfälle** zu genau diesem Übergang und keine
+abgeleitete Default-/Produktkorrektur. Die damaligen Detailstatusmeldungen enthalten
+jeweils einen Mainthread-Modellsnapshot; ihr Timingeffekt bleibt eine Grenze.
+
+### 30.8 Minimale Instrumentierung als weitere Kontrollvariable
+
+Die aktive Diagnose fügt vor der Hubsuche neue Mainthread-Checks/Phasenmeldungen
+ein. Um den Originalpfad nicht gerade dadurch vorzeitig zu synchronisieren,
+führt `--hub-observation minimal` die ursprüngliche Hubfolge direkt aus; lediglich
+feste Unterphasennamen trennen Rückknopf, Überschrift und Inhalt. Keine neuen
+HC_A..K-Checks oder proaktiven SG-/HC-Snapshots auf diesem Weg. **Alle ursprünglichen
+fachlichen und UI-Assertions bleiben erhalten.** Die zusätzlichen neuen
+Diagnoseassertionen laufen weiterhin im getrennten active-Arm.
+
+Nach bereits ausgeschöpfter ursprünglicher50er-Suche wird die letzte erfolglose
+Nodeliste paarweise untersucht. Ein danach durch Refresh auffindbares Ziel macht
+den vorherigen Fehlversuch ausdrücklich **nicht** nachträglich grün. Keine weitere
+Navigation, kein Wiederholen eines Writes, keine längere Suche. Aktuelle
+Fensterfokus-/Root-Eigentümerschaft nur als Booleans; kein fremder Paketname/Inhalt.
+Im finalen Paired-Sampler werden zunächst alle skalaren Samples gesammelt und
+erst anschließend Statusmeldungen/Mainthread-Modellreads ausgeführt. `sampleDraw`
+bezieht sich auf den jeweiligen tatsächlichen Samplezeitpunkt. Auch dies friert
+Androids asynchrone Semantikpublication nicht atomar ein.
+
+Dritte Diagnose-Test-APK:
+`49b08e5bbdca8b8653b5668188b28559e3a80229cda75b543986095d7703feaf`.
+Eigene vorab festgelegte Reihe:2 active-Kontrollen und10 minimal-Läufe,
+legacy/Phasenlogs/Schrift2, identische APK und Fixtures. Nicht mit älteren APKs
+oder prophylaktischem Refresh addieren. Kein Funktionsfix aus einem bloßen
+ausbleibenden Fehler ableiten.
+
+
+**GEMESSEN, dritte APK:**2/2 active-Kontrollen und10/10 minimal-Volltests bestanden,
+keine Appcrashes, Harness-/Assertion-/Erreichbarkeits-/Timeoutfehler. Alle
+ursprünglichen status-group-/Status-/Hub-/Lockassertionen bestanden. Dieser
+Kontrollarm reproduziert den vollständigen alten Fehler somit nicht. Einziger
+Wechsel zwischen diesen beiden Armen ist der beschriebene Diagnoseumfang.
+Die Zahlen werden nicht mit den vorigen APKs zu einer Gesamterfolgsquote addiert.
+
+**NICHT GETESTET durch einen neuen vollständigen Fehlversuch:** Der nach
+Sucherschöpfung vorgesehene Diagnoseeintritt wurde in der dritten APK nicht
+benötigt. Seine letzte gespeicherte Nodeliste stammt vor der letzten ursprünglichen
+Scrollaktion. Ein erst danach im Refresh auftauchendes Ziel wäre deshalb nicht
+allein bereits ein Cacheursachenbeweis; auch letzter Scroll/verspätete Publication
+wären getrennt zu prüfen. Die ursprüngliche Failure bleibt in jedem Fall bestehen.
+
+### 30.9 Abschließende Regression und finale Samplerprüfung
+
+**GEMESSEN, dritte/finale Test-APK `49b08e…`:**
+
+| Prüfung | Tatsächliches Ergebnis |
+|---|---|
+| legacy/Phasenlogs/active, Paired vor weiteren Hubscrolls, Schrift2 |2/2 vollständige Funktionsläufe bestanden|
+| Ux3cTasksProbe Schrift2, unveränderte auto→sweep-Steuerung |1/1 vollständiger Lauf bestanden|
+| P9MemoryReportProbe Schrift2, bestehender Vorfahrenrefresh |1/1 vollständiger Lauf einschließlich Addendum bestanden|
+| Große ListStabilityProbe |ACTIVE/PREPARATION, Schrift1/2/3,5 bestanden; Scrollanker, Semantik, Formulare, Lock, späte SQLCipher-Rückkehr, kein Autoopen nach synthetischem READY|
+
+Dieselben drei UI-Regressionen wurden zuvor mit der ersten Diagnose-APK ebenfalls
+jeweils einmal bestanden; getrennte Wiederholung wegen der späteren Änderungen
+am gemeinsamen Trace. Keine vermeintlich neue Produktoptimierung daraus ableiten.
+
+Der finale Sampler reproduziert den34→32-Nodes-/0→1-Ziel-Wechsel erneut in beiden
+vollständigen Paired-Läufen, teilweise mehrere Suchiterationen hintereinander.
+Jetzt keine Mainthread-Statuspublication zwischen den skalaren Samples:
+`sampleDraw` bleibt je Lauf442 bzw.499; ownedRoot=true, windowFocus=true,
+feedback=false, IME=false; gleiche Ziel-/Scrollbounds wie30.7. Der reguläre
+unaktualisierte Baum kann also auch nach einem frischen Kontrollbaum erneut die
+alte Projektion liefern. Die ursprüngliche Suche erreicht den Inhalt hier
+anschließend trotzdem. Keine automatische Umstellung der Funktionssteuerung.
+
+**GEMESSEN separat, zweite Test-APK, identischer unveränderter Produktstand:**
+Bestehender Material3-Footer-Semantikrepro50/50 bestanden, Schrift2 ohne
+Accessibility-Automation;0 Crashes. Keine automatische Wiederholung eines
+abgebrochenen Trials. Dies ist kein Ersatz für eine Funktionsvollregression.
+Viewport-/Lazy-/Footer-/P9-/Aufgaben-Sweep-Fixes bleiben unverändert.
+
+**Erneut ausgeführt:**7 fokussierte Kotlin-Hosttests (ProductViewportTest3,
+ProductEntityListTest4),0 Failures/Errors/Skips. Exakter historischer Constraints-
+Zahlenfall enthalten. Isolierte Offline-Testbuilds bestanden, Python-Syntaxprüfung
+bestanden. Zusätzlich4 hostseitige Runner-Negativkontrollen mit vollständig
+simulierten aapt/apksigner/adb: falsche Ziel-ID, falsche Test-ID, abweichende
+Zertifikate, fehlgeschlagener Zertifikatsprüfer. Alle vor jedem Mock-ADB-Aufruf
+abgelehnt; keine Device-/Produktinstallation in diesen Kontrollen. Der Runner
+prüft beide Pakete und Zertifikate vor Installation, Paketprüfung auch bei Python-
+Optimierung aktiv. Vor der unveränderten alten Baseline wurden die realen
+isolierten APK-Signaturen zusätzlich extern geprüft.
+
+**NICHT ERNEUT GETESTET:** Vollständige1266er-Hostsuite, gesonderte12er-Storage-
+Suite, Credential-/Dokument-/Kamera-/SAF-Vollregressionen, reale manuelle TalkBack-
+Abnahme und Produktabnahme. Ihre früheren Nachweise bleiben historisch.
+Session-Revoke in den UI-Proben ist ein synthetischer Port-/Generationswechsel,
+keine automatisierte Eingabe echter Geräte-/Produktcredentials. Keine behauptete
+neue Zehner-Post-Fix-Abnahme für jede Schriftkonfiguration: kein Fix freigegeben.
+Keine Performance-/Jankverbesserung gemessen oder behauptet.
+
+### 30.10 Root-Cause-Status und nächster kleinster Schritt
+
+**BEOBACHTET/NACHGEWIESEN:** Der Accessibility-Client kann am Hub noch eine alte
+Nodeliste/Scrollaktionsprojektion liefern, während ein kontrollierter neu
+aufgebauter aktualisierter Baum das sichtbare/enabled Ziel bereits anbietet.
+Für diesen beobachteten Übergang keine falschen Domainwerte, kein verbliebener
+Operationsfokus, keine IME, kein aktives Modellfeedback und keine fremde aktive
+Accessibility-Root in den finalen Samples. Nicht pauschal als Material3-Bug oder
+allgemein fehlerfreies TalkBack-Verhalten bewerten.
+
+**BLOCKER bleibt:** Die2 vollständigen Fehler der unveränderten Baseline sind
+weiterhin hub-after-change/visible()-Fehler; ihre damalige gemeinsame Fundstelle
+trennt Überschrift und Funktionsinhalt nicht. Neue HCL1/HCL2-Kontrollen bestehen,
+sie liefern keine rückwirkende eindeutige Zuordnung. Historischer status-group-
+Ausfall ebenfalls nicht neu reproduziert. Keine nachgewiesene Produktursache und
+keine verlässliche vollständige Kausalkette vom beobachteten Zwischenbaum zum
+terminalen Suchfehler. Keine Default-/Produktkorrektur auf Verdacht.
+
+**HYPOTHESEN offen:** verspätete/zwischengespeicherte Accessibilitypublication,
+Such-/Scrollgrenze oder Scrollanimation, frühere Overlay-/Ankerwirkung,
+Beobachter-/Fenster-Timing. B/C-Piloten und ausbleibende Fehler belegen keine
+alleinige Ursache. Das alte `focus=false` war Viewfokus, kein Fensterfokus;
+Window-/Root-Zugehörigkeit der alten Fehlversuche wurde nicht erhoben.
+
+**Engster nächster Diagnoseschritt nach unabhängigem Review:** Im minimalen
+Originalpfad ausschließlich bereits abgefragte skalare Such-/Scrollmetadaten in
+höchstens50 Einträgen sammeln: Versuch, Rootzugehörigkeit, Ziel-/Scrollbounds,
+verfügbare Richtung und tatsächlicher Rückgabewert der Scrollaktion. Ausgabe erst
+nach dem ohnehin feststehenden Fehlversuch, keine zusätzlichen Mainthread-/
+Accessibility-Abfragen oder Statusmeldungen vor dem Suchende. Damit ließen sich
+letzte Scrollaktion, Suchrand und unverändert veraltete Projektion trennen, ohne
+sie vorab durch Logs/Refresh zu beeinflussen. Dieser zusätzliche Puffer ist hier
+**nicht implementiert/getestet**. Erst bei konkretem vollständigem Fehlernachweis
+einen einzelnen Harnessfix ableiten und danach die beauftragten10er-Font-/
+Schriftwechsel-Vollregressionen durchführen. Kein spekulativer Produktfix erzwingen.
+
+**Verbleibendes Produkt-UX-Risiko:** Die in29.8 belegte vorübergehende Overlay-
+Überdeckung bleibt real; für die terminalen Funktionsfehler nicht kausal bewiesen.
+Keine Bannerabschaltung, keine geänderte Bestätigungsdauer/-semantik, keine
+entfernte Accessibilityinformation. Neue manuelle Screenreader-Abnahme offen.
+Issue#26 bleibt verbindliches Gesamt-Release-Gate; keine Stufe2-Freigabe.
+
+### 30.11 Sicherheits-/Gerätestatus
+
+**BEOBACHTET am Diff:** Nur androidTest, Diagnose-Runner/README und Bericht.
+Keine Änderung an src/main, SessionCoordinator/180s/30s, StorageAccess/Generation,
+SessionDbKeyOwner, SQLCipher-Preflight/Room-/Key-Lifecycle, Tink, Leadership/P3b,
+Dokument-/PDF-Isolation, Recovery, Schema11, Permissions, App-ID oder Signatur.
+Keine neuen Dependencies, Produktcaches, Netzwerkfunktionen oder produktive
+Klartextpersistenz.
+Die ursprünglichen Tests/Assertions wurden nicht entfernt/abgeschwächt. Kein
+vollständiger unabhängiger Securitynachweis aus den begrenzten UI-Tests behauptet.
+
+Temporär ausschließlich `org.pag.perf.p11probe` und `org.pag.perf.p11probe.test`
+installiert; Paket-IDs, Zielpaket der Instrumentation und gleiche verifizierte
+APK-Zertifikate geprüft. Die zuvor absichtlich entfernten17 Pakete wurden nicht
+pauschal wiederhergestellt. Nach Abschluss sämtlicher Gerätetests beide benötigten
+Testpakete per exakter Allowlist wieder entfernt; Produkt-ID technisch ausgeschlossen.
+Abschließender PaG-Paketbestand ausschließlich `org.pag.prototype.a`; andere Apps
+nicht entfernt. SHA256 der Host-Keystore-Datei unverändert. Keine Produktinstallation,
+kein Produkt-Uninstall/pm clear, kein Datenbankreset/-export/-kopieren, keine echten
+Credentials/Produktdaten, keine Produktmigration. Nur isolierte synthetische Bestände.
+
+### 30.12 Vollständige Dateiliste und Reviewstatus
+
+- `app/src/androidTest/kotlin/org/pag/prototype/Ux3dFunctionsProbe.kt`
+- `app/src/androidTest/kotlin/org/pag/prototype/UiReachabilityTrace.kt`
+- `tools/p11semantics/regressions.py`
+- `tools/p11semantics/README.md`
+- `docs/product-p11-active-workspace-assessment.md`
+
+5 Textdateien. Keine Produktquellen geändert. APKs, Rohstreams, maschinenlesbare
+Mess-/Cleanupresultate, temporäre Runner und Mocktools ausschließlich im ignorierten
+lokalen Diagnosebereich; keine Keys/Keystores, Credentials, DBs, Produktdaten,
+Gerätekennungen, persönlichen Pfade, Logs oder Buildartefakte im Commitumfang.
+Keine alten Fehlversuche/Veröffentlichungen oder Git-Historie entfernt/umgeschrieben.
+Vorgesehener Abschluss: geprüfter WIP-Commit/Push auf bestehendem Featurebranch,
+kein Force-Push/Merge/Release/Produktupdate; danach STOPP/unabhängigen Review abwarten.

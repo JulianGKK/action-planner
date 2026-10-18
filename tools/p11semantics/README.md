@@ -187,3 +187,30 @@ It reports actual ScrollState delta/viewport and marker availability after page
 scroll and small touch scroll. GEOMETRY_DIAGNOSTIC is not a complete Tasks pass.
 Only isolated package manifests are accepted; raw evidence stays ignored locally.
 See assessment 29 for actual outcomes, failed attempts and remaining blockers.
+
+
+Functions hub diagnosis (assessment 30): HC_A..HC_L separate the synthetic port's
+confirmed updates, model/route/domain assertions, draw proxy, tree/refresh,
+geometry/feedback and the original two visible-content assertions. Root draw
+counts do not prove that a particular hub card was measured. `--witness paired`
+opts into same-node before/after refresh and a newly refreshed tree, without any
+intervening click/scroll. It can itself alter UIAutomation's cache; use a separate
+pilot, never pool it with `none` or treat it as an inert observer. Default `none`
+keeps the original navigation. No Functions default refresh fix is implied.
+`legacy`, `nodes`, `parents` and `--diagnostics off` remain independent controls.
+Both isolated APK package IDs and equal verified signing certificates are checked
+before either installation. Result records include frozen target/test APK hashes.
+Never pass a product APK; only the two explicitly isolated package IDs are allowed.
+
+
+`--hub-observation minimal` is an instrumentation-effect control: it preserves the
+original full Functions assertions and original hub navigation without the new
+HC_A..HC_K main-thread diagnostic checks. It also skips new proactive SG/HC
+snapshots. Only after the original 50-attempt visible search has failed does it
+record a paired snapshot; it still reports failure even if refresh exposes the
+label. Use `--witness none` and diagnostics enabled for this control. Default
+`active` retains the additional model/geometry checks. Do not pool these modes or
+APK versions. In the final trace, paired scalar samples (including sampleDraw)
+are collected before emitting status/main-thread model snapshots, so logging does
+not insert a main-thread fence between the three samples. Window focus and owned
+root are booleans; no external package names or node contents are logged.
