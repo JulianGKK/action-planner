@@ -113,3 +113,43 @@ Results and limitations are recorded in assessment section 27. In particular, a 
 Ux3c font-3.5 run must not be treated as passing merely because the targeted footer test
 passes. The existing full flow has a separate reachability failure at that font size.
 The host summary preserves that failure instead of silently reducing the font or fixture.
+
+## P11 reachability follow-up (assessment section 28)
+
+The task and P9 probes emit fixed A–J subphases and scalar `REACH` diagnostics.
+`--diagnostics detailed` additionally records matched-node counts and bounds;
+no node text, document content, IDs or local device identifiers are recorded.
+The task driver remains unchanged: experimental alternate navigation did not pass
+its complete font-3.5 flow and was removed. That case remains a blocker.
+
+P9 now refreshes newly fetched parent NodeInfo instances before reading their
+clickable/enabled/bounds metadata. Refreshing the earlier walked child is insufficient
+to refresh a later cached getParent() result. `--navigation legacy` disables this
+specific test correction for controls; `auto` (default) and `parents` enable it.
+These switches do not change product UI, permissions, storage or model authority.
+
+```sh
+python3 tools/p11semantics/regressions.py --adb "$ADB" --serial "$ANDROID_SERIAL" \
+  --aapt "$AAPT" --target-apk "$ISOLATED_TARGET_APK" --test-apk "$ISOLATED_TEST_APK" \
+  --suites memory --memory-font 2 --memory-runs 10 --navigation parents \
+  --output .prototype-cache/reachability-memory
+```
+
+Use the exact same frozen test APK for both frozen target APKs. `--memory-font both`
+retains the original full 1→2 font/Activity path; `1` or `2` runs a complete single-font
+flow. Task repeat counts and P9 repeat counts are separate. The runner preserves failures
+and records PASS, APP_CRASH, UNREACHABLE, ASSERTION, TIMEOUT or HARNESS_ERROR.
+A timeout/execution failure stops the series: an on-device write might still be running,
+so it is never automatically overlapped or retried. P9 also asserts exactly one additional
+write for the accepted addendum-save action and the complete synthetic persisted result.
+Reports uses the original in-memory synthetic repository, not a product database.
+
+`UiScrollViewportProbe` is a separate synthetic measurement (registered only in the
+explicit test manifest). It creates fresh ScrollState per font/variant/trial, applies
+the same padding/verticalScroll/heightIn order, and records actual scroll deltas and
+viewportSize after ACTION_SCROLL_FORWARD. It does not navigate ProductScreen or load
+repositories. The explicit getScrollViewportLength branch is a falsification control,
+not a product fix. All 30 static cases produced the correct viewport-sized delta;
+the broad wrong-content-height hypothesis was rejected. Dynamic full-flow reachability
+remains outside that isolated measurement. See assessment 28 for unsuccessful task
+experiments and the additional failed functions regression; no overall green result.

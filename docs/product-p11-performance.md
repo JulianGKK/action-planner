@@ -1,15 +1,14 @@
 # P11 — Performance bei unverändertem Sicherheitsvertrag
 
-**Aktueller Abschluss 18.10.2026: Gesamtregression weiterhin BLOCKER.** Der
-Semantik-Auslöser ist unabhängig reproduziert und minimal korrigiert: tatsächlicher
-Produkt-Footer vorher50/50 Crashes, nachher0/50 bei identischer Test-APK.
-Vollständige Aufgabenläufe Schrift1/2, Funktionen und große Listen bestanden;
-Aufgaben-Vollpfad Schrift3,5 und P9-Ergänzungsprüfung sind nicht bestanden.
-Keine Produkt-/Stufe2-Freigabe. WIP-Ausgangspunkt dieser Untersuchung:
-`365341f942c78ec189a3990c160d222a9a18f59d`; ältere Stand-/HEAD-Angaben und
-Commitverbote unten sind historisch. Diese WIP-Sicherung ist ausdrücklich beauftragt.
-Aktuelle Nachweise: [Assessment27](product-p11-active-workspace-assessment.md#27-unabhängige-semantikeingrenzung-und-gezielte-korrektur);
-die widerlegten früheren Lifecycle-Versuche bleiben in Abschnitt26 dokumentiert.
+**Aktueller Abschluss 18.10.2026: Gesamtregression weiterhin BLOCKER.**
+Die unabhängige Erreichbarkeitsnachprüfung korrigiert nur den P9-Testtreiber:
+neu geholte Accessibility-Vorfahren aktualisieren, jeweils10/10 vollständige
+Schrift2-Läufe auf beiden eingefrorenen Zielständen bestanden. Aufgaben3,5 und
+eine zusätzliche Funktions-Erreichbarkeitsabweichung bleiben offen. Kein neuer
+Produktcode-/Performanceumbau; Lazy-Footer-Semantikfix unverändert erhalten.
+Aktuelle Nachweise: [Assessment28](product-p11-active-workspace-assessment.md#28-nachprüfung-der-offenen-ui-erreichbarkeitsregressionen).
+Ausgangspunkt `b89b7671a9d57805478c131df94c828da732297a`; ältere Abschlussstände
+unten sind historisch. Keine Produkt-/Stufe2-Freigabe, kein Produktupdate.
 
 Zweite Klasse-A-Runde: messbare Verbesserungen bei Entsperren/Aktionsöffnung/
 Gedächtnisprotokollen; verbleibender Jank und Viewer-Latenzen offen. Manuelle

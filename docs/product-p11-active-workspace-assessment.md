@@ -1,15 +1,16 @@
 # P11 — Active Action Workspace Assessment
 
-**Aktueller Abschluss 18.10.2026: Gesamtregression weiterhin BLOCKER.** Der
-Semantik-Auslöser ist unabhängig reproduziert und minimal korrigiert: tatsächlicher
-Produkt-Footer vorher50/50 Crashes, nachher0/50 bei identischer Test-APK.
-Vollständige Aufgabenläufe Schrift1/2, Funktionen und große Listen bestanden;
-Aufgaben-Vollpfad Schrift3,5 und P9-Ergänzungsprüfung sind nicht bestanden.
-Keine Produkt-/Stufe2-Freigabe. WIP-Ausgangspunkt dieser Untersuchung:
-`365341f942c78ec189a3990c160d222a9a18f59d`; ältere Stand-/HEAD-Angaben und
-Commitverbote unten sind historisch. Diese WIP-Sicherung ist ausdrücklich beauftragt.
-Aktuelle Nachweise: [Assessment27](#27-unabhängige-semantikeingrenzung-und-gezielte-korrektur);
-die widerlegten früheren Lifecycle-Versuche bleiben in Abschnitt26 dokumentiert.
+**Aktueller Abschluss 18.10.2026: Gesamtregression weiterhin BLOCKER.**
+P9-Addendum: veralteter Accessibility-Vorfahr nachgewiesen, minimal testseitig
+korrigiert, jeweils10/10 vollständige Schrift2-Läufe auf beiden eingefrorenen
+Zielständen bestanden. Aufgaben Schrift3,5 bleibt ungeklärt; zusätzliche
+Funktions-Erreichbarkeitsregression im Abschlusslauf offen. Kein Produktcode
+geändert, der belegte Lazy-Footer-Semantikfix bleibt erhalten. Keine Produkt-/
+Stufe2-Freigabe. Ausgangspunkt dieser Runde:
+`b89b7671a9d57805478c131df94c828da732297a`; ältere Stand-/HEAD-Angaben und
+Commitverbote unten sind historisch. WIP-Sicherung ausdrücklich beauftragt.
+Aktuelle Nachweise: [Assessment28](#28-nachprüfung-der-offenen-ui-erreichbarkeitsregressionen).
+Die früheren fehlgeschlagenen Versuche bleiben in Abschnitt26/27 dokumentiert.
 
 Stand: 17./18.10.2026. Lokaler Arbeitsbranch `p11-performance-optimization`, HEAD
 `b3a8c19105e755bc3df6c7207ac0c7e3969702a0`. Grundlage ist der **uncommittete
@@ -1747,3 +1748,308 @@ und keinen weiteren Produktfix ohne kontrollierten Nachweis erzwingen.
 maschinelle Messzusammenfassungen verbleiben ausschließlich im ignorierten
 lokalen Diagnosebereich; keine Veröffentlichung dieser Dateien. Anonymisierte
 Häufigkeiten/Stackfundstellen stehen oben. Keine Git-History-Bereinigung.
+
+## 28. Nachprüfung der offenen UI-Erreichbarkeitsregressionen
+
+Stand: 18.10.2026, Untersuchungsbasis WIP
+`b89b7671a9d57805478c131df94c828da732297a`. Ausschließlich Teststeuerung,
+Diagnostik und Bericht. Der Produktcode einschließlich des belegten
+Lazy-Footer-Semantikfixes bleibt unverändert. Kein Stufe2-Store, keine allgemeine
+Performanceoptimierung und keine neue Sicherheits-/Storagearchitektur.
+Abschnitt27 und seine fehlgeschlagenen Versuche bleiben historisch erhalten.
+
+### 28.1 Versuchsaufbau und Grenzen
+
+Nur Samsung SM-M526BR, Android13/API33 und isoliertes Paket
+`org.pag.perf.p11probe` mit zugehörigem Testpaket. Keine Produktinstallation,
+Credentials, echten Dokumente oder Produktdatenbank. APK-Paketnamen werden vor
+jeder Installation aus dem binären Manifest geprüft; ausschließlich Updates der
+isolierten Pakete, kein uninstall/pm clear. Vorhandener Keystore unverändert.
+
+Die zwei eingefrorenen Ziel-APKs sind dieselben wie in27.3: WIP unmittelbar vor
+Semantikfix (SHA256 `9cdecf178ef3a1a6862b4068e8c1793057df734761329fcabd32bada6783c81e`)
+und mit Fix (`e3160b230ab0445fbccd17504e7d6be981bbbe18e50a1e689b874200a91318a2`).
+Ein Vergleichsarm verwendet jeweils dieselbe neue Test-APK gegen beide Ziele.
+Produkt-APKs werden während einer Vergleichsreihe nicht neu gebaut. Die Fake-
+Repositories/Fixtures, ursprünglichen fachlichen Erwartungen und Texte bleiben
+identisch. Zusätzliche Assertions prüfen Modellzustand und genau eine Speicherung.
+
+Neue test-only `UiReachabilityTrace` protokolliert ausschließlich feste
+Phasennamen, Zustandsenums/Booleans, Zähler und Geometrie. Keine Node-Texte,
+Dokumentinhalte, IDs, Gerätekennungen oder lokalen Pfade. `LocalProductListObservation`
+beobachtet die bereits vorhandene LazyListState-Schnittstelle; sie führt keine
+Navigation aus und lädt keine Daten. Sichtbare `task-summary`-Messdaten sind ein
+Beleg für die zugehörige Item-Komposition/Messung, kein Beleg für die vollständige
+Composition aller offscreen Items. `rootComposition` zählt nur den vorhandenen
+Root-Hook, nicht jede verschachtelte Recomposition. Echte Draws werden am
+ViewTreeObserver beobachtet. Die Accessibility-Scrollereignisbeobachtung lieferte
+hier keine verwertbaren ScrollY-Werte (`none`); daraus wird kein Scrolloffset
+abgeleitet. Lazy-Indizes/-Offsets und Node-Bounds werden separat ausgewertet.
+
+**Diagnosegrenzen:** Der erste Pilot zählte Wrapper-Composition/Draw und erfasste
+damit nicht alle verschachtelten Updates. Diese Zähler sind kein gültiger
+Frame-/Recomposition-Nachweis. Danach wurden vorhandener Root-Hook und tatsächliche
+View-Draws benutzt. Instrumentierung/Logging kann das Timing verändern. Darum
+werden Pilot-, Diagnose- und Validierungsreihen nicht zu einer Erfolgsquote
+zusammengelegt. Rohlogs, Screens-/APK-Artefakte und lokale Runner bleiben ignoriert.
+Keine Latenz-/Performanceverbesserung aus diesen Funktionstests behauptet.
+
+### 28.2 Aufgaben Schrift3,5: Unterphasen und offener Status
+
+**GEMESSEN:** Die identische eingefrorene Diagnose-Test-APK läuft fünf vollständige
+Versuche je Zielstand. Beide Ziele: **0/5 vollständige Tests bestanden, 5/5
+UNREACHABLE in `start`, keine Appcrashes**. Unter der ausführlichen Diagnostik
+passieren alle Versuche die früher kombinierte Hub-Phase; sie scheitern nach der
+Statusänderung an der folgenden Label-Erreichbarkeit. Das ist kein bestandener
+Volltest und keine Widerlegung der älteren Huberreichbarkeitsfehler.
+
+| Unterphase | Nachweis / Ergebnis der Diagnosereihe |
+|---|---|
+| A Lagebild | Erwartete Überschrift erreichbar |
+| B Aufgaben-Tap | Ursprüngliche Accessibility-Clickaktion ausgeführt |
+| C ViewModel | ActiveArea.TASKS |
+| D Bestand | Workspace.tasks und TaskModel.board vorhanden |
+| E Zähler | 1 OPEN, 1 IN_PROGRESS; spätere Statusänderung ergibt korrekt 0/2 |
+| F Komposition/Messung | Lazy-`task-summary` erscheint in visibleItemsInfo, z.B. Offset118/Größe1194px |
+| G Accessibility | Erwarteter Summarytext wird schließlich als exakter Node-Text gefunden |
+| H Normale Scrollaktionen | Summary wird ohne programmatisches scrollToItem erreicht |
+| I Erste Aufgabe | Erwarteter Titel im Baum sichtbar |
+| J Bedienung | Echte Clickaktion öffnet erwartete synthetische Aufgabe; Detailzuordnung stimmt |
+
+**BEOBACHTET:** In einem feingranularen Ablauf ist die Summary bereits gemessen,
+während die Baumabfrage noch keinen Treffer enthält. Eine spätere Abfrage liefert
+das Label, während der Lazy-Viewport bereits weitergezogen ist. Die ursprüngliche
+Suche scrollt nach wenigen festen Polls immer weiter in dieselbe Richtung und
+nimmt damit eine sofort aktuelle Accessibilityprojektion an. Der Modell-/Domain-
+zustand ist dabei korrekt. Nach Klick auf Statusaktionen kann das erwartete
+Statuslabel bei Schrift3,5 oberhalb des aktuellen Viewports liegen; weiter nach
+unten gerichtete Suche findet es nicht. Das spricht für timing-/positionsabhängige
+Teststeuerung, beweist aber noch keine vollständige eindeutige Root Cause sämtlicher
+Großschrift-Erreichbarkeitsfehler.
+
+**HYPOTHESE/offen:** Ursachenanteile von verzögerter Accessibilityprojektion,
+Scroll-/Fokusposition und Suchrichtung. Kein Nachweis einer falschen Actionbindung,
+fehlender Domain-Summary oder einer neuen unbeschränkten Viewport-/Constraints-
+Allokation. Keine pauschale Erklärung als Produkt-/AndroidX-Bug.
+
+**Geprüfte, nicht übernommene Testkorrekturen:**
+
+| Versuch | Ergebnis eines vollständigen Fix-Ziel-Piloten | Einordnung |
+|---|---|---|
+| Frische Nodes, Accessibility-Idle, begrenzte Suche in beide Richtungen | Fehler `edit`, Eingabefeld nicht sofort sichtbar | Keine vollständige Korrektur |
+| Zusätzlich frische Button-Vorfahren und Scrollsuche nach Editable | Fehler `J_FIRST_TASK_OPEN`; neuer Scrollcontainer noch nicht zuverlässig vorhanden | Kein Vollerfolg |
+| Zusätzlich begrenzte Choreographer-Frame-Fence; fehlender Container nicht sofort als Rand | Fehler `edit`, Rücknavigation nach Speichern | Kein Vollerfolg |
+| Zusätzliche rohe/normalisierte Klicklabel-Diagnose | Wieder Fehler `edit`, Rücknavigation | Keine belegte reine Whitespaceursache |
+
+Alle diese Piloten ohne Appcrash. Die ursprünglichen fachlichen Assertions wurden
+nicht entfernt. Keine Sleeps/Timeoutverlängerungen oder Produktlayoutänderungen
+als Lösung übernommen. Die erfolglosen Navigationsvarianten wurden nach der
+Auswertung aus dem finalen Testcode entfernt; ihre Ergebnisse bleiben hier
+sichtbar. Final bleibt die ursprüngliche Aufgabensteuerung mit klar getrennten
+Diagnosephasen und zusätzlichen Modellprüfungen. **Aufgaben3,5 weiterhin BLOCKER.**
+
+**Engster nächster Schritt:** Den nachgewiesen offenen Rücknavigationspunkt nach
+Speichern isolieren. Vor/nach jeder normalen Scrollaktion die frisch gelesene
+Geometrie und einen festen Labelsatz für Header/Rückknopf/Chronik erfassen,
+zusammen mit Taskselected/Form- und Fokuszustand. So lässt sich tatsächliches
+Überspringen von ausstehender Semantikpublication unterscheiden. Keine privaten
+APIs, kein programmatisches Erzwingen einer Produktnavigation und kein weiterer
+Produktfix ohne Vorher-/Nachhernachweis.
+
+### 28.3 P9-Ergänzung: konkreter veralteter Vorfahr
+
+**GEMESSEN:** Die neue Unterphasendiagnostik trennt:
+
+| Phase | Erhaltener/zusätzlicher Nachweis |
+|---|---|
+| A abgeschlossen | Modellheader und synthetischer Repositoryheader COMPLETED |
+| B zulässig/sichtbar | DETAIL-Modus, nicht busy/loading; Ergänzungsbutton erreichbar |
+| C öffnen | Genau eine akzeptierte Accessibility-Clickaktion |
+| D Modus | ADDENDUM tatsächlich aktiviert |
+| E Feld | Erwartetes Eingabefeld erreichbar |
+| F Eingabe | Modellwert entspricht dem unveränderten synthetischen Testtext |
+| G speichern | addendumValid; erwarteter Speicherbutton erreichbar/aktiv |
+| H Bestätigung | Genau ein zusätzlicher Repositorywrite; DETAIL und nicht busy |
+| I Inhalt | Genau eine Ergänzung mit richtigem Inhalt im Port und Modell-Detail |
+| J Anzeige | Ursprüngliche Erwartung „Ergänzung1“ im UI erreichbar |
+
+**Beleg der tatsächlichen G-Fehlstelle:** Der zuvor aktualisierte Label-Knoten ist
+vorhanden, der über `getParent()` geholte Button-Vorfahr trägt jedoch veraltete
+Informationen. Unveränderter gültiger Modellzustand (ADDENDUM, busy=false,
+loading=false, completed=true), vor Refresh `clickable=true, enabled=false,
+Höhe147px`; nach erfolgreichem öffentlichen `refresh()` desselben Vorfahren
+`enabled=true`, zunächst sichtbare Höhe104px, später147px. Der alte Test verwirft
+den vermeintlich deaktivierten Button und scrollt weiter. Es wurde bis dahin
+keine Ergänzung gespeichert. Das ist kein nachgewiesener Daten-/Commitfehler.
+Die historische ungetrennte Addendum-Phase lässt sich nicht rückwirkend eindeutig
+einem A–J-Schritt zuordnen; der hier getrennt reproduzierte G-Auslöser ist
+konkret belegt. Die alte Schleife aktualisiert die beim Baumdurchlauf geholten Nodes bereits,
+aber `getParent()` kann erneut eine gecachte andere NodeInfo-Instanz liefern.
+
+**Minimaler Testfix:** Nur die während der Vorfahrensuche neu geholten
+AccessibilityNodeInfo-Instanzen vor Auswertung von isClickable/isEnabled/Bounds
+aktualisieren; fehlgeschlagenen Refresh als obsoleten Node verwerfen. Dasselbe
+bei Editable-Vorfahren. Suchrichtung, ursprüngliche Versuchsgrenzen, sichtbare
+Mindesthöhe48dp und Originalassertionen bleiben erhalten. Kein neuer Produkt-
+Scroll-/Fokusmechanismus, kein pauschaler Delay, kein Keyboard-/Formularbypass.
+Die finale G-Aktion hat außerdem eine explizite Einmalzustellungsassertion:
+auch eine abgelehnte/unklare performAction-Zustellung wird nicht automatisch als
+Schreibaktion wiederholt. Keine Wiederholung einer akzeptierten Speicheraktion; zusätzlicher Writezähler
+muss exakt um eins steigen. `navigation=legacy` bleibt explizite Testkontrolle;
+normaler P9-Probelauf aktualisiert Vorfahren.
+
+Öffentliche API-Grundlage: [AccessibilityNodeInfo.refresh](https://developer.android.com/reference/android/view/accessibility/AccessibilityNodeInfo#refresh())
+aktualisiert eine Instanz und meldet einen nicht mehr vorhandenen View als
+ungültig. Verwandte experimentelle Event-Idle-/Show-on-screen-Ansätze wurden
+gegen die minimale Vorfahrenkorrektur abgegrenzt; keine Produktverwendung.
+
+**Nachweisgrenze:** Reports ist der unveränderte synthetische In-memory-
+Repositoryport der bestehenden P9-Probe. „Persistierter Inhalt“ hier bedeutet
+bestätigter Portbestand plus erneutes Modell-Detail, keinen neu gemessenen echten
+SQLCipher-Addendum-Diskwrite. SQLCipher-/Sessiontests werden separat aufgeführt.
+
+### 28.4 Kontrollierte Reihen, verworfene Geometriehypothese
+
+**GEMESSEN, P9 Schrift2, vollständige Originalabläufe:** Derselbe eingefrorene
+Test-APK-Stand mit ausschließlich aktivierter Vorfahrenaktualisierung wird gegen
+beide eingefrorenen Ziel-APKs ausgeführt. Kein Abbruch nach erstem Erfolg,
+keine automatische Wiederholung fehlgeschlagener Fälle.
+
+| Zielstand | Vollständige Läufe | PASS | Appcrash | UNREACHABLE | Assertion | Timeout | Harnessfehler |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Vor Semantikfix | 10 | 10 | 0 | 0 | 0 | 0 | 0 |
+| Mit Semantikfix | 10 | 10 | 0 | 0 | 0 | 0 | 0 |
+
+Test-APK SHA256:
+`0e8b93bfbdb02dd7de80d09abd8a2d62b24b22e1cfdb446617f0dab186880a45`.
+Die spätere finale Probe ergänzt lediglich die konservative Einmalzustellung der
+Speicheraktion; ihr kompletter Schrift1→2-Lauf wird separat validiert. Keine
+Vermischung dieser finalen Regression mit der eingefrorenen10er-Vergleichsreihe.
+Zehn Läufe je Stand sind ein begrenzter funktionaler Regressionsnachweis,
+keine Garantie gegen jede seltene UI-/OEM-Variante.
+
+**Frühere neue Kontrollen bleiben sichtbar:** Diagnose-APK
+`ec2ee0c49b3588cb08156482df4e64e720248bfff53cda3723540c1e53b78d66`
+mit ursprünglicher P9-Steuerung: Vorher2/2 bestanden; Fix-Ziel1/2 bestanden,
+ein UNREACHABLE in der späteren Phase active-completed-draft. Die Addendum-
+Unterphasen waren dort passiert. Zusätzlich erster diagnostischer Schrift2-Pilot
+bestanden; nicht zur10er-Validierung addiert. Ein experimenteller Idle-/Suchlauf
+OHNE aktualisierte Vorfahren scheitert in G_SAVE_ADDENDUM; der erste reine
+Vorfahren-Refresh-Pilot besteht vollständig und liefert den obenstehenden
+before/after-enabled-Beleg. Auch diese Einzelversuche werden nicht zu einer
+Statistik mit veränderter Methodik zusammengefasst.
+
+**GEMESSEN, zusätzliche isolierte Scrollmessung:** Der AndroidX1.12.1-Quellpfad
+berechnet die Accessibility-Scrollstrecke aus GetScrollViewportLength oder einem
+Koordinatenfallback. Daraus entstand die **HYPOTHESE**, Column.verticalScroll könne
+statt Viewporthöhe die ganze Inhaltshöhe verwenden und mittlere Controls überspringen.
+Eine separate Probe mit derselben Padding/verticalScroll/heightIn-Reihenfolge,
+40 synthetischen Buttons, eigenem öffentlich beobachtetem ScrollState, frischem
+State je Versuch und normalen ACTION_SCROLL_FORWARD-Aktionen prüft dies.
+Kein ProductViewModel, keine Repository-/Credentialzugriffe und kein Produktpatch.
+
+| Schrift | Explizites Viewportmetadatum | Wiederholungen | tatsächlicher Viewport | Delta pro Scrollaktion | maxScroll |
+|---|---|---:|---:|---:|---:|
+| 1 | aus / an | jeweils5 | 1533px | 1533px | 5145px |
+| 2 | aus / an | jeweils5 | 1533px | 1533px | 5705px |
+| 3,5 | aus / an | jeweils5 | 1533px | 1533px | 16505px |
+
+Alle30 Messversuche abgeschlossen, keine Appcrashes. Die Boxhöhe1659px enthält
+zusätzlich126px Padding und wird ausdrücklich nicht als Scrollviewport ausgegeben.
+Die generelle statische Whole-content-Scrollhypothese ist damit für diese Probe
+verworfen. **Kein Produkt-Viewportmetadatum hinzugefügt.** Das ist keine vollständige
+Aussage über dynamische Banner-/IME-/Fokusänderungen im kompletten Aufgabenpfad.
+Der Aufgaben-Blocker bleibt offen. Test-APK dieser Messung:
+`4bbd8345604676560ef548e08389d9eb32df5d1fe2836743cc56d053de24b9bd`.
+
+### 28.5 Abschlussregressionen
+
+**Tatsächlich erneut ausgeführte Hosttests:** app612 + data650 + security4 =1266,
+alle ausdrücklich mit --rerun, 0 Failures/Errors/Skipped. Darin ProductViewportTest:
+der exakte alte269909px/954px-Zahlenfall wirft erwartungsgemäß, begrenzter realer
+Viewport ergibt gültige Constraints, Infinity/kleiner Viewport erfindet keine
+riesige Mindesthöhe. Keine Tests gelöscht oder abgeschwächt.
+
+**GEMESSEN, finale Regressions-Test-APK**
+`f73111d0e76c02243bde269e3cb7674c61ea473ca1ddf6ab294832873b4ffa3b`:
+
+| Prüfung | Ergebnis |
+|---|---|
+| Vollständige Aufgabenprobe Schrift1 | 1/1 bestanden |
+| Vollständige Aufgabenprobe Schrift2 | 1/1 bestanden |
+| Vollständige Aufgabenprobe Schrift3,5 | 0/1, UNREACHABLE/H_SUMMARY_REACH, kein Appcrash |
+| Unveränderte Ux3d-Funktionen Schrift1→2 | Fehlgeschlagen bei Schrift2/status-group; Label nicht erreichbar |
+| Vollständiger P9 Schrift1→2, gleiche Activity | Bestanden, einschließlich finaler Einmalzustellungs-/Inhaltsassertionen |
+| Große ACTIVE-/PREPARATION-Listen | Schrift1/2/3,5 bestanden, Scrollanker/Formulare/schnelle Navigation/Lock/late Callback/kein Autoopen |
+| Bestehender tatsächlicher Produkt-Semantikrepro | 50/50 bestanden, Schrift2 ohne Accessibility-Automation, 0 Crashes/Harnessfehler |
+
+Die Ux3d-Ausgabe meldet Probezeilen105/96/188:105 ist die unveränderte
+visible()-Fehlstelle „Label nicht erreichbar“. Der generische Runner führt den
+alten, noch nicht kategorisierten Probeabbruch als ASSERTION; hier wird die
+nachgewiesene UI-Erreichbarkeitsfehlstelle präzisiert, **nicht als Erfolg umgedeutet**.
+Welche der kombinierten status-group-Erwartungen genau fehlt, ist ohne zusätzliche
+Ux3d-Unterphasen offen. Kein Zusammenhang mit dem P9-Fix behauptet, keine
+ungeprüfte Erweiterung des Auftrags auf einen Funktions-Produktfix. Die früheren
+bestandenen Funktionsläufe bleiben historische Einzelläufe und ersetzen diesen
+fehlgeschlagenen Abschlusslauf nicht.
+
+**GEMESSEN:** Der ursprüngliche große A-Fall (200 Personen/1000 Aufgaben/200 Rollen,
+VariantA, tatsächlicher SQLCipher-/Workspace-/Composepfad) besteht zehn vollständige
+Sequenzen mit ASSESSMENT_PASS und null Workspace-Cachehits. Kein Constraints-
+Appcrash. Die Probe meldet vor ihrem abschließenden Fixture-Cleanup FD110→140;
+das ist keine Warm-Steady-State-/Leakanalyse und wird nicht als neuer Nachweis
+konstanter FD-Zahlen ausgegeben. Kein Resource-/Performancegesamturteil daraus.
+
+**Gesamtregression nicht bestanden.** Keine neue manuelle Produkt-/TalkBack-/
+Credentialsabnahme behauptet.
+
+
+### 28.6 Sicherheitsstatus und Entscheidung
+
+**BEOBACHTET am Diff:** Keine Änderung unter app/data/domain/security src/main.
+SessionCoordinator, 180s/30s, StorageAccess/Generation, SessionDbKeyOwner,
+SQLCipher-Preflights/Room-/Key-Lease-Lifetime, Tink, Leadership/P3b,
+Dokumenten-/PDF-Isolation, Import/Delete-Recovery, Schema11, Produkt-App-ID,
+Permissions und Signatur unverändert. Der Semantikfix aus27 bleibt unverändert.
+Keine neue Dependency, kein Produkt-RAM-Store, kein Klartextcache/-file, kein
+Produktupdate und keine Produktdaten/Credentials verwendet. Die Tests verleihen
+keine fachlichen Rechte; Aktualisierung eines Accessibility-Snapshots umgeht
+keine Domain-/Write-/Commitprüfung.
+
+**P9:** Konkreter Harness-Auslöser belegt, minimal testseitig korrigiert,
+10+10 vollständige Einzel-Schrift2-Vergleiche und finaler vollständiger
+Schrift1→2-Pfad bestanden. Keine Behauptung, der historische ungetrennte
+Addendumfehler könne in jedem Einzelfall rückwirkend derselben Unterphase
+zugeordnet werden. Kein Produktfix notwendig oder durchgeführt.
+
+**Aufgaben3,5:** Ursache noch nicht verlässlich vollständig eingegrenzt.
+Modellbestand/Counts und Summarymessung sind vorhanden; Instrumentierung verändert
+Erreichbarkeit/Fehlerphase. Mehrere Test-Navigationsideen nicht vollständig
+bestanden, statische Whole-content-Scrollhypothese falsifiziert. Daher STOPP für
+weitere spekulative Änderungen. Der nächste kleinste Diagnosepunkt ist die
+Rücknavigation nach Speichern mit klar getrennten frischen Node-/Fokus-/Scroll-
+Snapshots und minimaler Observerlast; anschließend isolierte Ein-Variablen-
+Kontrollen statt weiterer kombinierter Navigationsänderungen.
+
+**Zusätzlich offen:** Neuer fehlgeschlagener Ux3d-status-group-Abschlusslauf,
+unabhängiger Review und P11-/Releasefragen gemäß älteren Abschnitten. Keine
+Gesamt-GRÜN-/Produkt-/Stufe2-Freigabe. Issue#26 bleibt verbindliches Release-Gate
+vor1.0. WIP-Commit/Push ausdrücklich beauftragt; kein Force-Push, Merge, Release
+oder Produktupdate. Nach Sicherung keine weitere Fehleranalyse vor unabhängigem
+Review.
+
+### 28.7 Vollständige Dateiliste dieser Runde
+
+- `app/src/androidTest/kotlin/org/pag/prototype/Ux3cTasksProbe.kt`
+- `app/src/androidTest/kotlin/org/pag/prototype/P9MemoryReportProbe.kt`
+- `app/src/androidTest/kotlin/org/pag/prototype/UiReachabilityTrace.kt`
+- `app/src/androidTest/kotlin/org/pag/prototype/UiScrollViewportProbe.kt`
+- `tools/p11semantics/ActualTestManifest.xml`
+- `tools/p11semantics/regressions.py`
+- `tools/p11semantics/README.md`
+- `docs/product-p11-active-workspace-assessment.md`
+- `docs/product-p11-performance.md`
+
+9 Textdateien. Keine APKs, Datenbanken, Keystores, Credentials, Rohlogs,
+Gerätekennungen, persönlichen Pfade oder Klartext-Testdokumente im Commit.
+Bereits öffentliche Historie nicht umgeschrieben.

@@ -17,7 +17,9 @@ import org.pag.prototype.product.*
 /** Real ProductScreen with synthetic ports only. No credentials, DB writes or system font change. */
 class Ux3cTasksProbe : Instrumentation() {
     private var requestedScale: Float? = null
-    override fun onCreate(arguments: Bundle?) { super.onCreate(arguments); requestedScale = arguments?.getString("font")?.toFloat(); require(requestedScale == null || requestedScale == 1f || requestedScale == 2f || requestedScale == 3.5f); start() }
+    private val trace by lazy { UiReachabilityTrace(this,"TASKS") }
+    private var failureKind="ASSERTION"
+    override fun onCreate(arguments: Bundle?) { super.onCreate(arguments);trace.detailed=arguments?.getString("diagnostics")=="detailed"; requestedScale = arguments?.getString("font")?.toFloat(); require(requestedScale == null || requestedScale == 1f || requestedScale == 2f || requestedScale == 3.5f); start() }
     private class Session : SessionPort {
         var value = SessionSnapshot(SessionState.READY, 1)
         var observer: ((SessionSnapshot) -> Unit)? = null
@@ -116,7 +118,7 @@ class Ux3cTasksProbe : Instrumentation() {
     }
     private fun visible(label: String, backwards: Boolean = label.startsWith("Rundgang") || label in listOf("PaG Demo", "Lagebild", "Vorbereitung im Überblick")): AccessibilityNodeInfo {
         repeat(50) { attempt ->
-            val tree = nodes(); tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
+            val tree = nodes();trace.search(tree,label,backwards,attempt); tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
             // Let the accessibility frame catch up before scrolling away from a
             // newly published heading. Tour/home headings live at the top.
             if (attempt >= 5) tree.firstOrNull { it.isScrollable }?.performAction(
@@ -124,7 +126,7 @@ class Ux3cTasksProbe : Instrumentation() {
             waitForIdleSync(); SystemClock.sleep(80)
         }
         clickDiagnostic = "labelNodes=${nodes().size},scrolls=${nodes().count { it.isScrollable }},matches=${nodes().count { match(it,label) }}"
-        error("Synthetic demo label not reachable")
+        failureKind="UNREACHABLE";error("Synthetic demo label not reachable")
     }
     private fun smallScroll(backwards: Boolean) {
         val rect = nodes().firstOrNull { it.isScrollable }?.let(::bounds) ?: return
@@ -167,7 +169,7 @@ class Ux3cTasksProbe : Instrumentation() {
         val finalTree = nodes()
         clickDiagnostic = "nodes=${finalTree.size},scrolls=${finalTree.count { it.isScrollable }},matches=${finalTree.count { match(it, label) }},buttons=" +
             finalTree.filter { it.isClickable }.take(12).joinToString { "${bounds(it)}:len=${it.text?.length ?: 0}:opens=${it.text?.contains(" öffnen") == true}" }
-        error("Synthetic demo control not reachable")
+        failureKind="UNREACHABLE";error("Synthetic demo control not reachable")
     }
     private fun reportUncaught(error: Throwable) {
         sendStatus(0, Bundle().apply { putString("stream", "UI_UNCAUGHT," + error.javaClass.simpleName + "," + error.stackTrace.take(12).joinToString("|") { it.className + "." + it.methodName + ":" + it.lineNumber } + "\n") })
@@ -176,67 +178,78 @@ class Ux3cTasksProbe : Instrumentation() {
     override fun onStart() {
         val originalHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, error -> runCatching { reportUncaught(error) }; originalHandler?.uncaughtException(thread, error) }
-        var activity: MainActivity? = null; var scaleUnderTest = 1f; var phase = "entry"
+        var activity: MainActivity? = null; var scaleUnderTest = 1f; var phase="entry";trace.phase=phase
         try {
-            check(!BuildConfig.PAG_DEMO_ONLY)
+            check(!BuildConfig.PAG_DEMO_ONLY);trace.start()
             val launched = startActivitySync(Intent(targetContext, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
-            activity = launched
+            activity = launched;trace.attach(launched)
             val density = targetContext.resources.displayMetrics.density
             for (scale in (requestedScale?.let { listOf(it) } ?: listOf(1f, 2f))) {
-                scaleUnderTest = scale
+                scaleUnderTest = scale;trace.font=scale
                 val session = Session(); val ops = Ops(); val tasks = Tasks()
                 lateinit var model: ProductViewModel
                 runOnMainSync {
                     model = ProductViewModel(session, Actions(), ProductStorageState.READY_TO_OPEN, People(), operationsRepository = ops, taskRepository = tasks) {}
+                    trace.model=model
                     model.detail("synthetic")
-                    launched.setContent { CompositionLocalProvider(LocalDensity provides Density(density, scale)) { ProductScreen(model) } }
+                    launched.setContent { CompositionLocalProvider(LocalDensity provides Density(density, scale)) { trace.Content(model) } }
                 }
-                phase = "hub"; waitForIdleSync(); visible("Lagebild"); top(); click("Aufgaben", backwards = false)
-                visible("1 offen · 1 in Arbeit"); visible("Übungsaufgabe A")
+                fun step(name:String,work:()->Unit){phase=name;trace.phase=name;trace.event("BEGIN");work();trace.event("PASS")}
+                step("A_HUB_VISIBLE"){waitForIdleSync();visible("Lagebild")}
+                step("B_TASKS_TAP"){top();click("Aufgaben",backwards=false)}
+                step("C_TASKS_MODEL"){runOnMainSync{check(model.activeArea==ActiveArea.TASKS)}}
+                step("D_WORKSPACE_BOARD"){runOnMainSync{check(model.workspace?.tasks!=null&&model.tasks.board!=null)}}
+                step("E_DOMAIN_COUNTS"){runOnMainSync{check(model.tasks.board!!.active.count{it.status==TaskStatus.OPEN}==1);check(model.tasks.board!!.active.count{it.status==TaskStatus.IN_PROGRESS}==1);check("1 offen · 1 in Arbeit" in activeTaskContent(model.tasks.board!!,null).summary)}}
+                phase="F_SUMMARY_MEASUREMENT";trace.phase=phase;trace.event("OBSERVE")
+                phase="G_SUMMARY_TREE";trace.phase=phase;trace.search(nodes(),"1 offen · 1 in Arbeit",false,0)
+                step("H_SUMMARY_REACH"){visible("1 offen · 1 in Arbeit");trace.event("VIEWPORT")}
+                step("I_FIRST_TASK"){visible("Übungsaufgabe A")}
                 check(nodes().none { it.isClickable && it.text?.toString() in listOf("Erledigt", "In Arbeit", "Entfällt") })
-                click("Übungsaufgabe A", backwards = true); visible("Zuständig: Support")
-                phase = "start"; click("In Arbeit", backwards = false); visible("Hoch · In Arbeit")
-                phase = "done"; click("Erledigt", backwards = false); visible("Hoch · Erledigt")
+                step("J_FIRST_TASK_OPEN"){click("Übungsaufgabe A", backwards = true); visible("Zuständig: Support");runOnMainSync{check(model.tasks.selected?.id=="t")}}
+                phase="start";trace.phase=phase; click("In Arbeit", backwards = false); visible("Hoch · In Arbeit")
+                phase="done";trace.phase=phase; click("Erledigt", backwards = false); visible("Hoch · Erledigt")
                 runOnMainSync { check(model.tasks.selected!!.status == TaskStatus.DONE && model.tasks.board!!.events.any { it.type == TaskEventType.COMPLETED }) }
-                phase = "reopen"; click("Wieder öffnen", backwards = false); visible("Hoch · Offen")
-                phase = "edit"; click("Aufgabe bearbeiten", backwards = false); title("Übungsaufgabe geändert")
+                phase="reopen";trace.phase=phase; click("Wieder öffnen", backwards = false); visible("Hoch · Offen")
+                phase="edit";trace.phase=phase; click("Aufgabe bearbeiten", backwards = false); title("Übungsaufgabe geändert")
                 runOnMainSync { check(model.tasks.form && model.tasks.input.title == "Übungsaufgabe geändert") }
                 click("Speichern", backwards = false); visible("Übungsaufgabe geändert")
                 runOnMainSync { check(model.tasks.selected!!.title == "Übungsaufgabe geändert" && !model.tasks.form) }
                 top(); click("‹ Aufgaben"); visible("1 offen · 1 in Arbeit")
-                phase = "closed"; click("Erledigt / Entfallen", backwards = false); visible("Übungsaufgabe erledigt")
+                phase="closed";trace.phase=phase; click("Erledigt / Entfallen", backwards = false); visible("Übungsaufgabe erledigt")
                 runOnMainSync { check(model.tasks.closedExpanded) }
                 click("Übungsaufgabe erledigt", backwards = false); visible("Niedrig · Erledigt")
                 top(); click("‹ Aufgaben")
-                phase = "create"; top(); click("+ Aufgabe", backwards = false); title("Neue Übungsaufgabe")
+                phase="create";trace.phase=phase; top(); click("+ Aufgabe", backwards = false); title("Neue Übungsaufgabe")
                 runOnMainSync { check(model.tasks.input.priority == TaskPriority.NORMAL && model.tasks.input.title == "Neue Übungsaufgabe") }
-                phase = "create-save"; click("Speichern", backwards = false); phase = "create-detail"; visible("Neue Übungsaufgabe"); runOnMainSync { check(model.tasks.selected?.title == "Neue Übungsaufgabe") }; // A list return preserves its scroll anchor; explicitly seek the summary before asserting it.
-                phase = "create-return"; top(); click("‹ Aufgaben"); top()
+                phase="create-save";trace.phase=phase; click("Speichern", backwards = false); phase="create-detail";trace.phase=phase; visible("Neue Übungsaufgabe"); runOnMainSync { check(model.tasks.selected?.title == "Neue Übungsaufgabe") }; // A list return preserves its scroll anchor; explicitly seek the summary before asserting it.
+                phase="create-return";trace.phase=phase; top(); click("‹ Aufgaben"); top()
                 runOnMainSync { check(model.tasks.selected == null); check(model.tasks.board!!.active.count { it.status == TaskStatus.OPEN } == 2) }
-                phase = "create-return-label"; visible("2 offen · 1 in Arbeit", backwards = true)
+                phase="create-return-label";trace.phase=phase; visible("2 offen · 1 in Arbeit", backwards = true)
                 runOnMainSync { check(tasks.rows.any { it.title == "Neue Übungsaufgabe" && it.status == TaskStatus.OPEN }) }
-                phase = "person-filter"; top(); click("‹ Zum Lagebild"); visible("Lagebild"); top(); click("Personen", backwards = false)
+                phase="person-filter";trace.phase=phase; top(); click("‹ Zum Lagebild"); visible("Lagebild"); top(); click("Personen", backwards = false)
                 visible("Motte"); click("Motte", backwards = true); visible("Aktuelle Funktion: Support")
                 click("Aufgaben ansehen", backwards = false); visible("Filter · Betrifft: Motte")
                 runOnMainSync { check(model.tasks.filter == "p" && activeTaskContent(model.tasks.board!!, "p").active.map { it.id } == listOf("t")) }
                 click("Alle Aufgaben anzeigen", backwards = false); visible("2 offen · 1 in Arbeit", backwards = true)
                 runOnMainSync { check(model.tasks.filter == null) }
-                phase = "lock-detail"; top(); click("Übungsaufgabe geändert", backwards = false)
+                phase="lock-detail";trace.phase=phase; top(); click("Übungsaufgabe geändert", backwards = false)
                 runOnMainSync { session.lock(); check(model.tasks.selected == null && model.workspace == null && model.tasks.filter == null) }
                 visible("PaG")
-                phase = "lock-form"; runOnMainSync {
+                phase="lock-form";trace.phase=phase; runOnMainSync {
                     session.value = SessionSnapshot(SessionState.READY, session.value.generation + 1); session.observer!!(session.value)
+                    trace.model=model
                     model.detail("synthetic"); model.activeArea(ActiveArea.TASKS)
                 }
                 waitForIdleSync(); top(); click("+ Aufgabe", backwards = false); title("Verworfener Übungsentwurf")
                 runOnMainSync { session.lock(); check(!model.tasks.form && model.tasks.input == TaskInput("") && !model.tasks.closedExpanded) }
                 visible("PaG")
             }
-            runOnMainSync { launched.finish() }
+            trace.stop();runOnMainSync { launched.finish() }
             finish(-1, Bundle().apply { putString("stream", "UX3c synthetic real ProductScreen: hub/tasks/card/start/done/reopen/edit/create/closed/person-filter/back/lock detail+form/font=${requestedScale ?: "1+2"}: OK\n") })
         } catch (failure: Exception) {
+            trace.event("FAIL","category=$failureKind;exception=${failure.javaClass.simpleName}");trace.stop()
             activity?.let { runOnMainSync { it.finish() } }
-            finish(0, Bundle().apply { putString("stream", "UX3c probe failed; font=$scaleUnderTest; phase=$phase; lines=${failure.stackTrace.filter { it.className == Ux3cTasksProbe::class.java.name }.take(5).map { it.lineNumber }}; $clickDiagnostic; no input data logged\n") })
+            finish(0, Bundle().apply { putString("stream", "UX3c probe failed; font=$scaleUnderTest; phase=$phase; category=$failureKind; lines=${failure.stackTrace.filter { it.className == Ux3cTasksProbe::class.java.name }.take(5).map { it.lineNumber }}; $clickDiagnostic; no input data logged\n") })
         }
     }
 }
