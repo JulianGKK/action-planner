@@ -2851,3 +2851,196 @@ Gerätekennungen, persönlichen Pfade, Logs oder Buildartefakte im Commitumfang.
 Keine alten Fehlversuche/Veröffentlichungen oder Git-Historie entfernt/umgeschrieben.
 Vorgesehener Abschluss: geprüfter WIP-Commit/Push auf bestehendem Featurebranch,
 kein Force-Push/Merge/Release/Produktupdate; danach STOPP/unabhängigen Review abwarten.
+
+## 31. Begrenzte Abschlussdiagnose im ursprünglichen Suchpfad
+
+### 31.1 Auftrag, historische Fehler und feste Versuchszahl
+
+Ausgangsstand `8a8a2c93c733fe0b731a6c9338948cb95d8a3bde`.
+Die unveränderte historische Baseline aus Abschnitt30 bleibt **8/10**:
+2 vollständige UNREACHABLE-Fehler in hub-after-change; kein Appcrash.
+Die zeitweise veraltete Accessibilityprojektion ist konkret belegt, ihre
+vollständige Kausalkette zum damaligen Suchabbruch weiterhin nicht nachgewiesen.
+Auch der historische status-group-Ausfall ist damit nicht nachträglich erklärt.
+Keine dieser Beobachtungen wird durch erfolgreiche neue Wiederholungen gelöscht.
+
+Vor Beginn festgelegt: genau20 vollständige Versuche mit Schriftfaktor2 und
+frischer Activity sowie5 vollständige Doppelfontläufe1→2 in derselben Activity.
+Keine weiteren Varianten, keine Wiederholung bis zum ersten PASS. Identische
+synthetische Fixtures, gleicher eingefrorener Zielstand und dieselbe neue Test-APK
+in beiden Armen. Originalnavigation `legacy`, `diagnostics=phases`,
+`hubObservation=minimal`, `witness=none`; kein prophylaktischer Refresh.
+Die ursprünglichen fachlichen Assertions, Klick-/Schreiboperationen,50 Suchversuche,
+Scrollbeginn ab Versuch5 und vorhandenen Wartezeiten bleiben erhalten.
+
+### 31.2 Diagnosepuffer und Aussagegrenzen
+
+**BEOBACHTET am Testdiff:** Ausschließlich `Ux3dFunctionsProbe.visible()` erhält
+im Minimalmodus ein festes Array von50 optionalen Strings pro Suche. Jeder Eintrag
+enthält ausschließlich skalare Werte: Versuch, feste interne Phase,
+Rootzugehörigkeit, Ziel vorhanden/positive Rechteckfläche, Schnitt mit dem bereits
+bekannten Scrollrechteck, Ziel-/Scrollbounds, Scrollcontainer vorhanden,
+Backward-/Forward-Aktion, Entscheidung WAIT/BACK/FORWARD und zurückgegebenes
+Aktionsergebnis beziehungsweise notAttempted. Kein Nodeobjekt wird im Puffer
+gehalten; keine Texte oder IDs werden ausgegeben.
+
+Die Geometrie und Aktionsliste stammen ausschließlich aus lokalen Metadaten der
+bereits vom ursprünglichen Suchversuch gelieferten Nodes. Keine zusätzliche
+UIAutomation-/Root-/Parent-Abfrage, kein Refresh, kein neuer Mainthread-
+Synchronisationspunkt und keine Statusausgabe innerhalb der Suchschleife.
+`beforeDecision` bezeichnet den Zustand vor der Scrollentscheidung;
+`afterDecisionAccepted` den Rückgabewert danach. Es ist **keine** zusätzliche
+Messung der tatsächlichen Scrollposition nach der Aktion. Geometrie aus der
+nächsten regulären Iteration lässt sich gegebenenfalls vergleichen. Nach der
+letzten Aktion gibt es keinen weiteren Suchversuch; ein späterer Treffer wird
+nicht abgefragt und kann FAIL niemals in PASS umwandeln.
+
+Erst nach vollständiger Sucherschöpfung wird UNREACHABLE gesetzt, dann werden
+höchstens50 Einträge ausgegeben und der ursprüngliche Fehler ausgelöst. Bei Erfolg
+wird kein Puffer ausgegeben. Der bisherige nachträgliche Paired-Refresh im
+Minimalmodus und das Vorhalten seines letzten Nodebaums entfallen. Aktive separate
+Diagnosemodi bleiben unverändert und wurden für diese Abschlussreihe nicht benutzt.
+Der Puffer kann das Timing durch begrenzte lokale Getter/Allokationen beeinflussen;
+er ist kein nachweislich vollständig wirkungsloser Beobachter.
+
+Ein positives Action-Ergebnis beweist keine bereits abgeschlossene Bewegung;
+eine alte Aktionsliste beweist keine physische Scrollgrenze. Cached Bounds beweisen
+weder aktuelle Sichtbarkeit noch Aktualität des Accessibilitybaums. Ein Ziel mit
+positiver Höhe wird vom ursprünglichen Suchpfad weiterhin unmittelbar akzeptiert;
+die neue Diagnostik verschärft oder lockert diese Bedingung nicht.
+
+### 31.3 Builds, Artefakte und begrenzte Prüfungen
+
+**GEMESSEN:** Isolierter Offline-Android-Testbuild bestanden. Eingefrorener Ziel-
+APK-SHA256 `e3160b230ab0445fbccd17504e7d6be981bbbe18e50a1e689b874200a91318a2`;
+neue Test-APK `66aeef1fdf31fb88c6da7f39cb7f11575ed19bfd98c62217bc9df0c6f8fa1945`.
+Vor Installation prüft der bestehende Runner beide exakten isolierten Paket-IDs
+und die verifizierten übereinstimmenden Signaturzertifikate. Gerät Samsung
+SM-M526BR, Android13/API33. Keine Produkt-APK installiert.
+
+6 fokussierte statische Prüfbedingungen des Puffer-/Suchvertrags bestanden:
+50er-Array, keine Statusausgabe in der Schleife, kein letzter gespeicherter
+Nodebaum, kein zusätzlicher Refresh/Rootzugriff im Suchcode, unveränderte
+Versuchs-/Scroll-/Warteparameter, Reihenfolge Fehlerfeststellung→Ausgabe→Exception.
+Dies sind Codeprüfungen, keine dynamischen Tests des erschöpften Fehlerpfads.
+Keine allgemeine neue UI-Kampagne und keine erneute vollständige Host-/Storage-
+oder Benchmarkreihe. Frühere Tests aus Abschnitt30 bleiben historische Nachweise.
+
+### 31.4 Konkreter vollständiger Fehlversuch und letzter Suchverlauf
+
+**GEMESSEN im Minimalpfad:** Der vierte und siebte Versuch des frischen
+Schrift2-Arms scheiterten vollständig in `HC_L2_CONTENT` (nach der bereits
+bestandenen Suche `HC_L1_HEADING`). Alle status-group-Unterphasen bestanden in
+diesen beiden Läufen. Fehlerkategorie UNREACHABLE, kein Appcrash. Jeweils exakt50
+Puffereinträge, identischer folgender skalarer Verlauf (Versuche nullbasiert):
+
+| Versuche | Root des Testpakets | Ziel vorhanden | Scrollbounds | Back / Forward angeboten | Entscheidung | Ergebnis |
+|---|---|---|---|---|---|---|
+| 0–4 | true | false | 63:293:1017:2211 | false / true | WAIT | nicht versucht |
+| 5 | true | false | unverändert | false / true | FORWARD | true |
+| 6–7 | true | false | unverändert | false / true | FORWARD | false |
+| 8–49 | true | false | unverändert | true / false | FORWARD | false |
+
+Zielbounds stets absent, positive Zielgröße/Schnitt mit Scrollrechteck false;
+Scrollcontainer in allen50 Versuchen vorhanden.45 Scrollversuche, davon1 angenommen
+und44 abgelehnt. Nach der **letzten** Scrollentscheidung ist das Aktionsergebnis
+false; der terminale Fehler beruht hier also nicht auf einem erst im allerletzten
+Versuch angenommenen Befehl ohne anschließende Suchchance. Die Puffer werden erst
+nach Fehlerfeststellung ausgegeben und verändern die Fehlversuche nicht in PASS.
+
+**BEOBACHTET nach dem feststehenden Fehler:** Das vorhandene äußere Fehlerevent
+meldet ACTIVE_HUB, area=HUB, Operations OVERVIEW, Workspace/TaskBoard vorhanden,
+kein Personen-/Gruppenfokus, feedback=false, IME=false und windowFocus=true.
+Diese nachträgliche Zustandsaufnahme beweist keinen unveränderten Feedbackzustand
+während aller vorausgehenden Versuche. Der Minimalarm erhebt absichtlich keine
+zusätzlichen HC-Modell-/Kartenmessungen innerhalb der Suche.
+
+**EINGEGRENZT:** Der ursprüngliche Suchpfad fährt nach dem einen angenommenen
+Vorwärtsbefehl mit unveränderter Richtung fort, auch nachdem die angebotenen
+Aktionen ausschließlich rückwärts lauten. Die Suche findet den erwarteten
+Funktionsinhalt weder vor dem Befehl noch in den44 folgenden Suchversuchen.
+Eine vorübergehend nicht aktualisierte Scrollaktionsprojektion ist mit den
+Versuchen6/7 vereinbar: Vorwärts wird noch angeboten, aber abgelehnt. Ob dies eine
+laufende Scrollanimation, gecachte Metadaten oder einen anderen Übergang beschreibt,
+wird nicht zusätzlich abgefragt. Die später angebotene Rückwärtsaktion wurde vom
+Originalpfad nicht betätigt; dies ist eine dokumentierte Suchgrenze.
+
+**NICHT BEWIESEN:** aktuelle Pixel-/Scrollposition, Erreichbarkeit nach einem
+Richtungswechsel, aktueller vollständiger Semantikbaum, Ort/Komposition des
+fehlenden Zielelements oder konkrete Produktursache. Die Bounds des Containers
+sind kein Inhalts-Scrolloffset. Ohne zusätzliche Refresh-/Renderabfrage lässt sich
+nicht entscheiden, ob der Inhalt zwischen Anfang/Ende übersprungen wurde, der
+Baum unvollständig/veraltet blieb oder ein echter UI-Erreichbarkeitsfehler besteht.
+Der frühere separate Refreshnachweis aus30 erklärt diese beiden terminalen
+Fehler nicht automatisch. Keine behauptete alleinige Banner-/Material3-Ursache,
+keine nachgewiesene kleinste Harnesskorrektur, kein spekulativer Produktfix.
+
+### 31.5 Abgeschlossene feste Vergleichsreihen
+
+**GEMESSEN, primärer Arm:**20/20 vorab festgelegte Versuche ausgeführt;
+**18 PASS,2 UNREACHABLE,0 Appcrash**. Fehler ausschließlich im vierten/siebten
+Versuch, jeweils `HC_L2_CONTENT`. Kein neuer status-group-Fehler. Alle10 SG_A–J-
+Unterphasen bestanden auch in beiden fehlgeschlagenen Vollversuchen. Die18
+bestandenen Vollversuche einschließlich ihrer Lock-Detail-/Lock-Form-Assertions
+bleiben von den2 zuvor abgebrochenen Läufen getrennt. Kein nachträgliches Umwerten.
+Alle20 Ergebnisdatensätze haben dieselben eingefrorenen APK-SHA256. Nachprüfung
+der Rohstreams: erfolgreiche Suchen geben keinen Fehlerpuffer aus, beide Fehler
+genau50 Einträge und anschließend weiterhin FAIL. Kein Wiederholungsversuch mit
+geänderten Assertions, kein neuer Diagnosearm.
+
+
+**GEMESSEN, zusätzlicher Arm:**5/5 vorab festgelegte vollständige Doppelfontläufe
+1→2 in derselben Activity bestanden,0 Appcrashes. Identische APKs und Kontrollflags
+wie im primären Arm; keine Fehlerpuffer in den5 Rohstreams. Dies sind begrenzte
+erfolgreiche Wiederholungen einer anderen Konfiguration, keine allgemeine
+Fehlerfreiheit und keine Aufhebung der2 neuen oder historischen Fehler.
+Die25 Ergebnisdatensätze und zugehörigen Rohstreams wurden abschließend erneut
+abgeglichen; keine zusätzlichen Gerätetestversuche ausgeführt.
+
+### 31.6 Abschlussentscheidung und verbleibende Abnahme
+
+Die zeitlich und methodisch begrenzte automatische Fehlersuche endet hier.
+Der vollständige intermittierende Fehler ist im Minimalpfad erneut erfasst und
+auf die Inhaltssuche nach erfolgreicher Hubüberschrift eingegrenzt. Belegt ist die
+unverändert vorwärts gerichtete Suchgrenze bei anschließend ausschließlich
+angebotener Rückwärtsaktion. Eine ausreichende Kausalkette zu Zielposition,
+Baumaktualität oder einer kleinsten testseitigen Korrektur fehlt weiterhin.
+Deshalb keine Korrektur auf Verdacht, keine zusätzliche Variante und keine neue
+Regression bis zum ersten grünen Ergebnis. Gesamtstatus weiterhin offen;
+keine künstliche GRÜN-Bewertung, keine produktive Stufe2-Freigabe.
+
+Offen bleiben die unabhängige manuelle UI-/Produktabnahme und TalkBack-Abnahme,
+insbesondere Funktionsnavigation, Schriftvergrößerung/-wechsel, Scroll-/Fokus-
+verhalten und die historisch belegte vorübergehende Feedbacküberdeckung.
+Automatische synthetische Accessibilityproben ersetzen diese Abnahme nicht.
+Weitere Entscheidungen erst nach unabhängigem GitHub-Review; Issue#26 bleibt
+Gesamt-Release-Gate.
+
+### 31.7 Sicherheit, vollständige Dateiliste und Übergabe
+
+Nur testseitige Diagnose und Dokumentation geändert. Produktcode einschließlich
+SessionCoordinator und180s/30s-READY-Fristen, StorageAccess/Generation,
+SessionDbKeyOwner, SQLCipher-Preflight, Room-/Key-Lifecycle, Tink, Leadership/P3b,
+Dokumentisolation und Recovery unverändert. Keine Änderung an App-ID,
+Signaturschlüssel, Dependencies oder produktiver Speicherung; kein Cache und
+keine Raw-Key-Umstellung. Keine echten Credentials oder Produktdaten verwendet.
+
+Nach Abschluss wurden ausschließlich die beiden für diese Reihe zugelassenen
+isolierten Pakete `org.pag.perf.p11probe.test` und `org.pag.perf.p11probe` entfernt;
+beide Entfernungen erfolgreich. Vorheriger/nachheriger PaG-Paketbestand geprüft:
+anschließend ausschließlich `org.pag.prototype.a` vorhanden. Kein Produktupdate,
+kein Produkt-Uninstall/pm clear, keine pauschale Wiederherstellung früher bereinigter
+Pakete. Rohbelege und Buildartefakte verbleiben ausschließlich im ignorierten
+lokalen Diagnosebereich.
+
+Vollständiger Commitumfang:
+
+- `app/src/androidTest/kotlin/org/pag/prototype/Ux3dFunctionsProbe.kt`
+- `tools/p11semantics/README.md`
+- `docs/product-p11-active-workspace-assessment.md`
+
+3 Textdateien; keine APKs, Logs, Gerätekennungen, persönlichen Pfade,
+Produktdaten, Schlüssel oder Keystores im Commitumfang. Offline-Testbuild bestanden;
+Rohstream-/Ergebnisabgleich bestanden. Abschließende Diff-/Statusprüfung und
+WIP-Commit/Push auf dem bestehenden Featurebranch vorgesehen, ohne Force-Push,
+Merge, Release oder Produktupdate. Anschließend STOPP bis zum unabhängigen Review.

@@ -110,21 +110,40 @@ class Ux3dFunctionsProbe : Instrumentation() {
         return text == label || text == "✓ $label" || text.split("\n").contains(label) || (label == "Weitere Funktionen" && text.startsWith(label))
     }
     private fun visible(label: String, backwards: Boolean = label.startsWith("Rundgang") || label in listOf("PaG Demo", "Lagebild", "Vorbereitung im Überblick")): AccessibilityNodeInfo {
-        var lastMissingTree=emptyList<AccessibilityNodeInfo>()
+        // Fixed capacity; entries contain only scalars encoded as strings, never nodes.
+        val failedSearch = if (minimalHubObservation) arrayOfNulls<String>(50) else null
         repeat(50) { attempt ->
             val tree = nodes();trace.search(tree,label,backwards,attempt)
             if (!minimalHubObservation && trace.phase.startsWith("HC_") && (attempt in listOf(0,5,49) || (witness && attempt>=5)))
                 trace.reachSnapshot(tree,label,witness)
             tree.find { match(it, label) && bounds(it).height() > 0 }?.let { return it }
-            if(minimalHubObservation)lastMissingTree=tree
+            val scroll = tree.firstOrNull { it.isScrollable }
+            // Read only metadata of nodes already returned by the original query.
+            // No refresh, parent lookup, root query, event output or main-thread fence.
+            val beforeDecision = if (failedSearch != null) {
+                val target = tree.firstOrNull { match(it, label) }
+                val targetBounds = target?.let(::bounds)
+                val scrollBounds = scroll?.let(::bounds)
+                fun geometry(rect: Rect?) = rect?.let { "${it.left}:${it.top}:${it.right}:${it.bottom}" } ?: "absent"
+                val intersects = targetBounds != null && scrollBounds != null && Rect.intersects(targetBounds, scrollBounds)
+                "attempt=$attempt;phase=${trace.phase};rootOwned=${trace.lastRootOwned};target=${target != null};" +
+                    "targetPositive=${targetBounds?.let { it.width()>0 && it.height()>0 } == true};intersectsScroll=$intersects;" +
+                    "targetBounds=${geometry(targetBounds)};scroll=${scroll != null};scrollBounds=${geometry(scrollBounds)};" +
+                    "back=${scroll?.actionList?.any { it.id==AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD } == true};" +
+                    "forward=${scroll?.actionList?.any { it.id==AccessibilityNodeInfo.ACTION_SCROLL_FORWARD } == true};" +
+                    "beforeDecision=${if(attempt>=5) if(backwards) "BACK" else "FORWARD" else "WAIT"}"
+            } else null
             // Let the accessibility frame catch up before scrolling away from a
             // newly published heading. Tour/home headings live at the top.
-            if (attempt >= 5) trace.scroll(tree.firstOrNull { it.isScrollable },if(backwards) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+            val accepted = if (attempt >= 5) trace.scroll(scroll,if(backwards) AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD else AccessibilityNodeInfo.ACTION_SCROLL_FORWARD) else null
+            if (failedSearch != null) failedSearch[attempt] = "$beforeDecision;afterDecisionAccepted=${accepted ?: "notAttempted"}"
             waitForIdleSync(); SystemClock.sleep(80)
         }
         failureKind="UNREACHABLE"
         // After the original search has already failed: cannot turn failure into PASS.
-        if(minimalHubObservation)trace.reachSnapshot(lastMissingTree,label,true)
+        failedSearch?.forEach { entry ->
+            if (entry != null) sendStatus(0, Bundle().apply { putString("stream", "VISIBLE_EXHAUSTED;$entry\n") })
+        }
         error("Synthetic demo label not reachable")
     }
     private fun smallScroll(backwards: Boolean) {

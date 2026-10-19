@@ -206,11 +206,41 @@ Never pass a product APK; only the two explicitly isolated package IDs are allow
 `--hub-observation minimal` is an instrumentation-effect control: it preserves the
 original full Functions assertions and original hub navigation without the new
 HC_A..HC_K main-thread diagnostic checks. It also skips new proactive SG/HC
-snapshots. Only after the original 50-attempt visible search has failed does it
-record a paired snapshot; it still reports failure even if refresh exposes the
-label. Use `--witness none` and diagnostics enabled for this control. Default
+snapshots. Assessment section 31 replaces its old post-failure paired snapshot
+with a fixed 50-entry scalar buffer for each original visible() search. It reads
+only local metadata from the tree already queried; no node objects are retained
+in the buffer, no additional root queries/refresh/main-thread fences are added.
+Each failed attempt records pre-decision geometry/action availability and the
+scroll decision's returned Boolean (not a post-scroll geometry measurement).
+The buffer is emitted only after all 50 attempts have failed. No late query can
+turn this failure into PASS. A successful search emits no buffer.
+Use `--witness none --diagnostics phases` for this bounded control. Default
 `active` retains the additional model/geometry checks. Do not pool these modes or
 APK versions. In the final trace, paired scalar samples (including sampleDraw)
 are collected before emitting status/main-thread model snapshots, so logging does
 not insert a main-thread fence between the three samples. Window focus and owned
 root are booleans; no external package names or node contents are logged.
+
+
+## Bounded closing investigation (assessment section 31)
+
+Use the same frozen target and newly frozen test APK for exactly these arms:
+
+```sh
+python3 tools/p11semantics/regressions.py --adb "$ADB" --serial "$ANDROID_SERIAL" \
+  --aapt "$AAPT" --target-apk "$ISOLATED_TARGET_APK" --test-apk "$ISOLATED_TEST_APK" \
+  --suites functions --function-font 2 --function-runs 20 --navigation legacy \
+  --diagnostics phases --hub-observation minimal --witness none \
+  --output .prototype-cache/p11r31-font2
+python3 tools/p11semantics/regressions.py --adb "$ADB" --serial "$ANDROID_SERIAL" \
+  --aapt "$AAPT" --target-apk "$ISOLATED_TARGET_APK" --test-apk "$ISOLATED_TEST_APK" \
+  --suites functions --function-font both --function-runs 5 --navigation legacy \
+  --diagnostics phases --hub-observation minimal --witness none \
+  --output .prototype-cache/p11r31-both
+```
+
+Do not add variants or repeat until green. Historical failures remain failures.
+`intersectsScroll` describes the cached rectangles' intersection, not measured
+current visibility or freshness. `afterDecisionAccepted` is the action result;
+the final action can still trigger a later publication that this exhausted search
+does not query. No failure-time refresh is performed in minimal mode.
