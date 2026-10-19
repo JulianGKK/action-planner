@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Synthetic library tests only: no platform authentication, services or launcher. -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" tools:node="remove" />
+    <queries tools:node="remove" />
+    <application android:label="PaG P11 Bounded Tests" android:allowBackup="false"
+        android:usesCleartextTraffic="false" android:fullBackupContent="@xml/b1_backup_rules"
+        android:dataExtractionRules="@xml/b1_data_extraction_rules">
+        <service android:name="androidx.room3.MultiInstanceInvalidationService"
+            tools:node="remove" tools:ignore="MissingClass" />
+    </application>
+</manifest>

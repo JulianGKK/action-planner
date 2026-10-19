@@ -3994,3 +3994,167 @@ Nur notwendige Quellen/Tests und dieser Bericht im regulären WIP-Commit; keine
 APKs, DBs, Logs, Schlüssel, persönlichen Pfade oder Gerätekennungen. Nach Push und
 unabhängigem Commit-/Remote-SHA-Abgleich STOPP bis zum unabhängigen GitHub-Review;
 kein Force-Push, Merge, Release, Produktupdate oder weitere Integration.
+
+## 37. Android-SQLCipher-/Room-Laufzeitnachweis – isolierte Vorbereitung
+
+### 37.1 Auftrag und Artefaktgrenze
+
+**VORBEREITET, NICHT AM GERÄT GETESTET:** Ausgangsstand lokal und auf dem
+WIP-Remote vor Änderungen identisch:
+`d4860848d0dfe45e9a067b488d645a8e72767d41`. Ausschließlich die vier bestehenden
+`BoundedActiveRoomTest`-Methoden sollen später ausgeführt werden. Keine Änderung
+an Produktquellen, diesen Androidtestmethoden, Navigation, Snapshotvorhaltung,
+Writepfaden oder Sicherheitsarchitektur. Kein Gerätezugriff, keine Installation,
+Deinstallation, Datenlöschung oder `connectedAndroidTest` in diesem Auftrag.
+
+Das neue ausschließlich auf `:data` wirkende Init-Skript baut offline die
+Library-Instrumentation. **Eine APK, kein separates Ziel-App-APK.** Das gebaute
+Manifest wurde tatsächlich mit AAPT geprüft, nicht aus Gradle-Annahmen abgeleitet:
+
+| Eigenschaft | Verifiziertes Ergebnis |
+|---|---|
+| Test-/APK-Paket | `org.pag.data.unlockprobe` |
+| Instrumentation-Target | `org.pag.data.unlockprobe` (Self-Target) |
+| Runner | `androidx.test.runner.AndroidJUnitRunner` |
+| Application | Standard `android.app.Application`, kein eigener Name |
+| Label | `PaG P11 Bounded Tests` |
+| Permissions / Queries | keine |
+| Activities / Services / Provider / Receiver / Aliase | keine |
+| Instrumentation | genau eine |
+| Backup / Cleartext | deaktiviert |
+| Debuggable / minSdk / targetSdk | ja / 30 / 37 |
+
+Der erste Manifestcheck fand geerbte Biometriepermission und Testservice-Queries.
+Das neue test-only Manifest entfernt diese sowie den Room-Multiinstance-Service;
+der abschließend gebaute und geprüfte Stand hat die oben dokumentierte leere
+Permission-/Komponentenmenge. Produktmanifest und vorhandenes manuelles
+P11-Testmanifest wurden nicht verändert.
+
+Eingefrorener APK-SHA256:
+`c5a628f6b6b4a23dc1adeb4af99d136a428f76204e99c906a422e1de0f7ddf42`.
+Gebautes Original und eingefrorene Kopie sind nach dem Abschlussbuild identisch.
+Ein Signer; kryptografische APK-Signaturprüfung bestanden. Zertifikat gegen den
+**bereits vorhandenen unabhängigen lokalen Vertrauensnachweis** geprüft, nicht
+gegen einen aus dieser APK übernommenen Vertrauensanker. Bestehender
+Keystore-Dateihash und eingefrorenes manuelles APK unverändert. Keine neuen
+Schlüssel und keine Keystoreumstellung. ARM64-SQLCipher und DEX-Symbole der
+Testklasse/vier Methoden vorhanden; Symbolpräsenz ersetzt keinen Testlauf.
+
+Der rein lesende APK-Prüfer erzwingt Hash, unabhängiges Zertifikat, Self-Target,
+Runner und die genaue Manifeststruktur. `org.pag.prototype.a` und
+`org.pag.perf.p11probe` sind ausgeschlossen. APKs, Vertrauensdateien und Logs
+bleiben lokal und werden nicht eingecheckt.
+
+### 37.2 Treiberabgleich und konkrete statische Grenze
+
+Geprüft wurden die vorhandenen Reader-/Fixture-/B2-Cleanupquellen, die lokal
+vorliegenden Room-3.0.3-Quellen und die tatsächliche Dependency
+`net.zetetic:sqlcipher-android:4.19.1`. AAR-SHA256:
+`43fc10cae8f1f1059f0933e8942a1eb328989d13426378597cd4add1b34a34fd`.
+Die folgenden Aussagen unterscheiden Quell-/Bytecodebefund von Androidlaufzeit:
+
+| Gegenstand | Statisch/auf Host bestätigt; offene Androidgrenze |
+|---|---|
+| `withReadTransaction` | Room verwendet Readerconnection und DEFERRED-Transaktion; tatsächliche Androidausführung offen. |
+| `PooledConnection.usePrepared` | Room-Passthrough verwendet `delegate.prepare(sql).use`; kein explizites `reset()` an dieser Grenze. |
+| `PRAGMA encoding` | Reader akzeptiert ausschließlich exakt `UTF-8`; Androidantwort noch nicht ausgeführt. |
+| `CAST(TEXT AS BLOB)` / `getBlob` | Reader misst BLOB-Bytelängen, lädt begrenzte BLOBs und dekodiert strikt UTF-8. SQLCipher delegiert `getBlob` an Android-Cursor. NUL-/Supplementary-Verhalten am Androidtreiber nicht nachgewiesen. |
+| Rowid-Keyset | Actionfilter, `ORDER BY rowid LIMIT 32`, nächste Seite über gebundenes `rowid > ?`; keine OFFSET-Vollmaterialisierung. Vier Fälle decken keine Folgeseite ab. |
+| Bindings / NULL | Echte SQLCipher-Klasse erhält explizites NULL und Long als typisierte Mapwerte; `step()` übergibt ein Object-Array an `rawQuery`. Native Auswertung offen. |
+| Statement-/Cursor-Cleanup | Konkrete unten beschriebene Abweichung; explizites Cursor-Close bei Statementende nicht bestätigt. |
+| Transaktion / Lease | Vorhandenes finales DB-/Driver-/Lease-Cleanup bleibt erhalten; Endwirkung am Androidtreiber noch offen. |
+
+**KONKRETER STATISCHER BLOCKER:** Der Bytecode von
+`SQLCipherStatement.close()` setzt lediglich `closed=true`; er schließt den
+gehaltenen Cursor nicht. `reset()` ruft dagegen `cursor.close()` auf.
+[B2Driver](../data/src/main/kotlin/org/pag/data/prototype/b2/B2Driver.kt) delegiert
+`SQLiteStatement` und überschreibt `close()` nicht. Zusammen mit Rooms `.use`
+ist damit die Annahme eines expliziten Cursor-Close am Ende jedes
+`usePrepared` widerlegt. Zwei neue Hostdiagnosen gegen die tatsächliche
+Dependencyklasse (nur der Cursor ist ein Proxy, keine native DB) bestätigen
+Close-/Reset- und Bindingverhalten. Der Test dokumentiert den Befund, keine
+Freigabe eines gewünschten Cleanupverhaltens.
+
+Das beweist **keinen endgültigen DB-/FD-/Native-Leak**: Das bestehende
+[ActionDatabase-Cleanup](../data/src/main/kotlin/org/pag/data/product/ActionDatabase.kt)
+schließt weiterhin Room, beendet den Parent, schließt den Driver und prüft
+Lifecycle/Publication. Dessen Android-Endeffekt und CursorWindow-Verhalten bleiben
+zu untersuchen. Keine spekulative Produktkorrektur vorgenommen.
+
+Die bestehende `P11SyntheticFixture.close()` widerruft den Owner, überschreibt
+das kontrollierte Keyarray und versucht nach Pfadprüfung `deleteRecursively()`.
+Dessen Boolean wird nicht geprüft: erfolgreiche Verzeichnisentfernung ist kein
+eigener nachgewiesener Testbefund. Auch dies wurde nicht verdeckt korrigiert.
+
+### 37.3 Exakter späterer Lauf und Datenschutz
+
+Der [reproduzierbare Ablauf](../tools/p11bounded/README.md) enthält Build,
+APK-Gate und den vollständigen festen Instrumentation-Selektor für ausschließlich:
+
+1. `boundedProjectionEqualsExistingOperationsAndActionReaders`
+2. `preparationCompletedAndMissingAreRejected`
+3. `finalPublicationDenialAndRevokedSessionReturnNoPayload`
+4. `repeatReadClosesConnectionsAndDoesNotChangeProjection`
+
+**BENÖTIGT GESONDERTE FREIGABE:** Installation dieser eingefrorenen APK und
+Ausführung dieser vier Methoden; eine nachfolgende Deinstallation benötigt
+expliziten Einschluss. Vorher Gerät eindeutig prüfen, nur Installations-/Signatur-
+metadaten der Produkt-/manuellen App festhalten, keine Produktdaten lesen.
+Falls das temporäre Paket schon vorhanden ist: STOPP, kein Ersetzen oder Leeren.
+Installation ohne `-r`. Keine zweite APK, keine allgemeine Suite, keine weiteren
+Tests, kein automatisches Wiederholen. Exakt vier Methodenergebnisse und regulären
+Runnerabschluss auswerten; Nichtausführung/Skips sind kein PASS.
+
+Die unveränderte paketbeschränkte Fixture erzeugt ausschließlich synthetische
+Daten und einen zufälligen flüchtigen DB-Schlüssel im privaten temporären
+Testpaketbestand. Kein echter Login, keine Produktdaten und kein Produktkeystore-
+zugriff durch den Test. Bei Crash können dort Reste bleiben. Cleanup betrifft
+nur den geprüften Fixture-Unterbestand beziehungsweise nach ausdrücklicher
+Freigabe das in diesem Lauf neu installierte temporäre Paket. Kein `pm clear`,
+keine Berührung der Produkt-App oder der vorhandenen manuellen P11-App.
+Vorher-/Nachher-Metadatenvergleich ist im Plan vorgeschrieben, hier nicht erfolgt.
+
+### 37.4 Konkrete Prüfungen und Aussagegrenzen
+
+**GETESTET:** Offline 202 App-, 148 Data- und 4 Security-Hosttests:
+**354 bestanden, 0 Fehler, 0 Skips**. Darin bestehende 2A-1-Verträge, historische
+Mutation-/Budget-Proofs, 22 bounded Readerfälle, Workspace-/ACTIVE-/ViewModel-,
+Session-/B2-Key- und Dokumentregressionen sowie die zwei neuen Treiberdiagnosen.
+Zusätzlich **6 Python-APK-Gatetests bestanden**, einschließlich Ablehnung falscher
+Pakete/Targets/Runner, zusätzlicher Komponenten/Permissions und Signerabweichungen.
+Abschließendes reales APK-Gate mit AAPT und kryptografischem Apksigner bestanden.
+
+**OFFLINE KOMPILIERT:** Data-Androidtest-APK einschließlich der vier Methoden,
+Produkt-Kotlin und Produkt-/Demo-Manifestprüfungen; Build erfolgreich. Exakte
+lokale Befehle: `:data:assembleDebugAndroidTest` mit dem neuen Init-Skript sowie
+App-Hosttests mit dem bestehenden `tools/p11assessment/host.init.gradle`,
+fokussierte Data-Hosttests und `:security:testDebugUnitTest`, jeweils `--offline`.
+
+**NICHT GETESTET:** Alle vier Android-Laufzeitergebnisse. Die vorhandenen Fälle
+verwenden 20 Personen und keine Rollen/Planungen. Sie decken keine nichtleeren
+Rollenpfade, keine >32-Zeilen-Folgebatches und keine Android-NUL-/Unicode-/Übergrößen-
+oder vollständigen Budgetgrenzfälle ab. Hostbefunde werden nicht in Android-PASS
+umgedeutet. Selbst vier erfolgreiche spätere Fälle lösen diese Grenzen und den
+Cursor-Cleanupbefund nicht automatisch. Keine neue Performanceverbesserung,
+Snapshotfreigabe, Sicherheits- oder Produktabnahme behauptet.
+
+### 37.5 Umfang und Abschlussgrenze
+
+Gemessener Commitumfang: sieben Dateien, 509 Einfügungen, keine Löschungen
+(`git diff --cached --stat`); ausschließlich Test-/Runner-/Prüfwerkzeuge und Bericht:
+
+- `data/src/test/kotlin/org/pag/data/product/BoundedDriverContractTest.kt`
+- `tools/p11bounded/prepare.init.gradle`
+- `tools/p11bounded/AndroidManifest.xml`
+- `tools/p11bounded/verify_apk.py`
+- `tools/p11bounded/test_verify_apk.py`
+- `tools/p11bounded/README.md`
+- `docs/product-p11-active-workspace-assessment.md`
+
+**BLOCKER:** Gesonderte Gerätefreigabe und tatsächlicher Androidlauf;
+Statement-/Cursor-Cleanupbewertung, nicht nachgewiesene Fixture-Verzeichnislöschung
+und die genannten Abdeckungslücken. Keine Produktionskorrektur, kein Anschluss
+an ProductViewModel/navigateActive/loadWorkspace, keine Session-/Storagegate-,
+SQLCipher-/Tink-/Schema-11-/P3b-/Dokument-/App-ID-/Signaturänderung. Installierte
+Apps unangetastet. Regulärer WIP-Commit/Push, unabhängiger Remote-SHA-Abgleich,
+danach STOPP bis zum unabhängigen Review beziehungsweise ausdrücklicher Freigabe.

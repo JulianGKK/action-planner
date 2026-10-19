@@ -1,0 +1,12 @@
+// Data-library instrumentation only. No app variant, install task or credential generation.
+gradle.beforeProject { p ->
+    if (p.path == ':data') p.plugins.withId('com.android.library') {
+        def keystore = new File(p.rootDir, '.prototype-cache/debug.keystore')
+        if (!keystore.isFile()) throw new GradleException('Existing local keystore required')
+        def android = p.extensions.getByName('android')
+        android.defaultConfig.testApplicationId = 'org.pag.data.unlockprobe'
+        android.defaultConfig.testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
+        android.signingConfigs.getByName('debug').storeFile = keystore
+        android.sourceSets.getByName('androidTest').manifest.srcFile(new File(p.rootDir, 'tools/p11bounded/AndroidManifest.xml'))
+    }
+}
