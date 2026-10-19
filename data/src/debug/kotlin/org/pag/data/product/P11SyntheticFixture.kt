@@ -11,9 +11,13 @@ import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicReference
 import org.pag.domain.*
 
-/** Debug benchmark fixture, guarded BEFORE any filesystem/key work. No product package allowed. */
-class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, main:Executor=Executor{it.run()}):AutoCloseable {
+/** Debug benchmark fixture, guarded BEFORE any filesystem/key work. No product package allowed.
+ * Task count is explicit for bounded tests; existing benchmark/manual callers keep default 100.
+ */
+class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, main:Executor=Executor{it.run()},
+    taskCountPerAction:Int=100):AutoCloseable {
     private val app=context.applicationContext.also {
+        require(taskCountPerAction>=0)
         check(it.packageName in setOf("org.pag.data.unlockprobe","org.pag.perf.p11probe"))
     }
     private val parent=app.noBackupFilesDir.canonicalFile
@@ -63,7 +67,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
                     if(status!=ActionStatus.PREPARATION)db.operations().insertState(OperationalRow(id,"$id-$p",null,"NO_STATUS",null,1))
                 }
                 if(status!=ActionStatus.COMPLETED) {
-                    repeat(100){i->check(TaskStore(db,c){1}.create(id,TaskInput("Synthetic task $i")) is OperationsResult.Value)}
+                    repeat(taskCountPerAction){i->check(TaskStore(db,c){1}.create(id,TaskInput("Synthetic task $i")) is OperationsResult.Value)}
                     repeat(20){i->
                         check(MaterialStore(db,c){1}.create(id,MaterialInput("Synthetic material $i")) is OperationsResult.Value)
                         check(ExpenseStore(db,c){1}.create(id,ExpenseInput("Synthetic expense $i",100,listOf(ExpensePaymentInput("Synthetic",100)))) is OperationsResult.Value)
@@ -102,13 +106,17 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
             {if(allowed)BoundedActiveBinding(actionId,epoch,0)else null},::fail).read(binding)
     }
     /** Explicit test entry only; not part of the runtime/navigation fixture setup. */
-    fun boundedTasks(actionId:String=activeId,allowPublication:Boolean=true):BoundedTaskResult {
+    fun boundedTasks(actionId:String=activeId,allowPublication:Boolean=true,
+        onPublicationAttempt:()->Unit={}):BoundedTaskResult {
         val binding=BoundedActiveBinding(actionId,epoch,0)
         val gated=object:StorageAccess {
             override fun acquire(scope:AccessScope):StorageContext? {
                 val c=access.acquire(scope) ?: return null
                 return object:StorageContext by c {
-                    override fun publish(result:()->Unit)=allowPublication && c.publish(result)
+                    override fun publish(result:()->Unit):Boolean {
+                        onPublicationAttempt()
+                        return allowPublication && c.publish(result)
+                    }
                 }
             }
         }

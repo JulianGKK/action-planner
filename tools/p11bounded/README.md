@@ -1,6 +1,6 @@
 # P11 bounded ACTIVE: isolierten Android-Lauf vorbereiten
 
-Der getrennte feste Task-Modus und sein bekannter Fixture-BLOCKER sind in
+Der getrennte feste Task-Modus und die korrigierte positive Fixture sind in
 [TASKS.md](TASKS.md) dokumentiert. Dieser bestehende ACTIVE-Ablauf bleibt unverändert.
 
 **Nur Vorbereitung. Keine Installation/Testausführung/Bereinigung ohne spätere

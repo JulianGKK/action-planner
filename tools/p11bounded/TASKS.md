@@ -3,16 +3,16 @@
 **Kein Gerätezugriff in diesem Auftrag. Installation, einmaliger Testlauf und
 optionale Entfernung benötigen eine neue ausdrückliche Freigabe.**
 
-**Bekannter Fixture-BLOCKER:** Die unveränderte 100-Task-Fixture überschreitet
-bereits ohne übergroße Templatekennung das Übergangsbudget. Dieses Artefakt ist
-kein erwartbar grüner Vier-Test-Abnahmelauf. Vor einer Gerätefreigabe muss dieser
-Befund ausdrücklich bewertet werden; ein diagnostischer Lauf wäre nur mit
-Kenntnis dieser Grenze sinnvoll. Keine Assertions, Fixture oder Budgets still ändern.
+Die korrigierte positive Fixture verwendet explizit 40 Tasks/40 CREATED-Events,
+nach Transition 40 Tasks/41 Events. Ihre Zulassung ist auf dem Host nachgewiesen;
+ein Android-PASS steht aus. Cursor-/CursorWindow-Lebensdauer und gemeinsame
+Snapshotintegration bleiben BLOCKER. Historischer 100-Task-Budgetnachweis bleibt erhalten.
 
 ## Eingefrorenes Artefakt und unabhängiges Gate
 
-Basis: `25d988e3186f56c828b03bdf82ae731b7957e97d`, Branch
-`p11-performance-optimization`. Die vier Androidmethoden sind unverändert.
+Basis: `6e6b0cf21436c8511ec4ed218f799688a437535f`, Branch
+`p11-performance-optimization`. Die vier Androidmethodennamen sind unverändert; Assertions prüfen jetzt erfolgreiche
+40-Task-Boards vor und nach den gezielten Testereignissen.
 Genau ein isolierter Data-Instrumentation-Build wurde ausgeführt:
 
 ```sh
@@ -20,13 +20,16 @@ Genau ein isolierter Data-Instrumentation-Build wurde ausgeführt:
 ```
 
 Gebautes Original: `data/build/outputs/apk/androidTest/debug/data-debug-androidTest.apk`.
-Separat eingefrorene Kopie: `.prototype-cache/p11bounded-task-artifacts/bounded-tasks-room.apk`.
-Das ältere ACTIVE-Artefakt `bounded-room.apk` bleibt unverändert separat erhalten.
+Separat eingefrorene Kopie: `.prototype-cache/p11bounded-task-corrected-artifacts/bounded-tasks-room-corrected.apk`.
+Die älteren Task- und ACTIVE-Artefakte bleiben unverändert separat erhalten.
+Insbesondere das gesperrte 100-Task-Artefakt mit SHA256
+`72990b3d301fc80c5663154a7e5e41491b718c6c059effbe5120c9185b8f986d`
+wurde nicht ersetzt und ist nicht dieses neue Artefakt.
 Ein Neubuild ist ein neues Artefakt und benötigt erneute Verifikation/Freigabe;
 die eingefrorene Kopie nicht überschreiben. APKs und Rohlogs nicht in Git aufnehmen.
 
 Task-APK-SHA256:
-`72990b3d301fc80c5663154a7e5e41491b718c6c059effbe5120c9185b8f986d`.
+`e2965c50aea142da8157bd914964b0a9388bbb861fbd739df26dd04d8c2bf115`.
 
 Tatsächliches AAPT-Manifest: Paket/Test/Instrumentation-Target jeweils
 `org.pag.data.unlockprobe`, Self-Target, genau eine Instrumentation mit
@@ -46,7 +49,7 @@ Keystore-Dateihash gegenüber diesem Nachweis prüfen; keine Schlüssel erzeugen
 TASK_SELECTION='org.pag.data.product.BoundedTaskRoomTest#boundedTasksMatchLegacyBoardIncludingEventsAndDerivedViews,org.pag.data.product.BoundedTaskRoomTest#nonActiveAndMissingAreDenied,org.pag.data.product.BoundedTaskRoomTest#publicationAndRevokeCannotReturnTaskPayload,org.pag.data.product.BoundedTaskRoomTest#oversizeTemplateRefusedAndRepeatedReadsRemainConsistent'
 python3 tools/p11bounded/verify_apk.py --mode tasks --selection "$TASK_SELECTION" \
   --apk "$TASK_APK" \
-  --sha256 72990b3d301fc80c5663154a7e5e41491b718c6c059effbe5120c9185b8f986d \
+  --sha256 e2965c50aea142da8157bd914964b0a9388bbb861fbd739df26dd04d8c2bf115 \
   --certificate-sha256 "$CERT_SHA256" --aapt "$AAPT" --apksigner "$APKSIGNER"
 ```
 
@@ -56,8 +59,9 @@ Beide Modi behalten dieselben engen Manifest-/Signatur-/Native-Gates.
 
 ## Vorbereiteter einmaliger Ablauf – ausschließlich nach neuer Freigabe
 
-1. Bekannten Fixture-BLOCKER und diagnostische Aussagegrenze ausdrücklich klären.
-   Kein grünes Ergebnis unterstellen. Fehlende Freigabe bedeutet STOPP.
+1. Unabhängigen Review und neue ausdrückliche Freigabe des neuen Hashes und
+   Vier-Methoden-Laufs abwarten. Offene Ressourcenfragen anerkennen; kein Android-
+   PASS unterstellen. Fehlende Freigabe bedeutet STOPP.
 2. APK-Gate mit exakt freigegebenem Hash, unabhängigem Zertifikat und Taskselektor
    erneut ausführen. Bei fehlender APK, Hash-/Signatur-/Manifest-/Symbol-/
    Selektorabweichung STOPP, kein Ersatzbuild oder Fallback.
@@ -103,45 +107,47 @@ Pakets sowie unveränderte Versionen/Installationszeiten/Signaturen der Produkt-
 und manuellen P11-App prüfen. Kein `pm clear` und keine pauschale Bereinigung.
 Gerätekennungen, lokale Pfade, APKs und Rohstream ausschließlich lokal aufbewahren.
 
-## Belegte Testvoraussetzungen und erwartete Grenzen
+## Korrigierte Voraussetzungen und getrennte Negativnachweise
 
-`P11SyntheticFixture` erstellt 100 ACTIVE-Tasks mit je einem CREATED-Event.
-UUIDs sind jeweils 36 ASCII-Bytes, Titel `Synthetic task 0` bis `Synthetic task 99`,
-keine Assignees/Betroffenen-/Templatewerte. Die gültige OPEN→IN_PROGRESS-Transition
-im ersten Test erzeugt genau ein STARTED-Event: fachlich 100 Tasks / 101 Events.
-Der Übergang und die Zählannahme sind fachlich zulässig.
+`P11SyntheticFixture(..., taskCountPerAction = 40)` wird ausschließlich in den
+vier Taskmethoden explizit verwendet. Default 100 für bestehende Aufrufer bleibt
+unverändert. Vor Transition: 40 Tasks/40 CREATED-Events; zulässige
+OPEN→IN_PROGRESS-Transition: genau ein zusätzliches STARTED-Event. UUIDs haben
+36 ASCII-Bytes; alle Feld-/Relation-/Budgetregeln bleiben unverändert.
 
-Nach der **aktuellen unveränderten** Budgetformel:
+| Zustand | Rows inkl. Action | Textfelder inkl. nullable | UTF8-Bytes | Retained-Charge | Transition-Charge |
+|---|---:|---:|---:|---:|---:|
+| 40 Tasks / 40 Events | 81 | 525 | 6530 | 849184 | 3387520 |
+| 40 Tasks / 41 Events | 82 | 529 | 6626 | 858528 | 3424896 |
 
-| Bestand | Rows inkl. Action | Textfelder inkl. nullable | UTF8-Bytes | Transition-Charge |
-|---|---:|---:|---:|---:|
-| 100 Tasks / 100 Events | 201 | 1305 | 16250 | 8410240 Bytes |
-| 100 Tasks / 101 Events, eine IN_PROGRESS | 202 | 1309 | 16346 | 8447616 Bytes |
+Beide Repräsentationen liegen unter ihrem jeweiligen 8388608-Byte-Limit.
+Dies sind Engineering-Charges, keine gemessenen ART-/Native-Heapgrößen.
 
-Limit: 8388608 Bytes. Formel aus Reader/Engineeringbudget:
-`rows * 20608 + fields * 2272 + bytes * 80 + 3072` (checked Long).
-Zwei neue Hosttests gegen echtes SQLite/schema 11 bestätigen baseline/Transition
-als BUDGET_REFUSED **vor Payloadquery/BLOB-Fetch**, ohne Storage-BLOCKED.
-Die zulässige Templatekennung mit 200000 `x` wird von TaskRules/TaskRow akzeptiert;
-der vorhandene Titel bleibt innerhalb 120 Codepoints. Es ist keine echte
-Credential und kein erlaubter Grund für eine Budgeterhöhung.
+- Methode 1 verlangt vor und nach Transition vollständige Values und Vergleich
+  mit echtem TaskRepository: Inhalte, gesamte geordnete Eventliste und abgeleitete
+  Ansichten. Counts 40/40 und 40/41 erzwingen je zwei Task-/Eventbatches; alle
+  vorherigen Events bleiben erhalten, genau ein STARTED für den betroffenen Task.
+- Methode 2 behält Ablehnung von Nicht-ACTIVE/fehlend bei.
+- Methode 3 verlangt vorher/nachher positive Reads. Ein expliziter Testcallback
+  zählt das tatsächliche Erreichen der Publicationgrenze; Budgetverweigerung
+  genügt nicht. Nach Revoke kein weiterer Publicationversuch.
+- Methode 4 verlangt erfolgreiche vollständige Reads vor Mutation und bei allen
+  drei Wiederholungen. Erst nach erfolgreichem Einfügen der fachlich zulässigen
+  200000-`x`-Templatekennung folgt BUDGET_REFUSED. FD-Toleranz vergleicht somit
+  vollständige Reads, keine Rejected-Werte.
 
-Folgen für die unveränderten Androidtests, **keine ausgeführten Androidresultate**:
+Fünf Fixture-Hostmethoden prüfen auf echtem SQLite/schema 11 die kleinen positiven
+Bestände, vollständige Historie/mehrere Batches, Transition/Event genau einmal,
+isolierte Übergröße, Publication/Revoke sowie die getrennte große negative Fixture.
+Der unveränderte Negativfall bleibt 100 Tasks/100 bzw. 101 Events:
+Transition-Charges 8410240 bzw. 8447616 Bytes, BUDGET_REFUSED vor Payloadquery und
+BLOB-Fetch, kein Storage-BLOCKED. Keine Budgeterhöhung oder unbegrenzter Fallback.
 
-- Methode 1 erwartet Value nach Transition; statisch/auf Host ist Budgetverweigerung
-  belegt. Ein Castfehler wäre deshalb ein Testvoraussetzungsproblem.
-- Methode 2 prüft ausschließlich Ablehnungen; kein Value-Voraussetzungsproblem
-  aus dieser Budgetrechnung abgeleitet, Androidausführung weiterhin offen.
-- Methode 3 erwartet zunächst ACCESS_REVOKED bei Publicationverweigerung; die
-  frühere Budgetverweigerung erreicht dieses Gate nicht. Erwartete Assertion
-  passt damit nicht zum aktuellen Fixturebestand.
-- Methode 4 kann schon identische Rejected-Ergebnisse vergleichen. Der FD-Check
-  wäre kein erfolgreicher vollständiger Taskboard-Read-Nachweis; die spätere
-  Budgetverweigerung isoliert nicht die übergroße Templatekennung als Ursache.
-
-Diese Befunde korrigieren keine Produktion und schwächen keine Assertions ab.
-Ein späterer sinnvoller grüner Abnahmelauf benötigt eine separat geprüfte
-Testvoraussetzungsentscheidung. Keine Android-PASS behaupten.
+Für realistische 200 Personen/1000 Aufgaben bleibt der gemeinsame Größen-/
+Budget-/Performancekonflikt offen. Schon 1000 Tasks ohne Events überschreiten
+mit diesen Engineeringgewichten das retained Budget, selbst bei einer unteren
+Rechnung ohne Textbytes. Keine schnelle Navigation solcher Bestände nachgewiesen;
+40 Tasks sind ein gezielter Testbestand, keine Lösung dieser Produktanforderung.
 
 ## Ressourcen-/Cleanupgrenzen
 
