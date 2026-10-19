@@ -4526,3 +4526,180 @@ Installierte Produkt-App und manuelle Test-App unangetastet. Keine APKs, Schlüs
 DBs, Rohlogs, persönlichen Pfade oder Gerätekennungen im Commit. Regulärer WIP-
 Commit/Push, unabhängiger Remote-SHA-Abgleich, danach STOPP bis zum unabhängigen
 GitHub-Review. Kein Force-Push, Merge, Release, Produktupdate oder weitere Integration.
+
+## 40. Stufe 2A-2b – Android-Laufzeitvorbereitung
+
+### 40.1 Basis, unveränderte Methoden und Artefakt
+
+**VORBEREITET, KEIN GERÄTEZUGRIFF:** Lokaler Branch und GitHub-Remote vor Änderungen
+unabhängig identisch bestätigt: `p11-performance-optimization`,
+`25d988e3186f56c828b03bdf82ae731b7957e97d`; Arbeitsverzeichnis sauber.
+Die vier vorhandenen Methoden in `BoundedTaskRoomTest` wurden unverändert geprüft:
+
+1. `boundedTasksMatchLegacyBoardIncludingEventsAndDerivedViews`
+2. `nonActiveAndMissingAreDenied`
+3. `publicationAndRevokeCannotReturnTaskPayload`
+4. `oversizeTemplateRefusedAndRepeatedReadsRemainConsistent`
+
+Keine Assertion-, Androidfixture- oder Produktänderung. Genau einmal offline
+`:data:assembleDebugAndroidTest -I tools/p11bounded/prepare.init.gradle --offline`
+ausgeführt; isolierte Data-Library-Instrumentation, **eine APK**, kein separates
+Ziel-App-APK. Gebautes APK separat eingefroren; das ältere eingefrorene ACTIVE-
+Artefakt wurde nicht ersetzt. SHA256 des finalen Task-Artefakts:
+
+`72990b3d301fc80c5663154a7e5e41491b718c6c059effbe5120c9185b8f986d`.
+
+Ein Neubuild benötigt neue Verifikation und gegebenenfalls neue Freigabe; keine
+unbemerkte Ersetzung der eingefrorenen Kopie. APK/Schlüssel/Rohlogs bleiben lokal.
+Keine Installation, Deinstallation, Instrumentation oder sonstiger Gerätezugriff.
+
+### 40.2 Tatsächliche APK-Identität und kryptografische Prüfung
+
+**VERIFIZIERT am gebauten Manifest mit AAPT:**
+
+| Eigenschaft | Ergebnis |
+|---|---|
+| Paket/Testpaket | `org.pag.data.unlockprobe` |
+| Instrumentation-Target | `org.pag.data.unlockprobe`, Self-Target |
+| Runner | `androidx.test.runner.AndroidJUnitRunner`, genau eine Instrumentation |
+| Application / Label | Standard `android.app.Application` / `PaG P11 Bounded Tests` |
+| Permissions / Queries | keine |
+| Activities / Services / Provider / Receiver / Aliase | keine |
+| Backup / Cleartext | deaktiviert |
+| Debuggable / minSdk / targetSdk | ja / 30 / 37 |
+| Native Library | ARM64 `libsqlcipher.so` enthalten |
+
+Kryptografische APK-Signaturprüfung mit Apksigner bestanden; genau ein Signer
+entspricht dem **bereits zuvor unabhängig bekannten lokalen Zertifikatsnachweis**.
+Kein aus der zu prüfenden APK übernommener Vertrauensanker. Bestehender Keystore-
+Dateihash gegenüber seinem unabhängigen Nachweis unverändert, keine neuen Keys.
+Exakter APK-Hash vor/nach Prüfung identisch. DEX enthält Testklassendeskriptor und
+Symbole aller vier Taskmethoden; das ist Symbolpräsenz, kein Android-Test-PASS.
+Andere Testklassen bleiben im Data-Test-APK enthalten, werden aber durch den
+späteren exakten Selektor nicht ausgeführt.
+
+`verify_apk.py` besitzt jetzt die geschlossenen Modi `active` und `tasks`.
+Default `active`, ursprüngliche Klasse/Methoden und sämtliche Manifest-/Signatur-
+Gates bleiben erhalten. `tasks` hat ausschließlich die vier oben genannten
+Methoden; ein optional übergebener Selektor muss bytegenau dem festen Selektor
+entsprechen. Keine beliebige Klassen-/Package-/Suiteauswahl oder zusätzliche
+Methode. Der Prüfer besitzt weiterhin keine Gerätefunktion. Das neue Task-APK
+bestand den Taskmodus; das ältere eingefrorene ACTIVE-APK bestand erneut den
+unveränderten ACTIVE-Prüfumfang mit seinem ursprünglichen Hash.
+
+### 40.3 Konkreter Fixture-BLOCKER vor einem sinnvollen Abnahmelauf
+
+**AUF HOST BESTÄTIGT, KEIN PRODUKTFEHLERNACHWEIS:** Die Fachannahme 100 ACTIVE-
+Tasks mit zunächst 100 CREATED-Events ist korrekt. OPEN→IN_PROGRESS ist zulässig
+und erzeugt ein STARTED-Event: danach 100 Tasks/101 Events. Task-/Event-UUIDs
+belegen jeweils 36 ASCII-Bytes; nullable Felder werden im Budget als mögliche
+Allokationen belastet. Die vorhandene Fixture überschreitet allerdings bereits
+**vor** der zusätzlichen Templatekennung das unveränderte Übergangsbudget:
+
+| Zustand | Rows inkl. Action | Textfelder inkl. nullable | UTF8-Bytes | Transition-Charge |
+|---|---:|---:|---:|---:|
+| vor Transition: 100 Tasks / 100 Events | 201 | 1305 | 16250 | 8410240 Bytes |
+| nach Transition: 100 Tasks / 101 Events | 202 | 1309 | 16346 | 8447616 Bytes |
+
+Limit 8388608 Bytes; Überschreitung 21632 beziehungsweise 59008 Bytes. Aus den
+aktuellen Reader-/Budgetgewichten folgt
+`rows * 20608 + fields * 2272 + bytes * 80 + 3072` für die Übergangsrepräsentation.
+Neue nichtproduktive Hostdiagnosen bilden die relevanten Fixturefelder mit
+synthetischen gleichlangen UUIDs auf echtem SQLite/schema 11 nach, prüfen die
+SQL-Aggregate und belegen am tatsächlichen BoundedTaskStore für beide Zustände
+BUDGET_REFUSED **vor Payloadquery und BLOB-Fetch**, null offene Statements und
+kein Storage-BLOCKED. Keine Fehlklassifikation als Korruption.
+
+Die übergroße sourceTemplateKey-Kennung aus 200000 `x` ist nach den aktuellen
+TaskRules/TaskRow-Regeln zulässig; ihr Titel bleibt unter 120 Codepoints. Sie
+benötigt keine neue Freitext-/Credentialregel. Die unveränderte Budgetverweigerung
+lässt sich in diesem Androidfall aber nicht isoliert auf sie zurückführen,
+weil bereits der Ausgangsbestand verweigert wird.
+
+**Folgen für die vier unveränderten Methoden – abgeleitet, nicht am Gerät gemessen:**
+
+- Methode 1 castet nach Transition auf Value. Für diese Fixture ist bereits die
+  Budgetverweigerung belegt; ein entsprechender Castfehler wäre ein
+  Testvoraussetzungsproblem, kein Nachweis defekter Tasksemantik.
+- Methode 2 prüft Nicht-ACTIVE/fehlend; aus der Budgetrechnung folgt kein solches
+  Value-Voraussetzungsproblem. Androidresultat trotzdem weiterhin offen.
+- Methode 3 erwartet zuerst ACCESS_REVOKED bei verweigerter Publication; die
+  vorgelagerte Budgetverweigerung erreicht das Publicationgate nicht und passt
+  daher nicht zur bestehenden Erwartung. Weitere Assertions könnten unerreicht bleiben.
+- Methode 4 kann identische Rejected-Werte vergleichen; der FD-Check wäre kein
+  Nachweis erfolgreicher vollständiger Reads. Die abschließende Budgetablehnung
+  weist nicht spezifisch die übergroße Templatekennung als Ursache nach.
+
+**BLOCKER:** Das unveränderte Artefakt ist technisch prüfbar und als diagnostischer
+Vier-Methoden-Lauf reproduzierbar, aber kein erwartbar grüner Abnahmelauf. Vor
+Gerätefreigabe muss diese Grenze ausdrücklich bewertet werden. Ein sinnvoller
+grüner Nachweis benötigt eine getrennt geprüfte Testvoraussetzungsentscheidung;
+keine Assertions abschwächen, kein Budget erhöhen und keine Testdatenprobleme
+als Produktfehler umdeuten. Die Offline-Kompilation aus 39 bewies diese fachliche
+Budgetvoraussetzung nicht; Abschnitt 40 ergänzt den jetzt konkreten Befund.
+
+### 40.4 Offline-Ergebnisse, Laufplan und Abbruchbedingungen
+
+**GETESTET:** Zehn Python-Prüfertestmethoden bestanden. Enthalten sind falsche
+Produkt-/manuelle Paketkennung, falsches Target/Runner, zusätzliche Permissions/
+Komponenten/Queries, Backup/Cleartext/Custom-Application-Abweichungen, fehlende/
+falsche/mehrere Signer sowie beide exakten Modi. Neue Payload-/Selektortests
+verweigern jede einzeln fehlende Methode in beiden Modi, fehlende/falsche Klasse,
+fehlendes ARM64, Teil-/Extra-/Doppelauswahl, vertauschte Reihenfolge und Kreuzwahl
+zwischen ACTIVE/Tasks. Bestehende ACTIVE-Grenzen wurden nicht abgeschwächt.
+
+**GETESTET:** 51 Data-Hosttests bestanden, 0 Fehler/Skips: zwei neue
+Fixture-Voraussetzungsdiagnosen, 25 bestehende Taskreaderfälle, 22 bestehende
+Personen-/Funktionsreaderfälle und zwei tatsächliche SQLCipher-Treiberdiagnosen.
+Offline-APK-Build einschließlich Androidtest-Kompilation und Architekturprüfung
+bestanden. Keine neuen Abhängigkeiten, keine zusätzliche Geräte-/Benchmarkkampagne.
+Die vier Androidmethoden sind ausschließlich gebaut, **nicht ausgeführt**.
+
+Der [exakte einmalige Task-Laufplan](../tools/p11bounded/TASKS.md) enthält den
+vollständigen festen Vier-Methoden-Selektor, den read-only Gateaufruf mit Taskmodus
+und eingefrorenem Hash sowie alle zukünftigen Installations-/Ergebnis-/Cleanup-
+Schritte. **BENÖTIGT NEUE AUSDRÜCKLICHE FREIGABE:** tatsächliche Installation und
+Ausführung; eine Paketentfernung muss ebenfalls ausdrücklich eingeschlossen sein.
+
+Vor späterer Installation: Fixture-BLOCKER bewerten, genaues autorisiertes Gerät
+prüfen, nur Installations-/Signaturmetadaten der drei betroffenen Pakete lokal
+sichern. Bei bereits vorhandenem temporären Paket STOPP, kein Ersetzen/Leeren.
+Bei fehlender APK, Hash-/Signatur-/Manifest-/Symbol-/Selektorabweichung STOPP,
+kein Ersatzbuild oder Fallback. Nur die eine neue APK ohne `-r`; Self-Target und
+unveränderte geschützte Apps danach prüfen. Genau ein Lauf, kein Retry bis grün,
+keine weiteren Methoden und kein connectedAndroidTest. Pro Methode Originalresultat
+und Runnerabschluss erfassen. Bereinigung ausschließlich des nachweislich neu
+installierten, erneut identifizierten temporären Pakets bei entsprechender
+Freigabe. Produkt-/manuelle P11-App niemals installieren, ersetzen, löschen oder
+leeren; abschließend Metadatenvergleich. Derzeit kein Gerätebestand abgefragt.
+
+### 40.5 Ressourcen- und Integrationsgrenzen; Dateiliste
+
+**WEITERHIN BLOCKER:** SQLCipherStatement.close schließt den Cursor nicht
+explizit. Keine Änderung an SQLCipher oder B2Driver. Statement-/Transaktionsende,
+DB-/Driver-/Lease-Cleanup, FD-Toleranz und offene native Cursor-/CursorWindow-
+Lebensdauer bleiben getrennte Nachweise. Ein späteres FD-PASS löst den statischen
+Befund nicht. Insbesondere die aktuelle baseline-Budgetverweigerung begrenzt die
+Aussage des vorbereiteten FD-Tests zusätzlich. Fixture-Verzeichnislöschung prüft
+weiterhin ihren Boolean nicht; Crash kann Reste im temporären Paket hinterlassen.
+
+Gemeinsame Scope-Admission und Payload-/Formularownership, Budgetkalibrierung,
+Task-Androidlauf samt weitergehender Grenz-/Fehlerabdeckung, Mutation-/Outcome-/
+Recovery-/Editorhooks und vertrauenswürdige Permission-/Statusversionierung aus
+39 bleiben offen. Keine Snapshotintegration, RAM-Hits, Writerhooks, Änderungen an
+Sicherheitsgates/Schema oder neue Performanceaussagen. Kein Gerät, keine echten
+Daten/Credentials, keine Veränderung installierter Apps.
+
+Vollständige geänderte Dateiliste:
+
+- `tools/p11bounded/verify_apk.py`
+- `tools/p11bounded/test_verify_apk.py`
+- `tools/p11bounded/README.md`
+- `tools/p11bounded/TASKS.md`
+- `data/src/test/kotlin/org/pag/data/product/BoundedTaskFixturePreconditionTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+
+Nur Test-/Prüfer-/Berichtsdateien, keine Produktquellen, Androidtestmethoden,
+APKs, Schlüssel, Rohlogs, Gerätekennungen oder persönlichen Pfade im Commit.
+Regulärer WIP-Commit/Push mit unabhängigem Commit-/Remote-SHA-Abgleich; danach
+STOPP bis zum unabhängigen GitHub-Review. Kein Force-Push, Merge oder Release.

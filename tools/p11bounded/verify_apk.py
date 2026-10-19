@@ -19,6 +19,34 @@ METHODS = (
 )
 SELECTION = ",".join(TEST_CLASS + "#" + method for method in METHODS)
 
+TASK_CLASS = "org.pag.data.product.BoundedTaskRoomTest"
+TASK_METHODS = (
+    "boundedTasksMatchLegacyBoardIncludingEventsAndDerivedViews",
+    "nonActiveAndMissingAreDenied",
+    "publicationAndRevokeCannotReturnTaskPayload",
+    "oversizeTemplateRefusedAndRepeatedReadsRemainConsistent",
+)
+TESTS = {"active": (TEST_CLASS, METHODS), "tasks": (TASK_CLASS, TASK_METHODS)}
+
+
+def selection_for(mode):
+    test_class, methods = TESTS[mode]
+    return ",".join(test_class + "#" + method for method in methods)
+
+
+def validate_selection(mode, selection):
+    if mode not in TESTS or selection != selection_for(mode):
+        raise ValueError("Only the exact four-method selection for this mode is allowed")
+
+
+def validate_payload(dex, entries, mode, selection):
+    validate_selection(mode, selection)
+    test_class, methods = TESTS[mode]
+    if ("L" + test_class.replace(".", "/") + ";").encode() not in dex or any(m.encode() not in dex for m in methods):
+        raise ValueError("Missing compiled test class/method symbols")
+    if "lib/arm64-v8a/libsqlcipher.so" not in entries:
+        raise ValueError("Missing ARM64 SQLCipher library")
+
 
 def digest(value):
     value = value.lower().replace(":", "")
@@ -62,7 +90,11 @@ def main():
     parser.add_argument("--certificate-sha256", required=True)
     parser.add_argument("--aapt", required=True)
     parser.add_argument("--apksigner", required=True)
+    parser.add_argument("--mode", choices=tuple(TESTS), default="active")
+    parser.add_argument("--selection", help="If supplied, must equal the fixed selector for the mode")
     args = parser.parse_args()
+    selection = args.selection if args.selection is not None else selection_for(args.mode)
+    validate_selection(args.mode, selection)
     before = hashlib.sha256(args.apk.read_bytes()).hexdigest()
     if before != digest(args.sha256):
         raise ValueError("APK hash differs from frozen artifact")
@@ -71,14 +103,12 @@ def main():
     validate(manifest, certs, args.certificate_sha256)
     with ZipFile(args.apk) as apk:
         dex = b"".join(apk.read(n) for n in apk.namelist() if re.fullmatch(r"classes\d*\.dex", n))
-        if ("L" + TEST_CLASS.replace(".", "/") + ";").encode() not in dex or any(m.encode() not in dex for m in METHODS):
-            raise ValueError("Missing compiled test class/method symbols")
-        if "lib/arm64-v8a/libsqlcipher.so" not in apk.namelist():
-            raise ValueError("Missing ARM64 SQLCipher library")
+        validate_payload(dex, apk.namelist(), args.mode, selection)
     if hashlib.sha256(args.apk.read_bytes()).hexdigest() != before:
         raise ValueError("Artifact changed during verification")
     print(f"VERIFIED package=test=target={PACKAGE}; runner={RUNNER}; sha256={before}; no device operation")
-    print("SELECTION=" + SELECTION)
+    print("MODE=" + args.mode)
+    print("SELECTION=" + selection)
 
 
 if __name__ == "__main__":
