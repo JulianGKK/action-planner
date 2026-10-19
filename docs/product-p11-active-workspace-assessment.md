@@ -3507,3 +3507,250 @@ P3b/Leadership, Tink, Dokument-/PDF-Isolation, Recovery, Keystore, App-ID und
 Signatur unverändert. Produkt-App und manuelle Test-App bleiben unangetastet.
 Nach geprüftem regulärem Commit/Push und Remote-SHA-Abgleich STOPP bis zum
 unabhängigen GitHub-Review; kein Force-Push, Merge, Release oder Produktupdate.
+
+
+## 35. Stufe 2A-1 – Gültigkeits- und Budgetgrundlagen
+
+### 35.1 Auftrag, Basis und tatsächlich implementierter Umfang
+
+**IMPLEMENTIERT:** Basis und GitHub-Branch vor Änderungen unabhängig abgeglichen:
+`c50da043826247e49709c44cd9f6e466c0104d68`,
+`p11-performance-optimization`. Der Benutzer hat für den späteren engen ACTIVE-
+Slice den größeren/länger lebenden RAM-Klartextbestand, spätere Erkennung neuer
+DB-Fehler auf RAM-Hits und fehlende physische Wipegarantie ausdrücklich akzeptiert.
+Performance bleibt Produktanforderung; diese Zustimmung hebt keine zentralen
+Gates, Budget- oder Integrationsnachweise auf. Dieser Auftrag setzt ausschließlich
+kompilierbare Sicherheitsgrundlagen um, keine Snapshot-Wiederverwendung.
+
+Neue interne Klassen im bestehenden Product-Paket:
+
+- `ActiveWorkspaceValidity`: instanzlokale Metadaten für genau eine ACTIVE-Bindung
+  (Action-ID/Status, READY-Generation, Berechtigungsrevision), Mutations-/Load-Epoch,
+  fünf Projektionsgruppen ACTION/PEOPLE/OPERATIONS/TASKS/TASK_COUNTS, Pending/Dirty,
+  einmalige identitätsgebundene Read-/Mutationstickets und terminaler Revoke.
+- `ActiveWorkspaceBudget`: getrennte mengenbasierte Admission mit ADMITTED,
+  BUDGET_REFUSED und INVALID_DATA sowie maximal einem gehaltenen und einem
+  separat begrenzten Übergangsbestand. Opaque Repräsentationstickets; veränderliche
+  Buchhaltung bleibt privat, Inspektion liefert nur Metadatenkopien.
+
+Beide Klassen halten keine Domain-Payload, DB-/Room-/DAO-/Connectionobjekte,
+Keys, Credentials, Dokumente, P3b-Inhalte oder Grants. Keine Persistenz, globale
+Registry, zweite Session, eigene Uhr oder neue Dependency. Sie sind auf den
+Erzeugerthread beschränkt; Workerresultate müssen später dorthin dispatcht werden.
+
+**NICHT INTEGRIERT:** Keine Aufrufstelle in ProductViewModel/Runtime, Navigation,
+WorkspaceRepository oder Data-Writern. `navigateActive`, `loadWorkspace`, Clears,
+`WorkspaceSnapshot`, `WorkspaceRead`, Reader und Writer unverändert. Kein Payload-
+Store, RAM-Hit, optimistisches Speichern, Write-behind oder Hintergrundvorhalten.
+Das heutige Produktverhalten und seine DB-Zugriffe bleiben bestehen. Keine neue
+Performanceverbesserung gemessen oder behauptet.
+
+### 35.2 Gültigkeits-, Commit- und UNKNOWN-/Recoveryvertrag
+
+**IMPLEMENTIERT:** Die Bindung ist nach Erzeugung unveränderlich. Eine Änderung
+von Action, Generation oder Berechtigungsrevision bzw. ein fehlender aktueller
+Scope beendet den Owner. Nicht-ACTIVE-Bindungen sind unzulässig; der künftige
+Adapter muss bei Statusverlust null liefern und synchron widerrufen.
+`StorageAccess.acquire(READY)`, Context-Scope/Generation und OPERATION werden bei
+Zulassung geprüft; jede Publication liegt zusätzlich im originalen
+`StorageContext.publish`. Dort werden Bindung, beide Epochs und Pending erneut
+geprüft. Ein lokal gültiges Ticket reicht niemals. Kein Fristupdate durch Checks.
+
+BEGIN ist vom zukünftigen vertrauenswürdigen Data-Adapter nach ursprünglicher
+Syntax-/Scopezulassung und **vor Queue/erstem Sideeffect** aufzurufen. Betroffene
+Gruppen werden sofort dirty, alte Reads/Patches ungültig. Es gibt höchstens eine
+Pendingmutation und einen Read; identische Readanforderungen coalescen, abweichende
+parallele Anforderungen werden ohne automatische Queue abgewiesen. Readbeginn
+entwertet alte Patches und die angeforderten Projektionen. Epoch-Inkremente sind
+mit `Math.incrementExact` gegen Überlauf geschützt; Überlauf beendet den Owner.
+
+COMMITTED ist nur eine vertrauenswürdige Data-Outcomemeldung, keine Commit-
+Autorisierung und keine UI-Erfolgsmeldung. Erst bestätigter Commit **und** COMPLETE-
+Cleanup ermöglichen einen vollständigen, einmaligen Projektionspatch unter dem
+finalen Gate. ROLLED_BACK bleibt für betroffene Teile dirty bis zu einem frischen,
+autorisierten Reload. Teil-/doppelte/verspätete Resultate und fremde Tickets werden
+abgewiesen; Completionversuche verbrauchen ihr gültiges Ticket auch bei Ablehnung.
+Während der Publication sind neue Reads/Mutationen gesperrt. Callbackfehler
+(einschließlich `Error`) setzen terminal RECOVERY_REQUIRED und werden weitergereicht.
+Publication darf später nur vorbereitete Referenzen tauschen, keine IO/Projektionen
+berechnen oder Lifecycleänderungen auslösen. Es gibt keinen zusätzlichen Monitor.
+
+**IMPLEMENTIERT:** UNKNOWN sowie FAILED-Cleanup eines aktuellen Reads/Writes
+setzen terminal **RECOVERY_REQUIRED**, entfernen alle gültigen Tickets und
+Cleanmarkierungen. Derselbe Owner erlaubt danach weder Hits noch neue Reads,
+Writes oder Publication; auch Revoke/Reauth hebt diesen Zustand nicht auf. Kein
+Reset, Rebind oder automatischer Write-Retry. Dies schließt ausdrücklich die
+bekannte Lücke des historischen `MutationContractProof`, der nach UNKNOWN später
+wieder einen Read beginnen kann. Der historische Proof bleibt unverändert und
+wird weiter separat getestet; er ist keine produktive Outcomeintegration.
+
+**NICHT INTEGRIERT / BLOCKER:** Der künftige Lifecycle-/Data-Adapter muss bei Lock,
+Ablauf, Foreground-/Screen-Lock-Verlust, BLOCKED, Action-/Generation-/Permission-
+wechsel synchron `revoke` ausführen und Payload-/Formularreferenzen lösen.
+Die Klasse prüft zusätzlich die zentrale Autorität bei jeder Zulassung; sie
+abonniert selbst keine zweite Session. Nach UNKNOWN darf ein neuer Owner nicht
+als lokaler Reset erzeugt werden: ursprüngliche Storage-/Maintenance-/Recovery-
+Entscheidung und neuer bewusster autorisierter Load sind vorher nachzuweisen.
+Diese übergreifende Lifecyclepflicht wird nicht durch eine globale Registry ersetzt.
+
+Die heutigen Repositorycallbacks unterscheiden nicht überall bestätigten Commit,
+Cleanup und widerrufene Publication. `ActionDatabaseAccess.use` prüft nach Cleanup
+noch die Publication; ein verweigerter Rückgabepfad beweist deshalb keinen Rollback.
+Der Commitadapter `B2Driver` bleibt zuständig für echtes Commitgate/Rollback.
+Lock vor Commit darf ihn nicht umgehen; Commit vor Lock bleibt DB-Wahrheit,
+auch wenn danach kein UI-Erfolg mehr erlaubt ist. Die neuen Tests beweisen diese
+Metadaten-/Coordinatorentscheidungen, keine neu angeschlossene SQLCiphertransaktion.
+
+### 35.3 Admissionannahmen und verbleibende Readerblocker
+
+**IMPLEMENTIERT:** Je Repräsentation fest 8 MiB Engineeringbudget; höchstens ein
+gehaltener und ein separat auf 8 MiB begrenzter Übergangsbestand pro Ledger.
+Kein stiller Resize/Reset. Erst ein erfolgreich versiegelter Übergangsbestand
+kann die alte Buchhaltung ersetzen; alte Tickets werden dabei ungültig. Ein
+verweigerter Übergang kann weder versiegelt/promoviert noch durch weitere
+Übergänge umgangen werden. `close` ist terminal. Das künftige Payload-Ownership
+muss alte Referenzen tatsächlich lösen, bevor ein weiterer Übergang startet;
+Buchhaltung allein kann externe Runtime-/Formularkopien nicht freigeben.
+
+`Units` erfasst disjunkte Objekt-, String-/UTF16-, Array-/Byte-, Listen-/Kapazitäts-,
+Map-/Kapazitäts-, Index-/Kapazitäts- und Referenzzahlen. Konservative Charges:
+128 Byte/DTO, 71/String inkl. Header-/Alignmentreserve plus 4/UTF16-Einheit,
+71/Array plus Payloadbytes, 128/Liste plus 8/Kapazität, 128/Map oder Index plus
+128/Kapazität sowie 8/zusätzlicher Referenz. Doppelte Repräsentationen werden
+separat gezählt; keine Deduplikationsannahme. Kapazitäten sind obere Grenzen der
+Allokation, keine bloßen Listengrößen. Sämtliche Add/Mul erfolgen checked in Long.
+Negative oder strukturell widersprüchliche Aggregate sind INVALID_DATA, gültige
+Übergröße/Chargeoverflow BUDGET_REFUSED. Verweigerung ist sticky, ungültige Daten
+werden auch nach Budgetverweigerung ausdrücklich als INVALID_DATA erkannt.
+
+**BLOCKER:** Diese Gewichte sind noch nicht für reale DTO-/ART-Graphen kalibriert;
+sie sind keine harte ART-/Native-/App-Heapgrenze und keine OOM-Garantie. Admission
+ist keine Fach-/Storagefreigabe. Sie muss vor der nächsten Materialisierung
+aufgerufen werden; ein erfolgreiches Seal beweist allein weder vollständigen
+Inhalt noch sichere Reader-/Cleanupintegration. Formulare/Compose und temporäre
+Row-/Builder-/Sortierkopien brauchen explizite begrenzte Ownership-/Chargeregeln.
+
+Konkrete Voraussetzungen für Readerarbeit in **2A-2**, keine aktuelle Umsetzung:
+
+1. In derselben kurzen autorisierten Readtransaktion zuerst frischen Actionstatus,
+   Counts/Relationen und begrenzte Textaggregate prüfen. Auch IDs, normalisierte
+   Pseudonyme/Rollennamen und Actiontitel/-beschreibung zählen. SQL-Codepoints,
+   Byteaggregate und Kotlin-UTF16 einschließlich NUL-/Surrogatfällen dürfen nicht
+   ungeprüft gleichgesetzt werden; SQL- und Long-Overflow getrennt behandeln.
+2. `OperationsStore.board`/`PersonDao.list`/`OperationsDao.roles/planned/plans/states`
+   laden heute vollständige Bestände; `TaskStore.board`/`TaskDao.list/events` alle
+   Tasks und Events. Personen-, Rollen-, Task-/Eventzahlen sind unbeschränkt,
+   mehrere Action-/Pseudonym-/Rollentexte haben kein allgemeines Längenmaximum.
+   Auch `actions().get()` materialisiert Actiontexte bereits vollständig.
+3. Diese DAOs brauchen zunächst reine Metadaten-/Längenabfragen ohne Stringpayload
+   sowie deterministische, begrenzte Batches/Cursorpfade, mit Prüfung auch großer
+   Einzelwerte vor `getText`/Rowmaterialisierung. Batchgröße allein begrenzt keine
+   einzelne Zeichenkette. Dafür sind konkrete DAO-Erweiterungen nötig; eine
+   Schemaänderung/Migration wird in 2A-1 weder benötigt noch durchgeführt.
+4. Reservierte obere Grenzen vor Fetch prüfen, tatsächliche materialisierte
+   Einheiten danach gegen Reservierung nachprüfen; sämtliche temporären und
+   retained Repräsentationen budgetieren. Alle Storagegates, Validierungen,
+   Preflights und bedingungsloses Schließen von Cursor/Room/Lease erhalten.
+5. Bei Ablehnung kein vollständiges/EMPTY-Ergebnis aus Teilbestand, keine
+   Budgeterhöhung, zweite Action, Retryschleife oder unbeschränkter Fallback über
+   heutige Vollreader. Ohne begrenzten Bedarfspfad bleibt der Bereich kontrolliert
+   nicht verfügbar. Beschädigte Daten bleiben originale fail-closed-Storagefehler.
+
+### 35.4 Tests und konkrete Ergebnisse
+
+**GETESTET:** Abschlusslauf mit vorhandener lokaler Toolchain, offline;
+keine Geräteverbindung, Credentials, Installation oder neue Benchmarkkampagne.
+JUnit-XML-Ergebnisse abgeglichen, keine Fehler oder übersprungenen Tests:
+
+| Host-Suite | Ergebnis |
+|---|---:|
+| ActiveWorkspaceValidityTest | 23/23 |
+| ActiveWorkspaceValiditySessionTest (echter unveränderter SessionCoordinator, synthetische Auth/Uhr) | 8/8 |
+| ActiveWorkspaceBudgetTest | 13/13 |
+| Historische MutationContractTest / BudgetContractTest | 13/13 und 7/7 |
+| Historische AssessmentSessionTest | 9/9 |
+| WorkspaceBatchTest / ActiveWorkspaceTest | 21/21 und 20/20 |
+| ActivePeopleTest / ActiveTasksTest / ActiveFunctionsTest | 25/25, 29/29, 27/27 |
+| ProductViewModelTest | 7/7 |
+| Data: SessionCoordinatorTest / B2SessionTest / B2KeyContractTest | 20/20, 16/16, 12/12 |
+| Data: DocumentDeleteTest / DocumentProductStorageTest / DocumentReconciliationTest | 29/29, 11/11, 36/36 |
+| Security: LeadershipCryptoTest | 4/4 |
+
+Summe: **202 App-Hosttests** (davon **44 neue**), **124 Data-Hosttests**,
+**4 Security-Hosttests**, insgesamt **330 bestanden**. Bestehende Proofs wurden
+nur über `tools/p11assessment/host.init.gradle` in Hosttests eingebunden;
+kein Probe-Overlay im Produktbuild. Offline `:app:assembleDebug`,
+`:app:verifyPrototypeManifest`, `:app:verifyDemoManifest` und Architekturprüfung
+bestanden. Vorhandener Keystore-Dateihash vor/nach Build unverändert.
+
+Die neuen Tests decken Action-/Generation-/Permissionabweichung, Pending/Dirty,
+Commit ohne Publication, Revoke/Lock vor Commitmeldung und nach Commit vor
+Publication, doppelte/alte/fremde Tickets, Mutation während Read, Mutation oder
+neuen Read unmittelbar am finalen Gate, Teilpatches, Rollback, terminal UNKNOWN,
+Cleanupfehler, Threadkonfinierung und defensive Kopien der Projektionsmengen ab.
+Coordinatorfälle prüfen zusätzlich BLOCKED, 30-s-Idle ohne Verlängerung durch
+Checks, absolute 180 s trotz Interaktion, Foreground-/Screen-Lock-Verlust und
+fehlenden Scope-Reuse nach Reauth. Echte Geräteauthentifizierung wird nicht behauptet.
+
+Budgettests prüfen exakte Grenze, Überschreitung, Long-Mul-/Add-Overflow, alle
+negativen Aggregate, inkonsistente Counts, extrem langen Einzeltext nur anhand
+seiner Länge, Supplementary Unicode, Objekt-/Collection-/Index-/Array-/Kopierkosten,
+zwei getrennte Maximalbudgets, Verweigerung vor simuliertem Fetch und weitere
+Materialisierungsversuche nach Refusal, Fremdtickets, terminal Close sowie fehlende
+Storagefreigabe bei Budgetverweigerung. Das ist kein Test eines bereits bounded
+produktiven DAO-Readers.
+
+Ein initialer Wrapperstart scheiterte am Sandbox-Dateisystem; der Projektcache
+enthielt zudem nicht alle vorhandenen CameraX-Artefakte. Abschlussprüfungen nutzten
+den vollständigen vorhandenen Benutzer-Gradlecache **offline**, ohne Dependency-
+oder Versionsänderung. Die Fehler wurden nicht als Testerfolge gezählt.
+Die bestehende onActivityResult-Deprecation bleibt außerhalb dieses Slices.
+
+### 35.5 Mutationshooks, weitere Freigabegates und Dateiliste
+
+**NICHT INTEGRIERT / BLOCKER:** Alle produktiven Writefamilien aus 19/34.4 benötigen
+weiterhin nachgewiesene BEGIN-/Commit-/Cleanup-/Publication-Outcomes:
+Action create/update/status, Person create/rename, Role create/rename/delete,
+Plan/Snapshot, Task create/edit/transition/delete einschließlich atomarer Events,
+Material/Kosten samt Referenz-/Summaryabhängigkeiten, Protokollrevisionen,
+Memory-Section/Complete/Addendum, Dokumentimport/-löschung sowie Reconciliation/
+Maintenance und Permission-/Leadershipwiderruf. Mehrstufige Dokumentarbeit bleibt
+über Subcommits hinweg pending; ihre eigene Lane/Recovery wird nicht ersetzt.
+P3b-Inhalte gehören niemals in den künftigen Kern. Nicht vorhandene allgemeine
+P3a-Person-/Action-Deleteports werden nicht erfunden.
+
+Personrename hat weiterhin keinen universellen Expected-Person-CAS. Vor längerer
+Snapshotnutzung sind einzelne Editowner, aktuelle Formulartokens, Invalidierung
+und sichere Abwehr paralleler/staler Rename-/Plan-/Rolleneditoren nachzuweisen;
+ein Metadatenticket ersetzt keinen persistierten Konfliktvergleich.
+
+Für **2A-2** erforderlich: unabhängiger Review dieses Slices; vertrauenswürdige
+Scope-/Permissionquelle, vollständiger Revoke-/Recovery-/Owner-Lifecycle und
+Writer-Outcomeadapter mit echten Commit-/Cleanup-Rennentests; bounded Reader und
+Kalibrierung/Actual-Unit-Nachweise aus 35.3; eng allowlisteter Kernsnapshot ohne
+zweiten Payloadstore. Erst nach diesen Nachweisen darf Navigation getrennt
+integriert und auf 100–150 ms geprüft werden. Die Grundlagen allein erfüllen
+keinen dieser noch offenen Integrationsnachweise.
+
+Unverändert: SessionCoordinator, StorageAccess, 180-s-/30-s-Fristen,
+SessionDbKeyOwner, SQLCipher-/Raw-Key-Vertrag, Tink, P3b/Leadership,
+DocumentNamespaceLane, Dokument-Recovery/PDF-Isolation, Schema 11, App-ID,
+Signatur/Keystore und sämtliche bestehende Navigations-/Writepfade. Keine echten
+Produktdaten oder neue Klartextpersistenz. Produkt-App und installierte manuelle
+P11-Test-App bleiben unangetastet. Historische **18/20, 2 UNREACHABLE bei
+HC_L2_CONTENT** bleiben ohne neue UI-Ursachensuche dokumentiert; Abschnitt 33
+wird nicht auf neue Software oder alle TalkBack-/Schriftkombinationen übertragen.
+
+Vollständiger Commitumfang:
+
+- `app/src/main/kotlin/org/pag/prototype/product/ActiveWorkspaceValidity.kt`
+- `app/src/main/kotlin/org/pag/prototype/product/ActiveWorkspaceBudget.kt`
+- `app/src/test/kotlin/org/pag/prototype/product/ActiveWorkspaceValidityTest.kt`
+- `app/src/test/kotlin/org/pag/prototype/product/ActiveWorkspaceValiditySessionTest.kt`
+- `app/src/test/kotlin/org/pag/prototype/product/ActiveWorkspaceBudgetTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+
+Nur diese sechs Quell-/Test-/Berichtsdateien; keine APKs, Logs, DBs, Schlüssel,
+Keystores, Gerätekennungen oder persönlichen Pfade im Commit. Regulärer WIP-Push
+und unabhängiger Remote-SHA-Abgleich; danach STOPP bis zum unabhängigen GitHub-
+Review. Kein Force-Push, Merge, Release, Produktupdate oder weitere Integration.
