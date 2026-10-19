@@ -3214,3 +3214,296 @@ Produkt-App und vorhandene Test-App auf dem Samsung bleiben unangetastet.
 Nach regulärem Commit/Push auf dem bestehenden WIP-Branch und Remote-SHA-Abgleich
 STOPP. Weitere Arbeit erst nach unabhängigem GitHub-Review; kein Force-Push,
 Merge, Release oder Produktupdate.
+
+
+## 34. Stufe 2 – Architektur- und Sicherheitsentscheidung
+
+Grundlage: `8435c6debdb87a89a576f8eb480f3785a7f806f2` auf
+`p11-performance-optimization`. Reiner Code-/Dokumentationsabgleich der Abschnitte
+6–14, 19–20 und 33 mit dem aktuellen Produktbestand; keine Implementierung.
+**BESTÄTIGT** bedeutet hier durch Quelleninspektion belegt oder ausdrücklich als
+historischer Mess-/Benutzernachweis bezeichnet, keine neue Testausführung.
+**VORGESCHLAGEN** bezeichnet den Integrationsentwurf; **NICHT GETESTET** dessen
+produktive Wirkung; **BENÖTIGT FREIGABE** die ausdrücklich offene Entscheidung.
+
+Quellanker: Product unter `app/src/main/kotlin/org/pag/prototype/product/`,
+Domain unter `domain/src/main/kotlin/org/pag/domain/`, Repositories/Stores,
+`ActionDatabase.kt`, `SessionDbKeyOwner.kt`, `LeadershipGrant.kt` und Dokument-
+Recovery unter `data/src/main/kotlin/org/pag/data/product/`; zentrale Autorität
+`data/src/main/kotlin/org/pag/data/SessionCoordinator.kt`, Commitadapter
+`data/src/main/kotlin/org/pag/data/prototype/b2/B2Driver.kt`. Die gelesenen
+Testverträge liegen unter `tools/p11assessment/shared/org/pag/assessment/`
+(`MutationContractProof.kt`, `BudgetContractProof.kt`), ihre Tests unter
+`tools/p11assessment/test/org/pag/assessment/` (`MutationContractTest.kt`,
+`BudgetContractTest.kt`). Ergänzend Produktziel und bestehende Security-/Threat-
+Model-/Privacy-/Architekturvorgaben berücksichtigt.
+
+### 34.1 A – Heute implementierte Schutzmechanismen
+
+**BESTÄTIGT:** `SessionCoordinator` bleibt die zentrale Autorität für READY,
+Generation, Umgebung, Ablauf und Publication. `ProductSessionTiming.policy` in
+`domain/src/main/kotlin/org/pag/domain/Actions.kt` setzt 180 Sekunden absolut und 30 Sekunden READY-Idle.
+Die absolute Frist läuft ab erfolgreicher Authentifizierung, nicht ab dem ersten
+Cachehit; nur gültige Benutzerinteraktion erneuert Idle. `acquire`, `check` und
+`publish` erzwingen die aktuelle Gültigkeit. `MainActivity` koppelt Vordergrund,
+Fensterfokus und Gerätesperre an diese Autorität. Ein gespeichertes READY-Flag
+oder ein lokales Ticket ist keine ausreichende Zulassung.
+
+**BESTÄTIGT:** `ProductWorkspaceRepository` liest ausdrücklich angeforderte Teile
+über `DocumentNamespaceLane`, `SessionDbKeyOwner`, `ActionDatabaseAccess` und eine
+kurze Readtransaktion. Persistierte Action, Status, Generation und optional
+`expectedAction` werden geprüft; Operations sind immer enthalten. Inventar,
+SQLCipher-/SQLite-Integrität, Fremdschlüssel und Room-Schema werden bei realer
+DB-Arbeit geprüft. Room/Driver und Key-Lease werden vor Result-Publication
+aufgeräumt. `B2Driver` kontrolliert auch den tatsächlichen Commit und behandelt
+verweigerten Commit mit Rollback. Das ist kein allgemeiner Konfliktschutz jedes
+Fachwrites und kein Nachweis für eine künftig längere Snapshotlebensdauer.
+
+**BESTÄTIGT:** `ProductViewModel` verwirft Requests über Requestnummern und
+`WorkspaceReadTicket`, prüft Action/Status/Generation und leert bei Nicht-READY
+oder Generationwechsel synchron über den Sessionbeobachter den Workspace,
+Bereichsmodelle, Formulare und sensible Owner. `WorkspaceSnapshot` in `PagShell.kt`
+und `WorkspaceRead` in `domain/src/main/kotlin/org/pag/domain/Workspaces.kt` sind vorhandene Readmodelle.
+Sie besitzen heute keine vollständige Mutations-/Permissionrevision und keine
+Admission vor unbeschränktem Laden. `WorkspaceSnapshot` enthält außerdem optionale
+Leadership-/weitere Bereichssummaries; sein vollständiger Inhalt ist daher keine
+zulässige Allowlist für den ersten Slice. Kotlin-Listen garantieren keine tiefe
+Unveränderlichkeit. `selected` und die Aktionsliste sind weitere bestehende
+Referenzhalter, die eine spätere Ownershipprüfung berücksichtigen muss.
+
+### 34.2 B – Veränderte Schutzannahmen
+
+**BENÖTIGT FREIGABE:** Längere gemeinsame RAM-Vorhaltung ist ausdrücklich eine
+sicherheitsrelevante **Klasse-B-Änderung**, auch bei Wiederverwendung vorhandener
+Snapshots ohne neuen Store. Mehr gleichzeitig identifizierbare Personen-, Rollen-
+und Aufgabenbezüge sowie länger lebende Strings vergrößern den Klartextbestand.
+Referenzfreigabe garantiert weder Überschreiben aller Runtime-/Compose-/IME-Kopien
+noch Schutz gegen privilegierte Speicherabbilder oder ein kompromittiertes OS.
+
+**BESTÄTIGT als Entwurfsfolge:** Ein RAM-Treffer führt keinen neuen DB-Preflight aus.
+Ein zwischenzeitlich entstandener Disk-/Inventar-/Schema-/FK-Fehler wird erst bei
+nächster tatsächlicher DB-Operation bzw. Unlock-Maintenance erkannt. Lokale
+Revisionen erkennen bekannte Appmutationen, keine externe DB-Manipulation. Es gibt
+keine neue garantierte Erkennungsfrist in Wanduhrzeit. Das ist separat zu akzeptieren;
+unveränderte Preflights bei echten Operationen beseitigen dieses Restrisiko nicht.
+
+| Ereignis | VORGESCHLAGENE zwingende Reaktion; produktive Integration NICHT GETESTET |
+|---|---|
+| Lock, 180-s-Deadline, 30-s-Idle, Foreground-/Screen-Lock-Verlust | Zentrale Autorität entscheidet; sofort Hits/Publication sperren, Epoch/Tickets widerrufen und alle Scope-/Formularreferenzen synchron lösen; kein Verlängern durch Read/Render/Callback |
+| Actionwechsel oder Generationwechsel | Alten Scope vollständig verwerfen; exakt eine Action; keine Übernahme bei Reauth, selbst bei gleicher Action-ID |
+| Berechtigungsänderung/-widerruf | Fachrechte neu aus zentral zuständigen Regeln ableiten, betroffene Tokens/Owner invalidieren; fehlt ein zuverlässiger Revisionspfad, kein Hit |
+| Storage BLOCKED oder Maintenance/Recovery | Gesamten Scope unzugänglich machen; kein Cache-Fallback über BLOCKED, keine READY-Navigation in MAINTENANCE |
+| Prozessende/Ownerende | Keine Persistenz oder SavedState-Wiederherstellung; bewusster neuer autorisierter Read beim Neustart; physische RAM-Löschung nicht zugesichert |
+| Verspäteter Read-/Writecallback | Action, Status, Generation, Berechtigungsrevision, Mutations-/Load-Epoch und einmalige Ticketidentität vor atomarer Publication prüfen |
+| Fremde Actiondaten/Referenzen | Top-Level-Binding und sämtliche Kind-/Relation-Action-IDs sowie Alias-/Ownershipgrenzen prüfen; keine Vermischung über Formular-/Projektionskopien |
+
+Ein lokaler Treffer schafft **keine Berechtigung**. Jeder Treffer benötigt die
+bestehende READY-Storage-Autorität und finale Publication; lokale Revisionen sind
+nur zusätzliche Invalidierung. Keine eigene Sessionverwaltung oder eigene Timer.
+Aufwendige Projektion/Kopien außerhalb des Coordinator-Monitors, dort nur kurzer
+Gültigkeitscheck und atomarer Referenztausch.
+
+### 34.3 C/D – Kleinster Slice und erforderliche Codeänderungen
+
+**VORGESCHLAGEN:** Zunächst nur die bewusst geöffnete **ACTIVE**-Aktion:
+Aktionsstammdaten, Personenübersicht/Pseudonyme, Operations/Funktionen und
+Aufgabenübersicht einschließlich der für unveränderte TaskBoard-Semantik nötigen
+Events, unter gemeinsamer Admission. Keine zusätzliche Eventhistorisierung.
+PREPARATION/COMPLETED-Wiederverwendung erst separat integrieren; ihre heutigen
+fachlichen Read-/Write-Regeln bleiben bestehen. Auch eine Actionbeschreibung
+benötigt wegen fehlendem allgemeinem Längenmaximum Admission.
+
+Vor einem zusätzlichen Store ist die Erweiterung des bestehenden instanzlokalen
+Workspace-Owners im `ProductViewModel` vorzuziehen: genau ein zugelassener,
+versionierter Kernsnapshot, Bereichssichten referenzieren ihn. `WorkspaceRead` und
+Operations/Tasks wiederverwenden; keine parallele zweite Payloadregistry.
+`navigateActive`/`clearPersons` leeren heute bewusst viel Zustand und lesen erneut;
+sie dürfen nicht lediglich durch Entfernen des Clear-/Loadaufrufs geändert werden.
+**NICHT GETESTET:** Ob dies ohne separaten Owner ausreichend wartbar bleibt.
+Ein eigener Store wäre erst nach belegter Ownershipnotwendigkeit zu entscheiden.
+
+Erforderliche spätere Änderungen, derzeit sämtlich **VORGESCHLAGEN**:
+
+1. Domain: explizite Kern-Allowlist, Binding mit Status/Generation/Permissionrevision,
+   Projektionsversionen und Load-/Mutationsepoch; Zustände NOT_LOADED/LOADING/
+   CONTENT/EMPTY/ERROR/BUDGET_REFUSED. Actiondaten konsistent im Read zurückgeben;
+   heutiges `WorkspaceRead` enthält nur Action-ID/Status, nicht die ganze Action.
+2. Data/Composition Root: rein metadatenhaltige, serialisierte Mutationserfassung
+   vor Queue/Sideeffect an allen unten genannten Wegen; Commit-Ausgang, vollständiges
+   Cleanup und erlaubte Publication getrennt melden. Keine Commitautorität in Compose.
+3. Data: vorhandenen Workspace-Reader/DAOs um Count-/Text-/Relationsadmission und
+   begrenzte Materialisierung in derselben autorisierten Readtransaktion ergänzen.
+   `OperationsStore.board` lädt heute Rollen, Personen, Pläne/Zustände vollständig;
+   `TaskStore.board` lädt komplette Tasks und Events. Nachträgliches Prüfen genügt nicht.
+4. Product: Clear für sensible Detailowner/Drafts vom Revoke des Kernworkspaces
+   trennen; alle bisherigen P3b-/Viewer-/Dirtyregeln erhalten. Gültige Kernhits durch
+   StorageAccess zulassen, keine neuen Reads für abgedeckte Navigation. Versionierte
+   Projektions-/Formulartokens, Single-flight-Reload, begrenzte Kopien und synchrone
+   Revokeanbindung ergänzen; Actionliste/selected nicht als zweite Wahrheit verwenden.
+5. Zunächst konservativ vollständigen Kern dirty setzen und einmal autorisiert
+   neu lesen, statt unvollständige Projektionspatches einzuführen. Personrename und
+   parallele/stale Editoren vor Freigabe ausdrücklich lösen. Kein Writeport wird
+   durch diesen Auftrag geändert.
+
+Der ACTIVE-Hub fordert heute auch Protokoll-, Material-, Kosten-, Memory- und
+Dokumentsummaries an. Der erste Slice darf diese nicht stillschweigend langfristig
+mitführen. Entweder verbleiben diese Teilreads bei Hub-Rückkehr im bisherigen
+Bedarfspfad oder erhalten erst nach separater Entscheidung eine Wiederverwendung.
+Unbekannte Counts niemals als null/leer oder als frisch darstellen.
+
+### 34.4 D – Abgleich sämtlicher produktiver Mutationsfamilien mit Abschnitt 19
+
+**BESTÄTIGT:** Die folgenden Einstiege existieren im aktuellen Data-Code; ein
+zentraler produktiver `ActionMutationObserver`/Permissionrevisionsvertrag fehlt.
+UI-Callbacks wie `loadWorkspace` nach Erfolg sind kein vollständiger Ersatz:
+Commit kann erfolgreich sein, obwohl sein Callback später nicht publizieren darf.
+Die Invalidierungen der Tabelle sind **VORGESCHLAGEN**, nicht bereits integriert.
+
+| Produktiver Writepfad | Heutige Grenze und fehlender Integrationspunkt |
+|---|---|
+| `ProductActionRepository.createAction`, `updateAction`/`changeAction`, `advanceActionStatus`/`advanceAction` | Create betrifft Aktionsliste, nicht automatischen Scopewechsel; Update prüft Expected-Action, Transition Expected-Status. Gesamten betroffenen Scope/Rechte/Editoren vor Mutation invalidieren; Status kann Operations initialisieren. Auch Create benötigt Outcome-Erfassung am wirklichen Commit, nicht erst UI-Callback |
+| `ProductPersonRepository.createPerson`, `updatePerson`/`changePerson` | Frische Existenz-/Status-/Duplicateprüfung, **kein universeller Expected-Person-CAS**. P/O/T-Zähler und Labels sowie spätere Material-/Protokollreferenzprojektionen invalidieren. Mindestens ein Editowner, Tokenentwertung und frischer Reload; parallele Writer/Rename-/Rollenplan-Konflikte müssen zusätzlich geschlossen werden |
+| `ProductOperationsRepository.createRole`, `renameRole`, `deleteRole`, `planRoles`, `updateSnapshot` | Originalstatus-/Referenzregeln erhalten; Rollenlöschung in-use abgelehnt. Snapshotwechsel vergleicht Expected-OperationalState; Rename/Plan haben keinen universellen CAS. Operations, Aufgabenassignees/-labels, Counts und Formulare invalidieren; Status kann Funktion/Ort entfernen |
+| `ProductTaskRepository.create`, `edit`, `transition`, `delete` | Task+CREATED bzw. Transition+Event atomar; edit/transition/delete prüfen Expected-Task, Delete nur PREPARATION. Tasks/Events, Personen-Aufgabenzähler und Material-Taskoptionen invalidieren; kein erneutes Event durch Callback-Retry |
+| `ProductMaterialRepository.create/edit/delete` | Expected-Position bei edit/delete; Personen-/Taskreferenzen bleiben actionlokal. Material/Hub/Formularoptionen invalidieren, Kern nur bei tatsächlicher Abhängigkeit; keine implizite Task-/Personenmutation erfinden |
+| `ProductExpenseRepository.create/edit/delete` | Expected-Position einschließlich Payments, Betrags-/Paymentregeln bleiben Data; Kosten/Summen/Hub invalidieren, auch erlaubte COMPLETED-Ausnahme erweitert keine Kernrechte |
+| `ProductProtocolRepository.createEntry/reviseEntry/markMistaken` | Entry/Revision/Relationen atomar, bestehende Revisionserwartung und append-only-Regeln erhalten. Header/Summary und gezielten Detailowner invalidieren; kein Volltextpatch im Kern |
+| `ProductMemoryReportRepository.create/saveSection/complete/addAddendum` | Persistierte Headerrevision/Conflictregeln erhalten; Header/Counts/Detaileditor invalidieren. Keine doppelte Section-/Nachtragsmutation durch Refresh; kein allgemeiner öffentlicher Report-Delete-Port |
+| `ProductDocumentRepository.importDocument/deleteDocument` | Pending über gesamte Staging-/Publication-/Deleteoperation, nicht nur einzelne DB-Commits. Import erst nach vollständiger Publication fertig; Delete widerruft betroffenen Viewerrequest. Originale Namespace-Lane/Journale/Recovery behalten; Fehlerzustand nicht als Cache-Miss behandeln |
+| `DocumentReconciliation.run`, `reconcileProductDocuments`, Maintenancebarrier | Gesamten Scope sperren/verwerfen; Recoverywrites/Subcommits erzeugen keinen READY-Cache. Neue Generation lädt bewusst neu; kein zweiter Dateisystemlock |
+| `ProductLeadershipRepository.setup/save/deleteArea/deletePerson/deleteAction`, `revoke`/Grantablauf | Separater Schutz-/Grant-/Inventoryowner, keine Payload im Kern. Permission-/sichtbare Statusänderung zuverlässig melden oder Scope konservativ verwerfen. `deletePerson` entfernt sensible Areas, keine P3a-Person; `deleteAction` Leitungsschutz, keine ActionRow |
+| Zukünftige allgemeine Personen-/Aktions-/Retentionlöschung | Heute kein allgemeiner öffentlicher P3a-Person-/Action-Delete-Port; keine vorhandene Garantie behaupten. Vor Einführung sämtliche Scope-/Referenz-/Recoveryhooks ergänzen |
+
+**VORGESCHLAGEN:** BEGIN vor möglichem Sideeffect entwertet alte Reads/Hits.
+Definitiver Rollback/fachliche Ablehnung liefert keinen Erfolg und führt zu einem
+kontrollierten Reload; fachliches STALE/INVALID ist keine automatische Korruption.
+Commit vor Lock, Publication nach Lock: DB-Wahrheit bleibt, aber weder gespeicherter
+UI-Erfolg noch Snapshotpatch; nach neuer Freigabe neu lesen. Lock vor Commit muss
+am bestehenden Commitgate ablehnen/rollbacken. Bei unbekanntem Commit-Ausgang oder
+Cleanupfehler Kernscope unbrauchbar machen, ursprünglichen BLOCKED-/Recoveryvertrag
+beachten, keinen automatischen Write-Retry. Alte/doppelte Callbacks dürfen weder
+neuen Scope noch neueren Reload überschreiben.
+
+**BESTÄTIGT:** `MutationContractProof` und seine 13 Testmethoden modellieren nur
+Metadata, Fake-StorageAccess und injiziertes Binding. Sie prüfen u.a. Pending,
+Coalescing, Teilpatchablehnung und Revoke zwischen Commit/Publication. Sie beweisen
+keinen SQLCipher-Commit, keine echte Permissionrevision und keine Einbindung aller
+Writer. Konkrete Modellgrenze: UNKNOWN leert `clean`, verwirft aber nicht selbst
+Binding/Scope und erlaubt später `startRead`; die strengere produktive
+Unknown-/Recoveryentscheidung aus Abschnitt 19 benötigt einen Adapter und eigene
+Tests. Der Proof ist keine unverändert übernehmbare Produktionsimplementierung.
+
+### 34.5 D/E – Speicherbudget und Nachweisplan
+
+**VORGESCHLAGEN / BENÖTIGT FREIGABE:** 8 MiB konservativ belasteter retained
+Domainbestand einschließlich Indizes/Listen/Maps/Strings; maximal **eine** separat
+auf ebenfalls höchstens 8 MiB begrenzte Übergangsrepräsentation. Alte und neue
+Snapshots plus Builder-/Row-/Projektionskopien dürfen nicht ungezählt parallel
+leben. Formulare und Compose brauchen eigene begrenzte Kopier-/Ownershipregeln;
+das ist keine harte ART-Heap-, Native-, Gesamt-App- oder OOM-Garantie.
+
+**BESTÄTIGT:** Personen-, Aufgaben-/Event- und Rollenzahlen sind nicht global
+begrenzt; auch lange Action-/Pseudonym-/Rollentexte bleiben ein Admissionproblem.
+`BudgetContractProof` und sieben Tests prüfen beispielhafte 128-/64-/8-/4-Byte-
+Charges, Boundary, sticky Refusal, negative Aggregate, Unicode und Long-Overflow.
+Sie messen weder reale ART-Objektgrößen noch einen produktiven DAO-Reader.
+SQL-Codepoints, UTF16-Einheiten und UTF8-Bytes müssen explizit unterschieden werden;
+supplementary Unicode, String-/Arrayheader, Alignment, Hashkapazität, Referenzen,
+Relationen und doppelte Repräsentationen zählen. Add/Mul und SQL-Aggregatgrenzen
+müssen Überlauf vor Allokation kontrollieren; keine Deduplikationsannahme ohne Beleg.
+
+**NICHT GETESTET / BLOCKER:** Admission muss vor vollständigen Strings/Rowlisten
+in derselben konsistenten Transaktion erfolgen, danach bounded batches mit
+Nachprüfung und Storagegates. Die heutigen vollständigen `list`-/`events`-/Board-
+Reads erfüllen dies nicht. BUDGET_REFUSED beendet geordnet ohne Teilerfolg,
+Retryloop oder automatische Budgeterhöhung. Ein bisheriger unbeschränkter Readport
+ist kein zulässiger automatischer Fallback; ohne begrenzten Bedarfspfad bleibt der
+Teil kontrolliert nicht verfügbar. Ungültige Rows/negative Aggregate/DB-Fehler
+bleiben Validierungs-/Storagefehler, gültige Übergröße/Chargeoverflow Budgetfälle.
+
+Vor **jeder produktiven Freigabe** sind mit echter Integration erforderlich
+(**NICHT GETESTET** für diesen Slice):
+
+- Revoke-/Hit-/Publicationtests am echten Coordinator: 180 s trotz Bedienung,
+  30 s Idle, Lock, Foreground/Screen-Lock, BLOCKED, Maintenance, Generation,
+  Action-/Permissionwechsel; keine fremden Actiondaten und keine Wiederbelebung
+  durch alte/doppelte Callbacks, Owner-/Prozessende oder SavedState.
+- Reale SQLCipher-Commit-/Rollback-/Cleanup-/Unknown-Rennen für jede Tabellenzeile
+  aus 34.4; Commit erfolgreich/Publication verweigert, Lock während Write,
+  Single-flight-Reload, Personrename-/Parallelformular-Konflikte, TaskEvents
+  genau einmal, Status-/Referenzinvalidierung und Dokument-Recoverygrenzen.
+- Admission vor Materialisierung bei sehr großen Mengen und Einzelwerten,
+  Unicode-/Long-/SQL-Overflow, Aliaskopien, Übergangsbestand/Formularkopien,
+  kontrollierte Verweigerung ohne unbeschränkten Fallback; Kalibrierung der
+  Charges, GC-/Allokationsstress sowie Persistenz-/Log-/Leakprüfung.
+- Bestehende Security-/Domain-/Workspace-/Viewerregressionen und spätere
+  synthetische Content-OnDraw-/DB-Zugriffsnachweise; UI-/TalkBack-/Fokus-/Scroll-
+  Abnahme des tatsächlich integrierten Slices. Die manuelle Bestätigung in
+  Abschnitt 33 gilt nur für den damaligen Ablauf, nicht für Stufe 2.
+
+### 34.6 Performance – vorhandene Messungen und offene Wirkung
+
+**BESTÄTIGT, historische synthetische Messung aus Abschnitt 23:** Median/P95 bis
+Content-OnDraw in ms; B hält den ersten Snapshot, C lädt zusätzlich Boards vor.
+Keine neue Gerätemessung für diesen Auftrag.
+
+| Typical, Navigation | A Produktpfad | B Snapshot | C vorbereitet |
+|---|---:|---:|---:|
+| Personen | 1211,22 / 1246,21 | 20,28 / 46,04 | 20,06 / 44,18 |
+| Aufgaben | 1211,60 / 1230,85 | 17,75 / 27,23 | 17,58 / 26,29 |
+| Funktionen | 1204,33 / 1213,37 | 22,13 / 27,73 | 19,16 / 27,33 |
+| Hub zurück | 1214,07 / 1222,27 | 16,81 / 27,20 | 23,08 / 30,41 |
+
+**VORGESCHLAGEN, erwarteter Nutzen:** Der erste Slice entspricht eher B als dem
+breiteren C. Abgedeckte Wechsel Personen ↔ Aufgaben ↔ Funktionen und deren
+Kernprojektionen könnten ohne erneuten DB-Read unter 100–150 ms liegen. Das ist
+kein gemessener produktiver Slice. Hub-Rückkehr kann wegen ausgeschlossener
+Summaries weiterhin DB benötigen; die B-/C-Hubwerte sind dafür keine Zusage.
+Aktionsliste/initiales Laden, Writes/Reloads, Personen-Detail/Leadershipinventory,
+Material/Kosten, Protokolle/Memory und Dokumentpfade bleiben DB-/bedarfsgesteuert.
+Taskformulare nutzen schon heute vorhandenen RAM und liefern keinen zusätzlichen
+Storegewinn. Initiale Öffnung typical B bleibt 1219,90 / 1253,94 ms.
+
+Abschnitt 15 zeigt historisch auch Task-P95 über 150 ms (typical B 195,14 ms);
+Abschnitt 23 enthält spätere UI-Optimierungswerte. Diese Reihen nicht zu einer
+Produktgarantie vermischen. Synthetische Navigation nutzt synthetische Gates und
+belegt keine echten Gerätecredentials/Deadlines. **NICHT GETESTET:** End-to-End-
+Latenz mit real integrierter Admission, Invalidierung, maximalen Feldlängen und
+allen zentralen Sicherheitsgates. Das Ziel rechtfertigt keine Gateumgehung.
+
+### 34.7 F/G/H – Freigabe, Ausschlüsse und technische BLOCKER
+
+**BENÖTIGT FREIGABE:** Benutzer muss vor produktiver Umsetzung ausdrücklich
+akzeptieren: längeren/größeren gleichzeitigen Klartextbestand des engen Slices,
+spätere Integritätsfehlererkennung auf RAM-Hits, fehlende physische Wipegarantie,
+8-MiB-Engineeringbudget plus begrenzten Übergang sowie mögliche kontrollierte
+Nichtverfügbarkeit großer Bereiche und DB-Latenz nach Invalidierung. Kategorien,
+Scope-Lebensdauer und Konflikt-/Freshnessvertrag sind Teil dieser Entscheidung.
+Dieser Architekturauftrag erteilt diese Freigabe nicht.
+
+**VORGESCHLAGEN ausgeschlossen:** Material und Kosten zunächst nur spätere,
+separat freizugebende Erweiterungen. Ebenso keine neue längere Vorhaltung von
+Protokoll-/Memory-/Dokumentheadern oder deren Summaries im Kern. Keine P3b-Inhalte,
+Leadership-Inventare/-Grants/Opened, Schlüssel/Credentials, Dokumentinhalte,
+PDF-/Bild-/Textseiten, Protokollvolltexte/-revisionen oder Gedächtnisprotokoll-
+Antworten/Nachträge. Keine Aufnahme von DAO/Room/Connection/Lease/Capability.
+Bestehende bedarfsorientierte Detailowner bleiben zuständig.
+
+**Technische BLOCKER:** fehlende produktive Mutation-/Outcome-/Permissionhooks;
+ungelöste stale-/parallele Editorgrenzen ohne universellen CAS; fehlende bounded
+Reader und vorkalkulierte Admission; fehlender belegter Ownership-/Revokevertrag
+für längere Snapshotnutzung; sämtliche Integrationsnachweise aus 34.5 und
+End-to-End-Performance offen. Unabhängiger Review und Issue #26 bleiben Gates.
+Historisch **18/20 bestanden, 2 UNREACHABLE bei HC_L2_CONTENT** bleiben unverändert;
+keine rückwirkende GRÜN-Bewertung und keine Wiederaufnahme der automatischen
+UI-Ursachensuche. Abschnitt 33 bestätigt manuell Erreichbarkeit bei 1/2/3,5 und
+TalkBack im getesteten Kontext, keine separate TalkBack-Abnahme je Schriftfaktor
+und keine allgemeine Produkt-/Accessibility-/Sicherheitsabnahme.
+
+Für diesen Auftrag nur Berichtänderung; keine Produktdatei, kein neuer RAM-Store,
+keine Tests/Builds/Benchmarks/Installationen und kein Gerätezugriff. SQLCipher-
+Parameter, Raw-Key-Vertrag, Preflights realer DB-Operationen, Sessiondauer,
+P3b/Leadership, Tink, Dokument-/PDF-Isolation, Recovery, Keystore, App-ID und
+Signatur unverändert. Produkt-App und manuelle Test-App bleiben unangetastet.
+Nach geprüftem regulärem Commit/Push und Remote-SHA-Abgleich STOPP bis zum
+unabhängigen GitHub-Review; kein Force-Push, Merge, Release oder Produktupdate.
