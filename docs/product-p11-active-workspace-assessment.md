@@ -4290,3 +4290,239 @@ Navigationseinbindung aktiviert; keine neue Navigationszeit gemessen oder behaup
 Ausschließlich dieser bereinigte Bericht geändert. Regulärer WIP-Commit und Push
 mit unabhängigem Remote-SHA-Abgleich; danach STOPP bis zum unabhängigen GitHub-
 Review. Kein Force-Push, Merge, Release, Produktupdate oder weitere Implementierung.
+
+## 39. Stufe 2A-2b – Bounded Task-/Eventreader
+
+### 39.1 Implementierte Architektur und unveränderte Produktgrenze
+
+**IMPLEMENTIERT / NICHT INTEGRIERT:** Lokaler Ausgangsstand und GitHub-Branch
+`p11-performance-optimization` vor Änderungen unabhängig identisch bestätigt:
+`341552c45a5a6c0088c13686ea8173dde2668c15`; Arbeitsverzeichnis sauber.
+Neue getrennte Worker-Lesestrecke `ProductBoundedTaskReader` mit
+`BoundedTaskStore` und Domain-Ergebnis `BoundedTaskResult`. Genau eine aktuelle
+ACTIVE-Bindung aus Action-ID, READY-Generation und Berechtigungsrevision; kein
+Berechtigungstoken. Fünf getrennte Ergebnisse: ADMITTED mit vollständigem
+TaskBoard, BUDGET_REFUSED, INVALID_DATA, STORAGE_FAILURE, ACCESS_REVOKED.
+
+Der neue Pfad verwendet dieselben originalen READY-/Storagegates, Inventarprüfung,
+DocumentNamespaceLane, SessionDbKeyOwner, SQLCipher-/FK-/Room-Schema-Preflights,
+ActionDatabaseAccess und kurze `withReadTransaction` wie der bestehende bounded
+Reader. Keine Änderungen an diesen zentralen Klassen. ActionRow wird innerhalb
+der Admission mitgezählt und nach Zulassung mit dem bestehenden Modell validiert;
+der zurückgegebene Domainbestand enthält nur TaskBoard und Budgetmetadaten.
+Personen-/Rollenpayload wird nicht zusätzlich gelesen; SQL prüft deren Referenzen.
+
+Nur explizite Tests rufen den neuen Pfad auf. `P11SyntheticFixture.boundedTasks`
+ist ein neuer paketgeschützter synthetischer Debug-Einstieg. Keine Aufrufstelle
+in ProductRuntime/ProductViewModel, navigateActive oder loadWorkspace; bestehende
+Repositories, TaskDao, TaskStore.board und sämtliche produktiven Writer bleiben
+unverändert. Keine Snapshot-Wiederverwendung, RAM-Hits, längere Lebensdauer,
+Hintergrundvorhaltung, neuen Clears/Formularverträge oder optimistischen Writes.
+Keine neue Performanceverbesserung gemessen oder behauptet.
+
+### 39.2 SQL-Admission vor Materialisierung
+
+**IMPLEMENTIERT:** Innerhalb derselben konsistenten autorisierten Readtransaktion:
+
+1. Frische Bindung, READY-Generation und Storagegate prüfen. `PRAGMA encoding`
+   muss exakt UTF-8 liefern. Skalares Actionstatus-CASE ohne Actiontexte prüft
+   ACTIVE; fehlende/fremde/nicht-ACTIVE-Aktion wird ACCESS_REVOKED.
+2. Für genau drei Tabellen `actions`, `tasks`, `task_events` ausschließlich COUNT,
+   Typ-/Konsistenzflags und MAX der BLOB-Bytelängen abfragen. Erfasst werden alle
+   Task-/Eventfelder, auch IDs, Referenzen, nullable sourceTemplateKey und Actiontexte.
+   Text/Integer/NULL-Typen, Prioritäten/Status/Eventtypen, ausschließliche
+   Person-/Rollenzuweisung und DONE/completedAt-Konsistenz werden geprüft.
+3. Skalare EXISTS/NOT-EXISTS-Abfragen prüfen Personenassignee, betroffene Person,
+   Rollenassignee und Event→Task jeweils **innerhalb derselben Action**.
+   Keine vollständigen Personen-/Rollen-/Task-/Eventlisten dabei laden.
+4. Vor SQL-SUM: höchstens 65536 Zeilen insgesamt und höchstens 8 MiB je Einzeltext.
+   Damit ist jede anschließende Feldsumme höchstens 2^39; Integer-SUM statt
+   Double/TOTAL. Negative oder widersprüchliche Aggregate sind INVALID_DATA,
+   echte SQL-Fehler STORAGE_FAILURE. Gültige Übergröße verweigert kontrolliert.
+5. Counts, Feldanzahlen, vollständige UTF8-Bytes und Kapazitäten mit checked Long-
+   Add/Mul in den vorhandenen `ActiveWorkspaceBudget` übernehmen. Sowohl retained
+   als auch transition müssen vor der ersten Payloadquery zugelassen sein.
+6. Erst danach alle Rows über deterministisches `ORDER BY rowid LIMIT 32` und
+   gebundene Keyset-Fortsetzung laden, ohne OFFSET oder Abschneiden. NULL-Start
+   erhält auch Long.MIN_VALUE-Rowids; keine Rowid-Inkremente mit Overflow.
+   Textspalten liefern Länge und durch CASE begrenztes `CAST(TEXT AS BLOB)`.
+   Vor `getBlob` erneut Gate, Bindung, Länge und NULL prüfen.
+7. Striktes UTF8-Decoding mit REPORT, tatsächliche BLOB-Bytes und UTF16-Länge
+   nachprüfen. Für gültiges UTF8 ist Byteanzahl eine konservative Obergrenze der
+   UTF16-Einheiten (einschließlich NUL und 4-Byte→2-UTF16-Supplementary-Zeichen).
+   Ungültige Kodierung wird nicht ersetzt oder geschätzt. Nach jeder Tabelle
+   müssen Zeilenzahl und Feldbytesummen exakt den reservierten Aggregaten entsprechen.
+8. Bestehende `ActionRow.model`, `TaskRow.model`, `TaskEventRow.model` prüfen die
+   Fachwerte. Erst nach vollständigem TaskBoard, Transaktions-/DB-/Driver-/Lease-
+   Cleanup folgt Rückgabe über das originale `StorageContext.publish` mit nochmals
+   aktueller Bindung. Ein späterer UI-Aufrufer benötigt weiterhin sein eigenes
+   aktuelles Publicationgate; ADMITTED ist keine dauerhafte Freigabe.
+
+Es gibt keinen `TaskDao.list()`-/`events()`-Vollread vor Admission, keine vollständige
+Zwischen-Rowliste, keinen stillen Prefetch, zweiten Actionbestand, Retry oder
+unbeschränkten Ersatzpfad. Bei verweigerter Admission lief in den entsprechenden
+Hosttests **keine Payloadquery und kein BLOB-Fetch**; nicht erst nachträglich
+budgetierte Vollmaterialisierung. SQLite muss zur Aggregation intern lesen:
+dies ist keine Garantie über sämtliche nativen SQLCipher-/Enginearbeitspuffer.
+
+### 39.3 Task-/Event-Semantik
+
+**GETESTET AUF HOST:** Vollständige Task-/Eventfelder einschließlich nullable
+Assignee-/Betroffenenreferenzen, dueAt, sourceTemplateKey, Zeitwerten und completedAt.
+TaskRow nutzt unverändert TaskRules: getrimmter nichtleerer Titel bis 120
+Unicode-Codepoints, exklusive Zuständigkeit, gültige Enums und DONE/completedAt.
+Der neue Reader ändert keine Statusübergänge oder Schreibregeln.
+
+Alle Events der gebundenen Action werden erhalten; keine Historienobergrenze
+mit stillem Abschneiden. Nicht zulassbare Gesamtmengen liefern kein Teilboard
+und kein EMPTY. Events werden zunächst in Rowidfolge gelesen und anschließend
+stabil nach occurredAt sortiert: gleiche Semantik wie vorhandenes
+`TaskDao.events ORDER BY occurredAt,rowid`, auch bei gleichen Zeitwerten.
+
+`TaskDao.list` definiert bisher **kein ORDER BY**. Der bounded Pfad liefert Tasks
+in deterministischer Rowidfolge; Gleichheit wird deshalb nach Identität/Inhalt
+und den vorhandenen TaskBoard-Projektionen geprüft, nicht gegen einen zufälligen
+Queryplan. `active`, `closed`, `affectedCount` und TaskRules.order bleiben
+unverändert. Closed bleibt nach updatedAt absteigend sortiert; eine bisher nicht
+vertraglich definierte Gleichstandsreihenfolge wird nicht als Garantie erfunden.
+
+Doppelte Eventidentität wird vom Schema-Primärschlüssel abgelehnt. Unbekannte
+Eventtypen, falsche Feldtypen und fehlende/actionfremde Taskreferenzen werden
+INVALID_DATA. Wiederkehrende Eventtypen und gleiche Zeitwerte bleiben vollständig
+erhalten: Der vorhandene Reader definiert **keine zusätzliche historische
+Statusfolgenprüfung**. Insbesondere erfindet dieser Slice keine Chronikreparatur,
+Deduplikation oder neue Ereignisregeln, die gültige vorhandene Reads verändern.
+
+### 39.4 Gemeinsames Budget: Voraussetzung und ausdrückliche Integrationssperre
+
+**IMPLEMENTIERT:** Konservative Reservierung über unveränderte Budgetgewichte:
+4/16-fache Text-/Feld-/Kapazitätsallowances für retained/transition, einschließlich
+Domainobjekten, Strings, UTF16, BLOB-/Decoder-/Trimkopien, Arrays, Row-/Builderlisten,
+Referenzen sowie Sortier-/Projektionskapazität. Keine Deduplikationsrabatte.
+Beide Kostenobergrenzen werden synchron vor Materialisierung berechnet und
+versiegelt; kein threadgebundener Ledger wird über suspendierende Roomqueries
+mitgeführt. Mengenprüfung danach beweist Vollständigkeit, nicht das Seal allein.
+`BoundedTaskReservation` weist die beiden **disjunkten Units** zusätzlich zu den
+Charges aus; sie lassen sich in demselben Scopeledger mit weiteren Units belasten.
+Der Hosttest bestätigt identische Charges bei Replay und sticky Verweigerung bei
+zusätzlicher Überbelegung. Diese Metadaten halten keine Payload/Keys/DAOobjekte.
+
+**NICHT INTEGRIERT / BLOCKER:** Der Einstieg ist ausdrücklich ein eigenständiger
+Testreader ohne schon gehaltenen Kernbestand. Seine lokalen 8 MiB retained plus
+maximal eine 8-MiB-transition sind **keine weiteren freien 8 MiB** neben dem
+Personen-/Funktionsreader. Eine gemeinsame Snapshotintegration ist gesperrt.
+Rückgabe-Units erst nach dem Laden zu addieren wäre keine gemeinsame Admission!
+
+Vor Zusammenführung erforderlich: vorgelagerte Metadaten-/Reservierungsphase für
+Personen/Funktionen/Tasks/Events derselben Action und konsistenten Version, alle
+Units in **einem** Scopebudget vor jeder Payloadmaterialisierung zulassen, höchstens
+eine gemeinsame begrenzte Übergangsrepräsentation, eindeutiger Payload-/Formular-
+Owner und Buchhaltung aller alten/neuen/abgeleiteten Kopien. Die vorhandene
+Personenlesestrecke weist bisher nur skalare Charges aus; ihr vorgelagerter
+komponierbarer Admissionvertrag fehlt ebenso wie der gemeinsame Orchestrator.
+Es wird hier kein zweiter Store oder scheinbarer Shared-Owner eingeführt.
+
+Beliebig viele vom Testaufrufer festgehaltene Rückgaben oder TaskBoard-getter-
+Kopien sind nicht global gebucht; deshalb keine Freigabe für kombinierte längere
+Vorhaltung. Engineering-Charges sind weiterhin keine harte ART-/Native-/App-Heap-
+oder OOM-Garantie; Kopierallowances und Laufzeitretention benötigen Kalibrierung.
+
+### 39.5 Revoke, Fehler und Ressourcen-BLOCKER
+
+**GETESTET AUF HOST:** Revoke an Metadaten-/Admission-/Row-/Text-/Completegrenzen,
+Generation-/Binding-/Berechtigungswechsel und späte Publication nach Cleanup
+liefern keine Payload. Admissionverweigerung ist BUDGET_REFUSED ohne BLOCKED;
+inkonsistente Daten INVALID_DATA mit zentralem Blocked-Verhalten, SQL-/Lesungs-/
+Cleanupfehler STORAGE_FAILURE. Cleanupfehler übersteuern sowohl erfolgreiche Reads
+als auch vorherige Budgetverweigerung. Keine Teil-CONTENT-Publication, kein
+leeres Ergebnis aus Teilbestand und keine automatische Wiederholung.
+
+Statements enden am vorhandenen `usePrepared`-Scope; Transaktion, Room/Driver und
+Key-Lease laufen durch originale finally-Grenzen, auch bei Exception/Revoke.
+Der SQLite-Hostadapter prüft null offene Statements vor Publication und bei
+Harnessende sowie Prozessclose. Dies ist **kein Android-Cursorfreigabenachweis**.
+
+**WEITERHIN BLOCKER:** SQLCipherStatement.close schließt den gehaltenen Cursor
+nicht ausdrücklich; weder B2Driver noch SQLCipher-Adapter wurden geändert.
+Statementende und Transaktionsende beweisen keine Cursor-/CursorWindowfreigabe.
+DB-/Driver- und Leaseende bleiben maßgebliche originale Cleanupgrenzen; ihre
+vollständige native Ressourcenwirkung, insbesondere über viele Batches und bei
+Ablehnung/Exception, ist für diesen neuen Pfad nicht am Gerät nachgewiesen.
+Die vier früheren Android-PASS aus Abschnitt 38 sind unveränderte begrenzte
+Nachweise des Personen-/Funktionspfads und heben diesen BLOCKER nicht auf.
+
+### 39.6 Konkrete Testergebnisse und offene Androidprüfung
+
+**GETESTET:** 25 neue `BoundedTaskStoreTest`-Hostmethoden gegen echtes SQLite
+mit Schema 11 aus der vorhandenen Repositoryschemadefinition, keine Fake-
+Repositoryantworten. Darunter Vergleich mit tatsächlich ausgeführten bisherigen
+DAO-SQL-Abfragen und Domainprojektionen; kleine/leere ACTIVE-Boards, fremde/
+nicht-ACTIVE-Aktionen, Referenzen, 45 Tasks/99 Events über mehrere Batches,
+2000 Tasks bzw. Events als Ablehnungsfälle, sehr lange Einzeltexte und NUL-Suffix,
+Supplementary Unicode/NUL, ungültiges UTF8, Enums/Typen/Completion/Assignee,
+doppelte Identität und wiederkehrende Events, exakte 8-MiB-transition-Grenze plus
+nächstes Byte, Reservoir-Replay/Überbelegung, Count-/MAX-Gates vor SUM, Long-Mul-/
+Addschutz des Budgetvertrags, echter SQLite-SUM-Overflow, extreme Rowids,
+Revoke-/Binding-/Publication- und Exception-/Cleanupfälle.
+
+Abschlusslauf offline: **202 App + 173 Data + 4 Security = 379 bestanden,
+0 Fehler, 0 Skips**. Data enthält weiterhin die 22 Personen-/Funktionsreaderfälle,
+zwei tatsächlichen Treiberdiagnosen und bestehende SessionCoordinator-/B2-Key-/
+B2-Session-/Dokumentregressionen. App enthält 2A-1-Gültigkeit/Budget, historische
+Mutation-/Budget-Proofs und Workspace-/ACTIVE-/ViewModel-Regressionen.
+Architekturprüfung, Produkt-Kotlin, Produkt-/Demo-Manifestprüfungen und
+`:data:compileDebugAndroidTestKotlin` mit bestehendem isoliertem Init-Skript
+bestanden, alles `--offline`, keine neuen Dependencies oder Schemaänderung.
+
+Ein erster fokussierter Lauf hatte 20/21 bestanden: Der Test zählte bei
+Berechtigungswechsel fälschlich keinen Eintritt in den zentralen publish-Callback,
+obwohl dessen inneres Bindinggate die Payload korrekt ablehnte. Die Zählassertion
+wurde präzisiert; keine Readerkorrektur oder abgeschwächte Payloadassertion.
+Anschließend 21/21 und nach Erweiterung im Abschlusslauf 25/25 bestanden.
+
+**NUR OFFLINE KOMPILIERT, NICHT AUSGEFÜHRT:** Vier neue `BoundedTaskRoomTest`-
+Methoden für spätere isolierte SQLCipher-/Room-Ausführung: Vergleich mit realem
+Taskrepository samt Events/abgeleiteten Ansichten (100 Tasks, nach Transition
+101 Events), Nicht-ACTIVE/fehlend, Publication/Revoke und Wiederholungs-/FD-
+Toleranz plus Übergrößenverweigerung. Keine APK gebaut/installiert, kein Gerät
+kontaktiert, keine Instrumentation oder Benchmarkkampagne ausgeführt. Der frühere
+eingefrorene Vier-Test-APK-Nachweis gilt nicht automatisch für diese neuen Tests;
+ein späteres Artefakt und sein exakter Runnerumfang benötigen eigene Prüfung/
+Freigabe. Noch keine Android-Laufzeit-PASS für den Taskreader.
+
+### 39.7 Voraussetzungen für Snapshotintegration und vollständige Dateiliste
+
+**BLOCKER:** Gemeinsame Admission/Ownership aus 39.4, Cursor-/Ressourcennachweis,
+Task-Androidlauf und weitere reale Unicode-/Grenz-/Fehlerpfadabdeckung,
+Budgetkalibrierung; vertrauenswürdige Scope-/Permission-/Statusversionierung und
+originaler synchroner Revoke-Lifecycle. ActiveWorkspaceValidity ist weiterhin
+nicht verdrahtet. Readtickets und Mutation-/Load-Epochs müssen am späteren
+Adapter mit zentralen Gates verbunden werden, ohne neue Sessionautorität.
+
+Alle Mutations-/Outcome-/Recoveryhooks aus 35.5 bleiben offen: Task+Event-Commit
+atomar und genau einmal, BEGIN vor Sideeffect, sichere Commit-/Rollback-/UNKNOWN-
+Unterscheidung, kein stale Patch/Write-Retry, Lock-/Publicationrennen, Actionstatus,
+Personen-/Rollen-/Referenzänderung, Dokument-/Maintenancegrenzen. Personrename
+bleibt ohne universellen CAS; parallele/stale Personen-, Rollenplan- und Taskeditoren
+benötigen begrenzte Owner/Tokens und reale Konfliktvergleiche. Keine Writeport-
+oder Recoveryänderung in diesem Slice. Erst nach unabhängiger Prüfung und allen
+Nachweisen kann Snapshotintegration gesondert beauftragt werden.
+
+Vollständige geänderte Dateiliste (sieben Dateien):
+
+- `domain/src/main/kotlin/org/pag/domain/BoundedTaskRead.kt`
+- `data/src/main/kotlin/org/pag/data/product/BoundedTaskStore.kt`
+- `data/src/main/kotlin/org/pag/data/product/ProductBoundedTaskReader.kt`
+- `data/src/debug/kotlin/org/pag/data/product/P11SyntheticFixture.kt`
+- `data/src/test/kotlin/org/pag/data/product/BoundedTaskStoreTest.kt`
+- `data/src/androidTest/kotlin/org/pag/data/product/BoundedTaskRoomTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+
+SessionCoordinator und 180-s-absolut/30-s-READY-idle, StorageAccess, Preflights,
+SessionDbKeyOwner, B2Driver, SQLCipher/Tink, Leadership/P3b, Dokument-Recovery/
+DocumentNamespaceLane/PDF-Isolation, Schema 11 und Raw-Key-Vertrag unverändert.
+Keine neuen Berechtigungen, Klartextpersistenz, echten Produktdaten oder Credentials.
+Installierte Produkt-App und manuelle Test-App unangetastet. Keine APKs, Schlüssel,
+DBs, Rohlogs, persönlichen Pfade oder Gerätekennungen im Commit. Regulärer WIP-
+Commit/Push, unabhängiger Remote-SHA-Abgleich, danach STOPP bis zum unabhängigen
+GitHub-Review. Kein Force-Push, Merge, Release, Produktupdate oder weitere Integration.
