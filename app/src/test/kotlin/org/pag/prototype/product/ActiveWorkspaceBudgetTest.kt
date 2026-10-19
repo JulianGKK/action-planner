@@ -2,7 +2,8 @@ package org.pag.prototype.product
 
 import org.junit.Assert.*
 import org.junit.Test
-import org.pag.prototype.product.ActiveWorkspaceBudget.*
+import org.pag.domain.ActiveWorkspaceBudget
+import org.pag.domain.ActiveWorkspaceBudget.*
 
 class ActiveWorkspaceBudgetTest {
     private val limit = ActiveWorkspaceBudget.LIMIT_BYTES

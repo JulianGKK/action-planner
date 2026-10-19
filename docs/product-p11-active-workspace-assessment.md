@@ -3754,3 +3754,243 @@ Nur diese sechs Quell-/Test-/Berichtsdateien; keine APKs, Logs, DBs, Schlüssel,
 Keystores, Gerätekennungen oder persönlichen Pfade im Commit. Regulärer WIP-Push
 und unabhängiger Remote-SHA-Abgleich; danach STOPP bis zum unabhängigen GitHub-
 Review. Kein Force-Push, Merge, Release, Produktupdate oder weitere Integration.
+
+
+## 36. Stufe 2A-2a – Bounded ACTIVE-Reader
+
+### 36.1 Implementierter Umfang und Modulgrenze
+
+**IMPLEMENTIERT, NICHT AN NAVIGATION ANGESCHLOSSEN:** Ausgangs- und Remotecommit
+vor Änderungen unabhängig als `5c3e41cb0852f7862e332d2eeefb51a58bdb979d` auf
+`p11-performance-optimization` bestätigt. `ProductBoundedActiveReader` ist ein
+separat aufzurufender synchroner Worker-Lesepfad für genau eine aktuelle
+ACTIVE-Bindung. Er liefert ausschließlich Action-Metadaten und `OperationalBoard`
+mit Personen, Rollen, Rollenplanungen und operativen Personenstatus. Kein TaskBoard,
+keine Events, Material-/Kosten-/Protokoll-/Memory-/Dokument- oder P3b-Payload.
+
+`BoundedActiveStore` verwendet Room-`PooledConnection.usePrepared` innerhalb von
+`withReadTransaction`. Die vorhandene Room-Schnittstelle reicht dafür aus; kein
+neuer DAO-Vollread, keine Schemaänderung/Migration und kein neuer Driver.
+`ActiveWorkspaceBudget` wurde mit unveränderter Chargelogik von App nach Domain
+verschoben und für Data zugänglich gemacht; der bestehende App-Test importiert
+jetzt diesen gemeinsamen Vertrag. Keine Data→App-Abhängigkeit und keine zweite
+Budgetimplementierung. `ActiveWorkspaceValidity` bleibt unverändert und weiterhin
+nicht mit Produktreadern/-writern verdrahtet.
+
+`BoundedActiveBinding`/`BoundedActiveResult` definieren die Metadatenbindung und
+fünf getrennte Ergebnisse: ADMITTED mit vollständiger Payload, BUDGET_REFUSED,
+INVALID_DATA, STORAGE_FAILURE und ACCESS_REVOKED. Fehlende/fremde oder nicht mehr
+ACTIVE-gebundene Aktionen werden für diesen Pfad als ACCESS_REVOKED abgewiesen;
+PREPARATION/COMPLETED sind dabei keine behauptete Storagekorruption.
+
+### 36.2 Tatsächliche Admission- und Abfragereihenfolge
+
+**IMPLEMENTIERT:** Der Reader benutzt die originalen READY-Gates, Inventarprüfung,
+DocumentNamespaceLane, SessionDbKeyOwner und ActionDatabaseAccess. Damit bleiben
+sämtliche SQLCipher-/SQLite-/FK-/Room-Schema-Preflights und die ursprünglichen
+DB-/Lease-Cleanupgrenzen erhalten. Kein Handle verlässt den Aufruf.
+
+Innerhalb derselben konsistenten autorisierten Readtransaktion:
+
+1. Aktuelle Action-ID/READY-Generation/Berechtigungsrevision gegen die vom
+   vertrauenswürdigen künftigen Adapter gelieferte Bindung prüfen. `PRAGMA encoding`
+   muss UTF-8 bestätigen; andere Kodierung wird ohne Umrechnungsschätzung abgewiesen.
+   Ein skalares CASE prüft den persistierten Actionstatus, ohne Actiontexte zu laden.
+2. Für die sechs Tabellen `actions`, `persons`, `roles`, `person_planned_roles`,
+   `person_role_plans` und `person_operational_states`: ausschließlich COUNT,
+   Typ-/Konsistenzflags und MAX der Feld-Bytegrößen lesen. Geprüft werden Text-/
+   Integer-/Nulltypen, aktive Actionmetadaten und bekannte Status-/Funktions-/
+   Ortskombinationen. Statusmengen werden aus den bestehenden Domain-Regeln abgeleitet.
+3. Skalare EXISTS/NOT-EXISTS-Prüfungen sichern actionlokale Personen-/Rollenreferenzen,
+   die Zugehörigkeit der Hauptrolle zum Rollenplan und den erforderlichen operativen
+   Status jeder ACTIVE-Person. Bekannte Typ-/Referenzfehler sind INVALID_DATA,
+   auch wenn der übrige Bestand groß ist.
+4. Vor SUM gilt die sichere Untergrenze: maximal 65536 Tabellenzeilen insgesamt
+   (8 MiB / 128 Byte) und maximal 8 MiB je Textfeld. Bereits größere Werte verweigern
+   vor Payloadquery und Textfetch. Danach SUM der Bytegrößen **je Feld**: höchstens
+   65536 × 8 MiB = 2^39 pro Summe. Kein Double/TOTAL und kein ungesichertes
+   SQL-Längen-SUM über beliebig große Bestände. Negative/widersprüchliche Aggregate
+   werden abgewiesen; tatsächliche SQL-Fehler bleiben STORAGE_FAILURE.
+5. Zeilen-, Feld-, Text-, Relations- und Kapazitätsobergrenzen mit checked Long-
+   Arithmetik in den vorhandenen Budgetvertrag übernehmen. **Beide** Reservierungen
+   müssen vor der ersten Payloadquery zugelassen sein: höchstens 8 MiB Kern und
+   ein zusätzlich auf 8 MiB begrenzter Übergangsbestand. Keine zweite Action,
+   automatische Budgeterhöhung oder unbeschränkte Ersatzlesestrecke.
+6. Erst jetzt Payloadqueries: deterministisches Rowid-Keyset mit LIMIT 32,
+   einschließlich des ersten möglichen Rowidwerts ohne Startwert-Overflow.
+   Jede Textspalte liefert zunächst Bytegröße und eine durch CASE begrenzte
+   BLOB-Projektion. Vor `getBlob` erneut Länge, NULL, Storagegate und Bindung prüfen.
+   Keine `actions().get()`, `persons().list()` oder Operations-Vollreader in diesem Pfad.
+7. Tatsächliche Zeilen-/Byteeinheiten gegen die zugelassenen Obergrenzen prüfen;
+   nach jeder Tabelle müssen Counts und Textsummen exakt übereinstimmen. Bestehende
+   `ActionRow`-/`PersonRow`-/`RoleRow`-/`OperationalRow.model()` und `OperationalRules`
+   sichern Fachwerte, Normalisierung, Rollenplan und Referenzen. Ausgabe wie bisher:
+   Personen nach createdAt/id, Rollen nach normalizedName/id. Die Raw-/Builderdaten
+   bleiben nur temporär, ohne ungezählte vollständige Rowlisten.
+8. Erst nach vollständigem Materialisieren/Validieren die Readtransaktion, Room/
+   Driver und Key-Lease beenden. Der gemeinsame reale Ergebnisadapter
+   `boundedActiveRead` lässt Payload erst im originalen `StorageContext.publish`
+   unter nochmals aktueller Bindung zurückkehren. Spätere UI-Publication benötigt
+   später erneut die zuständige Autorität; ein Rückgabewert ist kein Freigabetoken.
+
+### 36.3 Einheiten, Reservierung und tatsächliche Grenzen
+
+**IMPLEMENTIERT:** `length(CAST(text AS BLOB))` misst bei verifiziertem UTF-8 die
+vollständigen kodierten Bytes einschließlich NUL und Suffix. Es wird ausdrücklich
+nicht `length(text)` als Kotlin-/UTF16-Größe benutzt. Nutztexte werden als BLOB mit
+strengem Java-UTF8-Decoder (REPORT) gelesen, nicht über ersetzendes `getText`.
+Ungültige Fortsetzungsbytes, Overlong-Sequenzen, kodierte Surrogate und Werte
+außerhalb Unicode werden als INVALID_DATA abgewiesen.
+
+Konservative Umrechnung für **gültiges** UTF-8: 1/2/3/4 UTF8-Bytes entsprechen
+höchstens 1/1/1/2 UTF16-Einheiten. Damit ist die vollständige Bytezahl eine obere
+Grenze der UTF16-Einheiten, auch für NUL (1→1) und supplementary Unicode (4→2).
+Decodergebnislänge und tatsächlich gefetchte Bytes werden zusätzlich kontrolliert.
+Die Kodierung wird bei unbekannter/anderer DB-Encoding nicht geraten.
+
+Die Reservierung verwendet für Kern/Übergang Multiplikatoren 4/16 auf die
+vollständigen Text-/Feldzahlen, `rows × copies × 8` Objektallowances,
+`rows × copies` Listen-/Mapkapazitäten, `rows × copies × 16` Referenzen sowie
+Arrays/Bytepuffer. Feste Containerreserven kommen hinzu. Darin sind Raw-Blobs,
+Decoder-Charpuffer, String-/Normalisierungs-/Trimkopien, Rowwrapper, Personen-/
+Rollenmaps, Planungssets, Sortier- und Ergebnislisten konservativ mitgerechnet.
+Bereits Nullable-Felder werden als mögliche Allokationen belastet; keine
+Deduplikationsannahme. Diese Engineering-Charges sind bewusst restriktiv und
+weiterhin **keine zertifizierten ART-Größen oder harte Native-/Gesamt-App-Grenze**.
+
+Die Reservierungsrechnung ist vollständig synchron; die threadgebundene
+Budgetbuchhaltung wird nicht über suspendierende Room-Aufrufe mitgeführt. Ihre
+versiegelten Kostenobergrenzen werden als skalare Werte übernommen, der reine
+Metadatenledger geschlossen. Seal bestätigt hier ausschließlich die eingefrorene
+Kostenreservierung, niemals vollständigen Inhalt. Erst die späteren tatsächlichen
+Count-/Byteprüfungen und das originale Cleanup-/Publicationgate erlauben ADMITTED.
+Ein erzwungener Coroutine-Threadwechsel ist dafür separat getestet.
+
+**BLOCKER für spätere Vorhaltung:** Dieser Einstieg akzeptiert keinen schon
+gehaltenen Kernbestand und besitzt keinen Payloadowner. Vor Einbindung in längere
+Snapshotnutzung sind die Reservierungen in genau einen Scopeowner zu übertragen,
+auch bei Reload/Formular-/Sortierkopien. Beliebig viele vom Aufrufer behaltene
+Rückgabewerte werden hiermit nicht global budgetiert. Kopierallowances/ART-Retention
+und Android-Driverpuffer sind noch zu kalibrieren. Die SQLite-Engine muss bei
+Größenabfragen Daten intern lesen können; der Nachweis betrifft ausbleibende
+Kotlin-/Domain-/Blobmaterialisierung vor Admission, keine garantierte Begrenzung
+sämtlicher nativer SQLCipher-/SQLite-Arbeitspuffer.
+
+### 36.4 Fehler, Cleanup und unveränderte Produktwirkung
+
+**IMPLEMENTIERT:** Budgetverweigerung beendet den Read ohne Payload, EMPTY,
+Teil-CONTENT, Retry, Prefetch oder Fallback und löst kein Storage-BLOCKED aus.
+Nicht geladene Texte werden dadurch nicht als fachlich gültig bestätigt. Unter
+Admission erkannte inkonsistente Felder/Referenzen oder ungültiges UTF-8 sind
+INVALID_DATA und benutzen das zentrale Blocked-Verhalten. Echte SQL-/Inventar-/
+Preflight-/Cleanupfehler sind STORAGE_FAILURE; ein Cleanupfehler darf weder eine
+erfolgreiche Lesung noch eine vorherige Budgetverweigerung als Erfolg erhalten.
+Es gibt keine Reparatur und keinen neuen Recoverymechanismus.
+
+Sperre/Generation-/Berechtigungs-/Actionbindungsverlust führt zu ACCESS_REVOKED
+und ohne Payload zurück. Statements enden über `usePrepared`; Originaltransaktion,
+Room/Driver und Lease über ihre bestehenden finally-Grenzen. Eine verspätete
+Freigabe wird nach Cleanup erneut zentral abgewiesen. Dieser Read erzeugt keine
+Write-Outcomes und schließt keine offene Mutations-/UNKNOWN-/Recoveryintegration.
+
+**NICHT INTEGRIERT:** ProductRuntime, ProductViewModel, navigateActive,
+loadWorkspace, vorhandene Repositories, Clears/Formulare/Detailowner und sämtliche
+Produktwriter bleiben unverändert. Einziger expliziter Android-Aufrufer ist eine
+neue Methode der bereits paketgeschützten synthetischen Debugfixture für Tests.
+Kein RAM-Hit, keine längere produktive Snapshotvorhaltung, keine behauptete
+Navigationsverbesserung. TaskBoard/TaskEvents werden weiterhin unverändert gelesen.
+
+### 36.5 Konkrete Testnachweise und offene Android-Laufzeitprüfung
+
+**GETESTET:** 22 neue `BoundedActiveStoreTest`-Hostfälle führen die produktiven
+SQL-Abfragen, UTF8-Dekodierung, Materialisierung und den produktiven Ergebnisadapter
+gegen **echtes SQLite** aus. Python-Standardbibliothek hält dafür eine ausschließlich
+in-memory DB mit Tabellen/Indizes aus dem vorhandenen Schema-11-JSON. Der kleine
+Test-Statementadapter ersetzt keine Repositoryantworten; Python und dieser Adapter
+sind ausschließlich Hosttestinfrastruktur, keine Appdependency oder Klartextdatei.
+Room-Callbacks/SQLCipher-Android-Driver werden damit nicht vorgetäuscht.
+
+Abgedeckt sind:
+
+- Kleine ACTIVE-Aktion mit exakter erwarteter Action-/Operationsprojektion,
+  Planung/Hauptrolle/Status, stabile Reihenfolge über mehrere Batches und Ausschluss
+  einer zweiten Aktion mit großem Textbestand.
+- PREPARATION/COMPLETED, fehlende/fremde Bindung, falsche Generation sowie
+  ungültige Personen-/Rollen-/Hauptrollenreferenzen und fehlende Statuszeilen.
+- 5000 Personen; 1000 Rollen samt 1000 Planungsrelationen; Count-Untergrenze mit
+  33000 Personen; 8-MiB-plus-ein-Byte-Maximum vor SUM; sehr lange Einzeltexte in
+  Action/Person/Rolle und großer Suffix hinter NUL. Bei Refusal **keine vorbereitete
+  Payloadquery, kein Blobfetch und keine vollständige Rowmaterialisierung**.
+- Exakt 8 MiB Übergangscharge im echten Reader und Verweigerung nach einem weiteren
+  Nutzbyte, ohne neue Payloadquery; bestehende Budgettests prüfen zusätzlich die
+  exakte Bytegrenze, Grenzwert plus eine Einheit und Long-Add-/Mul-Overflow.
+- NUL und supplementary Unicode ohne Abschneiden, Unicode-Normalisierung mit
+  Expansion/Kontext, malformed UTF8/Overlong/Surrogaten/ungültigem Wertebereich,
+  tatsächlich UTF16-kodierte SQLite-DB, falsche SQL-Typen und ungültige Domainwerte.
+- Tatsächlicher SQLite-Integer-SUM-Overflow ist ein Fehler; die Readerguards
+  verhindern SUM bereits bei zu großen Counts/Einzelwerten, ohne Float-Ausweichpfad.
+- Revoke an jeder Readerphase, Generation-/Bindungswechsel beim Materialisieren,
+  Sperre/Generation-/Permissionwechsel am finalen Publicationgate, Cleanupfehler
+  nach Erfolg oder Refusal, kein BLOCKED bei Budgetknappheit und geschlossene
+  Statements/Readtransaktionen. Erzwungene Coroutine-Threadwechsel bestehen.
+
+**GETESTET:** Abschlussstand: 202 App-Hosttests einschließlich aller 44 neuen
+2A-1-Fälle und der unveränderten historischen Proofs, 146 Data-Hosttests
+(124 bestehende plus 22 Readerfälle), 4 Security-Hosttests: **352 bestanden,
+keine Fehler/Skips**. Fokussierte bestehende Workspace-/ACTIVE-/ViewModel-,
+SessionCoordinator-/B2-Key-/B2-Session-, Dokument-Delete-/Storage-/Reconciliation-
+und LeadershipCrypto-Regressionen enthalten. Offline-Debugbuild, Architektur-
+und Produkt-/Demo-Manifestprüfungen bestanden; vorhandener Keystorehash unverändert.
+
+**NUR KOMPILIERT, NICHT AUSGEFÜHRT:** Vier `BoundedActiveRoomTest`-Fälle benutzen
+die vorhandene paketbeschränkte isolierte SQLCipher-/Room-Fixture: Gleichheit
+mit bisherigen Action-/Operationsreadern, Phasenablehnung, finale Publication-
+verweigerung/Revoke und wiederholte Reads mit Cleanup-/FD-Kontrolle. Die gesamte
+Data-Androidtestsuite wurde offline kompiliert. Kein Gerät kontaktiert und keine
+APK installiert; diese vier Fälle haben daher **kein Laufzeit-PASS**. Die direkte
+Gleichheit mit dem alten realen Room-Operationsreader ist vorbereitet, aber noch
+nicht am Android-Driver nachgewiesen. Das bleibt technischer Freigabe-BLOCKER.
+
+Gefundene Testfehler wurden untersucht: Der erste Hostadapterimport setzte eine
+Indexliste für jede Schemaentität voraus; danach war ein Fehlerklassifikationstest
+noch mit einem vorher absichtlich beschädigten Feld befüllt. Beide Testaufbauten
+wurden korrigiert. Diese Fehlläufe werden nicht als erfolgreiche Prüfungen gezählt.
+
+### 36.6 Vollständiger Umfang und verbleibende BLOCKER
+
+Gemessener Diffumfang vor Commit: **11 logische Dateien einschließlich einer
+Verschiebung, 1124 Einfügungen und 4 Löschungen** (`git diff --cached --stat`).
+Vollständige Pfade:
+
+- `app/src/main/kotlin/org/pag/prototype/product/ActiveWorkspaceBudget.kt`
+  → `domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt`
+- `app/src/test/kotlin/org/pag/prototype/product/ActiveWorkspaceBudgetTest.kt`
+- `domain/src/main/kotlin/org/pag/domain/BoundedActiveRead.kt`
+- `data/src/main/kotlin/org/pag/data/product/BoundedActiveStore.kt`
+- `data/src/main/kotlin/org/pag/data/product/ProductBoundedActiveReader.kt`
+- `data/src/debug/kotlin/org/pag/data/product/P11SyntheticFixture.kt`
+- `data/src/androidTest/kotlin/org/pag/data/product/BoundedActiveRoomTest.kt`
+- `data/src/test/kotlin/org/pag/data/product/BoundedActiveStoreTest.kt`
+- `data/src/test/kotlin/org/pag/data/product/SqliteHostConnection.kt`
+- `data/src/test/resources/bounded_active_sqlite.py`
+- `docs/product-p11-active-workspace-assessment.md`
+
+**BLOCKER:** Android-SQLCipher-/Room-Laufzeitnachweise, Chargen-/Kopierkalibrierung,
+späterer einheitlicher Scope-/Payload-/Formularowner mit begrenztem Übergang,
+vertrauenswürdige Permission-/Status-/Mutationsversionierung und alle noch offenen
+Writer-/Outcome-/Recoveryhooks aus 35.5. Personrename/Plan-/Rolleneditoren benötigen
+weiterhin eine nachgewiesene Konfliktlösung; kein universeller CAS ist hinzugekommen.
+Task-/Event-Admission ist ein eigener nächster Reader-Slice, nicht verdeckt erledigt.
+Erst danach kann eine gesondert geprüfte Navigationseinbindung folgen.
+
+SessionCoordinator, 180-s-absolut/30-s-READY-idle, StorageAccess, SessionDbKeyOwner,
+SQLCipher/Tink, P3b/Leadership, DocumentNamespaceLane/-Recovery, PDF-Isolation,
+Schema 11, Raw-Key-Vertrag, App-ID und Signatur/Keystore unverändert. Keine neuen
+Produktdaten-/Credential-/Klartextpersistenzpfade. Produkt-App und installierte
+manuelle Test-App bleiben unangetastet. Historische 18/20 mit 2 UNREACHABLE bleiben
+unverändert; weder neue UI-Ursachensuche noch neue Accessibility-/Produktabnahme.
+
+Nur notwendige Quellen/Tests und dieser Bericht im regulären WIP-Commit; keine
+APKs, DBs, Logs, Schlüssel, persönlichen Pfade oder Gerätekennungen. Nach Push und
+unabhängigem Commit-/Remote-SHA-Abgleich STOPP bis zum unabhängigen GitHub-Review;
+kein Force-Push, Merge, Release, Produktupdate oder weitere Integration.

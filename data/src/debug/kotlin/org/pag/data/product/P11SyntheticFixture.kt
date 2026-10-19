@@ -87,6 +87,20 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
     val expenses:ExpenseRepository=ProductExpenseRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
     val memoryReports:MemoryReportRepository=ProductMemoryReportRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
     val documents:DocumentRepository=ProductDocumentRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
+    /** Explicit test entry only; not part of the runtime/navigation fixture setup. */
+    fun boundedActive(actionId:String=activeId,allowPublication:Boolean=true):BoundedActiveResult {
+        val binding=BoundedActiveBinding(actionId,epoch,0)
+        val gated=object:StorageAccess {
+            override fun acquire(scope:AccessScope):StorageContext? {
+                val c=access.acquire(scope) ?: return null
+                return object:StorageContext by c {
+                    override fun publish(result:()->Unit)=allowPublication && c.publish(result)
+                }
+            }
+        }
+        return ProductBoundedActiveReader(wrapped,gated,inventory,owner::get,
+            {if(allowed)BoundedActiveBinding(actionId,epoch,0)else null},::fail).read(binding)
+    }
     fun databaseRead(report:(String,Long)->Unit) {
         val c=access.acquire(AccessScope.READY) ?: error("SYNTHETIC_REVOKED")
         val start=System.nanoTime();check(inventory.state()==ProductStorageState.READY_TO_OPEN)

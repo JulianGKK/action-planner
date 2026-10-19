@@ -1,7 +1,7 @@
-package org.pag.prototype.product
+package org.pag.domain
 
 /**
- * Unwired accounting foundation, no payload and no storage/session authorization. One ledger
+ * Accounting foundation, no payload and no storage/session authorization. One ledger
  * per future scope, confined to its owner thread. Charges are engineering allowances, NOT
  * certified ART deep sizes or an App/Native/OOM bound. DTO/capacity calibration is still needed.
  *
@@ -10,7 +10,7 @@ package org.pag.prototype.product
  * (including all temporary builders/rows/copies); actual units must not exceed its reservation.
  * Successful admission alone never makes a partial result complete or permits publication.
  */
-internal class ActiveWorkspaceBudget {
+class ActiveWorkspaceBudget {
     enum class Decision { ADMITTED, BUDGET_REFUSED, INVALID_DATA }
 
     /**
