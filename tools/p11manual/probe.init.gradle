@@ -1,0 +1,19 @@
+// Explicit manual overlay on the existing isolated P11 target. Never install tasks.
+apply from: new File(initscript.sourceFile.parentFile, '../p11/probe.init.gradle')
+gradle.settingsEvaluated { settings ->
+    if (!new File(settings.settingsDir, '.prototype-cache/debug.keystore').isFile()) {
+        throw new GradleException('Existing local debug keystore required; manual preparation must not generate a new key')
+    }
+}
+gradle.beforeProject { p ->
+    p.plugins.withId('com.android.application') {
+        if (p.path == ':app') {
+            def a = p.extensions.getByName('android')
+            a.sourceSets.getByName('debug').kotlin.srcDirs += [
+                new File(p.rootDir, 'app/src/androidTest/kotlin/org/pag/prototype/p11fixture'),
+                new File(p.rootDir, 'tools/p11manual/android')]
+            a.sourceSets.getByName('debug').manifest.srcFile(new File(p.rootDir, 'tools/p11manual/AndroidManifest.xml'))
+            a.sourceSets.getByName('test').kotlin.srcDir(new File(p.rootDir, 'tools/p11manual/test'))
+        }
+    }
+}

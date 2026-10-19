@@ -3044,3 +3044,123 @@ Produktdaten, Schlüssel oder Keystores im Commitumfang. Offline-Testbuild besta
 Rohstream-/Ergebnisabgleich bestanden. Abschließende Diff-/Statusprüfung und
 WIP-Commit/Push auf dem bestehenden Featurebranch vorgesehen, ohne Force-Push,
 Merge, Release oder Produktupdate. Anschließend STOPP bis zum unabhängigen Review.
+
+
+## 32. Vorbereitung der manuellen isolierten P11-UI-Abnahme
+
+### 32.1 Umfang und Wiederverwendung
+
+Basis `9ba2b9cc61027b0531e99faef31e2d4fb235ac0f`, bestehender Branch
+`p11-performance-optimization`. Das vorhandene isolierte P11-Zielpaket ist als
+Buildgrundlage geeignet. Sein bisheriger Launcher ist jedoch der produktive
+Einstieg, den die Instrumentation erst nach Start durch synthetischen Inhalt
+ersetzt. Für eine manuelle Bedienung ohne diesen Einstieg wird deshalb ein
+explizites Debug-Manifest-/Quelloverlay auf dem vorhandenen P11-Init-Skript
+bereitgestellt, keine zweite Testarchitektur oder neuer Produktmodus.
+
+Launchername **PaG P11 UI-Test**, Paket unverändert isoliert
+`org.pag.perf.p11probe`. `P11ManualActivity` und `android.app.Application` ersetzen
+im manuellen Zielmanifest MainActivity/PagApplication; der PDF-Service entfällt.
+Der tatsächliche aktuelle `ProductScreen` und `ProductViewModel` werden direkt
+mit synthetischen Ports betrieben. Die bisherigen Fixtures aus Ux3dFunctionsProbe
+sind in einen nur explizit eingebundenen gemeinsamen P11-Testquellbereich
+verschoben. Automatische Navigation, Assertions und Diagnosepuffer bleiben
+unverändert; ihre bisherigen APK-/Messnachweise werden nicht auf neue Builds
+übertragen.
+
+Vorbereitet sind Übungsaktion (ACTIVE), Motte mit Support, Klee ohne aktuelle
+Funktion und die weitere Funktion Blockierende. Die Operations-Fixture erlaubt
+jetzt auch Klee-Änderungen und weist veraltete erwartete Snapshots zurück.
+Die manuelle Personenliste verwendet dieselben beiden erfundenen Personen;
+der automatische Probe-Standard behält seine historische leere Personenliste.
+Bestätigungsbanner und Funktions-/Statusnavigation stammen aus unverändertem
+Produktcode. Keine zusätzlichen Beobachter, Refreshs oder Suchsteuerungen.
+
+### 32.2 Manuelle Steuerung und Grenzen
+
+Startbildschirm mit Schrift1/2/3,5, Öffnen/Fortsetzen und Reset. Die Schriftwahl
+ändert ausschließlich LocalDensity im Testziel, keine Geräteeinstellung.
+Während des Produktbildschirms keine zusätzliche Testtoolbar und kein veränderter
+Viewport durch einen Testwrapper. Android-Zurück bietet die Rückkehr zum Teststart;
+fachliche Rücknavigation erfolgt über die sichtbaren Produktknöpfe.
+
+Reset verwirft die In-Memory-Ports und räumt das alte Modell über ViewModelStore
+auf; neue Daten und neue Hubnavigation für den nächsten Durchlauf. Eine sichtbare
+Live-Region meldet die neue Durchlaufnummer. Schriftwechsel am Start erhält
+Activity/Modelldaten, öffnet aber die Composition neu; kein unveränderter
+Scroll-/Fokuszustand zugesichert. Activity-Neustart/Rotation/Prozesstod setzt die
+synthetischen Daten zurück. Die synthetische Session unterstützt im manuellen
+Modus rein lokalen Lock/Unlock ohne Plattformauthentifizierung; der automatische
+Probe-Standard erlaubt weiterhin keine Authentifizierung. Observer werden beim
+Modellabbau freigegeben. Keine Simulation echter Sessionfristen/Sicherheitsabnahme.
+
+Nur der beauftragte Funktionspfad ist als manuelle Probe vorbereitet. Andere
+Fachbereiche sind nicht vollständig simuliert; Aufgaben haben ein leeres Board,
+Dokumente und sensible Bereiche sind nicht angebunden. Keine Vollproduktabnahme
+behauptet. `tools/p11manual/README.md` enthält die kurze Funktionsfolge,
+Schrift-/TalkBack-Prüfpunkte, Resetgrenzen und getrennte sichere Build-, Prüf-
+und spätere Installationsschritte. TalkBack verwendet die tatsächliche
+Compose-Semantik; reale Bedienbarkeit und Banneransage bleiben manuell zu prüfen.
+
+### 32.3 Verifikation ohne Installation
+
+**GEMESSEN:** Manueller isolierter Offline-Debugbuild bestanden;4 fokussierte
+Fixture-Hosttests bestanden (beide Personen, Status-/Funktionswechsel, veraltete
+Snapshots, frische Ausgangsdaten, synthetischer Unlock und Observerfreigabe
+sowie Modell-Einstieg/Workspace/Wiederentsperren).
+Ein zunächst gefundener Nullobserver beim Lock nach Subscriptionfreigabe wurde
+in der Test-Fixture korrigiert, Tests danach erfolgreich. Bestehende automatische
+P11-Assessment-Instrumentation nach gemeinsamer Fixture-Auslagerung offline gebaut;
+keine Instrumentation auf einem Gerät gestartet. Keine neue UI-Testkampagne.
+Auch die normalen Produkt-/Demo-Manifestprüfungen ohne Testoverlay bestanden.
+
+8 Python-Prüfungen des nur lesenden APK-Gates bestanden: isoliertes Ziel,
+Ablehnung der Produkt-ID, falscher Zertifikate, produktiver Application,
+Netzwerkberechtigung, zusätzlicher Komponenten, Backup und unexportiertem Launcher.
+Der reale eingefrorene manuelle APK wurde ebenfalls geprüft: exakte isolierte
+Paketkennung, einzige manuelle Launcher-Activity, Standard-Application,
+keine Services/Provider/Receiver/Instrumentation, nur paketlokale AndroidX-
+Signaturberechtigung, Backup und Cleartexttraffic aus. `apksigner verify` bestanden,
+Zertifikat mit unabhängig bekanntem lokalem Fingerprint abgeglichen.
+Der vorhandene lokale Keystore-Dateihash ist gegenüber dem vorherigen Nachweis
+unverändert; keine Schlüsselneuerzeugung/-umstellung. Der manuelle Init-Build
+bricht bei fehlendem vorhandenem Keystore bereits vor Projektkonfiguration ab.
+
+Lokal eingefrorener manueller APK-SHA256:
+`742d53923cb6d1e3a5b6463967f92a42c78bdb504c977d6010acd3ebd972453c`.
+APKs und Rohbuildausgaben ausschließlich im ignorierten lokalen Diagnosebereich.
+Der APK-Prüfer hat keine Installations-/ADB-Funktion. Vor einer späteren Installation
+müssen Paket, Signatur und freigegebener Artefakthash erneut geprüft werden.
+Es wurde **nichts installiert**, keine Produkt-App gestartet/aktualisiert/gelöscht,
+kein pm clear ausgeführt und kein bereits bereinigtes Testpaket wiederhergestellt.
+Keine reale UI-/TalkBack-Abnahme erfolgt; keine GRÜN-Bewertung daraus ableiten.
+
+### 32.4 Schutzgrenzen, Dateiliste und Übergabe
+
+Keine Produktquellen, Produkt-App-ID, SessionCoordinator/180s-/30s-Fristen,
+StorageAccess/Generation, SessionDbKeyOwner, SQLCipher-Preflight,
+Room-/Key-Lifecycle, Tink, Leadership/P3b, Dokumentisolation oder Recovery geändert.
+Keine produktive DB, echten Daten/Credentials, Geräteauthentifizierung,
+Netzwerkfunktion oder produktiver RAM-Cache. Keine neue Dependency.
+
+Vollständiger Änderungsumfang:
+
+- `app/src/androidTest/kotlin/org/pag/prototype/Ux3dFunctionsProbe.kt`
+- `app/src/androidTest/kotlin/org/pag/prototype/p11fixture/P11FunctionsFixture.kt`
+- `tools/p11manual/probe.init.gradle`
+- `tools/p11manual/AndroidManifest.xml`
+- `tools/p11manual/android/org/pag/prototype/P11ManualActivity.kt`
+- `tools/p11manual/test/org/pag/prototype/P11FunctionsFixtureTest.kt`
+- `tools/p11manual/verify_apk.py`
+- `tools/p11manual/test_verify_apk.py`
+- `tools/p11manual/README.md`
+- `docs/product-p11-active-workspace-assessment.md`
+
+10 Textdateien. Kein APK, Log, Schlüssel/Keystore, Credential, Produktdatum,
+Gerätekennung oder persönlicher Pfad im Commitumfang. Vorgesehene Übergabe:
+Diff-/Statusprüfung, WIP-Commit und Push auf dem bestehenden Branch,
+Commit-/Remote-SHA unabhängig abgleichen. Kein Merge/Release/Produktupdate.
+Anschließend STOPP bis zum unabhängigen GitHub-Review und ausdrücklicher
+Installationsfreigabe. Die18/20 und5/5 aus Abschnitt31 bleiben historische,
+getrennte Ergebnisse; die2 neuen und2 ursprünglichen vollständigen Fehler bleiben
+anerkannt. Ursache und manuelle UI-/TalkBack-/Produktabnahme weiterhin offen.
