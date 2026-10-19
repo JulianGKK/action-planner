@@ -3164,3 +3164,53 @@ Anschließend STOPP bis zum unabhängigen GitHub-Review und ausdrücklicher
 Installationsfreigabe. Die18/20 und5/5 aus Abschnitt31 bleiben historische,
 getrennte Ergebnisse; die2 neuen und2 ursprünglichen vollständigen Fehler bleiben
 anerkannt. Ursache und manuelle UI-/TalkBack-/Produktabnahme weiterhin offen.
+
+
+## 33. Manuelle P11-UI-/TalkBack-Prüfung
+
+### 33.1 Vom Benutzer manuell bestätigt
+
+Ausgangsstand `0a6fc8247e84a8ccc07f5e3fe1482ef3acb3569f`, Branch
+`p11-performance-optimization`. Der Benutzer hat die manuelle Prüfung persönlich
+mit der isolierten Test-App **PaG P11 UI-Test** auf dem Samsung durchgeführt.
+Die folgenden Ergebnisse sind Benutzerbestätigungen:
+
+- Schriftfaktor **1**: **„Noch keine aktuellen Funktionen“** sichtbar und erreichbar.
+- Schriftfaktor **2**: **„Noch keine aktuellen Funktionen“** sichtbar und erreichbar.
+- Schriftfaktor **3,5**: **„Noch keine aktuellen Funktionen“** sichtbar und erreichbar.
+- **TalkBack funktioniert** laut Benutzer im getesteten Kontext.
+
+Für den manuell getesteten Ablauf wurde damit bei Schriftfaktor 1, 2 und 3,5 kein
+Erreichbarkeitsproblem festgestellt. Eine separate TalkBack-Prüfung mit jedem der
+drei Schriftfaktoren ist nicht bestätigt. Weitere Testfälle, Wiederholungszahlen
+oder detailliertere TalkBack-Ergebnisse liegen mit dieser Rückmeldung nicht vor.
+
+### 33.2 Durch Codex automatisiert getestet
+
+Die historischen automatischen Ergebnisse aus Abschnitt 31 bleiben unverändert:
+**18/20 bestanden, 2 UNREACHABLE bei HC_L2_CONTENT**. Diese Testreihe erhält
+auch nach der erfolgreichen manuellen Prüfung keine rückwirkende GRÜN-Bewertung.
+Die dort getrennt dokumentierten Ergebnisse und Fehlernachweise bleiben erhalten.
+Die manuellen Benutzerbestätigungen sind keine automatisierten Codex-Ergebnisse.
+
+Für diese Berichtsergänzung wurden keine neuen UI-Tests durchgeführt und keine
+APK gebaut oder installiert. Die Prüfung der Änderung beschränkt sich auf
+Git-Status und Dokumentationsdiff einschließlich `git diff --check`.
+
+### 33.3 Weiterhin offen
+
+Die erfolgreichen manuellen Prüfungen sind kein allgemeiner Produkt- oder
+Accessibility-Fehlerfreiheitsnachweis und ersetzen keine vollständige Sicherheits-
+oder Produktabnahme. Eine vollständige Accessibility-Abnahme einschließlich der
+nicht separat bestätigten TalkBack-/Schriftkombinationen bleibt offen.
+Die Ursache der historischen automatischen Fehler bleibt ungeklärt; die
+automatische UI-Ursachensuche bleibt vorerst abgeschlossen. Issue #26 bleibt
+Gesamt-Release-Gate; keine Freigabe für produktive Stufe 2.
+
+Ausschließlich dieser Bericht wird ergänzt. Keine Produktcode-, RAM-Cache- oder
+Sicherheitsarchitekturänderung, keine Stufe 2-Implementierung und keine Verwendung
+echter Produktdaten. Kein Gerätezugriff für diesen Dokumentationsauftrag;
+Produkt-App und vorhandene Test-App auf dem Samsung bleiben unangetastet.
+Nach regulärem Commit/Push auf dem bestehenden WIP-Branch und Remote-SHA-Abgleich
+STOPP. Weitere Arbeit erst nach unabhängigem GitHub-Review; kein Force-Push,
+Merge, Release oder Produktupdate.
