@@ -4158,3 +4158,135 @@ an ProductViewModel/navigateActive/loadWorkspace, keine Session-/Storagegate-,
 SQLCipher-/Tink-/Schema-11-/P3b-/Dokument-/App-ID-/Signaturänderung. Installierte
 Apps unangetastet. Regulärer WIP-Commit/Push, unabhängiger Remote-SHA-Abgleich,
 danach STOPP bis zum unabhängigen Review beziehungsweise ausdrücklicher Freigabe.
+
+## 38. Stufe 2A-2a – Android-SQLCipher-/Room-Laufzeitergebnisse
+
+### 38.1 Freigabe und verifiziertes Artefakt
+
+**AM ANDROIDGERÄT AUSGEFÜHRT:** Auf ausdrückliche Benutzerfreigabe erfolgten eine
+Installation, genau ein fest selektierter Instrumentationlauf und die anschließende
+Entfernung ausschließlich des neu installierten `org.pag.data.unlockprobe`.
+Ausgangsbranch `p11-performance-optimization`, freigegebener Commit
+`71e231a1e59217e113c06c33a9446a28e9182bfc`, Arbeitsverzeichnis vorher sauber.
+Genau ein über ADB erreichbares Samsung wurde eindeutig ausgewählt. Keine
+Gerätekennung oder Rohlogs werden veröffentlicht.
+
+Ausschließlich das vorhandene eingefrorene APK verwendet, **kein Neubuild**.
+SHA256 erneut exakt bestätigt:
+`c5a628f6b6b4a23dc1adeb4af99d136a428f76204e99c906a422e1de0f7ddf42`.
+Der vorhandene `tools/p11bounded/verify_apk.py` bestand einschließlich
+kryptografischer Signaturprüfung gegen den bereits unabhängig bekannten lokalen
+Zertifikatsnachweis. Bestehender Keystore-Dateihash unverändert. Self-Target und
+Paket `org.pag.data.unlockprobe`, Runner `androidx.test.runner.AndroidJUnitRunner`,
+Standard-Application, keine Permissions/Queries oder zusätzlichen Komponenten,
+Backup/Cleartext deaktiviert. Details des Gates unverändert wie Abschnitt 37.
+
+Vorher ausschließlich Paket-/Installationsmetadaten der drei freigegebenen
+Paketnamen lokal erfasst: Existenz, Version, firstInstallTime, lastUpdateTime und
+Signaturinformationen. Das temporäre Paket war nicht installiert. Installation
+**ohne `-r`** erfolgreich. Danach installierte Test-APK lesend gegen das eingefrorene
+Artefakt verglichen: vollständiger Dateihash identisch; damit auch identische
+signierte APK. Installierte Instrumentation mit korrektem Self-Target bestätigt.
+Keine geschützten Appdaten/DBs gelesen oder kopiert, keine echten Credentials.
+Fixture und Tests unverändert: ausschließlich synthetische Daten und flüchtiger
+synthetischer DB-Schlüssel im privaten Testpaketbestand.
+
+### 38.2 Einzelresultate und Runnerabschluss
+
+Der vollständige feste Methodenselektor aus `tools/p11bounded/README.md` wurde
+**einmal** aufgerufen. Keine andere Testklasse, keine Suite, kein Retry,
+kein `connectedAndroidTest`, keine Änderung von Assertions oder Produktcode.
+Die tatsächliche Runnerreihenfolge war 2, 4, 3, 1 der folgenden Auftragsliste:
+
+| Methode in `BoundedActiveRoomTest` | Tatsächlich ausgeführt | Ergebnis |
+|---|---|---|
+| `boundedProjectionEqualsExistingOperationsAndActionReaders` | einmal | PASS |
+| `preparationCompletedAndMissingAreRejected` | einmal | PASS |
+| `finalPublicationDenialAndRevokedSessionReturnNoPayload` | einmal | PASS |
+| `repeatReadClosesConnectionsAndDoesNotChangeProjection` | einmal | PASS |
+
+**GESAMT: 4/4 PASS, 0 FAIL/ERROR/SKIP.** Der Originalstream enthält für jede
+exakte Klasse/Methode genau ein Startereignis (Status 1) und ein erfolgreiches
+Endereignis (Status 0), insgesamt acht Methodenstatusereignisse. Runnerabschluss
+`OK (4 tests)`, abschließender Instrumentationcode `-1`, ADB-Exitcode 0.
+Kein unerwarteter Prozessabbruch oder SQLCipher-/Room-Fehler im Runnerstream
+beobachtet. Keine zusätzliche Logcat-/Gerätetestkampagne durchgeführt; daraus
+folgt keine Aussage über sämtliche geräteweiten Warnungen.
+
+Bestätigt sind im Umfang dieser Fixture die gleiche Action-/Operationsprojektion
+wie bei den bestehenden Readern, Ablehnung von PREPARATION/COMPLETED/fehlender
+Action, verweigerte finale Publication und Revoke ohne Payload sowie wiederholte
+Reads mit identischer Projektion und bestandener FD-Toleranzprüfung.
+Die **22 Host-Readerfälle** aus Abschnitt 36 bleiben davon getrennte Nachweise;
+es wurden hier keine zusätzlichen Hosttests oder Benchmarks ausgeführt.
+
+### 38.3 Cursor, Driver, Lease und Dateideskriptoren
+
+**A – Statement-Cursor-Close: NICHT NACHGEWIESEN.** Der statisch und im Host
+belegte Befund bleibt unverändert: `SQLCipherStatement.close()` setzt nur das
+Closed-Flag, schließt den gehaltenen Cursor nicht ausdrücklich. Ein bestandener
+Androidtest beseitigt diesen Befund nicht. Keine Produktkorrektur vorgenommen.
+
+**B – Datenbank-/Driver-/Lease-Cleanup: BEGRENZTER LAUFZEITNACHWEIS.** Die
+Readeraufrufe kehrten erfolgreich durch den vorhandenen Rückgabepfad zurück.
+Dieser führt vor Rückgabe DB-/Room-Close, Parent-Beendigung, Driver-Close und
+Lifecycle-/Publicationprüfungen aus; `withDbKey` verlässt seinen Lease-Scope.
+Es trat dabei kein gemeldeter Cleanupfehler auf. Die Tests instrumentieren jedoch
+weder jeden Close-Aufruf noch native Cursorfreigabe, Lease-Zeroisierung oder
+sämtliche Runtime-Kopien separat. Vollständige physische Ressourcen-/Wipegarantie
+ist damit nicht nachgewiesen.
+
+**C – FD-Beobachtung: TOLERANZPRÜFUNG BESTANDEN.** Die vierte Methode erstellt
+einen initialen Read, erfasst die FD-Anzahl, führt drei weitere Reads aus und
+prüft anschließend `FD_nachher <= FD_vorher + 2`. Diese Assertion bestand.
+Die absoluten Zahlen werden vom bestehenden Test nicht ausgegeben. Damit wurde
+kein Anstieg über diese Toleranz in diesem kurzen Ablauf beobachtet; insbesondere
+kein Langzeitnachweis eines ausbleibenden dauerhaften FD-Anstiegs. Es gab keinen
+separaten Cursorbestand-/CursorWindow-Zähler und keine erzwungene GC-Prüfung.
+
+**D – OFFEN:** Lebensdauer und Freigabe einzelner Cursor beziehungsweise nativer
+CursorWindow-Ressourcen; Verhältnis von Statementende zu endgültigem DB-/Driver-
+Cleanup. Die vorhandene Fixture prüft den Boolean von `deleteRecursively()` nicht.
+Daher bleibt erfolgreiche einzelne Fixture-Verzeichnislöschung unbewiesen,
+obwohl kein Closefehler gemeldet wurde und anschließend das ganze ausdrücklich
+freigegebene temporäre Paket erfolgreich deinstalliert wurde.
+
+### 38.4 Paketstatus und Bereinigung
+
+| Paket | Vor Installation | Nach Installation | Nach Bereinigung |
+|---|---|---|---|
+| `org.pag.data.unlockprobe` | fehlt | neu installiert, Identität verifiziert | fehlt |
+| `org.pag.prototype.a` | vorhanden | Metadaten unverändert | Metadaten unverändert |
+| `org.pag.perf.p11probe` | vorhanden | Metadaten unverändert | Metadaten unverändert |
+
+Vor der Deinstallation erneut Paketexistenz und sämtliche lokal erfassten
+Versions-/Zeit-/Signaturmetadaten gegen die nachgewiesene Neuinstallation
+abgeglichen. Ausschließlich `org.pag.data.unlockprobe` entfernt; ADB meldete
+Erfolg, abschließende Paketabfrage bestätigte Abwesenheit. Für beide geschützten
+Apps sind Paketversionen, firstInstallTime, lastUpdateTime und erfasste
+Signaturinformationen im Vorher-/Nachhervergleich exakt identisch. Keine andere
+Installation/Deinstallation, kein `pm clear`, kein Launcherstart, kein Produktupdate
+und keine Änderung der manuellen P11-App. Rohstream, Metadaten, installierte
+Test-APK-Kopie und Geräteidentität ausschließlich lokal aufbewahrt, nicht in Git.
+
+### 38.5 Weiterhin offene Grenzen und nächste Schritte
+
+Der Android-Laufzeitblocker für **genau diese vier Fälle** ist mit 4/4 bestanden
+abgearbeitet. Keine allgemeine Android-/Sicherheits-/Performancefreigabe.
+Unveränderte Abdeckungslücken: 20 synthetische Personen, keine nichtleeren
+Rollen-/Planungsbestände, keine >32-Zeilen-Folgebatches, keine Android-NUL-/
+Supplementary-Unicode-/Übergrößen-/vollständigen Budgetgrenzfälle. Kein separater
+Lock-/Generationwechsel während eines laufenden Batches und kein Langzeit-
+Ressourcennachweis durch diese vier Methoden. Die Hostnachweise bleiben getrennt.
+
+**BLOCKER vor weiterer produktiver Integration:** Cursor-/Ressourcenlebensdauer
+bewerten; weitere Android-Abdeckung nur nach gesondertem Auftrag; konservative
+Budget-/Kopierkalibrierung, Scope-/Payload-/Formularowner, Permission-/Status-/
+Mutationsversionierung und noch offene Writer-/Outcome-/Recoveryhooks einschließlich
+Personrename-/Editorkonflikten aus Abschnitten 35–37. Task-/Event-Reader bleibt
+ein eigener Slice. Keine RAM-Hits, keine verlängerte Snapshotvorhaltung und keine
+Navigationseinbindung aktiviert; keine neue Navigationszeit gemessen oder behauptet.
+
+Ausschließlich dieser bereinigte Bericht geändert. Regulärer WIP-Commit und Push
+mit unabhängigem Remote-SHA-Abgleich; danach STOPP bis zum unabhängigen GitHub-
+Review. Kein Force-Push, Merge, Release, Produktupdate oder weitere Implementierung.
