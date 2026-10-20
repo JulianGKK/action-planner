@@ -5008,3 +5008,257 @@ Kein neuer Build, da nur Ergebnisdokumentation geändert und ausschließlich das
 freigegebene eingefrorene Artefakt getestet wurde. Nach Dokumentationscommit und
 regulärem Push mit unabhängigem Remote-SHA-Abgleich STOPP bis zum unabhängigen
 GitHub-Review; kein Force-Push, Merge, Release oder Produktupdate.
+
+## 43. Issue #33 – Skalierbare kompakte ACTIVE-Aufgabenprojektion
+
+### 43.1 Implementierter Slice und tatsächliche Abhängigkeiten
+
+**IMPLEMENTIERT UND AUF ECHTEM SQLITE GETESTET (2026-10-20):** Ausgangs-SHA
+`cbe9196b6ddd4a98ca3e8af6a07dc7efba30d0a6`, Branch
+`p11-performance-optimization`, sauberer Ausgangszustand und Remote-SHA bestätigt.
+Neue Domainverträge in `CompactActiveTasks.kt`, bounded SQL in
+`CompactTaskStore.kt`, expliziter Workerzugang in `ProductCompactTaskReader.kt`
+und reproduzierbare Schema-11-Hosttests in `CompactTaskStoreTest.kt`.
+Kein Anschluss an ProductRuntime, ProductViewModel oder Produktnavigation.
+
+Die Prüfung der bestehenden Abhängigkeiten ergibt:
+
+| Bestand | Tatsächlicher Bedarf / Konsequenz für den späteren Anschluss |
+|---|---|
+| `BoundedActiveStore` | Vollständige Action-/Personen-/Rollen-/Operationsprojektion mit eigener bisheriger Standalone-Admission; gemeinsame Buchung noch offen. |
+| `BoundedTaskStore` | Vollständiges `TaskBoard`, alle Templatekennungen und alle Events; bisheriger 100-Task-Budgetkonflikt bleibt für diesen Reader bestehen. |
+| `ActiveWorkspaceBudget` | Ein retained- und höchstens ein transition-Kontingent à 8 MiB; Engineeringgewichte, keine zertifizierten ART-/Native-Größen. |
+| `ActiveWorkspaceValidity` | Owner-Thread, Mutation-/Load-Epochen, einmalige Read-/Mutationtickets, Pending-/UNKNOWN-/Cleanup-/Revoke-Gates; keine Produktintegration und keine Payloadautorität. |
+| `ProductViewModel` | `WorkspaceSnapshot.tasks` bleibt `TaskBoard`; `readWorkspace()` fordert es unter anderem für Hub, Personen, Aufgaben und Material an. `clearPersons()` bereinigt zusätzlich Tickets, Formulare, Auswahl und sensible Bereiche. Ein bloßer Austausch der Taskliste würde diese Verträge verletzen. |
+| `TaskModel` | Auswahl/Reconcile suchen das vollständige Taskmodell im Board; Bearbeitung und Writer benötigen den vollständigen erwarteten Snapshot einschließlich Provenienz. Form-/Request-/Revoke-Lebensdauer darf nicht an einer Übersichtszeile hängen. |
+| `TaskScreen` / `ActiveTasks` | `TaskBoard.active/closed`, Filter, Summary und vollständige Eventliste; nicht-lazy `forEach`. Karten suchen Personen/Rollen wiederholt in Listen. Personenbezogene Taskzahlen verwenden die vollständige Aufgabenmenge. |
+| `TaskBoard` / `TaskRules` | ACTIVE-Reihenfolge HIGH/NORMAL/LOW, Fälligkeit vor null, früheste Fälligkeit, createdAt, Kotlin-UTF16-ID; CLOSED nach updatedAt absteigend. Personenfilter bedeutet affectedPersonId, unabhängig von Zuständigkeit. |
+
+Die bestehenden Reader, TaskBoard-/TaskRules-Semantik, Writer, Schema und Proofs
+wurden nicht verändert. Die neue Projektion ist ausdrücklich **kein TaskBoard**.
+
+### 43.2 Read-, Paging- und Detailvertrag
+
+`CompactTaskPage` enthält die exakten globalen und gefilterten OPEN-, IN_PROGRESS-,
+aktiven HIGH-, DONE- und CANCELLED-Zahlen sowie höchstens 32 `CompactTaskItem`s.
+HIGH zählt nur OPEN/IN_PROGRESS; DONE wird nicht mit CANCELLED gleichgesetzt.
+Ein optionaler Personenfilter betrifft ausschließlich affectedPersonId, sowohl
+für Zähler als auch für Seiten. Kein Label/Pseudonym und keine Templatekennung,
+Eventliste oder vollständige Editorkopie in der Übersichtszeile.
+
+ACTIVE und CLOSED sind explizite getrennte Seitenstrecken. SQL-Keyset statt
+OFFSET: ACTIVE nach Prioritätsrang, Null-Fälligkeitsrang, Fälligkeit, createdAt und
+ID; CLOSED nach updatedAt DESC und ID. Letztere ID-Reihenfolge präzisiert bisher
+nicht fachlich festgelegte Gleichstände; `TaskBoard.closed` bleibt unverändert.
+Kein Negieren von Long-Zeitwerten, daher auch Long.MIN_VALUE korrekt.
+
+Die SQL-Auswahl verwendet skalare Sortierschlüssel und LIMIT 32. Erst die
+zugelassenen Zeilen werden materialisiert und maximal 32 Objekte in Kotlin sortiert.
+ASCII-IDs nutzen BINARY; für Unicode-IDs wird pro einzelner bounded ID ein
+UTF16-Schlüssel als korrelierte skalare Rekursion gebildet. Eine globale rekursive
+ID-Tabelle wird vermieden. Ergänzende Tests bestätigen supplementary Unicode und
+NUL über Seitengrenzen gegen Kotlin-Sortierung; UTF8-BINARY allein wäre falsch.
+
+Fortsetzungen tragen Query, Action-/Generation-/Permissionbindung und Mutations-
+epoche sowie den letzten Sortierschlüssel. Sie sind Metadaten, **keine neuen
+Sicherheits- oder Sessiontokens**. Der letzte Schlüssel wird zusätzlich gegen eine
+aktuell vorhandene passende Zeile geprüft. Keine Wiederverwendung für eine andere
+Person, Lane oder einen anderen Zustand. Eine volle letzte Seite darf eine weitere
+Fortsetzung liefern; dann markiert eine explizite leere Endseite mit `next=null`
+den Abschluss. Eine kurze Seite beendet die Strecke direkt. Keine stille Kürzung.
+
+`detail()` liefert ausschließlich bei ausdrücklicher Auswahl **einen vollständigen
+Task** einschließlich unveränderter sourceTemplateKey, IDs und Zeitfelder. Erst
+nach vorgelagerter Größenprüfung; bei Überbudgetierung Rejected, kein gekürztes
+Editormodell und kein unbegrenzter Ersatzread.
+
+`events()` liefert die vollständige Chronik über ausdrücklich markierte Seiten
+mit exakter Gesamtzahl, jeweils maximal 32 Events und Fortsetzung nach
+`(occurredAt,rowid)`, entsprechend dem bisherigen TaskDao-Chronikvertrag. Keine
+Ereignisse werden gelöscht oder abgeschnitten. Der rowid-Anker muss noch zur
+Aufgabe/Transaktionsepoche gehören. Er darf weder persistiert noch über Wartung,
+Rebuild, Recovery oder eine neue Session hinweg verwendet werden. Einzelfalltests
+lesen sämtliche 128 Events jeweils einer OPEN-, IN_PROGRESS-, DONE- und CANCELLED-
+Aufgabe einschließlich Zeitgleichständen ohne Lücken/Duplikate und prüfen die
+Lifecycle-Folge gegen `TaskRules.event` bis zum tatsächlichen Endstatus.
+
+### 43.3 Autorität, Konsistenz und gemeinsames Budget
+
+Jeder Aufruf erwirbt READY neu über `StorageAccess`; Generation und aktueller
+vertrauenswürdiger Zustand müssen passen. Workerzugang verwendet den bestehenden
+`SessionDbKeyOwner`, `ActionDatabaseAccess`, unveränderte SQLCipher-/Integritäts-/
+FK-/Room-Preflights, Namespace-Lane und eine kurze Room-Readtransaktion. Persistierter
+Aktionsstatus muss ACTIVE sein. Keine zweite Sessionautorität, kein Keygetter,
+keine gehaltene DB/Lease und keine neue Klartextdatei. Bestehendes B2-temp_store-
+MEMORY-Gate bleibt unverändert. Vollständige Action-/Personen-/Funktionspayload
+ist nicht Teil dieses Taskreads und muss später gemeinsam aufgenommen werden.
+
+Query-, Zeilen-, Decoder- und Abschlussgrenzen prüfen aktuelle Autorität.
+Publication erst nach Transaktions-/DB-/Key-Cleanup erneut über `StorageContext`;
+auch ein false-Rückgabewert nach ausgeführtem Callback verweigert den Rückgabepayload.
+INVALID_DATA und Storage-/Cleanupfehler verweigern Content und melden BLOCKED;
+Budgetverweigerung ist kein Storagekorruptionssignal. Revoke oder geänderter
+Zustand verhindern Publication. Keine automatische Wiederholung.
+
+**VERTRAGS-/INTEGRATIONSBLOCKER:** `currentState` muss später aus dem bestehenden
+synchronen Mutation-/Validity-/Permissionowner kommen. Während Pending, UNKNOWN,
+fehlgeschlagenem Cleanup, Recovery, Revoke oder nicht sicher beobachteten Writes
+muss er null liefern; Epochen dürfen nicht wiederverwendet werden. Jeder relevante
+Write/Wartungswechsel muss invalidieren. Ein UI-Boolean oder bloßes SQL COUNT/MAX
+ersetzt diesen Vertrag nicht. Bei jeder Rejection alle alten Seiten/Details
+verwerfen; nie zwei Epochen zu einem Snapshot zusammenfügen. Der neue Adapter ist
+nur ein expliziter Standalone-Proofpfad, kein produktiv freigegebener Owner.
+
+Vor Payloadmaterialisierung: feste skalare Typ-/Enum-/Relationsprüfungen, globale
+Titel-/ID-Validierung, dann COUNT/MAX/SUM der ausgewählten höchstens 32 Zeilen.
+Titel werden als UTF8-BLOB mit maximal 480 Bytes und exakt bestehender 120-
+Codepoint-/Trimsemantik geprüft, einschließlich NUL. Auch ungültige Titel auf
+späteren Seiten dürfen keine gültigen Gesamtzähler erzeugen. UTF8 wird streng
+validiert; keine Ersatzzeichen-Decodierung. Kennungen/Referenzen über 256 UTF8-
+Bytes verweigern die Admission explizit als BUDGET_REFUSED; dies ist keine neue
+Domainregel oder Datenkürzung. Provenienz bleibt für die Übersicht unangetastet
+und wird nur für das ausgewählte Detail vermessen/materialisiert.
+
+Disjunkte exportierte `BoundedTaskReservation`-Units für Domainobjekte, Strings,
+UTF16, Arrays, Listen/Kapazitäten, Indizes, Sortierung, Referenzen und Metadaten;
+4-fache retained- und 16-fache transition-Allowances. Zusätzlich je Repräsentation
+16 KiB Text-/Arraybasis vor dem Kopiefaktor für SQL-/Binding-/Decoder-/Cursor-/
+Zähler-/Pagingmetadaten. Konservative Überlappungs-/UI-/Formkopie-Allowances,
+keine Dedup-Rabatte. Tatsächliche Zeilen-/Bytezahlen dürfen beim Fetch die
+vorgelagerte Reservation nicht überschreiten; Prüfung vor jedem BLOB-Fetch.
+Seitengröße und Maxima begrenzen die SUM-/Chargearithmetik; das bestehende
+`ActiveWorkspaceBudget` und seine unveränderten 8+8 MiB bleiben das Gate.
+
+**KEINE ZWEITE RAM-FREIGABE:** Die Units sind für die spätere Addition mit
+Personen/Funktionen **vor** deren Materialisierung exportiert. Standalone-PASS
+berechtigt weder zur gleichzeitigen Retention anderer Readergraphs noch zum
+Ansammeln aller Task-/Eventseiten. Höchstens die zugelassene Seite/Detailrepräsentation
+ersetzt die vorige; weitere Seitenverweise müssen aufgegeben werden. Die Tests
+sammeln erwartete/gelieferte IDs nur als Testorakel, nicht als Produktcache.
+Die tatsächliche gemeinsame Scope-Admission bleibt
+[#34](https://github.com/JulianGKK/action-planner/issues/34).
+
+### 43.4 Reproduzierbare Lasttests, Charges und Hostzeiten
+
+**HOST, KEIN ANDROID-LAUF:** Python 3.14.4 / SQLite 3.46.1, OpenJDK 17.0.20.1.
+Bestehende `SqliteHostConnection`, echte In-Memory-SQLite-Tabellen/Indizes aus
+Room-Schema 11; Bridge-IPC, SQL, Validierung, Decodierung und Host-Cleanup sind
+in den Zeiten enthalten. Personen besitzen gültige Operationszustände; vollständige
+synthetische Task-/Lifecycle-Eventbestände verbleiben im SQL-Store. Der reale
+Produktadapter adressiert SQLCipher, seine Android-Laufzeit mit diesem großen
+Bestand wurde in diesem Auftrag **nicht ausgeführt**. Host-SQLite ist kein
+SQLCipher-/Room-/Native-/Keystore-Performancebeleg.
+
+| Größe | Personen | Tasks | gespeicherte Events | OPEN / IN_PROGRESS / HIGH aktiv / DONE / CANCELLED |
+|---|---:|---:|---:|---|
+| klein | 20 | 40 | 480 | 8 / 8 / 5 / 16 / 8 |
+| mittel | 100 | 250 | 10000 | 50 / 50 / 33 / 100 / 50 |
+| groß | 200 | 1000 | 128000 | 200 / 200 / 133 / 400 / 200 |
+
+| Größe | Admission ms | erste Seite gesamt ms | davon Materialisierung/Publication ms | Folgeseite ms | Taskdetail ms | Chronikseite ms | komplette ausgewählte Chronik ms |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| klein | 4,899 | 6,109 | 0,975 | entfällt | 5,125 | 5,907 | 5,545 |
+| mittel | 22,917 | 24,110 | 1,710 | 24,361 | 22,687 | 23,872 | 46,978 |
+| groß | 86,343 | 87,786 | 1,481 | 87,096 | 83,831 | 85,374 | 424,674 |
+
+Admission misst bis zum ADMITTED-Hook einschließlich globaler Prüfungen,
+Zähler und Seitenreservation. Materialisierung misst anschließend Fetch bis
+Publication; erste Seite gesamt umfasst beides. Folgeseite, Detail und Chronikseite
+enthalten jeweils erneut die vollständige Autorisierungs-/Metadatenstrecke.
+Je Messung ein verworfener Warmup, danach Median aus fünf Durchläufen. Separate
+Mediane sind nicht zwingend additiv. Klein besitzt nur 16 aktive Tasks und damit
+keine ACTIVE-Folgeseite. Komplette ausgewählte Chronik: 12/40/128 Events, also
+1/2/5 Seitenaufrufe einschließlich der notwendigen Endseite bei 128 Events.
+
+Charges der gemessenen Operationen, jeweils **retained / transition in Bytes**:
+
+| Operation | klein | mittel | groß |
+|---|---:|---:|---:|
+| erste ACTIVE-Seite | 588284 / 2346224 | 752852 / 3004496 | 750532 / 2995216 |
+| ACTIVE-Folgeseite | entfällt | 750172 / 2993776 | 753592 / 3007456 |
+| vollständiges einzelnes Detail | 435460 / 1734928 | 435460 / 1734928 | 435460 / 1734928 |
+| erste Chronikseite | 519844 / 2072464 | 683324 / 2726384 | 683324 / 2726384 |
+
+Alle Werte sind tatsächliche Engineering-Charges des Readers, **keine gemessenen
+ART-Deep-Sizes, Native-Buffer-/GC- oder Composegrößen**. Die konservativen Gewichte
+und SQLCipher-/SQLite-internen Allokationen benötigen reale Kalibrierung. Der
+zusätzliche Detailgrenztest erreicht mit 83179 UTF8-Bytes Templatekennung genau
+8388608 Transition-Bytes (retained 2098880); ein weiteres Byte verweigert vor jedem
+weiteren Payload-BLOB. Bei 200000 und über 8 MiB Templatebytes ebenfalls kontrollierte
+Verweigerung. Keine automatische Budgeterhöhung und kein unbounded Fallback.
+
+18 neue Hostmethoden prüfen alle drei Größen, exakte Gesamt-/Filterzahlen,
+beide Lanes mit vollständiger Keyset-Abdeckung ohne Duplikate/Lücken, viele CLOSED-
+Tasks/Prioritäten/Gleichstände, mehrseitigen Personenfilter, maximale 120-Supplementary-
+Codepoint-Titel, Unicode/NUL in Titeln/IDs/Provenienz, ungültige UTF8/Enums/Typen/
+Titel auch außerhalb der ersten Seite, Cross-Action-Referenzen, exklusive Zuständigkeit,
+Übergrößen, exakte Budgetgrenze, falsche Fortsetzungen, konkrete Mutation zwischen
+Seiten, Revoke-/UNKNOWN-/Publicationrennen, abgebrochene Reads und Cleanupfehler.
+Die Übersichtsabfrage fragt die Eventtabelle nicht ab und lädt keine Provenienz.
+
+Ein neuer Regressionstest deckte zunächst einen Fehler im ASCII-Schnellpfad auf:
+Byte-/TEXT-Längengleichheit allein erkannte ein ungültiges einzelnes UTF8-Byte
+nicht. Zusätzliche echte ASCII-Klassenprüfung und strenge bounded UTF8-Prüfung
+korrigieren das; die Rejection-Assertion blieb unverändert. Abschlusslauf grün.
+Frühere schnellere Vorabzeiten ohne globale Textvalidierung sind kein Endergebnis.
+
+Reproduktion der neuen Fälle: `./gradlew :data:testDebugUnitTest --tests
+'*CompactTaskStoreTest' --offline` (für eine erneute Messung bei UP-TO-DATE gezielt
+`--rerun-tasks`). Gesamte Abschlussprüfung offline: App/Data/Security-
+`testDebugUnitTest`, `:app:assembleDebug`, App-/Data-`compileDebugAndroidTestKotlin`,
+Produkt-/Demo-Manifestprüfungen und Architekturcheck bestanden.
+**613 App + 722 Data + 4 Security = 1339 Tests, 0 Fehler, 0 Skips**.
+Keine Geräteinstallation, Instrumentation oder Änderung installierter Apps;
+vorhandene Android-PASS werden nicht als Performancebeweis übernommen.
+
+### 43.5 Tragfähigkeit und verbleibende Release-/Integrationsblocker
+
+**FÜR DEN GETESTETEN TASK-DATENPFAD TRAGFÄHIG:** 1000 Aufgaben und 128000 gespeicherte
+Events sind vollständig seitenweise zugänglich; erste Seite und Folgeseiten bleiben
+nach den konservativen Engineering-Charges deutlich innerhalb 8 MiB retained und
+8 MiB transition. Die vollständige Task-/Eventmenge muss dafür nicht gleichzeitig
+im RAM liegen. Das löst den bisherigen Voll-TaskBoard-Größenengpass für diesen
+neuen Vertrag, ohne den bisherigen Reader zu verändern.
+
+**KEINE PRODUKT-/RELEASEFREIGABE:** Gemeinsame Retention der 200 Personen/Funktionen
+ist noch nicht gebucht; tatsächliche ART-/Native-/Compose-Speicherwirkung ist nicht
+vermessen. Globale Validierung dominiert die Hostzeit und wird bei jedem Seiten-/
+Detailread wiederholt; komplette lange Chroniken sind langsamer als die erste Seite.
+SQLCipher-Öffnung und alle unveränderten Integritäts-/Room-Preflights kommen auf
+Android hinzu. Kein Nachweis realer Content-OnDraw-Zeiten unter 100–150 ms.
+
+Für die spätere Integration erforderlich:
+
+1. [#33](https://github.com/JulianGKK/action-planner/issues/33): Engineeringgewichte,
+   tatsächliche ART-/Native-/GC-/Compose-Retention und realen großen SQLCipher-Bestand
+   isoliert nachweisen; keine Abschlusserklärung dieses Gesamtissues allein durch Host-PASS.
+2. [#34](https://github.com/JulianGKK/action-planner/issues/34): gemeinsame vorgelagerte
+   Action-/Personen-/Funktions-/Task-Admission. Personenkarte-/Hubzahlen aus exakten
+   SQL-Summaries beziehen, niemals aus nur 32 Zeilen ableiten; gruppierte Personenzähler
+   gegebenenfalls gemeinsam budgetieren. Keine zwei 8-MiB-Readerfreigaben addieren.
+3. [#37](https://github.com/JulianGKK/action-planner/issues/37): ausschließlich vorhandenen
+   ProductViewModel-Owner nutzen; echte Mutations-/Permission-/Load-/UNKNOWN-/Recovery-
+   Hooks, atomare Owner-Publication, Seitenaustausch und synchrones Revoke aller
+   Form-/Detail-/Chronikreferenzen. Keine Navigationstickets durch Cursor ersetzen.
+4. TaskModel/WorkspaceSnapshot um den getrennten kompakten Vertrag erweitern;
+   vollständigen Task bei Auswahl vor Editor/Transition nachladen, Expected-Task-
+   Writervertrag erhalten, Änderungen invalidieren alle betroffenen Seiten/Zähler.
+   Material-Taskauswahl und weitere heutige TaskBoard-Verbraucher getrennt umstellen.
+5. [#38](https://github.com/JulianGKK/action-planner/issues/38): TaskScreen/ActiveTasks auf
+   begrenzte lazy Listen mit stabilen Task-/Eventkeys und kontrollierter Nachladung
+   umstellen. Kein `forEach` über alle Tasks/Events, kein Akkumulieren aller Seiten,
+   kein wiederholtes Vollsortieren oder Filtern einer Ersatz-TaskBoard-Liste;
+   gemeinsame lookup-/Form-/Scrollkosten budgetieren. Anschließend echte Navigation
+   einschließlich Median/p95 und Lifecycle messen.
+6. [#32](https://github.com/JulianGKK/action-planner/issues/32): Cursor-/CursorWindow-/
+   Native-/FD-/Lease-Cleanup bleibt BLOCKER. `SQLCipherStatement.close()` schließt
+   den Cursor weiterhin nicht explizit. Host-Statement-Close und frühere FD-PASS
+   beweisen keine vollständige native Cursorfreigabe. Kein spekulativer B2Driver-
+   oder SQLCipherfix in diesem Slice.
+
+Geändert ausschließlich die vier neuen Code-/Hosttestdateien oben und dieser
+Assessmentabschnitt. Keine Dependency-/Schema-/Permission-/Netzwerkänderung,
+keine Produktwritepfade oder RAM-Hits aktiviert. Keine APKs, Datenbanken, Schlüssel,
+Credentials, Rohlogs, persönlichen Pfade oder Gerätekennungen im Commit.
+Regulärer WIP-Commit/Push mit unabhängigem Remote-SHA-Abgleich; danach STOPP bis
+zum unabhängigen GitHub-Review. Kein Force-Push, Merge, Release oder Produktupdate.
