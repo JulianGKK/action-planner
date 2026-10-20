@@ -25,6 +25,7 @@ class CoreWriterIntegrationTest {
         val worker=Queue();val main=Queue();val epoch=UncachedWorkspaceMutations()
         val requests=ArrayList<WorkspaceMutation>();val completions=ArrayList<WorkspaceWriteCompletion>()
         var generation=1L;var permission=2L;var action="a";var ready=true;var blocks=0
+        var storageReady=true
         var active=false;var handle=false;var lease=false;var time=20L
         var beforeEnd:()->Unit={};var afterEnd:()->Unit={};var beforePublication:()->Unit={}
         var dbCleanup:()->Unit={};var keyCleanup:()->Unit={}
@@ -74,6 +75,7 @@ class CoreWriterIntegrationTest {
         fun <R:Any> queue(family:WorkspaceWriterFamily,rejected:(R)->Boolean,busy:()->R?,publish:(R)->Unit,
             work:suspend(StorageContext)->R) {
             boundary.submit(WorkspaceMutation(family,if(family==WorkspaceWriterFamily.ACTION_CREATE)null else "a"),publish,busy,{!rejected(it)}) {c,p->
+                if(!storageReady)throw ProductStorageFailure()
                 lease=true;handle=true
                 val value=try { runBlocking {try {confirmedWorkspaceTransaction(tx(c),c,p,rejected){work(c)}}finally{handle=false;dbCleanup()}} }
                     finally{lease=false;keyCleanup()}
@@ -89,6 +91,7 @@ class CoreWriterIntegrationTest {
             WorkspaceWriterFamily.ACTION_EDIT->ActionWriterStore(data,c).change(actionRow(),NewAction("Changed","Synthetic description",1,2))
             WorkspaceWriterFamily.ACTION_STATUS->ActionWriterStore(data,c).advance("a",ActionStatus.PREPARATION)
             WorkspaceWriterFamily.PERSON->PersonWriterStore(data,c).change("a",null,"Synthetic created")
+            WorkspaceWriterFamily.MATERIAL->MaterialStore(data,c){++time}.create("a",MaterialInput("Synthetic material"))
             else->OperationsStore(data,c){++time}.role("a",null,"Synthetic created")
         }
         fun effect(family:WorkspaceWriterFamily)=when(family) {
@@ -96,6 +99,7 @@ class CoreWriterIntegrationTest {
             WorkspaceWriterFamily.ACTION_EDIT->actionRow().title=="Changed"
             WorkspaceWriterFamily.ACTION_STATUS->actionRow().status==ActionStatus.ACTIVE
             WorkspaceWriterFamily.PERSON->count("persons")==3L
+            WorkspaceWriterFamily.MATERIAL->count("materials")==1L
             else->count("roles")==2L
         }
         fun advance(from:ActionStatus)=write<ActionChangeResult>(WorkspaceWriterFamily.ACTION_STATUS,{it is ActionChangeResult.Rejected},{ActionChangeResult.Rejected(ActionChangeRejection.STALE)}){ActionWriterStore(data,it){++time}.advance("a",from)}
@@ -449,7 +453,7 @@ class CoreWriterIntegrationTest {
         assertEquals(3L,h.count("persons"));assertEquals(1L,h.count("roles"));assertEquals(0L,h.count("task_events"));assertEquals(1,h.completions.size)
     }
     @Test fun allFamiliesUnknownEndAndCleanupNeverBecomeValueSuccess() {
-        for(family in listOf(WorkspaceWriterFamily.ACTION_CREATE,WorkspaceWriterFamily.ACTION_EDIT,WorkspaceWriterFamily.ACTION_STATUS,WorkspaceWriterFamily.PERSON,WorkspaceWriterFamily.OPERATIONS))
+        for(family in listOf(WorkspaceWriterFamily.ACTION_CREATE,WorkspaceWriterFamily.ACTION_EDIT,WorkspaceWriterFamily.ACTION_STATUS,WorkspaceWriterFamily.PERSON,WorkspaceWriterFamily.OPERATIONS,WorkspaceWriterFamily.MATERIAL))
             for(failure in listOf("end-before","end-after","database","key")) H().use {h->
                 when(failure){"end-before"->h.failEndBefore=true;"end-after"->h.failEndAfter=true;"database"->h.dbCleanup={error("SYNTHETIC_CLEANUP")};else->h.keyCleanup={error("SYNTHETIC_CLEANUP")}}
                 var calls=0
@@ -504,6 +508,186 @@ class CoreWriterIntegrationTest {
         TaskMutationBoundary(h.access,h.worker,h.main,h.sink,{fail()}).submit("",{result=it}){_,_->error("No work allowed")}
         assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),result)
         assertEquals(0L,h.epoch.mutationEpoch);assertTrue(h.worker.jobs.isEmpty());assertTrue(h.completions.isEmpty())
+    }
+    private fun <T> H.material(work:suspend(MaterialStore)->OperationsResult<T>)=
+        write<OperationsResult<T>>(WorkspaceWriterFamily.MATERIAL,{it is OperationsResult.Rejected},
+            {OperationsResult.Rejected(OperationsFailure.STALE)}){work(MaterialStore(data,it){++time})}
+    private fun H.materialRow(id:String)=runBlocking{data.materials.get("a",id)?.model()}
+    private fun H.materialQueue(publish:(OperationsResult<MaterialItem>)->Unit={},work:suspend(MaterialStore)->OperationsResult<MaterialItem>)=
+        queue<OperationsResult<MaterialItem>>(WorkspaceWriterFamily.MATERIAL,{it is OperationsResult.Rejected},
+            {OperationsResult.Rejected(OperationsFailure.STALE)},publish){work(MaterialStore(data,it){++time})}
+
+    @Test fun materialCreateEditDeleteAreConfirmedOuterCommitsAndReadsDoNotAdvanceEpoch()=H().use{h->
+        val item=value(h.material{it.create("a",MaterialInput(" Synthetic material "," 2 "," Box ","p0",sourceTemplateKey="GLUE"))})
+        assertEquals("Synthetic material",item.name);assertEquals("2",item.quantityLabel);assertEquals("Box",item.placeLabel)
+        val next=value(h.material{it.edit("a",item,item.input().copy(name="Changed",sourceTemplateKey="OTHER"))})
+        assertEquals(item.createdAt,next.createdAt);assertEquals(item.sourceTemplateKey,next.sourceTemplateKey)
+        val epoch=h.epoch.mutationEpoch
+        runBlocking{
+            val store=MaterialStore(h.data,h.context){0}
+            assertEquals(MaterialSummary(1),value(store.summary("a")))
+            assertEquals(listOf(next),value(store.board("a")).items)
+        }
+        assertEquals(epoch,h.epoch.mutationEpoch)
+        assertEquals(OperationsResult.Value(Unit),h.material{it.delete("a",next)})
+        assertNull(h.materialRow(item.id));assertEquals(3L,h.epoch.mutationEpoch)
+        assertTrue(h.requests.all{it.family==WorkspaceWriterFamily.MATERIAL})
+        assertTrue(h.completions.all{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
+        assertFalse(h.epoch.ramReuseEnabled)
+    }
+    @Test fun materialStaleEditorsAndDeleteKeepFirstCommittedItem()=H().use{h->
+        val a=value(h.material{it.create("a",MaterialInput("A"))})
+        val b=value(h.material{it.edit("a",a,a.input().copy(name="B"))})
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.material{it.edit("a",a,a.input().copy(name="C"))})
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.material{it.delete("a",a)})
+        assertEquals(b,h.materialRow(a.id))
+        assertTrue(h.completions.takeLast(2).all{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE)})
+        assertTrue(h.material{it.edit("a",b,b.input().copy(name="Fresh"))} is OperationsResult.Value)
+    }
+    @Test fun materialComparesEveryExpectedFieldBeforeWriting()=H().use{h->
+        val a=value(h.material{it.create("a",MaterialInput("A"))})
+        var writes=0
+        h.db.beforePrepare={if(it.startsWith("UPDATE materials") || it.startsWith("DELETE FROM materials"))writes++}
+        for(old in listOf(a.copy(actionId="b"),a.copy(name="Other"),a.copy(quantityLabel="2"),a.copy(placeLabel="Box"),
+            a.copy(responsiblePersonId="p0"),a.copy(linkedTaskId="t"),a.copy(sourceTemplateKey="GLUE"),a.copy(createdAt=100))){
+            assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.material{it.edit("a",old,a.input())})
+            assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.material{it.delete("a",old)})
+        }
+        assertEquals(0,writes);assertEquals(a,h.materialRow(a.id))
+    }
+    @Test fun materialInvalidMissingForeignReferencesAndActionsRollbackWithoutChanges()=H().use{h->
+        h.exec("INSERT INTO persons VALUES('foreign','b','Synthetic foreign','synthetic foreign',0)")
+        h.exec("INSERT INTO tasks VALUES('foreign-task','b','Synthetic','NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
+        val a=value(h.material{it.create("a",MaterialInput("A"))})
+        for(input in listOf(MaterialInput(" "),MaterialInput("x".repeat(121)),MaterialInput("A","x".repeat(41)),MaterialInput("A",placeLabel="x".repeat(81)))){
+            assertEquals(OperationsResult.Rejected(OperationsFailure.INVALID),h.material{it.create("a",input)})
+            assertEquals(OperationsResult.Rejected(OperationsFailure.INVALID),h.material{it.edit("a",a,input)})
+        }
+        for(input in listOf(MaterialInput("A",responsiblePersonId="foreign"),MaterialInput("A",linkedTaskId="foreign-task"))){
+            assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),h.material{it.create("a",input)})
+            assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),h.material{it.edit("a",a,input)})
+        }
+        for(action in listOf("b","missing")){
+            assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),h.material{it.edit(action,a,a.input())})
+            assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),h.material{it.delete(action,a)})
+        }
+        assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),h.material{it.delete("a",a.copy(id="missing"))})
+        assertEquals(a,h.materialRow(a.id));assertEquals(1L,h.count("materials"))
+        assertTrue(h.completions.drop(1).all{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE)})
+    }
+    @Test fun materialAllLifecycleGatesKeepDomainRules() {
+        for(status in ActionStatus.entries)H().use{h->
+            val a=value(h.material{it.create("a",MaterialInput("A"))})
+            h.exec("UPDATE actions SET status='${status.name}',completedAt=${if(status==ActionStatus.COMPLETED)20 else "NULL"} WHERE id='a'")
+            val create=h.material{it.create("a",MaterialInput("B"))}
+            val edit=h.material{it.edit("a",a,a.input().copy(name="C"))}
+            val current=h.materialRow(a.id)!!
+            val delete=h.material{it.delete("a",current)}
+            for(result in listOf(create,edit,delete))if(MaterialRules.mayWrite(status))assertTrue(result is OperationsResult.Value)
+                else assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED),result)
+            runBlocking{val store=MaterialStore(h.data,h.context){0};
+                if(MaterialRules.mayRead(status))assertTrue(store.summary("a") is OperationsResult.Value)
+                else assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED),store.summary("a"))}
+        }
+    }
+    @Test fun materialSqlFailureAfterInsertRollsBackActualSideeffects()=H().use{h->
+        h.exec("CREATE TRIGGER synthetic_material_failure AFTER INSERT ON materials BEGIN INSERT INTO materials SELECT * FROM materials WHERE id=NEW.id; END")
+        var calls=0;h.materialQueue({calls++}){it.create("a",MaterialInput("A"))}
+        h.worker.drain();h.main.drain()
+        assertEquals(0,calls);assertEquals(0L,h.count("materials"));assertEquals(1,h.blocks)
+        // Exception propagation provides no positive outer-end evidence, although SQL rolled back.
+        assertEquals(WorkspaceWriteOutcome.UNKNOWN,h.completions.single().outcome)
+    }
+    @Test fun materialExplicitRejectionAfterSideeffectsRequiresConfirmedRollback() {
+        for(mode in listOf("normal","rollback","db-cleanup","key-cleanup"))H().use{h->
+            if(mode=="rollback")h.failRollback=true
+            if(mode=="db-cleanup")h.dbCleanup={error("SYNTHETIC_CLEANUP")}
+            if(mode=="key-cleanup")h.keyCleanup={error("SYNTHETIC_CLEANUP")}
+            var calls=0
+            h.materialQueue({calls++;assertEquals(OperationsResult.Rejected(OperationsFailure.INVALID),it)}){
+                value(it.create("a",MaterialInput("Temporary")))
+                OperationsResult.Rejected(OperationsFailure.INVALID)
+            }
+            h.worker.drain();h.main.drain()
+            assertEquals(if(mode=="normal")1 else 0,calls)
+            assertEquals(if(mode=="rollback")1L else 0L,h.count("materials"))
+            assertEquals(if(mode=="rollback")WorkspaceWriteOutcome.UNKNOWN else WorkspaceWriteOutcome.ROLLED_BACK,h.completions.single().outcome)
+            assertEquals(if(mode=="normal")WorkspaceWriteCleanup.COMPLETE else WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED,h.completions.single().cleanup)
+        }
+    }
+    @Test fun materialAllWritesKeepCommitCleanupScopeAndOnceProofSeparate() {
+        for(operation in listOf("create","edit","delete"))for(mode in listOf("normal","end-before","end-after","db-cleanup","key-cleanup","initial","queued","during-write","commit","after-commit","publication","permission","generation","action","blocked"))H().use{h->
+            val a=value(h.material{it.create("a",MaterialInput("A"))});h.completions.clear()
+            when(mode){"end-before"->h.failEndBefore=true;"end-after"->h.failEndAfter=true;"db-cleanup"->h.dbCleanup={error("SYNTHETIC_CLEANUP")};
+                "key-cleanup"->h.keyCleanup={error("SYNTHETIC_CLEANUP")};"initial"->h.ready=false;"commit"->h.beforeEnd={h.ready=false};
+                "after-commit"->h.afterEnd={h.ready=false};"publication"->h.beforePublication={h.ready=false};"blocked"->h.storageReady=false}
+            if(mode=="during-write")h.db.beforePrepare={if(it.startsWith("INSERT INTO materials") || it.startsWith("UPDATE materials") || it.startsWith("DELETE FROM materials"))h.ready=false}
+            var calls=0
+            h.queue<OperationsResult<*>>(WorkspaceWriterFamily.MATERIAL,{it is OperationsResult.Rejected},{null},{calls++}){c->
+                val store=MaterialStore(h.data,c){50}
+                when(operation){"create"->store.create("a",MaterialInput("Changed"));"edit"->store.edit("a",a,a.input().copy(name="Changed"));else->store.delete("a",a)}
+            }
+            if(mode=="queued")h.ready=false
+            val worker=h.worker.jobs.firstOrNull();h.worker.drain();worker?.run()
+            when(mode){"permission"->h.permission++;"generation"->h.generation++;"action"->h.action="b"}
+            val main=h.main.jobs.firstOrNull();h.main.drain();main?.run()
+            assertEquals("$operation/$mode",if(mode=="normal")1 else 0,calls)
+            val committed=mode in listOf("normal","end-after","db-cleanup","key-cleanup","after-commit","publication","permission","generation","action")
+            when(operation){"create"->assertEquals(if(committed)2L else 1L,h.count("materials"));"edit"->assertEquals(if(committed)"Changed" else "A",h.materialRow(a.id)!!.name);else->assertEquals(!committed,h.materialRow(a.id)!=null)}
+            if(mode=="initial")assertTrue(h.completions.isEmpty())
+            else if(mode.startsWith("end"))assertEquals(WorkspaceWriteOutcome.UNKNOWN,h.completions.single().outcome)
+            else if(committed)assertEquals(WorkspaceWriteOutcome.COMMITTED,h.completions.single().outcome)
+            if(mode.endsWith("cleanup"))assertEquals(WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED,h.completions.single().cleanup)
+            if(mode=="normal")assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE),h.completions.single())
+            assertFalse(h.epoch.ramReuseEnabled)
+        }
+    }
+    @Test fun materialPendingCannotBeBypassedByMaterialTaskOrOperationsAndReverse() {
+        for(first in listOf(WorkspaceWriterFamily.MATERIAL,WorkspaceWriterFamily.TASK,WorkspaceWriterFamily.OPERATIONS))H().use{h->
+            h.queue<OperationsResult<*>>(first,{it is OperationsResult.Rejected},{null},{}){c->
+                when(first){
+                    WorkspaceWriterFamily.MATERIAL->MaterialStore(h.data,c){0}.create("a",MaterialInput("A"))
+                    WorkspaceWriterFamily.TASK->TaskStore(HostTaskData(h.db),c){0}.create("a",TaskInput("Synthetic task"))
+                    else->OperationsStore(h.data,c){0}.role("a",null,"New role")
+                }
+            }
+            for(other in listOf(WorkspaceWriterFamily.MATERIAL,WorkspaceWriterFamily.TASK,WorkspaceWriterFamily.OPERATIONS)){
+                var result:OperationsResult<Unit>?=null
+                h.queue<OperationsResult<Unit>>(other,{it is OperationsResult.Rejected},{OperationsResult.Rejected(OperationsFailure.STALE)},{result=it}){error("Must not execute")}
+                assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),result)
+            }
+            assertEquals(1,h.worker.jobs.size);assertEquals(1L,h.epoch.mutationEpoch);assertTrue(h.completions.isEmpty())
+            h.worker.drain();h.main.drain();assertEquals(1,h.completions.size)
+            assertEquals(if(first==WorkspaceWriterFamily.MATERIAL)1L else 0L,h.count("materials"))
+            assertEquals(if(first==WorkspaceWriterFamily.TASK)1L else 0L,h.count("tasks"))
+            assertEquals(if(first==WorkspaceWriterFamily.OPERATIONS)2L else 1L,h.count("roles"))
+        }
+    }
+    @Test fun materialValueWithoutOuterCommitEvidenceCannotPublish()=H().use{h->
+        var calls=0
+        h.boundary.submit<OperationsResult<Unit>>(WorkspaceMutation(WorkspaceWriterFamily.MATERIAL,"a"),{calls++},
+            {null},{it is OperationsResult.Value}){_,_->OperationsResult.Value(Unit)}
+        h.worker.drain();h.main.drain()
+        assertEquals(0,calls);assertEquals(0L,h.count("materials"));assertEquals(1,h.blocks)
+        assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.UNKNOWN,WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED),h.completions.single())
+    }
+    @Test fun materialLostMainDispatchStaysPendingAndNoRetryCanRun()=H().use{h->
+        h.materialQueue{it.create("a",MaterialInput("A"))};h.worker.drain()
+        h.main.jobs.clear() // physical commit, deliberately lost dispatch, no finish evidence delivered
+        var busy:OperationsResult<MaterialItem>?=null
+        h.materialQueue({busy=it}){error("No retry")}
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),busy)
+        assertTrue(h.worker.jobs.isEmpty());assertTrue(h.completions.isEmpty());assertEquals(1L,h.count("materials"))
+    }
+    @Test fun materialFailedDispatchNeverPublishesSuccess() {
+        for(failWorker in listOf(true,false))H().use{h->
+            if(failWorker)h.worker.onQueue={error("SYNTHETIC_DISPATCH")}else h.main.onQueue={error("SYNTHETIC_DISPATCH")}
+            var calls=0;h.materialQueue({calls++}){it.create("a",MaterialInput("A"))}
+            if(!failWorker)assertThrows(IllegalStateException::class.java){h.worker.drain()}
+            assertEquals(0,calls);assertEquals(if(failWorker)0L else 1L,h.count("materials"))
+            if(failWorker){assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),h.completions.single());assertEquals(1,h.blocks)}
+            else{assertTrue(h.completions.isEmpty());var busy:OperationsResult<MaterialItem>?=null;h.materialQueue({busy=it}){error("No retry")};assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),busy)}
+        }
     }
     companion object {
         private val coreFamilies=WorkspaceWriterFamily.entries.filter{it!=WorkspaceWriterFamily.TASK}

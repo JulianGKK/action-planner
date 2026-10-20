@@ -60,9 +60,29 @@ class CoreWriterBoundaryStorageTest {
             run()
             actions.advanceActionStatus(a,ActionStatus.PREPARATION){assertTrue(it is ActionChangeResult.Applied)};run()
             ops.board(a){r->val board=(r as OperationsResult.Value).value;assertEquals(setOf(role!!.id),board.persons.single().plan.roleIds);assertEquals(role!!.id,board.persons.single().state!!.currentRoleId)};run()
+            val coreReports=reports.toList() // six core writes before ACTIVE -> COMPLETED
+            // Same runtime-style port, real Room/SQLCipher repository; OFFLINE preparation only.
+            val material=ProductMaterialRepository(app,access,inventory,{owner},worker,main,blocked,mutations=sink)
+            var item:MaterialItem?=null;var materialCallbacks=0
+            material.create(a,MaterialInput(" Synthetic material ",responsiblePersonId=person!!.id)){
+                materialCallbacks++;item=(it as OperationsResult.Value).value
+                assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE),reports.last())
+            }
+            assertEquals(7L,epoch.mutationEpoch);assertEquals(0,materialCallbacks);run()
+            val original=checkNotNull(item)
+            material.edit(a,original,original.input().copy(name="Changed")){materialCallbacks++;item=(it as OperationsResult.Value).value};run()
+            material.delete(a,original){materialCallbacks++;assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),it)
+                assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),reports.last())};run()
+            material.board(a){assertEquals(listOf(checkNotNull(item)),(it as OperationsResult.Value).value.items)};run()
+            material.delete(a,checkNotNull(item)){materialCallbacks++;assertEquals(OperationsResult.Value(Unit),it)};run()
+            material.summary(a){assertEquals(MaterialSummary(0),(it as OperationsResult.Value).value)};run()
+            assertEquals(4,materialCallbacks);assertEquals(10L,epoch.mutationEpoch);assertEquals(10,reports.size)
             actions.advanceActionStatus(a,ActionStatus.ACTIVE){assertTrue(it is ActionChangeResult.Applied)};run()
-            assertEquals(7L,epoch.mutationEpoch);assertEquals(7,reports.size)
-            assertTrue(reports.all{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
+            val completedCoreReports=coreReports+reports.last()
+            assertEquals(7,completedCoreReports.size)
+            assertTrue(completedCoreReports.all{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
+            assertEquals(11L,epoch.mutationEpoch);assertEquals(11,reports.size)
+            assertEquals(10,reports.count{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
             assertFalse(epoch.ramReuseEnabled)
         } finally{owner.invalidate();key.fill(0)}
     }

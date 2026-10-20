@@ -53,5 +53,14 @@ internal class HostCoreWriterData(private val sql:SqliteHostConnection):CoreWrit
         override suspend fun insertState(row:OperationalRow){change("INSERT INTO person_operational_states VALUES(?,?,?,?,?,?)",listOf(row.actionId,row.personId,row.currentRoleId,row.operationalStatus,row.currentPlaceLabel,row.updatedAt))}
         override suspend fun updateState(row:OperationalRow)=change("UPDATE person_operational_states SET currentRoleId=?,operationalStatus=?,currentPlaceLabel=?,updatedAt=? WHERE actionId=? AND personId=?",listOf(row.currentRoleId,row.operationalStatus,row.currentPlaceLabel,row.updatedAt,row.actionId,row.personId))
     }
+    private fun material(s:SQLiteStatement)=MaterialRow(s.getText(0),s.getText(1),s.getText(2),nullable(s,3),nullable(s,4),nullable(s,5),nullable(s,6),nullable(s,7),s.getLong(8))
+    override val materials=object:MaterialDao {
+        override suspend fun count(actionId:String)=query("SELECT COUNT(*) FROM materials WHERE actionId=?",listOf(actionId)){it.step();it.getLong(0).toInt()}
+        override suspend fun list(actionId:String)=rows("SELECT * FROM materials WHERE actionId=? ORDER BY createdAt,id",listOf(actionId),::material)
+        override suspend fun get(actionId:String,id:String)=query("SELECT * FROM materials WHERE actionId=? AND id=?",listOf(actionId,id)){if(it.step())material(it)else null}
+        override suspend fun insert(row:MaterialRow){change("INSERT INTO materials VALUES(?,?,?,?,?,?,?,?,?)",listOf(row.id,row.actionId,row.name,row.quantityLabel,row.placeLabel,row.responsiblePersonId,row.linkedTaskId,row.sourceTemplateKey,row.createdAt))}
+        override suspend fun update(row:MaterialRow)=change("UPDATE materials SET actionId=?,name=?,quantityLabel=?,placeLabel=?,responsiblePersonId=?,linkedTaskId=?,sourceTemplateKey=?,createdAt=? WHERE id=?",listOf(row.actionId,row.name,row.quantityLabel,row.placeLabel,row.responsiblePersonId,row.linkedTaskId,row.sourceTemplateKey,row.createdAt,row.id))
+        override suspend fun delete(actionId:String,id:String)=change("DELETE FROM materials WHERE actionId=? AND id=?",listOf(actionId,id))
+    }
     override val tasks=HostTaskData(sql).tasks
 }

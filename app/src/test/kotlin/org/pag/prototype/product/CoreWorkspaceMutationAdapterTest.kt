@@ -23,7 +23,7 @@ class CoreWorkspaceMutationAdapterTest {
         fun load(){val t=validity.beginRead(all)!!;assertTrue(validity.publishRead(t,all,Cleanup.COMPLETE){})}
     }
     @Test fun everyCoreFamilyInvalidatesAllDependenciesBeforeQueueOnTheSameEpoch() {
-        for(family in WorkspaceWriterFamily.entries.filter{it!=WorkspaceWriterFamily.TASK}) {
+        for(family in WorkspaceWriterFamily.entries.filter{it!=WorkspaceWriterFamily.TASK && it!=WorkspaceWriterFamily.MATERIAL}) {
             val h=H();h.load();assertTrue(h.validity.canReuse(h.all));val before=h.validity.mutationEpoch
             val write=h.port.beforeCoreQueue(WorkspaceMutation(family,if(family==WorkspaceWriterFamily.ACTION_CREATE)null else "a"),1)!!
             assertEquals(before+1,h.validity.mutationEpoch);assertTrue(h.validity.isPending())
@@ -32,6 +32,16 @@ class CoreWorkspaceMutationAdapterTest {
             assertTrue(write.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)))
             assertFalse(h.validity.canReuse(h.all));assertTrue(write.isCurrent());h.load();assertFalse(write.isCurrent())
         }
+    }
+    @Test fun materialInvalidatesBoardSummaryAndOverviewCountWithoutInventedTaskChanges() {
+        val h=H();h.load()
+        val parts=setOf(Projection.MATERIAL_BOARD,Projection.MATERIAL_SUMMARY)
+        assertEquals(parts,ActiveWorkspaceMutationAdapter.affected(WorkspaceWriterFamily.MATERIAL))
+        val ticket=h.port.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.MATERIAL,"a"),1)!!
+        assertEquals(1L,h.validity.mutationEpoch);assertTrue(parts.all{h.validity.isDirty(it)})
+        assertFalse(h.validity.canReuse(parts));assertNull(h.port.beforeTaskQueue("a",1))
+        assertTrue(ticket.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)))
+        assertFalse(h.validity.canReuse(parts));assertTrue(ticket.isCurrent())
     }
     @Test fun actionSwitchStatusExitAndUnknownNeverResurrectAnActiveBinding() {
         for(change in listOf("action","generation","permission","status-exit","unknown","cleanup")) {

@@ -8,10 +8,12 @@ internal interface CoreWriterData {
     val persons: PersonDao
     val operations: OperationsDao
     val tasks: TaskDao
+    val materials: MaterialDao
 }
 internal class RoomCoreWriterData(private val db: ActionDatabase):CoreWriterData {
     override val actions get()=db.actions()
     override val persons get()=db.persons()
     override val operations get()=db.operations()
     override val tasks get()=db.tasks()
+    override val materials get()=db.materials()
 }

@@ -38,7 +38,7 @@ internal suspend fun <R> confirmedWorkspaceTransaction(tx: Transactor, context: 
     return result
 }
 
-/** Shared by task/action/person/operations writers, with ONE injected metadata port/epoch.
+/** Shared by task/action/person/operations/material writers, with ONE injected metadata port/epoch.
  * Every work closure includes actual DB/key cleanup; completions run only on the owner thread.
  * No cache, retry, payload owner, session authority or speculative rollback inference.
  */

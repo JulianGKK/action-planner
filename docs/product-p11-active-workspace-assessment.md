@@ -7207,3 +7207,226 @@ Abschluss: `git diff --check`, `git status -sb`, regulärer WIP-Commit/Push, una
 Remote-SHA-Abgleich. Keine APKs/Schlüssel/Datenbanken/Rohlogs/Credentials/persönlichen
 Pfade/Gerätekennungen einchecken. Danach **STOPP bis zum unabhängigen GitHub-Review**.
 Kein Force-Push, Merge, Release oder vollständige Release-1.0-Freigabe.
+
+
+## 53. Issue #35 – Material-Writerintegration
+
+### Ausgangsbasis und RED-Nachweis
+
+Verbindliche Basis `76315a20bad21488520cd297d48491212ed5f6fc` vor Änderungen lokal
+und unabhängig über den GitHub-Ref bestätigt; Branch `p11-performance-optimization`,
+Arbeitsbaum sauber. Keine fremden Änderungen übernommen oder überschrieben.
+
+Bisheriger tatsächlicher Pfad: `MaterialRepository` → `ProductMaterialRepository`
+→ eigener `write`/`run` → `withWriteTransaction` → `MaterialStore` → Room-DAOs →
+SQLCipher. READY-, Schritt-, Commit- und Publicationprüfungen waren vorhanden.
+Es fehlten jedoch der gemeinsame Vor-Queue-Mutationsport und der explizite
+Abschlussbeleg aus `confirmedWorkspaceTransaction`; ein zurückgegebener Store-Value
+war kein separater Beleg für äußeren Commit und Cleanup.
+
+**GETESTET – RED vor Implementierung:** Neuer `MaterialWriterWiringTest` mit zwei
+Methoden, beide fehlgeschlagen: gemeinsame Boundary fehlt; Runtime reicht gemeinsamen
+Mutationsport nicht an Material weiter. Dies sind ausdrücklich **statische
+Verdrahtungsregressionen**, keine auf Android ausgeführten Repositorytests. Nach
+Implementierung beide grün. Die dynamischen Transaktions-/Queue-/Outcome-Nachweise
+verwenden zusätzlich den vorhandenen echten SQLite-/Schema-11-Hostharness.
+
+### IMPLEMENTIERT – gemeinsame Writer- und Transaktionsgrenze
+
+`WorkspaceWriterFamily.MATERIAL` ergänzt. `ProductRuntime` übergibt exakt dieselbe
+`workspaceMutations`-Instanz an Material wie an Action, Person, Operations und Task.
+Kein eigener Material-Epochenzähler. Der kompatible Standalone-Constructordefault ist
+wie bei Operations/Task `UncachedWorkspaceMutations`; die produktive Composition
+injiziert ausdrücklich den gemeinsamen Port. Vorhandene Material-Fixtures mit
+abschließendem Clock-Lambda bleiben kompatibel.
+
+Create/Edit/Delete verwenden `WorkspaceWriteBoundary.submit`:
+
+1. Aktuellen READY-Kontext beziehen und Operation erlauben lassen.
+2. Synchron `beforeCoreQueue(MATERIAL, actionId, generation)` anfordern, **bevor**
+   `worker.execute` aufgerufen wird. Gemeinsames Pending sperrt auch andere Familien.
+3. Im Worker Autorisierung und `READY_TO_OPEN` prüfen; bestehenden Key-Lease und
+   `ActionDatabaseAccess` samt SQLCipher-/Room-Preflights verwenden.
+4. `useWriterConnection` und `confirmedWorkspaceTransaction` öffnen genau eine äußere
+   **IMMEDIATE**-Transaktion. Bereits aktive Transaktionen liefern keinen äußeren
+   Commitbeweis; kein SAVEPOINT-Erfolg. MaterialStore eröffnet selbst keine Transaktion.
+5. Store-Value verlangt Commit, fachliche Rejection verlangt expliziten tatsächlichen
+   äußeren Rollback. Erst normal zurückgekehrter Transaktionsabschluss bei nicht mehr
+   aktiver Transaktion setzt COMMITTED bzw. ROLLED_BACK.
+6. Erst nach Rückkehr des vollständigen DB-/Key-Scopes kann die Boundary COMPLETE
+   setzen und den Abschluss auf dem Ownerthread an das Ticket melden. Danach zentrale
+   `StorageContext.publish` und `ticket.isCurrent()` vor dem Ergebnis-Callback.
+
+`WorkspaceWriteBoundary` und `confirmedWorkspaceTransaction` funktional unverändert;
+nur ihr Familienkommentar wurde erweitert. `MaterialStore` verwendet als minimale
+Hosttest-Seam nun `CoreWriterData.materials` sowie die bereits vorhandenen Action-/
+Person-/Task-DAOs. Produktion delegiert auf dieselben Room-DAOs. Keine neue
+Repositoryarchitektur, Transaktions-, Session- oder Schlüsselautorität.
+
+| Situation | Beleg / Publication |
+|---|---|
+| Erfolgreicher äußerer Commit und vollständige Rückkehr aller Scopes | COMMITTED / COMPLETE; Callback nur bei weiterhin gültiger zentraler Publication und aktuellem Ticket |
+| Fachliche Rejection mit tatsächlich zurückgekehrtem äußerem Rollback | ROLLED_BACK / COMPLETE; Ablehnung darf veröffentlicht werden |
+| Unklarer Commit-/Rollbackabschluss, SQL-Exception ohne positiven äußeren Endbeleg | UNKNOWN; keine Erfolgs- oder fachliche Rejectionpublication |
+| Physischer Commit bekannt, danach DB-/Lease-Scope nicht bestätigt zurückgekehrt | COMMITTED / FAILED_OR_UNCONFIRMED; kein Erfolg |
+| Revoke nach bekanntem physischem Commit | Commitbeleg bleibt COMMITTED; Scopefehler/Publicationverweigerung erzeugt keinen UI-Erfolg und keinen erfundenen Rollback |
+| Pending-Ticket bereits belegt | Vor-Queue-STALE-Rejection (`OperationsFailure.STALE`); **keine** ausgeführte DB-Transaktion und **kein** Rollbacknachweis |
+| Workerdispatch vor Start fehlgeschlagen | Bestätigte Nichtausführung, vorhandene Boundary meldet ROLLED_BACK / COMPLETE plus Fehlerpfad; kein Erfolg |
+| Main-Dispatch verloren oder fehlgeschlagen | Ticket bleibt Pending, keine Abschluss-/Erfolgspublication, kein automatischer Retry |
+
+UNKNOWN und unbestätigtes Cleanup sperren weitere Nutzung in derselben Generation.
+Storagefehler laufen weiterhin über das vorhandene `blocked`/Storage-Failure-Verhalten;
+bei bereits widerrufenem Kontext keine unberechtigte Veröffentlichung dieses Fehlers.
+COMMITTED allein ist keine UI-Freigabe. `OperationsResult.Value` ohne äußeren
+Commitbeleg wird nachweislich unterdrückt. Ein physischer Commit wird nicht automatisch
+wiederholt, wenn seine Antwort nicht veröffentlicht werden kann.
+
+### IMPLEMENTIERT – Materialsemantik und Invalidierungsumfang
+
+`MaterialRules`, MaterialInput-Normalisierung, Provenienz-/createdAt-Erhalt,
+PREPARATION-/ACTIVE-Schreibrechte, COMPLETED-Read-only und übrige Statusgates bleiben
+unverändert. MaterialItem wird vor Edit/Delete vollständig mit dem aktuell persistierten
+Datensatz verglichen: ID/actionlokaler Lookup, Action-ID, Name, Mengen-/Ortslabel,
+Person-/Taskreferenz, sourceTemplateKey und createdAt. Vergleich und Mutation liegen
+nun nachweislich in derselben äußeren Schreibtransaktion. STALE führt vor UPDATE/DELETE
+zur Rejection und bestätigtem Rollback. Keine API-Abschwächung, kein ID-only-Bypass.
+Person und Task müssen weiterhin derselben Aktion angehören. Keine P3b-Lesung oder
+neue Materialberechtigung. Read/Board/Summary verwenden weiterhin den bisherigen
+Readpfad und erzeugen keine Mutationsepoche. DB-Schema, Foreign Keys und bestehende
+Material-Referenz-/Detach-Trigger bleiben unverändert.
+
+Material verändert nur Materialzeilen. Echte Abhängigkeiten: Materialboard sowie
+`MaterialSummary.count`, das PREPARATION-Übersicht und ACTIVE-Hub anzeigen.
+Der **weiterhin nicht produktiv installierte** `ActiveWorkspaceMutationAdapter`
+ordnet MATERIAL deshalb den neuen Metadatenprojektionen `MATERIAL_BOARD` und
+`MATERIAL_SUMMARY` zu; der Übersichtszähler ist derselbe Summarywert. Kein erfundener
+Task-/Personenpayload-Write durch Material. Bestehende Familienimpacts bleiben
+mindestens erhalten: Task wie zuvor TASKS/TASK_COUNTS/PEOPLE; übrige Core-Familien
+weiter konservativ alle Projektionen, nun einschließlich Materialmetadaten.
+Eine vollständige spätere Abhängigkeitsprüfung insbesondere von Task-/Personenänderungen
+auf Materiallinks/-labels bleibt vor globalem RAM-Reuse notwendig; dieser Slice
+behauptet keine fertige globale Cacheinvalidierung.
+
+Runtime bleibt `UncachedWorkspaceMutations`, `ramReuseEnabled == false`. Epochenschritt
+vor Queue, ein gemeinsames Pending, kein Ticket macht nach Commit Projektionen sauber.
+Keine Payload-Registry, kein Snapshotowner, keine produktive Aktivierung von
+`ActiveWorkspaceValidity`, kein RAM-Hit oder längere sensible Payloadlebensdauer.
+
+### GETESTET – SQLite, Rennen und bestehende Regressionen
+
+`CoreWriterIntegrationTest` erweitert den vorhandenen Harness mit echten in-memory
+SQLite-Transaktionen aus dem exportierten Schema 11 und `HostCoreWriterData.materials`.
+Die tatsächlichen produktiven Stores sowie die unveränderte gemeinsame Boundary und
+Transaktionsfunktion laufen im Host. DB-/Lease-/Room-Endfehler und vertrauenswürdige
+Scope-/Permissionwechsel sind gezielte Simulationen; kein nativer Cleanupnachweis.
+Der Host lädt Tabellen/Indizes/Foreign Keys des Schemas; native Materialtrigger und
+Room-generierte SQL-Pfade bleiben Gegenstand der Android-Fixtures.
+
+Nachweise:
+
+- Create/Edit/Delete: COMMITTED / COMPLETE erst nach äußerem Abschluss; Reads erzeugen
+  keine neue Epoche. Normalisierung, Provenienz und createdAt bleiben erhalten.
+- Zwei Editoren: erster Wert bleibt, alter Edit und alte Löschbestätigung STALE.
+  Jeder persistierte Expected-Feldunterschied wird vor UPDATE/DELETE abgelehnt.
+- INVALID (einschließlich Textgrenzen), NOT_FOUND, fremde Person/fremder Task,
+  fremde/fehlende Aktion und sämtliche Aktionsstatus: keine Fremdänderung,
+  bestätigte fachliche Rollbacks. Bestehende Unicode-/Referenzregressionen erhalten.
+- SQL-Fehler nach einem echten INSERT-Sideeffect (synthetischer AFTER-INSERT-Trigger):
+  SQL-Rollback entfernt die Zeile; trotzdem UNKNOWN ohne positiven äußeren Endbeleg,
+  kein Callback. Explizite Rejection nach Sideeffect: ROLLED_BACK / COMPLETE erst nach
+  zurückgekehrtem Rollback. Fehlgeschlagener Rollback bleibt UNKNOWN; uncommittierter
+  SQL-Zustand wird als solcher geprüft und erst im Harness-Cleanup zurückgerollt.
+- Für Create/Edit/Delete separat: Fehler vor/nach physischem Commit, DB- und
+  Key-Scopecleanupfehler; tatsächlicher SQL-Zustand und Abschlussbeleg getrennt.
+- READY-Verlust vor Queueausführung, während SQL-Write, an der Commitgrenze, nach
+  physischem Commit und unmittelbar vor Publication. Generation-, Permission- und
+  Actionwechsel unter vertrauenswürdig gebundenem Testport; keine späte Antwort.
+- BLOCKED/Storage-not-ready verweigert DB-Write und Erfolg. Verlorener/fehlgeschlagener
+  Main-Dispatch bleibt Pending; fehlgeschlagener Workerdispatch erzeugt keinen Write.
+- Doppelte Worker- und Main-Runnables: genau eine Wirkung/Completion/Antwort.
+  Material gegen Material/Task/Operations sowie die Gegenrichtung: nur erster Auftrag
+  kommt in die Queue, ein gemeinsamer Epochenschritt; Busy ist kein DB-Rollbackbeleg.
+- Bloßer Material-Value ohne äußeren Transaktionsbeleg: kein Erfolg.
+  `ramReuseEnabled` durchgehend false. Adaptertest: beide Materialprojektionen dirty,
+  Pending blockiert Reads/weitere Writer, Commit allein erlaubt keinen Reuse.
+
+Reale zentrale Sessionautorisierung wird nicht durch Testbooleans ersetzt. Der
+Hostport simuliert vertrauenswürdige Bindings für Racebeweise. Im Produkt bleiben
+StorageContext/SessionCoordinator maßgeblich; actiongebundene UI-Antwortannahme zusätzlich
+im bestehenden unveränderten `MaterialModel` (Generation, Action, Status, Epoch,
+separate Read-/Write-Requests). Eine neue allgemeine Permissionrevision/Snapshotautorität
+wurde nicht erfunden. Atomarer zukünftiger Owner-Publication-Vertrag bleibt #37.
+
+**Gezielter Abschlusslauf:** 55 Tests (51 Data, 4 App), keine Fehler/Skips.
+Die erste Vorbereitung hatte zwei Testfehler (nicht-void JUnit-Methode und synthetischer
+COMPLETED-Datensatz ohne completedAt); korrigiert, keine Assertion abgeschwächt.
+Vollständiger Offline-Abschlusslauf und endgültige Testzahlen: siehe Abschluss unten.
+
+### GETESTET / NUR VORBEREITET – Android und Abschluss
+
+`CoreWriterBoundaryStorageTest` erweitert: derselbe gemeinsame Port geht zusätzlich
+an das reale `ProductMaterialRepository`. In der ACTIVE-Phase folgen
+Create, Edit, STALE-Delete, Boardread, aktuelles Delete und Summaryread; doppelte
+Worker-Runnables und anschließender bestehender Abschlussstatuswechsel: 11 gemeinsame
+Epochenschritte, 10 bestätigte Commits plus ein
+bestätigter Rollback, vier Materialantworten. Erfolgscallback prüft bereits gemeldeten
+COMMITTED-/COMPLETE-Beleg. Bestehender `MaterialStorageTest` bleibt unverändert
+kompatibel. Androidtests ausschließlich offline kompiliert, **nicht ausgeführt**.
+Keine Installation/Instrumentation; kein Android-/SQLCipher-Laufzeit- oder nativer
+Cursor-/Keycleanup-Beweis aus Hostwerten.
+
+### NOCH NICHT ANGEBUNDEN / BLOCKER
+
+- [#35](https://github.com/JulianGKK/action-planner/issues/35): Materialwritergrenze
+  **IMPLEMENTIERT / GETESTET** im beschriebenen Umfang. ExpenseWriter,
+  ProtocolWriter, MemoryReportWriter, DocumentWriter, Leadership/P3b sowie übrige
+  Maintenance-/Recovery-/Löschpfade weiter **UNWIRED / NOT SAFE FOR RAM REUSE**.
+  Keine globale Invalidierungsfreigabe durch diesen Slice.
+- [#36](https://github.com/JulianGKK/action-planner/issues/36): vorhandener
+  Material-Expected-CAS erhalten; gewöhnliche veraltete Edits/Deletes getestet.
+  Kein neuer persistierter ABA-Schutz. Action-/Operations-Live-Editorlücken aus §51
+  bleiben offen; CreateRole-Abschlussvertrag aus §52 erhalten.
+- [#37](https://github.com/JulianGKK/action-planner/issues/37): produktiver
+  Snapshotowner und atomare Payload-Publication **NOCH NICHT ANGEBUNDEN**.
+- [#38](https://github.com/JulianGKK/action-planner/issues/38): keine Navigation-/
+  Performanceintegration oder neue Performancefreigabe.
+- [#32](https://github.com/JulianGKK/action-planner/issues/32): eigenständiger
+  Cursor-/Cleanup-**BLOCKER** unverändert. `SQLCipherStatement.close()` schließt den
+  Cursor nicht explizit. Host-Statementabschluss und simulierte Cleanupfehler sowie
+  frühere FD-PASSes beweisen keine vollständige native Cursorfreigabe.
+
+SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink, B2Driver,
+Schema 11, 180 s absolut/30 s READY idle und 8+8-MiB-Sicherheitsbudget unverändert.
+Keine neuen Dependencies/Permissions/Persistenzorte, keine Klartextdateien,
+Schemamigration, Produktnavigation, RAM-Hits, Snapshotaktivierung oder Gerätezugriffe.
+Keine pauschale Editor-, P11-Snapshot- oder Release-1.0-Freigabe.
+
+
+**Vollständiger Offline-Abschlusslauf: PASS.**
+
+```text
+./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest \
+  :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin \
+  :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline
+```
+
+1.467 Hosttests: App 668, Data 795, Security 4; **0 Fehler, 0 Errors, 0 Skips**.
+Domain ohne Testsources, nicht als zusätzlicher Test gezählt. Bestehende Personen-,
+Rollenplan-, Rollenrename/-delete-, Task-, Operations-, Material-, Security- und
+Publicationregressionen enthalten. App-Offline-Build, beide Androidtest-Kompilationen,
+Architekturprüfung und Prototype-/Demo-Manifestchecks erfolgreich. Compilerwarnungen
+(u. a. bestehende unnötige Non-null-Assertions und eine weitere im erweiterten Fixture)
+sind sichtbar geblieben; keine Tests übersprungen oder Assertions abgeschwächt.
+
+Geändert: ProductMaterialRepository.kt, ProductRuntime.kt, CoreWriterData.kt,
+WorkspaceMutationInvalidation.kt, ActiveWorkspaceMutationAdapter.kt,
+ActiveWorkspaceValidity.kt (nur Projektionsbezeichner), WorkspaceWriteBoundary.kt
+(nur Kommentar), HostCoreWriterData.kt, CoreWriterIntegrationTest.kt,
+MaterialWriterWiringTest.kt, CoreWorkspaceMutationAdapterTest.kt,
+CoreWriterBoundaryStorageTest.kt und dieser Assessmentabschnitt.
+
+Abschlusskontrollen: `git diff --check`, `git status -sb`, gezielte Diffprüfung,
+regulärer WIP-Commit/Push auf den bestehenden Branch und unabhängiger GitHub-Ref-Abgleich.
+Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
+Gerätekennungen eingecheckt. Danach **STOPP BIS ZUM UNABHÄNGIGEN GITHUB-REVIEW**.
+Kein Force-Push, Merge, Release oder Produktupdate.
