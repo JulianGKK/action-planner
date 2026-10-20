@@ -53,7 +53,7 @@ class ActiveIntegrationTest {
             override fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { opWrites++ }
             override fun renameRole(actionId: String, roleId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { opWrites++ }
             override fun deleteRole(actionId: String, roleId: String, publish: (OperationsResult<Unit>) -> Unit) { opWrites++ }
-            override fun planRoles(actionId: String, personId: String, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit) { opWrites++ }
+            override fun planRoles(actionId: String, personId: String, expected: ExpectedPersonRolePlan, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit) { opWrites++ }
             override fun updateSnapshot(actionId: String, personId: String, expected: PersonOperationalState, status: OperationalStatus, roleId: String?, place: String, publish: (OperationsResult<Unit>) -> Unit) {
                 assertEquals(expected, people.single { it.person.id == personId }.state); opWrites++
                 people = people.map { if (it.person.id == personId) it.copy(state = expected.copy(status = status, currentRoleId = roleId.takeIf { OperationalRules.roleAllowed(status) }, currentPlaceLabel = OperationalRules.place(place, status), updatedAt = 5)) else it }

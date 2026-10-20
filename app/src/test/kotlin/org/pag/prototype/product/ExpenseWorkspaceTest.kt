@@ -41,7 +41,7 @@ class ExpenseWorkspaceTest {
         override fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { error("No P8 role write") }
         override fun renameRole(actionId: String, roleId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { error("No P8 role write") }
         override fun deleteRole(actionId: String, roleId: String, publish: (OperationsResult<Unit>) -> Unit) { error("No P8 role write") }
-        override fun planRoles(actionId: String, personId: String, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit) { error("No P8 plan write") }
+        override fun planRoles(actionId: String, personId: String, expected: ExpectedPersonRolePlan, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit) { error("No P8 plan write") }
         override fun updateSnapshot(actionId: String, personId: String, expected: PersonOperationalState, status: OperationalStatus, roleId: String?, place: String, publish: (OperationsResult<Unit>) -> Unit) { error("No P8 snapshot write") }
     }
     private class Tasks : TaskRepository {

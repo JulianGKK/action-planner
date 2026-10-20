@@ -39,6 +39,10 @@ internal data class OperationalRow(val actionId:String,val personId:String,val c
     @Query("DELETE FROM roles WHERE actionId=:actionId AND id=:roleId") suspend fun removeRole(actionId:String,roleId:String):Int
     @Query("SELECT * FROM person_planned_roles WHERE actionId=:actionId") suspend fun planned(actionId:String):List<PlannedRoleRow>
     @Query("SELECT * FROM person_role_plans WHERE actionId=:actionId") suspend fun plans(actionId:String):List<RolePlanRow>
+    @Query("SELECT * FROM person_planned_roles WHERE actionId=:actionId AND personId=:personId")
+    suspend fun personAssignments(actionId:String,personId:String):List<PlannedRoleRow>
+    @Query("SELECT * FROM person_role_plans WHERE actionId=:actionId AND personId=:personId")
+    suspend fun personPlan(actionId:String,personId:String):RolePlanRow?
     @Query("SELECT * FROM person_operational_states WHERE actionId=:actionId") suspend fun states(actionId:String):List<OperationalRow>
     @Query("SELECT * FROM person_operational_states WHERE actionId=:actionId AND personId=:personId") suspend fun state(actionId:String,personId:String):OperationalRow?
     @Query("SELECT COUNT(*) FROM person_planned_roles WHERE actionId=:actionId AND roleId=:roleId") suspend fun plannedReferences(actionId:String,roleId:String):Int

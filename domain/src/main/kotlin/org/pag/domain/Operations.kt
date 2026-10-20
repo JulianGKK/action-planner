@@ -8,6 +8,12 @@ enum class OperationalStatus {
     NO_STATUS, ON_SITE, IDENTITY_CHECK, IN_CUSTODY, NOT_REACHABLE, RELEASED, LEFT, UNCLEAR
 }
 data class PersonRolePlan(val roleIds: Set<String>, val primaryRoleId: String?)
+/** Immutable editor-open value; missing storage row and stored empty plan are the same domain plan.
+ * Full value CAS only: schema 11 supplies no monotone persistent ABA revision.
+ */
+class ExpectedPersonRolePlan(val actionId: String, val personId: String, plan: PersonRolePlan) {
+    val plan = plan.copy(roleIds = java.util.Collections.unmodifiableSet(LinkedHashSet(plan.roleIds)))
+}
 data class PersonOperationalState(val actionId: String, val personId: String, val currentRoleId: String?,
     val status: OperationalStatus, val currentPlaceLabel: String?, val updatedAt: Long)
 data class OperationalPerson(val person: Person, val plan: PersonRolePlan, val state: PersonOperationalState?)
@@ -44,7 +50,7 @@ interface OperationsRepository {
     fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit)
     fun renameRole(actionId: String, roleId: String, name: String, publish: (OperationsResult<Role>) -> Unit)
     fun deleteRole(actionId: String, roleId: String, publish: (OperationsResult<Unit>) -> Unit)
-    fun planRoles(actionId: String, personId: String, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit)
+    fun planRoles(actionId: String, personId: String, expected: ExpectedPersonRolePlan, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit)
     fun updateSnapshot(actionId: String, personId: String, expected: PersonOperationalState,
         status: OperationalStatus, roleId: String?, place: String, publish: (OperationsResult<Unit>) -> Unit)
 }

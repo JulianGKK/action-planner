@@ -8,19 +8,73 @@ class OperationsModelTest {
     private var snapshot=SessionSnapshot(SessionState.READY,1)
     private var action=Action("a","synthetic","synthetic",1,2,0,ActionStatus.PREPARATION)
     private class Repo:OperationsRepository {
+        var reads=0;var captured:ExpectedPersonRolePlan?=null;
         var status=ActionStatus.PREPARATION;var writes=0;var created:String?=null;var callback:((OperationsResult<OperationalBoard>)->Unit)?=null;var defer=false
         val roles=listOf(Role("s","a","Support",0),Role("g","a","Gesa-Support",0))
         var person=OperationalPerson(Person("p","a","synthetic",0),PersonRolePlan(setOf("s","g"),"s"),PersonOperationalState("a","p","s",OperationalStatus.NO_STATUS,null,0))
-        override fun board(actionId:String,publish:(OperationsResult<OperationalBoard>)->Unit){if(defer)callback=publish else publish(OperationsResult.Value(OperationalBoard(actionId,status,roles,listOf(person))))}
+        override fun board(actionId:String,publish:(OperationsResult<OperationalBoard>)->Unit){reads++;if(defer)callback=publish else publish(OperationsResult.Value(OperationalBoard(actionId,status,roles,listOf(person))))}
         override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit){writes++;created=name;publish(OperationsResult.Value(Role("new",actionId,name,1)))}
         override fun renameRole(actionId:String,roleId:String,name:String,publish:(OperationsResult<Role>)->Unit){writes++;publish(OperationsResult.Value(roles[0].copy(name=name)))}
         override fun deleteRole(actionId:String,roleId:String,publish:(OperationsResult<Unit>)->Unit){writes++;publish(OperationsResult.Value(Unit))}
-        override fun planRoles(actionId:String,personId:String,plan:PersonRolePlan,publish:(OperationsResult<Unit>)->Unit){writes++;person=person.copy(plan=plan);publish(OperationsResult.Value(Unit))}
+        override fun planRoles(actionId:String,personId:String,expected: ExpectedPersonRolePlan, plan:PersonRolePlan,publish:(OperationsResult<Unit>)->Unit){writes++;captured=expected;if(expected.actionId!=actionId || expected.personId!=personId || expected.plan!=person.plan)publish(OperationsResult.Rejected(OperationsFailure.STALE)) else {person=person.copy(plan=plan);publish(OperationsResult.Value(Unit))}}
         override fun updateSnapshot(actionId:String,personId:String,expected:PersonOperationalState,status:OperationalStatus,roleId:String?,place:String,publish:(OperationsResult<Unit>)->Unit){writes++;person=person.copy(state=expected.copy(status=status,currentRoleId=roleId.takeIf{OperationalRules.roleAllowed(status)},currentPlaceLabel=OperationalRules.place(place,status),updatedAt=1));publish(OperationsResult.Value(Unit))}
     }
     private val repo=Repo();private var revoked=0;private var interactions=0
-    private val model=OperationsModel(repo,{snapshot},{action},{interactions++},{revoked++})
+    private val messages=ArrayList<String>()
+    private val model=OperationsModel(repo,{snapshot},{action},{interactions++},{revoked++},feedback={messages.add(it)})
     private fun enter(status:ActionStatus){action=action.copy(status=status);repo.status=status;model.refresh()}
+    @Test fun stalePlanKeepsDraftAndOnlyExplicitReloadReplacesExpected() {
+        enter(ActionStatus.PREPARATION);model.plan("p")
+        val original=repo.person.plan;val reads=repo.reads
+        model.toggleRole("s");model.primary("g")
+        repo.person=repo.person.copy(plan=PersonRolePlan(setOf("s"),"s"))
+        model.savePlan()
+        assertEquals(OperationsFailure.STALE,model.error);assertEquals(OperationsScreen.PLAN,model.screen)
+        assertEquals(setOf("g"),model.roleIds);assertEquals("g",model.primaryRoleId)
+        assertEquals(original,repo.captured!!.plan);assertEquals(reads,repo.reads);assertTrue(messages.isEmpty())
+        model.savePlan();assertEquals(original,repo.captured!!.plan) // No implicit retry with fresh expected.
+        model.reloadPlan()
+        assertNull(model.error);assertEquals(setOf("s"),model.roleIds);assertEquals("s",model.primaryRoleId)
+        model.toggleRole("g");model.primary("g");model.savePlan()
+        assertEquals(PersonRolePlan(setOf("s"),"s"),repo.captured!!.plan)
+        assertEquals(OperationsScreen.OVERVIEW,model.screen)
+    }
+    @Test fun mutableSourceCannotChangeEditorExpected() {
+        val source=linkedSetOf("s","g")
+        repo.person=repo.person.copy(plan=PersonRolePlan(source,"s"))
+        enter(ActionStatus.PREPARATION);model.plan("p");source.remove("g")
+        model.primary("g");model.savePlan()
+        assertEquals(setOf("s","g"),repo.captured!!.plan.roleIds)
+        assertEquals(OperationsFailure.STALE,model.error)
+    }
+    @Test fun failedReloadKeepsDraftAndDuplicateReloadCannotReplaceItLater() {
+        enter(ActionStatus.PREPARATION);model.plan("p");model.toggleRole("s")
+        repo.person=repo.person.copy(plan=PersonRolePlan(emptySet(),null));model.savePlan()
+        repo.defer=true;model.reloadPlan();val old=repo.callback!!
+        old(OperationsResult.Rejected(OperationsFailure.NOT_FOUND))
+        assertEquals(setOf("g"),model.roleIds);assertEquals(OperationsScreen.PLAN,model.screen)
+        old(OperationsResult.Value(OperationalBoard("a",ActionStatus.PREPARATION,repo.roles,listOf(repo.person))))
+        assertEquals(setOf("g"),model.roleIds)
+        model.savePlan();assertEquals(OperationsFailure.STALE,model.error)
+        model.reloadPlan();val fresh=repo.callback!!
+        fresh(OperationsResult.Value(OperationalBoard("a",ActionStatus.PREPARATION,repo.roles,listOf(repo.person))))
+        model.toggleRole("g")
+        fresh(OperationsResult.Value(OperationalBoard("a",ActionStatus.PREPARATION,repo.roles,listOf(repo.person))))
+        assertEquals(setOf("g"),model.roleIds)
+    }
+    @Test fun reloadCannotRestoreDraftAcrossLockGenerationActionOrLostPlanningPermission() {
+        for(at in listOf("lock","generation","action","permission","clear")) {
+            snapshot=SessionSnapshot(SessionState.READY,1);action=action.copy(id="a",status=ActionStatus.PREPARATION)
+            repo.defer=false;repo.person=repo.person.copy(plan=PersonRolePlan(setOf("s","g"),"s"))
+            model.clear();model.refresh();model.plan("p");model.toggleRole("s")
+            repo.person=repo.person.copy(plan=PersonRolePlan(emptySet(),null));model.savePlan()
+            repo.defer=true;model.reloadPlan();val late=repo.callback!!
+            when(at){"lock"->{snapshot=SessionSnapshot(SessionState.LOCKED,2);model.clear()};"generation"->snapshot=SessionSnapshot(SessionState.READY,2);"action"->action=action.copy(id="b");"permission"->action=action.copy(status=ActionStatus.ACTIVE);else->model.clear()}
+            val draft=model.roleIds
+            late(OperationsResult.Value(OperationalBoard("a",ActionStatus.PREPARATION,repo.roles,listOf(repo.person))))
+            assertEquals(at,draft,model.roleIds)
+        }
+    }
     @Test fun draftOffersNoPlanOrLive(){enter(ActionStatus.DRAFT);model.plan("p");model.update("p");assertFalse(model.planning);assertFalse(model.live);assertEquals(OperationsScreen.OVERVIEW,model.screen)}
     @Test fun preparationAllowsMultipleAndOnePrimary(){enter(ActionStatus.PREPARATION);model.plan("p");model.primary("g");model.savePlan();assertEquals(setOf("s","g"),repo.person.plan.roleIds);assertEquals("g",repo.person.plan.primaryRoleId);assertEquals(1,repo.writes)}
     @Test fun cancelPlanPersistsNothing(){enter(ActionStatus.PREPARATION);model.plan("p");model.toggleRole("s");model.cancel();assertEquals(0,repo.writes);assertEquals("s",repo.person.plan.primaryRoleId)}

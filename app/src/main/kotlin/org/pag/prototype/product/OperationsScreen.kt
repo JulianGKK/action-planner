@@ -14,18 +14,23 @@ import java.time.format.FormatStyle
 
 @Composable internal fun OperationsSection(model:ProductViewModel) {
     val ops=model.operations;val board=ops.board?:return
-    ops.error?.let{Text(operationsError(it))}
+    ops.error?.let{Text(if(ops.screen==OperationsScreen.PLAN && it==OperationsFailure.STALE)
+        "Die Rollenplanung wurde inzwischen geändert. Dein Entwurf bleibt erhalten." else operationsError(it))}
     when(ops.screen) {
         OperationsScreen.ROLES->RoleManagement(ops,board)
         OperationsScreen.PLAN->{
             Text("Rollen planen",style=MaterialTheme.typography.titleLarge)
             Text(ops.person?.person?.pseudonym.orEmpty(),style=MaterialTheme.typography.headlineMedium)
-            if(board.roles.isEmpty())Text("Noch keine Rollen vorhanden. Rollen können in der Aktionsübersicht angelegt werden.")
-            board.roles.forEach{role->
+            if(ops.planRoles.isEmpty())Text("Noch keine Rollen vorhanden. Rollen können in der Aktionsübersicht angelegt werden.")
+            ops.planRoles.forEach{role->
                 FormOutlinedButton({ops.toggleRole(role.id)},enabled=!ops.busy){Text((if(role.id in ops.roleIds)"✓ " else "")+role.name)}
                 if(role.id in ops.roleIds)FormOutlinedButton({ops.primary(role.id)},enabled=!ops.busy){Text(if(role.id==ops.primaryRoleId)"Hauptfunktion ✓" else "Als Hauptfunktion wählen")}
             }
             FormOutlinedButton({ops.primary(null)},enabled=!ops.busy){Text(if(ops.primaryRoleId==null)"Keine Hauptfunktion ✓" else "Ohne Hauptfunktion planen")}
+            if(ops.error==OperationsFailure.STALE) {
+                Text("Beim Neuladen wird dein bisheriger Entwurf ersetzt.")
+                FormOutlinedButton(ops::reloadPlan,enabled=!ops.busy){Text("Entwurf verwerfen und aktuellen Plan laden")}
+            }
             FormButton(ops::savePlan,enabled=!ops.busy){Text("Speichern")}
             FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Abbrechen")}
         }

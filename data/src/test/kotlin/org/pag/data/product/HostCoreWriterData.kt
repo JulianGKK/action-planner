@@ -38,6 +38,8 @@ internal class HostCoreWriterData(private val sql:SqliteHostConnection):CoreWrit
         override suspend fun updateRole(row:RoleRow)=change("UPDATE roles SET actionId=?,name=?,normalizedName=?,createdAt=? WHERE id=?",listOf(row.actionId,row.name,row.normalizedName,row.createdAt,row.id))
         override suspend fun removeRole(actionId:String,roleId:String)=change("DELETE FROM roles WHERE actionId=? AND id=?",listOf(actionId,roleId))
         override suspend fun planned(actionId:String)=rows("SELECT * FROM person_planned_roles WHERE actionId=?",listOf(actionId)){PlannedRoleRow(it.getText(0),it.getText(1),it.getText(2))}
+        override suspend fun personAssignments(actionId:String,personId:String)=rows("SELECT * FROM person_planned_roles WHERE actionId=? AND personId=?",listOf(actionId,personId)){PlannedRoleRow(it.getText(0),it.getText(1),it.getText(2))}
+        override suspend fun personPlan(actionId:String,personId:String)=rows("SELECT * FROM person_role_plans WHERE actionId=? AND personId=?",listOf(actionId,personId)){RolePlanRow(it.getText(0),it.getText(1),nullable(it,2))}.singleOrNull()
         override suspend fun plans(actionId:String)=rows("SELECT * FROM person_role_plans WHERE actionId=?",listOf(actionId)){RolePlanRow(it.getText(0),it.getText(1),nullable(it,2))}
         override suspend fun states(actionId:String)=rows("SELECT * FROM person_operational_states WHERE actionId=?",listOf(actionId),::state)
         override suspend fun state(actionId:String,personId:String)=query("SELECT * FROM person_operational_states WHERE actionId=? AND personId=?",listOf(actionId,personId)){if(it.step())state(it)else null}

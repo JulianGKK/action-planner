@@ -20,9 +20,9 @@ class ProductOperationsRepository(app:Context,private val access:StorageAccess,
     override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,null,name)}
     override fun renameRole(actionId:String,roleId:String,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,roleId,name)}
     override fun deleteRole(actionId:String,roleId:String,publish:(OperationsResult<Unit>)->Unit)=write(actionId,publish){it.deleteRole(actionId,roleId)}
-    override fun planRoles(actionId:String,personId:String,plan:PersonRolePlan,publish:(OperationsResult<Unit>)->Unit) {
+    override fun planRoles(actionId:String,personId:String,expected:ExpectedPersonRolePlan,plan:PersonRolePlan,publish:(OperationsResult<Unit>)->Unit) {
         val frozen=plan.copy(roleIds=plan.roleIds.toSet())
-        write(actionId,publish){it.plan(actionId,personId,frozen)}
+        write(actionId,publish){it.plan(actionId,personId,expected,frozen)}
     }
     override fun updateSnapshot(actionId:String,personId:String,expected:PersonOperationalState,status:OperationalStatus,roleId:String?,place:String,publish:(OperationsResult<Unit>)->Unit)=
         write(actionId,publish){it.snapshot(actionId,personId,expected,status,roleId,place)}
@@ -93,10 +93,13 @@ internal class OperationsStore(private val data:CoreWriterData,private val c:Sto
         if(step{data.operations.removeRole(actionId,roleId)}!=1)throw ProductStorageFailure()
         return OperationsResult.Value(Unit)
     }
-    suspend fun plan(actionId:String,personId:String,plan:PersonRolePlan):OperationsResult<Unit> {
+    suspend fun plan(actionId:String,personId:String,expected:ExpectedPersonRolePlan,plan:PersonRolePlan):OperationsResult<Unit> {
         val status=actionStatus(actionId)?:return denied(OperationsFailure.NOT_FOUND)
         if(!OperationalRules.mayPlan(status))return denied(OperationsFailure.NOT_ALLOWED)
         step{data.persons.get(actionId,personId)}?.model()?:return denied(OperationsFailure.NOT_FOUND)
+        if(expected.actionId!=actionId || expected.personId!=personId)return denied(OperationsFailure.STALE)
+        val current=readPlan(actionId,personId)
+        if(current!=expected.plan)return denied(OperationsFailure.STALE)
         if(!OperationalRules.validPlan(plan.roleIds,plan.primaryRoleId))return denied(OperationsFailure.INVALID)
         for(id in plan.roleIds)step{data.operations.role(actionId,id)}?.model()?:return denied(OperationsFailure.NOT_FOUND)
         step{data.operations.removePlan(actionId,personId)}
@@ -104,6 +107,14 @@ internal class OperationsStore(private val data:CoreWriterData,private val c:Sto
         for(id in plan.roleIds)step{data.operations.assign(PlannedRoleRow(actionId,personId,id))}
         step{data.operations.insertPlan(RolePlanRow(actionId,personId,plan.primaryRoleId))}
         return OperationsResult.Value(Unit)
+    }
+    /** Reads only the selected person's complete plan, before any deleting/inserting SQL. */
+    private suspend fun readPlan(actionId:String,personId:String):PersonRolePlan {
+        val ids=step{data.operations.personAssignments(actionId,personId)}.map{it.roleId}.toSet()
+        val primary=step{data.operations.personPlan(actionId,personId)}?.primaryRoleId
+        if(!OperationalRules.validPlan(ids,primary))throw ProductStorageFailure()
+        for(id in ids)step{data.operations.role(actionId,id)}?.model()?:throw ProductStorageFailure()
+        return PersonRolePlan(ids,primary)
     }
     suspend fun snapshot(actionId:String,personId:String,expected:PersonOperationalState,status:OperationalStatus,roleId:String?,place:String):OperationsResult<Unit> {
         val actionStatus=actionStatus(actionId)?:return denied(OperationsFailure.NOT_FOUND)

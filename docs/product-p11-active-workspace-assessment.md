@@ -6430,3 +6430,174 @@ Nur Code/Tests/Dokumentation; keine APKs, Schlüssel, Datenbanken, Rohlogs, Cred
 persönlichen Pfade oder Gerätekennungen. Regulärer Push und unabhängiger Remote-SHA-
 Abgleich, danach **STOPP bis zum unabhängigen GitHub-Review**. Kein Force-Push, Merge,
 Release oder Produktupdate. Keine Produktionsreife von Release 1.0 behauptet.
+
+## 49. Issue #36 – P3a-Rollenplanung gegen Lost Updates
+
+### 49.1 Ausgangsnachweis und implementierter Expected-Vertrag
+
+Remote-HEAD und lokaler HEAD wurden **vor Änderungen** unabhängig gegen die verbindliche
+Basis `21311641df4536602d2a604d557d2c9506d6c475` geprüft; Arbeitsbaum sauber.
+Der zunächst ausgeführte echte SQLite-/Schema-11-Hosttest
+`rolePlanLostUpdateBaselineAcceptsBothOldEditors` bestätigte den Ausgangsfehler:
+A plante `r0` als Hauptfunktion; B speicherte danach den Entwurf aus demselben alten
+leeren Ausgangsstand erfolgreich und entfernte As bestätigte Planung. Beide Writes
+wurden akzeptiert. Der Test ist jetzt zum positiven Konfliktproof
+`rolePlanOldEditorsConflictAndConfirmedFirstPlanSurvives` weiterentwickelt.
+
+**IMPLEMENTIERT:** Der öffentliche `OperationsRepository.planRoles` und der interne
+`OperationsStore.plan` verlangen zusätzlich `ExpectedPersonRolePlan`. Kein verbleibender
+ungeschützter Plan-Write-Overload. Dieser Wert bindet Action-ID, Person-ID, vollständige
+Rollenmenge und `primaryRoleId`. Seine Konstruktion kopiert die Rollenmenge in eine
+nicht veränderbare Menge; auch ein Cast auf MutableSet kann sie nicht mutieren.
+Der Entwurf bleibt ein separater `PersonRolePlan`; der Repositoryport friert weiterhin
+auch dessen Menge synchron vor dem Einreihen ein. Kein Nachladen eines neuen Expected
+beim Speichern und keine UI-Boolean-Autorität.
+
+Das bestehende fachliche Modell hat keinen Unterschied zwischen einer fehlenden
+`person_role_plans`-Zeile ohne Assignments und einer gespeicherten leeren Planung mit
+null Hauptfunktion. Beide sind bewusst `PersonRolePlan(emptySet(), null)` und vergleichen
+sich gleich. Leere gegenüber belegter Planung und abweichende Hauptfunktion werden
+vollständig verglichen. Eine reine physische Zeilenexistenz ist keine neue fachliche
+Revision; keine Schemamigration oder geänderte bestehende Board-Semantik.
+
+### 49.2 Transaktion, Outcome und Cleanup
+
+**IMPLEMENTIERT:** Innerhalb derselben bestehenden äußeren **IMMEDIATE**-Transaktion
+werden aktuelle READY-Autorität, Actionstatus PREPARATION, zugehörige existierende
+Person und Expected-Scope geprüft. Zwei neue ausschließlich personenbezogene DAO-
+SELECTs lesen vollständige Assignments und Planzeile. Bestehende Rollenreferenzen und
+Primary-Konsistenz werden geprüft. Vollvergleich gegen Expected geschieht **vor dem
+ersten DELETE/INSERT**. Abweichung: `OperationsFailure.STALE`. Fehlende Person/Aktion
+oder fehlende/aktionsfremde gewünschte Rolle: NOT_FOUND; unzulässiger Status NOT_ALLOWED;
+ungültiger Entwurf INVALID. Ungültige persistierte Zustände bleiben Storagefehler.
+Kein Entfernen alter Assignments und kein Einsetzen neuer Hauptfunktion bei Rejection.
+
+`WorkspaceWriteBoundary`, `WorkspaceMutationInvalidation` und
+`confirmedWorkspaceTransaction` bleiben unverändert. Eine innerhalb der Transaktion
+entstandene fachliche STALE-Rejection wird erst nach tatsächlich zurückgekehrtem äußeren
+Rollback und DB-/Lease-Cleanup publiziert: **ROLLED_BACK / COMPLETE**. Erfolgreiche
+Writes benötigen **COMMITTED / COMPLETE** und anschließend weiterhin gültige zentrale
+Publication. Vor-Queue-Pendingverweigerung bleibt die bestehende separate STALE-
+Busyantwort ohne neue DB-Transaktion; sie ist kein Beleg eines DB-Konflikts/Rollbacks.
+
+Fehlender Transaktionsabschluss oder geworfenes Rollback: **UNKNOWN**. Cleanupfehler:
+**FAILED_OR_UNCONFIRMED**, auch nach physisch bestätigtem Commit. Kein Erfolgsresultat,
+kein optimistischer UI-Abschluss, kein Retry. Revoke vor Commit verhindert den Write;
+Revoke nach Commit verhindert die Publication, macht den physischen Commit nicht
+rückgängig. Eine Mutationsepoche, ein injizierter Port, keine zweite Sessionautorität.
+
+### 49.3 Formular und ausdrückliches Neuladen
+
+**IMPLEMENTIERT:** `OperationsModel.plan()` friert beim Öffnen den vollständigen Plan
+mit Action/Person ein und bindet den Editor an die vorhandene READY-Generation und
+Requestlebensdauer. `savePlan()` übergibt genau diesen Expected-Wert und den separat
+bearbeiteten Entwurf; kein DBread im Save. STALE lässt Rollenmenge, Hauptfunktion und
+Formular offen; kein Erfolgsbanner, kein automatisches Überschreiben oder Wiederholen.
+Die PLAN-Ansicht erklärt ausdrücklich: „Die Rollenplanung wurde inzwischen geändert.
+Dein Entwurf bleibt erhalten.“ Bestehende Live-Status-Fehlermeldungen bleiben getrennt.
+
+Vor dem Button „Entwurf verwerfen und aktuellen Plan laden“ steht, dass das Neuladen
+den bisherigen Entwurf ersetzt. Dieser ausdrücklich bestätigte Klick allein verwendet
+den bestehenden autorisierten `board`-Lesepfad; es gibt keinen neuen Ersatzvollread
+oder automatischen Refresh bei STALE. Erst ein gültiges vollständiges Ergebnis der
+richtigen Aktion/Person in PREPARATION ersetzt Expected und Entwurf. Die aktuellen
+Rollenidentitäten/-labels werden für diesen Editor übernommen, damit inzwischen neu
+angelegte Funktionen nach dem bewussten Reload sichtbar sind. Kein zweites vollständiges
+OperationalBoard wird im Editor gehalten; übrige Reloadpayload wird nicht übernommen.
+Bei Abbruch/Abschluss/Lock über bestehendes `clear()` werden Editorreferenzen entfernt.
+Das ist keine neue Freigabe für RAM-Retention oder einen Snapshotowner.
+
+Fehlgeschlagenes Neuladen ersetzt den Entwurf nicht. READY-, Generation-, Action-,
+Planungsberechtigungs-, Request-, Person- und Expected-Referenzprüfungen sperren alte
+Callbacks; Reloadcallback einmalig konsumiert. Lock/Navigation nutzen weiterhin die
+bestehenden Clear-/Requestgrenzen. Keine Klartextpersistenz des Formulars und keine
+allgemeine Änderung der Produktnavigation.
+
+### 49.4 GETESTET und Offline-Validierung
+
+Echtes SQLite mit Schema 11, FKs/Indizes, tatsächlichen DAO-SQLwrites, produktiver
+Storelogik und gemeinsamer Transaktions-/Dispatchgrenze:
+
+- Gleicher Expected bei A/B: A COMMITTED/COMPLETE, B STALE mit bestätigtem Rollback;
+  vollständige Rollenmenge und Hauptfunktion von A bleiben erhalten. Frischer Editor
+  darf anschließend ändern. Mengenunterschiede und reine Primary-Unterschiede erkannt.
+- Leerer/fehlender/gespeicherter leerer gegenüber belegtem Plan; fremde Expected-Action/
+  Person, fremde Zielperson und gelöschte/fehlende/aktionsfremde Rollen. SQL-Prepare-
+  Beobachtung belegt **null DELETE/INSERT** vor diesen Rejections. Keine Fremdänderung.
+- Fehlertrigger bei erneutem Insert der Planzeile **nach** Löschen alter Zuordnungen:
+  SQLite-Rollback stellt die vollständige ursprüngliche Planung wieder her; kein
+  Callback, UNKNOWN statt fälschlichem Erfolg aus einem Repositorywert.
+- Plan-spezifisch Commit, Rollback, UNKNOWN vor/nach physischem Commit, fehlgeschlagenes
+  Rollback, Cleanupfehler, Revoke nach Queue/vor/nach Commit, Permission-/Generation-/
+  Actionwechsel und konkurrierende Queueanforderungen. Doppelte Worker/Maincallbacks
+  haben nur eine Wirkung/Publication; kein RAM-Reuse.
+- Mutierbare Quellmengen verändern Expected nicht. Formular-Porttests prüfen unveränderten
+  Expected ohne Save-Read, Entwurferhalt bei STALE/Reloadfehler, ausschließlich bewussten
+  Reload, keine Erfolgsfeedbacks, doppelte/veraltete Reloadcallbacks und Lock/Generation/
+  Action/Planungsberechtigungsverlust. Personen-CAS-/Task-/Operations-/Security- und
+  Publicationregressionen bleiben erhalten.
+
+Native Room-/Key-/Bindingrennen werden im Host weiterhin vertrauenswürdig simuliert;
+kein Androidlaufzeit- oder Native-Cleanupbeweis. Androidtest
+`OperationsStorageTest.expectedPlanRejectsSecondOldEditorThroughProductBoundary`
+zusätzlich vorbereitet; vorhandene Storageproofs und mutable-Queue-Fixture auf Expected
+angepasst. **Nur offline kompiliert, nicht installiert/instrumentiert.**
+
+Gezielte Reproduktion:
+`./gradlew :data:testDebugUnitTest --tests '*CoreWriterIntegrationTest' :app:testDebugUnitTest --tests '*OperationsModelTest' --offline`.
+Vollständiger Abschlusslauf:
+`./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline`.
+**634 App + 772 Data + 4 Security = 1410 Hosttests, 0 Fehler, 0 Skips.**
+Domain-Testtask ohne Testquellen, keine zusätzlichen Tests gezählt. Offline-Appbuild,
+beide Androidtest-Kompilationen, Architekturcheck und Produkt-/Demo-Manifestprüfungen
+erfolgreich. Bestehende Kotlin-/Android-Deprecationwarnungen bleiben sichtbar; keine
+fehlgeschlagenen Tests unterdrückt. Keine Geräteinstallation oder connectedAndroidTest.
+
+### 49.5 ABA und weiterhin offene Pfade
+
+**GETESTETER NEGATIVFALL / BLOCKER:** A → B → A wird ohne monotone persistierte Revision
+nicht erkannt. Derselbe alte Expected-A kann danach wieder erfolgreich schreiben.
+Der Negativtest `rolePlanExpectedIsImmutableAndSchema11CannotDetectAba` bleibt erhalten.
+Vollvergleich verhindert typische Lost Updates, behauptet keine vollständige ABA-
+Sicherheit. Generation, Requestzähler, Zeitstempel und flüchtige Mutationsepoche sind
+keine persistierte Planrevision. Eine monotone Revision samt allen Writerhooks und
+Migration benötigt später eine gesonderte Prüfung/Freigabe; keine Schema-12-Migration.
+
+**Inventar NOT FULLY CAS SAFE, unverändert:**
+
+- Rollenrename: `OperationsModel.renameRole` → `ProductOperationsRepository.renameRole`
+  → `OperationsStore.role` liest die aktuelle Rolle, hat aber keinen Expected-Rollenwert.
+  Zwei veraltete Namenseditoren sind damit nicht allgemein gegen Lost Updates geschützt.
+- Rollenlöschung: `OperationsModel.deleteRole` → Repository → `deleteRole` prüft aktuelle
+  Existenz und Referenzen/IN_USE in der Transaktion, hat aber keinen Expected-Rollenwert.
+  Die Bestätigung benennt keinen revisionsgebundenen Zustand. Keine allgemeine CAS-/ABA-
+  Garantie für veraltete Löschformulare; bestehende FK-/Referenzsicherheit bleibt erhalten.
+- Live-Snapshot-/Action-/Taskeditoren behalten ihre bestehenden spezifischen Expected-
+  Vergleiche; keine universelle monotone Revision oder vollständige Editor-CAS-Freigabe.
+  Personen-Vollzustands-CAS aus §48 unverändert, einschließlich eigener ABA-Grenze.
+
+[#35](https://github.com/JulianGKK/action-planner/issues/35): Writer-/Invalidierungsvertrag
+beibehalten; unverdrahtete Familien aus §46/47 bleiben **UNWIRED / NOT SAFE FOR RAM REUSE**.
+[#36](https://github.com/JulianGKK/action-planner/issues/36): P3a-Plan-Vollvergleich und
+gezieltes Formular **IMPLEMENTIERT / GETESTET**, monotone Revision und übrige Editorpfade
+offen. [#37](https://github.com/JulianGKK/action-planner/issues/37): Snapshotowner
+**NOCH NICHT ANGEBUNDEN**. [#38](https://github.com/JulianGKK/action-planner/issues/38):
+keine RAM-Hits, Cacheaktivierung, Navigationseinbindung oder Performancefreigabe.
+[#32](https://github.com/JulianGKK/action-planner/issues/32): Cursor-/Cleanup-**BLOCKER**
+weiter offen; `SQLCipherStatement.close()` schließt den Cursor nicht explizit.
+Hostabschluss/FD-PASS beweisen keine vollständige native Cursorfreigabe.
+
+Unverändert: SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink,
+B2Driver, Schema 11, 180 s absolut/30 s READY idle und 8+8-MiB-Sicherheitsbudget.
+Keine neue Sessionautorität, Snapshotowner, Berechtigung oder Dependency. Keine
+Geräteinstallation/Instrumentation, keine Änderung installierter Apps, kein Produktupdate.
+
+Geändert: Operations.kt (Domain/API), ProductOperationsRepository.kt, OperationsDatabase.kt
+(nur DAO-SELECTs), OperationsModel.kt/OperationsScreen.kt, CoreWriterIntegrationTest.kt,
+HostCoreWriterData.kt, OperationsModelTest.kt, OperationsStorageTest.kt,
+CoreWriterBoundaryStorageTest.kt, notwendige OperationsRepository-Testdoubles/Fixtures
+und dieser Abschnitt. Keine fachliche Änderung anderer Writerfamilien.
+`git diff --check`, `git status -sb`, regulärer WIP-Commit/Push und unabhängiger Remote-
+SHA-Abgleich gehören zum Abschluss. Keine APKs/Schlüssel/Datenbanken/Rohlogs/Credentials/
+persönlichen Pfade/Gerätekennungen einchecken. Danach **STOPP bis zum unabhängigen
+GitHub-Review**. Kein Force-Push, Merge oder Release; keine vollständige Release-1.0-Freigabe.

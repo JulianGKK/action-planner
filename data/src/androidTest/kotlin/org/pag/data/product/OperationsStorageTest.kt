@@ -45,7 +45,8 @@ class OperationsStorageTest {
     private fun <T> value(result:OperationsResult<T>):T {assertTrue(result is OperationsResult.Value);return (result as OperationsResult.Value).value}
     private fun rejected(result:OperationsResult<*>,reason:OperationsFailure){assertEquals(OperationsResult.Rejected(reason),result)}
     private fun role(i:ProductInventory,name:String="Blockierende",a:String="a")=value(write(i){it.role(a,null,name)})
-    private fun plan(i:ProductInventory,p:String,ids:Set<String>,primary:String?=null)=value(write(i){it.plan("a",p,PersonRolePlan(ids,primary))})
+    private fun expected(i:ProductInventory,p:String)=ExpectedPersonRolePlan("a",p,board(i).persons.single{it.person.id==p}.plan)
+    private fun plan(i:ProductInventory,p:String,ids:Set<String>,primary:String?=null)=expected(i,p).let{old->value(write(i){it.plan("a",p,old,PersonRolePlan(ids,primary))})}
     private fun board(i:ProductInventory,a:String="a")=value(use(i){d->d.withReadTransaction{OperationsStore(d,context()){++time}.board(a)}})
     private fun advance(i:ProductInventory,a:String="a",from:ActionStatus=ActionStatus.PREPARATION)=use(i){it.advanceAction(a,from,context())}
     private fun state(i:ProductInventory,p:String="Motte")=board(i).persons.single{it.person.id==p}.state!!
@@ -68,10 +69,18 @@ class OperationsStorageTest {
         val i=fixture();val support=role(i,"Support");val gesa=role(i,"Gesa-Support");val foreign=role(i,"Other","b")
         plan(i,"Supporter",setOf(support.id,gesa.id),support.id)
         assertEquals(PersonRolePlan(setOf(support.id,gesa.id),support.id),board(i).persons.single{it.person.id=="Supporter"}.plan)
-        rejected(write(i){it.plan("a","Supporter",PersonRolePlan(setOf(support.id),gesa.id))},OperationsFailure.INVALID)
-        rejected(write(i){it.plan("a","Supporter",PersonRolePlan(setOf(foreign.id),foreign.id))},OperationsFailure.NOT_FOUND)
-        rejected(write(i){it.plan("b","Supporter",PersonRolePlan(emptySet(),null))},OperationsFailure.NOT_FOUND)
+        val old=expected(i,"Supporter")
+        rejected(write(i){it.plan("a","Supporter",old,PersonRolePlan(setOf(support.id),gesa.id))},OperationsFailure.INVALID)
+        rejected(write(i){it.plan("a","Supporter",old,PersonRolePlan(setOf(foreign.id),foreign.id))},OperationsFailure.NOT_FOUND)
+        rejected(write(i){it.plan("b","Supporter",ExpectedPersonRolePlan("b","Supporter",PersonRolePlan(emptySet(),null)),PersonRolePlan(emptySet(),null))},OperationsFailure.NOT_FOUND)
         assertTrue(board(i,"b").persons.single().plan.roleIds.isEmpty())
+    }
+    @Test fun expectedPlanRejectsSecondOldEditorThroughProductBoundary() {
+        val i=fixture();val role=role(i);val r=repo(i)
+        val old=ExpectedPersonRolePlan("a","Motte",PersonRolePlan(emptySet(),null))
+        r.planRoles("a","Motte",old,PersonRolePlan(setOf(role.id),role.id)){assertEquals(OperationsResult.Value(Unit),it)}
+        r.planRoles("a","Motte",old,PersonRolePlan(emptySet(),null)){assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),it)}
+        assertEquals(PersonRolePlan(setOf(role.id),role.id),board(i).persons.single{it.person.id=="Motte"}.plan)
     }
     @Test fun renameAndDeleteCannotCascadeAssignments(){
         val i=fixture();val r=role(i);plan(i,"Motte",setOf(r.id),r.id)
@@ -121,7 +130,7 @@ class OperationsStorageTest {
         rejected(write(i){it.snapshot("a","Motte",fake,OperationalStatus.ON_SITE,r.id,"")},OperationsFailure.NOT_ALLOWED)
         plan(i,"Motte",setOf(r.id),r.id);advance(i)
         val liveRole=role(i,"Ad hoc")
-        rejected(write(i){it.plan("a","Motte",PersonRolePlan(emptySet(),null))},OperationsFailure.NOT_ALLOWED)
+        rejected(write(i){it.plan("a","Motte",ExpectedPersonRolePlan("a","Motte",PersonRolePlan(emptySet(),null)),PersonRolePlan(emptySet(),null))},OperationsFailure.NOT_ALLOWED)
         rejected(write(i){it.role("a",r.id,"Must not rename")},OperationsFailure.NOT_ALLOWED)
         rejected(write(i){it.deleteRole("a",r.id)},OperationsFailure.NOT_ALLOWED)
         update(i,s=OperationalStatus.ON_SITE,role=liveRole.id);advance(i,from=ActionStatus.ACTIVE)
