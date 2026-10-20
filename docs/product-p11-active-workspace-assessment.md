@@ -4887,3 +4887,124 @@ Nur Test-/Fixture-/Berichtsdateien. Keine APKs, Schlüssel, Datenbanken, Rohlogs
 persönlichen Pfade, Gerätekennungen oder echten Produktdaten im Commit. Regulärer
 WIP-Commit/Push mit unabhängigem Remote-SHA-Abgleich; danach STOPP bis zum
 unabhängigen GitHub-Review. Kein Force-Push, Merge, Release oder Produktupdate.
+
+
+## 42. Stufe 2A-2b – Android-Laufzeitergebnisse
+
+### 42.1 Freigabe und Artefaktprüfung
+
+**AUF SAMSUNG GETESTET (2026-10-20):** Ausgangscommit
+`98d50f05c34862aa3aea69b2643c591550239c0f`, Branch
+`p11-performance-optimization`, vor Beginn sauberes Arbeitsverzeichnis.
+Ausdrückliche einmalige Benutzerfreigabe für Installation, genau einen Lauf der
+vier festgelegten Taskmethoden und anschließende Entfernung ausschließlich von
+`org.pag.data.unlockprobe`. Genau ein autorisiertes Samsung ausgewählt;
+keine Produktinstallation, kein Release oder Merge.
+
+Ausschließlich die eingefrorene korrigierte APK aus Abschnitt 41 verwendet:
+SHA256 `e2965c50aea142da8157bd914964b0a9388bbb861fbd739df26dd04d8c2bf115`.
+Kein Neubuild. `tools/p11bounded/TASKS.md` vollständig gelesen und
+`verify_apk.py --mode tasks` mit dessen unverändertem vollständigen Selektor
+vor Installation erfolgreich ausgeführt. Kryptografische Signatur gegen den
+bereits unabhängig vorhandenen Zertifikatsnachweis geprüft; Keystore-Dateihash
+entspricht ebenfalls dem früheren unabhängigen Nachweis. Vertrauen nicht aus
+der zu prüfenden APK abgeleitet.
+
+APK-Hash, Signatur, Paketkennung und Self-Target-Instrumentation mit
+AndroidJUnitRunner bestätigt; enges Manifest ohne Permissions, zusätzliche
+Komponenten oder Queries, Backup/Cleartext deaktiviert, Standard-Application,
+ARM64-SQLCipher sowie alle vier Methodensymbole vorhanden. Installation ohne
+`-r`, keine zweite APK. Danach installierte APK zurückgelesen: Bytes/Hash exakt
+identisch zum verifizierten Artefakt, damit auch dessen Signatur; Paketmetadaten
+und Instrumentation-Self-Target erneut bestätigt. Kein Launcherstart.
+
+### 42.2 Vier Einzelresultate und tatsächlicher Runnerabschluss
+
+Genau ein `am instrument -w -r` mit dem festen Vier-Methoden-Selektor.
+Kein `connectedAndroidTest`, keine zusätzlichen Tests, kein Retry, keine
+Assertionänderung oder Neuinstallation.
+
+| Methode in `BoundedTaskRoomTest` | Ergebnis |
+|---|---|
+| `boundedTasksMatchLegacyBoardIncludingEventsAndDerivedViews` | PASS |
+| `nonActiveAndMissingAreDenied` | PASS |
+| `publicationAndRevokeCannotReturnTaskPayload` | PASS |
+| `oversizeTemplateRefusedAndRepeatedReadsRemainConsistent` | PASS |
+
+Für jede dieser exakt vier Methoden je ein Startstatus 1 und Abschlussstatus 0,
+keine weitere Methode, kein FAIL/ERROR/SKIP. Tatsächliche Runnerreihenfolge:
+Publication/Revoke, Legacyvergleich, Übergröße/Wiederholungen, Nicht-ACTIVE/fehlend.
+Regulärer Abschluss: `OK (4 tests)`, `INSTRUMENTATION_CODE: -1`, ADB-Exitcode 0;
+Runnerzeit 23,858 Sekunden. Diese Zeit ist keine Produktperformancemessung.
+
+**DURCH BESTANDENE ASSERTIONS BELEGT:** Vollständige 40-Task-Boards als Value,
+Vergleich mit echtem TaskRepository einschließlich Taskinhalten, vollständiger
+geordneter Eventchronik und abgeleiteter Ansichten. Vor Transition 40 CREATED-
+Events, danach 41 Events mit genau einem zusätzlichen STARTED für den betroffenen
+Task; vorherige Events bleiben erhalten. 40 Tasks und 40/41 Events überschreiten
+jeweils die Batchgröße 32 und durchlaufen mehrere Task-/Eventbatches. Keine
+separate Laufzeit-Queryzählung behauptet.
+
+Nicht-ACTIVE und fehlende Aktion korrekt verweigert. Publicationgrenze tatsächlich
+über den Callback genau einmal erreicht und dort verweigert, mit positiven Reads
+vorher/nachher. Nach Revoke keine Payload und kein weiterer Publicationversuch.
+
+Übergrößentest: vollständiger Ausgangsread und drei weitere vollständige,
+identische erfolgreiche Reads; anschließend erfolgreiche einmalige Erstellung
+des Tasks mit der fachlich zulässigen 200000-`x`-Templatekennung, erst danach
+BUDGET_REFUSED. Keine vorzeitige Budgetablehnung als positiver Read gewertet.
+FD-Toleranz nach den erfolgreichen Wiederholungen bestanden (`nachher <= vorher + 2`);
+absolute FD-Zahlen werden vom Test nicht ausgegeben.
+
+### 42.3 Ressourcen, Bereinigung und Paketstatus
+
+Im vollständigen Instrumentationstream keine gemeldeten SQLCipher-/Roomfehler,
+Runnerabbrüche oder Cleanupfehler. Die bestandenen Methoden schließen die
+Fixture-`use`-Blöcke ohne gemeldete Close-Exception ab. Das beweist weder die
+physische Entfernung sämtlicher Testdateien durch die Fixture noch native
+Cursorfreigabe: Die Fixture prüft den Boolean ihrer Verzeichnislöschung weiterhin
+nicht. Keine zusätzlichen Appdaten-/Datenbankprüfungen vorgenommen.
+
+**STATISCHER BEFUND WEITER OFFEN / BLOCKER:**
+`SQLCipherStatement.close()` schließt den Cursor nicht explizit.
+Ein FD-PASS beweist keine vollständige native Cursorfreigabe, keine langfristige
+CursorWindow-/FD-Freiheit und keinen Statement-Cursor-Close. DB-/Driver-/Leaseende
+und native Ressourcenlebensdauer bleiben getrennt zu bewerten. Kein Treiberfix.
+
+Vorher ausschließlich Paketmetadaten der drei freigegebenen Paketkennungen
+erfasst, keine Appdaten oder Datenbanken bestehender Apps geöffnet:
+
+| Paket | Vorher | Nach Installation / vor Entfernung | Nachher |
+|---|---|---|---|
+| `org.pag.prototype.a` | vorhanden | Version, firstInstallTime, lastUpdateTime und Signaturmetadaten unverändert | unverändert vorhanden |
+| `org.pag.perf.p11probe` | vorhanden | Version, firstInstallTime, lastUpdateTime und Signaturmetadaten unverändert | unverändert vorhanden |
+| `org.pag.data.unlockprobe` | nicht vorhanden | neu installiert, verifizierte APK-Identität und Self-Target bestätigt | entfernt, Abwesenheit bestätigt |
+
+Vor Deinstallation temporäre Paketidentität einschließlich Version,
+Installationszeiten und Signaturmetadaten erneut mit dem Zustand unmittelbar
+nach Installation verglichen; identisch. Ausschließlich das in diesem Lauf
+neu installierte temporäre Paket deinstalliert, Ergebnis `Success`.
+Kein `pm clear`, keine andere App entfernt. Abschließender Metadatenvergleich
+für beide geschützten Apps identisch zum Vorzustand. Rohbelege verbleiben lokal;
+keine Gerätekennungen, persönlichen Pfade, APKs, Credentials oder Rohlogs im Git.
+
+### 42.4 Verbleibende technische BLOCKER und Umfang
+
+Der ausstehende Androidnachweis genau dieser vier korrigierten Methoden ist
+jetzt erbracht. Offen bleiben separate reale Grenz-/Unicode-/Fehlerpfadabdeckung,
+Cursor-/CursorWindow-Lebensdauer, Ressourcen- und Budget-/Kopierkalibrierung sowie
+der realistische Größen-/Performancevertrag für 200 Personen/1000 Aufgaben.
+Die 40-Task-Fixture löst den dokumentierten Größenkonflikt nicht.
+
+Gemeinsame Admission/Ownership, Mutations-/Outcome-/UNKNOWN-/Recoveryhooks und
+Personrename-/Editor-/Permission-/Statusversionierung bleiben vor gemeinsamer
+Snapshotintegration erforderlich. Keine neue Produktperformance oder
+Snapshotfreigabe, keine Änderung an Produktcode, Budgets, Schema, Abhängigkeiten,
+Navigation, Writer oder Sessionregeln.
+
+Einzige geänderte versionierte Datei:
+`docs/product-p11-active-workspace-assessment.md` (dieser Abschnitt).
+Kein neuer Build, da nur Ergebnisdokumentation geändert und ausschließlich das
+freigegebene eingefrorene Artefakt getestet wurde. Nach Dokumentationscommit und
+regulärem Push mit unabhängigem Remote-SHA-Abgleich STOPP bis zum unabhängigen
+GitHub-Review; kein Force-Push, Merge, Release oder Produktupdate.
