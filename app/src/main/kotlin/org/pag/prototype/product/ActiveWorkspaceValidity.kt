@@ -1,5 +1,6 @@
 package org.pag.prototype.product
 
+import java.util.concurrent.atomic.AtomicBoolean
 import org.pag.domain.AccessPoint
 import org.pag.domain.AccessScope
 import org.pag.domain.ActionStatus
@@ -174,24 +175,37 @@ internal class ActiveWorkspaceValidity(
         publication: () -> Unit): Boolean {
         val frozen = parts.toSet()
         val c = context() ?: return false
-        var delivered = false
+        var executed = false
+        val window = AtomicBoolean(true)
+        val claimed = AtomicBoolean()
         val accepted: Boolean
         try {
             accepted = c.publish {
-                if (bindingValid() && pending == null && !publishing &&
-                    mutationEpoch == expectedMutation && loadEpoch == expectedLoad) {
-                    publishing = true
-                    try {
-                        publication()
-                        if (bindingValid()) { clean.addAll(frozen); delivered = true }
-                    } finally { publishing = false }
+                // Only the synchronous first central callback can touch owner state. Late
+                // callbacks are inert; a foreign-thread callback cannot mutate the owner.
+                if (window.get() && claimed.compareAndSet(false, true)) {
+                    owner()
+                    if (bindingValid() && pending == null && !publishing &&
+                        mutationEpoch == expectedMutation && loadEpoch == expectedLoad) {
+                        publishing = true
+                        try { publication(); executed = true } finally { publishing = false }
+                    }
                 }
             }
         } catch (error: Throwable) {
             terminate(State.RECOVERY_REQUIRED)
             throw error
+        } finally { window.set(false) }
+        return try {
+            if (!accepted) { terminate(State.REVOKED); false }
+            else if (!executed) false
+            // Executed is not central acceptance. False cannot undo callback side effects.
+            else if (!c.check(AccessPoint.PUBLICATION) || context() == null || pending != null ||
+                mutationEpoch != expectedMutation || loadEpoch != expectedLoad) {
+                terminate(State.REVOKED); false
+            } else { clean.addAll(frozen); true }
+        } catch (error: Throwable) {
+            terminate(State.RECOVERY_REQUIRED); throw error
         }
-        if (!accepted && state == State.ACTIVE) terminate(State.REVOKED)
-        return delivered
     }
 }

@@ -6041,3 +6041,260 @@ Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade o
 Gerätekennungen im Commit. Regulärer WIP-Commit/Push; unabhängiger Remote-SHA-Abgleich;
 danach **STOPP bis zum unabhängigen GitHub-Review**. Kein Force-Push, Merge, Release
 oder Produktupdate. Release 1.0 nicht als performant/produktionsreif freigegeben.
+
+
+## 47. Issues #35/#37 – Gemeinsame Action-, Personen- und Operationswriter
+
+### 47.1 Implementierter Umfang und Sicherheitskorrektur
+
+**IMPLEMENTIERT (2026-10-20):** sauberer Branch `p11-performance-optimization`,
+Ausgangsbasis `ec1468741fc9dbeac77f59f9cf8f13e1352449ff` lokal und unabhängig über
+GitHub bestätigt. Neben Tasks jetzt sämtliche produktiven Action-, P3a-Personen-
+und Operationswrites mit synchroner Vor-Queue-Invalidierung, tatsächlichem äußeren
+Transaktionsbeleg, getrenntem Cleanup und einmaligem Mainabschluss. Keine globale
+Cachefreigabe, Navigation oder Installation.
+
+**Nachgewiesener Publicationfehler:** Im bisherigen `ActiveWorkspaceValidity.publish`
+wurde `delivered=true` innerhalb des Callbacks gesetzt und nach einem zentralen
+`false` trotzdem zurückgegeben. Ein erst nach dem Callback eintretender Revoke wurde
+vor dem Rückgabewert nicht verifiziert; derselbe zentrale Callback konnte außerdem
+mehrfach Sideeffects ausführen. Gegen die unveränderte Basis liefen die ersten vier
+neuen Hostmethoden mit **drei Fehlern**, eine bestehende Ticket-Einmalbedingung war
+bereits korrekt. Keine Änderung an SessionCoordinator oder StorageAccess als Umgehung.
+
+**KORRIGIERT UND GETESTET:** nur die erste synchrone Callbackinvokation im geöffneten
+Publicationfenster kann Ownerzustand berühren. Doppelte oder nach Rückkehr eintreffende
+Callbacks sind inert. Clean-Markierung/positiver Rückgabewert erst nach zentralem
+`accepted=true`, tatsächlich ausgeführtem Callback und erneuter Prüfung des ursprünglichen
+PUBLICATION-Kontexts sowie aktueller Binding-/Generation-/Permission-/Mutations-/
+Loadepochen. Zentral verweigert oder bei den finalen Prüfungen widerrufen:
+**false**, keine Wiederverwendung; Gateexception nach Callback: RECOVERY_REQUIRED,
+kein positiver Abschluss. Verbrauchte Read-/Mutationtickets bleiben einmalig.
+
+Die fünf neuen Publication-Hostmethoden prüfen zentral `false` **nach** ausgeführtem
+Callback, Revoke/Permission-/Generation-/Actionwechsel bzw. Ownerrevoke vor Rückkehr,
+doppelte/deferred/späte Callbackinvokation, doppelte Ticketpublication und einen
+geworfenen finalen Authoritycheck. Die Sideeffectzähler belegen ausdrücklich:
+**Ein bereits ausgeführter Effekt bleibt ausgeführt. false ist keine Rückabwicklung.**
+
+### 47.2 Sicherer atomarer Owner-Publication-Vertrag – weiterhin Anschlussblocker
+
+Die korrigierte Metadatenklasse ist kein produktiver Payloadowner und keine
+Transaktion für beliebige UI-Callbacks. Sie kann nachträglich beobachteten Revoke
+oder Verweigerung melden, aber keine bereits angezeigte Information zurückholen.
+Auch ein positives Ergebnis ist keine dauerhafte Autorisierung nach Methodenrückkehr.
+Für [#37](https://github.com/JulianGKK/action-planner/issues/37) verbindlich:
+
+1. Vollständigen, budgetzugelassenen Payload und immutable Referenzhülle **vor** der
+   Ownerpublication vorbereiten; sämtliche DB-/Key-/Ressourcenabschlüsse davor.
+2. Der Callback unter dem bestehenden zentralen `StorageContext.publish` darf nur den
+   vorbereiteten Referenzslot des **einzigen** Owners austauschen, nach Prüfung von
+   Scope, Generation, Permission, Action, Mutationsepoche und erwarteter Slotidentität.
+   Keine IO, Navigation, Notifications, Formularwrites oder sonstigen irreversiblen
+   UI-Effekte als angeblich atomaren Publicationcallback verwenden.
+3. Scope-/Permission-/Sessionrevoke muss synchron denselben Owner serialisieren und
+   dessen Referenzslot/Seiten/Formulare leeren; nicht erst über einen verspäteten
+   UI-Observer. Kein Ownerlock unter dem Koordinatormonitor. Nach zentralem false oder
+   unklarem Abschluss darf der Slot nicht als gültig erreichbar bleiben; niemals einen
+   alten Slot in eine inzwischen gewechselte Generation zurückkopieren.
+4. Acknowledgement nur bei zentraler Annahme **und** noch gültigem gebundenem Slot.
+   Auch jeder spätere Zugriff benötigt frische zentrale Autorität. Nachträgliches
+   boolesches Prüfen allein macht beliebige UI-Sideeffects nicht atomar.
+
+**NOCH NICHT ANGEBUNDEN / BLOCKER:** dieser Referenzslot-/Revoke-/Lebensdauervertrag
+und seine atomare Produktkomposition. Er ist hier dokumentiert, nicht als bereits
+implementierter Snapshotowner ausgegeben. ProductViewModel/TaskModel/TaskScreen und
+Produktnavigation bleiben unangetastet; keine produktiven RAM-Hits.
+
+### 47.3 Ein Port, eine Epoche, alle Kernwriter
+
+`WorkspaceMutationInvalidation` wird erweitert, nicht durch eine zweite Epochmaschine
+ersetzt. Feste `WorkspaceWriterFamily`-Metadaten: TASK, ACTION_CREATE, ACTION_EDIT,
+ACTION_STATUS, PERSON, OPERATIONS. ACTION_CREATE ist eine globale Actionlistenänderung
+mit explizit null Scope-ID; alle übrigen Anfragen tragen ihre Action-ID. Kein neues
+Session-/Berechtigungstoken und kein vom UI frei wählbarer Projektions-Subset.
+
+**ProductRuntime injiziert genau dieselbe Portinstanz** in Action-, Personen-,
+Operations- und Taskrepository. Keine zusätzlichen unabhängigen Family-Epochen.
+Der ungecachte Default `UncachedWorkspaceMutations` besitzt weiterhin eine einzige
+Epoche und höchstens eine Pending-/Latest-Identität. Seine RAM-Reuse-Antwort bleibt
+unveränderlich false. Die bisherigen Standalone-Konstruktoren bleiben für isolierte
+ungecachte Komponenten/Tests quellkompatibel; sie dürfen nicht als Komposition eines
+gemeinsamen Produkt-Snapshots verwendet werden. Dafür ist der gemeinsame injizierte
+Port zwingend. Keine Registry und kein zweiter Snapshotowner.
+
+Der bestehende `ActiveWorkspaceMutationAdapter` delegiert weiterhin auf **dieselbe**
+ActiveWorkspaceValidity-Instanz. Tasks invalidieren wie zuvor PEOPLE/TASKS/TASK_COUNTS;
+alle neuen Kernfamilien konservativ **alle fünf Projektionen**, einschließlich Action,
+Operations/Funktionen, Personen- und Tasklabels. `beginMutation` erhöht genau einmal
+Mutation-/Loadepoche und verwirft alte Read-/Patchtickets. Damit sind alte Kernseiten,
+Details und komplette Binding+Epoch-Snapshotidentitäten vor dem Writequeue-Eintrag
+ungültig. Pending verhindert jeden Reuse-/Readbeginn dieser Validityinstanz.
+
+Nach Commit oder bestätigtem Rollback bleiben alle betroffenen Teile dirty. Kein
+Repositorycallback ist ein vollständiger Kernpatch und keiner ruft publishMutation
+für einen Teilpayload auf. Bei Action-/Generation-/Permissionwechsel oder ACTIVE-
+Statusausstieg muss die vertrauenswürdige Bindingquelle ungültig werden; die Tests
+prüfen, dass die alte Instanz dann terminal revokt wird. Eine neue ACTIVE-Bindung
+braucht einen neuen, vollständig verifizierten Scope. Persistierte ACTIVE-Preflights
+verweigern außerdem einen Kernread für inzwischen COMPLETED. Der zukünftige einzige
+Owner-/Bindingadapter bleibt ausdrücklich unverdrahtet (#37).
+
+Alte Task-only-Portimplementierungen verweigern neue Familien standardmäßig mit null,
+statt still an deren Invalidierung vorbeizuschreiben. Falsche Action/Generation am
+ACTIVE-Adapter: keine Queue, alte Validity revokt. Änderungen an anderen Aktionen
+benötigen die spätere korrekte Owner-/Scope-Routingkomposition; keine Lockerung des
+bestehenden Single-ACTIVE-Bindingvertrags. Produktiver ungecachter Default ist nicht
+auf eine UI-Action gebunden und verwendet weiterhin die reale READY-Autorität.
+
+### 47.4 Tatsächliche Transaktion, Cleanup und Writer-Matrixdelta
+
+`WorkspaceWriteBoundary` und `confirmedWorkspaceTransaction` sind die gemeinsame
+Implementierung des bereits geprüften Taskvertrags. Alte Taskseams `TaskMutationBoundary`,
+`TaskWriteProgress` und `confirmedTaskTransaction` bleiben als dünne Delegates/Typalias
+erhalten; **die vorhandenen Taskwriter-Proofquellen wurden nicht geändert**.
+Ein reiner interner DAO-Port `CoreWriterData` erlaubt denselben Action-/Personen-/
+Operationsstore auf echtem SQLite im Hosttest; produktiv delegiert er auf dieselben
+Room-DAOs. Keine neue Datenbank-/Schlüssel-/Storageautorität.
+
+Für jede der folgenden Zeilen: BEGIN nach READY-Zulassung synchron vor worker.execute;
+Worker umschließt Inventory + originale DB-Keylease + ActionDatabaseAccess.use;
+Room.useWriterConnection + neuer **äußerer** IMMEDIATE-T; kein bereits offener Parent-T
+zugelassen. Fachresultate steuern nur den gewünschten Commit oder expliziten
+`TransactionScope.rollback(result)`. **Erst der erfolgreiche äußere END/ROLLBACK-
+Rücklauf mit inTransaction()==false ist der Beleg.** Geworfener Open/BEGIN/Body/END/
+ROLLBACK: UNKNOWN, selbst wenn SQL in Wirklichkeit bereits committed oder zurückgerollt
+ist. Kein SAVEPOINT-Erfolg als Gesamtcommit und keine automatische Wiederholung.
+
+COMMITTED / ROLLED_BACK / UNKNOWN und COMPLETE / FAILED_OR_UNCONFIRMED bleiben getrennt.
+COMPLETE erst nach normaler Rückkehr aus dem gesamten DB-/Keyscope; ein bekannter
+Commit mit geworfenem Cleanup ist kein erfolgreicher Gesamtabschluss. Main-Finish
+meldet diesen Beleg einmal, danach ursprüngliche Contextpublication + aktuelle
+Ticketprüfung. Doppelter Workerdispatch führt nicht zu einem zweiten Write; doppelter
+Mainabschluss nicht zu einem zweiten Callback. Fehlender Maindispatch bleibt Pending.
+
+| Produktiver Writeeinstieg | tatsächlicher T / fachliche Besonderheit | konservativ invalidiert vor Queue | neuer Anschluss |
+|---|---|---|---|
+| ProductActionRepository.createAction | neue UUID-Action, DRAFT-INSERT; Syntaxablehnung bleibt vor Queue wie bisher; äußerer Commit separat bestätigt | alle Kernteile + Actionlisten-/Bindingepoch | IMPLEMENTIERT |
+| updateAction → ActionWriterStore.change | unveränderter vollständiger expected-Actionvergleich; Felder/Status und UPDATE im selben T | alle Kernteile, Seiten, Header/Details | IMPLEMENTIERT |
+| advanceActionStatus → ActionWriterStore.advance | expectedStatus; PREPARATION→ACTIVE: sämtliche Personensnapshots aus Planung + Actionstatus **atomar**; ACTIVE→COMPLETED: Status + completedAt; kein unabhängiger Snapshotcommit | gesamter Kern, Seiten/Details und Binding+Epochidentität | IMPLEMENTIERT |
+| ProductPersonRepository.createPerson/updatePerson | unveränderte PREPARATION-Regel; Duplikatcheck/INSERT oder Rename im T; kein neuer expected-Person-CAS | Personenkarten, Funktionsmitglieder, Operations-/Tasklabels, Details; konservativ gesamter Kern | IMPLEMENTIERT; #36 bleibt offen |
+| ProductOperationsRepository.createRole/renameRole/deleteRole | bestehende Phasenregeln/Normalisierung/Duplikate; Delete prüft Planungs-/Live-/Taskreferenzen, IN_USE bleibt Rejection | Funktionsidentitäten/-zähler/-mitglieder, Personen-/Tasklabels/Details; gesamter Kern | IMPLEMENTIERT |
+| planRoles | primary plan/assignments im selben T; vor Queue ausgewählte roleIds defensiv eingefroren | Planung/Details, spätere ACTIVE-Snapshots; gesamter Kern | IMPLEMENTIERT |
+| updateSnapshot | bisheriger vollständiger expected-Operationssnapshot; Status/Rolle/Ort/Updatezeit im T; fremde Rolle wird auch bei danach löschendem Status verweigert | Statusverteilung, exakte ON_SITE-Zähler/-Mitglieder, Ohne Funktion und Personen-/Taskanzeigen; gesamter Kern | IMPLEMENTIERT |
+| Tasks/TaskEvents | unveränderte Fachlogik/atomare Ereignisse aus §46; dieselbe gemeinsame Dispatch-/Transaktionsimplementierung | bisherige konservative Taskteile + globale Epoche | ERHALTEN / GETESTET |
+
+Die alten `ActionDatabase.changeAction/advanceAction/changePerson`-Transaktionswrappers
+bleiben für bestehende Storageproofs verfügbar. **Produktive neue Writepfade rufen
+Storebodies im gemeinsamen äußeren T auf**, nicht diese Wrappers als vermeintliche
+Commitbelege innerhalb eines Parent-T. Sämtliche bisherigen Persistenz-/Status-/
+Referenz-/COMMIT-Gates bleiben erhalten; Schema/DAOs/Driver mussten nicht geändert werden.
+
+API-Grenzen ausdrücklich:
+
+- Zweiter überlappender Write wird vor Queue verweigert; es gibt keine unbegrenzte
+  Writerqueue. Actionänderung/Operations/Tasks erhalten vorhandenes STALE, Personen
+  vorhandenes NOT_ALLOWED (das P3a-Resultat kennt kein BUSY/STALE). Das ist eine
+  Vor-Queue-Ablehnung **ohne** SQL-/Rollbackbeleg, keine behauptete DB-Rechteänderung.
+- `createAction` hat nur `(Action)->Unit`, keinen Rejectionkanal. Bei verweigertem
+  Queuezugang daher kein Callback und kein Write, wie bei bisheriger Authorityablehnung.
+  Keine erfundene Action, kein Korruptionssignal. Vollständiges Busy-/Fehlerfeedback
+  benötigt einen eigenen API-/Editorvertrag; hier nicht als gelöst ausgegeben.
+- Pseudonymänderungen bleiben PREPARATION-only; Rollen-Rename/-Delete/Planung ebenso.
+  Kein ACTIVE-Schreibrecht hinzugefügt. Das Invalidierungsprotokoll gilt auch für diese
+  Vorbereitungsschritte, weil sie spätere Kernlabels/Snapshots bestimmen.
+- Zwei nacheinander zugelassene Personenänderungen aus alten Formularen können weiter
+  beide committen; der letzte Pseudonymwrite gewinnt. Der neue echte SQLtest belegt
+  dies ausdrücklich als **unbehobenen** Expected-Person-CAS-/Lost-Updatefall aus #36.
+
+### 47.5 Konkrete Tests und Offlineergebnis
+
+**GETESTET:** zehn neue CoreWriterIntegrationTest-Hostmethoden auf echtem SQLite mit
+allen Schema-11-Tabellen/Indizes/FKs. Tatsächliche unveränderte Storelogik mit echten
+DAO-SQLwrites; derselbe gemeinsame Transaktions-/Dispatchcode wie im Produkt. Native
+Room-/Keyscope- und Bindingrennen bleiben im Host vertrauenswürdig simuliert.
+
+- Actioncreate/Edit/STALE und beide wichtigen Statuswechsel; primäre Rollenplanung
+  wird bei ACTIVE vollständig in NO_STATUS-Snapshots übernommen. Ein echter SQLite-
+  Abbruchtrigger beim zweiten Personensnapshot lässt **null** Teilsnapshots und
+  PREPARATION unverändert zurück, UNKNOWN ohne Callback.
+- Personencreate/Rename/Duplikat und bewusst nachgewiesener fehlender CAS; Rollencreate/
+  Rename/Delete/IN_USE/Planung und Operationsstatus. Frischer kompakter SQL-Kernread
+  bestätigt richtige Pseudonyme/Rollennamen, drei Personen, zwei ON_SITE, eine IN_CUSTODY,
+  exakt eine Person ohne Funktion und eine verwendete Funktion. Kein RAM-Hit.
+- Gemeinsames Pending quer über Personen/Operations/Tasks/Actioncreate, exakt eine
+  Epoche und ein Writequeueeintrag. Legacy-Blank-Taskscope weiterhin ohne Write/Epoch.
+- Für **jede der fünf neuen Writearten** END-vor-/END-nach-Fehler und DB-/Key-Cleanupfehler,
+  Revoke initial/nach Queue/vor Commit/nach Commit/vor Publication, Action-/Permission-/
+  Generationwechsel und doppelte Worker-/Mainrunnables. Persistierte Effekte werden von
+  Callbackfreigabe getrennt geprüft; kein Doppeleffekt durch automatische Wiederholung.
+- Fachrejection **nach** tatsächlichem temporärem SQLwrite: erfolgreiches ROLLBACK entfernt
+  ihn; geworfenes Rollback ist UNKNOWN, nicht aus dem Rejectionobjekt als bestätigt
+  klassifiziert. Cleanupfehler nach bestätigtem Rollback ebenfalls kein Callback.
+
+Drei neue CoreWorkspaceMutationAdapterTest-Methoden prüfen jede Family gegen denselben
+bestehenden Validityowner: vollständige abhängige Dirtysets, Pending gegen RAMread,
+einheitliche Epoche, Task/Core-Überschneidung, Statusausstieg, fremde Scope-ID, Generation,
+Permission, UNKNOWN/Cleanup und fail-closed Verhalten alter Task-only-Adapter.
+Dazu fünf Publication-Racemethoden und sämtliche vorhandenen Task-/Security-Proofs.
+
+**NUR OFFLINE VORBEREITET/KOMPILIERT:**
+`CoreWriterBoundaryStorageTest.sharedNativeWritersAndFrozenPlansKeepConfirmedOutcomesAndOneEpoch`
+übt die tatsächlichen Repositories/Room/B2 mit einem gemeinsamen Port, Actionstatus,
+Personen/Rollen, vor Queue eingefrorenen Plänen, sieben bestätigten Writes/einer Epoche
+pro Write und doppeltem Workerdispatch. Noch **nicht am Gerät ausgeführt**. Die vorhandenen
+Android-/Taskproofs bleiben unverändert und werden nur kompiliert.
+
+Reproduktion fokussiert:
+`./gradlew :data:testDebugUnitTest --tests '*CoreWriterIntegrationTest' --tests '*TaskMutationSqliteTest' :app:testDebugUnitTest --tests '*ActiveWorkspace*' --tests '*CoreWorkspaceMutationAdapterTest' --offline`.
+Vollständiger Abschlusslauf:
+`:app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest :app:assembleDebug
+:data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin
+:app:verifyPrototypeManifest :app:verifyDemoManifest --offline`.
+**625 App + 762 Data + 4 Security = 1391 Hosttests, 0 Fehler, 0 Skips.** Architekturcheck,
+Offline-Appbuild, beide Androidtest-Kompilationen und Produkt-/Demo-Manifeste erfolgreich.
+Keine Geräteinstallation und kein connectedAndroidTest. `git diff --check` sowie
+`git status -sb` geprüft.
+
+### 47.6 Verbleibende BLOCKER und Änderungsgrenzen
+
+- [#35](https://github.com/JulianGKK/action-planner/issues/35): Action/Personen/Operations/
+  Tasks produktiv an gemeinsame Writergrenze angeschlossen und hostgetestet. Kein Pfad
+  erforderte Lockerung eines bestehenden Sicherheitsvertrags. Material/Kosten,
+  Aktionsprotokoll/Gedächtnisprotokolle, Dokument-Staging/Publication/Delete/Recovery,
+  P3b/Leadership/Berechtigungen, Maintenance/Initialisierung sowie implizite Schema-
+  Migrationswrites bleiben **UNWIRED / NOT SAFE FOR RAM REUSE**, siehe vollständige
+  Matrix §46. Keine vollständige globale Invalidierungsabdeckung behauptet.
+- [#36](https://github.com/JulianGKK/action-planner/issues/36): Personen-CAS/Lost Updates,
+  monotone Revision/ABA, familienübergreifendes Editor-/Busy-/Fehlerfeedback und
+  Formularscope bleiben eigene Arbeit; bestehender Action-/Operations-/Taskvergleich
+  wird nicht als universeller CAS ausgegeben.
+- [#37](https://github.com/JulianGKK/action-planner/issues/37): atomarer einziger
+  Payload-/Referenzslot-/Formular-/Seitenowner samt synchronem Revoke und geprüfter
+  Bindingquelle weiter **NOCH NICHT ANGEBUNDEN / BLOCKER**. Falscher Publication-
+  Erfolgswert korrigiert; irreversible Callbacksideeffects nicht rückgängig behauptet.
+- [#38](https://github.com/JulianGKK/action-planner/issues/38): keine Navigation, RAM-Hits,
+  Snapshotaktivierung oder neue Android-Performanceaussage.
+- [#32](https://github.com/JulianGKK/action-planner/issues/32): Cursor-/Cleanup-/Native-
+  Risiko unverändert offen. `SQLCipherStatement.close()` schließt den Cursor nicht
+  explizit; Wrapper-/Hostabschluss und frühere FD-PASS beweisen keine vollständige
+  native Cursorfreigabe. Kein spekulativer Driver-/SQLCipherfix.
+
+Unverändert: SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink,
+B2Driver, Schema 11, 180 s absolut/30 s READY idle und 8+8-MiB-Budget. Die vorhandenen
+Writerbodies behalten ihre bisherigen Datenlese-/Fachregeln; keine neue Retention-
+freigabe für Editor-/Writepayload oder produktiven Snapshot. ProductViewModel,
+TaskModel, TaskScreen und Navigation unangetastet. Keine neuen Dependencies/Permissions,
+Klartextpersistenz, installierten Apps oder Produktupdates.
+
+Neue Dateien: WorkspaceWriteBoundary.kt, CoreWriterData.kt, HostCoreWriterData.kt,
+CoreWriterIntegrationTest.kt, ActiveWorkspacePublicationRaceTest.kt,
+CoreWorkspaceMutationAdapterTest.kt und CoreWriterBoundaryStorageTest.kt.
+Geändert: WorkspaceMutationInvalidation.kt, ActiveWorkspaceValidity.kt,
+ActiveWorkspaceMutationAdapter.kt, TaskMutationBoundary.kt (nur gemeinsame Delegation),
+ProductRuntime.kt, ProductActionRepository.kt, ActionMutations.kt,
+ProductPersonRepository.kt, ProductOperationsRepository.kt und dieser Abschnitt.
+Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
+Gerätekennungen im Commit. Regulärer WIP-Commit/Push, unabhängiger Remote-SHA-Abgleich;
+danach **STOPP bis zum unabhängigen GitHub-Review**. Kein Force-Push, Merge oder Release.
+Keine Freigabe von Release 1.0 als performant/produktionsreif.

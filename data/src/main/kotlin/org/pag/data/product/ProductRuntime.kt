@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 /** Activity-owned composition. No global key/database registry, no retained session. */
 class ProductRuntime(activity: Activity, private val worker: Executor, private val main: Executor,
-    taskMutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(),
+    workspaceMutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(),
     foreground: () -> Boolean) {
     private val noBackupRoot = productNoBackupRoot(activity.noBackupFilesDir)
     private val root = File(noBackupRoot, "pag-db-v1")
@@ -76,13 +76,13 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
     }
     fun close() { session.lock(); keyLifetime.cancel(); leadershipLifetime.cancel(); leadership.revoke(); owner.getAndSet(null)?.invalidate() }
     val actions: ActionRepository = ProductActionRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure)
+        { owner.get() }, worker, main, workspaceMutations, session::storageFailure)
     val workspace:WorkspaceRepository=ProductWorkspaceRepository(activity.applicationContext,session,inventory,
         {owner.get()},worker,main,session::storageFailure)
     val persons: PersonRepository = ProductPersonRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure)
+        { owner.get() }, worker, main, workspaceMutations, session::storageFailure)
     val tasks: TaskRepository = ProductTaskRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure, mutations = taskMutations)
+        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
     val protocol: ProtocolRepository = ProductProtocolRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
     val material: MaterialRepository = ProductMaterialRepository(activity.applicationContext, session, inventory,
@@ -94,7 +94,7 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
     val documents: DocumentRepository = ProductDocumentRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
     val operations: OperationsRepository = ProductOperationsRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure)
+        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
     val leadership: LeadershipRepository = ProductLeadershipRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, MonotonicTime { SystemClock.elapsedRealtime() })
     private val leadershipLifetime = session.observe { state ->

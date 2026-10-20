@@ -3,6 +3,7 @@ package org.pag.data.product
 import android.content.Context
 import androidx.room3.withReadTransaction
 import androidx.room3.withWriteTransaction
+import androidx.room3.useWriterConnection
 import org.pag.data.prototype.b2.StorageAccessRevoked
 import org.pag.domain.*
 import java.util.UUID
@@ -11,7 +12,11 @@ import java.util.concurrent.Executor
 /** No unscoped queries. Status and ownership are checked in the same transaction. */
 class ProductPersonRepository(app: Context, private val access: StorageAccess,
     private val inventory: ProductInventory, private val owner: () -> SessionDbKeyOwner?,
-    private val worker: Executor, private val main: Executor, private val blocked: () -> Unit) : PersonRepository {
+    private val worker: Executor, private val main: Executor, mutations:WorkspaceMutationInvalidation,
+    private val blocked: () -> Unit) : PersonRepository {
+    constructor(app:Context,access:StorageAccess,inventory:ProductInventory,owner:()->SessionDbKeyOwner?,
+        worker:Executor,main:Executor,blocked:()->Unit):this(app,access,inventory,owner,worker,main,UncachedWorkspaceMutations(),blocked)
+    private val mutationBoundary=WorkspaceWriteBoundary(access,worker,main,mutations,blocked)
     private val database = ActionDatabaseAccess(app.applicationContext)
     override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) =
         run(publish) { db, context -> db.withReadTransaction {
@@ -26,10 +31,20 @@ class ProductPersonRepository(app: Context, private val access: StorageAccess,
             PersonResult.Value(db.persons().get(actionId, personId)?.model())
         } }
     override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) =
-        run(publish) { db, context -> db.changePerson(actionId, null, pseudonym, context) }
+        write(actionId,null,pseudonym,publish)
     override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) =
-        run(publish) { db, context -> db.changePerson(actionId, personId, pseudonym, context) }
+        write(actionId,personId,pseudonym,publish)
 
+    private fun write(actionId:String,personId:String?,pseudonym:String,publish:(PersonResult<Person>)->Unit) =
+        mutationBoundary.submit<PersonResult<Person>>(WorkspaceMutation(WorkspaceWriterFamily.PERSON,actionId),publish,
+            {PersonResult.Rejected(PersonRejection.NOT_ALLOWED)},{it is PersonResult.Value}) { c,p ->
+            if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
+            (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->
+                db.useWriterConnection { tx -> confirmedWorkspaceTransaction(tx,c,p,{it is PersonResult.Rejected}) {
+                    PersonWriterStore(RoomCoreWriterData(db),c).change(actionId,personId,pseudonym)
+                } }
+            }}
+        }
     private fun <T> run(publish: (T) -> Unit, work: suspend (ActionDatabase, StorageContext) -> T) {
         val context = access.acquire(AccessScope.READY) ?: return
         val keyOwner = owner() ?: run { blocked(); return }
@@ -49,31 +64,37 @@ private fun requirePersonAccess(context: StorageContext) {
     if (context.scope != AccessScope.READY || !context.check(AccessPoint.STEP)) throw StorageAccessRevoked()
 }
 private suspend fun permitted(db: ActionDatabase, actionId: String, context: StorageContext,
-    writing: Boolean): PersonResult.Rejected? {
+    writing: Boolean): PersonResult.Rejected? = permitted(RoomCoreWriterData(db),actionId,context,writing)
+private suspend fun permitted(data:CoreWriterData,actionId:String,context:StorageContext,
+    writing:Boolean):PersonResult.Rejected? {
     requirePersonAccess(context)
-    val action = db.actions().get(actionId)?.model()
+    val action = data.actions.get(actionId)?.model()
         ?: return PersonResult.Rejected(PersonRejection.ACTION_NOT_FOUND)
     val allowed = if (writing) PersonRules.mayManage(action.status) else PersonRules.mayRead(action.status)
     return if (allowed) null else PersonResult.Rejected(PersonRejection.NOT_ALLOWED)
 }
-/** Internal seam also exercised by deterministic commit-revocation tests. */
-internal suspend fun ActionDatabase.changePerson(actionId: String, personId: String?, pseudonym: String,
-    context: StorageContext): PersonResult<Person> = withWriteTransaction {
-    permitted(this@changePerson, actionId, context, true)?.let { return@withWriteTransaction it }
-    if (!PersonRules.valid(pseudonym)) return@withWriteTransaction PersonResult.Rejected(PersonRejection.INVALID_PSEUDONYM)
-    requirePersonAccess(context)
-    val existing = if (personId == null) null else persons().get(actionId, personId)?.also { it.model() }
-        ?: return@withWriteTransaction PersonResult.Rejected(PersonRejection.NOT_FOUND)
-    val normalized = PersonRules.normalized(pseudonym)
-    requirePersonAccess(context)
-    val duplicate = persons().samePseudonym(actionId, normalized)?.also { it.model() }
-    if (duplicate != null && duplicate.id != existing?.id)
-        return@withWriteTransaction PersonResult.Rejected(PersonRejection.DUPLICATE_PSEUDONYM)
-    val row = existing?.copy(pseudonym = pseudonym, pseudonymNormalized = normalized)
-        ?: PersonRow(UUID.randomUUID().toString(), actionId, pseudonym, normalized, System.currentTimeMillis())
-    requirePersonAccess(context)
-    if (existing == null) persons().insert(row)
-    else if (persons().rename(actionId, personId!!, pseudonym, normalized) != 1) throw ProductStorageFailure()
-    if (!context.check(AccessPoint.COMMIT)) throw StorageAccessRevoked()
-    PersonResult.Value(row.model())
+/** Existing storage proofs keep their transaction wrapper. Product boundary owns the outer T. */
+internal suspend fun ActionDatabase.changePerson(actionId:String,personId:String?,pseudonym:String,context:StorageContext):PersonResult<Person> =
+    withWriteTransaction { PersonWriterStore(RoomCoreWriterData(this@changePerson),context).change(actionId,personId,pseudonym) }
+internal class PersonWriterStore(private val data:CoreWriterData,private val context:StorageContext,
+    private val now:()->Long=System::currentTimeMillis) {
+    suspend fun change(actionId:String,personId:String?,pseudonym:String):PersonResult<Person> {
+        permitted(data, actionId, context, true)?.let { return it }
+        if (!PersonRules.valid(pseudonym)) return PersonResult.Rejected(PersonRejection.INVALID_PSEUDONYM)
+        requirePersonAccess(context)
+        val existing = if (personId == null) null else data.persons.get(actionId, personId)?.also { it.model() }
+            ?: return PersonResult.Rejected(PersonRejection.NOT_FOUND)
+        val normalized = PersonRules.normalized(pseudonym)
+        requirePersonAccess(context)
+        val duplicate = data.persons.samePseudonym(actionId, normalized)?.also { it.model() }
+        if (duplicate != null && duplicate.id != existing?.id)
+            return PersonResult.Rejected(PersonRejection.DUPLICATE_PSEUDONYM)
+        val row = existing?.copy(pseudonym = pseudonym, pseudonymNormalized = normalized)
+            ?: PersonRow(UUID.randomUUID().toString(), actionId, pseudonym, normalized, now())
+        requirePersonAccess(context)
+        if (existing == null) data.persons.insert(row)
+        else if (data.persons.rename(actionId, personId!!, pseudonym, normalized) != 1) throw ProductStorageFailure()
+        if (!context.check(AccessPoint.COMMIT)) throw StorageAccessRevoked()
+        return PersonResult.Value(row.model())
+    }
 }
