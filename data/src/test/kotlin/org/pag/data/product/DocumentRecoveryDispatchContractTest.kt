@@ -6,7 +6,7 @@ import org.pag.domain.*
 import java.util.concurrent.Executor
 
 /** Dispatch characterization only: state below is a simulated durable ledger, not SQLite evidence.
- * Gap tests deliberately describe existing behavior; they do not approve that behavior for reuse. */
+ * Lifecycle tests enforce one-shot dispatch and observed fence invalidation; no global commit claim. */
 class DocumentRecoveryDispatchContractTest {
     private class Queue : Executor {
         val tasks = mutableListOf<Runnable>()
@@ -21,6 +21,9 @@ class DocumentRecoveryDispatchContractTest {
     private var blocked = 0
     private var mutations = 0
     private var phase = "NONE"
+    private var beforePublication: () -> Unit = {}
+    private var publicationAllowed = true
+    private var publicationReturn = true
     private val access = object : StorageAccess {
         override fun acquire(scope: AccessScope): StorageContext? {
             if (!ready) return null
@@ -30,9 +33,10 @@ class DocumentRecoveryDispatchContractTest {
                 override val scope = AccessScope.READY
                 override fun check(point: AccessPoint) = ready && acquired == this@DocumentRecoveryDispatchContractTest.generation
                 override fun publish(result: () -> Unit): Boolean {
-                    if (!check(AccessPoint.STEP)) return false
+                    beforePublication()
+                    if (!publicationAllowed || !check(AccessPoint.STEP)) return false
                     result()
-                    return true
+                    return publicationReturn
                 }
             }
         }
@@ -81,19 +85,18 @@ class DocumentRecoveryDispatchContractTest {
         submit(); DocumentNamespaceLane.drainAndFence {}; worker.next(); main.next()
         assertEquals(0, mutations); assertEquals(0, callbacks); assertEquals(1, blocked)
     }
-    @Test fun gapDuplicateWorkerExecutesWorkTwice() {
+    @Test fun duplicateWorkerExecutesWorkOnce() {
         submit(); val runnable = worker.tasks.removeAt(0); runnable.run(); runnable.run()
-        main.next(); main.next()
-        assertEquals(2, mutations) // OPEN: desired at-most-once assertion (1) reproduced RED in §57
-        assertEquals(2, callbacks)
+        assertEquals(1,main.tasks.size);main.next()
+        assertEquals(1, mutations);assertEquals(1, callbacks)
     }
-    @Test fun gapDuplicateMainPublishesTwice() {
+    @Test fun duplicateMainPublishesOnce() {
         submit(); worker.next(); val runnable = main.tasks.removeAt(0); runnable.run(); runnable.run()
-        assertEquals(1, mutations); assertEquals(2, callbacks) // OPEN: desired at-most-once assertion (1) reproduced RED in §57
+        assertEquals(1, mutations); assertEquals(1, callbacks)
     }
-    @Test fun gapFenceAfterWorkerDoesNotFenceQueuedMainPublication() {
+    @Test fun fenceAfterWorkerSuppressesQueuedMainPublication() {
         submit(); worker.next(); DocumentNamespaceLane.drainAndFence {}; main.next()
-        assertEquals("FILE_PUBLISHED", phase); assertEquals(1, callbacks) // OPEN: desired post-fence suppression (0) reproduced RED in §57
+        assertEquals("FILE_PUBLISHED", phase); assertEquals(0, callbacks)
     }
     @Test fun gapDocumentDispatchDoesNotConsultCommonPendingOrAdvanceItsEpoch() {
         val common=UncachedWorkspaceMutations()
@@ -103,5 +106,109 @@ class DocumentRecoveryDispatchContractTest {
         assertNull(common.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.OPERATIONS,"synthetic-action"),generation))
         assertFalse(common.ramReuseEnabled)
         assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE)))
+    }
+    @Test fun duplicateWorkerAndMainRemainOneShot() {
+        submit();val w=worker.tasks.removeAt(0);w.run();w.run()
+        assertEquals(1,main.tasks.size);val m=main.tasks.removeAt(0);m.run();m.run()
+        assertEquals(1,mutations);assertEquals(1,callbacks)
+    }
+    @Test fun fenceDuringContextPublicationSuppressesCallback() {
+        submit();worker.next();beforePublication={DocumentNamespaceLane.drainAndFence{}}
+        main.next();assertEquals(1,mutations);assertEquals(0,callbacks)
+    }
+    @Test fun callbackThenFalseDoesNotPermitReplay() {
+        publicationReturn=false;submit();worker.next()
+        val m=main.tasks.removeAt(0);m.run();m.run()
+        assertEquals(1,callbacks);assertEquals(1,mutations)
+    }
+    @Test fun deniedPublicationCannotBeReplayedAfterPermissionReturns() {
+        publicationAllowed=false;submit();worker.next();val m=main.tasks.removeAt(0)
+        m.run();publicationAllowed=true;m.run();assertEquals(0,callbacks);assertEquals(1,mutations)
+    }
+    @Test fun duplicatedFailingWorkerAndMainBlockOnceWithoutRetry() {
+        dispatch().run<Unit>({callbacks++}){mutations++;phase="DELETE_FILE_PENDING";error("synthetic after detach")}
+        val w=worker.tasks.removeAt(0);w.run();w.run();assertEquals(1,main.tasks.size)
+        val m=main.tasks.removeAt(0);m.run();m.run()
+        assertEquals(1,mutations);assertEquals("DELETE_FILE_PENDING",phase)
+        assertEquals(1,blocked);assertEquals(0,callbacks)
+    }
+    @Test fun completedPublicationIsNotUndoneByLaterFence() {
+        submit();worker.next();val m=main.tasks.removeAt(0);m.run()
+        DocumentNamespaceLane.drainAndFence{};m.run()
+        assertEquals(1,callbacks);assertEquals("FILE_PUBLISHED",phase);assertEquals(1,mutations)
+    }
+    @Test fun summaryReadExecutesAndPublishesOnceWithoutMutation() {
+        var reads=0
+        dispatch().run({r:DocumentResult<DocumentSummary> -> assertEquals(DocumentResult.Value(DocumentSummary(3)),r);callbacks++}) {
+            reads++;DocumentResult.Value(DocumentSummary(3))
+        }
+        val w=worker.tasks.removeAt(0);w.run();w.run();val m=main.tasks.removeAt(0);m.run();m.run()
+        assertEquals(1,reads);assertEquals(1,callbacks);assertEquals(0,mutations);assertEquals("NONE",phase)
+    }
+    @Test fun rejectionPublishesOnceAndDoesNotClaimMutation() {
+        var reads=0
+        dispatch().run<Unit>({assertEquals(DocumentResult.Rejected(DocumentFailure.NOT_ALLOWED),it);callbacks++}) {
+            reads++;DocumentResult.Rejected(DocumentFailure.NOT_ALLOWED)
+        }
+        val w=worker.tasks.removeAt(0);w.run();w.run();val m=main.tasks.removeAt(0);m.run();m.run()
+        assertEquals(1,reads);assertEquals(1,callbacks);assertEquals(0,mutations)
+    }
+    @Test fun concurrentWorkerExecutionStartsOnlyOneWorkclosure() {
+        val entered=java.util.concurrent.CountDownLatch(1)
+        val release=java.util.concurrent.CountDownLatch(1)
+        val pool=java.util.concurrent.Executors.newFixedThreadPool(2)
+        dispatch().run<Unit>({callbacks++}) {
+            mutations++;entered.countDown();check(release.await(5,java.util.concurrent.TimeUnit.SECONDS))
+            DocumentResult.Value(Unit)
+        }
+        val w=worker.tasks.removeAt(0)
+        try {
+            val first=pool.submit{w.run()};assertTrue(entered.await(5,java.util.concurrent.TimeUnit.SECONDS))
+            pool.submit{w.run()}.get(5,java.util.concurrent.TimeUnit.SECONDS)
+            release.countDown();first.get(5,java.util.concurrent.TimeUnit.SECONDS)
+            assertEquals(1,mutations);assertEquals(1,main.tasks.size);main.next();assertEquals(1,callbacks)
+        } finally {release.countDown();pool.shutdownNow()}
+    }
+    @Test fun listReadKeepsResultAndDoesNotAddReadsOrFileWork() {
+        var reads=0
+        dispatch().run({r:DocumentResult<List<DocumentAsset>> -> assertEquals(DocumentResult.Value(emptyList<DocumentAsset>()),r);callbacks++}) {
+            reads++;DocumentResult.Value(emptyList<DocumentAsset>())
+        }
+        val w=worker.tasks.removeAt(0);w.run();w.run();val m=main.tasks.removeAt(0);m.run();m.run()
+        assertEquals(1,reads);assertEquals(1,callbacks);assertEquals(0,mutations)
+    }
+    @Test fun readAfterRevokeNeverPublishesEvenWhenMainIsReplayed() {
+        var reads=0
+        dispatch().run<Unit>({callbacks++}){reads++;DocumentResult.Value(Unit)}
+        worker.next();val m=main.tasks.removeAt(0);ready=false;m.run();ready=true;m.run()
+        assertEquals(1,reads);assertEquals(0,callbacks)
+    }
+    @Test fun concurrentMainExecutionPublishesOnlyOnce() {
+        submit();worker.next();val m=main.tasks.removeAt(0)
+        val pool=java.util.concurrent.Executors.newFixedThreadPool(2)
+        val entered=java.util.concurrent.CountDownLatch(1)
+        val release=java.util.concurrent.CountDownLatch(1)
+        beforePublication={entered.countDown();check(release.await(5,java.util.concurrent.TimeUnit.SECONDS))}
+        try {
+            val first=pool.submit{m.run()};assertTrue(entered.await(5,java.util.concurrent.TimeUnit.SECONDS))
+            pool.submit{m.run()}.get(5,java.util.concurrent.TimeUnit.SECONDS)
+            release.countDown();first.get(5,java.util.concurrent.TimeUnit.SECONDS)
+            assertEquals(1,callbacks);assertEquals(1,mutations)
+        } finally {release.countDown();pool.shutdownNow()}
+    }
+    @Test fun mainDoesNotWaitForLongRunningNamespaceWork() {
+        submit();worker.next();val m=main.tasks.removeAt(0)
+        val pool=java.util.concurrent.Executors.newFixedThreadPool(2)
+        val entered=java.util.concurrent.CountDownLatch(1)
+        val release=java.util.concurrent.CountDownLatch(1)
+        val ticket=DocumentNamespaceLane.ticket()
+        try {
+            val holding=pool.submit{DocumentNamespaceLane.exclusive(ticket){
+                entered.countDown();check(release.await(5,java.util.concurrent.TimeUnit.SECONDS))
+            }}
+            assertTrue(entered.await(5,java.util.concurrent.TimeUnit.SECONDS))
+            pool.submit{m.run()}.get(2,java.util.concurrent.TimeUnit.SECONDS)
+            assertEquals(1,callbacks);release.countDown();holding.get(5,java.util.concurrent.TimeUnit.SECONDS)
+        } finally {release.countDown();pool.shutdownNow()}
     }
 }

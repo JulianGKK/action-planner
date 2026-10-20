@@ -73,6 +73,8 @@ internal object DocumentNamespaceLane {
     @Volatile private var epoch = 0L
     fun requireExclusive() { if (!Thread.holdsLock(monitor)) throw ProductStorageFailure() }
     fun ticket() = epoch
+    /** Nonblocking liveness observation, not authorization or an atomic publication lock. */
+    fun isCurrent(ticket: Long) = ticket == epoch
     fun <T> exclusive(ticket: Long, work: () -> T): T = synchronized(monitor) {
         if (ticket != epoch) throw ProductStorageFailure()
         work()

@@ -8588,3 +8588,147 @@ Domain hat keine eigenen Testquellen. Der Gradle-Lifecycle-Task
 `git diff --check` erfolgreich. Keine Instrumentation/Installation, keine neuen
 Android-Fixtures und kein nativer Cleanupnachweis. Rohlogs/Artefakte bleiben
 außerhalb des Commits. Regulärer WIP-Commit/Push; danach unabhängiges GitHub-Review.
+
+## 58. Document-Dispatch-Lifecycle
+
+Issue #35 auf verbindlicher Basis
+`184dadb41d2abeb1dc140bea7f3cc02b6ac4fda0`.
+Lokaler HEAD und unabhängig über GitHub-Ref geprüfter Remote-HEAD entsprachen
+dieser Basis; Branch `p11-performance-optimization`, Arbeitsbaum und Diff waren
+vor Änderungen sauber. Der SSH-Remoteabruf scheiterte an der lokalen
+SSH-Konfiguration; die Prüfung erfolgte anschließend erfolgreich über die
+GitHub-API. Keine fremden Änderungen übernommen oder überschrieben.
+
+### 58.1 Ausgangsbeleg und eng begrenzte Implementierung
+
+**HOSTGETESTET – RED vor Produktänderung:** Die drei §57-Characterizations wurden
+auf Zielwerte umgestellt: eine Workerwirkung, eine Main-Publication, null
+Publication nach einem Fence zwischen Worker und Main. Der gezielte Lauf
+`./gradlew :data:testDebugUnitTest --tests '*DocumentRecoveryDispatchContractTest' --offline`
+kompilierte und ergab **12 Tests / genau 3 Assertionfehler** in den drei
+bisherigen `gapDuplicateWorker…`, `gapDuplicateMain…` und `gapFenceAfterWorker…`.
+Das waren weder Compilefehler noch Skips. Die drei Tests tragen jetzt eindeutige
+Zielvertragsnamen und behalten die strengeren Erwartungen.
+
+**IMPLEMENTIERT:** Nur `DocumentProductDispatch` und ein kleiner lesender
+Lanezugriff wurden produktiv geändert:
+
+- Auftragslokales `AtomicBoolean started`: CAS vor Eintritt in die Workclosure
+  verhindert mehrfache und parallele Workerwirkung desselben Dispatch-Runnable.
+  Auch nach Fehler, Revoke oder dauerhaftem Teilfortschritt wird der Auftrag
+  nicht erneut ausgeführt. Keine zweite Sourceöffnung, Mutation oder Main-
+  Einreihung durch Wiederholung desselben Workers.
+- Auftragslokales `AtomicBoolean delivered`: CAS zu Beginn der Main-Zustellung,
+  auch im bestehenden Blocked-Fehlerpfad. Wiederholte/parallele Main-Runnables
+  können weder Ergebnis, fachliche Rejection noch Blocked-Meldung wiederholen.
+  Ein verweigerter erster Zustellversuch ist verbraucht. `publish`-Rückgabe false
+  löst keinen Retry aus, auch wenn der Context den Callback vorher ausführte.
+- `DocumentNamespaceLane.isCurrent(ticket)` liest ausschließlich die bestehende
+  volatile Epoche. Prüfung vor `StorageContext.publish` und nochmals innerhalb
+  seines Callbacks. Ein inzwischen beobachteter Fence unterdrückt das Ergebnis.
+  Kein Main-Thread erwirbt dazu den lang gehaltenen Namespace-Monitor.
+
+Diese Booleans vergeben keine Session-/Scopeberechtigung. READY-Erwerb,
+Operationsgates, Generation und `StorageContext.publish` bleiben maßgeblich.
+Ein Lane-Ticket allein autorisiert keine Antwort. Der Blocked-Fehlerpfad behält
+seine bestehende Context-STEP-Prüfung; ein Fence vor dem Worker bleibt ein
+Storagefehler ohne physische Wirkung und kann weiterhin einmal Blocked melden.
+
+### 58.2 Tatsächlicher Nebenläufigkeitsvertrag
+
+**HOSTGETESTET:** Fence vor Worker verhindert Arbeit. Fence nach Worker vor Main
+verhindert Ergebnispublication. Ein deterministisch innerhalb der verzögerten
+Context-Publication vor Callbackzulassung ausgeführter Fence verhindert durch
+die innere Prüfung ebenfalls das Ergebnis. Ohne Fence wird die gültige Antwort
+einmal zugestellt. Revoke/Generationwechsel verhindern die Antwort weiterhin;
+später wieder gültiger Context macht einen verbrauchten Main-Runnable nicht
+wieder ausführbar. Ein bereits erfolgreich publizierter Auftrag wird durch einen
+späteren Fence weder erneut zugestellt noch als zurückgerollt klassifiziert.
+Ein eigener Latch-Test hält den Namespace-Monitor und belegt, dass Main trotzdem
+abschließen kann; parallele Worker- und parallele Main-Runnables sind separat
+getestet.
+
+**BLOCKER / explizite Racegrenze:** Das letzte volatile Lesen und der unmittelbar
+folgende fachliche Callback bilden **keine atomare Einheit** mit
+`drainAndFence`. Ein konkurrierender Fence nach der inneren Prüfung kann den
+bereits zugelassenen Callback nicht rückwirkend verhindern. Die drei konkreten
+RED-Reproduktionen und die verzögerte Freigabe sind behoben; eine vollständig
+linearisierbare Fence-/Publication-Garantie ist damit ausdrücklich nicht
+nachgewiesen. Ein weitergehender atomarer Owner-/Publicationvertrag benötigt
+gesondertes Review. Kein Namespace-Monitor um UI-Callbacks, keine blockierende
+Kopplung des UI-Threads an lange Dateioperationen, keine große Monitorumgestaltung.
+Normale Dokumentaufträge erhöhen die Lane-Epoche nicht: dies ist kein allgemeiner
+„neuester Dokumentauftrag gewinnt“-Vertrag. Dafür werden weder eine globale
+Jobregistry noch eine zweite Mutationsepoche eingeführt.
+
+### 58.3 Fehler, Reads und Beweisgrenzen
+
+**HOSTGETESTET:** Kontrollierte Worker-/Mainqueues, gespeicherte Runnables,
+Context-/Generationssimulation, getrennter physischer Simulationsledger und
+Callbackzähler prüfen:
+
+- null READY/BLOCKED-Simulation, Lock vor Worker, Generationwechsel nach Wirkung;
+- doppelte Worker, doppelte Mainrunnables und beide zusammen, jeweils one-shot;
+- tatsächlich parallele Ausführung beider Runnablearten;
+- Fehler nach simuliertem WRITING bzw. DELETE_FILE_PENDING, einmalige Blocked-
+  Meldung und keine Wiederholung oder erfundene Rückabwicklung;
+- Workerdispatch- und Maindispatch-Exceptions sowie verlorenen Main-Runnable;
+  kein später ungebundener Ersatzcallback und kein automatischer Retry;
+- Context führt Callback aus und liefert false; Context verweigert ersten
+  Versuch, späterer Replay bleibt wirkungslos;
+- Fence vor Worker, zwischen Worker/Main und während verzögerter Contextfreigabe;
+- Summarywert, Listenrückgabe und normale NOT_ALLOWED-Rejection genau einmal,
+  jeweils nur ein Work-/Readaufruf und keine simulierte Dateimutation;
+- Read nach Revoke ohne Callback; bestehender gemeinsamer Pending-Port bleibt
+  unberührt, `ramReuseEnabled=false`.
+
+Summary-/Listen-Tests prüfen die Dispatchzustellung mit synthetischen Werten,
+keine neue DAO-Korrektheitsbehauptung. Bestehende Dokument-Foundation-, Storage-,
+Import-, Publication-, Delete-, Recovery-, Read-/Viewer- und Sessiontests bleiben
+erhalten. PDF-/Bild-/Text-`DocumentReadDispatch` wurde nicht verändert.
+Die neuen Ledger sind **kein SQLite-/SQLCipher-, fsync-, Powerloss- oder nativer
+Cleanupbeweis**. Ein physischer Schritt bleibt nach späterem Revoke/Fehler im
+Ledger bestehen; es wird kein DB-Rollback aus einer Exception abgeleitet.
+
+### 58.4 Unveränderte offene Grenzen
+
+**UNWIRED:** Keine produktive DOCUMENT-Writerfamilie, keine Anbindung an
+`WorkspaceMutationInvalidation`/`WorkspaceWriteBoundary`, kein globaler
+COMMITTED-Beleg aus `DocumentResult.Value`. Der mehrphasige DB-/Datei-/Inventar-/
+Cleanup-/Recoveryvertrag aus §57 bleibt ein separat zu prüfender Vorschlag (#35).
+Die Namespace-Lane ersetzt die gemeinsame Mutationsepoche nicht. Kein
+Snapshotowner (#37), keine RAM-Hits oder Performance-/Navigationseinbindung (#38).
+Bestehende Editor-/CAS-/ABA-Grenzen (#36) bleiben unverändert.
+
+**BLOCKER:** RED-4 aus §57 bleibt unverändert: IMPORT_WRITING ohne Root führt bei
+Maintenance fail-closed zu BLOCKED. Der bestehende Characterization-Test bleibt
+erhalten. Keine Root-Neuerstellung, Jobentfernung, Reparaturheuristik oder
+Dateilöschung ergänzt. Keine allgemeine Recoveryfreigabe. Zusätzlich bleiben die
+oben beschriebene letzte Fence-/Callback-Racegrenze, fehlende mehrphasige Evidence
+und nativer Cursor-/Cleanupnachweis #32 offen. Insbesondere schließt
+`SQLCipherStatement.close()` den Cursor nicht explizit; Hosttests ersetzen keinen
+nativen Ressourcenbeweis.
+
+SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink/B2Driver,
+Schema 11, 180-s-Absoluttimeout, 30-s-READY-idle, 8+8-MiB-Budget,
+Root-/Symlink-/Hardlink-/No-Replace-Regeln, Verschlüsselung, File-/Directory-Sync
+und Kapazitätslimits wurden nicht verändert. Keine neue Dependency/Permission,
+keine Geräteinstallation, keine Änderung installierter Apps oder P3b/Leadership.
+
+### 58.5 Abschlussvalidierung
+
+**HOSTGETESTET:** Gezielter Dokumentlauf mit `--tests '*Document*Test'`:
+**249 Tests bestanden, 0 Failures, 0 Errors, 0 Skips**; davon 25 Dispatch-
+Vertragstests (13 zusätzliche Fälle gegenüber §57).
+Vollständiger angeforderter Offline-Lauf mit
+`:app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest
+:domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin
+:app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest
+:app:verifyDemoManifest --offline`: **BUILD SUCCESSFUL**.
+Debug-Test-XMLs: App 671, Data 923, Security 4, zusammen **1.598 bestanden,
+0 Failures, 0 Errors, 0 Testskips**. Security war UP-TO-DATE; Domain hat keine
+Testquellen. Der Gradle-Lifecycle-Task `preDebugAndroidTestBuild SKIPPED` ist kein
+übersprungener Testfall. Beide Androidtest-Kompilationen und beide Manifestchecks
+waren erfolgreich. Kein Geräte-/Instrumentationlauf. `git diff --check` ist
+sauber; keine Rohlogs, APKs oder sonstigen Buildartefakte im Commit.
+Regulärer WIP-Commit/Push, anschließend STOPP bis zum unabhängigen GitHub-Review.

@@ -165,15 +165,26 @@ internal class DocumentProductDispatch(private val access: StorageAccess, privat
     fun <T> run(publish: (DocumentResult<T>) -> Unit, work: (StorageContext) -> DocumentResult<T>) {
         val c = access.acquire(AccessScope.READY) ?: return
         val ticket = DocumentNamespaceLane.ticket()
+        val started = java.util.concurrent.atomic.AtomicBoolean(false)
+        val delivered = java.util.concurrent.atomic.AtomicBoolean(false)
         worker.execute {
+            if (!started.compareAndSet(false,true)) return@execute
             try {
                 val result = DocumentNamespaceLane.exclusive(ticket) {
                     requireOperations(c,AccessPoint.OPERATION)
                     work(c).also { requireOperations(c) }
                 }
-                main.execute { c.publish { publish(result) } }
+                main.execute {
+                    if (delivered.compareAndSet(false,true) && DocumentNamespaceLane.isCurrent(ticket)) {
+                        c.publish {
+                            // Nonblocking fence recheck after the authoritative context admits us.
+                            // This is not atomic with a concurrent fence after this last check.
+                            if (DocumentNamespaceLane.isCurrent(ticket)) publish(result)
+                        }
+                    }
+                }
             } catch (_: StorageAccessRevoked) { /* inspect persisted state after the next real unlock */ }
-              catch (_: Exception) { main.execute { if (c.check(AccessPoint.STEP)) blocked() } }
+              catch (_: Exception) { main.execute { if (delivered.compareAndSet(false,true) && c.check(AccessPoint.STEP)) blocked() } }
         }
     }
 }
