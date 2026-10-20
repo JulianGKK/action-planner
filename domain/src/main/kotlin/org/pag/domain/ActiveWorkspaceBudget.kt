@@ -110,6 +110,12 @@ class ActiveWorkspaceBudget {
     companion object {
         const val LIMIT_BYTES = 8L * 1024 * 1024
 
+        /** Pure engineering cost/validation, including values above LIMIT_BYTES.
+         * ADMITTED here means structurally representable cost, NOT scope admission:
+         * only admit()/seal() on ONE ledger can authorize materialization. No ledger created.
+         */
+        fun estimateUnits(units: Units): Pair<Decision, Long> = estimate(units)
+
         private fun estimate(u: Units): Pair<Decision, Long> {
             val counts = longArrayOf(u.objects, u.strings, u.utf16Units, u.arrays, u.arrayPayloadBytes,
                 u.lists, u.listCapacity, u.maps, u.mapCapacity, u.indexes, u.indexCapacity, u.references)

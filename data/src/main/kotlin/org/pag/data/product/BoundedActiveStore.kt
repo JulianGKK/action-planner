@@ -46,7 +46,17 @@ internal class BoundedActiveStore(private val sql: PooledConnection, private val
         result
     }
 
+    internal data class Payload(val action: Action, val operations: OperationalBoard)
+
     suspend fun read(binding: BoundedActiveBinding): BoundedActiveResult.Value {
+        val prepared = prepare(binding)
+        val admission = CoreReadAdmission.admit(listOf(prepared))
+        val payload = prepared.materialize(admission)
+        return BoundedActiveResult.Value(payload.action, payload.operations, admission.retained, admission.transition)
+    }
+
+    /** Only fixed-size metadata, counts, byte bounds and relations; NO domain payload. */
+    suspend fun prepare(binding: BoundedActiveBinding): PreparedCoreRead<Payload> {
         gate()
         if (context.generation != binding.generation) reject(BoundedActiveStatus.ACCESS_REVOKED)
         // CAST(TEXT AS BLOB) uses the DB encoding. Do not guess on UTF16 databases.
@@ -73,90 +83,67 @@ internal class BoundedActiveStore(private val sql: PooledConnection, private val
             Math.addExact(a, Math.multiplyExact(s.rows, s.table.texts.size.toLong()))
         } }
 
-        val charges = reserve(rows, fieldCount, byteCount)
-        observe(Phase.ADMITTED)
-        gate()
-
-        var action: Action? = null
-        val people = linkedMapOf<String, Person>()
-        val roles = linkedMapOf<String, Pair<Role, String>>()
-        val plans = HashMap<String, String?>()
-        val assignments = HashMap<String, MutableSet<String>>()
-        val states = HashMap<String, PersonOperationalState>()
-        for (size in sizes) scan(size, actionId) { t, texts, numbers ->
-            fun text(i: Int) = texts[i] ?: invalid()
-            fun number(i: Int) = numbers[i] ?: invalid()
-            try {
-                when (t.name) {
-                    "actions" -> {
-                        if (text(0) != actionId || text(3) != "ACTIVE") invalid()
-                        action = ActionRow(text(0), text(1), text(2), number(0), number(1), number(2),
-                            text(3), text(4), numbers[3]).model()
-                    }
-                    "persons" -> {
-                        if (text(1) != actionId) invalid()
-                        val row = PersonRow(text(0), text(1), text(2), text(3), number(0))
-                        if (people.put(row.id, row.model()) != null) invalid()
-                    }
-                    "roles" -> {
-                        if (text(1) != actionId) invalid()
-                        val row = RoleRow(text(0), text(1), text(2), text(3), number(0))
-                        if (roles.put(row.id, row.model() to row.normalizedName) != null) invalid()
-                    }
-                    "person_planned_roles" -> {
-                        if (text(0) != actionId || text(1) !in people || text(2) !in roles) invalid()
-                        if (!assignments.getOrPut(text(1)) { linkedSetOf() }.add(text(2))) invalid()
-                    }
-                    "person_role_plans" -> {
-                        if (text(0) != actionId || text(1) !in people || plans.containsKey(text(1))) invalid()
-                        if (texts[2] != null && texts[2] !in assignments[text(1)].orEmpty()) invalid()
-                        plans[text(1)] = texts[2]
-                    }
-                    "person_operational_states" -> {
-                        if (text(0) != actionId || text(1) !in people || (texts[2] != null && texts[2] !in roles)) invalid()
-                        val row = OperationalRow(text(0), text(1), texts[2], text(3), texts[4], number(0))
-                        if (states.put(text(1), row.model()) != null) invalid()
-                    }
-                }
-            } catch (_: ProductStorageFailure) { invalid() }
-              catch (_: IllegalArgumentException) { invalid() }
-        }
-        if (states.size != people.size) invalid()
-        val persons = people.values.sortedWith(compareBy<Person> { it.createdAt }.thenBy { it.id }).map { p ->
+        val reservation = ActiveCoreReservation(units(rows, fieldCount, byteCount, 4), units(rows, fieldCount, byteCount, 16))
+        return PreparedCoreRead(reservation) {
+            observe(Phase.ADMITTED)
             gate()
-            val ids = assignments[p.id].orEmpty()
-            val plan = PersonRolePlan(ids, plans[p.id])
-            if (!OperationalRules.validPlan(ids, plan.primaryRoleId)) invalid()
-            OperationalPerson(p, plan, states[p.id] ?: invalid())
-        }
-        val sortedRoles = roles.values.sortedWith(compareBy<Pair<Role, String>> { it.second }.thenBy { it.first.id }).map { it.first }
-        gate(); observe(Phase.COMPLETE); gate()
-        val result = BoundedActiveResult.Value(action ?: invalid(),
-            OperationalBoard(actionId, ActionStatus.ACTIVE, sortedRoles, persons),
-            charges.first, charges.second)
-        return result
-    }
 
-    /**
-     * Freeze both upper-bound reservations synchronously. Room can resume a coroutine on a
-     * different IO thread, so its thread-confined budget ledger must NOT cross a suspension.
-     * Seal only freezes charges here, never declares CONTENT. Subsequent scans must prove all
-     * actual counts/byte lengths stay inside these reservations before any result can return.
-     * No pre-existing retained payload is accepted by this test-only entry path.
-     */
-    private fun reserve(rows: Long, fields: Long, bytes: Long): Pair<Long, Long> {
-        val budget = ActiveWorkspaceBudget()
-        try {
-            val retained = budget.beginRetained()!!
-            // Domain graph, role sets/maps, sorting/output capacity and duplicate string identities.
-            admit(budget.admit(retained, units(rows, fields, bytes, 4)))
-            check(budget.seal(retained))
-            val transition = budget.beginTransition()!!
-            // Raw blobs, decoder buffers, normalization/trim work, row wrappers and builders.
-            admit(budget.admit(transition, units(rows, fields, bytes, 16)))
-            check(budget.seal(transition))
-            return budget.accounting(retained)!!.chargedBytes to budget.accounting(transition)!!.chargedBytes
-        } finally { budget.close() }
+            var action: Action? = null
+            val people = linkedMapOf<String, Person>()
+            val roles = linkedMapOf<String, Pair<Role, String>>()
+            val plans = HashMap<String, String?>()
+            val assignments = HashMap<String, MutableSet<String>>()
+            val states = HashMap<String, PersonOperationalState>()
+            for (size in sizes) scan(size, actionId) { t, texts, numbers ->
+                fun text(i: Int) = texts[i] ?: invalid()
+                fun number(i: Int) = numbers[i] ?: invalid()
+                try {
+                    when (t.name) {
+                        "actions" -> {
+                            if (text(0) != actionId || text(3) != "ACTIVE") invalid()
+                            action = ActionRow(text(0), text(1), text(2), number(0), number(1), number(2),
+                                text(3), text(4), numbers[3]).model()
+                        }
+                        "persons" -> {
+                            if (text(1) != actionId) invalid()
+                            val row = PersonRow(text(0), text(1), text(2), text(3), number(0))
+                            if (people.put(row.id, row.model()) != null) invalid()
+                        }
+                        "roles" -> {
+                            if (text(1) != actionId) invalid()
+                            val row = RoleRow(text(0), text(1), text(2), text(3), number(0))
+                            if (roles.put(row.id, row.model() to row.normalizedName) != null) invalid()
+                        }
+                        "person_planned_roles" -> {
+                            if (text(0) != actionId || text(1) !in people || text(2) !in roles) invalid()
+                            if (!assignments.getOrPut(text(1)) { linkedSetOf() }.add(text(2))) invalid()
+                        }
+                        "person_role_plans" -> {
+                            if (text(0) != actionId || text(1) !in people || plans.containsKey(text(1))) invalid()
+                            if (texts[2] != null && texts[2] !in assignments[text(1)].orEmpty()) invalid()
+                            plans[text(1)] = texts[2]
+                        }
+                        "person_operational_states" -> {
+                            if (text(0) != actionId || text(1) !in people || (texts[2] != null && texts[2] !in roles)) invalid()
+                            val row = OperationalRow(text(0), text(1), texts[2], text(3), texts[4], number(0))
+                            if (states.put(text(1), row.model()) != null) invalid()
+                        }
+                    }
+                } catch (_: ProductStorageFailure) { invalid() }
+                  catch (_: IllegalArgumentException) { invalid() }
+            }
+            if (states.size != people.size) invalid()
+            val persons = people.values.sortedWith(compareBy<Person> { it.createdAt }.thenBy { it.id }).map { p ->
+                gate()
+                val ids = assignments[p.id].orEmpty()
+                val plan = PersonRolePlan(ids, plans[p.id])
+                if (!OperationalRules.validPlan(ids, plan.primaryRoleId)) invalid()
+                OperationalPerson(p, plan, states[p.id] ?: invalid())
+            }
+            val sortedRoles = roles.values.sortedWith(compareBy<Pair<Role, String>> { it.second }.thenBy { it.first.id }).map { it.first }
+            gate(); observe(Phase.COMPLETE); gate()
+            Payload(action ?: invalid(), OperationalBoard(actionId, ActionStatus.ACTIVE, sortedRoles, persons))
+        }
     }
 
     private fun units(rows: Long, fields: Long, bytes: Long, copies: Long): ActiveWorkspaceBudget.Units = checked {
@@ -169,14 +156,6 @@ internal class BoundedActiveStore(private val sql: PooledConnection, private val
     }
     private fun <T> checked(work: () -> T): T = try { work() }
         catch (_: ArithmeticException) { reject(BoundedActiveStatus.BUDGET_REFUSED) }
-    private fun admit(decision: ActiveWorkspaceBudget.Decision) {
-        when (decision) {
-            ActiveWorkspaceBudget.Decision.ADMITTED -> Unit
-            ActiveWorkspaceBudget.Decision.BUDGET_REFUSED -> reject(BoundedActiveStatus.BUDGET_REFUSED)
-            ActiveWorkspaceBudget.Decision.INVALID_DATA -> invalid()
-        }
-    }
-
     private suspend fun head(t: Table, action: String): Size {
         val checks = t.texts.map { "(typeof(${it.name})!='text'${if (it.nullable) " AND ${it.name} IS NOT NULL" else ""})" } +
             t.numbers.map { "(typeof(${it.name})!='integer'${if (it.nullable) " AND ${it.name} IS NOT NULL" else ""})" } +

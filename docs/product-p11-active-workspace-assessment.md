@@ -5262,3 +5262,234 @@ keine Produktwritepfade oder RAM-Hits aktiviert. Keine APKs, Datenbanken, Schlü
 Credentials, Rohlogs, persönlichen Pfade oder Gerätekennungen im Commit.
 Regulärer WIP-Commit/Push mit unabhängigem Remote-SHA-Abgleich; danach STOPP bis
 zum unabhängigen GitHub-Review. Kein Force-Push, Merge, Release oder Produktupdate.
+
+## 44. Issue #34 – Gemeinsame ACTIVE-Kern-Admission
+
+### 44.1 Implementierter gemeinsamer Reader
+
+**IMPLEMENTIERT UND AUF ECHTEM SQLITE GETESTET (2026-10-20):** Branch
+`p11-performance-optimization`, sauberer Ausgangszustand und lokal/remote unabhängig
+bestätigte Basis `86c682856fa7f57cb778628627aba01dd1a03675`.
+
+`ActiveCoreRead.kt` definiert einen gemeinsamen, explizit begrenzten Vertrag:
+ein `ActiveCorePayload` mit genau einer Action, vollständigem `OperationalBoard`
+(Personen, Rollen/Funktionen, Rollenplanung und aktuellem Operationsstatus), einer
+kompakten ersten ACTIVE-Aufgabenseite mit höchstens 32 Einträgen und exakten
+globalen/gefilterten Taskzählern. Die optional gefilterte Person bedeutet weiterhin
+`affectedPersonId`, nicht Zuständigkeit. Kein TaskBoard, keine vollständige Taskliste,
+keine Template-/Editor- oder Ereignischronik im retained Kern. Die bestehenden
+bewussten Detail-/Chronik-/Folgeseitenreads aus #33 bleiben getrennt erhalten.
+
+`ActiveCoreStore` bereitet beide Teile auf derselben `PooledConnection` innerhalb
+einer einzigen Readtransaktion vor. `ProductActiveCoreReader` verwendet dafür die
+bestehenden Grenzen: READY-`StorageAccess`/`StorageContext`, aktuellen vertrauenswürdigen
+Binding-/Epochzustand, vorhandenen `SessionDbKeyOwner`, `ActionDatabaseAccess`,
+unveränderte SQLCipher-/Integrity-/FK-/Room-Preflights und Namespace-Lane.
+Kein neuer Sessionowner, keine eigene Autorisierung und keine Produktinstanziierung.
+
+### 44.2 Metadaten zuerst, genau ein Ledger, danach Materialisierung
+
+`BoundedActiveStore` ist in `prepare()` und eine nachgelagerte Materialisierung
+geteilt; `CompactTaskStore` entsprechend in `preparePage()` und Materialisierung.
+Die bisherigen Einzel-`read()`-/`page()`-Einstiege verwenden diese gleichen Pläne
+und behalten ihre Fachsemantik, Prüfungen und exakten bisherigen Charges bei.
+Detail-/Eventpfade und der vollständige `BoundedTaskStore` bleiben erhalten.
+
+Die gemeinsamen Schritte sind:
+
+1. Ausschließlich Encoding-/ACTIVE-/Typ-/Enum-/Relations-/COUNT-/MAX-/SUM-Prüfungen
+   für Action/Personen/Rollen/Planungen/Operationsstatus und die kompakte Taskseite
+   samt vollständigen Taskzählern. Kein Personen-/Rollen-/Task-BLOB-Fetch davor.
+   Einzeltext- und Kardinalitätsgrenzen schützen bereits die Metadatenerfassung;
+   nicht sicher repräsentierbare Metadaten werden früh fail-closed verweigert.
+2. Unveränderliche, disjunkte `ActiveCoreReservation`-Units beider Teile bilden.
+   Gemeinsame Hüllen-/Plan-/Quittungs-/Referenzkapazität zusätzlich buchen:
+   **2080 retained / 7808 transition Bytes**. Action selbst ausschließlich im
+   Personen-/Funktionenteil; Taskunits enthalten keine zweite Actionzeile.
+3. `CoreReadAdmission` validiert jeden Unitsbestand einzeln, damit negative oder
+   strukturell fehlerhafte Werte sich nicht gegenseitig aufheben können. Danach
+   komponentenweise `Math.addExact` über alle Zähler. Overflow verweigert kontrolliert.
+4. **Ein** `ActiveWorkspaceBudget`: gesamte retained-Units zulassen/sealen, dann
+   gesamte transition-Units zulassen/sealen. Maximal **8388608 / 8388608 Bytes**.
+   Keine nachträgliche Addition bereits materialisierter Readerresultate, keine
+   zwei unabhängigen Payloadfreigaben, keine automatische Budgeterhöhung.
+5. Erst nach dieser gemeinsamen Zulassung beide Pläne materialisieren. Ein fehlender,
+   fehlerhafter oder entzogen autorisierter Teil verhindert den gesamten Rückgabepayload.
+   Erst der vollständige Kern darf nach DB-/Transaktions-/Key-Cleanup publiziert werden.
+
+`ActiveWorkspaceBudget.estimateUnits()` ist ausschließlich eine reine Kosten-/
+Strukturdiagnose mit den unveränderten Engineeringgewichten, auch oberhalb des Limits;
+kein Ledger, kein Retentiongrant und keine zweite Budgetfreigabe. Ein dortiges
+ADMITTED bezeichnet nur berechenbare Units. Entscheidend bleibt ausschließlich die
+anschließende gemeinsame `admit`-/`seal`-Entscheidung. Die Diagnose erlaubt exakte
+Überbudgetzahlen statt eines irreführenden Chargestands 0 nach Verweigerung.
+
+Das Ledger wird synchron auf dem jeweils aktuellen Ownerthread konstruiert, benutzt,
+gesealt und im `finally` geschlossen. Keine DB-Suspension innerhalb dieses Abschnitts.
+Die interne Buchungsquittung enthält nur unveränderliche Units/Kosten und höchstens
+zwei transaktionslokale Planidentitäten, **keine Representation-Tickets oder Ledger**.
+Private Quittungskonstruktion, Identitätsprüfung und atomarer Einmalverbrauch verhindern
+fremde/wiederholte Planmaterialisierung. Diese Quittung ist keine Storageautorität.
+Der echte Suspend-/Resume-Hosttest wechselt zwischen zwei Executor-Threads über die
+SQL-Aufrufe; Vorbereitung und Materialisierung bleiben korrekt, ohne threadgebundene
+Ledger weiterzugeben.
+
+### 44.3 Autorität, Fehler und Ownershipgrenzen
+
+Ein `CompactTaskState` bindet denselben Kern an genau eine ACTIVE-Action-ID,
+READY-Generation, Berechtigungsrevision und Mutationsepoche. Es ist derselbe
+Metadatenvertrag wie bei kompaktem Paging, keine zweite Sessionautorität.
+Jeder SQL-/Zeilen-/Materialisierungsabschluss prüft den aktuellen Kontext und
+vertrauenswürdigen Zustand; Publication prüft erneut nach vollständigem Cleanup.
+Auch ein false-Rückgabewert von `StorageContext.publish` nach ausgeführtem Callback
+liefert kein Value zurück. Vor der Rückgabe werden Kontext und Epoche auch nach einem
+akzeptierten Callback nochmals geprüft; Mutation/Revoke während dessen Rückkehr liefern
+kein Value. Das ersetzt nicht die spätere atomare Owner-Publication aus #37.
+
+Tests simulieren vertrauenswürdige Bindings/Epochen mit atomaren Referenzen;
+keine UI-Boolean-Autorität. Bei initialem UNKNOWN oder Revoke kein Read; bei Pending/
+UNKNOWN/Recovery muss der spätere Adapter null liefern, bei BLOCKED/Sessionentzug
+READY verweigern. Jede Mutation muss vor ihrem Seiteneffekt invalidieren. Getestet
+an allen gemeinsamen Phasen: Revoke, Mutation, Permission-, Action-, Generationwechsel,
+UNKNOWN, BLOCKED und Recovery. Ebenfalls Entzug nach DB-Cleanup, nach Lease-Cleanup
+und unmittelbar vor Publication. Keine Teil-CONTENT- oder falsche EMPTY-Publication.
+
+SQL-/Storage- und Cleanupfehler verweigern den gesamten Kern und melden Storage-
+BLOCKED. INVALID_DATA bleibt getrennt. **BUDGET_REFUSED meldet keine DB-Korruption**;
+alle Überbudgetfälle haben null BLOCKED-Signale. Kein Retry und kein unbounded Fallback.
+
+`PreparedCoreRead` hält nur kurzlebige Metadaten/Materialisierungsclosures in der
+laufenden Transaktion. Der gemeinsame Pfad ruft keine bisherigen Payloadreader auf
+und hält keine alten Readerresultate. In der Rückgabe sind ausschließlich Domainkern,
+Kosten und Units, keine Pläne, Quittungen, SQL-/Storagekontexte, Schlüssel oder Leases.
+Keine zweite Registry. Einzelaufrufe der bestehenden Reader erteilen weiterhin keine
+Erlaubnis, deren Graphen zusätzlich zu diesem Kern zu halten.
+
+**WEITER OFFEN:** Reale produktive Writer-/Outcome-/UNKNOWN-/Recoveryhooks gehören
+zu [#35](https://github.com/JulianGKK/action-planner/issues/35), der einzige Payload-/
+Snapshot-/Formularowner zu [#37](https://github.com/JulianGKK/action-planner/issues/37).
+Ein gemeinsames Reader-Value erlaubt noch keine längere Produkt-RAM-Vorhaltung.
+ProductViewModel, TaskModel, TaskScreen und sämtliche Produktwritepfade unangetastet;
+keine RAM-Hits oder Navigation angebunden.
+
+### 44.4 Realistische SQLite-Bestände und kombinierte Charges
+
+Echte SQLite-Hosttests mit allen Tabellen/Indizes aus Schema 11. Je sechs reale
+Rollen, zwei geplante Rollen pro Person, eine davon primär und aktuell bei ON_SITE.
+Taskzuständigkeit abwechselnd Person/Rolle sowie unabhängig betroffene Person;
+alle Referenzen auf echte Datensätze derselben Aktion. Vollständige synthetische
+Lifecycle-Historien bleiben im SQL-Store; kein Eventhistorien-Prefetch durch den Kern.
+
+| Bestand | Personen | Rollen | Tasks | gespeicherte Events | gemeinsames Ergebnis |
+|---|---:|---:|---:|---:|---|
+| klein | 20 | 6 | 40 | 480 | ADMITTED, vollständige Personen/Funktionen + 16 aktive Tasks |
+| mittel | 100 | 6 | 250 | 10000 | BUDGET_REFUSED vor Payload |
+| groß | 200 | 6 | 1000 | 128000 | BUDGET_REFUSED vor Payload |
+
+Tatsächliche unveränderte Engineering-Charges, **retained / transition in Bytes**:
+
+| Bestand | Action + Personen/Funktionen/Operations | kompakte Taskseite | gemeinsame Hüllen | insgesamt |
+|---|---:|---:|---:|---:|
+| klein | 808348 / 3224176 | 580304 / 2314304 | 2080 / 7808 | **1390732 / 5546288** |
+| mittel | 3803868 / 15206256 | 739152 / 2949696 | 2080 / 7808 | **4545100 / 18163760** |
+| groß | 7562268 / 30239856 | 739612 / 2951536 | 2080 / 7808 | **8303960 / 33199200** |
+
+**KONKRETER GRÖSSENBLOCKER:** Beim großen Bestand passt retained rechnerisch noch
+mit 84648 Bytes Rest, aber transition überschreitet das Limit um **24810592 Bytes**.
+Die vollständige Personen-/Funktionenprojektion alleine benötigt 30239856 Transition-
+Bytes. Ihre Metadaten: 1007 Zeilen (1 Action + 200 Personen + 6 Rollen + 400 Planungs-
+relationen + 200 Primärplanungen + 200 Operationszustände), 3629 Textfelder inklusive
+nullable und 15493 UTF8-Bytes. Nach unveränderter Formel:
+`1007*20608 + 3629*2272 + 15493*80 + 3072 = 30239856`.
+Es dominieren die konservativen Objekt-/Map-/Sortier-/Kopiergewichte, nicht die
+128000 Events: Der Kern fragt deren Tabelle gar nicht ab. Die kompakte Taskseite
+löst diesen verbleibenden Personen-/Funktionen-/Kopierkonflikt nicht.
+
+Zusätzlicher echter Grenzfall: **35 Personen / 250 Tasks** mit denselben Relationen.
+Beide Komponenten passen einzeln in 8+8 MiB, gemeinsam aber **2111080 / 8427680 Bytes**;
+transition liegt **39072 Bytes** über dem Limit. Null Payloadqueries/-BLOBs und keine
+Korruptionsmeldung. Genau diese Verweigerung wäre bei zwei Einzelzulassungen verloren.
+
+Exakte Gesamtgrenze: Bei 20/40 fügen 35529 weitere Actionbeschreibungsbytes eine
+zulässige Gesamtcharge von **2101312 / 8388608 Bytes** hinzu. Ungekürzter Kern wird
+geliefert. Ein weiteres Byte verweigert vor beiden Materialisierern; keine Aufgabe,
+Person oder Rolle wird zur Budgetpassung weggelassen. Alle großen Refusals liefern
+weder Teilpersonen noch Taskseiten/Zähler als eigenständigen CONTENT-Ersatz.
+
+### 44.5 Median/p95 und Grenzen der Messung
+
+Host: Python 3.14.4, SQLite 3.46.1, OpenJDK 17.0.20.1, In-Memory-SQLite über die
+bestehende Bridge. Zwei Warmups, anschließend 20 Messungen je Größe. Median als
+Mittel der beiden mittleren Werte, p95 als nearest rank (19. Wert von 20).
+Enthalten: Bridge-IPC/SQL, Metadatenvalidierung, Unitsbildung, gemeinsame Admission,
+gegebenenfalls Materialisierung und beim Gesamtwert Host-Transaktions-/Cleanup-/
+Publicationgrenzen. Kein Android-/SQLCipher-/Keystore-/Compose-Navigationsnachweis.
+
+| Größe | Metadaten Median / p95 ms | Admission Median / p95 ms | Materialisierung Median / p95 ms | Gesamt Median / p95 ms |
+|---|---:|---:|---:|---:|
+| klein | 3,703 / 4,465 | 0,046 / 0,059 | 4,806 / 6,042 | 9,015 / 10,667 |
+| mittel | 6,104 / 7,234 | 0,047 / 0,084 | entfällt: verweigert | 6,318 / 7,656 **Verweigerung** |
+| groß | 9,926 / 11,393 | 0,044 / 0,054 | entfällt: verweigert | 10,168 / 11,672 **Verweigerung** |
+
+Die kleinen Gesamtzeiten sind vollständige zugelassene Kernreads; die mittleren/
+großen Zeiten ausschließlich Verweigerungszeiten. Kein 0-ms-Materialisierungs-PASS.
+Die ASCII-Titel dieser gemeinsamen Relationsfixture unterscheiden sich von den
+langen Unicode-/NUL-Titeln aus 43; keine direkte Performancegleichsetzung. Alle
+vorhandenen Unicode-/NUL-/Sortier-/Paging-/Budgetproofs bleiben im Regressionlauf.
+Engineering-Charges sind keine gemessenen ART-Deep-Sizes, Native-/GC- oder Compose-
+Retention. Keine 100–150-ms-Produktnavigation oder Release-1.0-Performance behauptet.
+
+### 44.6 Tests, Prüfergebnis und verbleibende Arbeit
+
+12 neue Hostmethoden: realistische Größen und Median/p95, vollständige zugelassene
+Personen-/Rollen-/Planungs-/Operationsprojektion, exakte globale und Personenfilter-
+Taskzähler aus dem Gesamtbestand, bounded Taskseite mit echter Fortsetzung bei 250
+Tasks, Metadaten ohne BLOBs, genau eine Actionpayloadquery, zwei einzeln passende
+aber kumulativ zu große Graphen, exakte gemeinsame Budgetgrenze + nächstes Byte,
+alle Zustandsrennen, verspätete Publication, Cross-Action-/Typ-/Relations-/Domainfehler,
+SQL-/Storage-Injektionen, einen echten SQLite-Enginefehler und beide Cleanupfehler, echte Suspend-Threadwechsel, fremde/wiederholte Pläne,
+negative Units und Overflow. Budgetfehler publizieren nie Teilpayload und blockieren
+den Store nicht. Die bestehenden Reader-/Host-/Android-Proofs wurden nicht abgeschwächt.
+
+Ein erster neuer Negativtest scheiterte beim Anlegen der Fixture: UPDATE mehrerer
+Rollen auf denselben normalizedName verletzte deren UNIQUE-Index, noch vor dem Reader.
+Mutation auf genau eine Rolle begrenzt; der unveränderte erwartete INVALID_DATA-Test
+erreicht damit tatsächlich den Reader und belegt die unterdrückte Publication. Abschluss grün.
+
+Reproduktion: `./gradlew :data:testDebugUnitTest --tests '*ActiveCoreStoreTest' --offline`
+(bei UP-TO-DATE für erneute Messwerte gezielt `--rerun-tasks`). Abschlusslauf:
+**613 App + 734 Data + 4 Security = 1351 Tests, 0 Fehler, 0 Skips**.
+`:app:assembleDebug`, App-/Data-`compileDebugAndroidTestKotlin`, Architekturcheck und
+Produkt-/Demo-Manifestprüfungen offline bestanden. Keine neuen Androidtests ausgeführt,
+keine Instrumentation, Geräteinstallation oder Änderung installierter Apps.
+
+- [#34](https://github.com/JulianGKK/action-planner/issues/34): gemeinsame Metadaten-/
+  Admission-/Materialisierungsstrecke jetzt implementiert und auf SQLite geprüft;
+  unabhängiger Review und reale isolierte SQLCipher-/Room-/Ressourcennachweise bleiben nötig.
+- [#33](https://github.com/JulianGKK/action-planner/issues/33): großer gemeinsamer
+  Größen-/Speichervertrag weiterhin BLOCKER, jetzt mit obigen exakten Refusalzahlen.
+  Keine stillschweigende Gewichts-/Budgetreduktion oder Auslassung von Personen/Rollen.
+- [#35](https://github.com/JulianGKK/action-planner/issues/35) und
+  [#37](https://github.com/JulianGKK/action-planner/issues/37): reale Writer-/UNKNOWN-/
+  Recoveryhooks, synchroner Revoke und einziger Produkt-Snapshot-/Formularowner offen.
+- [#38](https://github.com/JulianGKK/action-planner/issues/38): keine Navigationseinbindung,
+  RAM-Hits oder Compose-Aktivierung; reale Content-OnDraw-Median/p95 erst nach Integration.
+- [#32](https://github.com/JulianGKK/action-planner/issues/32): unverändert offener Cursor-/
+  CursorWindow-/Native-/FD-/Lease-BLOCKER. `SQLCipherStatement.close()` schließt den
+  Cursor nicht explizit. Hosttests prüfen Statement-/Transaktionsende und simulierte
+  Handle-/Lease-Cleanupreihenfolge vor Publication; tatsächliches Android-Room-/Native-/
+  Leaseende folgt im unveränderten Produktionswrapper, wurde hier nicht am Gerät geprüft.
+  Weder Host-Close noch frühere FD-PASS beweisen vollständige native Cursorfreigabe.
+
+Neue Dateien: `ActiveCoreRead.kt`, `CoreReadAdmission.kt`, `ActiveCoreStore.kt`,
+`ProductActiveCoreReader.kt`, `ActiveCoreStoreTest.kt`. Angepasst: Phasentrennung
+in `BoundedActiveStore.kt` und `CompactTaskStore.kt`, reine Kostendiagnose in
+`ActiveWorkspaceBudget.kt`, Standalone-Hinweis in `ProductCompactTaskReader.kt`
+und ausschließlich dieser neue Assessmentabschnitt.
+SessionCoordinator, B2Driver, SQLCipher/Tink, Schema 11, Sessionfristen, Produkt-
+writepfade, ProductViewModel, TaskModel, TaskScreen und Navigation unverändert.
+Keine neuen Dependencies, Netzwerk-/Permissionpfade, Klartextdateien oder Registry.
+Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
+Gerätekennungen im Commit. Regulärer WIP-Commit/Push mit unabhängigem Remote-SHA-
+Abgleich; danach STOPP bis zum unabhängigen GitHub-Review. Kein Force-Push, Merge,
+Release oder Produktupdate.

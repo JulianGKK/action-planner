@@ -144,6 +144,16 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
     private fun utf16Key(id: String) = buildString(id.length*4) { id.forEach { append(it.code.toString(16).uppercase().padStart(4,'0')) } }
 
     suspend fun page(state: CompactTaskState, filter: CompactTaskQuery, after: CompactTaskCursor?): CompactTaskResult.Value {
+        val prepared = preparePage(state, filter, after)
+        val admission = CoreReadAdmission.admit(listOf(prepared))
+        val payload = prepared.materialize(admission)
+        return CompactTaskResult.Value(payload,
+            BoundedTaskReservation(prepared.reservation.retained, prepared.reservation.transition),
+            admission.retained, admission.transition)
+    }
+
+    /** Metadata only. The caller must admit ALL scope parts before this plan can fetch text. */
+    suspend fun preparePage(state: CompactTaskState, filter: CompactTaskQuery, after: CompactTaskCursor?): PreparedCoreRead<CompactTaskPage> {
         filter.affectedPersonId?.let(::checkInput)
         if(after!=null) {
             checkInput(after.id)
@@ -184,26 +194,29 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         val selected="id IN ($candidates)"
         val texts=listOf("id","title","priority","status","assigneePersonId","assigneeRoleId","affectedPersonId")
         val sized=size("tasks",selected,args,texts)
-        val reservation=reserve(sized.first,texts.size,sized.second)
-        observe(Phase.ADMITTED);gate()
-        // Reusing the same bounded key selection in the SAME transaction; SQLite output order
-        // of IN is irrelevant. Sort only the admitted <=32 objects with TaskRules equivalent.
-        val items=ArrayList<CompactTaskItem>(PAGE_SIZE)
-        fetch("tasks",selected,args,texts,listOf("dueAt","createdAt","updatedAt"),sized) { t,n,_ ->
-            val item=CompactTaskItem(t[0]?:invalid(),t[1]?:invalid(),TaskPriority.valueOf(t[2]?:invalid()),TaskStatus.valueOf(t[3]?:invalid()),t[4],t[5],t[6],n[0],n[1]?:invalid(),n[2]?:invalid())
-            if(!TaskRules.valid(TaskInput(item.title,item.priority,item.assigneePersonId,item.assigneeRoleId,item.affectedPersonId,item.dueAt)) || item.title!=item.title.trim()) invalid()
-            items.add(item)
+        val reservation=pageUnits(sized.first,texts.size,sized.second)
+        return PreparedCoreRead(reservation) {
+            observe(Phase.ADMITTED);gate()
+            // Reusing the same bounded key selection in the SAME transaction; SQLite output order
+            // of IN is irrelevant. Sort only the admitted <=32 objects with TaskRules equivalent.
+            val items=ArrayList<CompactTaskItem>(PAGE_SIZE)
+            fetch("tasks",selected,args,texts,listOf("dueAt","createdAt","updatedAt"),sized) { t,n,_ ->
+                val item=CompactTaskItem(t[0]?:invalid(),t[1]?:invalid(),TaskPriority.valueOf(t[2]?:invalid()),TaskStatus.valueOf(t[3]?:invalid()),t[4],t[5],t[6],n[0],n[1]?:invalid(),n[2]?:invalid())
+                if(!TaskRules.valid(TaskInput(item.title,item.priority,item.assigneePersonId,item.assigneeRoleId,item.affectedPersonId,item.dueAt)) || item.title!=item.title.trim()) invalid()
+                items.add(item)
+            }
+            if(items.size.toLong()!=sized.first) invalid()
+            items.sortWith(if(filter.lane==CompactTaskLane.ACTIVE)
+                compareByDescending<CompactTaskItem>{it.priority.ordinal}.thenBy{it.dueAt==null}.thenBy{it.dueAt}.thenBy{it.createdAt}.thenBy{it.id}
+                else compareByDescending<CompactTaskItem>{it.updatedAt}.thenBy{it.id})
+            // Existence probe beyond the last key is unnecessary: a full final page returns a
+            // continuation and the next empty page explicitly marks end. No false completeness.
+            val next=items.lastOrNull()?.takeIf { items.size==PAGE_SIZE }?.let {
+                CompactTaskCursor(state,filter,it.id,it.priority,it.dueAt,it.createdAt,it.updatedAt)
+            }
+            gate();observe(Phase.COMPLETE);gate()
+            CompactTaskPage(state,filter,overall,filtered,items,next)
         }
-        if(items.size.toLong()!=sized.first) invalid()
-        items.sortWith(if(filter.lane==CompactTaskLane.ACTIVE)
-            compareByDescending<CompactTaskItem>{it.priority.ordinal}.thenBy{it.dueAt==null}.thenBy{it.dueAt}.thenBy{it.createdAt}.thenBy{it.id}
-            else compareByDescending<CompactTaskItem>{it.updatedAt}.thenBy{it.id})
-        // Existence probe beyond the last key is unnecessary: a full final page returns a
-        // continuation and the next empty page explicitly marks end. No false completeness.
-        val next=items.lastOrNull()?.takeIf { items.size==PAGE_SIZE }?.let {
-            CompactTaskCursor(state,filter,it.id,it.priority,it.dueAt,it.createdAt,it.updatedAt)
-        }
-        return finish(CompactTaskPage(state,filter,overall,filtered,items,next),reservation)
     }
 
     suspend fun detail(state: CompactTaskState, taskId: String): CompactTaskResult.Value {
@@ -295,7 +308,7 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         }
     }
     private data class Reservation(val units: BoundedTaskReservation, val retained: Long, val transition: Long)
-    private fun reserve(rows: Long, fields: Int, bytes: Long): Reservation {
+    private fun pageUnits(rows: Long, fields: Int, bytes: Long): ActiveCoreReservation {
         fun units(copies: Long) = ActiveWorkspaceBudget.Units(
             objects=(rows+16)*copies*8, strings=(rows*fields+16)*copies,
             utf16Units=(bytes+16384)*copies, arrays=(rows*fields+16)*copies,
@@ -304,7 +317,11 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         // Overlap of old/new page and future UI/form references charged conservatively.
         // No entire-board map/index; sorting is limited to one page. Fixed allowance includes
         // metadata, bound IDs/UTF16 sort key, counters, cursors and SQLite binding copies.
-        val reservation=BoundedTaskReservation(units(4),units(16))
+        return ActiveCoreReservation(units(4),units(16))
+    }
+    private fun reserve(rows: Long, fields: Int, bytes: Long): Reservation {
+        val planned=pageUnits(rows,fields,bytes)
+        val reservation=BoundedTaskReservation(planned.retained,planned.transition)
         val budget=ActiveWorkspaceBudget()
         fun admit(d: ActiveWorkspaceBudget.Decision) { when(d) {
             ActiveWorkspaceBudget.Decision.ADMITTED -> Unit

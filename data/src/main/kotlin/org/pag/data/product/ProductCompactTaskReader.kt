@@ -8,7 +8,8 @@ import org.pag.domain.*
 /** Explicit standalone worker path, never constructed by ProductRuntime or ProductViewModel.
  * currentState MUST be supplied by a trusted synchronized mutation/permission adapter, never
  * inferred from UI snapshots. No new owner/token: existing key, context and DB preflights only.
- * A production adapter and shared pre-materialization admission remain #34/#37 blockers.
+ * Standalone calls do not authorize co-retention. ProductActiveCoreReader supplies joint
+ * first-page admission; real writer hooks and the production owner remain #35/#37 blockers.
  */
 class ProductCompactTaskReader(app: Context, private val access: StorageAccess,
     private val inventory: ProductInventory, private val owner: () -> SessionDbKeyOwner?,
