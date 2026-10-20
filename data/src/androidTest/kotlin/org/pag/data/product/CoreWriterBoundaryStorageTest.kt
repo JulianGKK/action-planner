@@ -77,12 +77,32 @@ class CoreWriterBoundaryStorageTest {
             material.delete(a,checkNotNull(item)){materialCallbacks++;assertEquals(OperationsResult.Value(Unit),it)};run()
             material.summary(a){assertEquals(MaterialSummary(0),(it as OperationsResult.Value).value)};run()
             assertEquals(4,materialCallbacks);assertEquals(10L,epoch.mutationEpoch);assertEquals(10,reports.size)
+            // Expense parent + ordered payments, same injected port; prepared OFFLINE ONLY.
+            val expenses=ProductExpenseRepository(app,access,inventory,{owner},worker,main,blocked,mutations=sink)
+            val submitted=mutableListOf(ExpensePaymentInput("Synthetic A",10),ExpensePaymentInput("Synthetic B",20))
+            var expense:Expense?=null;var expenseCallbacks=0
+            expenses.create(a,ExpenseInput("Synthetic expense",30,submitted)){
+                expenseCallbacks++;expense=(it as OperationsResult.Value).value
+                assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE),reports.last())
+            }
+            submitted.clear();assertEquals(11L,epoch.mutationEpoch);assertEquals(0,expenseCallbacks);run()
+            val oldExpense=checkNotNull(expense)
+            assertEquals(2,oldExpense.payments.size)
+            expenses.edit(a,oldExpense,ExpenseInput("Changed",6,List(3){ExpensePaymentInput("Synthetic $it",2)})){
+                expenseCallbacks++;expense=(it as OperationsResult.Value).value
+            };run()
+            expenses.delete(a,oldExpense){expenseCallbacks++;assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),it)
+                assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),reports.last())};run()
+            expenses.board(a){assertEquals(listOf(checkNotNull(expense)),(it as OperationsResult.Value).value.expenses)};run()
+            expenses.delete(a,checkNotNull(expense)){expenseCallbacks++;assertEquals(OperationsResult.Value(Unit),it)};run()
+            expenses.summary(a){assertEquals(ExpenseSummary(0,0),(it as OperationsResult.Value).value)};run()
+            assertEquals(4,expenseCallbacks)
             actions.advanceActionStatus(a,ActionStatus.ACTIVE){assertTrue(it is ActionChangeResult.Applied)};run()
             val completedCoreReports=coreReports+reports.last()
             assertEquals(7,completedCoreReports.size)
             assertTrue(completedCoreReports.all{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
-            assertEquals(11L,epoch.mutationEpoch);assertEquals(11,reports.size)
-            assertEquals(10,reports.count{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
+            assertEquals(15L,epoch.mutationEpoch);assertEquals(15,reports.size)
+            assertEquals(13,reports.count{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
             assertFalse(epoch.ramReuseEnabled)
         } finally{owner.invalidate();key.fill(0)}
     }

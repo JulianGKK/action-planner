@@ -4,13 +4,14 @@ import androidx.sqlite.SQLiteStatement
 
 /** Same writer stores as production, real schema-11 SQL; no mocked DAO outcomes. */
 internal class HostCoreWriterData(private val sql:SqliteHostConnection):CoreWriterData {
+    var afterChange: (String) -> Unit = {}
     suspend fun <T> query(text:String,args:List<Any?> = emptyList(),work:(SQLiteStatement)->T):T=sql.usePrepared(text){s->
         args.forEachIndexed{i,v->when(v){null->s.bindNull(i+1);is String->s.bindText(i+1,v);is Long->s.bindLong(i+1,v);else->error("Scalar binding")}}
         work(s)
     }
     private suspend fun change(text:String,args:List<Any?>):Int {
         query(text,args){it.step()}
-        return query("SELECT changes()"){it.step();it.getLong(0).toInt()}
+        return query("SELECT changes()"){it.step();it.getLong(0).toInt()}.also{afterChange(text)}
     }
     private fun nullable(s:SQLiteStatement,i:Int)=if(s.isNull(i))null else s.getText(i)
     private fun action(s:SQLiteStatement)=ActionRow(s.getText(0),s.getText(1),s.getText(2),s.getLong(3),s.getLong(4),s.getLong(5),s.getText(6),s.getText(7),if(s.isNull(8))null else s.getLong(8))
@@ -61,6 +62,27 @@ internal class HostCoreWriterData(private val sql:SqliteHostConnection):CoreWrit
         override suspend fun insert(row:MaterialRow){change("INSERT INTO materials VALUES(?,?,?,?,?,?,?,?,?)",listOf(row.id,row.actionId,row.name,row.quantityLabel,row.placeLabel,row.responsiblePersonId,row.linkedTaskId,row.sourceTemplateKey,row.createdAt))}
         override suspend fun update(row:MaterialRow)=change("UPDATE materials SET actionId=?,name=?,quantityLabel=?,placeLabel=?,responsiblePersonId=?,linkedTaskId=?,sourceTemplateKey=?,createdAt=? WHERE id=?",listOf(row.actionId,row.name,row.quantityLabel,row.placeLabel,row.responsiblePersonId,row.linkedTaskId,row.sourceTemplateKey,row.createdAt,row.id))
         override suspend fun delete(actionId:String,id:String)=change("DELETE FROM materials WHERE actionId=? AND id=?",listOf(actionId,id))
+    }
+    // Model native getLong affinity coercion for expense parents. The SAME production
+    // integerParent/invalidPaymentTypes queries must reject corrupt SQL types, not this seam.
+    private fun expenseLong(s:SQLiteStatement,i:Int):Long=when(s.getColumnType(i)) {
+        1->s.getLong(i);2->s.getDouble(i).toLong();3->s.getText(i).toLongOrNull()?:0L;else->0L
+    }
+    private fun expense(s:SQLiteStatement)=ExpenseRow(s.getText(0),s.getText(1),s.getText(2),expenseLong(s,3),expenseLong(s,4))
+    override val expenses=object:ExpenseDao {
+        private suspend fun count(text:String,args:List<Any?>)=query(text,args){it.step();it.getLong(0).toInt()}
+        override suspend fun summary(actionId:String)=query("SELECT COUNT(*) AS count, COALESCE(SUM(totalCents),0) AS totalCents FROM expenses WHERE actionId=?",listOf(actionId)){it.step();ExpenseSummaryRow(it.getLong(0).toInt(),it.getLong(1))}
+        override suspend fun invalidTotals(actionId:String)=count("SELECT COUNT(*) FROM expenses WHERE actionId=? AND (typeof(totalCents)!='integer' OR totalCents<=0)",listOf(actionId))
+        override suspend fun integerParent(actionId:String,id:String)=count("SELECT COUNT(*) FROM expenses WHERE actionId=? AND id=? AND typeof(totalCents)='integer' AND typeof(createdAt)='integer'",listOf(actionId,id))
+        override suspend fun invalidPaymentTypes(actionId:String,id:String)=count("SELECT COUNT(*) FROM expense_payments WHERE actionId=? AND expenseId=? AND (typeof(amountCents)!='integer' OR typeof(position)!='integer' OR position<0 OR position>31)",listOf(actionId,id))
+        override suspend fun list(actionId:String)=rows("SELECT * FROM expenses WHERE actionId=? ORDER BY createdAt,id",listOf(actionId),::expense)
+        override suspend fun get(actionId:String,id:String)=query("SELECT * FROM expenses WHERE actionId=? AND id=?",listOf(actionId,id)){if(it.step())expense(it)else null}
+        override suspend fun payments(actionId:String,id:String)=rows("SELECT * FROM expense_payments WHERE actionId=? AND expenseId=? ORDER BY position",listOf(actionId,id)){ExpensePaymentRow(it.getText(0),it.getText(1),expenseLong(it,2).toInt(),it.getText(3),expenseLong(it,4))}
+        override suspend fun insert(row:ExpenseRow){change("INSERT INTO expenses VALUES(?,?,?,?,?)",listOf(row.id,row.actionId,row.title,row.totalCents,row.createdAt))}
+        override suspend fun insertPayments(rows:List<ExpensePaymentRow>){for(row in rows)change("INSERT INTO expense_payments VALUES(?,?,?,?,?)",listOf(row.actionId,row.expenseId,row.position.toLong(),row.payerLabel,row.amountCents))}
+        override suspend fun update(row:ExpenseRow)=change("UPDATE expenses SET actionId=?,title=?,totalCents=?,createdAt=? WHERE id=?",listOf(row.actionId,row.title,row.totalCents,row.createdAt,row.id))
+        override suspend fun clearPayments(actionId:String,id:String){change("DELETE FROM expense_payments WHERE actionId=? AND expenseId=?",listOf(actionId,id))}
+        override suspend fun delete(actionId:String,id:String)=change("DELETE FROM expenses WHERE actionId=? AND id=?",listOf(actionId,id))
     }
     override val tasks=HostTaskData(sql).tasks
 }

@@ -5,7 +5,7 @@ import org.pag.domain.*
 /** Bridge to the EXISTING metadata validity instance, not another snapshot owner. Construct
  * only beside the future trusted scope/permission adapter (#37); no UI boolean authority.
  * Not installed in product today. The live runtime uses UncachedWorkspaceMutations and has
- * no RAM-hit path. Remaining document/cost/protocol/leadership writers stay UNWIRED / NOT SAFE FOR RAM REUSE.
+ * no RAM-hit path. Remaining document/protocol/leadership writers stay UNWIRED / NOT SAFE FOR RAM REUSE.
  */
 internal class ActiveWorkspaceMutationAdapter(private val validity: ActiveWorkspaceValidity,
     private val binding: ActiveWorkspaceValidity.Binding) : WorkspaceMutationInvalidation {
@@ -33,6 +33,8 @@ internal class ActiveWorkspaceMutationAdapter(private val validity: ActiveWorksp
                 WorkspaceWriterFamily.TASK -> parts
                 WorkspaceWriterFamily.MATERIAL -> setOf(ActiveWorkspaceValidity.Projection.MATERIAL_BOARD,
                     ActiveWorkspaceValidity.Projection.MATERIAL_SUMMARY)
+                WorkspaceWriterFamily.EXPENSE -> setOf(ActiveWorkspaceValidity.Projection.EXPENSE_BOARD,
+                    ActiveWorkspaceValidity.Projection.EXPENSE_SUMMARY)
                 else -> ActiveWorkspaceValidity.Projection.entries.toSet()
             }
 

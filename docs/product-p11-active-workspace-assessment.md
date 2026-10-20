@@ -7430,3 +7430,274 @@ regulärer WIP-Commit/Push auf den bestehenden Branch und unabhängiger GitHub-R
 Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
 Gerätekennungen eingecheckt. Danach **STOPP BIS ZUM UNABHÄNGIGEN GITHUB-REVIEW**.
 Kein Force-Push, Merge, Release oder Produktupdate.
+
+
+## 54. Issue #35 – Expense-Writerintegration
+
+### Ausgangsbasis und RED-Nachweise
+
+Vor Änderungen: lokaler HEAD und unabhängiger GitHub-Branchref exakt
+`12c7e2054a3c0dd5e7f8e6d4676ad88db6d11b68`, Branch
+`p11-performance-optimization`, Arbeitsbaum sauber. Keine fremden Änderungen.
+
+Tatsächlicher vorheriger Pfad: `ExpenseRepository` → `ProductExpenseRepository`
+→ eigener `write`/`run` → `withWriteTransaction` → `ExpenseStore` → Room-DAOs →
+SQLCipher. Bereits vorhandene READY-/Schritt-/Commit-/Publicationgates ersetzten
+weder die gemeinsame Vor-Queue-Invalidierung noch einen expliziten äußeren
+Commit-/Rollback-/Cleanupbeleg.
+
+**GETESTET – RED vor Implementierung:** Zwei neue Methoden in
+`ExpenseWriterWiringTest` schlugen fehl: gemeinsame Boundary fehlt und Runtime
+übergibt den gemeinsamen Mutationsport nicht. Statischer **Wiringnachweis**, kein
+SQLite-Transaktions- oder nativer Cleanupbeweis. Nach Implementierung grün;
+eine weitere Wiringregression sichert das Einfrieren beider Listen vor dem Writepfad.
+Die dynamischen Nachweise verwenden echte SQLite-/Schema-11-Transaktionen.
+
+Zusätzlicher **RED-SQLite-Befund** innerhalb der geforderten Positionsvalidierung:
+Ein einzelnes Payment an persistierter Position `4294967296` wurde nach
+`getLong(...).toInt()` als Position 0 materialisiert und unerwartet akzeptiert.
+Der gezielte Hosttest erwartete ProductStorageFailure und war rot. Die generierte
+Room-DAO verwendet tatsächlich diese Int-Konvertierung; der Host bildet sie nach.
+Dies ist ein reproduzierter zusätzlicher Validierungsbefund, kein behaupteter
+Android-Laufzeitnachweis. Die Query `invalidPaymentTypes` lehnt nun zusätzlich
+`position<0 OR position>31` **vor** Paymentmaterialisierung ab. Negativer Wrap
+`-4294967296` ebenfalls getestet; danach beide grün. Keine Schemaänderung: nur
+DAO-Prüfquery, weiterhin zusätzlich vollständiger Vergleich mit den erwarteten
+Positionen `0..N-1`. SQL-Typgates für Amount/Position bleiben vollständig erhalten.
+
+### IMPLEMENTIERT – gemeinsame Writergrenze
+
+`WorkspaceWriterFamily.EXPENSE` ergänzt. `ProductRuntime` injiziert dieselbe
+`workspaceMutations`-Instanz wie an Action, Person, Operations, Task und Material.
+Standalone-Constructor bleibt entsprechend den vorhandenen Writerfamilien kompatibel:
+Default `UncachedWorkspaceMutations`, Clock weiterhin als letzter Parameter. Keine
+zweite Registry, Material-/Expense-Epoche oder Sessionautorität.
+
+Create/Edit/Delete verwenden jetzt:
+
+```text
+WorkspaceWriteBoundary.submit(EXPENSE, actionId)
+  → aktueller READY-Kontext / OPERATION-Gate
+  → synchrones Pending-Ticket vor worker.execute
+  → READY_TO_OPEN / SessionDbKeyOwner.withDbKey
+  → ActionDatabaseAccess inklusive bisheriger SQLCipher-/Room-Preflights
+  → useWriterConnection / confirmedWorkspaceTransaction(IMMEDIATE)
+  → ExpenseStore / bisherige Room-DAOs
+  → tatsächliches äußeres Transaktionsende
+  → Rückkehr des vollständigen DB-/Keyscopes
+  → Ownerthread: Ticketcompletion
+  → zentrale StorageContext.publish und ticket.isCurrent
+  → Ergebnis-Callback
+```
+
+Die gemeinsame Boundary, `WorkspaceWriteProgress` und
+`confirmedWorkspaceTransaction` wurden funktional **nicht verändert**. ExpenseStore
+öffnet keine unabhängige äußere Transaktion. Aktive äußere Transaktionen werden vom
+bestehenden bestätigten Transaktionsvertrag abgewiesen; ein SAVEPOINT ist kein
+äußerer Commitnachweis. Ein Store-Value allein genügt nicht.
+
+| Ereignis | Writerbeleg und freigegebene Antwort |
+|---|---|
+| Äußerer Commit normal zurückgekehrt, alle DB-/Keyscopes normal zurückgekehrt | COMMITTED / COMPLETE; Erfolg zusätzlich nur unter gültiger zentraler Publication und aktuellem Ticket |
+| Fachliche Rejection und äußerer Rollback normal zurückgekehrt | ROLLED_BACK / COMPLETE; erst dann fachliche Ablehnung veröffentlichen |
+| Unklares äußeres Commit-/Rollbackende oder Exception ohne positiven Endbeleg | UNKNOWN; kein Erfolgs- oder fachlicher Rejectioncallback |
+| Physischer Commit bestätigt, danach DB-/Leasecleanup unbestätigt | COMMITTED / FAILED_OR_UNCONFIRMED; kein Erfolg |
+| Später Revoke nach bekanntem physischem Commit | Kein erfundener Rollback; weiterhin keine unberechtigte Publication |
+| Bereits Pending vor Queue | STALE-Busy-Ablehnung ohne Worker; keine ausgeführte DB-Transaktion, kein Rollbackbeweis |
+| Workerdispatch vor Start fehlgeschlagen | Vorhandener Nichtausführungsbeleg ROLLED_BACK / COMPLETE und Fehlerpfad; kein DB-Rollback vorgetäuscht |
+| Verlorener/fehlgeschlagener Main-Dispatch | Pending bleibt bestehen; keine Abschlussantwort und kein automatischer Retry |
+
+UNKNOWN bzw. unbestätigtes Cleanup sperren die betreffende Generation fail-closed;
+vorhandenes Storage-Failure-/BLOCKED-Verhalten bleibt maßgeblich. Cleanup wird nicht
+aus dem Repository-Value abgeleitet. Die Boundary setzt COMPLETE erst nach Rückkehr
+des ganzen Workclosures. Physisch persistierte Daten und unterdrückte UI-Erfolge
+sind unterschiedliche Beobachtungen und werden getrennt getestet.
+
+### IMPLEMENTIERT – Parent-/Payment-Atomarität, CAS und Listen
+
+Expense-Hauptdatensatz und sämtliche Payments liegen in derselben äußeren
+IMMEDIATE-Transaktion:
+
+- Create: Parent-INSERT und alle geordneten Payment-INSERTs.
+- Edit: vollständiger Read einschließlich Payments, vollständiger Expected-Vergleich,
+  Parent-UPDATE, clearPayments und alle Ersatz-Payment-INSERTs.
+- Delete: vollständiger Expected-Vergleich, Parent-DELETE und bestehende FK-Cascade
+  der Children. Kein manuelles Wiederherstellen oder Teil-Recovery außerhalb der Transaktion.
+
+Unverändert verglichen: Expense-ID über actionlokalen Lookup, Action-ID, Titel,
+totalCents, gesamte geordnete Paymentliste einschließlich Labels/Beträgen/Anzahl,
+createdAt. Veralteter Edit/Delete liefert STALE vor Mutation. Ein aktueller neuer
+Editor darf anschließend erfolgreich speichern. Missing/foreign Action oder Expense
+verändert keine fremden Daten. PayerLabel bleibt unabhängiger Text ohne Person-FK;
+kein P3b-Read und keine neuen Rechte. Insbesondere bleibt die bestehende administrative
+COMPLETED-Kostenausnahme erhalten: ExpenseRules erlaubt Schreiben/Löschen auch dort;
+dadurch werden keine Task-/Material-/Operationsrechte erweitert.
+
+**GETESTET – Listenaliasing:** List-typisierte ExpenseInput-/Expected-Objekte können
+aufrufereigene MutableLists enthalten; im alten direkt erfassten Closure änderten
+spätere Listenmutationen die eingereichten Werte. Ein expliziter Aliastest zeigt diese
+Eigenschaft. Produktion erstellt jetzt vor dem Queuepfad mittels
+`freezeExpenseInput`/`freezeExpenseExpected` eigene, unmodifiable Listen. Paymentblätter
+bestehen ausschließlich aus unveränderlichen String-/Long-vals; zusätzliche Kopien
+der Blätter sind dafür nicht erforderlich. Tests: Mutation der Quelllisten nach
+Queueeintritt verändert weder Create/Editeingabe noch Expected für Edit/Delete;
+MutableList-Casts können den eingefrorenen Stand nicht verändern. Nachträgliche
+Aliasänderung kann insbesondere einen STALE-Expected nicht in einen aktuellen
+Expected verwandeln. Keine neue persistierte Revision oder zusätzliche Langzeitretention.
+
+### IMPLEMENTIERT / GETESTET – Ganzzahlen und minimale DAO-Seam
+
+CoreWriterData lediglich um `ExpenseDao` ergänzt, RoomCoreWriterData delegiert an
+dieselben DAOs. ExpenseStore wurde mechanisch auf diesen Datenport umgestellt.
+Keine neue Transaktions-, Key- oder Autoritätsverantwortung in der Seam.
+
+ExpenseRules.normalized/valid und EuroMoney unverändert: ausschließlich EUR-Cent als
+Long, exakte Summierung mit Overflow-Erkennung, positive Beträge, 1..32 Payments,
+exakte Übereinstimmung Gesamt-/Paymentsumme und bisherige Unicodegrenzen.
+Materialize prüft weiterhin integerParent, invalidPaymentTypes, lückenlose Positionen,
+actionId/expenseId, Normalisierung und vollständige fachliche Gültigkeit. Ein
+SQL-REAL-/TEXT-Wert wird nicht durch stillen getLong-Cast freigegeben. Die zusätzliche
+Positionsrange schließt den oben belegten Int-Wrap. ExpenseSummary prüft weiter
+ungültige Parenttotals und verwendet die exakte SQLite-Integer-SUM; ein Gesamtüberlauf
+wird als Fehler behandelt. Summary bleibt bewusst Count/Summe der Parentzeilen,
+kein impliziter Vollread aller Payments und kein vollständiger Boardintegritätsbeweis.
+
+HostCoreWriterData bildet die unveränderten DAO-Queries auf echtem Schema-11-SQLite
+ab, einschließlich typeof-Gates. Für Expensefelder modelliert der Adapter native
+numerische getLong-Konvertierung ausdrücklich, damit der Test nicht schon an einem
+strengeren Hostparser scheitert und die Produktionsgates tatsächlich geprüft werden.
+Die Boundsquery und ihre Room-generierte SQL-Form sind zusätzlich getestet. Ein
+Host-only `afterChange`-Hook injiziert Fehler nach realen SQL-Sideeffects; daneben
+prüft ein tatsächlicher SQLite-Triggerfehler den Abbruch beim zweiten Payment.
+Keine neue Dependency, Produktionsseam bleibt eng auf DAO-Zugriff beschränkt.
+
+### GETESTET – echte SQLite-Regressionen und Races
+
+Neuer `ExpenseWriterIntegrationTest` verwendet den vorhandenen gemeinsamen
+`CoreWriterIntegrationTest.H`-Harness (nur interne Testsichtbarkeit erweitert).
+Produktive ExpenseStore-Logik, gemeinsame Boundary und bestätigte äußere Transaktion;
+SQLite in-memory aus exportiertem Schema 11, Foreign Keys aktiviert. Outcome-/
+Cleanup-/Scopefehler werden vertrauenswürdig simuliert; keine UI-Boolean-Autorität
+in der Runtime ergänzt. Bestehende Corewriter-Familienschleifen prüfen EXPENSE
+zusätzlich mit echten Parent-/Paymentwrites.
+
+Nachweise:
+
+- Create/Edit/Delete samt allen Payments und exakter Summary in PREPARATION, ACTIVE
+  und COMPLETED; Read/Summary erzeugen keine Mutationsepoche.
+- Vollwert-CAS: geänderter Parent, Betrag, Label, Reihenfolge, Anzahl und alter
+  Delete-Dialog; erster bestätigter Stand bleibt erhalten. INVALID, fehlende/fremde
+  Aktion und fehlende Kostenposition: bestätigte fachliche Rollbacks ohne Fremdänderung.
+- Ungültige Summen, 0/negative Payments, fehlende bzw. >32 Payments, Longoverflow,
+  Unicodegrenzen; maximale gültige 32-Payment-Eingabe bleibt zugänglich.
+- SQL-REAL/TEXT für Parent-Total/createdAt und Payment-Amount/Position, ungültige
+  Positionen einschließlich Int-Wrap, fehlende/zu viele Children, falsche Summen und
+  unnormalisierte Labels: keine Materialisierung/Erfolgspublication. Summary-Maximum
+  exakt Long.MAX_VALUE, weiterer positiver Parent führt zu SQLite-Integeroverflow.
+- Fehler nach Parent-INSERT, im Payment-INSERT, nach Parent-UPDATE, nach clearPayments,
+  bei erneutem Payment-INSERT und nach Parent-DELETE: kompletter vorheriger SQL-Stand
+  samt aller Payments bleibt erhalten. Createfehler hinterlässt weder Parent noch
+  Childrest. Foreign-action Payment-FK und Parent-/Action-Cascade separat geprüft.
+- Fachliche Rejection nach echten Sideeffects: ROLLED_BACK erst nach tatsächlichem
+  äußeren Rollback. Fehlgeschlagener Rollback: UNKNOWN, kein Callback; uncommittierter
+  SQL-Zustand separat beobachtet und erst im Harness-Cleanup zurückgerollt.
+- Für alle drei Writes separat: Lock vor Worker, während Write, vor Commit, nach
+  Commit und vor Publication; Generation-/Permission-/Actionwechsel, Storage BLOCKED,
+  unklarer Abschluss vor/nach physischem Commit, DB-/Keycleanupfehler.
+- SQL-Zustand, Outcome und UI-Callback getrennt; doppelte Worker-/Main-Runnables
+  haben nur eine Wirkung. Lost/failed Main-Dispatch bleibt Pending; fehlgeschlagener
+  Workerdispatch schreibt nichts. Value ohne bestätigten Commit erzeugt keinen Erfolg.
+- EXPENSE ↔ MATERIAL/TASK/OPERATIONS und jede übrige Paarung dieser vier Familien:
+  erste Mutation invalidiert vor Queue, alle weiteren Busy ohne Queue/DB-Transaktion;
+  eine gemeinsame Epoche, kein zweiter Invalidierer und kein RAM-Hit.
+- Negativer ABA-Test: Expense A → B → A stellt inklusive Payments denselben Vollwert
+  wieder her; alter Expected wird dann akzeptiert. Keine allgemeine ABA-Sicherheit.
+
+Gezielter Abschlusslauf: **82 Tests (77 Data, 5 App), 0 Fehler, 0 Errors, 0 Skips**.
+Ein Vorbereitungsfehler im neuen JUnit-Test (nicht-void Rückgabetyp) wurde korrigiert;
+keine Assertion abgeschwächt. RED-Fehler und spätere grüne Nachweise getrennt dokumentiert.
+
+### Android – NUR OFFLINE VORBEREITET, keine Gerätefreigabe
+
+Bestehende ExpenseStorageTest-Aufrufe bleiben kompatibel. Zusätzlicher isolierter
+SQLCipher-/Room-Positionswrap-Test vorbereitet. CoreWriterBoundaryStorageTest um
+reales ProductExpenseRepository mit gemeinsamem Port erweitert: Create mit nach
+Submit geleerter Quellliste, Edit mit Paymentersatz, STALE-Delete, Boardread, aktuelles
+Delete und leere Summary; vier Expenseantworten, jeweils doppelte Worker-Runnables.
+Mit unveränderten Core-/Materialnachweisen nun 15 gemeinsame Epochenschritte,
+13 COMMITTED-/COMPLETE- und zwei ROLLED_BACK-/COMPLETE-Belege.
+
+**Nicht ausgeführt.** Eigener synthetischer Namespace/Key, Keyinvalidate/-fill im
+bestehenden Finally. Vor einem später gesondert genehmigten Gerätelauf müssen
+Fixture-Isolierung und sichere, vollständige, geprüfte Verzeichnisbereinigung
+zusätzlich nachgewiesen werden; der bestehende Corefixture hat derzeit keine so
+freigegebene Verzeichnisbereinigung. Offline-Kompilation erteilt keine Gerätefreigabe.
+Keine Installation, Instrumentation oder Änderung installierter Apps in diesem Slice.
+
+### NOCH NICHT ANGEBUNDEN / BLOCKER
+
+- [#35](https://github.com/JulianGKK/action-planner/issues/35): Expensegrenze
+  **IMPLEMENTIERT / GETESTET** im beschriebenen Host-/Wiringumfang. ProtocolWriter,
+  MemoryReportWriter, DocumentWriter, Leadership/P3b, Maintenance/Recovery bleiben
+  **UNWIRED / NOT SAFE FOR RAM REUSE**. Keine globale Snapshotinvalidierungsfreigabe.
+- [#36](https://github.com/JulianGKK/action-planner/issues/36): Expense-Vollwert-CAS
+  einschließlich eingefrorener Payments erhalten; allgemeines persistiertes ABA
+  nicht gelöst. Offene Action-/Operations-Live-Editorgrenzen aus §51 unverändert.
+- [#37](https://github.com/JulianGKK/action-planner/issues/37): Snapshotowner und
+  atomare Payload-Publication **NOCH NICHT ANGEBUNDEN**. Lokale Requesttokens sind
+  keine Sessionautorität. StorageContext bleibt zentrale Publicationgrenze;
+  unverändertes ExpenseModel prüft zusätzlich Action/Status/Generation/Epoch und
+  eigene Write-/Readrequests vor Formularabschluss/Feedback. Keine optimistischen Patches.
+- [#38](https://github.com/JulianGKK/action-planner/issues/38): keine neue Navigation,
+  Cache-/Performanceintegration oder Android-Performancefreigabe.
+- [#32](https://github.com/JulianGKK/action-planner/issues/32): eigenständiger nativer
+  Cursor-/Cleanup-**BLOCKER**. SQLCipherStatement.close() schließt den Cursor nicht
+  explizit. Host-Statementcleanup, simulierte DB-/Keycleanupfehler und FD-PASS sind
+  kein vollständiger nativer Cursor-/Key-/Room-Leaknachweis.
+
+Runtime bleibt UncachedWorkspaceMutations, ramReuseEnabled=false. Der nicht produktiv
+installierte ActiveWorkspaceMutationAdapter kennt EXPENSE_BOARD/EXPENSE_SUMMARY:
+Board, Count und totalCents für PREPARATION-Übersicht und ACTIVE-Hub. Keine erfundenen
+Material-/Taskänderungen durch Expense; deren bisherige Impacts bleiben erhalten,
+übrige konservative Corefamilien umfassen auch die neuen Projektionsmetadaten.
+Pending sperrt Reuse, Commit markiert nichts automatisch clean, UNKNOWN/Cleanupfehler
+bleiben fail-closed. Kein Payloadowner, keine zweite Registry oder RAM-Freigabe.
+
+SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink, B2Driver,
+Schema 11, 180 s absolut/30 s READY idle und 8+8-MiB-Sicherheitsbudget unverändert.
+Keine neue Permission/Dependency/Persistenz, keine Migration, keine produktive
+Cache-/Snapshotaktivierung. Andere Writerproduktpfade unverändert. Keine vollständige
+P11-Snapshot-, Editor- oder Release-1.0-Freigabe.
+
+
+**Vollständiger Offline-Abschlusslauf: PASS.**
+
+```text
+./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest \
+  :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin \
+  :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline
+```
+
+**1.497 Hosttests bestanden:** App 669, Data 824, Security 4. **0 Fehler, 0 Errors,
+0 Skips.** Domain ohne Testsources, nicht als weiterer Test gezählt. Bestehende
+Material-/Task-/Action-/Person-/Rollenplan-/Operations-/Security-/Publicationregressionen
+enthalten. App-Offline-Build, beide Androidtest-Kompilationen, Architekturprüfung und
+Prototype-/Demo-Manifestchecks erfolgreich. Vorhandene Compilerwarnungen sichtbar
+geblieben; keine Testskips oder abgeschwächten Assertions. Androidtests nur kompiliert.
+
+Geändert: ProductExpenseRepository.kt, ProductRuntime.kt, ExpenseDatabase.kt
+(ausschließlich Positionsprüfquery), CoreWriterData.kt,
+WorkspaceMutationInvalidation.kt, ActiveWorkspaceMutationAdapter.kt,
+ActiveWorkspaceValidity.kt (nur neue Projektionsbezeichner), HostCoreWriterData.kt,
+CoreWriterIntegrationTest.kt (Testharnesssichtbarkeit und neue Familienschleifen),
+ExpenseProjectionTest.kt, neue ExpenseWriterWiringTest.kt und
+ExpenseWriterIntegrationTest.kt, CoreWorkspaceMutationAdapterTest.kt,
+CoreWriterBoundaryStorageTest.kt, ExpenseStorageTest.kt und dieser Abschnitt.
+WorkspaceWriteBoundary/-Progress/confirmedWorkspaceTransaction sowie die anderen
+produktiven Writer wurden funktional unverändert verwendet.
+
+Abschlusskontrollen: `git diff --check`, `git status -sb`, vollständige Diffprüfung,
+regulärer WIP-Commit/Push auf den bestehenden Branch und unabhängiger GitHub-Ref-Abgleich.
+Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
+Gerätekennungen eingecheckt. Danach **STOPP BIS ZUM UNABHÄNGIGEN GITHUB-REVIEW**.
+Kein Force-Push, Merge, Release oder Produktupdate.

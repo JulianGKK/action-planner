@@ -90,7 +90,7 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
     val memoryReports: MemoryReportRepository = ProductMemoryReportRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
     val expenses: ExpenseRepository = ProductExpenseRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure)
+        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
     val documents: DocumentRepository = ProductDocumentRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
     val operations: OperationsRepository = ProductOperationsRepository(activity.applicationContext, session, inventory,

@@ -2,28 +2,51 @@ package org.pag.data.product
 
 import android.content.Context
 import androidx.room3.withReadTransaction
-import androidx.room3.withWriteTransaction
+import androidx.room3.useWriterConnection
 import org.pag.domain.*
 import java.util.UUID
+import java.util.Collections
 import java.util.concurrent.Executor
 
 /** Existing short-lived READY/OPERATION/STEP/COMMIT/publication pattern, no P3b reads. */
 class ProductExpenseRepository(app: Context, private val access: StorageAccess, private val inventory: ProductInventory,
     private val owner: () -> SessionDbKeyOwner?, private val worker: Executor, private val main: Executor,
-    private val blocked: () -> Unit, private val now: () -> Long = System::currentTimeMillis) : ExpenseRepository {
+    private val blocked: () -> Unit,
+    mutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(), private val now: () -> Long = System::currentTimeMillis) : ExpenseRepository {
     private val database = ActionDatabaseAccess(app.applicationContext)
+    private val mutationBoundary = WorkspaceWriteBoundary(access, worker, main, mutations, blocked)
     override fun summary(actionId: String, publish: (OperationsResult<ExpenseSummary>) -> Unit) =
         run(publish) { d, c -> d.withReadTransaction { ExpenseStore(d, c, now).summary(actionId) } }
     override fun board(actionId: String, publish: (OperationsResult<ExpenseBoard>) -> Unit) =
         run(publish) { d, c -> d.withReadTransaction { ExpenseStore(d, c, now).board(actionId) } }
-    override fun create(actionId: String, input: ExpenseInput, publish: (OperationsResult<Expense>) -> Unit) =
-        write(publish) { it.create(actionId, input) }
-    override fun edit(actionId: String, expected: Expense, input: ExpenseInput, publish: (OperationsResult<Expense>) -> Unit) =
-        write(publish) { it.edit(actionId, expected, input) }
-    override fun delete(actionId: String, expected: Expense, publish: (OperationsResult<Unit>) -> Unit) =
-        write(publish) { it.delete(actionId, expected) }
-    private fun <T> write(publish: (OperationsResult<T>) -> Unit, work: suspend (ExpenseStore) -> OperationsResult<T>) =
-        run(publish) { d, c -> d.withWriteTransaction { val result = work(ExpenseStore(d, c, now)); requireOperations(c, AccessPoint.COMMIT); result } }
+    override fun create(actionId: String, input: ExpenseInput, publish: (OperationsResult<Expense>) -> Unit) {
+        val submitted = freezeExpenseInput(input)
+        write(actionId, publish) { it.create(actionId, submitted) }
+    }
+    override fun edit(actionId: String, expected: Expense, input: ExpenseInput, publish: (OperationsResult<Expense>) -> Unit) {
+        val original = freezeExpenseExpected(expected)
+        val submitted = freezeExpenseInput(input)
+        write(actionId, publish) { it.edit(actionId, original, submitted) }
+    }
+    override fun delete(actionId: String, expected: Expense, publish: (OperationsResult<Unit>) -> Unit) {
+        val original = freezeExpenseExpected(expected)
+        write(actionId, publish) { it.delete(actionId, original) }
+    }
+    private fun <T> write(actionId: String, publish: (OperationsResult<T>) -> Unit,
+        work: suspend (ExpenseStore) -> OperationsResult<T>) =
+        mutationBoundary.submit<OperationsResult<T>>(WorkspaceMutation(WorkspaceWriterFamily.EXPENSE, actionId), publish,
+            { OperationsResult.Rejected(OperationsFailure.STALE) }, { it is OperationsResult.Value }) { c, progress ->
+            if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
+            (owner() ?: throw ProductStorageFailure()).withDbKey(c) { key ->
+                database.use(inventory.database, key, c) { db ->
+                    db.useWriterConnection { tx ->
+                        confirmedWorkspaceTransaction(tx, c, progress, { it is OperationsResult.Rejected }) {
+                            work(ExpenseStore(db, c, now))
+                        }
+                    }
+                }
+            }
+        }
     private fun <T> run(publish: (OperationsResult<T>) -> Unit, work: suspend (ActionDatabase, StorageContext) -> OperationsResult<T>) {
         val c = access.acquire(AccessScope.READY) ?: return
         worker.execute {
@@ -36,18 +59,24 @@ class ProductExpenseRepository(app: Context, private val access: StorageAccess, 
         }
     }
 }
-internal class ExpenseStore(private val db: ActionDatabase, private val c: StorageContext, private val now: () -> Long) {
+/** Payment leaves contain only immutable Strings/Longs. Copy and wrap the list before queue,
+ * so caller mutation or a MutableList cast cannot change the submitted CAS/draft snapshot. */
+internal fun freezeExpenseInput(input: ExpenseInput) = input.copy(payments = Collections.unmodifiableList(ArrayList(input.payments)))
+internal fun freezeExpenseExpected(expected: Expense) = expected.copy(payments = Collections.unmodifiableList(ArrayList(expected.payments)))
+
+internal class ExpenseStore(private val data: CoreWriterData, private val c: StorageContext, private val now: () -> Long) {
+    constructor(db: ActionDatabase, c: StorageContext, now: () -> Long) : this(RoomCoreWriterData(db), c, now)
     private suspend fun <T> step(work: suspend () -> T): T { requireOperations(c); return work() }
     private fun denied(reason: OperationsFailure) = OperationsResult.Rejected(reason)
     private suspend fun permission(a: String, write: Boolean): OperationsFailure? {
-        val status = step { db.actions().get(a)?.model()?.status } ?: return OperationsFailure.NOT_FOUND
+        val status = step { data.actions.get(a)?.model()?.status } ?: return OperationsFailure.NOT_FOUND
         return if (if (write) ExpenseRules.mayWrite(status) else ExpenseRules.mayRead(status)) null else OperationsFailure.NOT_ALLOWED
     }
     private suspend fun materialize(row: ExpenseRow): Expense {
         // SQLite affinity alone does not prevent REAL values from being coerced by getLong.
-        if (step { db.expenses().integerParent(row.actionId, row.id) } != 1 ||
-            step { db.expenses().invalidPaymentTypes(row.actionId, row.id) } != 0) throw ProductStorageFailure()
-        val children = step { db.expenses().payments(row.actionId, row.id) }
+        if (step { data.expenses.integerParent(row.actionId, row.id) } != 1 ||
+            step { data.expenses.invalidPaymentTypes(row.actionId, row.id) } != 0) throw ProductStorageFailure()
+        val children = step { data.expenses.payments(row.actionId, row.id) }
         if (children.map { it.position } != children.indices.toList() || children.any { it.actionId != row.actionId || it.expenseId != row.id }) throw ProductStorageFailure()
         val m = Expense(row.id, row.actionId, row.title, row.totalCents, children.map { ExpensePayment(it.payerLabel, it.amountCents) }, row.createdAt)
         if (!ExpenseRules.valid(m.input()) || ExpenseRules.normalized(m.input()) != m.input()) throw ProductStorageFailure()
@@ -55,14 +84,14 @@ internal class ExpenseStore(private val db: ActionDatabase, private val c: Stora
     }
     suspend fun summary(a: String): OperationsResult<ExpenseSummary> {
         permission(a, false)?.let { return denied(it) }
-        if (step { db.expenses().invalidTotals(a) } != 0) throw ProductStorageFailure()
-        val s = step { db.expenses().summary(a) }
+        if (step { data.expenses.invalidTotals(a) } != 0) throw ProductStorageFailure()
+        val s = step { data.expenses.summary(a) }
         if (s.count < 0 || s.totalCents < 0 || (s.count == 0) != (s.totalCents == 0L)) throw ProductStorageFailure()
         return OperationsResult.Value(ExpenseSummary(s.count, s.totalCents))
     }
     suspend fun board(a: String): OperationsResult<ExpenseBoard> {
         permission(a, false)?.let { return denied(it) }
-        return OperationsResult.Value(ExpenseBoard(a, step { db.expenses().list(a) }.map { materialize(it) }))
+        return OperationsResult.Value(ExpenseBoard(a, step { data.expenses.list(a) }.map { materialize(it) }))
     }
     private fun Expense.row() = ExpenseRow(id, actionId, title, totalCents, createdAt)
     private fun Expense.children() = payments.mapIndexed { index, p -> ExpensePaymentRow(actionId, id, index, p.payerLabel, p.amountCents) }
@@ -71,12 +100,12 @@ internal class ExpenseStore(private val db: ActionDatabase, private val c: Stora
         val i = ExpenseRules.normalized(input)
         if (!ExpenseRules.valid(i)) return denied(OperationsFailure.INVALID)
         val m = Expense(UUID.randomUUID().toString(), a, i.title, i.totalCents, i.payments.map { ExpensePayment(it.payerLabel, it.amountCents) }, now())
-        step { db.expenses().insert(m.row()) }; step { db.expenses().insertPayments(m.children()) }
+        step { data.expenses.insert(m.row()) }; step { data.expenses.insertPayments(m.children()) }
         return OperationsResult.Value(m)
     }
     private suspend fun existing(a: String, expected: Expense): OperationsResult<Expense> {
         permission(a, true)?.let { return denied(it) }
-        val row = step { db.expenses().get(a, expected.id) } ?: return denied(OperationsFailure.NOT_FOUND)
+        val row = step { data.expenses.get(a, expected.id) } ?: return denied(OperationsFailure.NOT_FOUND)
         val old = materialize(row)
         if (expected.actionId != a || expected != old) return denied(OperationsFailure.STALE)
         return OperationsResult.Value(old)
@@ -86,14 +115,14 @@ internal class ExpenseStore(private val db: ActionDatabase, private val c: Stora
         val i = ExpenseRules.normalized(input)
         if (!ExpenseRules.valid(i)) return denied(OperationsFailure.INVALID)
         val m = expected.copy(title = i.title, totalCents = i.totalCents, payments = i.payments.map { ExpensePayment(it.payerLabel, it.amountCents) })
-        if (step { db.expenses().update(m.row()) } != 1) throw ProductStorageFailure()
-        step { db.expenses().clearPayments(a, m.id) }; step { db.expenses().insertPayments(m.children()) }
+        if (step { data.expenses.update(m.row()) } != 1) throw ProductStorageFailure()
+        step { data.expenses.clearPayments(a, m.id) }; step { data.expenses.insertPayments(m.children()) }
         return OperationsResult.Value(m)
     }
     suspend fun delete(a: String, expected: Expense): OperationsResult<Unit> {
         val old = existing(a, expected); if (old is OperationsResult.Rejected) return old
-        if (!ExpenseRules.mayDelete(step { db.actions().get(a)!!.model().status })) return denied(OperationsFailure.NOT_ALLOWED)
-        if (step { db.expenses().delete(a, expected.id) } != 1) throw ProductStorageFailure()
+        if (!ExpenseRules.mayDelete(step { data.actions.get(a)!!.model().status })) return denied(OperationsFailure.NOT_ALLOWED)
+        if (step { data.expenses.delete(a, expected.id) } != 1) throw ProductStorageFailure()
         return OperationsResult.Value(Unit)
     }
 }

@@ -31,7 +31,7 @@ internal class ActiveWorkspaceValidity(
             require(generation >= 0 && permissionRevision >= 0)
         }
     }
-    enum class Projection { ACTION, PEOPLE, OPERATIONS, TASKS, TASK_COUNTS, MATERIAL_BOARD, MATERIAL_SUMMARY }
+    enum class Projection { ACTION, PEOPLE, OPERATIONS, TASKS, TASK_COUNTS, MATERIAL_BOARD, MATERIAL_SUMMARY, EXPENSE_BOARD, EXPENSE_SUMMARY }
     /** Owner lifecycle only, never an assertion that the session is READY. */
     enum class State { ACTIVE, REVOKED, RECOVERY_REQUIRED }
     enum class Outcome { COMMITTED, ROLLED_BACK, UNKNOWN }

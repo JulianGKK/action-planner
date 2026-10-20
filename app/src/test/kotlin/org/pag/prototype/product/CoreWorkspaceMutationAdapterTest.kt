@@ -23,7 +23,7 @@ class CoreWorkspaceMutationAdapterTest {
         fun load(){val t=validity.beginRead(all)!!;assertTrue(validity.publishRead(t,all,Cleanup.COMPLETE){})}
     }
     @Test fun everyCoreFamilyInvalidatesAllDependenciesBeforeQueueOnTheSameEpoch() {
-        for(family in WorkspaceWriterFamily.entries.filter{it!=WorkspaceWriterFamily.TASK && it!=WorkspaceWriterFamily.MATERIAL}) {
+        for(family in WorkspaceWriterFamily.entries.filter{it!=WorkspaceWriterFamily.TASK && it!=WorkspaceWriterFamily.MATERIAL && it!=WorkspaceWriterFamily.EXPENSE}) {
             val h=H();h.load();assertTrue(h.validity.canReuse(h.all));val before=h.validity.mutationEpoch
             val write=h.port.beforeCoreQueue(WorkspaceMutation(family,if(family==WorkspaceWriterFamily.ACTION_CREATE)null else "a"),1)!!
             assertEquals(before+1,h.validity.mutationEpoch);assertTrue(h.validity.isPending())
@@ -42,6 +42,19 @@ class CoreWorkspaceMutationAdapterTest {
         assertFalse(h.validity.canReuse(parts));assertNull(h.port.beforeTaskQueue("a",1))
         assertTrue(ticket.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)))
         assertFalse(h.validity.canReuse(parts));assertTrue(ticket.isCurrent())
+    }
+    @Test fun expenseInvalidatesBoardCountAndTotalAndRemainsFailClosed() {
+        for(failure in listOf("none","unknown","cleanup")) {
+            val h=H();h.load();val parts=setOf(Projection.EXPENSE_BOARD,Projection.EXPENSE_SUMMARY)
+            assertEquals(parts,ActiveWorkspaceMutationAdapter.affected(WorkspaceWriterFamily.EXPENSE))
+            val ticket=h.port.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.EXPENSE,"a"),1)!!
+            assertEquals(1L,h.validity.mutationEpoch);assertTrue(parts.all{h.validity.isDirty(it)})
+            assertFalse(h.validity.canReuse(parts));assertNull(h.validity.beginRead(parts));assertNull(h.port.beforeTaskQueue("a",1))
+            assertTrue(ticket.finish(WorkspaceWriteCompletion(if(failure=="unknown")WorkspaceWriteOutcome.UNKNOWN else WorkspaceWriteOutcome.COMMITTED,
+                if(failure=="cleanup")WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED else WorkspaceWriteCleanup.COMPLETE)))
+            assertFalse(h.validity.canReuse(parts));assertEquals(failure=="none",ticket.isCurrent())
+            if(failure!="none")assertEquals(State.RECOVERY_REQUIRED,h.validity.state)
+        }
     }
     @Test fun actionSwitchStatusExitAndUnknownNeverResurrectAnActiveBinding() {
         for(change in listOf("action","generation","permission","status-exit","unknown","cleanup")) {

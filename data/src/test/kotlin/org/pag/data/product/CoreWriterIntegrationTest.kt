@@ -13,14 +13,14 @@ import java.util.concurrent.Executor
  * and resource/Room lifecycle simulations; not an Android SQLCipher or payload-owner proof.
  */
 class CoreWriterIntegrationTest {
-    private class Queue:Executor {
+    internal class Queue:Executor {
         val jobs=ArrayDeque<Runnable>()
         var onQueue:()->Unit={}
         override fun execute(command:Runnable){onQueue();jobs.add(command)}
         fun drain(){while(jobs.isNotEmpty())jobs.removeFirst().run()}
     }
     private class Rollback(val value:Any?):RuntimeException()
-    private class H:AutoCloseable {
+    internal class H:AutoCloseable {
         val db=SqliteHostConnection();val data=HostCoreWriterData(db)
         val worker=Queue();val main=Queue();val epoch=UncachedWorkspaceMutations()
         val requests=ArrayList<WorkspaceMutation>();val completions=ArrayList<WorkspaceWriteCompletion>()
@@ -92,6 +92,7 @@ class CoreWriterIntegrationTest {
             WorkspaceWriterFamily.ACTION_STATUS->ActionWriterStore(data,c).advance("a",ActionStatus.PREPARATION)
             WorkspaceWriterFamily.PERSON->PersonWriterStore(data,c).change("a",null,"Synthetic created")
             WorkspaceWriterFamily.MATERIAL->MaterialStore(data,c){++time}.create("a",MaterialInput("Synthetic material"))
+            WorkspaceWriterFamily.EXPENSE->ExpenseStore(data,c){++time}.create("a",ExpenseInput("Synthetic expense",1,listOf(ExpensePaymentInput("Synthetic payer",1))))
             else->OperationsStore(data,c){++time}.role("a",null,"Synthetic created")
         }
         fun effect(family:WorkspaceWriterFamily)=when(family) {
@@ -100,6 +101,7 @@ class CoreWriterIntegrationTest {
             WorkspaceWriterFamily.ACTION_STATUS->actionRow().status==ActionStatus.ACTIVE
             WorkspaceWriterFamily.PERSON->count("persons")==3L
             WorkspaceWriterFamily.MATERIAL->count("materials")==1L
+            WorkspaceWriterFamily.EXPENSE->count("expenses")==1L && count("expense_payments")==1L
             else->count("roles")==2L
         }
         fun advance(from:ActionStatus)=write<ActionChangeResult>(WorkspaceWriterFamily.ACTION_STATUS,{it is ActionChangeResult.Rejected},{ActionChangeResult.Rejected(ActionChangeRejection.STALE)}){ActionWriterStore(data,it){++time}.advance("a",from)}
@@ -453,7 +455,7 @@ class CoreWriterIntegrationTest {
         assertEquals(3L,h.count("persons"));assertEquals(1L,h.count("roles"));assertEquals(0L,h.count("task_events"));assertEquals(1,h.completions.size)
     }
     @Test fun allFamiliesUnknownEndAndCleanupNeverBecomeValueSuccess() {
-        for(family in listOf(WorkspaceWriterFamily.ACTION_CREATE,WorkspaceWriterFamily.ACTION_EDIT,WorkspaceWriterFamily.ACTION_STATUS,WorkspaceWriterFamily.PERSON,WorkspaceWriterFamily.OPERATIONS,WorkspaceWriterFamily.MATERIAL))
+        for(family in listOf(WorkspaceWriterFamily.ACTION_CREATE,WorkspaceWriterFamily.ACTION_EDIT,WorkspaceWriterFamily.ACTION_STATUS,WorkspaceWriterFamily.PERSON,WorkspaceWriterFamily.OPERATIONS,WorkspaceWriterFamily.MATERIAL,WorkspaceWriterFamily.EXPENSE))
             for(failure in listOf("end-before","end-after","database","key")) H().use {h->
                 when(failure){"end-before"->h.failEndBefore=true;"end-after"->h.failEndAfter=true;"database"->h.dbCleanup={error("SYNTHETIC_CLEANUP")};else->h.keyCleanup={error("SYNTHETIC_CLEANUP")}}
                 var calls=0

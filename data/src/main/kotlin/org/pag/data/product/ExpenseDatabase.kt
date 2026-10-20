@@ -22,7 +22,7 @@ internal data class ExpenseSummaryRow(val count: Int, val totalCents: Long)
     suspend fun invalidTotals(actionId: String): Int
     @Query("SELECT COUNT(*) FROM expenses WHERE actionId=:actionId AND id=:id AND typeof(totalCents)='integer' AND typeof(createdAt)='integer'")
     suspend fun integerParent(actionId: String, id: String): Int
-    @Query("SELECT COUNT(*) FROM expense_payments WHERE actionId=:actionId AND expenseId=:id AND (typeof(amountCents)!='integer' OR typeof(position)!='integer')")
+    @Query("SELECT COUNT(*) FROM expense_payments WHERE actionId=:actionId AND expenseId=:id AND (typeof(amountCents)!='integer' OR typeof(position)!='integer' OR position<0 OR position>31)")
     suspend fun invalidPaymentTypes(actionId: String, id: String): Int
     @Query("SELECT * FROM expenses WHERE actionId=:actionId ORDER BY createdAt,id") suspend fun list(actionId: String): List<ExpenseRow>
     @Query("SELECT * FROM expenses WHERE actionId=:actionId AND id=:id") suspend fun get(actionId: String, id: String): ExpenseRow?
