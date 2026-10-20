@@ -70,17 +70,31 @@ internal class SqlCipherDocumentImportDatabase(app: Context, private val invento
  */
 internal object DocumentNamespaceLane {
     private val monitor = Any()
-    @Volatile private var epoch = 0L
+    // One epoch, one bounded metadata stamp. Fresh identity prevents an admission CAS from
+    // succeeding across a fence; no payload, active-job registry or session authority.
+    private class FenceStamp(val epoch: Long)
+    private val order = java.util.concurrent.atomic.AtomicReference(FenceStamp(0L))
     fun requireExclusive() { if (!Thread.holdsLock(monitor)) throw ProductStorageFailure() }
-    fun ticket() = epoch
-    /** Nonblocking liveness observation, not authorization or an atomic publication lock. */
-    fun isCurrent(ticket: Long) = ticket == epoch
+    fun ticket() = order.get().epoch
+    /** Observation only; publication requires tryAdmitPublication inside StorageContext.publish. */
+    fun isCurrent(ticket: Long) = ticket == order.get().epoch
+    /** Single bounded CAS: the admission point, ordered against the fence store below.
+     * False also on competing admission; fail closed, never retry a document or wait on I/O.
+     * True permits ONE already session-authorized callback to finish even after a later fence.
+     * No lock survives this method, including during reentrant UI/session callbacks.
+     */
+    fun tryAdmitPublication(ticket: Long): Boolean {
+        val observed = order.get()
+        return observed.epoch == ticket && order.compareAndSet(observed,FenceStamp(ticket))
+    }
     fun <T> exclusive(ticket: Long, work: () -> T): T = synchronized(monitor) {
-        if (ticket != epoch) throw ProductStorageFailure()
+        if (ticket != order.get().epoch) throw ProductStorageFailure()
         work()
     }
     fun <T> drainAndFence(work: () -> T): T = synchronized(monitor) {
-        epoch = Math.addExact(epoch,1)
+        // Only fence writers hold monitor, so admissions cannot change the epoch between
+        // this read and store. Store is the fence point; work/Session gates run afterwards.
+        order.set(FenceStamp(Math.addExact(order.get().epoch,1)))
         work()
     }
 }

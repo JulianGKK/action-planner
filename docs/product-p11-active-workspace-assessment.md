@@ -8950,3 +8950,224 @@ keinen übersprungenen Testfall. Beide Manifestchecks erfolgreich.
 zusätzlicher SQLite-/nativer Dauerhaftigkeitsnachweis. Keine Rohlogs, APKs,
 Datenbanken oder Schlüssel im Commit. Regulärer WIP-Commit/Push; anschließend
 STOPP bis zum unabhängigen GitHub-Review.
+
+## 60. Document Fence/Publication Ordering
+
+Issue #35, verbindliche Basis
+`92cc3d61bb9bb8f6db8a609b13c2e600c714a398`.
+Vor Änderung: korrekter Branch `p11-performance-optimization`, lokaler HEAD und
+unabhängig über GitHub-Ref abgefragter Remote-HEAD identisch; sauberer Arbeitsbaum,
+leerer Diff. §57–§59 und die unveränderten Session-/Read-/Recoverygrenzen geprüft.
+
+### 60.1 Exakter Ausgangs-RED
+
+**RED REPRODUZIERT:** Die beiden §58-Epochenlesungen waren Beobachtungen, keine
+gegen `drainAndFence` atomare Callbackzulassung. Eine minimale interne
+Scheduling-Seam im Dispatch pausiert **nach** der letzten erfolgreichen
+`isCurrent(ticket)`-Prüfung und **vor** dem fachlichen Callback. Sie erhält weder
+Context, Schlüssel noch Dokumentpayload und ist im Produkt standardmäßig noop.
+Der Test benutzt den echten unveränderten SessionCoordinator und damit dessen
+wirklichen `StorageContext.publish`-Monitor; nur Authentifizierung, Queues und
+physischer Ledger sind synthetisch.
+
+Deterministische Folge in `lastCheckThenEffectiveFenceMustSuppressOldCallback`:
+Worker einmal, Main im echten Sessionmonitor, letzte Laneprüfung TRUE, Latchpause;
+anderer Thread führt `drainAndFence {}` aus, Ticket danach veraltet; erst dann
+Main fortsetzen. Zielassertion weiterhin **0 fachliche Callbacks**. Vor dem Fix:
+`./gradlew :data:testDebugUnitTest --tests '*DocumentFencePublicationOrderingTest' --offline`
+kompilierte und ergab **1 Test / 1 Assertionfehler**, tatsächlich 1 Callback.
+Kein Stresstest, Compilefehler oder geänderter Sessionvertrag als RED-Beleg.
+Der Fencebody ist hier absichtlich leer: das prüft Lane-Metadatenordnung,
+keine vollständige autorisierte Recoverypipeline und keinen nativen Exploitnachweis.
+
+### 60.2 Implementierter Vertrag und Linearisierung
+
+**IMPLEMENTIERT:** Eine einzige atomare Referenz hält einen kleinen unveränderlichen
+`FenceStamp(epoch)` statt des bisherigen einzelnen volatile Long. Die bestehende
+Lane-Epoche bleibt die **einzige** Epoche; Admission erhöht sie nicht. Es gibt
+keine aktiven Joblisten, zweite Sessionautorität, Pendingregistry, Payload,
+Schlüsselreferenz oder DB-/Dateilebensdauer in diesem Stamp.
+
+Publication geschieht weiterhin nur innerhalb des autoritativen
+`StorageContext.publish`. Nach den bestehenden Beobachtungsprüfungen versucht
+`tryAdmitPublication(ticket)` genau einmal:
+
+1. aktuellen Stamp lesen, Epoche mit Ticket vergleichen;
+2. per `compareAndSet` exakt diesen Stamp durch eine frische Identität mit
+   **derselben** Epoche ersetzen;
+3. nur bei erfolgreichem CAS den bereits sessionautorisierten Callback ausführen.
+
+**Publication-Zulassung P ist der erfolgreiche CAS.** Der Callback beginnt danach
+und darf genau einmal enden. Kein Monitor wird für diese Zulassung erworben oder
+über den Callback gehalten. Ein zweiter interner noop-Beobachtungspunkt erlaubt
+im Hosttest das Pausieren direkt nach P vor dem Callbackbeginn.
+
+`drainAndFence` behält den bisherigen Namespace-Monitor und Drainvertrag.
+Nachdem er die laufende Namespacearbeit drainiert hat, liest er die aktuelle
+Epoche, berechnet deren nächsten Wert und speichert einen frischen Stamp atomar.
+**Fencewirkung F ist dieser Store**, vor dem folgenden Maintenancebody. Nur
+Fencewriter dürfen die Epoche erhöhen und sind schon durch den Namespace-Monitor
+serialisiert. Admission verändert die Epoche nicht; daher ist zwischen dem
+Epochlesen und Store kein anderer Epochenwert zu verlieren. Overflowverhalten
+bleibt Math.addExact/fail-closed wie zuvor.
+
+| Ordnung | Zulässiges Ergebnis |
+| --- | --- |
+| F vor P-Versuch | altes Ticket wird nicht zugelassen; fachlicher Callback beginnt nicht |
+| P vor F | genau dieser bereits zugelassene Callback darf beginnen/enden, auch nach F; kein rückwirkender Rollback |
+| beide konkurrieren | erfolgreicher CAS bzw. Fence-Store entscheidet eine atomare Reihenfolge; ein vor F gelesener alter Stamp kann nach F nicht erfolgreich ersetzt werden |
+| anderer Admission-CAS gewinnt zuerst | ein konkurrierender einzelner CAS darf fail-closed verlieren, selbst ohne Epochenwechsel; kein Retry, kein späterer Replay |
+| Sessionpublication verweigert | kein P-Versuch im Callback, kein fachliches Ergebnis; gültiges Ticket erteilt keine Sessionberechtigung |
+
+Frische Stampidentitäten werden niemals wieder eingesetzt. Ein Store des Fences
+macht jeden vorher gelesenen Stamp für CAS ungeeignet; dies ist keine bloße
+Umbenennung der früheren TRUE-Beobachtung. Der erfolgreiche CAS ist eine neue,
+explizite atomare Entscheidung. Die neue Garantie lautet **kein altes P nach F**,
+nicht „kein bereits vor F zugelassener Callback darf nach F beginnen“. Der eigene
+Test `admissionBeforeFenceMayBeginCallbackAfterFenceAndFinishOnce` erzwingt gerade
+diesen erlaubten zweiten Fall mit Latches und null Callbackbeginn vor F.
+Ein ursprünglicher fachlicher Callback und der mehrphasige Import bilden dadurch
+weiterhin keine gemeinsame Transaktion.
+
+Die Zulassung hat genau einen CAS, keine Warteschleife und keinen automatischen
+Retry. Der Fence benötigt keinen CAS-Retry und wird nicht durch eine Folge
+konkurrierender Admissions verdrängt. Ein unter Konkurrenz verweigerter
+Zustellversuch bleibt durch delivered verbraucht. Der reguläre Produkt-Mainexecutor
+ist seriell, und der echte Sessionmonitor serialisiert außerdem seine eigenen
+Publications; die konservative Ablehnung bei anderweitiger Konkurrenz wird
+bewusst nicht in eine optimistische Antwort oder neue Queueoperation umgedeutet.
+
+### 60.3 Monitor-/Owneranalyse und Reentranz
+
+**IMPLEMENTIERT / HOSTGETESTET:** Kein zusätzlicher Publication-Monitor,
+keine Sperre um fachliche Callbacks. Vorhandene Reihenfolgen und neue Atomics:
+
+| Pfad | Tatsächliche Reihenfolge | Begrenzung |
+| --- | --- | --- |
+| Dokumentworker | Namespace-Monitor N → kurze Sessionprüfungen S → Arbeit unter N, native Arbeit außerhalb S | unverändert; Main wartet nicht auf N |
+| Maintenance | N drainieren → atomarer Fence-Store → Body mit Session-/Key-/DB-Schritten | Atomics halten keinen Monitor; Body weiterhin nur mit bestehender Autorisierung |
+| Main | StorageContext.publish hält S → kurzer Stampread/CAS → Callback unter dem bestehenden S | kein N, kein zusätzlicher Monitor, keine DB-/Keylease |
+| Revoke | vorhandener S-/Generationvertrag | konkurrierender Revoke wartet bei bereits zugelassener kurzer Sessionpublication wie bisher; kein neuer Lock |
+| Reentrant UI | Callback kann S reentrant nutzen oder neue asynchrone Arbeit einreihen | CAS ist bereits beendet, kein Admission-Lock zu verlängern |
+
+Damit entsteht durch Admission kein neues S→N, N→neuen Monitor oder umgekehrtes
+Lock-Ordering. Maintenance kann N halten und auf einen kurzen bestehenden S-Read
+warten; Main benötigt N weder für Prüfung noch Zulassung und kann S freigeben.
+Die Latchtests erzwingen diese Konkurrenz mit echten Sessionprüfungen.
+Ein synchroner Workerwait oder Datei-/Room-/Tink-Aufruf innerhalb eines
+StorageContext.publish-Callbacks wäre weiterhin eine Verletzung dessen
+bestehenden Kurz-/In-memory-Vertrags, keine erlaubte Erweiterung durch diesen Fix.
+Es wird keine Sicherheit für beliebige vertragswidrige Callbacks behauptet.
+
+Codebefund zur tatsächlichen Produktoberfläche: DocumentModel-Callbacks ändern
+Form-/Metadaten, prüfen den bestehenden Editorzustand und fordern Refreshs an.
+MainActivity verwendet den getrennten SingleThread-Worker und Mainexecutor.
+Der Fix macht daraus keine synchronen Workerwaits und verändert keine Navigation.
+Allgemeine Callbacklatenz unter dem bestehenden Sessionmonitor wurde hier nicht
+als Performance- oder universeller Worst-Case-Nachweis gemessen.
+
+### 60.4 Deterministische Ordering-/Livenesstests
+
+**HOSTGETESTET:** Neue `DocumentFencePublicationOrderingTest` mit 13 Fällen:
+
+- ursprünglicher strenger RED: Fence nach letzter TRUE-Beobachtung vor P;
+- P zuerst, dann Fence vor Callbackbeginn: einmaliges erlaubtes Ende, Replay wirkungslos;
+- Main hält S, Maintenance hält nach F den Namespace-Monitor und fragt S an:
+  Main beendet die Antwortverweigerung ohne N-Wait, beide Futures schließen ab;
+- langer Namespacehalter, während Main mit echtem Sessioncontext ohne N-Wait publiziert;
+- P unter echtem S, konkurrierender Revoke und Fence: F macht Fortschritt,
+  vor Revoke zugelassene Publication endet einmal, danach Session LOCKED;
+- Callback nutzt Session reentrant und reiht einen weiteren UI-Read ein:
+  kein Admission-Lock bleibt gehalten, genau ein Read und genau dessen Antwort;
+- Callback lockt die Session selbst: kein Replay, kein neuer Auftrag aus LOCKED;
+- Callbackexception: Zustellversuch verbraucht, kein zweiter Callback/Blocked,
+  physischer Simulationszustand bleibt FILE_PUBLISHED;
+- Generationwechsel mit erneuter Authentifizierung: kein Wiederbeleben alter Mainantwort;
+- Storage BLOCKED schlägt ein weiterhin aktuelles Lane-Ticket;
+- erneuter Session-Maintenance-Durchlauf führt Fence aus: alte Antwort weg,
+  neuer autorisierter Auftrag funktioniert; keine Wiederholung des alten Workers;
+- Admissions erhöhen die Epoche nicht; alter Epochenticketstand nach F nicht wieder zulassbar;
+- ergänzender endlicher Konkurrenzlauf mit 10.000 Admissionversuchen: Fence
+  beendet sich und alte Tickets bleiben verworfen. Dieser Lauf ergänzt die
+  Latchbelege, ersetzt sie nicht durch einen Stresstest.
+
+Futures haben begrenzte Testwartezeiten und Pools werden im finally beendet.
+Die Protokollanalyse belegt keine neue zyklische Lockabhängigkeit und keinen
+Admission-bedingten Monitorwait/Retry-Loop; Tests zeigen konkrete Fortschrittsfolgen.
+**NICHT BEWIESEN:** universelle Schedulerfairness, harte Echtzeitlatenzen,
+Fortschritt bei nie endender Namespace-I/O oder vertragswidrig endlosen Callbacks.
+Der bestehende Namespace-Drain muss auf solche laufende Arbeit weiterhin warten.
+Daraus wird keine neue allgemeine Maintenance-/Nativefreigabe abgeleitet.
+
+Ein Zwischenlauf hatte eine Testseam falsch angebunden: Nach Ergänzen des zweiten
+optionalen Lambda-Parameters band Kotlin die bisherige trailing lambda an den
+post-P-Beobachtungspunkt. Die strenge Null-Assertion wurde nicht verändert;
+explizites `probe = …` stellt wieder die geforderte Pause vor P her.
+Der anfängliche RED auf der Basis war korrekt, und der erste Fixlauf mit dem
+unveränderten einzelnen RED war bereits grün. Der zwischenzeitliche Harnessfehler
+wurde nicht als zusätzliche Produktlücke oder erfolgreicher Nachweis ausgegeben.
+
+### 60.5 One-Shot-, Read- und Sessionregressionen
+
+**BESTEHEND / HOSTGETESTET:** started.compareAndSet und delivered.compareAndSet
+bleiben unverändert. Vorhandene Tests prüfen Worker/Main wiederholt und tatsächlich
+parallel, beide zusammen, einmaliges Blocked nach Fehler, keine Wiederholung nach
+Teilfortschritt, Dispatchfehler und verlorenen Main-Runnable. Context verweigert
+bzw. führt Callback aus und liefert false: kein zweiter Versuch und keine
+Behauptung rückgängig gemachter UI-Sideeffects.
+Fence vor Worker/vor Main/beim Context-Gate, Revoke/Generation/BLOCKED und gültige
+Summary-/Listen-/Rejection-Rückgaben bleiben abgedeckt. Die bisherige Harness
+braucht nur die explizite Constructorbindung für blocked; ihre Assertions wurden
+nicht abgeschwächt. Ein Read bleibt genau ein Read, keine zusätzliche Datei-/DB-
+Arbeit durch die neue Admission. PDF-/TEXT-/IMAGE-DocumentReadDispatch bleibt
+unverändert; dieser Slice gibt seinen gesonderten Ressourcenpfad nicht neu frei.
+
+Die neue Harness nutzt den echten SessionCoordinator, synthetische Auth/Clock,
+kontrollierte Executorqueues und ausschließlich simulierte physische Wirkung.
+Auch der neue Maintenancecallback ist ein Scope-/Ordering-Test, kein nativer
+Reconciliationlauf. **NICHT BEWIESEN:** SQLite-/SQLCipher-Commit, Dateisystem-
+Dauerhaftigkeit oder nativer Cursor-/Key-Cleanup aus diesen Ledgerwerten.
+Verweigerte Publication ändert einen vorherigen physischen Schritt nicht.
+
+### 60.6 Weiterhin offene Grenzen
+
+**UNWIRED:** Keine DOCUMENT-Writerfamilie am Runtime-Invalidierungsport,
+keine WorkspaceWriteBoundary über den gesamten Import, kein globaler COMMITTED-
+Beleg aus DocumentResult.Value. Mehrphasige DB-/Datei-/Inventar-/Cleanup-Evidence
+bleibt #35. Kein Snapshotowner (#37), keine RAM-Hits oder Navigation-/Performance-
+Integration (#38), keine allgemeine Editor-/CAS-/ABA-Freigabe (#36).
+
+**BLOCKER:** RED-4 aus §59 bleibt unverändert: rootloses WRITING ist historisch
+mehrdeutig und bleibt fail-closed BLOCKED. Keine Joblöschung, Root-Rekonstruktion
+oder Recoveryheuristik. Native Cursor-/Cleanup-Grenze #32 bleibt offen;
+`SQLCipherStatement.close()` schließt den Cursor nicht explizit.
+Die konkret definierte Publication-/Fence-Zulassungsordnung ist implementiert,
+keine pauschale Dokument-/Recovery-/Release-1.0-Freigabe.
+
+Produktänderungen nur im Dispatch und im kleinen Lane-Metadatenzugriff;
+DocumentImportStaging.stage, Reconciliation, Maintenance, Publication, Delete,
+SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink/B2Driver,
+Schema 11, Fristen 180 s absolut / 30 s READY-idle, 8+8-MiB-Budget sowie Root-,
+Symlink-/Hardlink-, CREATE_NEW-, No-Replace-, Verschlüsselungs- und Sync-Regeln
+bleiben unverändert. Keine zusätzlichen Dependencies, Permissions, Keys,
+Persistenzorte, Geräteinstallation, Änderung installierter Apps, Corewriter-
+oder P3b-/Leadershipänderung.
+
+### 60.7 Abschlussvalidierung
+
+**HOSTGETESTET:** Gezielter Lauf
+`./gradlew :data:testDebugUnitTest --tests '*Document*Test' --tests '*Session*Test' --offline`:
+**379 bestanden, 0 Failures, 0 Errors, 0 Skips**.
+Vollständiger angeforderter Offline-Lauf mit
+`:app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest
+:domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin
+:app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest
+:app:verifyDemoManifest --offline`: **BUILD SUCCESSFUL**.
+Debug-Test-XMLs: App 671, Data 958, Security 4 = **1.633 bestanden,
+0 Failures, 0 Errors, 0 Testskips**. Security war UP-TO-DATE, Domain hat keine
+eigenen Testquellen. Gradle-Lifecycle-/Konfigurations-Tasks mit SKIPPED sind keine
+übersprungenen Testfälle. Beide Androidtest-Kompilationen und beide Manifestchecks
+erfolgreich. Keine Instrumentation/Installation, keine neue native
+Ressourcen-/Crashprüfung. `git diff --check` sauber. Keine Rohlogs, APKs,
+Datenbanken oder Schlüssel im Commit. Regulärer WIP-Commit/Push; danach STOPP
+bis zum unabhängigen GitHub-Review.

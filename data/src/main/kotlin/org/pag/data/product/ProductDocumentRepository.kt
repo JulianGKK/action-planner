@@ -161,7 +161,10 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
 
 /** Shared executor/publication boundary, independently tested without Android DB substitutes. */
 internal class DocumentProductDispatch(private val access: StorageAccess, private val worker: Executor,
-    private val main: Executor, private val blocked: () -> Unit) {
+    private val main: Executor, private val blocked: () -> Unit,
+    // Internal scheduling observation only; no context, key, payload or authorization hook.
+    private val afterFinalLaneCheck: () -> Unit = {},
+    private val afterPublicationAdmission: () -> Unit = {}) {
     fun <T> run(publish: (DocumentResult<T>) -> Unit, work: (StorageContext) -> DocumentResult<T>) {
         val c = access.acquire(AccessScope.READY) ?: return
         val ticket = DocumentNamespaceLane.ticket()
@@ -177,9 +180,15 @@ internal class DocumentProductDispatch(private val access: StorageAccess, privat
                 main.execute {
                     if (delivered.compareAndSet(false,true) && DocumentNamespaceLane.isCurrent(ticket)) {
                         c.publish {
-                            // Nonblocking fence recheck after the authoritative context admits us.
-                            // This is not atomic with a concurrent fence after this last check.
-                            if (DocumentNamespaceLane.isCurrent(ticket)) publish(result)
+                            // Session authority remains central. Observation is not admission;
+                            // the bounded CAS below orders this callback against maintenance.
+                            if (DocumentNamespaceLane.isCurrent(ticket)) {
+                                afterFinalLaneCheck()
+                                if (DocumentNamespaceLane.tryAdmitPublication(ticket)) {
+                                    afterPublicationAdmission()
+                                    publish(result)
+                                }
+                            }
                         }
                     }
                 }

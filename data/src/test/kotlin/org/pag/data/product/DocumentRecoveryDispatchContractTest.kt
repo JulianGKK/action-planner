@@ -41,7 +41,7 @@ class DocumentRecoveryDispatchContractTest {
             }
         }
     }
-    private fun dispatch(w: Executor = worker, m: Executor = main) = DocumentProductDispatch(access, w, m) { blocked++ }
+    private fun dispatch(w: Executor = worker, m: Executor = main) = DocumentProductDispatch(access, w, m, { blocked++ })
     private fun submit(d: DocumentProductDispatch = dispatch()) = d.run<Unit>({ callbacks++ }) {
         mutations++
         phase = "FILE_PUBLISHED"
