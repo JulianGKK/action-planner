@@ -14,7 +14,7 @@ import java.time.format.FormatStyle
 
 @Composable internal fun OperationsSection(model:ProductViewModel) {
     val ops=model.operations;val board=ops.board?:return
-    ops.error?.let{Text(if(ops.screen==OperationsScreen.PLAN && it==OperationsFailure.STALE)
+    if(ops.editingRole==null && ops.deletingRole==null)ops.error?.let{Text(if(ops.screen==OperationsScreen.PLAN && it==OperationsFailure.STALE)
         "Die Rollenplanung wurde inzwischen geändert. Dein Entwurf bleibt erhalten." else operationsError(it))}
     when(ops.screen) {
         OperationsScreen.ROLES->RoleManagement(ops,board)
@@ -95,22 +95,38 @@ import java.time.format.FormatStyle
             OperationalRules.templates.forEach{template->FormOutlinedButton({ops.createRole(template)},enabled=!ops.busy && board.roles.none{OperationalRules.normalizedName(it.name)==OperationalRules.normalizedName(template)}){Text(template)}}
         }
     }
-    var name by remember{mutableStateOf("")};var editing by remember{mutableStateOf<String?>(null)};var deleting by remember{mutableStateOf<String?>(null)}
-    FormTextField(name,{ops.textInteraction();name=it},label={Text(if(editing==null)"Rollenname" else "Neuer Rollenname")},autoFocus=true,keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy,modifier=Modifier.fillMaxWidth())
-    FormButton({if(editing==null)ops.createRole(name) else ops.renameRole(editing!!,name);name="";editing=null},enabled=!ops.busy && OperationalRules.validName(name)){Text(if(editing==null && ops.planning)"Eigene Rolle hinzufügen" else if(editing==null)"Neue Funktion hinzufügen" else "Speichern")}
+    if(ops.editingRole!=null || ops.deletingRole!=null){RoleEditor(ops);return}
+    var name by remember{mutableStateOf("")}
+    FormTextField(name,{ops.textInteraction();name=it},label={Text("Rollenname")},autoFocus=true,keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy,modifier=Modifier.fillMaxWidth())
+    FormButton({ops.createRole(name);name=""},enabled=!ops.busy && OperationalRules.validName(name)){Text(if(ops.planning)"Eigene Rolle hinzufügen" else "Neue Funktion hinzufügen")}
     if(ops.planning)board.roles.forEach{r->
         Text(r.name)
         FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)){
-            FormOutlinedButton({editing=r.id;name=r.name;deleting=null},enabled=!ops.busy){Text("Umbenennen")}
-            FormOutlinedButton({deleting=r.id},enabled=!ops.busy){Text("Löschen")}
-        }
-        if(deleting==r.id){
-            Text("Rolle löschen? Das ist nur möglich, wenn sie nicht mehr zugeordnet ist.")
-            FormButton({ops.deleteRole(r.id);deleting=null},enabled=!ops.busy){Text("Löschen bestätigen")}
-            FormOutlinedButton({deleting=null},enabled=!ops.busy){Text("Abbrechen")}
+            FormOutlinedButton({ops.editRole(r)},enabled=!ops.busy){Text("Umbenennen")}
+            FormOutlinedButton({ops.editRole(r,delete=true)},enabled=!ops.busy){Text("Löschen")}
         }
     }
     FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Zurück")}
+}
+/** Both productive role surfaces use the same snapshot-bound editor/confirmation. */
+@Composable internal fun RoleEditor(ops:OperationsModel) {
+    val editing=ops.editingRole;val deleting=ops.deletingRole
+    ops.error?.let{Text(if(it==OperationsFailure.STALE)
+        "Die Rolle wurde inzwischen geändert. Dein Entwurf bzw. die Löschbestätigung bleibt erhalten." else operationsError(it))}
+    if(editing!=null){
+        Text("Rolle umbenennen · ${editing.name}")
+        FormTextField(ops.roleName,ops::changeRoleName,label={Text("Neuer Rollenname")},autoFocus=true,
+            keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy,modifier=Modifier.fillMaxWidth())
+        FormButton(ops::saveRoleRename,enabled=!ops.busy && OperationalRules.validName(ops.roleName)){Text("Speichern")}
+    }else if(deleting!=null){
+        Text("Rolle „${deleting.name}“ löschen? Zugeordnete Rollen können nicht gelöscht werden.")
+        FormButton(ops::confirmRoleDelete,enabled=!ops.busy){Text("Löschen bestätigen")}
+    }
+    if(ops.error==OperationsFailure.STALE){
+        Text("Beim Neuladen wird der bisherige Entwurf bzw. die alte Löschbestätigung ersetzt. Danach erneut prüfen.")
+        FormOutlinedButton(ops::reloadRoleEditor,enabled=!ops.busy){Text("Alten Stand verwerfen und Rolle neu laden")}
+    }
+    FormOutlinedButton(ops::cancelRoleEditor,enabled=!ops.busy){Text(if(deleting!=null)"Löschung abbrechen" else "Bearbeitung verwerfen")}
 }
 @Composable private fun LiveForm(model:ProductViewModel,ops:OperationsModel,board:OperationalBoard) {
     Text(ops.person?.person?.pseudonym.orEmpty(),style=MaterialTheme.typography.headlineLarge)

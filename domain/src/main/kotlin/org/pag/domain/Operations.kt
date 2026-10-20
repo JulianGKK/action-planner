@@ -48,8 +48,10 @@ sealed interface OperationsResult<out T> {
 interface OperationsRepository {
     fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit)
     fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit)
-    fun renameRole(actionId: String, roleId: String, name: String, publish: (OperationsResult<Role>) -> Unit)
-    fun deleteRole(actionId: String, roleId: String, publish: (OperationsResult<Unit>) -> Unit)
+    /** Full editor-open identity, compared inside the outer write transaction; no persistent ABA revision. */
+    fun renameRole(actionId: String, expected: Role, name: String, publish: (OperationsResult<Role>) -> Unit)
+    /** Delete confirmation is bound to this exact previously selected identity. */
+    fun deleteRole(actionId: String, expected: Role, publish: (OperationsResult<Unit>) -> Unit)
     fun planRoles(actionId: String, personId: String, expected: ExpectedPersonRolePlan, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit)
     fun updateSnapshot(actionId: String, personId: String, expected: PersonOperationalState,
         status: OperationalStatus, roleId: String?, place: String, publish: (OperationsResult<Unit>) -> Unit)

@@ -31,13 +31,21 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     var planRoles by mutableStateOf<List<Role>>(emptyList()); private set
     private var planExpected:ExpectedPersonRolePlan?=null
     private var planGeneration=0L
+    var editingRole by mutableStateOf<Role?>(null); private set
+    var deletingRole by mutableStateOf<Role?>(null); private set
+    var roleName by mutableStateOf(""); private set
+    private var roleEditorSerial=0L
+    private var roleEditorGeneration=0L
+    private fun dropRoleEditor(){roleEditorSerial++;editingRole=null;deletingRole=null;roleName=""}
+    private fun roleEditorCurrent()=planning && session().generation==roleEditorGeneration &&
+        (editingRole?:deletingRole)?.actionId==action()?.id
     private var expected:PersonOperationalState?=null
     private var request=0L
     val planning get()=session().state==SessionState.READY && action()?.let{OperationalRules.mayPlan(it.status)}==true
     val live get()=session().state==SessionState.READY && action()?.let{OperationalRules.mayUpdateSnapshot(it.status)}==true
     val person get()=board?.persons?.singleOrNull{it.person.id==personId}
     fun textInteraction() = interaction()
-    fun clear(){functionFocus=null;moreFunctionsExpanded=false;newFunctionName="";focusedPersonId=null;request++;ownBoard=null;screen=OperationsScreen.OVERVIEW;personId=null;busy=false;error=null;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS}
+    fun clear(){dropRoleEditor();functionFocus=null;moreFunctionsExpanded=false;newFunctionName="";focusedPersonId=null;request++;ownBoard=null;screen=OperationsScreen.OVERVIEW;personId=null;busy=false;error=null;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS}
     fun refresh(){
         if (refreshWorkspace != null) { request++; refreshWorkspace.invoke(); return }
         val a=action()?.takeIf{session().state==SessionState.READY && OperationalRules.mayRead(it.status)}?:return
@@ -169,7 +177,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         finishForm()
         return id
     }
-    private fun finishForm(){request++;screen=when {focusedPersonId!=null->OperationsScreen.PERSON;functionFocus!=null->OperationsScreen.FUNCTION_DETAIL;else->OperationsScreen.OVERVIEW};newFunctionName="";personId=focusedPersonId;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS;error=null}
+    private fun finishForm(){dropRoleEditor();request++;screen=when {focusedPersonId!=null->OperationsScreen.PERSON;functionFocus!=null->OperationsScreen.FUNCTION_DETAIL;else->OperationsScreen.OVERVIEW};newFunctionName="";personId=focusedPersonId;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS;error=null}
     fun toggleRole(id:String){interaction();if(!planning || busy)return;roleIds=if(id in roleIds)roleIds-id else roleIds+id;if(primaryRoleId !in roleIds)primaryRoleId=null}
     fun primary(id:String?){interaction();if(planning && !busy && (id==null || id in roleIds))primaryRoleId=id}
     fun status(status:OperationalStatus){interaction();if(!live || busy)return;if(status!=liveStatus){livePlace="";if(!OperationalRules.roleAllowed(status) || status==OperationalStatus.RELEASED)liveRoleId=null};liveStatus=status}
@@ -184,9 +192,58 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     fun saveLive(){val a=action()?:return;val p=personId?:return;val old=expected?:return;if(!live || busy)return;if(!OperationalRules.validPlace(livePlace)){error=OperationsFailure.INVALID;return};write{publish->repository?.updateSnapshot(a.id,p,old,liveStatus,liveRoleId,livePlace,publish)}}
     fun createRole(name:String) = createRoleWrite(name, false, "Rolle „${name.trim()}“ angelegt")
     private fun createRoleWrite(name:String,close:Boolean,message:String){val a=action()?:return;if(!planning && !live || busy)return;write(close=close,message=message){publish->repository?.createRole(a.id,name){result->publish(when(result){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->result})}}}
-    fun renameRole(id:String,name:String){val a=action()?:return;if(!planning || busy)return;write(close=false){publish->repository?.renameRole(a.id,id,name){result->publish(when(result){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->result})}}}
-    fun deleteRole(id:String){val a=action()?:return;if(!planning || busy)return;write(close=false){publish->repository?.deleteRole(a.id,id,publish)}}
-    private fun write(close:Boolean=true,message:String?=null,work:((OperationsResult<Unit>)->Unit)->Unit){
+    fun editRole(role:Role,delete:Boolean=false) {
+        val before=session();val a=action()?.id;val token=request
+        interaction()
+        if(!planning || busy || role.actionId!=a || session().generation!=before.generation || request!=token || action()?.id!=a)return
+        dropRoleEditor();roleEditorGeneration=before.generation
+        if(delete)deletingRole=role else {editingRole=role;roleName=role.name}
+        error=null
+    }
+    fun changeRoleName(value:String){interaction();if(!busy && roleEditorCurrent() && editingRole!=null)roleName=value}
+    fun cancelRoleEditor(){interaction();if(!busy){dropRoleEditor();error=null}}
+    fun saveRoleRename(){val old=editingRole?:return;if(roleEditorCurrent())renameRole(old,roleName)}
+    fun confirmRoleDelete(){val old=deletingRole?:return;if(roleEditorCurrent())deleteRole(old)}
+    fun renameRole(expected:Role,name:String){
+        val a=action()?:return;if(!planning || busy || expected.actionId!=a.id)return
+        val serial=roleEditorSerial;var delivered=false
+        write(close=false,applied={if(serial==roleEditorSerial)dropRoleEditor()}){publish->
+            repository?.renameRole(a.id,expected,name){result->
+                if(!delivered){delivered=true;if(serial==roleEditorSerial)publish(when(result){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->result})}
+            }
+        }
+    }
+    fun deleteRole(expected:Role){
+        val a=action()?:return;if(!planning || busy || expected.actionId!=a.id)return
+        val serial=roleEditorSerial;var delivered=false
+        write(close=false,applied={if(serial==roleEditorSerial)dropRoleEditor()}){publish->
+            repository?.deleteRole(a.id,expected){if(!delivered){delivered=true;if(serial==roleEditorSerial)publish(it)}}
+        }
+    }
+    /** Explicit draft-discard confirmation; never invoked by a failed write. */
+    fun reloadRoleEditor(){
+        val old=editingRole?:deletingRole?:return
+        if(!roleEditorCurrent() || busy || error!=OperationsFailure.STALE)return
+        val serial=roleEditorSerial;val generation=roleEditorGeneration;val token=request;val deleting=deletingRole!=null
+        interaction()
+        if(!roleEditorCurrent() || serial!=roleEditorSerial || token!=request)return
+        busy=true;var delivered=false
+        repository?.board(old.actionId){result->
+            if(delivered)return@board
+            delivered=true
+            if(!roleEditorCurrent() || session().generation!=generation || serial!=roleEditorSerial || token!=request)return@board
+            busy=false
+            when(result){
+                is OperationsResult.Rejected->error=result.reason
+                is OperationsResult.Value->{
+                    val b=result.value;val fresh=b.roles.singleOrNull{it.id==old.id && it.actionId==old.actionId}
+                    if(b.actionId!=old.actionId || !OperationalRules.mayPlan(b.status) || fresh==null)error=OperationsFailure.NOT_FOUND
+                    else {dropRoleEditor();if(deleting)deletingRole=fresh else {editingRole=fresh;roleName=fresh.name};error=null}
+                }
+            }
+        }
+    }
+    private fun write(close:Boolean=true,message:String?=null,applied:()->Unit={},work:((OperationsResult<Unit>)->Unit)->Unit){
         val token=request;val a=action()?.id;val before=session();val generation=before.generation
         if(before.state!=SessionState.READY || repository==null || a==null)return
         interaction()
@@ -197,6 +254,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
             busy=false
             when(result){is OperationsResult.Value->{
                 val finishedPerson=personId
+                applied()
                 if(close)finishForm();refresh()
                 if(close && session().state==SessionState.READY && session().generation==generation && action()?.id==a)
                     onEditFinished(finishedPerson)

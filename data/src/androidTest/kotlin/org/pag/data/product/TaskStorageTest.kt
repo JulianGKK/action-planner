@@ -140,10 +140,10 @@ class TaskStorageTest {
     }
     @Test fun roleDeleteInUseThenUnassigned(){
         val i=fixture();val r=role(i);val t=create(i,TaskInput("x",assigneeRoleId=r.id))
-        use(i){d->d.withWriteTransaction{rejected(OperationsStore(d,context()){++time}.deleteRole("a",r.id),OperationsFailure.IN_USE)}}
+        use(i){d->d.withWriteTransaction{rejected(OperationsStore(d,context()){++time}.deleteRole("a",r),OperationsFailure.IN_USE)}}
         assertEquals(r.id,board(i).tasks.single().assigneeRoleId)
         value(write(i){it.edit("a",t,t.input().copy(assigneeRoleId=null))})
-        use(i){d->d.withWriteTransaction{value(OperationsStore(d,context()){++time}.deleteRole("a",r.id))}}
+        use(i){d->d.withWriteTransaction{value(OperationsStore(d,context()){++time}.deleteRole("a",r))}}
     }
     @Test fun templateKeysAreNotGloballyUniqueAndNothingAutomatic(){
         val i=fixture();assertTrue(board(i).tasks.isEmpty())

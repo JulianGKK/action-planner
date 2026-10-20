@@ -41,8 +41,8 @@ class DocumentWorkspaceTest {
         val reads = mutableListOf<(OperationsResult<OperationalBoard>) -> Unit>()
         override fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit) { reads += publish }
         override fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { error("No P7 role write") }
-        override fun renameRole(actionId: String, roleId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { error("No P7 role write") }
-        override fun deleteRole(actionId: String, roleId: String, publish: (OperationsResult<Unit>) -> Unit) { error("No P7 role write") }
+        override fun renameRole(actionId: String, expected: Role, name: String, publish: (OperationsResult<Role>) -> Unit) { error("No P7 role write") }
+        override fun deleteRole(actionId: String, expected: Role, publish: (OperationsResult<Unit>) -> Unit) { error("No P7 role write") }
         override fun planRoles(actionId: String, personId: String, expected: ExpectedPersonRolePlan, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit) { error("No P7 plan write") }
         override fun updateSnapshot(actionId: String, personId: String, expected: PersonOperationalState, status: OperationalStatus, roleId: String?, place: String, publish: (OperationsResult<Unit>) -> Unit) { error("No P7 snapshot write") }
     }

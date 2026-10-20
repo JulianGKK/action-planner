@@ -82,11 +82,21 @@ class OperationsStorageTest {
         r.planRoles("a","Motte",old,PersonRolePlan(emptySet(),null)){assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),it)}
         assertEquals(PersonRolePlan(setOf(role.id),role.id),board(i).persons.single{it.person.id=="Motte"}.plan)
     }
+    @Test fun roleExpectedSnapshotRejectsOldRenameAndDeleteThroughProductBoundary(){
+        val i=fixture();val original=role(i);val r=repo(i)
+        val changed=original.copy(name="Synthetic changed")
+        r.renameRole("a",original,changed.name){assertEquals(OperationsResult.Value(changed),it)}
+        r.renameRole("a",original,"Synthetic stale"){assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),it)}
+        r.deleteRole("a",original){assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),it)}
+        assertEquals(changed,board(i).roles.single())
+        r.deleteRole("a",changed){assertEquals(OperationsResult.Value(Unit),it)}
+        assertTrue(board(i).roles.isEmpty())
+    }
     @Test fun renameAndDeleteCannotCascadeAssignments(){
         val i=fixture();val r=role(i);plan(i,"Motte",setOf(r.id),r.id)
-        value(write(i){it.role("a",r.id,"Geänderte Rolle")});rejected(write(i){it.deleteRole("a",r.id)},OperationsFailure.IN_USE)
+        val renamed=value(write(i){it.role("a",r,"Geänderte Rolle")});rejected(write(i){it.deleteRole("a",renamed)},OperationsFailure.IN_USE)
         assertEquals(r.id,board(i).persons.single{it.person.id=="Motte"}.plan.primaryRoleId)
-        plan(i,"Motte",emptySet());value(write(i){it.deleteRole("a",r.id)});assertTrue(board(i).roles.isEmpty())
+        plan(i,"Motte",emptySet());value(write(i){it.deleteRole("a",renamed)});assertTrue(board(i).roles.isEmpty())
     }
     @Test fun startInitializesEveryPersonAtomicallyWithoutInventingPresence(){
         val i=fixture();val r=role(i);plan(i,"Motte",setOf(r.id),r.id)
@@ -131,8 +141,8 @@ class OperationsStorageTest {
         plan(i,"Motte",setOf(r.id),r.id);advance(i)
         val liveRole=role(i,"Ad hoc")
         rejected(write(i){it.plan("a","Motte",ExpectedPersonRolePlan("a","Motte",PersonRolePlan(emptySet(),null)),PersonRolePlan(emptySet(),null))},OperationsFailure.NOT_ALLOWED)
-        rejected(write(i){it.role("a",r.id,"Must not rename")},OperationsFailure.NOT_ALLOWED)
-        rejected(write(i){it.deleteRole("a",r.id)},OperationsFailure.NOT_ALLOWED)
+        rejected(write(i){it.role("a",r,"Must not rename")},OperationsFailure.NOT_ALLOWED)
+        rejected(write(i){it.deleteRole("a",r)},OperationsFailure.NOT_ALLOWED)
         update(i,s=OperationalStatus.ON_SITE,role=liveRole.id);advance(i,from=ActionStatus.ACTIVE)
         val completed=state(i)
         rejected(write(i){it.snapshot("a","Motte",completed,OperationalStatus.LEFT,null,"")},OperationsFailure.NOT_ALLOWED)

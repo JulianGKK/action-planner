@@ -44,8 +44,8 @@ class ActiveFunctionsTest {
         var writtenState: PersonOperationalState? = null
         override fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit) { loads.add(publish) }
         override fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { creates++; create = publish }
-        override fun renameRole(actionId: String, roleId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { renamed++ }
-        override fun deleteRole(actionId: String, roleId: String, publish: (OperationsResult<Unit>) -> Unit) { deleted++ }
+        override fun renameRole(actionId: String, expected: Role, name: String, publish: (OperationsResult<Role>) -> Unit) { renamed++ }
+        override fun deleteRole(actionId: String, expected: Role, publish: (OperationsResult<Unit>) -> Unit) { deleted++ }
         override fun planRoles(actionId: String, personId: String, expected: ExpectedPersonRolePlan, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit) {}
         override fun updateSnapshot(actionId: String, personId: String, expected: PersonOperationalState, status: OperationalStatus, roleId: String?, place: String, publish: (OperationsResult<Unit>) -> Unit) {
             writtenState = expected.copy(status = status, currentRoleId = roleId.takeIf { OperationalRules.roleAllowed(status) }, currentPlaceLabel = OperationalRules.place(place, status), updatedAt = 5)
@@ -182,7 +182,7 @@ class ActiveFunctionsTest {
         assertEquals("current", board.persons.first().state!!.currentRoleId); assertEquals(1, ops.creates)
     }
     @Test fun activeRenameDeleteAndPlanningAreDenied() {
-        openFunctions(); model.operations.renameRole("r", "Changed"); model.operations.deleteRole("r"); model.operations.plan("p")
+        openFunctions(); model.operations.renameRole(Role("r","a","synthetic",0), "Changed"); model.operations.deleteRole(Role("r","a","synthetic",0)); model.operations.plan("p")
         assertEquals(0, ops.renamed); assertEquals(0, ops.deleted); assertEquals(OperationsScreen.OVERVIEW, model.operations.screen)
     }
     @Test fun failedCreationKeepsDraftAndDoesNotClaimSuccess() {

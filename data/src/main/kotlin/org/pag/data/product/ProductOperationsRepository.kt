@@ -18,8 +18,8 @@ class ProductOperationsRepository(app:Context,private val access:StorageAccess,
     private val mutationBoundary=WorkspaceWriteBoundary(access,worker,main,mutations,blocked)
     override fun board(actionId:String,publish:(OperationsResult<OperationalBoard>)->Unit)=run(publish){d,c->d.withReadTransaction{OperationsStore(d,c,now).board(actionId)}}
     override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,null,name)}
-    override fun renameRole(actionId:String,roleId:String,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,roleId,name)}
-    override fun deleteRole(actionId:String,roleId:String,publish:(OperationsResult<Unit>)->Unit)=write(actionId,publish){it.deleteRole(actionId,roleId)}
+    override fun renameRole(actionId:String,expected:Role,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,expected,name)}
+    override fun deleteRole(actionId:String,expected:Role,publish:(OperationsResult<Unit>)->Unit)=write(actionId,publish){it.deleteRole(actionId,expected)}
     override fun planRoles(actionId:String,personId:String,expected:ExpectedPersonRolePlan,plan:PersonRolePlan,publish:(OperationsResult<Unit>)->Unit) {
         val frozen=plan.copy(roleIds=plan.roleIds.toSet())
         write(actionId,publish){it.plan(actionId,personId,expected,frozen)}
@@ -73,22 +73,30 @@ internal class OperationsStore(private val data:CoreWriterData,private val c:Sto
         }
         return OperationsResult.Value(OperationalBoard(actionId,status,roles,persons))
     }
-    suspend fun role(actionId:String,roleId:String?,name:String):OperationsResult<Role> {
+    suspend fun role(actionId:String,expected:Role?,name:String):OperationsResult<Role> {
         val status=actionStatus(actionId)?:return denied(OperationsFailure.NOT_FOUND)
-        if(!(if(roleId==null)OperationalRules.mayCreateRole(status) else OperationalRules.mayPlan(status)))return denied(OperationsFailure.NOT_ALLOWED)
+        if(!(if(expected==null)OperationalRules.mayCreateRole(status) else OperationalRules.mayPlan(status)))return denied(OperationsFailure.NOT_ALLOWED)
         if(!OperationalRules.validName(name))return denied(OperationsFailure.INVALID)
-        val old=if(roleId==null)null else step{data.operations.role(actionId,roleId)}?:return denied(OperationsFailure.NOT_FOUND)
+        val old=if(expected==null)null else {
+            if(expected.actionId!=actionId)return denied(OperationsFailure.STALE)
+            val row=step{data.operations.role(actionId,expected.id)}?:return denied(OperationsFailure.NOT_FOUND)
+            if(row.model()!=expected)return denied(OperationsFailure.STALE)
+            row
+        }
         val normalized=OperationalRules.normalizedName(name)
         val existing=step{data.operations.roles(actionId)}.onEach{it.model()}
-        if(existing.any{it.normalizedName==normalized && it.id!=roleId})return denied(OperationsFailure.DUPLICATE)
+        if(existing.any{it.normalizedName==normalized && it.id!=expected?.id})return denied(OperationsFailure.DUPLICATE)
         val row=old?.copy(name=name,normalizedName=normalized)?:RoleRow(UUID.randomUUID().toString(),actionId,name,normalized,now())
         if(old==null)step{data.operations.insertRole(row)}else if(step{data.operations.updateRole(row)}!=1)throw ProductStorageFailure()
         return OperationsResult.Value(row.model())
     }
-    suspend fun deleteRole(actionId:String,roleId:String):OperationsResult<Unit> {
+    suspend fun deleteRole(actionId:String,expected:Role):OperationsResult<Unit> {
         val status=actionStatus(actionId)?:return denied(OperationsFailure.NOT_FOUND)
         if(!OperationalRules.mayPlan(status))return denied(OperationsFailure.NOT_ALLOWED)
-        step{data.operations.role(actionId,roleId)}?.model()?:return denied(OperationsFailure.NOT_FOUND)
+        if(expected.actionId!=actionId)return denied(OperationsFailure.STALE)
+        val roleId=expected.id
+        val current=step{data.operations.role(actionId,roleId)}?.model()?:return denied(OperationsFailure.NOT_FOUND)
+        if(current!=expected)return denied(OperationsFailure.STALE)
         if(step{data.operations.plannedReferences(actionId,roleId)}>0 || step{data.operations.liveReferences(actionId,roleId)}>0 || step{data.tasks.roleReferences(actionId,roleId)}>0)return denied(OperationsFailure.IN_USE)
         if(step{data.operations.removeRole(actionId,roleId)}!=1)throw ProductStorageFailure()
         return OperationsResult.Value(Unit)

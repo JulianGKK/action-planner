@@ -48,8 +48,8 @@ class P7MaterialProbe : Instrumentation() {
             OperationalBoard(actionId, actions.row.status, emptyList(), listOf(OperationalPerson(Person("p", actionId, "Motte", 0),
                 PersonRolePlan(emptySet(), null), PersonOperationalState(actionId, "p", null, OperationalStatus.ON_SITE, null, 0))))))
         override fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { error("No P7 P4 mutation") }
-        override fun renameRole(actionId: String, roleId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { error("No P7 P4 mutation") }
-        override fun deleteRole(actionId: String, roleId: String, publish: (OperationsResult<Unit>) -> Unit) { error("No P7 P4 mutation") }
+        override fun renameRole(actionId: String, expected: Role, name: String, publish: (OperationsResult<Role>) -> Unit) { error("No P7 P4 mutation") }
+        override fun deleteRole(actionId: String, expected: Role, publish: (OperationsResult<Unit>) -> Unit) { error("No P7 P4 mutation") }
         override fun planRoles(actionId: String, personId: String, expected: ExpectedPersonRolePlan, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit) { error("No P7 P4 mutation") }
         override fun updateSnapshot(actionId: String, personId: String, expected: PersonOperationalState, status: OperationalStatus, roleId: String?, place: String, publish: (OperationsResult<Unit>) -> Unit) { error("No P7 P4 mutation") }
     }

@@ -68,6 +68,7 @@ class CoreWriterIntegrationTest {
         }
         fun exec(sql:String)=runBlocking{db.execute(sql)}
         fun count(table:String)=runBlocking{data.query("SELECT COUNT(*) FROM $table"){it.step();it.getLong(0)}}
+        fun roleRow(id:String="r0")=runBlocking{data.operations.role("a",id)!!.model()}
         fun actionRow(id:String="a")=runBlocking{data.actions.get(id)!!.model()}
         fun state(id:String="p0")=runBlocking{data.operations.state("a",id)!!.model()}
         fun <R:Any> queue(family:WorkspaceWriterFamily,rejected:(R)->Boolean,busy:()->R?,publish:(R)->Unit,
@@ -162,16 +163,16 @@ class CoreWriterIntegrationTest {
         assertEquals(3L,h.count("persons"));assertEquals("Synthetic renamed",(h.person("p0","Synthetic renamed") as PersonResult.Value).value.pseudonym)
         assertEquals(PersonResult.Rejected(PersonRejection.DUPLICATE_PSEUDONYM),h.person("p1","Synthetic renamed"))
         val role=value(h.ops{it.role("a",null,"Synthetic second")})
-        value(h.ops{it.role("a","r0","Synthetic role renamed")})
+        value(h.ops{it.role("a",h.roleRow(),"Synthetic role renamed")})
         value(h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",PersonRolePlan(emptySet(),null)),PersonRolePlan(setOf("r0",role.id),"r0"))})
-        assertEquals(OperationsResult.Rejected(OperationsFailure.IN_USE),h.ops{it.deleteRole("a","r0")})
-        val unused=value(h.ops{it.role("a",null,"Synthetic unused")});value(h.ops{it.deleteRole("a",unused.id)})
+        assertEquals(OperationsResult.Rejected(OperationsFailure.IN_USE),h.ops{it.deleteRole("a",h.roleRow())})
+        val unused=value(h.ops{it.role("a",null,"Synthetic unused")});value(h.ops{it.deleteRole("a",unused)})
         h.advance(ActionStatus.PREPARATION)
         value(h.ops{it.snapshot("a","p0",h.state(),OperationalStatus.ON_SITE,"r0","")})
         value(h.ops{it.snapshot("a","p1",h.state("p1"),OperationalStatus.ON_SITE,null,"")})
         value(h.ops{it.snapshot("a",person.id,h.state(person.id),OperationalStatus.IN_CUSTODY,null,"Synthetic place")})
         assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),h.person("p0","Must not rename ACTIVE"))
-        assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED),h.ops{it.role("a","r0","Must not rename ACTIVE")})
+        assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED),h.ops{it.role("a",h.roleRow(),"Must not rename ACTIVE")})
         val c=h.context
         val compact=runBlocking{val p=CompactPeopleStore(h.db,c,{true}).prepareCore(CompactTaskState(BoundedActiveBinding("a",1,2),h.epoch.mutationEpoch));p.materialize(CoreReadAdmission.admit(listOf(p)))}
         assertEquals(3L,compact.people.overall.total);assertEquals(2L,compact.people.overall.onSite);assertEquals(1L,compact.people.overall.inCustody)
@@ -339,6 +340,85 @@ class CoreWriterIntegrationTest {
         h.exec("DELETE FROM roles WHERE id='r0'")
         assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",empty),chosen)})
         assertEquals(0L,h.count("person_planned_roles"));assertEquals(0L,h.count("person_role_plans"))
+    }
+    @Test fun roleRenameSecondOldEditorIsStale()=H().use{h->
+        val original=h.roleRow()
+        assertTrue(h.ops{it.role("a",original,"Editor A")} is OperationsResult.Value)
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.ops{it.role("a",original,"Editor B")})
+        assertEquals("Editor A",h.roleRow().name)
+        assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),h.completions.last())
+    }
+    @Test fun roleDeleteOldConfirmationCannotDeleteRenamedRole()=H().use{h->
+        val original=runBlocking{h.data.operations.role("a","r0")!!.model()}
+        assertTrue(h.ops{it.role("a",original,"Changed after dialog")} is OperationsResult.Value)
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.ops{it.deleteRole("a",original)})
+        assertEquals("Changed after dialog",h.roleRow().name)
+        assertEquals(WorkspaceWriteOutcome.ROLLED_BACK,h.completions.last().outcome)
+    }
+    @Test fun roleIdentityCaseWhitespaceAndCreateValidationAreExactBeforeWrites()=H().use{h->
+        val original=h.roleRow()
+        h.exec("INSERT INTO roles VALUES('r1','a','Other','other',5),('foreign','b','Foreign','foreign',0)")
+        var writes=0
+        h.db.beforePrepare={if(it.trimStart().startsWith("UPDATE roles",true) || it.trimStart().startsWith("DELETE FROM roles",true))writes++}
+        for(expected in listOf(original.copy(name=original.name.lowercase()),original.copy(name=" ${original.name} "),original.copy(createdAt=99),original.copy(id="r1"),original.copy(actionId="b"))){
+            assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.ops{it.role("a",expected,"New")})
+            assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.ops{it.deleteRole("a",expected)})
+        }
+        val missing=original.copy(id="missing")
+        assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),h.ops{it.role("a",missing,"New")})
+        assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),h.ops{it.deleteRole("a",missing)})
+        assertEquals(OperationsResult.Rejected(OperationsFailure.DUPLICATE),h.ops{it.role("a",original," OTHER ")})
+        assertEquals(OperationsResult.Rejected(OperationsFailure.INVALID),h.ops{it.role("a",original,"  ")})
+        assertEquals(0,writes);assertEquals(original,h.roleRow())
+        val renamed=value(h.ops{it.role("a",original," Mixed CASE ")})
+        assertEquals(original.copy(name=" Mixed CASE "),renamed)
+        val next=value(h.ops{it.role("a",renamed,"Next")})
+        assertEquals(OperationsResult.Value(Unit),h.ops{it.deleteRole("a",next)})
+        assertEquals(2L,h.count("roles"))
+        assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE),h.completions.last())
+    }
+    @Test fun currentRoleDeletePreservesAllOperationsAndTaskReferenceGates(){
+        for(kind in listOf("planned","live","task"))H().use{h->
+            val role=h.roleRow()
+            when(kind){
+                "planned"->assertTrue(h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",PersonRolePlan(emptySet(),null)),PersonRolePlan(setOf("r0"),"r0"))} is OperationsResult.Value)
+                "live"->h.exec("INSERT INTO person_operational_states VALUES('a','p0','r0','ON_SITE',NULL,1)")
+                else->h.exec("INSERT INTO tasks VALUES('t','a','Synthetic','NORMAL','OPEN',NULL,'r0',NULL,NULL,NULL,1,1,NULL)")
+            }
+            assertEquals(OperationsResult.Rejected(OperationsFailure.IN_USE),h.ops{it.deleteRole("a",role)})
+            assertEquals(role,h.roleRow());assertEquals(WorkspaceWriteOutcome.ROLLED_BACK,h.completions.last().outcome)
+        }
+    }
+    @Test fun roleFullValueCasStillCannotDetectSchema11Aba()=H().use{h->
+        val a=h.roleRow();val b=value(h.ops{it.role("a",a,"B")})
+        val again=value(h.ops{it.role("a",b,a.name)})
+        assertEquals(a,again)
+        assertTrue(h.ops{it.role("a",a,"Old editor after ABA")} is OperationsResult.Value)
+        val current=h.roleRow();val changed=value(h.ops{it.role("a",current,"B again")})
+        assertEquals(current,value(h.ops{it.role("a",changed,current.name)}))
+        assertTrue(h.ops{it.deleteRole("a",current)} is OperationsResult.Value) // Negative ABA proof for delete too.
+    }
+    @Test fun renameAndDeleteKeepOuterCleanupAuthorityAndSingleDispatch(){
+        for(delete in listOf(false,true))for(at in listOf("normal","stale","end-before","end-after","rollback","db-cleanup","key-cleanup","initial","queued","commit","after-commit","publication","permission","generation","action"))H().use{h->
+            val original=h.roleRow();val expected=if(at in listOf("stale","rollback"))original.copy(createdAt=99) else original
+            when(at){"end-before"->h.failEndBefore=true;"end-after"->h.failEndAfter=true;"rollback"->h.failRollback=true;"db-cleanup"->h.dbCleanup={error("SYNTHETIC_CLEANUP")};"key-cleanup"->h.keyCleanup={error("SYNTHETIC_CLEANUP")};"initial"->h.ready=false;"commit"->h.beforeEnd={h.ready=false};"after-commit"->h.afterEnd={h.ready=false};"publication"->h.beforePublication={h.ready=false}}
+            var calls=0
+            h.queue<OperationsResult<*>>(WorkspaceWriterFamily.OPERATIONS,{it is OperationsResult.Rejected},{null},{calls++}){c->
+                val store=OperationsStore(h.data,c){0};if(delete)store.deleteRole("a",expected) else store.role("a",expected,"Changed")
+            }
+            if(at=="queued")h.ready=false
+            val work=h.worker.jobs.firstOrNull();h.worker.drain();work?.run()
+            when(at){"permission"->h.permission++;"generation"->h.generation++;"action"->h.action="b"}
+            val main=h.main.jobs.firstOrNull();h.main.drain();main?.run()
+            assertEquals(if(at in listOf("normal","stale"))1 else 0,calls)
+            val changed=at in listOf("normal","end-after","db-cleanup","key-cleanup","after-commit","publication","permission","generation","action")
+            if(delete)assertEquals(if(changed)0L else 1L,h.count("roles")) else assertEquals(if(changed)"Changed" else original.name,h.roleRow().name)
+            if(at.startsWith("end") || at=="rollback")assertEquals(WorkspaceWriteOutcome.UNKNOWN,h.completions.single().outcome)
+            if(at.endsWith("cleanup"))assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED),h.completions.single())
+            if(at=="normal")assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE),h.completions.single())
+            if(at=="stale")assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),h.completions.single())
+            assertFalse(h.epoch.ramReuseEnabled)
+        }
     }
     @Test fun crossFamilyPendingUsesOneEpochAndTaskProofCannotBypassIt()=H().use { h->
         var personCalls=0;var roleResult:OperationsResult<Role>?=null;var taskResult:OperationsResult<Task>?=null

@@ -153,29 +153,28 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     val ops = model.operations
     var form by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("") }
-    var editing by remember { mutableStateOf<String?>(null) }
-    var deleting by remember { mutableStateOf<String?>(null) }
     var templates by remember { mutableStateOf(false) }
     var submitted by remember { mutableStateOf(false) }
     LaunchedEffect(submitted, ops.busy) {
         if (submitted && !ops.busy) {
-            if (ops.error == null) { form = false; name = ""; editing = null; deleting = null }
+            if (ops.error == null) { form = false; name = "" }
             submitted = false
         }
     }
     PreparationHeading("Rollen")
     Text("${board.roles.size} angelegt · Geplante Nutzung")
+    if(ops.editingRole!=null || ops.deletingRole!=null){RoleEditor(ops);return}
     ops.error?.let { Text(operationsError(it)) }
     if (form) {
         FormTextField(name, { ops.textInteraction(); name = it }, label = { Text("Rollenname") },
-            autoFocus = editing == null, keyboardOptions = productKeyboard(ProductTextKind.ROLE),
+            autoFocus = true, keyboardOptions = productKeyboard(ProductTextKind.ROLE),
             enabled = !ops.busy, modifier = Modifier.fillMaxWidth())
-        FormButton({ submitted = true; if (editing == null) ops.createRole(name) else ops.renameRole(editing!!, name) },
+        FormButton({ submitted = true; ops.createRole(name) },
             enabled = !ops.busy && OperationalRules.validName(name)) { Text("Speichern") }
-        FormOutlinedButton({ ops.textInteraction(); form = false; name = ""; editing = null }, enabled = !ops.busy) { Text("Abbrechen") }
+        FormOutlinedButton({ ops.textInteraction(); form = false; name = "" }, enabled = !ops.busy) { Text("Abbrechen") }
         return
     }
-    FormButton({ ops.textInteraction(); form = true; editing = null; name = "" }, enabled = !ops.busy) { Text("Rolle anlegen") }
+    FormButton({ ops.textInteraction(); form = true; name = "" }, enabled = !ops.busy) { Text("Rolle anlegen") }
     FormOutlinedButton({ ops.textInteraction(); templates = !templates }, enabled = !ops.busy,
         modifier = Modifier.semantics { stateDescription = if (templates) "Geöffnet" else "Geschlossen" }) { Text("Vorlagenrollen ${if (templates) "▴" else "▾"}") }
     if (templates) {
@@ -192,13 +191,8 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
         val planned = board.persons.count { role.id in it.plan.roleIds }
         Text("$planned geplant · ${board.persons.count { it.plan.primaryRoleId == role.id }} als Hauptrolle")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FormOutlinedButton({ ops.textInteraction(); editing = role.id; name = role.name; form = true; deleting = null }, enabled = !ops.busy) { Text("Umbenennen") }
-            FormOutlinedButton({ ops.textInteraction(); deleting = role.id }, enabled = !ops.busy) { Text("Löschen") }
-        }
-        if (deleting == role.id) {
-            Text("Rolle löschen? Zugeordnete Rollen können nicht gelöscht werden.")
-            FormButton({ submitted = true; ops.deleteRole(role.id) }, enabled = !ops.busy) { Text("Löschen bestätigen") }
-            FormOutlinedButton({ ops.textInteraction(); deleting = null }, enabled = !ops.busy) { Text("Abbrechen") }
+            FormOutlinedButton({ ops.editRole(role) }, enabled = !ops.busy) { Text("Umbenennen") }
+            FormOutlinedButton({ ops.editRole(role,delete=true) }, enabled = !ops.busy) { Text("Löschen") }
         }
     }
 }

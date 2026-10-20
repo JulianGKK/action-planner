@@ -6601,3 +6601,187 @@ und dieser Abschnitt. Keine fachliche Änderung anderer Writerfamilien.
 SHA-Abgleich gehören zum Abschluss. Keine APKs/Schlüssel/Datenbanken/Rohlogs/Credentials/
 persönlichen Pfade/Gerätekennungen einchecken. Danach **STOPP bis zum unabhängigen
 GitHub-Review**. Kein Force-Push, Merge oder Release; keine vollständige Release-1.0-Freigabe.
+
+## 50. Issue #36 – Expected-Role-CAS für Rename und Delete
+
+### 50.1 Reproduzierter Ausgangszustand
+
+Vor Arbeitsbeginn stimmten lokaler HEAD und unabhängig über GitHub gelesener Remote-HEAD
+mit `0815804f514555c741786e514cc292c8fa1a3f22` überein; Arbeitsbaum sauber.
+Zwei gezielte SQLite-/Schema-11-Ausgangstests wurden **vor der Implementierung** erfolgreich
+ausgeführt und bestätigten beide Fehler des damaligen ID-only-Vertrags:
+
+- `roleRenameBaselineSilentlyAcceptsBothEditors`: A benennt um, B überschreibt danach
+  aus dem alten Editor ohne Konflikt. Beide Writes akzeptiert, Bs Name persistiert.
+- `roleDeleteBaselineDeletesRenamedRoleFromOldDialog`: Ein alter Dialog löscht die
+  seit seiner Öffnung umbenannte Rolle erfolgreich.
+
+Die Nachfolgetests `roleRenameSecondOldEditorIsStale` und
+`roleDeleteOldConfirmationCannotDeleteRenamedRole` verlangen jetzt STALE mit bestätigtem
+Rollback und dem erhaltenen neueren Namen. Die Ausgangsfehler werden nicht als positive
+CAS-Proofs ausgegeben.
+
+### 50.2 IMPLEMENTIERT – vollständige Expected-Role-Identität
+
+`OperationsRepository.renameRole(actionId, expected: Role, name, publish)` und
+`deleteRole(actionId, expected: Role, publish)` verlangen den vollständigen zuvor
+gewählten unveränderlichen Role-Wert. Kein öffentlicher ID-only-Overload bleibt erhalten.
+Auch `OperationsStore.role` erhält für Rename die Role statt nur einer ID, und
+`OperationsStore.deleteRole` verlangt sie verbindlich. Null im gemeinsamen Create-/
+Rename-Store bedeutet weiterhin ausschließlich Create; CreateRole-Semantik bleibt
+unverändert und kann keine bestehende Rolle per ID überschreiben.
+
+In der **bestehenden äußeren IMMEDIATE-Transaktion** werden aktuelle READY-Autorität und
+PREPARATION-Schreibregel geprüft. Danach wird die persistierte Rollenidentität mit
+Expected verglichen: **Role-ID, Action-ID, exakter ursprünglicher Name und createdAt**.
+Case-/Whitespace-Abweichungen des Expected-Namens zählen als Abweichung, selbst wenn
+sie denselben normalisierten Namen ergeben. Abweichende existierende Identität oder
+Expected-Action: **STALE vor UPDATE/DELETE**. Tatsächlich fehlende Rolle im zulässigen
+Scope: **NOT_FOUND**. Fehlende Aktion bleibt NOT_FOUND, unzulässiger Aktionsstatus
+NOT_ALLOWED. Ein ungültiger neuer Rename-Name wird weiterhin INVALID.
+
+Die normalisierten neuen Namen, Duplicate-Prüfung, Foreign Keys und Action-Isolation
+bleiben erhalten. Nach passendem Delete-Expected werden weiterhin geplante, aktuelle
+Operations- und Taskreferenzen geprüft: **IN_USE**, ohne Löschung. STALE wird nicht durch
+eine automatische Umbenennung, Löschung oder einen frisch nachgeladenen Expected
+umgangen. Inkonsistente persistierte Rollennormalisierung bleibt Storagefehler.
+Keine Schema-/Index-/Migrationsänderung.
+
+### 50.3 Tatsächliche Transaktion, Rollback, UNKNOWN und Cleanup
+
+`WorkspaceWriteBoundary`, `WorkspaceMutationInvalidation` und
+`confirmedWorkspaceTransaction` bleiben unverändert. Derselbe injizierte Writerport
+invalidiert synchron vor Queueeintritt, dieselbe Mutationsepoche sperrt Pending gegen
+weitere Writes/RAM-Reuse. Kein zweiter Owner und keine zweite Invalidierungsinstanz.
+
+Ein innerhalb der Transaktion ermitteltes STALE/IN_USE/NOT_FOUND/DUPLICATE/INVALID wird
+nur nach tatsächlich zurückgekehrtem äußerem Rollback und DB-/Lease-Cleanup als
+**ROLLED_BACK / COMPLETE** publiziert. Die vorhandene separate Vor-Queue-Busyantwort
+ist weiterhin kein DB-Konflikt- oder Rollbacknachweis.
+**COMMITTED** stammt vom bestätigten äußeren Transaktionsabschluss, nie allein aus
+einem Repositorywert oder SAVEPOINT. Fehlender Abschluss/geworfenes Rollback bleibt
+**UNKNOWN**; Cleanupfehler **FAILED_OR_UNCONFIRMED**, auch nach physischem Commit.
+In beiden Fällen keine Erfolgspublication und kein automatischer Retry.
+
+Revoke vor Commit verhindert den Write; Revoke nach Commit kann die UI-Publication
+verhindern, ohne den persistierten Write zurückzunehmen. Die bestehende zentrale
+Publication samt Action-/Generation-/Permissionprüfung bleibt maßgeblich. Native
+Room-/Key-/Bindingrennen werden in Hosttests weiterhin vertrauenswürdig simuliert;
+keine neue Behauptung vollständiger nativer Ressourcenfreigabe.
+
+### 50.4 IMPLEMENTIERT – beide produktiven Rollenoberflächen
+
+Es gibt **zwei** tatsächliche Aufrufstellen: `OperationsScreen.RoleManagement` und
+`PreparationWorkspace.PreparationRoles`. Beide nutzen jetzt denselben modellgebundenen
+`RoleEditor`. Beim Öffnen werden Role-Snapshot und READY-Generation festgehalten;
+Rename-Entwurf und Delete-Bestätigung sind getrennte explizite Modellzustände.
+
+- Rename übergibt genau den geöffneten Expected-Wert. Der Name wird **nicht mehr beim
+  Speicherklick** im Compose-Code geleert. Pending hält Editor und Namen fest. Erst
+  gültige erfolgreiche Repositorypublication aus der bewiesenen Writergrenze darf den
+  gebundenen Editor abschließen, danach erfolgt der bestehende Workspace-Refresh.
+- STALE hält Editor und eingegebenen Namen offen und erklärt, dass die Rolle inzwischen
+  geändert wurde. Kein Erfolgsbanner, automatisches Überschreiben oder Retry.
+- Die Löschbestätigung zeigt den **ursprünglich gewählten Namen** und verwendet dessen
+  vollständigen Role-Snapshot, auch wenn die Liste inzwischen neue Daten enthält.
+  Bei STALE oder IN_USE bleibt sie erhalten; IN_USE erklärt die bestehenden Referenzen.
+  Sie wird nicht schon beim Bestätigungsklick als erfolgreich erledigt entfernt.
+- „Alten Stand verwerfen und Rolle neu laden“ wird nur bei STALE angeboten. Der Text
+  erklärt **vor** dem Klick, dass dadurch Entwurf bzw. alte Löschbestätigung ersetzt
+  werden. Nur diese ausdrückliche Aktion nutzt den vorhandenen autorisierten Boardread.
+  Gültiger vollständiger Rückgabestand der richtigen Rolle/Aktion in PREPARATION ersetzt
+  den Editorstand; keine Übernahme des gesamten Reloadboards und keine neue Klartextdatei.
+  Fehler/Missing/Foreign-Scope verwerfen den Entwurf nicht. Eine frisch geladene
+  Löschbestätigung benötigt einen **erneuten Bestätigungsklick**; Reload löscht niemals.
+- „Bearbeitung verwerfen“ bzw. „Löschung abbrechen“ ermöglicht bewusstes Verlassen.
+  Bestehendes `ProductViewModel`-Clear bei Lock/BLOCKED, Generation- und Actionwechsel
+  verwirft über `OperationsModel.clear()` jetzt auch diese Referenzen. READY-/Generation-/
+  Action-/Request- und Editorzugehörigkeitsprüfungen sperren alte Callbacks. Einmaliger
+  Callbackverbrauch schützt zusätzlich vor doppelten Mutation-/Reloadcallbacks und
+  davor, einen später geöffneten Editor zu überschreiben oder abzuschließen.
+
+Der Editorzähler ist nur lokale Callbackzugehörigkeit, keine neue Autorität oder
+persistierte Rollenrevision. Keine allgemeine Navigationsänderung, RAM-Hits oder neue
+Retentionsfreigabe. Die bestehende CreateRole-Fachsemantik bleibt erhalten.
+
+### 50.5 GETESTET – SQLite-, Formular- und Offline-Proofs
+
+Echtes SQLite/Schema 11 mit FKs/Indizes, produktiver Storelogik und tatsächlicher
+gemeinsamer Transaktions-/Dispatchgrenze:
+
+- A/B mit gleichem Expected: A erfolgreich, B STALE, As Name bleibt erhalten.
+  Neuer Editor nach Commit darf umbenennen; aktueller unreferenzierter Expected löscht.
+  Alter Delete-Dialog nach Rename: STALE, Rolle bleibt erhalten.
+- Exakte Case-/Whitespace-/createdAt-/ID-/Actionabweichungen, fehlende Rolle, Duplicate-
+  Namen und ungültiger Name. SQL-Prepare-Beobachtung: **null Rollen-UPDATE/DELETE** bei
+  diesen Rejections. Foreign-Actiondaten unverändert; Rollenidentität bleibt intakt.
+- IN_USE für geplante Rollen, aktuellen Operationssnapshot und echte Taskreferenz;
+  jeweils bestätigter Rollback ohne Löschung. Bestehende FK-/Taskproofs erhalten.
+- Für Rename **und** Delete: Commit, STALE-Rollback, UNKNOWN vor/nach physischem Commit,
+  Rollbackfehler, DB-/Key-Cleanupfehler, Revoke initial/nach Queue/vor/nach Commit/vor
+  Publication, Permission-/Generation-/Actionwechsel und doppelte Worker/Mainrunnables.
+  Physischer Zustand und Callbackfreigabe werden separat geprüft. Bestehende
+  Cross-Family-Pending-/Epochen-, Personen-/Plan-/Task-/Security-/Publicationproofs bleiben.
+- Sechs neue `RoleEditorModelTest`-Methoden prüfen eingefrorenen Expected ohne Save-Read,
+  Rename-Entwurf bis bestätigter Portantwort, STALE-Erhalt, Delete-Pending/STALE/IN_USE,
+  expliziten Reload ohne Delete, Reloadfehler, doppelte/alte Callbackantworten gegen
+  neue Entwürfe, Lifecycle-Clear sowie ungelöste Writes ohne optimistischen Abschluss
+  oder automatische Wiederholung. Das sind UI-Porttests, keine nativen Commitbeweise.
+- `OperationsStorageTest.roleExpectedSnapshotRejectsOldRenameAndDeleteThroughProductBoundary`
+  zusätzlich als Android-/SQLCipher-/Room-Proof vorbereitet. Bestehende Androidproofs
+  und Testdoubles ausschließlich auf die notwendige Expected-Signatur angepasst.
+  **Nur offline kompiliert, nicht installiert oder instrumentiert.**
+
+Gezielt:
+`./gradlew :data:testDebugUnitTest --tests '*CoreWriterIntegrationTest' :app:testDebugUnitTest --tests '*RoleEditorModelTest' --tests '*OperationsModelTest' --offline`.
+Vollständiger Abschlusslauf:
+`./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline`.
+**640 App + 778 Data + 4 Security = 1422 Hosttests, 0 Fehler, 0 Skips.**
+Domain-Testtask ohne Testquellen, keine zusätzlichen Tests gezählt. Offline-Appbuild,
+beide Androidtest-Kompilationen, Architekturcheck und Produkt-/Demo-Manifestchecks
+erfolgreich. Bestehende Kotlin-/Android-Deprecationwarnungen bleiben sichtbar; kein
+Testfehler unterdrückt. Keine Geräteinstallation oder connectedAndroidTest.
+
+### 50.6 ABA und offene BLOCKER
+
+**GETESTETER ABA-NEGATIVFALL:** `roleFullValueCasStillCannotDetectSchema11Aba` stellt
+A → B → A einschließlich unveränderter Role-ID/Action-ID/createdAt her. Ein alter
+Rename-Editor wird danach wieder akzeptiert; ebenso kann eine alte Löschbestätigung
+nach Wiederherstellung desselben vollständigen Role-Wertes wieder löschen.
+Schema 11 enthält keine persistierte monotone Role-Revision. Vollzustandsvergleich
+verhindert gewöhnliche Lost Updates/veraltete Löschbestätigungen, **keine vollständige
+ABA-Sicherheit**. Zeitstempel oder flüchtige Editor-/Mutationsepochen ersetzen keinen
+persistierten Revisionsbeleg. Eine spätere monotone Revision mit Migration und allen
+Writerhooks benötigt eine eigene Architekturentscheidung/Freigabe; kein Schema 12.
+
+[#36](https://github.com/JulianGKK/action-planner/issues/36): Personen-, Plan- und nun
+Role-Vollvergleich **IMPLEMENTIERT / GETESTET** im jeweiligen begrenzten Vertrag.
+Monotone Revision/ABA und übrige allgemeine Task-/Action-/Live-Editor-/Revisionslücken
+bleiben offen; keine universelle CAS-/Editorfreigabe. Die historischen offenen
+Rename-/Delete-Punkte aus §49 sind mit diesem Slice nur für gewöhnliche Vollwertkonflikte
+und diese konkreten Formulare geschlossen, nicht für ABA oder alle Writerfamilien.
+[#35](https://github.com/JulianGKK/action-planner/issues/35): gemeinsame Writergrenze
+erhalten; übrige Familien aus §46/47 weiterhin **UNWIRED / NOT SAFE FOR RAM REUSE**.
+[#37](https://github.com/JulianGKK/action-planner/issues/37): Snapshotowner **NOCH NICHT
+ANGEBUNDEN**. [#38](https://github.com/JulianGKK/action-planner/issues/38): keine
+Cache-/Navigations-/Performanceintegration und keine Release-1.0-Performancefreigabe.
+[#32](https://github.com/JulianGKK/action-planner/issues/32): eigenständiger Ressourcen-
+**BLOCKER** bleibt offen. `SQLCipherStatement.close()` schließt den Cursor nicht explizit;
+Hostcleanup oder FD-PASS beweisen keine vollständige native Cursorfreigabe.
+
+Unverändert: SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink,
+B2Driver, Schema 11, 180 s absolut/30 s READY idle und 8+8-MiB-Sicherheitsbudget.
+Keine zweite Sessionautorität/Invalidierungsinstanz, kein Snapshotowner, RAM-Hit,
+Cacheaktivierung, installierte App, Geräteinstallation/Instrumentation oder Produktupdate.
+
+Geändert: Operations.kt (API), ProductOperationsRepository.kt, OperationsModel.kt,
+OperationsScreen.kt, PreparationWorkspace.kt; CoreWriterIntegrationTest.kt,
+RoleEditorModelTest.kt, OperationsStorageTest.kt und notwendige Test-/Fixture-Signaturen
+(einschließlich ausschließlich API-Anpassung im TaskStorageTest) sowie dieser Abschnitt.
+Keine fachliche Änderung der Personen-/Plan-/Task-/Actionwriter oder gemeinsamer
+Security-/Publicationgrenzen. Keine neuen Dependencies/Permissions.
+
+Abschluss: `git diff --check`, `git status -sb`, regulärer WIP-Commit/Push und unabhängiger
+Remote-SHA-Abgleich. Keine APKs/Schlüssel/Datenbanken/Rohlogs/Credentials/persönlichen
+Pfade/Gerätekennungen einchecken. Danach **STOPP bis zum unabhängigen GitHub-Review**.
+Kein Force-Push, Merge, Release oder vollständige Release-1.0-Freigabe.

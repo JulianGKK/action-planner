@@ -51,8 +51,8 @@ class ActiveIntegrationTest {
         val ops = object : OperationsRepository {
             override fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit) { opReads++; if (defer) pendingOps.add(publish) else publish(OperationsResult.Value(operations())) }
             override fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { opWrites++ }
-            override fun renameRole(actionId: String, roleId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { opWrites++ }
-            override fun deleteRole(actionId: String, roleId: String, publish: (OperationsResult<Unit>) -> Unit) { opWrites++ }
+            override fun renameRole(actionId: String, expected: Role, name: String, publish: (OperationsResult<Role>) -> Unit) { opWrites++ }
+            override fun deleteRole(actionId: String, expected: Role, publish: (OperationsResult<Unit>) -> Unit) { opWrites++ }
             override fun planRoles(actionId: String, personId: String, expected: ExpectedPersonRolePlan, plan: PersonRolePlan, publish: (OperationsResult<Unit>) -> Unit) { opWrites++ }
             override fun updateSnapshot(actionId: String, personId: String, expected: PersonOperationalState, status: OperationalStatus, roleId: String?, place: String, publish: (OperationsResult<Unit>) -> Unit) {
                 assertEquals(expected, people.single { it.person.id == personId }.state); opWrites++
@@ -195,7 +195,7 @@ class ActiveIntegrationTest {
     @Test fun completedCrossAreaReadsRemainAvailableAndAllWritesAreDenied() {
         val h = Harness(ActionStatus.COMPLETED); val m = h.model
         assertNotNull(m.workspace?.operations); assertNotNull(m.workspace?.tasks)
-        m.operations.focus("p"); m.operations.update("p"); m.operations.changeFunction(); m.operations.newFunction(); m.operations.saveNewFunction(); m.operations.renameRole("support", "X"); m.operations.deleteRole("support")
+        m.operations.focus("p"); m.operations.update("p"); m.operations.changeFunction(); m.operations.newFunction(); m.operations.saveNewFunction(); m.operations.renameRole(Role("support","a","synthetic",0), "X"); m.operations.deleteRole(Role("support","a","synthetic",0))
         m.tasks.open(m.tasks.board!!.tasks.first()); m.tasks.edit(); m.tasks.add(); m.tasks.transition(TaskStatus.DONE); m.tasks.delete()
         assertEquals(0, h.world.opWrites); assertEquals(0, h.world.taskWrites); assertFalse(m.tasks.form); assertFalse(m.operations.live)
     }

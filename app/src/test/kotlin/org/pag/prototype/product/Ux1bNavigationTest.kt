@@ -45,8 +45,8 @@ class Ux1bNavigationTest {
             publish(OperationsResult.Value(OperationalBoard(actionId,status(),listOf(Role("r",actionId,"Support",0)),listOf(person,other))))
         }
         override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit){}
-        override fun renameRole(actionId:String,roleId:String,name:String,publish:(OperationsResult<Role>)->Unit){}
-        override fun deleteRole(actionId:String,roleId:String,publish:(OperationsResult<Unit>)->Unit){}
+        override fun renameRole(actionId:String,expected: Role,name:String,publish:(OperationsResult<Role>)->Unit){}
+        override fun deleteRole(actionId:String,expected: Role,publish:(OperationsResult<Unit>)->Unit){}
         override fun planRoles(actionId:String,personId:String,expected: ExpectedPersonRolePlan, plan:PersonRolePlan,publish:(OperationsResult<Unit>)->Unit){writes++;pendingSave=publish}
         override fun updateSnapshot(actionId:String,personId:String,expected:PersonOperationalState,status:OperationalStatus,roleId:String?,place:String,publish:(OperationsResult<Unit>)->Unit){}
     }
