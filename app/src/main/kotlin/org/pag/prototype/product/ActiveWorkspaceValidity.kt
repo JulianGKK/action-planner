@@ -32,7 +32,8 @@ internal class ActiveWorkspaceValidity(
         }
     }
     enum class Projection { ACTION, PEOPLE, OPERATIONS, TASKS, TASK_COUNTS, MATERIAL_BOARD, MATERIAL_SUMMARY, EXPENSE_BOARD, EXPENSE_SUMMARY,
-        PROTOCOL_SUMMARY, PROTOCOL_TIMELINE, PROTOCOL_DETAIL }
+        PROTOCOL_SUMMARY, PROTOCOL_TIMELINE, PROTOCOL_DETAIL,
+        MEMORY_REPORT_SUMMARY, MEMORY_REPORT_HEADERS, MEMORY_REPORT_DETAIL }
     /** Owner lifecycle only, never an assertion that the session is READY. */
     enum class State { ACTIVE, REVOKED, RECOVERY_REQUIRED }
     enum class Outcome { COMMITTED, ROLLED_BACK, UNKNOWN }

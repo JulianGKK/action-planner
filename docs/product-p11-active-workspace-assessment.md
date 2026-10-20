@@ -8008,3 +8008,302 @@ WIP-Commit/Push auf den bestehenden Branch und unabhängiger GitHub-Ref-Abgleich
 Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
 Gerätekennungen eingecheckt. Danach **STOPP BIS ZUM UNABHÄNGIGEN GITHUB-REVIEW**.
 Kein Force-Push, Merge, Release oder Produktupdate.
+
+
+## 56. MemoryReport-Writerintegration
+
+### Ausgangsbasis und RED-Nachweise
+
+Vor Änderungen: lokaler HEAD und unabhängiger GitHub-Branchref exakt
+`3fb7f53d14111c5bc60fce20ae93ea79225593cc`, Branch
+`p11-performance-optimization`, Arbeitsbaum sauber. Keine fremden Änderungen.
+
+Vorheriger Pfad: MemoryReportRepository → ProductMemoryReportRepository → eigener
+run-/write-Pfad mit withWriteTransaction → MemoryReportStore → Room/SQLCipher.
+READY-/Schritt-/Commit-/Publicationgates waren vorhanden; gemeinsame Invalidierung
+vor Workerqueue und expliziter äußerer Transaktions-/Cleanupbeleg fehlten.
+**GETESTET – statischer RED-Wiringtest:** Zwei neue Methoden schlugen vor Integration
+fehl (Boundary fehlt, Runtime injiziert gemeinsamen Port nicht). Nach Integration grün.
+Statische Verdrahtungsprüfung ist kein SQLite-Transaktionsbeweis.
+
+**GETESTET – Freeze-RED vor Härtung:** Der bestehende frozenWrite-Ausdruck wurde
+semantisch unverändert in freezeMemorySection extrahiert. Vier Hosttests: Original-
+MutableMap-/MutableSet-/Multi.keys-Mutation bereits korrekt isoliert (PASS), aber
+Mutable-Casts von Antwortmap, mehrgliedrigem Konfliktset und verschachtelter
+Multi.keys-Liste konnten Kopien verändern (drei tatsächliche Assertion-FAILs).
+Nach unmodifiable Wrapping dieselben vier Tests grün, keine Assertion abgeschwächt.
+Es wird ausdrücklich kein ursprünglicher Originalreferenz-Aliasverlust behauptet.
+
+### IMPLEMENTIERT – eine gemeinsame Writerfamilie
+
+WorkspaceWriterFamily.MEMORY_REPORT ergänzt. ProductRuntime injiziert dieselbe
+workspaceMutations-Instanz wie an Action, Person, Operations, Task, Material, Expense
+und Protocol. Keine zweite Mutationsepoche, Pending-Registry oder Sessionautorität.
+Standalone-Constructordefault und letzter Clockparameter bleiben wie bei den übrigen
+Familien kompatibel; produktive Composition injiziert ausdrücklich den gemeinsamen Port.
+
+Alle vier Produktoperationen – create, saveSection, complete, addAddendum – verwenden:
+
+```text
+WorkspaceWriteBoundary.submit(MEMORY_REPORT, actionId)
+  → aktueller READY-/OPERATION-Kontext
+  → synchrones beforeCoreQueue-Ticket VOR worker.execute
+  → bisheriger READY_TO_OPEN-/Keyscope
+  → ActionDatabaseAccess mit bestehenden SQLCipher-/Room-Preflights
+  → useWriterConnection / confirmedWorkspaceTransaction(IMMEDIATE)
+  → MemoryReportStore und dieselben Room-DAOs
+  → tatsächlicher äußerer Transaktionsabschluss
+  → Rückkehr des vollständigen DB-/Key-Leasescopes
+  → Ownerthread: Ticketcompletion
+  → StorageContext.publish und ticket.isCurrent
+  → Ergebnis-Callback
+```
+
+Gemeinsame Boundary, WorkspaceWriteProgress und confirmedWorkspaceTransaction
+funktional unverändert. Store und Datenport öffnen keine zweite äußere Transaktion.
+Aktiver äußerer Transaktionsscope/SAVEPOINT-Erfolg genügt nicht als äußerer Commitbeleg.
+Ein OperationsResult.Value allein genügt nicht als Erfolgsevidence.
+
+| Zustand | Beleg / Publication |
+|---|---|
+| Äußerer Commit normal zurückgekehrt, kompletter Workscope normal zurückgekehrt | COMMITTED / COMPLETE; Erfolg nur bei weiterhin gültiger zentraler Publication und aktuellem Ticket |
+| Fachliche Rejection und expliziter äußerer Rollback normal zurückgekehrt, Cleanup bestätigt | ROLLED_BACK / COMPLETE; erst dann fachliche Ablehnung veröffentlichen |
+| Unklarer Commit-/Rollbackabschluss oder Exception ohne positiven Endbeleg | UNKNOWN; kein Erfolgs- oder fachlicher Rejectioncallback |
+| Commit bekannt, anschließender DB-/Keyscope nicht bestätigt zurückgekehrt | COMMITTED / FAILED_OR_UNCONFIRMED; kein Erfolg |
+| Revoke nach bekanntem physischem Commit | Commit bleibt COMMITTED; keine unberechtigte Antwort und kein erfundener Rollback |
+| Bereits Pending vor Queueeintritt | Vor-Queue-STALE-Busy-Ablehnung ohne DB-Transaktion; kein ausgeführter Rollbacknachweis |
+| Workerdispatch vor Start fehlgeschlagen | Bestehender Nichtausführungsbeleg ROLLED_BACK / COMPLETE plus Fehlerpfad; kein behaupteter tatsächlicher DB-Rollback |
+| Main-Dispatch verloren/fehlgeschlagen | Pending bleibt bestehen; keine Completionpublication, kein automatischer Retry |
+
+UNKNOWN/unbestätigtes Cleanup bleiben für dieselbe Generation fail-closed. Vorhandenes
+Storage-Failure-/BLOCKED-Verhalten maßgeblich; keine unberechtigte Fehlerpublication bei
+bereits widerrufenem Kontext. Keine optimistischen UI-Patches oder automatische
+Wiederholung eines möglicherweise physisch bereits committeten Schreibvorgangs.
+
+### IMPLEMENTIERT / GETESTET – Fragebogen-, Header- und Addendumatomarität
+
+Die fachliche Storelogik wurde ausschließlich mechanisch von ActionDatabase-Zugriff
+auf CoreWriterData.memoryReports/actions umgestellt. Alle bisherigen Regeln bleiben:
+
+- Create validiert Autor und vollständigen beabsichtigten Abschnitt 0 vor Schreiben;
+  Header und sämtliche ersten Antworten gehören zu derselben äußeren Transaktion.
+  Leerer Abschnitt ist weiterhin eine fachlich zulässige bewusste Speicherung.
+- SaveSection prüft vollständigen Expected-Header und tatsächlichen Detailzustand
+  einschließlich Answercodec/Addenda. Abschnitt löschen, sämtliche Ersatzantworten
+  schreiben und Headerrevision aktualisieren sind atomar; andere Abschnitte bleiben.
+- Complete setzt tatsächlichen DRAFT-Status und gespeicherten Abschnitt 16 voraus.
+  Status, Revision, updatedAt/completedAt werden gemeinsam fortgeschrieben.
+- AddAddendum setzt tatsächlichen COMPLETED-Status voraus. Vollständige Addendum-
+  Sequenz lesen/prüfen, neue Ergänzung einfügen und Headerrevision aktualisieren in
+  derselben äußeren Transaktion. Kein Addendum ohne Revisionsupdate oder umgekehrt.
+
+Expected-CAS bleibt vollständige MemoryReportHeader-Gleichheit: ID über actionlokalen
+Lookup, Action-ID, authorLabel, questionnaireVersion, Status, revision,
+lastSavedSectionOrdinal, createdAt, updatedAt, completedAt. Vergleich und Änderung
+in derselben IMMEDIATE-Transaktion. Alter Editor nach bestätigtem Save oder Addendum
+STALE; erster Stand bleibt erhalten, neuer gültiger Editor kann fortsetzen.
+Keine ID-only-Abkürzung und kein UI-Revisionsersatz. Header ist selbst vollständig
+immutable; eine zusätzliche Expected-Collectionkopie ist dort nicht erforderlich.
+
+Persistierte Headerrevision bleibt monoton im vorhandenen Writervertrag.
+Long.MAX_VALUE erzeugt wie bisher ProductStorageFailure statt Wrap; bevor
+SaveSection/Complete/Addendum mutieren. Bei Exception kein erfundener fachlicher
+Rollbackbeleg: UNKNOWN, tatsächlicher SQL-Altzustand bleibt nach Rollback erhalten.
+Keine Schemamigration oder neue Revisionsspalte.
+
+MemoryQuestionnaireV1, MemoryReportRules und MemoryAnswerCodec.encode/decode/normalize
+unverändert: Reihenfolge 0..16 und maySave/mayComplete, Question-/Sectionzuordnung,
+Optionkeys, MULTI_CHOICE, kanonische Reihenfolge, exklusive UNKNOWN/UNCLEAR/
+NO_ASSESSMENT, Text-/Countgrenzen und Autorenlabel. Inaktiv gewordene Fragen verlangen
+weiter exakt passende retainedConflicts oder bewusste Entfernung; keine stillschweigende
+Bereinigung gespeicherter Antworten. Addendumlänge, Trim und Sequenzordnung unverändert.
+Schreiben weiterhin ausschließlich ACTIVE/COMPLETED gemäß bestehenden Fachregeln;
+keine neuen Rechte/P3b-Reads und keine Reöffnung anderer Writer in COMPLETED.
+
+### IMPLEMENTIERT / GETESTET – unveränderlicher Submit und minimale SQLite-Seam
+
+freezeMemorySection bildet vor Queueeintritt unabhängige unmodifiable Antwortmap,
+Konfliktset und für jedes MemoryAnswerValue.Multi eine eigene unmodifiable Keyliste.
+Andere Blätter (Text/Option/Count), Strings und Headerfelder sind immutable Werte.
+Tests zeigen Originalreferenzisolation und verweigerte Collection-Casts. Gequeueute
+Create- und SaveSection-Aufträge behalten den eingereichten Stand auch nach Leeren
+aller ursprünglichen Maps/Sets/Keylisten. Keine persistierten Formularentwürfe,
+zusätzlichen Payloadowner oder neuen Lebensdauern sensibler Produktdaten.
+
+CoreWriterData gezielt um MemoryReportDao erweitert; Produktion verwendet dieselben
+Room-DAOs. Neuer HostMemoryReportDao implementiert sämtliche verwendeten Query-/
+Writepfade mit echtem Schema-11-SQLite, FKs und Indizes: Header, Summary, Liste,
+Answers, Addenda, invalidHeaders/invalidAddendumTypes, Insert, clearSection und Update.
+Keine Testseam als zweite Transaktions-/Sessionautorität, keine Fakeantworten als
+Persistenzbeweis. Hostnumerik bildet native getLong-/Intkonvertierung nach, sodass
+wirklich die vorhandenen Rohwertgates und nicht ein strengerer Hostparser schützen.
+
+**GETESTET – vorhandene Rohdatenprüfungen genügen für die konkret untersuchten
+Intfelder:** questionnaireVersion != 1 bzw. nicht integer und lastSavedSectionOrdinal
+außerhalb 0..16 werden vor Headermaterialisierung abgewiesen; unter anderem Werte
+4294967297, ±4294967296 und REAL-/TEXT-Werte. Addendumsequence wird vor Int-Cast auf
+integer, >=0 und <=2147483647 geprüft, anschließend auf lückenlose Sequenz 0..N-1.
+REAL/TEXT, große/negative Wrapwerte und normale Sequenzlücken verweigert. COUNT-Payload
+wird strikt über toIntOrNull und kanonischen Codec geprüft. Kein neuer konkreter
+Wrap-Bypass dieser Gates nachgewiesen; deshalb **keine DAO-/Treiber-/Schemahärtung auf
+Verdacht**. MemoryReportDatabase/DAO-Queries unverändert. Das ist keine pauschale
+Aussage über ungetestete extreme Zeilenanzahlen oder sämtliche anderen DB-Modelle.
+
+Summary/List bleiben bewusst Headerreads. Fehlerhafte Antwortpayloads machen Detail
+und Folgewrites unzulässig, werden aber durch eine reine Zählsummary weder gelesen
+noch als vollständig geprüft ausgegeben. Header-/Addendum-/Answerchecks und deren
+bestehende Datenintegritätsgrenzen wurden nicht abgeschwächt.
+
+### GETESTET – echte SQLite- und Outcome-Regressionsmatrix
+
+Neuer MemoryReportWriterIntegrationTest nutzt denselben bestehenden Corewriter-
+Harness, Store, Boundary und bestätigte äußere Transaktionsfunktion. In-memory
+SQLite aus exportiertem Schema 11, reale SQL-Zustände und FKs. Cross-Family-Protokoll
+nutzt auch seine produktiven Trigger. afterChange injiziert gezielt Fehler **nach**
+realen SQL-Sideeffects; zusätzliche echte SQLite-Fehlertrigger prüfen DB-Abbrüche.
+
+Nachweise:
+
+- Create mit vollständigem erstem Antwortsatz, SaveSection mit mehreren Antworten,
+  zulässige Abschnittswiederholung, Erhalt anderer Abschnitte, Autoränderung nur in
+  Abschnitt 0. Fortschritt darf keinen Abschnitt überspringen; bewusst leere
+  Abschnitte zählen weiterhin als gespeichert.
+- Abhängige Frage wird inaktiv: fehlende/falsche/überzählige retainedConflicts INVALID,
+  bewusster passender Erhalt oder explizite Entfernung erfolgreich.
+- Ungültige Question-/Sectionkeys, Optionkombinationen, doppelte Multi-Keys, unbekannte
+  Optionen, UNCLEAR/UNKNOWN/NO_ASSESSMENT zusammen mit anderen Werten, Count außerhalb
+  0..99999, Autor-/Textgrenzen: fachliche Rollbacks. Kanonische Multi-Reihenfolge und
+  gültige Countgrenzen 0/99999 gespeichert und gelesen.
+- Vollständiger Header-CAS, zwei alte Editoren, STALE nach Revisionsfortschritt und
+  zwei Ergänzungseditoren. Neuer Expected darf fortsetzen; alte Ergänzung erzeugt
+  weder weiteren Addendumdatensatz noch Headerupdate. Fremde/fehlende Aktion/Report
+  sowie reale Child-FKs/Cascade ohne Fremdänderung geprüft.
+- Complete vor 16 verweigert, nach 16 erfolgreich; Save nach COMPLETED verweigert,
+  Addendum vor COMPLETED verweigert, danach erfolgreich. Vollständige Addendumsequenz
+  bleibt auch bei gleichen/rückläufigen Erfassungszeiten korrekt.
+- Fehler nach Header-INSERT, nach clearSection, nach erstem/zweitem Answer-INSERT,
+  nach Header-UPDATE und nach Addendum-INSERT: vollständiger SQL-Altzustand aller drei
+  Tabellen wiederhergestellt. Failed Create ohne Header-/Antwortrest. Headerupdate-
+  Fehler nach Answer-/Addendumwrite ohne halbe Zustände. Keine manuelle Teil-Recovery.
+- Korrupte Header, Answers (einschließlich kanonischer MULTI-/COUNT-Fehler und
+  Question außerhalb gespeicherter Abschnitte) und Addenda: Detail/Folgewrites
+  fail-closed ohne Mutation. Vorhandene invalidHeaders-/invalidAddendumTypes-Gates
+  ausdrücklich vor unsicherer Materialisierung beobachtet.
+- Für **alle vier Writes**: Lock vor Worker, Revoke während Write, vor Commit,
+  nach physischem Commit, vor Publication; Action-, Generation-, Permissionwechsel,
+  Storage-not-ready/BLOCKED-Vertrag, UNKNOWN vor/nach Commit, DB-/Leasecleanupfehler.
+  Physischer SQL-Zustand, Completionevidence und sichtbarer Callback getrennt.
+- Für alle vier Writes: doppelter Worker/Main, verspäteter Callback, fehlgeschlagener
+  Workerdispatch, verlorener/fehlgeschlagener Main-Dispatch. Neuere Materialmutation
+  zwischen alter Completion und Publication unterdrückt alte Antwort, ohne alten
+  Commit als Rollback zu erfinden. Kein automatischer Retry.
+- Explizite Rejection nach tatsächlich erfolgten SQL-Änderungen: ROLLED_BACK/COMPLETE
+  erst nach zurückgekehrtem Rollback. Fehlgeschlagener Rollback UNKNOWN: noch
+  uncommittierter Zustand separat sichtbar; abschließender Harnessrollback ist
+  kein Produktcommit oder Erfolgsbeleg.
+- MEMORY_REPORT ↔ TASK/OPERATIONS/MATERIAL/EXPENSE/PROTOCOL und dieselbe Familie:
+  eine Pending-Grenze und gemeinsame Mutationsepoche vor Queue. Weitere Aufträge
+  Busy ohne DB-Transaktion. Andere Ergebnistypen, insbesondere ProtocolResult,
+  bleiben erhalten. Bare OperationsResult.Value ohne Commitbeleg erzeugt keinen Erfolg.
+
+Testbindings für Scope/Permission, Room-End- und DB-/Keycleanupfehler sind explizite
+vertrauenswürdige Simulationen. Produktiv bleiben StorageContext und bestehende
+Sessionautorität maßgeblich. Hosttests sind keine nativen Leak-/Cleanupbelege.
+Gezielter Abschlusslauf: **91 Tests (84 Data, 7 App), 0 Fehler, 0 Errors, 0 Skips**.
+Die RED-Fehler wurden nicht durch abgeschwächte Assertions oder Skips verborgen.
+
+### Sensitive Read-/RAM-Grenze und Androidvorbereitung
+
+summary/list/detail bleiben auf dem bisherigen kurzlebigen withReadTransaction-Pfad.
+Summary ausschließlich draftCount/completedCount; Headerlisten enthalten Autorenlabels,
+Detail vertrauliche Antworten und Addenda. Bestehendes MemoryReportModel und Navigation
+unverändert; es übernimmt Ergebnis/Feedback erst im vorhandenen Scope-/Requestgate.
+Dieser Slice behauptet keine zusätzliche allgemeine Editor-Lifecycle-/Livenessfreigabe.
+
+MEMORY_REPORT_SUMMARY wird im weiterhin nicht produktiv installierten Adapter als
+Dirty-/Validity-Metadatum geführt: ACTIVE-Hubzähler. MEMORY_REPORT_HEADERS ist wegen
+der bestehenden Listenreads nötig (Create, Autor-/Status-/Revisionsänderung);
+MEMORY_REPORT_DETAIL wegen Antworten/Addenda/Headerrevision. Diese Bezeichner sind
+**keine Retentionsfreigabe**: weder Autorenlabels noch Antworttexte, Addenda oder
+vollständige Reports gehören in den retained ACTIVE-Kern. ActiveCoreStore unverändert,
+keine neue Payloadregistry und keine RAM-Hits. Bisherige Familienimpacts erhalten;
+übrige konservative Corefamilien umfassen auch die neuen Metadaten. Pending blockiert
+Reuse, Commit markiert nichts automatisch clean, UNKNOWN/Cleanup bleiben fail-closed.
+Runtime bleibt UncachedWorkspaceMutations, ramReuseEnabled=false, Budget unverändert.
+
+CoreWriterBoundaryStorageTest um reales ProductMemoryReportRepository und denselben
+Port erweitert. Create mit nach Submit geleerter Antwortmap, SaveSection mit nach
+Submit geleerten Multi-Keys, sämtliche Abschnitte bis 16, Complete, Addendum und
+STALE-Addendum mit altem Header. Detailnachlese prüft ursprünglichen Abschnitt,
+kanonische Multi-Antwort, COMPLETED/revision=18 und genau eine Ergänzung.
+20 MemoryReportantworten (19 Commits, ein bestätigter Rollback); mit den bestehenden
+Familien insgesamt 39 gemeinsame Epochenschritte, 35 Commits, vier Rollbacks.
+Doppelte Worker-Runnables dürfen nichts duplizieren. Bestehende
+MemoryReportStorageTest-API-/Constructoraufrufe bleiben kompatibel.
+
+**Nur offline vorbereitet/kompiliert, nicht ausgeführt.** Vor späterer gesonderter
+Geräteprüfung müssen Fixture-Isolierung, enger Testselektor, sichere geprüfte
+Verzeichnisbereinigung und native Ressourcenfrage #32 separat abgenommen werden.
+Keyinvalidate/-fill in vorhandenen Finally-Blöcken ist keine bereits geprüfte
+vollständige Verzeichnisbereinigung. Keine Installation/Instrumentation und keine
+Änderung installierter Apps.
+
+### NOCH NICHT ANGEBUNDEN / BLOCKER / Revision
+
+- [#35](https://github.com/JulianGKK/action-planner/issues/35): vier MemoryReportwrites
+  **IMPLEMENTIERT / GETESTET** im beschriebenen Host-/Wiringumfang. DocumentWriter,
+  Leadership/P3b, Maintenance/Recovery weiterhin **UNWIRED / NOT SAFE FOR RAM REUSE**.
+  Keine globale Writer-/Cachefreigabe oder Document-/Recovery-Refaktorierung.
+- [#36](https://github.com/JulianGKK/action-planner/issues/36): vorhandener persistierter
+  Headerrevisionsvertrag erhalten. Antwort-A → B → A bei identischem updatedAt
+  getestet: Headerrevision bleibt erhöht, alter Expected STALE. Dies ist ein spezieller
+  MemoryReport-Writervertrag und keine allgemeine ABA-Sicherheit anderer Modelle;
+  deren bekannte Grenzen unverändert. Keine Schema-/Revisionsmigration.
+- [#37](https://github.com/JulianGKK/action-planner/issues/37): produktiver Snapshotowner
+  und atomare Payload-Publication **NOCH NICHT ANGEBUNDEN**.
+- [#38](https://github.com/JulianGKK/action-planner/issues/38): keine neue Navigation,
+  Performanceintegration, Cacheaktivierung oder Androidperformancefreigabe.
+- [#32](https://github.com/JulianGKK/action-planner/issues/32): eigenständiger nativer
+  Cursor-/Cleanup-**BLOCKER**. SQLCipherStatement.close() schließt den Cursor nicht
+  explizit. Hoststatementabschluss, simulierte DB-/Leasecleanupfehler und frühere
+  FD-PASSes beweisen keine vollständige native Cursorfreigabe.
+
+SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink, B2Driver,
+Schema 11, 180 s absolut/30 s READY idle und 8+8-MiB-Sicherheitsbudget unverändert.
+Keine neuen Dependencies, Permissions, Persistenzorte oder Sessionautorität, keine
+Klartextpersistenz außerhalb bestehender DB-Verträge, produktiven RAM-Hits oder
+Snapshotaktivierung. Andere geprüfte Writer produktiv unverändert. Keine allgemeine
+Release-1.0-/Editor-/P11-Snapshotfreigabe, kein Release oder Produktupdate.
+
+
+**Vollständiger Offline-Abschlusslauf: PASS.**
+
+```text
+./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest \
+  :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin \
+  :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline
+```
+
+**1.561 Hosttests bestanden:** App 671, Data 886, Security 4. **0 Fehler, 0 Errors,
+0 Skips.** Domain ohne Testsources, nicht als weiterer Test gezählt. Bestehende
+Person-/Rollenplan-/Operations-/Task-/Material-/Expense-/Protocol-/MemoryReport-/
+Security-/Publicationregressionen enthalten. App-Offline-Build, beide Androidtest-
+Kompilationen, Architekturprüfung und Prototype-/Demo-Manifestchecks erfolgreich.
+Vorhandene Compilerwarnungen in bestehenden/erweiterten Fixtures sichtbar geblieben.
+Keine künstliche native PASS-Meldung; Androidtests ausschließlich kompiliert.
+
+Geändert: ProductMemoryReportRepository.kt, ProductRuntime.kt, CoreWriterData.kt,
+WorkspaceMutationInvalidation.kt, ActiveWorkspaceMutationAdapter.kt,
+ActiveWorkspaceValidity.kt (nur zusätzliche Projektionsbezeichner), HostCoreWriterData.kt,
+neue HostMemoryReportDao.kt, MemoryReportWriterWiringTest.kt,
+MemoryReportWriterIntegrationTest.kt und MemorySectionFreezeTest.kt,
+CoreWriterIntegrationTest.kt, CoreWorkspaceMutationAdapterTest.kt,
+CoreWriterBoundaryStorageTest.kt und dieser Abschnitt. MemoryReportDatabase/DAO,
+MemoryReportRules/Codec/Questionnaire, gemeinsamer WriteBoundary/-Progress-/
+Transaktionsvertrag und andere produktive Writer funktional unverändert.
+
+Abschluss: `git diff --check`, `git status -sb`, vollständige Diffprüfung, regulärer
+WIP-Commit/Push auf den bestehenden Branch und unabhängiger GitHub-Ref-Abgleich.
+Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
+Gerätekennungen eingecheckt. Danach **STOPP BIS ZUM UNABHÄNGIGEN GITHUB-REVIEW**.
+Kein Force-Push, Merge, Release oder Produktupdate.

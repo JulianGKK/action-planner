@@ -84,6 +84,7 @@ internal class HostCoreWriterData(private val sql:SqliteHostConnection):CoreWrit
         override suspend fun clearPayments(actionId:String,id:String){change("DELETE FROM expense_payments WHERE actionId=? AND expenseId=?",listOf(actionId,id))}
         override suspend fun delete(actionId:String,id:String)=change("DELETE FROM expenses WHERE actionId=? AND id=?",listOf(actionId,id))
     }
+    override val memoryReports=HostMemoryReportDao(this)
     override val protocol=HostProtocolDao(this)
     override val tasks=HostTaskData(sql).tasks
 }

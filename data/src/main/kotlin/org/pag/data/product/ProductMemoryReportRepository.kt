@@ -2,16 +2,19 @@ package org.pag.data.product
 
 import android.content.Context
 import androidx.room3.withReadTransaction
-import androidx.room3.withWriteTransaction
+import androidx.room3.useWriterConnection
 import org.pag.domain.*
 import java.util.UUID
+import java.util.Collections
 import java.util.concurrent.Executor
 
 /** Existing short-lived READY/OPERATION/STEP/COMMIT/publication pattern, no P3b reads. */
 class ProductMemoryReportRepository(app: Context, private val access: StorageAccess, private val inventory: ProductInventory,
     private val owner: () -> SessionDbKeyOwner?, private val worker: Executor, private val main: Executor,
-    private val blocked: () -> Unit, private val now: () -> Long = System::currentTimeMillis) : MemoryReportRepository {
+    private val blocked: () -> Unit,
+    mutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(), private val now: () -> Long = System::currentTimeMillis) : MemoryReportRepository {
     private val database = ActionDatabaseAccess(app.applicationContext)
+    private val mutationBoundary = WorkspaceWriteBoundary(access, worker, main, mutations, blocked)
     override fun summary(actionId: String, publish: (OperationsResult<MemoryReportSummary>) -> Unit) =
         run(publish) { d, c -> d.withReadTransaction { MemoryReportStore(d, c, now).summary(actionId) } }
     override fun list(actionId: String, publish: (OperationsResult<List<MemoryReportHeader>>) -> Unit) =
@@ -19,22 +22,33 @@ class ProductMemoryReportRepository(app: Context, private val access: StorageAcc
     override fun detail(actionId: String, reportId: String, publish: (OperationsResult<MemoryReportDetail>) -> Unit) =
         run(publish) { d, c -> d.withReadTransaction { MemoryReportStore(d, c, now).detail(actionId, reportId) } }
     override fun create(actionId: String, authorLabel: String, firstSection: MemorySectionSave, publish: (OperationsResult<MemoryReportHeader>) -> Unit) =
-        frozenWrite(publish, firstSection) { store, section -> store.create(actionId, authorLabel, section) }
+        frozenWrite(actionId, publish, firstSection) { store, section -> store.create(actionId, authorLabel, section) }
     override fun saveSection(actionId: String, expected: MemoryReportHeader, section: MemorySectionSave, publish: (OperationsResult<MemoryReportHeader>) -> Unit) =
-        frozenWrite(publish, section) { store, snapshot -> store.saveSection(actionId, expected, snapshot) }
+        frozenWrite(actionId, publish, section) { store, snapshot -> store.saveSection(actionId, expected, snapshot) }
     override fun complete(actionId: String, expected: MemoryReportHeader, publish: (OperationsResult<MemoryReportHeader>) -> Unit) =
-        write(publish) { it.complete(actionId, expected) }
+        write(actionId, publish) { it.complete(actionId, expected) }
     override fun addAddendum(actionId: String, expected: MemoryReportHeader, content: String, publish: (OperationsResult<MemoryReportHeader>) -> Unit) =
-        write(publish) { it.addAddendum(actionId, expected, content) }
-    private fun frozenWrite(publish: (OperationsResult<MemoryReportHeader>) -> Unit, section: MemorySectionSave,
+        write(actionId, publish) { it.addAddendum(actionId, expected, content) }
+    private fun frozenWrite(actionId: String, publish: (OperationsResult<MemoryReportHeader>) -> Unit, section: MemorySectionSave,
         work: suspend (MemoryReportStore, MemorySectionSave) -> OperationsResult<MemoryReportHeader>) {
-        val frozen = section.copy(answers = section.answers.mapValues { (_, value) ->
-            if (value is MemoryAnswerValue.Multi) value.copy(keys = value.keys.toList()) else value
-        }, retainedConflicts = section.retainedConflicts.toSet())
-        write(publish) { work(it, frozen) }
+        val frozen = freezeMemorySection(section)
+        write(actionId, publish) { work(it, frozen) }
     }
-    private fun <T> write(publish: (OperationsResult<T>) -> Unit, work: suspend (MemoryReportStore) -> OperationsResult<T>) =
-        run(publish) { d, c -> d.withWriteTransaction { val result = work(MemoryReportStore(d, c, now)); requireOperations(c, AccessPoint.COMMIT); result } }
+    private fun <T> write(actionId: String, publish: (OperationsResult<T>) -> Unit,
+        work: suspend (MemoryReportStore) -> OperationsResult<T>) =
+        mutationBoundary.submit<OperationsResult<T>>(WorkspaceMutation(WorkspaceWriterFamily.MEMORY_REPORT, actionId), publish,
+            { OperationsResult.Rejected(OperationsFailure.STALE) }, { it is OperationsResult.Value }) { c, progress ->
+            if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
+            (owner() ?: throw ProductStorageFailure()).withDbKey(c) { key ->
+                database.use(inventory.database, key, c) { db ->
+                    db.useWriterConnection { tx ->
+                        confirmedWorkspaceTransaction(tx, c, progress, { it is OperationsResult.Rejected }) {
+                            work(MemoryReportStore(db, c, now))
+                        }
+                    }
+                }
+            }
+        }
     private fun <T> run(publish: (OperationsResult<T>) -> Unit, work: suspend (ActionDatabase, StorageContext) -> OperationsResult<T>) {
         val c = access.acquire(AccessScope.READY) ?: return
         worker.execute {
@@ -47,42 +61,50 @@ class ProductMemoryReportRepository(app: Context, private val access: StorageAcc
         }
     }
 }
-internal class MemoryReportStore(private val db: ActionDatabase, private val c: StorageContext, private val now: () -> Long) {
+/** Map/Set and nested MULTI keys are independently copied and wrapped before queue.
+ * Other answer leaves and every header field are immutable values. */
+internal fun freezeMemorySection(section: MemorySectionSave) = section.copy(
+    answers = Collections.unmodifiableMap(section.answers.mapValues { (_, value) ->
+        if (value is MemoryAnswerValue.Multi) value.copy(keys = Collections.unmodifiableList(ArrayList(value.keys))) else value
+    }), retainedConflicts = Collections.unmodifiableSet(LinkedHashSet(section.retainedConflicts)))
+
+internal class MemoryReportStore(private val data: CoreWriterData, private val c: StorageContext, private val now: () -> Long) {
+    constructor(db: ActionDatabase, c: StorageContext, now: () -> Long) : this(RoomCoreWriterData(db), c, now)
     private suspend fun <T> step(work: suspend () -> T): T { requireOperations(c); return work() }
     private fun denied(reason: OperationsFailure) = OperationsResult.Rejected(reason)
     private suspend fun permission(a: String): OperationsFailure? {
-        val status = step { db.actions().get(a)?.model()?.status } ?: return OperationsFailure.NOT_FOUND
+        val status = step { data.actions.get(a)?.model()?.status } ?: return OperationsFailure.NOT_FOUND
         return if (MemoryReportRules.mayRead(status)) null else OperationsFailure.NOT_ALLOWED
     }
     private suspend fun checkedHeaders(a: String) {
-        if (step { db.memoryReports().invalidHeaders(a) } != 0) throw ProductStorageFailure()
+        if (step { data.memoryReports.invalidHeaders(a) } != 0) throw ProductStorageFailure()
     }
     suspend fun summary(a: String): OperationsResult<MemoryReportSummary> {
         permission(a)?.let { return denied(it) }; checkedHeaders(a)
-        val row = step { db.memoryReports().summary(a) }
+        val row = step { data.memoryReports.summary(a) }
         if (row.draftCount < 0 || row.completedCount < 0) throw ProductStorageFailure()
         return OperationsResult.Value(MemoryReportSummary(row.draftCount, row.completedCount))
     }
     suspend fun list(a: String): OperationsResult<List<MemoryReportHeader>> {
         permission(a)?.let { return denied(it) }; checkedHeaders(a)
-        return OperationsResult.Value(step { db.memoryReports().list(a) }.map { it.model() })
+        return OperationsResult.Value(step { data.memoryReports.list(a) }.map { it.model() })
     }
     private suspend fun materialize(h: MemoryReportHeader): MemoryReportDetail {
-        val rows = step { db.memoryReports().answers(h.actionId, h.id) }
+        val rows = step { data.memoryReports.answers(h.actionId, h.id) }
         val values = rows.associate { row ->
             val q = MemoryQuestionnaireV1.question(row.questionKey) ?: throw ProductStorageFailure()
             if (q.sectionOrdinal > h.lastSavedSectionOrdinal || row.actionId != h.actionId || row.reportId != h.id) throw ProductStorageFailure()
             row.questionKey to (MemoryAnswerCodec.decode(row.questionKey, row.valueKind, row.payload) ?: throw ProductStorageFailure())
         }
-        if (values.size != rows.size || step { db.memoryReports().invalidAddendumTypes(h.actionId, h.id) } != 0) throw ProductStorageFailure()
-        val addenda = step { db.memoryReports().addenda(h.actionId, h.id) }
+        if (values.size != rows.size || step { data.memoryReports.invalidAddendumTypes(h.actionId, h.id) } != 0) throw ProductStorageFailure()
+        val addenda = step { data.memoryReports.addenda(h.actionId, h.id) }
         if ((h.status == MemoryReportStatus.DRAFT && addenda.isNotEmpty()) || addenda.map { it.sequence } != addenda.indices.toList() ||
             addenda.any { it.actionId != h.actionId || it.reportId != h.id || !MemoryReportRules.addendumValid(it.content) || it.content != it.content.trim() || it.recordedAt < 0 }) throw ProductStorageFailure()
         return MemoryReportDetail(h, values, addenda.map { MemoryAddendum(it.sequence, it.content, it.recordedAt) })
     }
     suspend fun detail(a: String, id: String): OperationsResult<MemoryReportDetail> {
         permission(a)?.let { return denied(it) }; checkedHeaders(a)
-        val h = step { db.memoryReports().get(a, id) }?.model() ?: return denied(OperationsFailure.NOT_FOUND)
+        val h = step { data.memoryReports.get(a, id) }?.model() ?: return denied(OperationsFailure.NOT_FOUND)
         return OperationsResult.Value(materialize(h))
     }
     private fun validatedSection(section: MemorySectionSave, old: Map<String, MemoryAnswerValue>): Map<String, MemoryAnswerValue>? {
@@ -105,17 +127,17 @@ internal class MemoryReportStore(private val db: ActionDatabase, private val c: 
         val answers = validatedSection(section, emptyMap()) ?: return denied(OperationsFailure.INVALID)
         val time = time()
         val h = MemoryReportHeader(UUID.randomUUID().toString(), a, author.trim(), 1, MemoryReportStatus.DRAFT, 0, 0, time, time, null)
-        step { db.memoryReports().insert(h.row()) }; step { db.memoryReports().insertAnswers(rows(a, h.id, answers)) }
+        step { data.memoryReports.insert(h.row()) }; step { data.memoryReports.insertAnswers(rows(a, h.id, answers)) }
         return OperationsResult.Value(h)
     }
     private suspend fun existing(a: String, expected: MemoryReportHeader): OperationsResult<MemoryReportDetail> {
         permission(a)?.let { return denied(it) }; checkedHeaders(a)
-        val h = step { db.memoryReports().get(a, expected.id) }?.model() ?: return denied(OperationsFailure.NOT_FOUND)
+        val h = step { data.memoryReports.get(a, expected.id) }?.model() ?: return denied(OperationsFailure.NOT_FOUND)
         if (expected.actionId != a || h != expected) return denied(OperationsFailure.STALE)
         return OperationsResult.Value(materialize(h))
     }
     private suspend fun update(h: MemoryReportHeader) {
-        if (!MemoryReportRules.headerValid(h) || step { db.memoryReports().update(h.row()) } != 1) throw ProductStorageFailure()
+        if (!MemoryReportRules.headerValid(h) || step { data.memoryReports.update(h.row()) } != 1) throw ProductStorageFailure()
     }
     suspend fun saveSection(a: String, expected: MemoryReportHeader, section: MemorySectionSave): OperationsResult<MemoryReportHeader> {
         val result = existing(a, expected); if (result is OperationsResult.Rejected) return result
@@ -127,8 +149,8 @@ internal class MemoryReportStore(private val db: ActionDatabase, private val c: 
         val answers = validatedSection(section, old.answers) ?: return denied(OperationsFailure.INVALID)
         val h = expected.copy(authorLabel = author, revision = revision(expected.revision),
             lastSavedSectionOrdinal = maxOf(expected.lastSavedSectionOrdinal, section.sectionOrdinal), updatedAt = time())
-        step { db.memoryReports().clearSection(a, h.id, MemoryQuestionnaireV1.section(section.sectionOrdinal).map { it.key }) }
-        step { db.memoryReports().insertAnswers(rows(a, h.id, answers)) }; update(h)
+        step { data.memoryReports.clearSection(a, h.id, MemoryQuestionnaireV1.section(section.sectionOrdinal).map { it.key }) }
+        step { data.memoryReports.insertAnswers(rows(a, h.id, answers)) }; update(h)
         return OperationsResult.Value(h)
     }
     suspend fun complete(a: String, expected: MemoryReportHeader): OperationsResult<MemoryReportHeader> {
@@ -145,7 +167,7 @@ internal class MemoryReportStore(private val db: ActionDatabase, private val c: 
         val sequence = (result as OperationsResult.Value).value.addenda.size
         Math.addExact(sequence, 1)
         val time = time(); val h = expected.copy(revision = revision(expected.revision), updatedAt = time)
-        step { db.memoryReports().insertAddendum(MemoryAddendumRow(a, h.id, sequence, content.trim(), time)) }
+        step { data.memoryReports.insertAddendum(MemoryAddendumRow(a, h.id, sequence, content.trim(), time)) }
         update(h); return OperationsResult.Value(h)
     }
 }

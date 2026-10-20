@@ -119,12 +119,42 @@ class CoreWriterBoundaryStorageTest {
                 assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),reports.last())};run()
             loadProtocol();assertEquals(3,checkNotNull(protocolDetail).revisions.size)
             assertEquals(firstProtocol.current,checkNotNull(protocolDetail).revisions.first());assertEquals(4,protocolCallbacks)
+            // MemoryReport remains short-lived, sensitive fixture data; no retained ACTIVE payload.
+            val memory=ProductMemoryReportRepository(app,access,inventory,{owner},worker,main,blocked,mutations=sink)
+            val firstAnswers=linkedMapOf<String,MemoryAnswerValue>("A_FREE_NARRATIVE" to MemoryAnswerValue.Text("Synthetic narrative"),"A_ALLEGATION" to MemoryAnswerValue.Option("UNKNOWN"))
+            var report:MemoryReportHeader?=null;var memoryCallbacks=0
+            memory.create(a,"Synthetic author",MemorySectionSave(0,firstAnswers)){
+                memoryCallbacks++;report=(it as OperationsResult.Value).value
+                assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE),reports.last())
+            }
+            firstAnswers.clear();assertEquals(19L,epoch.mutationEpoch);assertEquals(0,memoryCallbacks);run()
+            val multiKeys=mutableListOf("AFTER_REQUEST","SELF_LEFT")
+            memory.saveSection(a,checkNotNull(report),MemorySectionSave(1,mapOf("B_ENDING_MODE" to MemoryAnswerValue.Multi(multiKeys)))){
+                memoryCallbacks++;report=(it as OperationsResult.Value).value
+            }
+            multiKeys.clear();run()
+            for(n in 2..16){
+                memory.saveSection(a,checkNotNull(report),MemorySectionSave(n,emptyMap())){memoryCallbacks++;report=(it as OperationsResult.Value).value};run()
+            }
+            memory.complete(a,checkNotNull(report)){memoryCallbacks++;report=(it as OperationsResult.Value).value};run()
+            val beforeAddendum=checkNotNull(report)
+            memory.addAddendum(a,beforeAddendum,"Synthetic addition"){memoryCallbacks++;report=(it as OperationsResult.Value).value};run()
+            memory.addAddendum(a,beforeAddendum,"Must remain stale"){memoryCallbacks++;assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),it)
+                assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),reports.last())};run()
+            memory.detail(a,checkNotNull(report).id){
+                val detail=(it as OperationsResult.Value).value
+                assertEquals(18L,detail.header.revision);assertEquals(MemoryReportStatus.COMPLETED,detail.header.status)
+                assertEquals(MemoryAnswerValue.Text("Synthetic narrative"),detail.answers["A_FREE_NARRATIVE"])
+                assertEquals(MemoryAnswerValue.Multi(listOf("SELF_LEFT","AFTER_REQUEST")),detail.answers["B_ENDING_MODE"])
+                assertEquals(listOf("Synthetic addition"),detail.addenda.map{it.content})
+            };run()
+            assertEquals(20,memoryCallbacks)
             actions.advanceActionStatus(a,ActionStatus.ACTIVE){assertTrue(it is ActionChangeResult.Applied)};run()
             val completedCoreReports=coreReports+reports.last()
             assertEquals(7,completedCoreReports.size)
             assertTrue(completedCoreReports.all{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
-            assertEquals(19L,epoch.mutationEpoch);assertEquals(19,reports.size)
-            assertEquals(16,reports.count{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
+            assertEquals(39L,epoch.mutationEpoch);assertEquals(39,reports.size)
+            assertEquals(35,reports.count{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
             assertFalse(epoch.ramReuseEnabled)
         } finally{owner.invalidate();key.fill(0)}
     }

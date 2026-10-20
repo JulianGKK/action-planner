@@ -11,6 +11,7 @@ internal interface CoreWriterData {
     val materials: MaterialDao
     val expenses: ExpenseDao
     val protocol: ProtocolDao
+    val memoryReports: MemoryReportDao
 }
 internal class RoomCoreWriterData(private val db: ActionDatabase):CoreWriterData {
     override val actions get()=db.actions()
@@ -20,4 +21,5 @@ internal class RoomCoreWriterData(private val db: ActionDatabase):CoreWriterData
     override val materials get()=db.materials()
     override val expenses get()=db.expenses()
     override val protocol get()=db.protocol()
+    override val memoryReports get()=db.memoryReports()
 }

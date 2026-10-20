@@ -92,6 +92,7 @@ class CoreWriterIntegrationTest {
             WorkspaceWriterFamily.ACTION_STATUS->ActionWriterStore(data,c).advance("a",ActionStatus.PREPARATION)
             WorkspaceWriterFamily.PERSON->PersonWriterStore(data,c).change("a",null,"Synthetic created")
             WorkspaceWriterFamily.MATERIAL->MaterialStore(data,c){++time}.create("a",MaterialInput("Synthetic material"))
+            WorkspaceWriterFamily.MEMORY_REPORT->MemoryReportStore(data,c){++time}.create("a","Synthetic author",MemorySectionSave(0,emptyMap()))
             WorkspaceWriterFamily.PROTOCOL->ProtocolStore(data,c){++time}.create("a",ActionStatus.ACTIVE,ProtocolInput(ProtocolClassification.KEY_EVENT,"Synthetic",1))
             WorkspaceWriterFamily.EXPENSE->ExpenseStore(data,c){++time}.create("a",ExpenseInput("Synthetic expense",1,listOf(ExpensePaymentInput("Synthetic payer",1))))
             else->OperationsStore(data,c){++time}.role("a",null,"Synthetic created")
@@ -102,6 +103,7 @@ class CoreWriterIntegrationTest {
             WorkspaceWriterFamily.ACTION_STATUS->actionRow().status==ActionStatus.ACTIVE
             WorkspaceWriterFamily.PERSON->count("persons")==3L
             WorkspaceWriterFamily.MATERIAL->count("materials")==1L
+            WorkspaceWriterFamily.MEMORY_REPORT->count("memory_reports")==1L
             WorkspaceWriterFamily.PROTOCOL->count("protocol_entries")==1L && count("protocol_revisions")==1L
             WorkspaceWriterFamily.EXPENSE->count("expenses")==1L && count("expense_payments")==1L
             else->count("roles")==2L
@@ -457,10 +459,10 @@ class CoreWriterIntegrationTest {
         assertEquals(3L,h.count("persons"));assertEquals(1L,h.count("roles"));assertEquals(0L,h.count("task_events"));assertEquals(1,h.completions.size)
     }
     @Test fun allFamiliesUnknownEndAndCleanupNeverBecomeValueSuccess() {
-        for(family in listOf(WorkspaceWriterFamily.ACTION_CREATE,WorkspaceWriterFamily.ACTION_EDIT,WorkspaceWriterFamily.ACTION_STATUS,WorkspaceWriterFamily.PERSON,WorkspaceWriterFamily.OPERATIONS,WorkspaceWriterFamily.MATERIAL,WorkspaceWriterFamily.EXPENSE,WorkspaceWriterFamily.PROTOCOL))
+        for(family in listOf(WorkspaceWriterFamily.ACTION_CREATE,WorkspaceWriterFamily.ACTION_EDIT,WorkspaceWriterFamily.ACTION_STATUS,WorkspaceWriterFamily.PERSON,WorkspaceWriterFamily.OPERATIONS,WorkspaceWriterFamily.MATERIAL,WorkspaceWriterFamily.EXPENSE,WorkspaceWriterFamily.PROTOCOL,WorkspaceWriterFamily.MEMORY_REPORT))
             for(failure in listOf("end-before","end-after","database","key")) H().use {h->
                 when(failure){"end-before"->h.failEndBefore=true;"end-after"->h.failEndAfter=true;"database"->h.dbCleanup={error("SYNTHETIC_CLEANUP")};else->h.keyCleanup={error("SYNTHETIC_CLEANUP")}}
-                if(family==WorkspaceWriterFamily.PROTOCOL)h.exec("UPDATE actions SET status='ACTIVE' WHERE id='a'")
+                if(family in setOf(WorkspaceWriterFamily.PROTOCOL,WorkspaceWriterFamily.MEMORY_REPORT))h.exec("UPDATE actions SET status='ACTIVE' WHERE id='a'")
                 var calls=0
                 h.queue<Any>(family,{false},{null},{calls++}) {c->h.validWork(family,c)}
                 h.worker.drain();h.main.drain();assertEquals(0,calls);assertEquals(1,h.blocks)
@@ -487,7 +489,7 @@ class CoreWriterIntegrationTest {
     }
     @Test fun revokeScopeAndLateCallbacksCannotPublishAcrossActionPermissionOrGeneration() {
         for(family in coreFamilies) for(at in listOf("initial","queued","commit","after-commit","publication","action","permission","generation")) H().use{h->
-            if(family==WorkspaceWriterFamily.PROTOCOL)h.exec("UPDATE actions SET status='ACTIVE' WHERE id='a'")
+            if(family in setOf(WorkspaceWriterFamily.PROTOCOL,WorkspaceWriterFamily.MEMORY_REPORT))h.exec("UPDATE actions SET status='ACTIVE' WHERE id='a'")
             var calls=0
             when(at){"initial"->h.ready=false;"commit"->h.beforeEnd={h.ready=false};"after-commit"->h.afterEnd={h.ready=false};"publication"->h.beforePublication={h.ready=false}}
             h.queue<Any>(family,{false},{null},{calls++}){h.validWork(family,it)}
@@ -501,7 +503,7 @@ class CoreWriterIntegrationTest {
     }
     @Test fun eachNewFamilyConsumesDuplicateWorkerAndMainDispatchExactlyOnce() {
         for(family in coreFamilies) H().use {h->
-            if(family==WorkspaceWriterFamily.PROTOCOL)h.exec("UPDATE actions SET status='ACTIVE' WHERE id='a'")
+            if(family in setOf(WorkspaceWriterFamily.PROTOCOL,WorkspaceWriterFamily.MEMORY_REPORT))h.exec("UPDATE actions SET status='ACTIVE' WHERE id='a'")
             var calls=0;h.queue<Any>(family,{false},{null},{calls++}){h.validWork(family,it)}
             val work=h.worker.jobs.removeFirst();work.run();work.run()
             assertTrue(h.effect(family));assertEquals(0,calls)
