@@ -9,7 +9,7 @@ enum class WorkspaceWriteCleanup { COMPLETE, FAILED_OR_UNCONFIRMED }
 data class WorkspaceWriteCompletion(val outcome: WorkspaceWriteOutcome, val cleanup: WorkspaceWriteCleanup)
 
 /** Fixed conservative impacts; no caller-supplied subset may omit dependent views. */
-enum class WorkspaceWriterFamily { TASK, ACTION_CREATE, ACTION_EDIT, ACTION_STATUS, PERSON, OPERATIONS, MATERIAL, EXPENSE }
+enum class WorkspaceWriterFamily { TASK, ACTION_CREATE, ACTION_EDIT, ACTION_STATUS, PERSON, OPERATIONS, MATERIAL, EXPENSE, PROTOCOL }
 data class WorkspaceMutation(val family: WorkspaceWriterFamily, val actionId: String?) {
     init { require(if(family == WorkspaceWriterFamily.ACTION_CREATE) actionId == null else actionId != null) }
 }
@@ -17,6 +17,7 @@ data class WorkspaceMutation(val family: WorkspaceWriterFamily, val actionId: St
 /** Owner-thread metadata port. beforeQueue MUST synchronously invalidate TASKS, TASK_COUNTS
  * and PEOPLE for tasks; core writers conservatively invalidate ALL core parts before queue;
  * MATERIAL/EXPENSE invalidate their board and summary (including overview counts/totals).
+ * PROTOCOL invalidates summary/timeline/detail VALIDITY METADATA ONLY, never retains text.
  * No payload, key,
  * session authority or retention grant. A null ticket denies the write, never bypasses fencing.
  * finish is after ALL cleanup, including failures, and does not mark any projection clean.

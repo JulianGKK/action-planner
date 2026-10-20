@@ -76,6 +76,8 @@ internal data class ProtocolTimelineRow(
     @Query("SELECT * FROM protocol_revisions WHERE actionId=:a AND entryId=:entryId ORDER BY revisionNumber DESC LIMIT 1") suspend fun current(a: String, entryId: String): ProtocolRevisionRow?
     @Query("SELECT p.* FROM protocol_affected_persons p JOIN protocol_revisions r ON r.actionId=p.actionId AND r.id=p.revisionId WHERE p.actionId=:a AND r.entryId=:entryId") suspend fun affected(a: String, entryId: String): List<ProtocolAffectedRow>
     @Query("SELECT p.* FROM protocol_reported_by_persons p JOIN protocol_revisions r ON r.actionId=p.actionId AND r.id=p.revisionId WHERE p.actionId=:a AND r.entryId=:entryId") suspend fun reported(a: String, entryId: String): List<ProtocolReportedRow>
+    @Query("SELECT COUNT(*) FROM protocol_official_identifiers p JOIN protocol_revisions r ON r.actionId=p.actionId AND r.id=p.revisionId WHERE p.actionId=:a AND r.entryId=:entryId AND (typeof(p.position)!='integer' OR p.position<0 OR p.position>31)")
+    suspend fun invalidIdentifierPositions(a: String, entryId: String): Long
     @Query("SELECT p.* FROM protocol_official_identifiers p JOIN protocol_revisions r ON r.actionId=p.actionId AND r.id=p.revisionId WHERE p.actionId=:a AND r.entryId=:entryId ORDER BY r.revisionNumber,p.position") suspend fun identifiers(a: String, entryId: String): List<ProtocolIdentifierRow>
     @Query("SELECT id,pseudonym FROM persons WHERE actionId=:a AND id IN (:ids) ORDER BY createdAt,id") suspend fun persons(a: String, ids: Set<String>): List<ProtocolPersonReference>
     @Insert suspend fun insert(row: ProtocolEntryRow)

@@ -84,7 +84,7 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
     val tasks: TaskRepository = ProductTaskRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
     val protocol: ProtocolRepository = ProductProtocolRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure)
+        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
     val material: MaterialRepository = ProductMaterialRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
     val memoryReports: MemoryReportRepository = ProductMemoryReportRepository(activity.applicationContext, session, inventory,

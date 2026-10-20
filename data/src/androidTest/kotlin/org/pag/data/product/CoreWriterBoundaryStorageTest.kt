@@ -97,12 +97,34 @@ class CoreWriterBoundaryStorageTest {
             expenses.delete(a,checkNotNull(expense)){expenseCallbacks++;assertEquals(OperationsResult.Value(Unit),it)};run()
             expenses.summary(a){assertEquals(ExpenseSummary(0,0),(it as OperationsResult.Value).value)};run()
             assertEquals(4,expenseCallbacks)
+            // Protocol values never enter a retained ACTIVE core; only this isolated fixture scope.
+            val protocol=ProductProtocolRepository(app,access,inventory,{owner},worker,main,blocked,mutations=sink)
+            val affected=linkedSetOf(person!!.id)
+            val identifiers=mutableListOf(ProtocolOfficialIdentifier(ProtocolOfficialIdentifierType.OTHER_OFFICIAL_ID,"Synthetic id"))
+            var savedProtocol:ProtocolSaved?=null;var protocolDetail:ProtocolEntryDetail?=null;var protocolCallbacks=0
+            val protocolInput=ProtocolInput(ProtocolClassification.KEY_EVENT,"Synthetic protocol",1,affectedPersonIds=affected,officialIdentifiers=identifiers)
+            protocol.createEntry(a,ActionStatus.ACTIVE,protocolInput){protocolCallbacks++;savedProtocol=(it as ProtocolResult.Value).value
+                assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE),reports.last())}
+            affected.clear();identifiers.clear();assertEquals(15L,epoch.mutationEpoch);assertEquals(0,protocolCallbacks);run()
+            val entryId=checkNotNull(savedProtocol).entryId
+            fun loadProtocol(){protocol.getEntry(a,entryId){protocolDetail=(it as ProtocolResult.Value).value};run()}
+            loadProtocol();val firstProtocol=checkNotNull(protocolDetail)
+            assertEquals(setOf(person!!.id),firstProtocol.current.revision.input.affectedPersonIds)
+            assertEquals(1,firstProtocol.current.revision.input.officialIdentifiers.size)
+            val initialExpected=ProtocolExpectedRevision(firstProtocol.entry,firstProtocol.current.revision)
+            protocol.reviseEntry(a,ActionStatus.ACTIVE,initialExpected,ProtocolRevisionType.ADDENDUM,firstProtocol.current.revision.input.copy(title="Addendum"),false){protocolCallbacks++;assertTrue(it is ProtocolResult.Value)};run()
+            loadProtocol();val revised=checkNotNull(protocolDetail)
+            protocol.markMistaken(a,ActionStatus.ACTIVE,ProtocolExpectedRevision(revised.entry,revised.current.revision)){protocolCallbacks++;assertTrue(it is ProtocolResult.Value)};run()
+            protocol.markMistaken(a,ActionStatus.ACTIVE,initialExpected){protocolCallbacks++;assertEquals(ProtocolResult.Rejected(ProtocolFailure.STALE),it)
+                assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),reports.last())};run()
+            loadProtocol();assertEquals(3,checkNotNull(protocolDetail).revisions.size)
+            assertEquals(firstProtocol.current,checkNotNull(protocolDetail).revisions.first());assertEquals(4,protocolCallbacks)
             actions.advanceActionStatus(a,ActionStatus.ACTIVE){assertTrue(it is ActionChangeResult.Applied)};run()
             val completedCoreReports=coreReports+reports.last()
             assertEquals(7,completedCoreReports.size)
             assertTrue(completedCoreReports.all{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
-            assertEquals(15L,epoch.mutationEpoch);assertEquals(15,reports.size)
-            assertEquals(13,reports.count{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
+            assertEquals(19L,epoch.mutationEpoch);assertEquals(19,reports.size)
+            assertEquals(16,reports.count{it==WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)})
             assertFalse(epoch.ramReuseEnabled)
         } finally{owner.invalidate();key.fill(0)}
     }

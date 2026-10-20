@@ -101,6 +101,23 @@ class ProtocolStorageTest {
         assertTrue(loaded!!.current.revision.mistaken); assertEquals(3, loaded!!.revisions.size)
         assertEquals("changed", loaded!!.current.revision.input.title)
     }
+    @Test fun rawIdentifierWrapCannotBecomeAValidRoomPosition() {
+        for(position in listOf("4294967296","-4294967296","0.5")) {
+            val i=fixture();val saved=create(i)
+            sql(i,"DROP TRIGGER protocol_official_identifiers_immutable")
+            sql(i,"UPDATE protocol_official_identifiers SET position=$position")
+            assertThrows(ProductStorageFailure::class.java){detail(i,saved.entryId)}
+        }
+    }
+    @Test fun noAppendAfterOriginalWasRemovedFromMultiRevisionHistory() {
+        val i=fixture();val saved=create(i)
+        val first=expected(i,saved.entryId)
+        value(write(i){it.revise("a",ActionStatus.ACTIVE,first,ProtocolRevisionType.CORRECTION,input("Changed"))})
+        val old=expected(i,saved.entryId)
+        sql(i,"DELETE FROM protocol_revisions WHERE entryId='${saved.entryId}' AND revisionNumber=1")
+        assertThrows(ProductStorageFailure::class.java){write(i){it.markMistaken("a",ActionStatus.ACTIVE,old)}}
+        assertEquals(1L,count(i,"protocol_revisions"))
+    }
     @Test fun createPersistsFullNormalizedContentAndOwnedTimes() {
         val i = fixture(); val saved = create(i, input(" synthetic ").copy(officialIdentifiers = List(32) { input().officialIdentifiers.single() }))
         val d = detail(i, saved.entryId)

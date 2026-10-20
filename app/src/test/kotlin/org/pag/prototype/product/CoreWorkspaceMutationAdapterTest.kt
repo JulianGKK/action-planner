@@ -23,7 +23,7 @@ class CoreWorkspaceMutationAdapterTest {
         fun load(){val t=validity.beginRead(all)!!;assertTrue(validity.publishRead(t,all,Cleanup.COMPLETE){})}
     }
     @Test fun everyCoreFamilyInvalidatesAllDependenciesBeforeQueueOnTheSameEpoch() {
-        for(family in WorkspaceWriterFamily.entries.filter{it!=WorkspaceWriterFamily.TASK && it!=WorkspaceWriterFamily.MATERIAL && it!=WorkspaceWriterFamily.EXPENSE}) {
+        for(family in WorkspaceWriterFamily.entries.filter{it!=WorkspaceWriterFamily.TASK && it!=WorkspaceWriterFamily.MATERIAL && it!=WorkspaceWriterFamily.EXPENSE && it!=WorkspaceWriterFamily.PROTOCOL}) {
             val h=H();h.load();assertTrue(h.validity.canReuse(h.all));val before=h.validity.mutationEpoch
             val write=h.port.beforeCoreQueue(WorkspaceMutation(family,if(family==WorkspaceWriterFamily.ACTION_CREATE)null else "a"),1)!!
             assertEquals(before+1,h.validity.mutationEpoch);assertTrue(h.validity.isPending())
@@ -50,6 +50,19 @@ class CoreWorkspaceMutationAdapterTest {
             val ticket=h.port.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.EXPENSE,"a"),1)!!
             assertEquals(1L,h.validity.mutationEpoch);assertTrue(parts.all{h.validity.isDirty(it)})
             assertFalse(h.validity.canReuse(parts));assertNull(h.validity.beginRead(parts));assertNull(h.port.beforeTaskQueue("a",1))
+            assertTrue(ticket.finish(WorkspaceWriteCompletion(if(failure=="unknown")WorkspaceWriteOutcome.UNKNOWN else WorkspaceWriteOutcome.COMMITTED,
+                if(failure=="cleanup")WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED else WorkspaceWriteCleanup.COMPLETE)))
+            assertFalse(h.validity.canReuse(parts));assertEquals(failure=="none",ticket.isCurrent())
+            if(failure!="none")assertEquals(State.RECOVERY_REQUIRED,h.validity.state)
+        }
+    }
+    @Test fun protocolTracksDirtyMetadataWithoutGrantingSensitivePayloadRetention() {
+        for(failure in listOf("none","unknown","cleanup")) {
+            val h=H();h.load();val parts=setOf(Projection.PROTOCOL_SUMMARY,Projection.PROTOCOL_TIMELINE,Projection.PROTOCOL_DETAIL)
+            assertEquals(parts,ActiveWorkspaceMutationAdapter.affected(WorkspaceWriterFamily.PROTOCOL))
+            val ticket=h.port.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.PROTOCOL,"a"),1)!!
+            assertTrue(parts.all{h.validity.isDirty(it)});assertFalse(h.validity.canReuse(parts));assertNull(h.validity.beginRead(parts))
+            assertNull(h.port.beforeTaskQueue("a",1));assertEquals(1L,h.validity.mutationEpoch)
             assertTrue(ticket.finish(WorkspaceWriteCompletion(if(failure=="unknown")WorkspaceWriteOutcome.UNKNOWN else WorkspaceWriteOutcome.COMMITTED,
                 if(failure=="cleanup")WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED else WorkspaceWriteCleanup.COMPLETE)))
             assertFalse(h.validity.canReuse(parts));assertEquals(failure=="none",ticket.isCurrent())

@@ -7701,3 +7701,310 @@ regulärer WIP-Commit/Push auf den bestehenden Branch und unabhängiger GitHub-R
 Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
 Gerätekennungen eingecheckt. Danach **STOPP BIS ZUM UNABHÄNGIGEN GITHUB-REVIEW**.
 Kein Force-Push, Merge, Release oder Produktupdate.
+
+
+## 55. Issue #35 – Protokoll-Writerintegration
+
+### Ausgangsbasis und getrennte RED-Nachweise
+
+Vor Änderungen lokaler HEAD und unabhängiger GitHub-Branchref exakt
+`98671f320cfee81d8b1fbca7d6e60b0eb3152f0d`, Branch
+`p11-performance-optimization`, Arbeitsbaum sauber. Keine fremden Änderungen.
+
+Vorheriger Produktpfad: `ProtocolRepository` → `ProductProtocolRepository`
+→ eigener `write`/`run` mit `withWriteTransaction` → `ProtocolStore` → Room/SQLCipher.
+READY-/Schritt-/Commit-/Publicationgates waren vorhanden. Gemeinsame Invalidierung
+vor Workerqueue und expliziter äußerer Commit-/Rollback-/Cleanupbeleg fehlten.
+**GETESTET – statischer RED-Wiringtest:** Zwei neue Methoden schlugen vor Integration
+fehl (gemeinsame Boundary fehlt; Runtime injiziert gemeinsamen Mutationsport nicht).
+Nach Integration grün. Dies ist ausdrücklich kein SQLite-Transaktionsbeweis.
+Eine zusätzliche Wiringregression prüft Freeze vor dem Writepfad für alle drei APIs.
+
+Zusätzliche **dynamische RED-SQLite-Befunde**:
+
+- Bei bewusst beschädigten Rohdaten konnte eine einzelne Identifierposition
+  `4294967296` nach `getLong(...).toInt()` als 0 erscheinen und akzeptiert werden.
+  Der Host bildet die native numerische Konvertierung nach; auch die generierte Room-DAO
+  verwendet den Int-Cast. Produktions-INSERTs waren bereits durch den unveränderten
+  Identifiertrigger begrenzt, UPDATEs durch Immutability-Trigger gesperrt. Der Test
+  entfernt gezielt den UPDATE-Trigger zur Rohkorruptionsprüfung; er behauptet keinen
+  erlaubten Produktwrite. Neuer schmaler `invalidIdentifierPositions`-Count prüft
+  SQL-type integer und Range 0..31 **vor** Identifiermaterialisierung. Danach grün,
+  zusätzlich negative Wraps, REAL/TEXT und normale Positionslücken geprüft.
+- Nach realem DELETE der Originalrevision aus einer zweirevisionigen Testhistorie
+  konnte ein alter vollständiger Expected weiterhin eine neue Markierung anhängen.
+  Der Test erwartete keine Antwort/Änderung und war rot. `existing` verwendet jetzt
+  vor Current/CAS zusätzlich das bestehende `checkOriginals`-Gate. Ohne Original
+  keine Fortsetzung, Storagefehler statt erfundener fachlicher Ablehnung. Der Test
+  ist danach grün. Keine historische Reparatur und kein automatisches Nachtragen.
+
+Beide Befunde wurden nach Korrektur anfänglicher Testhilfsfehler tatsächlich als
+Assertion-RED reproduziert; Compile-/Binding-/JUnit-Vorbereitungsfehler sind kein
+Ausgangsbeweis. Keine Assertion abgeschwächt und kein Fehler durch Skip ersetzt.
+
+### IMPLEMENTIERT – eine Writerfamilie und gemeinsame Autoritätsgrenze
+
+`WorkspaceWriterFamily.PROTOCOL` ergänzt. ProductRuntime übergibt dieselbe
+`workspaceMutations`-Instanz wie an Action, Person, Operations, Task, Material und
+Expense. Kein unabhängiges Protokollticket, zweiter Invalidierer oder neuer Owner.
+Standalone-Constructordefault und abschließender Clockparameter bleiben analog den
+vorhandenen Writerfamilien kompatibel; Produktion injiziert ausdrücklich den gemeinsamen
+Port. Runtime weiterhin `UncachedWorkspaceMutations`, `ramReuseEnabled=false`.
+
+Für `createEntry`, `reviseEntry` und `markMistaken`:
+
+```text
+WorkspaceWriteBoundary.submit(PROTOCOL, actionId)
+  → aktueller READY-/OPERATION-Kontext
+  → synchrones Pending-Ticket VOR worker.execute
+  → READY_TO_OPEN / SessionDbKeyOwner.withDbKey
+  → ActionDatabaseAccess mit bisherigen SQLCipher-/Room-Preflights
+  → useWriterConnection / confirmedWorkspaceTransaction(IMMEDIATE)
+  → ProtocolStore / dieselben Room-DAOs
+  → tatsächlicher äußerer Transaktionsabschluss
+  → Rückkehr des vollständigen DB-/Keyscopes
+  → Completion am Ownerthread
+  → StorageContext.publish + aktuelles Ticket
+  → ProtocolResult-Callback
+```
+
+Die gemeinsame Boundary, WorkspaceWriteProgress und confirmedWorkspaceTransaction
+funktional unverändert. Kein eigener zweiter äußerer Commit im Store/Port. Ein
+bereits aktiver äußerer Transaktionsscope ist kein akzeptierter Commitbeweis;
+SAVEPOINT-Erfolg ersetzt keinen äußeren Abschluss. `ProtocolResult.Value` und
+`ProtocolResult.Rejected` bleiben unverändert eigene Typen; keine Übersetzung in
+OperationsResult und kein Verlust von WRONG_ACTION/INVALID_STATE/INVALID/STALE.
+
+| Situation | Beleg und erlaubte Antwort |
+|---|---|
+| Äußerer Commit normal zurückgekehrt und kompletter Workscope normal zurückgekehrt | COMMITTED / COMPLETE; Erfolg nur bei gültiger zentraler Publication und aktuellem Ticket |
+| Fachliche Rejection, expliziter äußerer Rollback normal zurückgekehrt, Cleanup bestätigt | ROLLED_BACK / COMPLETE; erst dann fachlicher Rejectioncallback |
+| Unklares Commit-/Rollbackende oder Exception ohne positiven äußeren Endbeleg | UNKNOWN; kein Erfolgs- oder fachlicher Rejectioncallback |
+| Commit bekannt, DB-/Keyscope danach nicht bestätigt zurückgekehrt | COMMITTED / FAILED_OR_UNCONFIRMED; kein Erfolg |
+| Revoke nach bekanntem physischem Commit | Commit bleibt COMMITTED; keine unberechtigte Antwort und kein erfundener Rollback |
+| Fremdes/gleiches Pending vor Queue | ProtocolFailure.STALE als Busy-Rejection; keine ausgeführte DB-Transaktion oder tatsächlicher Rollback |
+| Workerdispatch vor Start fehlgeschlagen | Bestehender Nichtausführungsbeleg ROLLED_BACK / COMPLETE plus Fehlerpfad; kein behaupteter DB-Rollback |
+| Main-Dispatch verloren/fehlgeschlagen | Pending bleibt bestehen; keine Completionpublication und kein automatischer Retry |
+
+Unbestätigtes Cleanup/UNKNOWN bleiben für dieselbe Generation fail-closed; bestehendes
+Storage-Failure-/BLOCKED-Verhalten bleibt maßgeblich. SQL-Zustand, Completion und
+freigegebene UI-Antwort sind getrennte Belege. Kein optimistisches Patchen und keine
+automatische Wiederholung physisch möglicherweise bereits persistierter Revisionen.
+
+### IMPLEMENTIERT / GETESTET – Append-only- und Relationsatomarität
+
+Eine Create-Transaktion umfasst Entry, Originalrevision Nummer 1, alle betroffenen
+Personen, optionale berichtende Person und alle geordneten offiziellen Identifier.
+Revise/MarkMistaken lesen und vergleichen den aktuellen vollständigen Stand in derselben
+äußeren IMMEDIATE-Transaktion und fügen ausschließlich neue Revision-/Relationszeilen
+hinzu. Kein UPDATE eines Originaleintrags oder einer vorherigen Revision.
+
+Original, Revisionstypen, streng steigende Nummern, mistaken-Regeln, templateKey-
+Kontinuität, recordedAt, recordedAfterCompletion und createdAfterCompletion bleiben
+unverändert. Produktions-Immutability-, Quellen-/Identifier- und Revisionsregeltrigger
+sowie sämtliche Schema-11-FKs/Indizes erhalten. Keine Schemamigration.
+
+Fachlich weiterhin nur ACTIVE/COMPLETED. Persistierte Phase ist maßgeblich;
+abweichender erwarteter Actionstatus liefert STALE, nicht erlaubte Phase INVALID_STATE.
+COMPLETED-Neueinträge und nachträgliche Revisionen behalten ihre getrennten Phasenflags.
+Keine Erweiterung auf PREPARATION oder P3b.
+
+Expected-CAS umfasst gesamten Entry und gesamte Currentrevision: Identitäten,
+Revisionnummer/-typ, vollständige Eingabe einschließlich Personen/Identifiern,
+recordedAt, Phasenflags und mistaken. Zwei alte Editoren können nicht dieselbe
+Fortsetzung erfolgreich anhängen: erste Revision bleibt erhalten, zweiter Write
+und alte MarkMistaken-Bestätigung STALE. Neu geöffneter Editor darf fortsetzen.
+Fremde Expected-Action/Entryrelation bleibt WRONG_ACTION; fehlender Entry/Action
+NOT_FOUND; falsche Expected-Revision bei existierendem Current STALE. Fehlendes
+Original/Current einer existierenden Historie ist eine Integritätsverletzung, kein
+künstliches NOT_FOUND-Ergebnis. Bestehende vollständige Detail-Historienvalidierung
+bleibt erhalten. Das zusätzliche Append-Gate prüft Originalpräsenz; es ist kein
+neu behaupteter universeller Rohdatenvalidator aller denkbaren Historienbeschädigungen.
+
+SQL-Fehler nach Entry-INSERT, Revision-INSERT und in jeder Relationsfamilie rollen
+sämtliche neuen Zeilen zurück. Bei Append bleibt die ganze vorherige Historie
+unverändert, bei Create bleibt kein halber Entry/Original-/Relationsrest.
+Keine Teil-Recovery außerhalb der Transaktion.
+
+### IMPLEMENTIERT / GETESTET – Freeze und fachliche Integritätsgates
+
+Der bestehende normalized()/frozen()-Vertrag kopierte die Collections bereits:
+Mutationen der **ursprünglichen** MutableSets/MutableLists nach Normalisierung änderten
+die Kopien nicht. Dafür wurde kein falscher ursprünglicher Aliasverlust behauptet.
+Die erzeugten Set-/Listkopien waren jedoch nicht durchgehend unveränderlich;
+Mutable-Collection-Casts konnten bei mehrgliedrigen Kopien deren Inhalt verändern.
+Das ist separat reproduziert.
+
+Vor Queueeintritt verwendet Produktion nun `freezeProtocolInput` mit eigenen
+unmodifiable LinkedHashSet-/ArrayListkopien; Expected wird bis zur verschachtelten
+Revision.input genauso eingefroren. Scalarfelder und Identifierblätter sind immutable
+Werte. Entwürfe werden wie bisher normalisiert; Expected wird **nicht** nachträglich
+normalisiert und dadurch an den Iststand angepasst. Tests mit Create, Revise und
+MarkMistaken: Quellen nach Submit leeren/ändern, Expected-/Entwurfscollections trennen,
+Casts verweigern Mutation; eingereichte Snapshots bleiben unverändert.
+Kein neuer Domainvertrag, Formularregistry oder persistierter Klartextentwurf.
+
+ProtocolRules.normalized/valid unverändert, einschließlich Titel-/Beschreibungs-/
+Orts-/Ansage-/Rechtsgrundlagenlimits, templateKey, Klassifikation, sourceType,
+announcementKind/Text, Personenbezüge und höchstens 32 Identifier. Personen müssen
+aktionslokal existieren; tatsächliche Schema-FKs lehnen fremde Relationen zusätzlich ab.
+Identifierreihenfolge und lückenlose Positionen bleiben geprüft. Neue Rohpositionsquery
+ist ausschließlich die belegte Integritätshärtung vor Int-Cast, keine spekulative
+Ausweitung aller DAOs. Revisionsnummer-Long.MAX_VALUE verweigert Append statt Wrap.
+
+### GETESTET – echte SQLite-Seam, Races und historische Vollständigkeit
+
+CoreWriterData um ProtocolDao erweitert; RoomCoreWriterData delegiert an dieselben
+Produkt-DAOs. HostProtocolDao implementiert alle verwendeten Methoden mit den
+entsprechenden echten SQL-Queries: Entry/Current/Revisions, Summary/Timeline,
+Relationen, Personenprojektion, Originalcheck, Rohpositionscheck und alle Inserts.
+Keine vereinfachte fachliche Materialisierung im Testdouble.
+
+ProtocolWriterIntegrationTest nutzt den bestehenden gemeinsamen Corewriter-Harness
+mit in-memory SQLite/Schema 11, aktivierten FKs und Indizes. Der Host führt zusätzlich
+**den produktiven installProtocolConstraints-Installer** auf derselben SQLite-Verbindung
+aus. Der schmale prepare/step/close-Adapter dient nur der Installation der tatsächlichen
+Trigger; keine neue Transaktions-, Autoritäts- oder Lifecycleinstanz. DAO-/Storewrites
+verwenden weiterhin reale SQL-Zustände. Host-only afterChange injiziert Fehler nach
+echten Inserts, echte SQLite-Fehlertrigger ergänzen die Faultsimulation.
+
+Nachweise:
+
+- Create mit mehreren Personen/Identifiern, Correction, Addendum, MarkMistaken,
+  wiederholtes unzulässiges Markieren, Addendum/Correction bei mistaken und bewusstes
+  Clear: alle alten Revisionen bleiben vollständig erhalten. Direkte UPDATEs jeder
+  Protokolltabelle scheitern an produktiven Immutability-Triggern.
+- Vollständiger CAS einschließlich Inhalt/Relationen/Flags; zwei alte Editoren,
+  alter Markdialog, neue gültige Fortsetzung, falsche Action/Revision und fehlender Entry.
+- INVALID-Input, ungültiger Templatewechsel/Revisionsart, fremde/fehlende Personen,
+  Unicode-/Text-/Identifiergrenzen: fachlicher Rollback bestätigt. Maximal gültige
+  32-Identifier-Eingabe bleibt lesbar. Bewusst erzeugte verwaiste Personenrelation
+  (FKs nur im Rohkorruptionstest deaktiviert) führt zum bestehenden Detailfehler.
+- Fehlendes Original: Summary/Timeline/Detail verweigert; Append verweigert jetzt
+  ebenfalls. Keine automatische Reparatur. Overflowbranch mit bewusst manipuliertem
+  Current=Long.MAX_VALUE liefert INVALID_STATE ohne neue Revision; keine Behauptung,
+  dass eine solche lückenhafte Rohhistorie fachlich gültig wäre.
+- Für Create, Revise, MarkMistaken jede erreichbare Insertgrenze: Fehler nach Entry
+  (nur Create), Revision, betroffenen Personen, berichtender Person und Identifiern;
+  SQL-Snapshots aller fünf Tabellen bleiben vollständig erhalten. Echte Fehler beim
+  zweiten Identifier-/Personeninsert erzeugen keine halben neuen Revisionen.
+- Für alle drei Writes: Lock vor Worker, während Write, vor/nach physischem Commit,
+  vor Main-Publication; Generation-, Action-, Permissionwechsel, Storage BLOCKED,
+  UNKNOWN vor/nach Commit, DB-/Keycleanupfehler. COMMITTED wird nach Revoke nicht
+  als Rollback umgedeutet; Callback bleibt unterdrückt.
+- Explizite Rejection nach echten Sideeffects: ROLLED_BACK / COMPLETE erst nach
+  zurückgekehrtem Rollback. Fehlgeschlagener Rollback: UNKNOWN und keine Antwort;
+  uncommittierter SQL-Zustand separat beobachtet, Rollback erst im Testharness-Cleanup.
+- Doppelte Worker-/Mainrunnables: eine Wirkung/Antwort. Lost/failed Main-Dispatch und
+  failed Workerdispatch für alle drei APIs. Fremde Mutation zwischen alter Completion
+  und Publication nimmt altem Ticket die Aktualität; alter Commit bleibt bestehen,
+  aber keine alte Antwort. Keine automatische Wiederholung.
+- PROTOCOL ↔ PROTOCOL/TASK/MATERIAL/EXPENSE/OPERATIONS und die jeweiligen Gegenrichtungen:
+  gemeinsames Pending vor Queue und eine Mutationsepoche. Busy ist kein DB-Rollback.
+  Andere Familien behalten ihren OperationsResult-Typ; Protokoll behält ProtocolResult.
+- Bare ProtocolResult.Value ohne äußeren Commitbeleg: kein Erfolg. Runtime-RAM-Reuse
+  durchgehend deaktiviert. Adaptertests prüfen dirty-Metadaten, Pending-Readsperre,
+  UNKNOWN/Cleanup-Fail-closed und keinen automatischen Cleanstatus nach Commit.
+
+Vertrauenswürdige Binding-/Permission-/Cleanup-/Room-Endsimulationen sind keine neue
+Produktautorität und kein nativer SQLCipher-/Room-/Keycleanupbeweis. StorageContext
+und SessionCoordinator bleiben maßgeblich; bestehende UI-Scopeannahme unverändert.
+Gezielter Abschlusslauf: **90 Tests (84 Data, 6 App), 0 Fehler, 0 Errors, 0 Skips**.
+Anfängliche neue Testhilfsfehler (Snapshotklammer/-typ, Host-Parameterbindung und
+JUnit-Rückgabetyp) wurden korrigiert, ohne Assertions abzuschwächen.
+
+### Read-/RAM-Grenzen und nur offline vorbereitete Androidtests
+
+Summary, listTimeline und getEntry bleiben auf dem bisherigen Readpfad mit
+withReadTransaction. Summary liefert weiterhin nur Zähler/Original-Erfassungszeit;
+Timeline enthält bereits Titel und EntryDetail vollständigen sensiblen Inhalt.
+Die existierenden Spaltenprojektionen/Navigation wurden nicht auf Writer umgestellt.
+Der neue Rohpositionscheck verweigert beschädigte Daten; gesunde Readergebnisse
+und vorhandene Historien-/Personenprüfungen bleiben erhalten.
+
+Für die zukünftige Invalidierungsplanung ausschließlich Dirty-/Validity-Metadaten:
+PROTOCOL_SUMMARY für ACTIVE-Hubzähler/-zeit, PROTOCOL_TIMELINE für die nach Revisionen
+veränderten Timelinezeilen und PROTOCOL_DETAIL für die aktuelle Detail-/Historiensicht.
+Diese Bezeichner erlauben **keine RAM-Retention ihres Inhalts**. Vollständige Titel/
+Texte, Beschreibungen, Identifier, Personenlisten und Revisionshistorien gehören
+weiter nicht in den retained ACTIVE-Kern. ActiveCoreStore/Produktnavigation unverändert,
+keine Protokollpayloadregistry und keine neuen RAM-Hits. Der Adapter bleibt nicht
+produktiv installiert. Bisherige Task-/Material-/Expenseimpacts unverändert;
+übrige Corefamilien weiter konservativ alle Projektionsmetadaten.
+
+CoreWriterBoundaryStorageTest erweitert um echtes ProductProtocolRepository und
+denselben Port: Create mit nach Submit geleerten Quellcollections, Addendum,
+MarkMistaken, STALE-Mark mit alter Revision und vollständige Detailnachlese.
+Original unverändert, vier Protokollantworten; zusammen mit bestehenden Familien
+19 gemeinsame Epochenschritte, 16 bestätigte Commits und drei bestätigte Rollbacks.
+ProtocolStorageTest um Rohpositions- und fehlendes-Original-Regressionsfixture ergänzt;
+bestehende Constructor-/API-Aufrufe kompatibel.
+
+**Nur offline kompiliert, nicht ausgeführt.** Vor späterer gesonderter Gerätefreigabe
+müssen Fixture-Isolierung und sichere geprüfte Verzeichnisbereinigung separat
+abgenommen werden. Bestehende Fixture-finallys invalidieren Keyowner und leeren
+Keybytes; daraus folgt keine bereits geprüfte vollständige Verzeichnisbereinigung.
+Keine Installation/Instrumentation und keine Veränderung installierter Apps.
+
+### NOCH NICHT ANGEBUNDEN / BLOCKER / ABA
+
+- [#35](https://github.com/JulianGKK/action-planner/issues/35): Protokollwriter
+  **IMPLEMENTIERT / GETESTET** im beschriebenen Wiring-/Hostumfang. MemoryReportWriter,
+  DocumentWriter, Leadership/P3b, Maintenance/Recovery weiterhin
+  **UNWIRED / NOT SAFE FOR RAM REUSE**. Keine globale Writer-/Cachefreigabe.
+- [#36](https://github.com/JulianGKK/action-planner/issues/36): vollständiger
+  Expected-Revision-CAS erhalten. Spezieller append-only-Vertrag verhindert das
+  Wiederverwenden alter Revisionidentität bei Inhalts-A → B → A: getestet sogar bei
+  gleichem recordedAt. Revision-ID/-nummer bleiben neu; alter Expected STALE.
+  Kein allgemeiner ABA-Schutz für Person/Role/Plan/Task/Action/Operations/Expense
+  aus Zeitstempeln oder UI-Tokens abgeleitet. Deren bekannte Grenzen bleiben offen;
+  keine Schema-12- oder sonstige Revisionsmigration.
+- [#37](https://github.com/JulianGKK/action-planner/issues/37): produktiver
+  Snapshotowner/atomare Payload-Publication **NOCH NICHT ANGEBUNDEN**.
+- [#38](https://github.com/JulianGKK/action-planner/issues/38): keine neue Navigation,
+  Performance-/Cacheintegration oder Androidperformancefreigabe.
+- [#32](https://github.com/JulianGKK/action-planner/issues/32): eigenständiger
+  Cursor-/Cleanup-**BLOCKER** unverändert. SQLCipherStatement.close() schließt den
+  Cursor nicht explizit. Hoststatementabschluss, simulierte DB-/Leasecleanupfehler
+  und frühere FD-PASSes beweisen keine vollständige native Cursorfreigabe.
+
+Unverändert: SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink,
+B2Driver, Schema 11, 180 s absolut, 30 s READY idle, 8+8-MiB-Sicherheitsbudget.
+Keine Dependencies/Permissions/Persistenzorte, neue Sessionautorität oder zusätzlichen
+Rechte. Keine Klartextpersistenz außerhalb der bestehenden DB, Produktnavigation,
+RAM-Hits oder Snapshotaktivierung. Andere geprüfte Writer produktiv unverändert.
+Kein Release, Produktupdate oder pauschale Release-1.0-/Editor-/P11-Snapshotfreigabe.
+
+
+**Vollständiger Offline-Abschlusslauf: PASS.**
+
+```text
+./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest \
+  :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin \
+  :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline
+```
+
+**1.527 Hosttests bestanden:** App 670, Data 853, Security 4. **0 Fehler, 0 Errors,
+0 Skips.** Domain ohne Testsources, nicht als weiterer Test gezählt. Bestehende
+Task-/Action-/Person-/Rollenplan-/Operations-/Material-/Expense-/Protokoll-/Security-/
+Publicationregressionen enthalten. App-Offline-Build, beide Androidtest-Kompilationen,
+Architekturprüfung und Prototype-/Demo-Manifestchecks erfolgreich. Compilerwarnungen
+(u. a. unnötige Non-null-Assertions in bestehenden/erweiterten Fixtures) sichtbar
+geblieben. Keine Geräteausführung oder künstlicher nativer PASS.
+
+Geändert: ProductProtocolRepository.kt, ProductRuntime.kt, ProtocolDatabase.kt
+(nur zusätzliche Rohpositionsquery), CoreWriterData.kt,
+WorkspaceMutationInvalidation.kt, ActiveWorkspaceMutationAdapter.kt,
+ActiveWorkspaceValidity.kt (nur Projektionsbezeichner), HostCoreWriterData.kt,
+neue HostProtocolDao.kt und HostProtocolConstraints.kt, neue
+ProtocolWriterWiringTest.kt und ProtocolWriterIntegrationTest.kt,
+ProtocolProjectionTest.kt, CoreWriterIntegrationTest.kt,
+CoreWorkspaceMutationAdapterTest.kt, CoreWriterBoundaryStorageTest.kt,
+ProtocolStorageTest.kt und dieser Abschnitt. Gemeinsame WriteBoundary/-Progress/
+Transaktionsfunktion und andere produktive Writer funktional unverändert.
+
+Abschluss: `git diff --check`, `git status -sb`, vollständige Diffprüfung, regulärer
+WIP-Commit/Push auf den bestehenden Branch und unabhängiger GitHub-Ref-Abgleich.
+Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
+Gerätekennungen eingecheckt. Danach **STOPP BIS ZUM UNABHÄNGIGEN GITHUB-REVIEW**.
+Kein Force-Push, Merge, Release oder Produktupdate.

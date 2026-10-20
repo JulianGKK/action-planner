@@ -9,7 +9,7 @@ internal class HostCoreWriterData(private val sql:SqliteHostConnection):CoreWrit
         args.forEachIndexed{i,v->when(v){null->s.bindNull(i+1);is String->s.bindText(i+1,v);is Long->s.bindLong(i+1,v);else->error("Scalar binding")}}
         work(s)
     }
-    private suspend fun change(text:String,args:List<Any?>):Int {
+    suspend fun change(text:String,args:List<Any?>):Int {
         query(text,args){it.step()}
         return query("SELECT changes()"){it.step();it.getLong(0).toInt()}.also{afterChange(text)}
     }
@@ -84,5 +84,6 @@ internal class HostCoreWriterData(private val sql:SqliteHostConnection):CoreWrit
         override suspend fun clearPayments(actionId:String,id:String){change("DELETE FROM expense_payments WHERE actionId=? AND expenseId=?",listOf(actionId,id))}
         override suspend fun delete(actionId:String,id:String)=change("DELETE FROM expenses WHERE actionId=? AND id=?",listOf(actionId,id))
     }
+    override val protocol=HostProtocolDao(this)
     override val tasks=HostTaskData(sql).tasks
 }

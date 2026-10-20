@@ -36,4 +36,9 @@ class ProtocolProjectionTest {
         assertFalse(generated().contains("FROM sensitive_person_areas"))
         assertFalse(generated().contains("FROM leadership"))
     }
+    @Test fun rawIdentifierPositionGuardRunsBeforeRoomIntConversion() {
+        val sql=query("invalidIdentifierPositions")
+        assertTrue(sql.contains("typeof(p.position)!='integer'"));assertTrue(sql.contains("p.position<0 OR p.position>31"))
+        assertFalse(sql.contains("p.value"));assertFalse(sql.contains("pseudonym"))
+    }
 }
