@@ -20,9 +20,8 @@ import java.util.UUID
 /** Actual DAO rules/Tink/host filesystem, explicitly simulated transaction rollback. */
 class DocumentReconciliationTest {
     @get:Rule val temp=TemporaryFolder()
-    private class Access(override val scope:AccessScope=AccessScope.MAINTENANCE):StorageContext {
+    private class Access(override val scope:AccessScope=AccessScope.MAINTENANCE,override val generation:Long=20L):StorageContext {
         var allowed=true;var commit=true;var checks=0;var atCheck:()->Unit={}
-        override val generation=20L
         override fun check(point:AccessPoint):Boolean {checks++;atCheck();return allowed && (point!=AccessPoint.COMMIT || commit)}
         override fun publish(result:()->Unit):Boolean=error("No content publication")
     }
@@ -45,21 +44,27 @@ class DocumentReconciliationTest {
             val index=jobs.indexOfFirst{it.id==id && it.phase==old};if(index<0)return 0
             val j=jobs[index];jobs[index]=DocumentJobRow(j.id,j.actionId,j.documentId,j.operation,next,j.stagingName,j.blobName,j.displayName,j.format,size,j.fileKey?.copyOf());return 1
         }
-        override suspend fun removeInterruptedImport(id:String,phase:String)=if(jobs.removeIf{it.id==id && it.phase==phase})1 else 0
+        override suspend fun removeInterruptedImport(id:String,phase:String):Int {
+            val removed=if(jobs.removeIf{it.id==id && it.phase==phase})1 else 0
+            if(failAbortAfterRemoval)throw IOException("synthetic abort after SQL effect")
+            return removed
+        }
         override suspend fun removeDeleteParent(actionId:String,documentId:String)=if(docs.removeIf{it.id==documentId && it.actionId==actionId})1 else 0
         override suspend fun markDeletePending(id:String)=changeImportPhase(id,"DELETE_RESERVED","DELETE_FILE_PENDING",jobs.single{it.id==id}.plaintextSize)
         override suspend fun removeDeleteJob(id:String)=if(jobs.removeIf{it.id==id && it.phase=="DELETE_FILE_PENDING"})1 else 0
     }
     private val dao=Dao();private var inDb=false;private var dbFailure:Exception?=null
     private var afterCommit:()->Unit={};private var beforeCommit:()->Unit={};private var afterMark:()->Unit={}
+    private var inventoryReads=0;private var afterInventory:()->Unit={};private var beforeAbort:()->Unit={}
+    private var failAbortAfterRemoval=false;private var aborts=0
     private fun <T> tx(work:suspend()->T):T {
         dbFailure?.let{throw it};check(!inDb);inDb=true
         val docs=dao.docs.map{copy(it)}.toMutableList();val jobs=dao.jobs.map{copy(it)}.toMutableList()
         try{return runBlocking{work()}}catch(e:Exception){dao.docs=docs;dao.jobs=jobs;throw e}finally{inDb=false}
     }
     private val db=object:DocumentReconciliationDatabase,DocumentDeleteDatabase {
-        override fun inventory(c:StorageContext)=tx{dao.reconciliationSnapshot(c)}
-        override fun abort(c:StorageContext,expected:DocumentRecoveryJob){tx{dao.abortInterruptedImport(expected,c)};afterCommit()}
+        override fun inventory(c:StorageContext)=tx{dao.reconciliationSnapshot(c)}.also{inventoryReads++;afterInventory()}
+        override fun abort(c:StorageContext,expected:DocumentRecoveryJob){beforeAbort();aborts++;tx{dao.abortInterruptedImport(expected,c)};afterCommit()}
         override fun publication(c:StorageContext,id:String,phase:String,expected:DocumentJobRow?)=tx{dao.maintenancePublicationSnapshot(id,phase,expected,c)}
         override fun mark(c:StorageContext,expected:DocumentJobRow){tx{dao.maintenanceMarkPublished(expected,c)};afterMark()}
         override fun commit(c:StorageContext,expected:DocumentJobRow){beforeCommit();tx{dao.maintenanceCommitDocument(expected,42,c)};afterCommit()}
@@ -205,5 +210,156 @@ class DocumentReconciliationTest {
         invalid{reconcile()} // OPEN: direct reconcile() reproduced RED; current outcome is BLOCKED (§57)
         assertFalse(root().exists());assertEquals("IMPORT_WRITING",dao.jobs.single().phase)
         assertEquals(0,unlinks);assertEquals(0,syncs)
+    }
+    /** This bridge runs the actual staging/DAO code; only its transaction engine is simulated. */
+    private fun stageUntilWriting():DocumentJobRow {
+        val ready=Access(AccessScope.READY,19)
+        val phases=mutableListOf<String>();var sourceOpens=0
+        val stagingDb=object:DocumentImportDatabase {
+            override fun inventory(c:StorageContext)=tx{dao.importInventory(c)}
+            override fun reserve(c:StorageContext,job:DocumentJobRow)=tx{dao.reserveImport(job,c)}.also{
+                assertTrue(it is OperationsResult.Value);phases.add(dao.jobs.single().phase)
+            }
+            override fun advance(c:StorageContext,expected:DocumentJobRow,size:Long?) {
+                tx{dao.advanceImport(expected,size,c)}
+                assertFalse(inDb);phases.add(dao.jobs.single().phase);ready.allowed=false
+            }
+        }
+        assertThrows(StorageAccessRevoked::class.java) {
+            DocumentImportStaging(stagingDb,temp.root).stage(ready,"a","synthetic",DocumentFormat.TEXT) {
+                sourceOpens++;ByteArrayInputStream(byteArrayOf(120))
+            }
+        }
+        assertEquals(listOf("IMPORT_RESERVED","IMPORT_WRITING"),phases)
+        assertEquals(0,sourceOpens);assertFalse(root().exists());assertTrue(dao.docs.isEmpty())
+        return dao.jobs.single()
+    }
+    private fun assertRootlessBlockedWithoutMutation() {
+        val before=dao.jobs.map{it.recoveryHeader()};val documents=dao.docs.map{it.id}
+        invalid{reconcile()}
+        assertEquals(before,dao.jobs.map{it.recoveryHeader()});assertEquals(documents,dao.docs.map{it.id})
+        assertFalse(root().exists());assertEquals(0,aborts);assertEquals(0,unlinks)
+        assertEquals(0,links);assertEquals(0,syncs)
+    }
+    @Test fun actualStagingRevokeBeforeNamespaceThenRealSessionMaintenanceBlocks() {
+        stageUntilWriting();sessionFlow(true,false)
+        assertFalse(root().exists());assertEquals("IMPORT_WRITING",dao.jobs.single().phase)
+        assertEquals(0,aborts);assertEquals(0,unlinks)
+    }
+    @Test fun neverCreatedAndCreatedThenLostHaveIdenticalPersistedEvidence() {
+        val j=stageUntilWriting();val frozen=copy(j);val before=db.inventory(c)
+        assertRootlessBlockedWithoutMutation()
+        // Test-owned TemporaryFolder only: synthesize historical ciphertext, then external loss.
+        dirs();DocumentFileStreams.encrypt(Access(AccessScope.READY),j.documentId,j.fileKey!!,
+            ByteArrayInputStream("synthetic".toByteArray()),stage(j).outputStream())
+        assertTrue(stage(j).isFile);assertTrue(sameDocumentImport(frozen,dao.jobs.single()))
+        Files.delete(stage(j).toPath());Files.delete(File(root(),"staging").toPath())
+        Files.delete(File(root(),"files").toPath());Files.delete(root().toPath())
+        assertEquals(before,db.inventory(c));assertTrue(sameDocumentImport(frozen,dao.jobs.single()))
+        assertRootlessBlockedWithoutMutation()
+    }
+    @Test fun multipleWritingWithoutRootCannotBePartiallyAborted() {
+        job("IMPORT_WRITING");job("IMPORT_WRITING");assertRootlessBlockedWithoutMutation()
+    }
+    @Test fun reservedAndWritingWithoutRootBlockBeforeEvenReservedCleanup() {
+        job("IMPORT_RESERVED");job("IMPORT_WRITING");assertRootlessBlockedWithoutMutation()
+    }
+    @Test fun finishedDocumentWithoutRootIsPreservedAndBlocks() {
+        val j=job("FILE_PUBLISHED")
+        dao.jobs.remove(j);dao.docs.add(DocumentRow(j.documentId,j.actionId,j.displayName!!,j.format!!,
+            j.plaintextSize!!,1,j.blobName,j.fileKey!!.copyOf()))
+        assertRootlessBlockedWithoutMutation()
+    }
+    @Test fun closedWithoutRootIsPreservedAndBlocks() {
+        job("IMPORT_CLOSED");assertRootlessBlockedWithoutMutation()
+    }
+    @Test fun publishedWithoutRootIsPreservedAndBlocks() {
+        job("FILE_PUBLISHED");assertRootlessBlockedWithoutMutation()
+    }
+    @Test fun reservedDeleteWithoutRootPreservesParentAndJob() {
+        val j=job("FILE_PUBLISHED");dao.jobs.remove(j)
+        dao.docs.add(DocumentRow(j.documentId,j.actionId,j.displayName!!,j.format!!,j.plaintextSize!!,1,j.blobName,j.fileKey!!.copyOf()))
+        dao.jobs.add(DocumentJobRow(id(),j.actionId,j.documentId,"DELETE","DELETE_RESERVED",null,j.blobName,null,null,j.plaintextSize,null))
+        assertRootlessBlockedWithoutMutation()
+    }
+    @Test fun pendingDeleteWithoutRootIsNotTreatedAsConfirmedUnlink() {
+        dao.jobs.add(DocumentJobRow(id(),"a",id(),"DELETE","DELETE_FILE_PENDING",null,id(),null,null,9,null))
+        assertRootlessBlockedWithoutMutation()
+    }
+    @Test fun bareRootIsNotSilentlyCompleted() {
+        job("IMPORT_WRITING");assertTrue(root().mkdir())
+        invalid{reconcile()};assertTrue(root().list()!!.isEmpty());assertEquals(1,dao.jobs.size);assertEquals(0,aborts)
+    }
+    @Test fun stagingOnlyRootIsNotSilentlyCompletedForWriting() {
+        job("IMPORT_WRITING");assertTrue(File(root(),"staging").mkdirs())
+        invalid{reconcile()};assertFalse(File(root(),"files").exists());assertEquals(1,dao.jobs.size);assertEquals(0,unlinks)
+    }
+    @Test fun filesOnlyRootIsNotSilentlyCompletedForWriting() {
+        job("IMPORT_WRITING");assertTrue(File(root(),"files").mkdirs())
+        invalid{reconcile()};assertFalse(File(root(),"staging").exists());assertEquals(1,dao.jobs.size);assertEquals(0,aborts)
+    }
+    @Test fun symlinkRootLeavesTargetAndJobUntouched() {
+        job("IMPORT_WRITING");val outside=temp.newFolder();val marker=File(outside,"synthetic");marker.writeBytes(byteArrayOf(42))
+        Files.createSymbolicLink(root().toPath(),outside.toPath())
+        invalid{reconcile()};assertTrue(Files.isSymbolicLink(root().toPath()));assertArrayEquals(byteArrayOf(42),marker.readBytes())
+        assertEquals(1,dao.jobs.size);assertEquals(0,unlinks);assertEquals(0,aborts)
+    }
+    @Test fun unknownLeafProtectsReadyDocumentAndWritingStaging() {
+        val d=document();val j=job("IMPORT_WRITING","staging");val old=File(root(),"files/${d.blobName}").readBytes()
+        val foreign=File(root(),"files/${id()}");foreign.writeBytes(byteArrayOf(42))
+        invalid{reconcile()};assertArrayEquals(old,File(root(),"files/${d.blobName}").readBytes())
+        assertTrue(stage(j).isFile);assertTrue(foreign.isFile);assertEquals(1,dao.docs.size)
+        assertEquals(0,aborts);assertEquals(0,unlinks)
+    }
+    @Test fun revokeAfterDatabaseInventoryPreventsFileCleanupAndAbort() {
+        val j=job("IMPORT_WRITING","staging");afterInventory={c.allowed=false}
+        assertThrows(StorageAccessRevoked::class.java){reconcile()}
+        assertTrue(stage(j).isFile);assertEquals(1,dao.jobs.size);assertEquals(0,unlinks);assertEquals(0,aborts)
+    }
+    @Test fun revokeBeforeAbortPreservesJobAfterAlreadyPerformedFileCleanup() {
+        val j=job("IMPORT_WRITING","staging");beforeAbort={c.allowed=false}
+        assertThrows(StorageAccessRevoked::class.java){reconcile()}
+        assertFalse(stage(j).exists());assertEquals("IMPORT_WRITING",dao.jobs.single().phase)
+        assertEquals(1,unlinks);assertEquals(1,syncs)
+    }
+    @Test fun abortFailureAfterSimulatedDeleteRollsBackJobButNotEarlierUnlink() {
+        val j=job("IMPORT_WRITING","staging");failAbortAfterRemoval=true
+        assertThrows(IOException::class.java){reconcile()}
+        assertFalse(stage(j).exists());assertEquals("IMPORT_WRITING",dao.jobs.single().phase)
+        assertEquals(1,unlinks);assertEquals(1,aborts);assertTrue(dao.docs.isEmpty())
+    }
+    @Test fun abortFailurePreventsRealSessionReady() {
+        dirs();job("IMPORT_WRITING");failAbortAfterRemoval=true
+        sessionFlow(true,false);assertEquals("IMPORT_WRITING",dao.jobs.single().phase);assertEquals(1,aborts)
+    }
+    @Test fun namespaceChangedBetweenInventoriesBlocksBeforeAnyCleanup() {
+        val j=job("IMPORT_WRITING","staging");val foreign=File(root(),"files/${id()}")
+        afterInventory={if(inventoryReads==2)foreign.writeBytes(byteArrayOf(42))}
+        invalid{reconcile()};assertEquals(2,inventoryReads);assertTrue(foreign.isFile);assertTrue(stage(j).isFile)
+        assertEquals(0,unlinks);assertEquals(0,aborts);assertEquals(1,dao.jobs.size)
+    }
+    @Test fun secondUnlockInventoriesFreshStateUnderFreshGeneration() {
+        job("IMPORT_RESERVED");reconcile();assertTrue(dao.jobs.isEmpty());val previous=inventoryReads
+        c.allowed=false;val j=jobWithFreshContext();val next=Access(AccessScope.MAINTENANCE,21)
+        invalid{reconcile(next)};assertTrue(inventoryReads>previous)
+        assertEquals(j.id,dao.jobs.single().id);assertFalse(root().exists());assertEquals(1,aborts)
+    }
+    private fun jobWithFreshContext():DocumentJobRow {
+        // Synthetic persisted row, independent from revoked c; no old authorized call is reused.
+        return DocumentJobRow(id(),"a",id(),"IMPORT","IMPORT_WRITING",id(),id(),"synthetic","TEXT",null,ByteArray(32){7})
+            .also{dao.jobs.add(it)}
+    }
+    @Test fun reservedOnlyWithoutRootUsesExistingAbortPolicyAndMayReady() {
+        job("IMPORT_RESERVED");sessionFlow(false,false)
+        assertTrue(dao.jobs.isEmpty());assertFalse(root().exists());assertEquals(1,aborts)
+        assertEquals(0,unlinks);assertEquals(0,links);assertEquals(0,syncs)
+    }
+    @Test fun revokeAfterFileInventoryPreventsJobAbort() {
+        dirs();job("IMPORT_WRITING")
+        DocumentReconciliation(db,db,temp.root,ops,observePhase={phase->
+            if(phase==MaintenancePhase.M05_JOB_RECOVERY)c.allowed=false
+        }).let{recovery->assertThrows(StorageAccessRevoked::class.java){recovery.run(c)}}
+        assertEquals(1,inventoryReads);assertEquals("IMPORT_WRITING",dao.jobs.single().phase)
+        assertEquals(0,aborts);assertEquals(0,unlinks);assertEquals(0,syncs)
     }
 }

@@ -8732,3 +8732,221 @@ Testquellen. Der Gradle-Lifecycle-Task `preDebugAndroidTestBuild SKIPPED` ist ke
 waren erfolgreich. Kein Geräte-/Instrumentationlauf. `git diff --check` ist
 sauber; keine Rohlogs, APKs oder sonstigen Buildartefakte im Commit.
 Regulärer WIP-Commit/Push, anschließend STOPP bis zum unabhängigen GitHub-Review.
+
+## 59. Document-Recovery ohne Root
+
+Issue #35 – Untersuchung von RED-4 auf verbindlicher Basis
+`5179204e3b307e2489168bf42a904e749fe8f3e4`.
+Vor Änderungen: lokaler HEAD und unabhängig per GitHub-Ref abgefragter Remote-HEAD
+identisch, Branch `p11-performance-optimization`, Arbeitsbaum und Diff leer.
+**BESTEHEND:** Fail-closed bei rootlosem IMPORT_WRITING bleibt unverändert.
+Dieser Slice ergänzt ausschließlich Tests und Assessment, keine Produktkorrektur.
+
+### 59.1 Erreichbarkeit und unterschiedliche Beweisstärken
+
+**HOSTGETESTET:** `actualStagingRevokeBeforeNamespaceThenRealSessionMaintenanceBlocks`
+führt den echten `DocumentImportStaging.stage` und echte DocumentDao-Regeln aus.
+Eine schmale Test-DB-Brücke übernimmt dieselben DAO-Reserve-/Advance-Aufrufe in
+die vorhandene simulierte Transaktionsharness. Nach zurückgekehrtem Advance setzt
+sie Revoke, noch bevor der Stagingkoordinator den Namespace initialisiert.
+Festgestellt: IMPORT_RESERVED → IMPORT_WRITING, beide simulierten DB-Scopes
+zurückgekehrt, kein offener DB-Scope, keine Sourceöffnung, kein DocumentRow,
+`pag-documents-v1` fehlt. Anschließend läuft die echte Reconciliation im
+MAINTENANCE-Kontext des echten SessionCoordinator-Testflows: Fehler,
+Session BLOCKED, kein READY-Owner-/Erfolgsschritt, Job bleibt bestehen.
+
+| Beleg | Tatsächlich geprüft | Grenze |
+| --- | --- | --- |
+| A Echter Stagingcode | Reserve/Advance vor `initialize`, Revoke unmittelbar nach Advance; Folgerecovery blockiert | Transaktionsengine ist Fake, nicht Room |
+| B Persistierten Zustand simulieren | Gültige Jobs, vollständige DAO-Inventarregeln, echte Hostdateien, reale Reconciliation-/Sessionlogik | Fake-Rollback ist kein SQL-Rollback und kein dauerhafter Datenträger |
+| C Tatsächliche SQLite-Commitbestätigung | Produktcode geprüft: SqlCipherDocumentImportDatabase verwendet pro Reserve/Advance einen eigenen `withWriteTransaction` innerhalb DB-/Keyscope; Dateizugriff erst nach dessen Rückkehr | **NICHT BEWIESEN in diesem Slice:** kein neuer echter SQLite-/Room-Commitlauf für diesen Dokumentpfad; Compile-only Android-Fixtures sind kein Ausführungsbeleg |
+| D Native Crash-/Powerloss-Dauerhaftigkeit | Keine Geräteausführung; keine Crash-/Powerloss-Injektion | **NICHT BEWIESEN:** WAL-/Journal-, File-/Directory-fsync-, Rename- und native Cleanup-Dauerhaftigkeit |
+
+Die tatsächliche Codefolge erlaubt einen zwischen WRITING-Rückkehr und erstem
+Namespacezugriff unterbrochenen Import. Die Hosttests bestätigen diese
+Erreichbarkeit auf Kontrollflussebene; sie behaupten keinen im Gerätelauf neu
+beobachteten dauerhaften SQLite-Commit. Bereits §57/§58 trennen diese Grenzen.
+
+### 59.2 Persistierte Evidence und Ununterscheidbarkeit
+
+**BESTEHEND:** DocumentJobRow speichert ID, Action-/Document-ID, Operation, Phase,
+Staging-/Blobname, Anzeigename, Format, optionale Größe und Dateischlüssel.
+Bei WRITING ist die Größe null. Kein Feld bezeichnet „Root nie angelegt“,
+„Namespaceinitialisierung bestätigt“ oder „erste Dateioperation noch nicht
+begonnen“. `DocumentRecoverySnapshot` enthält ausschließlich Blobnamen fertiger
+Dokumente und keyfreie Jobheader. Die volle DAO-Validierung läuft vor dieser
+Reduktion; sie erfindet keinen zusätzlichen historischen Beleg.
+Die Schema-11-Phasen-/Bindungs-/Kapazitätsregeln schützen die zulässige
+DB-Zustandsfolge, beobachten aber keine Root-Erstellung oder späteren Rootverlust.
+Die DB-Initialisierungsmarker von ProductInventory belegen nicht die Historie des
+separaten Dokumentnamespace. UUIDs, fehlende Größe, aktuelle Pfadabwesenheit und
+flüchtige Lane-Epoche sind ebenfalls kein solcher Beleg.
+
+**HOSTGETESTET:** `neverCreatedAndCreatedThenLostHaveIdenticalPersistedEvidence`
+nimmt den vom echten Stagingcode hinterlassenen WRITING-Job und vergleicht:
+
+1. Historie H0: Revoke vor Namespace-Erstellung; Root fehlt.
+2. Historie H1: derselbe Job; danach synthetische Cipherdatei mit Tink in einem
+   vollständigen Testnamespace geschrieben/geschlossen, ohne CLOSED-DB-Schritt;
+   anschließend externen Namespaceverlust simuliert. Nur einzeln benannte Leaves
+   des eigenen TemporaryFolder werden im Test entfernt, keine Produktbereinigung.
+
+Beide Beobachtungen liefern denselben Recovery-Snapshot, denselben vollständigen
+Job einschließlich Schlüsselbindung und dieselbe Rootabwesenheit. Beide führen
+zur unveränderten fail-closed Ablehnung ohne Abort/Unlink/mkdir/READY.
+Der künstlich erzeugte externe Verlust ist ein **Ununterscheidbarkeitsbeleg**,
+kein Nachweis, dass PaG selbst den Root löscht, und keine Wahrscheinlichkeitsschätzung
+für einen solchen Schaden. H1 ist auch mit einer Unterbrechung nach Dateisync vor
+CLOSED vereinbar; native Dauerhaftigkeit wird dadurch nicht behauptet.
+
+**NICHT BEWIESEN:** Aus der aktuellen Datenbank lässt sich für WRITING ohne Root
+nicht „nie angelegt“ herleiten. Automatisches Joblöschen würde zumindest die
+verbliebene Schlüssel-/Recoverybindung und die erkennbare Schadens-/Abbruchspur
+verwerfen. Es rekonstruiert bereits verschwundene Bytes nicht. Dass kein
+abgeschlossener Import bestätigt wurde, erlaubt keine Behauptung verlustfreier
+Reparatur oder unbeschädigter globaler Dokumentablage.
+
+### 59.3 Zustandsmatrix des bestehenden Recoveryvertrags
+
+Alle regulären Recoveryzeilen setzen einen aktuellen MAINTENANCE-Kontext mit
+gültiger Generation, autorisierten Key-/DB-Scopes, gültigen Action-/Job-/Document-
+Bindungen und erfolgreich abgeschlossenem globalem Inventar voraus. „READY
+möglich“ bedeutet erst nach sämtlichen Jobs, frischem Endinventar, Cleanup und
+Maintenance-Barrier; keine Einzelzeile verleiht READY. Bei Revoke bleibt die
+Session ggf. LOCKED statt BLOCKED, aber niemals unberechtigt READY.
+
+| Fall | DB und tatsächlicher Dateistand | Mögliche Historie / bestehende Behandlung | READY / BLOCKED |
+| --- | --- | --- | --- |
+| A | DB ohne Documents/Jobs; kein Root | noch nie Dokumente angelegt; auch historisch leere Ablage nicht unterscheidbar. Inventar bleibt leer, kein mkdir | READY möglich |
+| B | nur IMPORT_RESERVED; kein Root | autorisierte Reservierung vor WRITING; im vertrauenswürdigen Phasenvertrag darf diese Reservierung noch keine Datei erzeugt haben. Bestehender Abort entfernt ausschließlich den geprüften Job | READY nach bestehendem Abort möglich; kein neuer Reparaturpfad |
+| C | nur IMPORT_WRITING; kein Root | H0 und H1 ununterscheidbar; keine belegte Nichtausführung | BLOCKED; Job erhalten |
+| D | mehrere WRITING; kein Root | unabhängige Abbrüche oder Namespaceverlust; keine sichere Teilmenge herleitbar | BLOCKED vor erstem Abort |
+| E | RESERVED + WRITING; kein Root | ein früherer WRITING-Zustand macht globales Inventar unzulässig; auch RESERVED nicht vorher bereinigen | BLOCKED; beide Jobs erhalten |
+| F | mindestens ein fertiger DocumentRow; kein Root | fehlende erwartete dauerhafte Dokumentablage; unvollständiger Import legitimiert keine Löschung fertiger Daten | BLOCKED; DocumentRows/Keys erhalten |
+| G | IMPORT_CLOSED; kein Root | zuvor bestätigter Dateiabschluss laut Phasenvertrag, aktuelle Datei fehlt; keine Authentifizierung möglich | BLOCKED; Job erhalten |
+| H | FILE_PUBLISHED; kein Root | finaler Blob erwartet, fehlt; kein Commit aus Phasenname erfinden | BLOCKED; Job erhalten |
+| I | DELETE_RESERVED + Parent; kein Root | erwarteter Parent/Blob noch nicht detached; fehlende Ablage nicht als erfolgreichen Delete deuten | BLOCKED; Parent und Job erhalten |
+| J | DELETE_FILE_PENDING ohne Parent; kein Root | Parent kann bereits entfernt sein; Unlink kann stattgefunden haben oder Root verschwunden sein. Fehlender Root unterscheidet sich von fehlendem einzelnen Pending-Blob in vollständigem Root | BLOCKED; Job erhalten |
+| K | nackter partieller Root | Initialisierung unterbrochen oder beschädigt; keine gesicherte vollständige Struktur | BLOCKED; keine Ergänzung |
+| L | Root nur mit staging | unterbrochene Initialisierung oder verlorenes files | BLOCKED; kein mkdir files |
+| M | Root nur mit files | unterbrochene Initialisierung oder verlorenes staging | BLOCKED; kein mkdir staging |
+| N | Symlink statt Root | fremde/umgebogene Bindung, unabhängig von DB-Phasen | BLOCKED; Ziel unverändert, kein Folgen/Unlink |
+| O | fremder Datei-Leaf bei bekanntem Inventar | externer Namespacezustand oder unbekannte Datei; DB legitimiert ihre Löschung nicht | BLOCKED vor jeder bekannten Bereinigung; fertige Blobs erhalten |
+| P | WRITING + bekanntes staging im vollständigen Root | unvollständiger, noch nicht publizierter Import; bestehender Vertrag bricht ihn ab: genau bekanntes staging unlink, Directory-Sync, Recheck, geprüfter Job-Abort | READY nach vollständigem bestehenden Recovery möglich; kein Source-Reopen |
+| Q | WRITING, staging fehlt, vollständiger Root vorhanden | vor CREATE_NEW abgebrochen oder früheres Recovery-Unlink vor Job-Abort; auch externe Leafentfernung nicht historisch unterscheidbar | bestehende Politik akzeptiert aktuellen vollständigen globalen Zustand, synchronisiert staging, bricht Job ab; READY möglich; kein Beweis „nie geschrieben“ |
+| R | Revoke vor Inventar | Autorisierung nicht mehr gültig | keine DB-/Dateiarbeit, kein READY |
+| S | Revoke nach DB- oder vollständigem Dateiinventar | Snapshot allein autorisiert keine folgende Mutation | kein Cleanup/Abort nach den jeweiligen Gates; kein READY |
+| T | Revoke vor DB-Abort | Unlink/Sync können vorher schon ausgeführt sein | Job bleibt; kein erfundener globaler Rollback/READY |
+| U | Fehler während DB-Abort | bestätigter lokaler Rollback lässt Job bestehen; bei unbekanntem Abschluss neuer autorisierter Read erforderlich. Frühere Dateioperation bleibt getrennt | kein Erfolgsabschluss/READY; BLOCKED bei gültiger Session |
+| V | Namespace verändert sich zwischen Prüfungen | externe Änderung oder Bindungsverlust; Lane serialisiert PaG-Arbeit, nicht externe Eingriffe | erneutes Inventar blockiert bei erkanntem Fremdleaf; keine stillschweigende Reparatur |
+
+**HOSTGETESTET:** A/B und P/Q waren bereits abgedeckt; zusätzliche Tests prüfen
+insbesondere C–O sowie R–V mit erhaltenem DB-/Dateizustand. Der neue Test zu B
+prüft ausdrücklich die **bereits bestehende** RESERVED-Abbruchpolitik samt echter
+Session-READY-Grenze. Der Test zu V injiziert einen Fremdleaf vor dem zweiten
+Dateiinventar: kein Unlink und kein DB-Abort. Daraus folgt keine Garantie gegen
+jede externe Manipulation nach der letzten Prüfung.
+
+### 59.4 Bestehende Integrität, Ressourcen und Sessiongrenzen
+
+**BESTEHEND:** Vor erster Mutation validiert DocumentReconciliation die gesamten
+DocumentRows und Jobs samt Actionstatus/-bindung, Kapazität, Namen und
+Phase-/Parentrelationen über DocumentDao. DocumentFileInventory prüft den
+vertrauenswürdigen noBackup-Root, kanonische Identität, NOFOLLOW, erlaubte
+Verzeichnisse, bekannte Leafnamen und bei Recovery doppelte Dateiidentitäten.
+Fertige Documents müssen vollständig im Namespaceinventar vertreten sein.
+Ein einzelner zulässiger Job darf ein global ungültiges Inventar nicht überstimmen.
+
+Maintenance drain/fenced dieselbe Namespace-Lane, bevor Preflight/Inventar und
+Recovery laufen; alte Workertickets bleiben ungültig. Frische DB-/Dateiinventare
+werden zwischen Jobs und am Ende erneut erhoben. Aktuelle Context-/Generations-
+und COMMIT-Gates gelten weiterhin vor/nach einzelnen Schritten. Die geborgte
+Maintenance-Keyautorität bleibt kurzlebig, vor READY-Owner-Vorbereitung.
+Der Runtimepfad meldet fehlerhafte Maintenance nicht erfolgreich; Revoke ist kein
+Rollback früherer DB-/Dateischritte. Die offene letzte Fence-/Publication-
+Racegrenze aus §58 wurde nicht verändert oder geschlossen.
+
+**HOSTGETESTET:** Weitere Fälle belegen Revoke nach DB-Inventar und nach erstem
+Dateiinventar; Revoke unmittelbar vor Abort nach bereits erfolgtem Unlink;
+Fehler nach simuliertem Job-DELETE mit lokalem Fake-Rollback, wobei die vorherige
+Dateientfernung bestehen bleibt; keine echte Session-READY-Freigabe nach
+fehlgeschlagenem Abort. Ein zweiter autorisierter Unlock mit neuer Generation
+führt neue Inventarreads aus und erkennt einen inzwischen neu vorhandenen
+rootlosen WRITING-Job, statt einen alten erfolgreichen Snapshot zu verwenden.
+Bestehende Scope-, Lane-, Dispatch-, Read-, Publication- und Sessiontests bleiben
+erhalten. Die Tests prüfen keine universelle Sicherheit gegenüber kompromittiertem
+Kernel/Dateisystem und keinen nativen Ressourcenabschluss.
+
+### 59.5 Bewertung möglicher Recoverypolitiken
+
+| Ansatz | Datenverlust / Integrität / Manipulationsrisiko | Vertraulichkeit / Crash / Schema / Bestand / Maintenance |
+| --- | --- | --- |
+| A Status quo: rootloses WRITING bleibt BLOCKED | Erhält verbleibende DB-/Key-/Jobbelege; verdeckt möglichen Namespaceverlust nicht. Availability-Lücke bleibt bewusst bestehen | Kein neuer Klartext-/Schlüsselpfad, keine Schemaänderung; alte Imports bleiben interpretierbar. Revoke verlangt neue autorisierte Maintenance; kein zusätzlicher Crashbeweis |
+| B Nur bewiesene Nichtausführung bereinigen | RESERVED kann innerhalb des unveränderten vertrauenswürdigen Phasenvertrags abbrechbar sein, wie bereits implementiert. Für WRITING fehlt der notwendige Beleg; Abwesenheit, Größe null oder UI-Flag genügen nicht | Kein zusätzlicher Angriffspfad nur dann, wenn Evidence tatsächlich autoritativ und dauerhaft ist. Heutiges Schema liefert sie für WRITING nicht; Legacy-WRITING darf nicht umgedeutet werden |
+| C Zusätzliche vertrauenswürdige Vorbedingungen | Aktuelle leere Documentliste, gültiger Key, korrekte UUIDs oder READY_TO_OPEN beweisen keine fehlenden historischen Datei-Sideeffects. Auch ein einfacher „vorher“-Marker schließt nachfolgende Arbeit vor Markerupdate nicht aus | Neue dauerhafte, gebundene und crashgeordnete Evidence müsste unabhängig reviewed werden; kein flüchtiges Token als Ersatz. Kein solcher kompatibler Beleg im bisherigen Schema 11 gefunden; kein neuer Persistenzort/Marker in diesem Slice |
+| D Künftige Stagingphasen geordnet ändern | Vollständig geprüfte und synchronisierte Namespaceinitialisierung vor WRITING könnte das spezielle H0-Fenster für künftige Versuche reduzieren. Rootverlust bliebe Schaden, kein Abbruchbeweis | Ändert die bisherige Grenze „kein Namespacezugriff vor WRITING“ und muss separat sicherheitsgeprüft werden. Parent-/Root-fsync, Zwischencrashs bei mkdir, RESERVED mit Teilroot und Revoke müssen vollständig behandelt werden. Historische WRITING-Jobs bleiben mehrdeutig; Schema-11-Kompatibilität und Maintenance dürfen nicht still gebrochen werden |
+
+**VORGESCHLAGEN:** Status quo A für bestehendes rootloses WRITING beibehalten.
+Es gibt auf den geprüften bestehenden Belegen **keinen nachweislich sicheren
+destruktiven Minimalpatch**, der die zwei Historien unterscheiden und
+verlustfreie automatische Recovery zusagen könnte. Daher weder Joblöschung noch
+Root-Rekonstruktion vorschlagen, als wäre ihre Sicherheit schon bewiesen.
+Die bestehende Politik für einen vollständigen Root (P/Q) ist eine explizite
+Abbruchregel für unpublizierte Imports und kein Beweis fehlender Vorgeschichte;
+sie darf nicht allein für höhere Verfügbarkeit auf einen global fehlenden Root
+ausgedehnt werden.
+
+Ein nächster enger **Reviewvorschlag, kein implementierter Patch** ist die
+präzise Definition einer zukünftigen Namespace-Initialisierungs-/Phasenordnung:
+vorheriger globaler Bestand, Rootidentität, vollständig angelegte Verzeichnisse,
+File-/Parent-/Directory-Sync-Reihenfolge, explizite Grenzen vor CREATE_NEW und vor
+WRITING sowie jede Crash-/Revokezwischenstelle. Benötigte Tests wären zusätzliche
+Injektionen nach jedem mkdir/fsync/DB-Ende, fehlender/ersetzter Root, alte
+Schema-11-Jobs, vollständiger und partieller Root, Revoke und erneute Maintenance.
+Erst nach unabhängig bewiesenem Vertrag einen separaten Präventionsfix für neue
+Imports freigeben; keine rückwirkende heuristische Bereinigung alter Jobs.
+Eine weitere Persistenz-/Migrationsentscheidung wäre gesondert nötig, falls der
+Vertrag dauerhaft zusätzliche historische Evidence benötigt. Keine neue
+Sessionautorität oder automatische Wiederöffnung des Importstreams.
+
+### 59.6 Umfang und offene Blocker
+
+**BLOCKER:** RED-4 bleibt Availability-/Recoverypolitik-Blocker. Sichere
+Nichtausführung ist für rootloses WRITING aus Schema 11 nicht entscheidbar;
+vorhandene gültige Recoveryfälle sind nur innerhalb ihrer geprüften aktuellen
+Namespace-/Phasenbedingungen behandelbar. Fehlende native Crash-/Cleanupbelege
+(#32), mehrphasige Document-Outcome-/Invalidierungsevidence (#35), Snapshotowner
+(#37), Performanceintegration (#38) und bestehende Editor-/CAS-/ABA-Grenzen (#36)
+werden nicht durch diese Untersuchung geschlossen. Keine Recovery-, Dokument-,
+RAM- oder Release-1.0-Freigabe.
+
+Ausschließlich `DocumentReconciliationTest` und dieses Assessment geändert.
+Keine produktive Änderung an Reconciliation, Staging, Publication, Delete,
+Namespace-Lane, SQLCipher-Adaptern, Runtime oder anderen Writerfamilien.
+SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink/B2Driver,
+Schema 11, 180-s-Absoluttimeout, 30-s-READY-idle und 8+8-MiB-Budget bleiben
+unverändert. Keine neuen Dependencies/Permissions, Persistenzorte, RAM-Hits,
+Snapshotowner oder P3b-/Leadershipänderungen. Keine Geräteinstallation oder
+Änderung installierter Apps. Testdateientfernung ausschließlich als explizite
+Verlustsimulation im isolierten TemporaryFolder, keine Produktlöschroutine.
+
+### 59.7 Abschlussvalidierung
+
+**HOSTGETESTET:** 22 zusätzliche Recoverytests in der bestehenden Harness;
+keine neuen Testdateien. Gezielter Lauf
+`./gradlew :data:testDebugUnitTest --tests '*Document*Test' --offline`:
+**271 bestanden, 0 Failures, 0 Errors, 0 Skips**.
+Angeforderter vollständiger Offline-Lauf mit
+`:app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest
+:domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin
+:app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest
+:app:verifyDemoManifest --offline`: **BUILD SUCCESSFUL**.
+Debug-Test-XMLs: App 671, Data 945, Security 4 = **1.620 bestanden,
+0 Failures, 0 Errors, 0 Testskips**. Unveränderte App-/Securitytests und
+Androidtest-Kompilationen waren UP-TO-DATE; Domain hat keine Testquellen.
+`preDebugAndroidTestBuild SKIPPED` bezeichnet einen Gradle-Lifecycle-Task,
+keinen übersprungenen Testfall. Beide Manifestchecks erfolgreich.
+`git diff --check` sauber. Keine Android-/Instrumentationausführung und kein
+zusätzlicher SQLite-/nativer Dauerhaftigkeitsnachweis. Keine Rohlogs, APKs,
+Datenbanken oder Schlüssel im Commit. Regulärer WIP-Commit/Push; anschließend
+STOPP bis zum unabhängigen GitHub-Review.
