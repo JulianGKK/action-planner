@@ -75,8 +75,6 @@ internal fun activeFunctionContent(board: OperationalBoard): ActiveFunctionConte
 
 @Composable internal fun NewActiveFunction(ops: OperationsModel) {
     PreparationHeading("Neue Funktion")
-    FormTextField(ops.newFunctionName, ops::changeNewFunctionName, label = { Text("Funktionsname") },
-        autoFocus = true, keyboardOptions = productKeyboard(ProductTextKind.ROLE), enabled = !ops.busy, modifier = Modifier.fillMaxWidth())
-    FormButton(ops::saveNewFunction, enabled = !ops.busy && OperationalRules.validName(ops.newFunctionName)) { Text("Funktion anlegen") }
+    RoleCreateForm(ops,RoleCreateSurface.NEW_FUNCTION,"Funktionsname","Funktion anlegen")
     FormOutlinedButton(ops::backToFunctions, enabled = !ops.busy) { Text("Abbrechen") }
 }

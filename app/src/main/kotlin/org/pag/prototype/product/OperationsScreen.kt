@@ -14,7 +14,7 @@ import java.time.format.FormatStyle
 
 @Composable internal fun OperationsSection(model:ProductViewModel) {
     val ops=model.operations;val board=ops.board?:return
-    if(ops.editingRole==null && ops.deletingRole==null)ops.error?.let{Text(if(ops.screen==OperationsScreen.PLAN && it==OperationsFailure.STALE)
+    if(ops.editingRole==null && ops.deletingRole==null && ops.createError==null)ops.error?.let{Text(if(ops.screen==OperationsScreen.PLAN && it==OperationsFailure.STALE)
         "Die Rollenplanung wurde inzwischen geändert. Dein Entwurf bleibt erhalten." else operationsError(it))}
     when(ops.screen) {
         OperationsScreen.ROLES->RoleManagement(ops,board)
@@ -95,10 +95,11 @@ import java.time.format.FormatStyle
             OperationalRules.templates.forEach{template->FormOutlinedButton({ops.createRole(template)},enabled=!ops.busy && board.roles.none{OperationalRules.normalizedName(it.name)==OperationalRules.normalizedName(template)}){Text(template)}}
         }
     }
+    ops.templateCreateError?.let{Text(createRoleError(it))}
     if(ops.editingRole!=null || ops.deletingRole!=null){RoleEditor(ops);return}
-    var name by remember{mutableStateOf("")}
-    FormTextField(name,{ops.textInteraction();name=it},label={Text("Rollenname")},autoFocus=true,keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy,modifier=Modifier.fillMaxWidth())
-    FormButton({ops.createRole(name);name=""},enabled=!ops.busy && OperationalRules.validName(name)){Text(if(ops.planning)"Eigene Rolle hinzufügen" else "Neue Funktion hinzufügen")}
+    if(ops.createSurface==RoleCreateSurface.ROLES)RoleCreateForm(ops,RoleCreateSurface.ROLES,
+        if(ops.planning)"Rollenname" else "Funktionsname",if(ops.planning)"Eigene Rolle hinzufügen" else "Neue Funktion hinzufügen")
+    else FormButton({ops.beginRoleCreate(RoleCreateSurface.ROLES)},enabled=!ops.busy){Text("Rolle oder Funktion anlegen")}
     if(ops.planning)board.roles.forEach{r->
         Text(r.name)
         FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)){
@@ -107,6 +108,20 @@ import java.time.format.FormatStyle
         }
     }
     FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Zurück")}
+}
+/** Every text create surface delegates draft lifetime and completion to the same model contract. */
+@Composable internal fun RoleCreateForm(ops:OperationsModel,surface:RoleCreateSurface,label:String,saveLabel:String) {
+    if(ops.createSurface!=surface)return
+    ops.createError?.let{Text(createRoleError(it))}
+    FormTextField(ops.createName,ops::changeRoleCreateName,label={Text(label)},autoFocus=true,
+        keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy,modifier=Modifier.fillMaxWidth())
+    FormButton(ops::saveRoleCreate,enabled=!ops.busy && OperationalRules.validName(ops.createName)){Text(saveLabel)}
+}
+internal fun createRoleError(reason:OperationsFailure)=when(reason){
+    OperationsFailure.INVALID->"Bitte einen Rollen- oder Funktionsnamen eingeben."
+    OperationsFailure.NOT_FOUND->"Die Aktion ist nicht mehr verfügbar."
+    OperationsFailure.STALE->"Die Erstellung wurde nicht freigegeben. Der Entwurf bleibt erhalten."
+    else->operationsError(reason)
 }
 /** Both productive role surfaces use the same snapshot-bound editor/confirmation. */
 @Composable internal fun RoleEditor(ops:OperationsModel) {
@@ -141,9 +156,8 @@ import java.time.format.FormatStyle
             FormOutlinedButton({ops.function(null)},enabled=!ops.busy){Text((if(ops.liveRoleId==null)"✓ " else "")+"Unzugeordnet")}
             board.preferredRoles(ops.personId!!).forEach{r->FormOutlinedButton({ops.function(r.id)},enabled=!ops.busy){Text((if(ops.liveRoleId==r.id)"✓ " else "")+r.name)}}
         }
-        var adding by remember{mutableStateOf(false)};var name by remember{mutableStateOf("")}
-        FormOutlinedButton({adding=!adding},enabled=!ops.busy){Text("Neue Funktion")}
-        if(adding){FormTextField(name,{ops.textInteraction();name=it},label={Text("Rollenname")},autoFocus=true,keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy);FormButton({ops.createRole(name);name="";adding=false},enabled=!ops.busy && OperationalRules.validName(name)){Text("Hinzufügen")}}
+        FormOutlinedButton({if(ops.createSurface==RoleCreateSurface.INLINE)ops.cancelRoleCreate() else ops.beginRoleCreate(RoleCreateSurface.INLINE)},enabled=!ops.busy){Text(if(ops.createSurface==RoleCreateSurface.INLINE)"Neue Funktion abbrechen" else "Neue Funktion")}
+        if(ops.createSurface==RoleCreateSurface.INLINE)RoleCreateForm(ops,RoleCreateSurface.INLINE,"Funktionsname","Hinzufügen")
     }
     if(!functionOnly && OperationalRules.placeRelevant(ops.liveStatus)){
         Text("Ort / Ziel · kurze lokale Bezeichnung, keine Notizen")

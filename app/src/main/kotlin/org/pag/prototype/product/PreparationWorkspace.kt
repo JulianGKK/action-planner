@@ -151,30 +151,18 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
 }
 @Composable private fun PreparationRoles(model: ProductViewModel, board: OperationalBoard) {
     val ops = model.operations
-    var form by remember { mutableStateOf(false) }
-    var name by remember { mutableStateOf("") }
     var templates by remember { mutableStateOf(false) }
-    var submitted by remember { mutableStateOf(false) }
-    LaunchedEffect(submitted, ops.busy) {
-        if (submitted && !ops.busy) {
-            if (ops.error == null) { form = false; name = "" }
-            submitted = false
-        }
-    }
     PreparationHeading("Rollen")
     Text("${board.roles.size} angelegt · Geplante Nutzung")
     if(ops.editingRole!=null || ops.deletingRole!=null){RoleEditor(ops);return}
-    ops.error?.let { Text(operationsError(it)) }
-    if (form) {
-        FormTextField(name, { ops.textInteraction(); name = it }, label = { Text("Rollenname") },
-            autoFocus = true, keyboardOptions = productKeyboard(ProductTextKind.ROLE),
-            enabled = !ops.busy, modifier = Modifier.fillMaxWidth())
-        FormButton({ submitted = true; ops.createRole(name) },
-            enabled = !ops.busy && OperationalRules.validName(name)) { Text("Speichern") }
-        FormOutlinedButton({ ops.textInteraction(); form = false; name = "" }, enabled = !ops.busy) { Text("Abbrechen") }
+    if(ops.createError==null)ops.error?.let { Text(operationsError(it)) }
+    if(ops.createSurface==RoleCreateSurface.PREPARATION){
+        RoleCreateForm(ops,RoleCreateSurface.PREPARATION,"Rollenname","Speichern")
+        FormOutlinedButton(ops::cancelRoleCreate,enabled=!ops.busy){Text("Abbrechen")}
         return
     }
-    FormButton({ ops.textInteraction(); form = true; name = "" }, enabled = !ops.busy) { Text("Rolle anlegen") }
+    FormButton({ops.beginRoleCreate(RoleCreateSurface.PREPARATION)},enabled=!ops.busy){Text("Rolle anlegen")}
+    ops.templateCreateError?.let{Text(createRoleError(it))}
     FormOutlinedButton({ ops.textInteraction(); templates = !templates }, enabled = !ops.busy,
         modifier = Modifier.semantics { stateDescription = if (templates) "Geöffnet" else "Geschlossen" }) { Text("Vorlagenrollen ${if (templates) "▴" else "▾"}") }
     if (templates) {

@@ -7015,3 +7015,195 @@ WIP-Commit/Push und unabhängigem Remote-SHA-Abgleich. Keine APKs, Schlüssel, D
 Rohlogs, Credentials, persönlichen Pfade oder Gerätekennungen einchecken.
 Danach **STOPP bis zum unabhängigen GitHub-Review**. Kein Force-Push, Merge, Release oder
 vollständige Editor-/Release-1.0-Freigabe.
+
+## 52. Issue #36 – CreateRole-/NewFunction-Entwürfe und Publication
+
+### 52.1 Ausgangsnachweise und Umfang
+
+Vor Änderungen: sauberer Arbeitsbaum, lokaler HEAD und unabhängig über GitHub gelesener
+Remote-HEAD `8e157f91d22a27d119835bd870ca8f126ccce2a9`.
+
+**REPRODUZIERT, zunächst rote Hostregressionen:**
+`CreateRoleModelTest.normalReadRefreshCannotLoseConfirmedCreateCallback` und
+`callbackAfterRejectionCannotCloseLaterFormInstance` schlugen gegen den Ausgangscode
+fehl. Ein gewöhnliches `OperationsModel.refresh()` erhöhte denselben Requestzähler,
+den der Create-Writecallback prüfte: gültiges Ergebnis verloren, busy/Formular blieben
+stehen. Nach einer Rejection konnte außerdem ein erneut ausgeführter alter Callback
+eine danach geöffnete NewFunction-Instanz schließen. Zwei weitere Ausgangstests waren
+bereits grün: normaler DUPLICATE-Callback erhielt den NewFunction-Entwurf, ausbleibender
+Callback erhielt Name/Formular ohne Retry. Diese Fälle werden nicht als Ausgangsfehler
+behauptet. Die beiden roten Tests bestehen jetzt unverändert in ihrer Zielaussage.
+
+**Eindeutige Quellcodebefunde, keine behauptete gerenderte Host-UI-Ausführung:**
+RoleManagement hatte `ops.createRole(name); name=""` direkt im Klickhandler.
+LiveForm hatte zusätzlich `adding=false` im Handler. Beide lokalen Zustandsänderungen
+waren unabhängig von Ergebnis/Commit/Publication und konnten Namen bereits vor einem
+Callback verwerfen. PreparationRoles verwendete `submitted`, `ops.busy` und `ops.error`
+in einem LaunchedEffect statt einer zugehörigen Ergebnisidentität. Für diese dritte
+Oberfläche wurde **kein nominaler tatsächlicher Produktions-Fehlabschluss behauptet**;
+der indirekte Mechanismus wird durch denselben ausdrücklichen Ergebnispfad ersetzt.
+Ein zusätzlicher neuer Porttest belegt, dass ein gar nicht eingereichter Auftrag nicht
+allein wegen `!busy && error==null` als erfolgreich behandelt wird. Kein Androidrendering
+oder Gerätetest wurde ausgeführt, keine Vermutungen als Laufzeitfehler ausgegeben.
+
+### 52.2 IMPLEMENTIERT – ein flüchtiger Create-Formularvertrag
+
+Alle Texteingaben verwenden jetzt `OperationsModel`-Draft und dieselbe
+`RoleCreateForm`-Darstellung. `RoleCreateSurface` unterscheidet die bestehenden
+Aufrufstellen; eine zusätzlich wechselnde Formularinstanz unterscheidet auch zwei
+aufeinanderfolgende Aufrufe derselben Oberfläche. Die Bindung umfasst Action-ID,
+READY-Generation, konkrete Formularinstanz, Screen-/Personkontext, Role-Editorzugehörigkeit
+und einen separat identifizierten Create-Schreibauftrag.
+
+`createName` ist der bearbeitbare Draft. Beim Submit wird die tatsächlich gesendete
+unveränderliche Stringeingabe gesondert im Auftrag festgehalten. Während Pending sind
+Eingabe und erneuter Submit gesperrt; kein automatischer zweiter Write. Formular- und
+Jobzähler sind ausschließlich lokale Callbackzugehörigkeit, **keine Sessionautorität,
+persistierte Revision, Permission oder Snapshotregistry**. Höchstens ein Createauftrag
+im Modell pending; keine persistierten Entwürfe oder neue Lebensdauer nach Clear/Reauth.
+
+Nur eine einmalig verbrauchte, zum noch aktuellen Auftrag/Formular passende Antwort
+darf Zustand verändern. Read-Requestnummern gehören nicht zu dieser Createbindung.
+Ein anderer Role-Editor oder eine neue Createinstanz kann durch den alten Callback
+weder geschlossen noch überschrieben werden. Ein durch Rename/Delete verdecktes
+Text-Createformular darf nicht über einen alten UI-Aufruf zusätzlich einreichen.
+
+### 52.3 Alle produktiven Einstiege und Abschlusssemantik
+
+| Einstieg | Neuer gemeinsamer Draft-/Abschlusspfad | Nach gültigem eigenen Erfolg |
+|---|---|---|
+| Allgemeine Rollenansicht PREPARATION | ROLES-Instanz bei Eintritt; gemeinsames modellgebundenes Feld | Eingabe zurücksetzen, Feld bleibt für nächste Rolle verfügbar. |
+| Allgemeine Rollenansicht ACTIVE | Derselbe ROLES-Vertrag, bestehende CreateRole-Rechte | Eingabe zurücksetzen; keine automatische Rollen-/Personenzuordnung. |
+| PreparationRoles | PREPARATION-Instanz beim ausdrücklichen Öffnen; kein lokales submitted/busy/error-Abschlussraten mehr | Eigenes Formular schließen und Namen entfernen. |
+| Inline-Funktion im aktiven Lageformular | INLINE-Instanz beim Öffnen; kein lokales name/adding-Clear beim Speicherklick | Nur Inline-Unterformular schließen. Personenbindung und Live-Status-/Funktionsentwurf bleiben erhalten. |
+| NewActiveFunction | NEW_FUNCTION-Instanz; bisherige change-/saveNewFunction-Aufrufe delegieren an denselben Vertrag | Bestehender Rückweg zur Übersicht, Name entfernen; bisheriges Funktionsfeedback erhalten. |
+| Vorlagenbuttons | Kein künstlicher Texteingabedraft und kein Eigentum an einem anderen Formular | Workspace aktualisieren/Feedback; fremde Create-, Rename-, Delete- oder Planentwürfe nicht zurücksetzen. |
+
+INVALID, DUPLICATE und NOT_ALLOWED behalten Name und Formular. Der zugehörige Fehler
+wird sichtbar, kein neues Erfolgsfeedback und kein automatischer Retry. Createfehler
+und Vorlagenfehler sind getrennt; eine Vorlagen-Rejection ersetzt nicht den Fehler
+oder Entwurf eines fremden Text-/Renameeditors. Vorlagenfehler bleiben auch in der
+allgemeinen Rollenansicht neben einem offenen Renameeditor sichtbar.
+
+Erfolgsfeedback verwendet die **abgeschickte Eingabe**, nicht einen späteren Draft.
+Der bestehende Feedbackvertrag bleibt erhalten: `createRole` meldet „Rolle … angelegt“,
+die eigene NewFunction-Seite „Funktion … angelegt“. Der erste vollständige Regressionlauf
+fand eine versehentlich verallgemeinerte ACTIVE-Formulierung; die Implementierung wurde
+zur bestehenden Erwartung von `Ux1bSnapshotTest` zurückgeführt, nicht dessen Assertion
+geändert. Keine unnötige fachliche oder textliche Create-Semantikänderung.
+
+### 52.4 Commit-/Publication-Grenze und Read-/Write-Liveness
+
+**Unverändert:** `OperationsRepository.createRole` → `ProductOperationsRepository` →
+`WorkspaceWriteBoundary`/`WorkspaceMutationInvalidation` →
+`confirmedWorkspaceTransaction`/`OperationsStore.role(..., expected=null, ...)`.
+Kein alternativer Writer, kein direkter UI-SQLpfad, kein Existing-Expected für Create.
+PREPARATION/ACTIVE-Regeln, normalisierte Namen und Duplicate-Prüfung bleiben bestehen.
+
+Die produktive Writergrenze invalidiert vor Queueeintritt und belegt äußeren Commit/
+Rollback sowie DB-/Lease-Cleanup. Ein beliebiger Callback oder Repositorywert allein
+ist **kein** Commitnachweis. Das UI konsumiert den bestehenden vertrauenswürdigen
+Repositorypublication-Vertrag; es erfindet keine eigene Commitbestätigung. UNKNOWN,
+unbestätigter Abschluss und FAILED_OR_UNCONFIRMED-Cleanup liefern dort keinen
+Erfolgscallback. Ohne Callback bleiben Formular/Name pending, bis bestehender
+Lock/BLOCKED/Action-/Lifecycle-Clear sie verwirft. Kein optimistischer Erfolg/Retry.
+
+Erst nach zulässiger erfolgreicher Publication: zugehörigen Draft zurücksetzen bzw.
+eigenes Formular schließen, bestehenden Workspace-Refresh auslösen und zutreffendes
+Feedback freigeben. Nach synchronem Scope-/Navigationswechsel während dieses Refreshes
+wird kein altes Folgefeedback veröffentlicht. Doppelte Callbackausführung bewirkt
+höchstens einen Abschluss/Refresh/Feedback.
+
+Ein normaler eigener Boardread oder gelieferter Workspace-Refresh verändert nur den
+Readrequest, **nicht** die Create-Auftragsidentität. Auch ein Readfehler darf nicht
+allein das passende bestätigte Writergebnis verschlucken. Die bestehende allgemeine
+`OperationsModel.write`-Implementierung für Rename/Delete/Plan/Live wurde dagegen
+**nicht** pauschal umgestellt; deren übrige Read-/Write-Livenessfragen aus §51 bleiben
+getrennt offen. Kein zweiter Workspaceowner oder neue Sessionautorität.
+
+### 52.5 Lifecycle und Clear
+
+Bestehende Clear-Grenzen entfernen jetzt den gemeinsamen Draft, die Surface-/Auftrags-
+zugehörigkeit und Createfehler. Lock/BLOCKED, Generation- und Actionwechsel können
+keinen alten Namen nach Reauth wiederherstellen. Ein alter Callback verändert auch
+keine später in derselben READY-Generation neu geöffnete Instanz.
+
+Eintritt in andere bestehende Operationsansichten bzw. Abschluss/Cancel verwirft den
+zugehörigen Createzustand. Beim Wechsel des Live-Status verlässt die Inline-Erstellung
+ihren sichtbaren Kontext; nur deren Kind-Draft wird verworfen, die bisherigen fachlichen
+Status-/Rollenregeln bleiben unverändert. Eine spätere Rückkehr stellt den Kindnamen
+nicht heimlich wieder her. Busy sperrt doppelte Einreichung, eine gültige Clear-Grenze
+kann weiterhin abbrechen. Keine neue Produktseite oder allgemeine Navigationsarchitektur.
+
+### 52.6 GETESTET und Abschlussvalidierung
+
+`CreateRoleModelTest` prüft mit kontrollierten echten Portaufrufen und zurückgehaltenen
+Antworten:
+
+- Pending, INVALID, DUPLICATE und NOT_ALLOWED für alle vier Text-Surfaces;
+  einheitliche Semantik beider PREPARATION-Oberflächen und ACTIVE-Inline-Erhalt.
+- Eigener bestätigter Erfolg, konkrete abgeschickte Eingabe, kein Submit/Erfolg aus
+  bloßem busy/error-Zustand; fehlender Callback ohne Abschluss/Retry.
+- Neue Formularinstanz nach Rejection, neuer Auftrag auf derselben Instanz,
+  erste verspätete Antwort gegen neue Instanz derselben READY-Generation,
+  doppelte Antwort nur einmal verarbeitet.
+- Lock/BLOCKED/Generation-/Action-Clear; zusätzlich Scopewechsel vor Antwort ohne
+  voreilige Successpublication sowie synchroner Revoke vor Queueeintritt.
+- Eigener Readrefresh, gelieferter Workspace-Refresh und Readfehler während Pending;
+  der gültige Createcallback bleibt ansprechbar und schließt nur seinen Owner.
+- Vorlagenantworten ändern keine offenen Text-/Renameentwürfe. Verdecktes Textformular
+  reicht nicht über Rename ein. Inline-Statuswechsel verwirft nur den Kind-Draft.
+  Abgewiesene Funktionsnavigation und ein fremder Darstellungstoggle verwerfen keinen Draft.
+
+Die bisherigen ActiveFunctions-, Operations-, Snapshot-/Feedback-, Personen-/Plan-/
+Role-CAS-, Task-, Security- und Publicationregressionen laufen vollständig mit.
+**Keine neuen DB-relevanten Behauptungen:** Daher keine zusätzlichen SQLite-Tests und
+keine Änderung am produktiven Createwriter; die vorhandenen echten SQLite-/Schema-11-
+Writer-/Outcome-/Cleanup-Proofs bleiben erhalten. Porttests sind kein neuer nativer
+Commit-/Cleanup- oder gerenderter Compose-/Fokusnachweis. Bestehende Androidproofs nur
+offline kompiliert; keine Geräteinstallation/Instrumentation und keine neue Dependency.
+
+Gezielt:
+`./gradlew :app:testDebugUnitTest --tests '*CreateRoleModelTest' --tests '*OperationsModelTest' --tests '*ActiveFunctionsTest' --tests '*RoleEditorModelTest' --offline`.
+Vollständig:
+`./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline`.
+**667 App + 781 Data + 4 Security = 1452 Hosttests, 0 Fehler, 0 Skips.**
+Domain-Testtask ohne Testquellen; keine zusätzlichen Tests gezählt. Offline-Appbuild,
+beide Androidtest-Kompilationen, Architekturcheck und Produkt-/Demo-Manifestchecks
+erfolgreich. Abschließender Clear entfernt auch die privaten Action-/Generations-
+Bindungsreferenzen; danach gleiche Abschlussprüfungen erneut. Compilerwarnungen bleiben
+sichtbar, keine fehlgeschlagenen Tests unterdrückt. Kein connectedAndroidTest.
+
+### 52.7 Status, verbleibende BLOCKER und Grenzen
+
+[#36](https://github.com/JulianGKK/action-planner/issues/36): Create-Formular-/Auftrags-
+bindung für alle genannten Oberflächen **IMPLEMENTIERT / GETESTET** im UI-Portvertrag.
+Der CreateRole-Entwurfsverlust-Restpunkt aus §51 ist für diese Aufrufstellen geschlossen;
+keine pauschale Editorfreigabe. Action-Editor-/Callbacklücken, Operations-Live-Reload/
+Formidentität und übrige gemeinsame Operations-Read-/Write-Liveness bleiben offen.
+Persistierte ABA-Grenzen von Person/Role/Plan/Task/Action/Operationsstate aus §51
+unverändert; Create ist kein Rename-CAS und erzeugt keine persistierte Revision.
+Keine Schema-12-Migration.
+
+[#35](https://github.com/JulianGKK/action-planner/issues/35): produktive Writergrenze,
+eine Mutationsepoche und Vor-Queue-Invalidierung erhalten; weitere Familien weiterhin
+**UNWIRED / NOT SAFE FOR RAM REUSE** gemäß §46/47.
+[#37](https://github.com/JulianGKK/action-planner/issues/37): gemeinsamer Snapshotowner
+**NOCH NICHT ANGEBUNDEN**, keine RAM-Hits/Cacheaktivierung. Lokale Formularserials sind
+kein atomarer Payloadowner oder Ersatz für zentrale Storage-Publication.
+[#38](https://github.com/JulianGKK/action-planner/issues/38): keine Navigations-/
+Performanceintegration; gerenderte Android-UI-/Fokusnachweise bleiben gesondert nötig.
+[#32](https://github.com/JulianGKK/action-planner/issues/32): Cursor-/Cleanup-**BLOCKER**
+weiter unabhängig offen. `SQLCipherStatement.close()` schließt den Cursor nicht explizit;
+Hostabschluss/FD-PASS beweisen keine vollständige native Cursorfreigabe.
+
+SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink, B2Driver, Schema 11,
+180 s absolut/30 s READY idle und 8+8-MiB-Budget unverändert. Kein neuer Snapshotowner,
+keine Sessionautorität, Klartextpersistenz, Permission oder Dependency. Keine fachliche
+Änderung anderer Writerfamilien, kein Gerät, keine installierte App, kein Produktupdate.
+Geändert: OperationsModel.kt, OperationsScreen.kt, PreparationWorkspace.kt,
+ActiveFunctions.kt, neuer CreateRoleModelTest.kt und dieser Abschnitt.
+Abschluss: `git diff --check`, `git status -sb`, regulärer WIP-Commit/Push, unabhängiger
+Remote-SHA-Abgleich. Keine APKs/Schlüssel/Datenbanken/Rohlogs/Credentials/persönlichen
+Pfade/Gerätekennungen einchecken. Danach **STOPP bis zum unabhängigen GitHub-Review**.
+Kein Force-Push, Merge, Release oder vollständige Release-1.0-Freigabe.

@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import org.pag.domain.*
 
 internal enum class OperationsScreen { OVERVIEW, ROLES, PLAN, LIVE, PERSON, FUNCTION, FUNCTION_DETAIL, NEW_FUNCTION }
+enum class RoleCreateSurface { ROLES, PREPARATION, INLINE, NEW_FUNCTION }
 internal data class FunctionFocus(val roleId: String?)
 /** Short-lived UI/navigation state only; the repository enforces persisted status and session. */
 class OperationsModel(private val repository:OperationsRepository?,private val session:()->SessionSnapshot,
@@ -25,7 +26,47 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     var livePlace by mutableStateOf("");private set
     internal var functionFocus by mutableStateOf<FunctionFocus?>(null); private set
     var moreFunctionsExpanded by mutableStateOf(false); private set
-    var newFunctionName by mutableStateOf(""); private set
+    val newFunctionName get()=if(createSurface==RoleCreateSurface.NEW_FUNCTION)createName else ""
+    var createSurface by mutableStateOf<RoleCreateSurface?>(null); private set
+    var createName by mutableStateOf(""); private set
+    var createError by mutableStateOf<OperationsFailure?>(null); private set
+    var templateCreateError by mutableStateOf<OperationsFailure?>(null); private set
+    private var createSerial=0L
+    private var createGeneration=0L
+    private var createActionId:String?=null
+    private var createJob=0L
+    private var pendingCreateJob:Long?=null
+    private fun dropCreate(){createSerial++;pendingCreateJob=null;createActionId=null;createGeneration=0L;createSurface=null;createName="";createError=null;templateCreateError=null}
+    private fun bindCreate(surface:RoleCreateSurface){dropCreate();createSurface=surface;createGeneration=session().generation;createActionId=action()?.id}
+    private fun createAllowed(surface:RoleCreateSurface)=editingRole==null && deletingRole==null && when(surface){
+        RoleCreateSurface.ROLES->(planning || live) && screen==OperationsScreen.ROLES
+        RoleCreateSurface.PREPARATION->planning && screen==OperationsScreen.OVERVIEW
+        RoleCreateSurface.INLINE->live && screen in setOf(OperationsScreen.LIVE,OperationsScreen.FUNCTION) && liveStatus==OperationalStatus.ON_SITE
+        RoleCreateSurface.NEW_FUNCTION->live && screen==OperationsScreen.NEW_FUNCTION
+    }
+    fun beginRoleCreate(surface:RoleCreateSurface){
+        val before=session();val a=action()?.id;val serial=createSerial
+        interaction()
+        if(busy || before.state!=SessionState.READY || session().generation!=before.generation || action()?.id!=a || serial!=createSerial || !createAllowed(surface))return
+        bindCreate(surface);error=null
+    }
+    fun changeRoleCreateName(value:String){
+        val serial=createSerial;val generation=session().generation;val a=action()?.id
+        interaction()
+        val surface=createSurface?:return
+        if(!busy && createSerial==serial && createGeneration==generation && session().generation==generation &&
+            createActionId==a && action()?.id==a && createAllowed(surface))createName=value
+    }
+    fun cancelRoleCreate(){
+        val serial=createSerial;val generation=session().generation;val a=action()?.id
+        interaction()
+        if(!busy && session().state==SessionState.READY && session().generation==generation && action()?.id==a && createSerial==serial){dropCreate();error=null}
+    }
+    fun saveRoleCreate(){
+        val surface=createSurface?:return
+        if(createAllowed(surface) && createActionId==action()?.id && createGeneration==session().generation)
+            createRoleWrite(createName,surface)
+    }
     private var focusedPersonId: String? = null
     internal val hasPersonFocus get() = focusedPersonId != null
     var planRoles by mutableStateOf<List<Role>>(emptyList()); private set
@@ -45,7 +86,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     val live get()=session().state==SessionState.READY && action()?.let{OperationalRules.mayUpdateSnapshot(it.status)}==true
     val person get()=board?.persons?.singleOrNull{it.person.id==personId}
     fun textInteraction() = interaction()
-    fun clear(){dropRoleEditor();functionFocus=null;moreFunctionsExpanded=false;newFunctionName="";focusedPersonId=null;request++;ownBoard=null;screen=OperationsScreen.OVERVIEW;personId=null;busy=false;error=null;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS}
+    fun clear(){dropCreate();dropRoleEditor();functionFocus=null;moreFunctionsExpanded=false;focusedPersonId=null;request++;ownBoard=null;screen=OperationsScreen.OVERVIEW;personId=null;busy=false;error=null;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS}
     fun refresh(){
         if (refreshWorkspace != null) { request++; refreshWorkspace.invoke(); return }
         val a=action()?.takeIf{session().state==SessionState.READY && OperationalRules.mayRead(it.status)}?:return
@@ -55,7 +96,13 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
             when(result){is OperationsResult.Value->ownBoard=result.value;is OperationsResult.Rejected->error=result.reason}
         }
     }
-    fun roles(){interaction();if(!planning && !live)return;leaveSensitive();screen=OperationsScreen.ROLES;error=null}
+    fun roles(){
+        val before=session();val a=action()?.id;val token=request
+        interaction();if((!planning && !live) || busy)return
+        leaveSensitive()
+        if(session().state!=SessionState.READY || session().generation!=before.generation || action()?.id!=a || token!=request)return
+        screen=OperationsScreen.ROLES;bindCreate(RoleCreateSurface.ROLES);error=null
+    }
     fun plan(id:String) {
         val before=session();val a=action()?.id?:return;val token=request
         interaction();if(!planning || busy)return
@@ -64,7 +111,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         val frozen=ExpectedPersonRolePlan(a,id,p.plan)
         leaveSensitive()
         if(!planning || session().generation!=before.generation || action()?.id!=a || request!=token)return
-        planExpected=frozen;planRoles=b.roles;planGeneration=before.generation
+        dropCreate();planExpected=frozen;planRoles=b.roles;planGeneration=before.generation
         personId=id;roleIds=frozen.plan.roleIds;primaryRoleId=frozen.plan.primaryRoleId
         screen=OperationsScreen.PLAN;error=null
     }
@@ -105,7 +152,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         val before = session(); val token = request; val actionId = action()?.id
         leaveSensitive()
         if (!live || session().generation != before.generation || request != token || action()?.id != actionId) return
-        personId = id; expected = state; liveStatus = state.status; liveRoleId = state.currentRoleId
+        dropCreate();personId = id; expected = state; liveStatus = state.status; liveRoleId = state.currentRoleId
         livePlace = state.currentPlaceLabel.orEmpty(); screen = OperationsScreen.LIVE; error = null
     }
     /** RAM-only focus on the already published complete board; no inventory or read. */
@@ -114,7 +161,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         if (!live || busy || board?.persons?.none { it.person.id == id } != false) return
         interaction(); leaveSensitive()
         if (!live || session().generation != before.generation || action()?.id != actionId || request != token) return
-        focusedPersonId = id; personId = id; screen = OperationsScreen.PERSON; error = null
+        dropCreate();focusedPersonId = id; personId = id; screen = OperationsScreen.PERSON; error = null
     }
     private fun functionNavigation(change: () -> Unit) {
         val before = session(); val actionId = action()?.id; val token = request
@@ -125,6 +172,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     }
     fun focusFunction(roleId: String?) = functionNavigation {
         if (roleId != null && board?.roles?.none { it.id == roleId } != false) return@functionNavigation
+        dropCreate()
         functionFocus = FunctionFocus(roleId); focusedPersonId = null; personId = null
         screen = OperationsScreen.FUNCTION_DETAIL; error = null
     }
@@ -133,20 +181,11 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     }
     fun newFunction() = functionNavigation {
         functionFocus = null; focusedPersonId = null; personId = null
-        newFunctionName = ""; screen = OperationsScreen.NEW_FUNCTION; error = null
+        screen = OperationsScreen.NEW_FUNCTION;bindCreate(RoleCreateSurface.NEW_FUNCTION);error = null
     }
-    fun changeNewFunctionName(value: String) {
-        val before = session(); val token = request; val actionId = action()?.id
-        if (!live || busy || screen != OperationsScreen.NEW_FUNCTION) return
-        interaction()
-        if (live && session().generation == before.generation && action()?.id == actionId && token == request)
-            newFunctionName = value
-    }
+    fun changeNewFunctionName(value:String){if(createSurface==RoleCreateSurface.NEW_FUNCTION)changeRoleCreateName(value)}
     fun toggleMoreFunctions() = functionNavigation { moreFunctionsExpanded = !moreFunctionsExpanded }
-    fun saveNewFunction() {
-        if (!live || busy || screen != OperationsScreen.NEW_FUNCTION) return
-        createRoleWrite(newFunctionName, true, "Funktion „${newFunctionName.trim()}“ angelegt")
-    }
+    fun saveNewFunction(){if(createSurface==RoleCreateSurface.NEW_FUNCTION)saveRoleCreate()}
     fun backToList() {
         if (!live || busy) return
         interaction(); if (!live) return
@@ -177,10 +216,10 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         finishForm()
         return id
     }
-    private fun finishForm(){dropRoleEditor();request++;screen=when {focusedPersonId!=null->OperationsScreen.PERSON;functionFocus!=null->OperationsScreen.FUNCTION_DETAIL;else->OperationsScreen.OVERVIEW};newFunctionName="";personId=focusedPersonId;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS;error=null}
+    private fun finishForm(){dropCreate();dropRoleEditor();request++;screen=when {focusedPersonId!=null->OperationsScreen.PERSON;functionFocus!=null->OperationsScreen.FUNCTION_DETAIL;else->OperationsScreen.OVERVIEW};personId=focusedPersonId;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS;error=null}
     fun toggleRole(id:String){interaction();if(!planning || busy)return;roleIds=if(id in roleIds)roleIds-id else roleIds+id;if(primaryRoleId !in roleIds)primaryRoleId=null}
     fun primary(id:String?){interaction();if(planning && !busy && (id==null || id in roleIds))primaryRoleId=id}
-    fun status(status:OperationalStatus){interaction();if(!live || busy)return;if(status!=liveStatus){livePlace="";if(!OperationalRules.roleAllowed(status) || status==OperationalStatus.RELEASED)liveRoleId=null};liveStatus=status}
+    fun status(status:OperationalStatus){interaction();if(!live || busy)return;if(status!=liveStatus){if(createSurface==RoleCreateSurface.INLINE)dropCreate();livePlace="";if(!OperationalRules.roleAllowed(status) || status==OperationalStatus.RELEASED)liveRoleId=null};liveStatus=status}
     fun function(id:String?){interaction();if(live && !busy && liveStatus==OperationalStatus.ON_SITE)liveRoleId=id}
     fun place(value:String){interaction();if(live && !busy)livePlace=value}
     fun savePlan(){
@@ -190,8 +229,45 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         write{publish->repository?.planRoles(a.id,p,old,draft,publish)}
     }
     fun saveLive(){val a=action()?:return;val p=personId?:return;val old=expected?:return;if(!live || busy)return;if(!OperationalRules.validPlace(livePlace)){error=OperationsFailure.INVALID;return};write{publish->repository?.updateSnapshot(a.id,p,old,liveStatus,liveRoleId,livePlace,publish)}}
-    fun createRole(name:String) = createRoleWrite(name, false, "Rolle „${name.trim()}“ angelegt")
-    private fun createRoleWrite(name:String,close:Boolean,message:String){val a=action()?:return;if(!planning && !live || busy)return;write(close=close,message=message){publish->repository?.createRole(a.id,name){result->publish(when(result){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->result})}}}
+    /** Template/no-text entry: never owns or resets another open form. */
+    fun createRole(name:String)=createRoleWrite(name,null)
+    private fun createRoleWrite(name:String,owner:RoleCreateSurface?){
+        val a=action()?.id?:return;val generation=session().generation
+        val serial=createSerial;val roleSerial=roleEditorSerial;val targetScreen=screen;val targetPerson=personId
+        if(session().state!=SessionState.READY || (!planning && !live) || busy || repository==null)return
+        fun current()=session().state==SessionState.READY && session().generation==generation && action()?.id==a &&
+            createSerial==serial && roleEditorSerial==roleSerial && screen==targetScreen && personId==targetPerson &&
+            (planning || live) && (owner==null || (createSurface==owner && createAllowed(owner)))
+        interaction();if(!current())return
+        val submitted=name // Immutable submitted input, separate from the model's draft.
+        val job=++createJob;pendingCreateJob=job
+        busy=true
+        if(owner!=null){createError=null;error=null}else templateCreateError=null
+        var delivered=false
+        repository.createRole(a,submitted){result->
+            if(delivered)return@createRole
+            delivered=true
+            if(!current() || pendingCreateJob!=job)return@createRole
+            pendingCreateJob=null;busy=false
+            when(result){
+                is OperationsResult.Rejected->{
+                    if(owner!=null){createError=result.reason;error=result.reason}else templateCreateError=result.reason
+                }
+                is OperationsResult.Value->{
+                    if(result.value.actionId!=a){if(owner!=null){createError=OperationsFailure.NOT_ALLOWED;error=OperationsFailure.NOT_ALLOWED}else templateCreateError=OperationsFailure.NOT_ALLOWED;return@createRole}
+                    if(owner==RoleCreateSurface.NEW_FUNCTION)finishForm()
+                    else if(owner==RoleCreateSurface.ROLES)bindCreate(RoleCreateSurface.ROLES)
+                    else if(owner!=null)dropCreate()
+                    val completedSerial=createSerial;val completedRoleSerial=roleEditorSerial;val completedScreen=screen
+                    fun completedCurrent()=session().state==SessionState.READY && session().generation==generation && action()?.id==a &&
+                        createSerial==completedSerial && roleEditorSerial==completedRoleSerial && screen==completedScreen
+                    refresh()
+                    if(completedCurrent() && owner==RoleCreateSurface.NEW_FUNCTION)onEditFinished(targetPerson)
+                    if(completedCurrent())feedback("${if(owner==RoleCreateSurface.NEW_FUNCTION) "Funktion" else "Rolle"} „${submitted.trim()}“ angelegt")
+                }
+            }
+        }
+    }
     fun editRole(role:Role,delete:Boolean=false) {
         val before=session();val a=action()?.id;val token=request
         interaction()
