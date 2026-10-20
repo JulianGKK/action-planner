@@ -43,7 +43,7 @@ internal fun activeTaskActions(status: TaskStatus): List<TaskStatus> = TaskStatu
 @Composable internal fun ActiveTaskSection(model: TaskModel, people: OperationalBoard, board: TaskBoard) {
     model.error?.let { Text(when (it) {
         OperationsFailure.INVALID -> "Bitte Titel (1–120 Zeichen), Zuständigkeit und Fälligkeit prüfen."
-        OperationsFailure.STALE -> "Die Aufgabe wurde inzwischen geändert. Bitte neu öffnen."
+        OperationsFailure.STALE -> "Die Aufgabe wurde inzwischen geändert. Dein Entwurf bleibt erhalten; bitte bewusst neu laden."
         OperationsFailure.NOT_ALLOWED -> "Im aktuellen Aktionsstatus ist diese Änderung nicht möglich."
         else -> "Die Aufgabe oder Zuordnung ist in dieser Aktion nicht verfügbar."
     }) }
@@ -54,7 +54,7 @@ internal fun activeTaskActions(status: TaskStatus): List<TaskStatus> = TaskStatu
         FormOutlinedButton({ model.showPerson(null) }, enabled = !model.busy) { Text("Alle Aufgaben anzeigen") }
     }
     if (model.form) {
-        PreparationHeading(if (model.selected == null) "Aufgabe hinzufügen" else "Aufgabe bearbeiten")
+        PreparationHeading(if (!model.editingExisting) "Aufgabe hinzufügen" else "Aufgabe bearbeiten")
         TaskForm(model, people)
         return
     }

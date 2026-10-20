@@ -62,6 +62,7 @@ class TaskMutationSqliteTest {
         val runner=TaskMutationBoundary(access,worker,main,sink,{blocks++})
         val dao=HostTaskData(db){afterEvent()}
         var time=10L
+        var clock:()->Long={++time}
         init { exec("INSERT INTO actions VALUES('a','Synthetic','Synthetic action',1,2,0,'ACTIVE','SENSITIVE',NULL)")
             worker.before={assertTrue(mutations.mutationEpoch>0);assertFalse(mutations.ramReuseEnabled)}
         }
@@ -73,7 +74,7 @@ class TaskMutationSqliteTest {
                 lease=true;handle=true
                 try {runBlocking {
                     try {
-                        confirmedTaskTransaction(tx(c),c,p){work(TaskStore(dao,c){++time})}
+                        confirmedTaskTransaction(tx(c),c,p){work(TaskStore(dao,c,clock))}
                     } finally {handle=false;dbCleanup()}
                 }} finally {lease=false;leaseCleanup()}
             }
@@ -146,6 +147,29 @@ class TaskMutationSqliteTest {
         assertEquals(WorkspaceWriteOutcome.ROLLED_BACK,h.reports.last().outcome)
         assertTrue(h.reports.all{it.cleanup==WorkspaceWriteCleanup.COMPLETE})
         assertEquals(0,h.blocks)
+    }
+    @Test fun editAndTransitionRacesUseFullExpectedAndEventsExactlyOnce()=H().use{h->
+        val a=h.create()
+        fun write(work:suspend(TaskStore)->OperationsResult<Task>):OperationsResult<Task>{var r:OperationsResult<Task>?=null;h.submit<Task>({r=it},work);h.worker.drain();h.main.drain();return r!!}
+        val b=(write{it.edit("a",a,a.input().copy(title="Other editor"))} as OperationsResult.Value).value
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),write{it.edit("a",a,a.input().copy(title="Stale form"))})
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),write{it.transition("a",a,TaskStatus.DONE)})
+        assertEquals(b,h.task(a.id));assertEquals(1L,h.count("task_events"))
+        val c=(write{it.transition("a",b,TaskStatus.IN_PROGRESS)} as OperationsResult.Value).value
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),write{it.edit("a",b,b.input().copy(title="Stale edit against transition"))})
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),write{it.transition("a",b,TaskStatus.CANCELLED)})
+        assertEquals(c,h.task(a.id));assertEquals(2L,h.count("task_events"))
+        assertEquals(WorkspaceWriteOutcome.ROLLED_BACK,h.reports.last().outcome)
+    }
+    @Test fun sameMillisecondTaskAbaIsNotAPersistentRevisionProof()=H().use{h->
+        h.clock={7L}
+        fun write(work:suspend(TaskStore)->OperationsResult<Task>):Task{var r:OperationsResult<Task>?=null;h.submit<Task>({r=it},work);h.worker.drain();h.main.drain();assertTrue(r is OperationsResult.Value);return (r as OperationsResult.Value).value}
+        val a=write{it.create("a",TaskInput("A"))}
+        val b=write{it.edit("a",a,TaskInput("B"))};assertEquals(a,write{it.edit("a",b,TaskInput("A"))})
+        val started=write{it.transition("a",a,TaskStatus.CANCELLED)}
+        assertEquals(a,write{it.transition("a",started,TaskStatus.OPEN)})
+        assertTrue(write{it.edit("a",a,TaskInput("Old editor accepted after ABA"))}.title.startsWith("Old"))
+        assertEquals(3L,h.count("task_events"))
     }
     @Test fun taskAndEventBothRollbackOnFailureAndUnconfirmedOutcomeNeverSucceeds() {
         for(at in listOf("begin","event","event-sql","end-before","end-after","rollback")) H().use { h ->

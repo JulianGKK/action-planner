@@ -20,16 +20,25 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     var error by mutableStateOf<OperationsFailure?>(null);private set
     private var createdSelectionId: String? = null
     private var request=0L
+    private var editorExpected:Task?=null
+    private var editorGeneration=0L
+    private var editorActionId:String?=null
+    // UI identity only, never a persisted revision or session authority.
+    var formRevision by mutableStateOf(0L);private set
+    val editingExisting get()=editorExpected!=null
+    private fun dropEditor(){formRevision++;editorExpected=null;editorActionId=null}
+    private fun bindEditor(task:Task?){dropEditor();editorExpected=task;editorGeneration=session().generation;editorActionId=action()?.id}
+
     val writable get()=session().state==SessionState.READY && action()?.let{TaskRules.mayWrite(it.status)}==true
     val deletable get()=writable && action()?.status==ActionStatus.PREPARATION
     fun touch()=interaction()
-    fun clear(){createdSelectionId=null;request++;ownBoard=null;selected=null;form=false;input=TaskInput("");filter=null;closedExpanded=false;busy=false;error=null}
+    fun clear(){dropEditor();createdSelectionId=null;request++;ownBoard=null;selected=null;form=false;input=TaskInput("");filter=null;closedExpanded=false;busy=false;error=null}
     fun refresh(){
         if (refreshWorkspace != null) { request++; refreshWorkspace.invoke(); return }
         val a=action()?.takeIf{session().state==SessionState.READY && TaskRules.mayRead(it.status)}?:return
         val token=++request;val generation=session().generation
         repository?.board(a.id){r->if(token==request && session().state==SessionState.READY && session().generation==generation && action()?.id==a.id){
-            when(r){is OperationsResult.Value->{ownBoard=r.value;reconcileSelection()};is OperationsResult.Rejected->error=r.reason}
+            when(r){is OperationsResult.Value->{if(r.value.actionId==a.id){ownBoard=r.value;reconcileSelection()}else error=OperationsFailure.NOT_FOUND};is OperationsResult.Rejected->error=r.reason}
         }}
     }
     internal fun reconcileSelection() {
@@ -46,50 +55,80 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
         if(current())publish(a.id,current)
     }
     fun add(personId:String?=null,template:TaskTemplate?=null)=guardedInteraction { _,current ->
-        if(writable && !busy){leaveSensitive();if(current()){createdSelectionId=null;selected=null;input=(template?.input()?:TaskInput("")).copy(affectedPersonId=personId);form=true;error=null}}
+        if(writable && !busy){leaveSensitive();if(current()){bindEditor(null);createdSelectionId=null;selected=null;input=(template?.input()?:TaskInput("")).copy(affectedPersonId=personId);form=true;error=null}}
     }
     fun open(t:Task)=guardedInteraction { id,current ->
-        if(!busy && t.actionId==id){leaveSensitive();if(current()){createdSelectionId=null;selected=t;form=false;error=null}}
+        if(!busy && t.actionId==id){leaveSensitive();if(current()){dropEditor();createdSelectionId=null;selected=t;form=false;error=null}}
     }
-    fun edit()=guardedInteraction { _,_ -> if(writable && !busy){selected?.let{input=it.input();form=true;error=null}} }
+    fun edit()=guardedInteraction { _,_ -> if(writable && !busy){selected?.let{bindEditor(it);input=it.input();form=true;error=null}} }
     fun change(i:TaskInput)=guardedInteraction { _,_ -> if(writable && !busy)input=i }
-    fun showPerson(id:String?)=guardedInteraction { _,_ -> if(!busy){createdSelectionId=null;filter=id;closedExpanded=false;selected=null;form=false;input=TaskInput("")} }
+    fun showPerson(id:String?)=guardedInteraction { _,_ -> if(!busy){dropEditor();createdSelectionId=null;filter=id;closedExpanded=false;selected=null;form=false;input=TaskInput("")} }
     fun cancel() = guardedInteraction { _, _ ->
         if (!busy) {
             createdSelectionId = null
             val returnToDetail = action()?.status == ActionStatus.ACTIVE && form && selected != null
-            form = false; if (!returnToDetail) selected = null
+            dropEditor();form = false; if (!returnToDetail) selected = null
             input = TaskInput(""); error = null
         }
     }
     fun backToTasks() = guardedInteraction { _, _ ->
-        if (!busy) { createdSelectionId = null; selected = null; form = false; input = TaskInput(""); error = null }
+        if (!busy) { dropEditor();createdSelectionId = null; selected = null; form = false; input = TaskInput(""); error = null }
     }
     fun toggleClosed() = guardedInteraction { _, _ -> if (!busy) closedExpanded = !closedExpanded }
     fun save() {
         val a = action() ?: return
-        if (!writable || busy) return
+        if (!writable || busy || !form || editorGeneration!=session().generation || editorActionId!=a.id) return
         if (!TaskRules.valid(input)) { error = OperationsFailure.INVALID; return }
-        val old = selected
+        val old = editorExpected
+        val draft = input
         var createdId: String? = null
         write(message = if (old == null) "Aufgabe angelegt" else "Aufgabe gespeichert",
             createdFocus = { if (old == null && action()?.status == ActionStatus.ACTIVE) createdId else null }) { done ->
-            if (old == null) repository?.create(a.id, input) { result ->
+            if (old == null) repository?.create(a.id, draft) { result ->
                 createdId = (result as? OperationsResult.Value)?.value?.id
                 done(unit(result))
-            } else repository?.edit(a.id, old, input) { done(unit(it)) }
+            } else repository?.edit(a.id, old, draft) { done(unit(it)) }
         }
     }
-    fun transition(status:TaskStatus){val a=action()?:return;val t=selected?:return;if(!writable || busy)return;write(message=if(status==TaskStatus.OPEN)"Aufgabe wieder geöffnet" else null){done->repository?.transition(a.id,t,status){done(unit(it))}}}
-    fun delete(){val a=action()?:return;val t=selected?:return;if(!deletable || busy)return;write{done->repository?.delete(a.id,t,done)}}
+    fun transition(status:TaskStatus){val a=action()?:return;val t=(if(form)editorExpected else selected)?:return;if(!writable || busy)return;write(message=if(status==TaskStatus.OPEN)"Aufgabe wieder geöffnet" else null){done->repository?.transition(a.id,t,status){done(unit(it))}}}
+    fun delete(){val a=action()?:return;val t=(if(form)editorExpected else selected)?:return;if(!deletable || busy)return;write{done->repository?.delete(a.id,t,done)}}
+    /** Explicit discard-and-reload only. A normal board/workspace refresh never calls this. */
+    fun reloadEditor()=guardedInteraction { a,_ ->
+        val old=editorExpected
+        if(repository!=null && old!=null && form && writable && !busy && error==OperationsFailure.STALE &&
+            editorGeneration==session().generation && editorActionId==a){
+            val revision=formRevision;val generation=session().generation
+            busy=true;var delivered=false
+            repository.board(a){result->
+                if(!delivered){
+                    delivered=true
+                    if(session().state==SessionState.READY && session().generation==generation && action()?.id==a &&
+                        writable && form && revision==formRevision && editorExpected==old){
+                        busy=false
+                        when(result){
+                            is OperationsResult.Rejected->error=result.reason
+                            is OperationsResult.Value->{
+                                val fresh=result.value.tasks.singleOrNull{it.id==old.id && it.actionId==a}
+                                if(result.value.actionId!=a || fresh==null)error=OperationsFailure.NOT_FOUND
+                                else {bindEditor(fresh);selected=fresh;input=fresh.input();error=null}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     private fun unit(r:OperationsResult<Task>):OperationsResult<Unit> = when(r){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->r}
-    private fun write(message:String?=null,createdFocus:()->String?={null},work:((OperationsResult<Unit>)->Unit)->Unit)=guardedInteraction { _,current ->
+    private fun write(message:String?=null,createdFocus:()->String?={null},work:((OperationsResult<Unit>)->Unit)->Unit)=guardedInteraction { _,_ ->
         if(repository!=null && writable && !busy){
-            busy=true;error=null
-            work{r->if(current()){
+            val revision=formRevision;val generation=session().generation;val actionId=action()?.id
+            busy=true;error=null;var delivered=false
+            work{r->if(!delivered && session().state==SessionState.READY && session().generation==generation &&
+                action()?.id==actionId && formRevision==revision){
+                delivered=true
                 busy=false;when(r){is OperationsResult.Value->{
                     createdSelectionId = createdFocus()
-                    form=false;input=TaskInput("")
+                    dropEditor();form=false;input=TaskInput("")
                     val generation=session().generation;val actionId=action()?.id
                     refresh()
                     if(session().state==SessionState.READY && session().generation==generation && action()?.id==actionId && message!=null)feedback(message)

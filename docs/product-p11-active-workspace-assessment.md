@@ -6785,3 +6785,233 @@ Abschluss: `git diff --check`, `git status -sb`, regulärer WIP-Commit/Push und 
 Remote-SHA-Abgleich. Keine APKs/Schlüssel/Datenbanken/Rohlogs/Credentials/persönlichen
 Pfade/Gerätekennungen einchecken. Danach **STOPP bis zum unabhängigen GitHub-Review**.
 Kein Force-Push, Merge, Release oder vollständige Release-1.0-Freigabe.
+
+## 51. Issue #36 – Editor-Lifecycle-Audit und Task-CAS-Bindung
+
+### 51.1 Ausgangsbefund und geprüfter Datenfluss
+
+Vor Änderungen: Arbeitsbaum sauber; lokaler HEAD und unabhängig über GitHub gelesener
+Remote-HEAD identisch mit `ce1e07304419c21b0cbf4b5e838344bdaaa3a19c`.
+
+**REPRODUZIERT:** Der zunächst gegen den unveränderten Code ausgeführte deterministische
+Port-Hosttest `workspaceRefreshBaselineRebindsExpectedWhileKeepingOldDraft` öffnet Task A,
+bearbeitet dessen Entwurf, liefert Task B über `refresh()` und beobachtet **selected B
+bei unverändertem Entwurf A**. `save()` verwendete `selected` als Expected. Der damalige
+Testdouble nahm diesen Write an. Das ist ein UI-/Port-Ausgangsnachweis, kein SQLite-
+Commitbeweis. Der direkte Codepfad erklärt den CAS-Bypass: `old = selected`, obwohl der
+Entwurf auf A basiert. DB-seitiger Vollvergleich gegen das bereits aktuelle B kann
+so passen und den alten Entwurf akzeptieren.
+
+Das betrifft beide produktiven Refreshwege:
+
+1. `TaskModel.refresh()` nimmt einen vollständigen Repository-Boardread entgegen und
+   ruft `reconcileSelection()` auf.
+2. `ProductViewModel.readWorkspace()`/`loadWorkspace()` publiziert erst nach vollständigem,
+   aktuellem Read einen `WorkspaceSnapshot` (Aktion/Generation, Personen, Operations,
+   Tasks und weitere angeforderte Bereiche) und ruft ebenfalls `tasks.reconcileSelection()`.
+   `TaskModel.board` verwendet dabei den gelieferten Workspace statt `ownBoard`.
+
+`reconcileSelection()` aktualisiert den gewählten Task anhand der ID. Vor dem Fix war
+dieses Anzeigeobjekt zugleich der einzige Edit-Expected. Weder `WorkspaceSnapshot` noch
+die vollständige Readerpublication war damit eine Editor-CAS-Bindung. Kein Umbau dieses
+Workspace-/Navigationspfads in diesem Slice.
+
+### 51.2 IMPLEMENTIERT – minimaler Task-Lifecycle-Fix
+
+`TaskModel` hält jetzt **einen separaten privaten `editorExpected`** und die beim Öffnen
+bestehende Action-/READY-Generation. `edit()` bindet ihn an den unveränderlichen Task A
+und initialisiert den Entwurf. `selected` darf weiterhin als Anzeigesnapshot auf B
+wechseln oder nach Löschung fehlen. Refresh, Reconciliation und Hintergrundantworten
+ersetzen aber weder Expected noch Entwurf. Auch bei fehlender aktueller Auswahl bleibt
+der offene Editor ein Edit, niemals versehentlich ein Create.
+
+`save()` verlangt einen gültigen gebundenen Formularzustand und reicht **A plus separaten
+TaskInput-Entwurf** an den unveränderten `ProductTaskRepository.edit` weiter. Ein Task B
+führt dort über `TaskStore.existing` zum bestehenden vollständigen SQL-CAS: STALE,
+kein UPDATE, kein Zusatzereignis. Der zugehörige Nachfolgetest heißt
+`workspaceRefreshKeepsOriginalEditorExpectedAndNewerPersistedTask`. Schichtenbeweis:
+Porttest prüft tatsächlich übergebenes Expected A/erhaltenen Entwurf; unabhängiger echter
+SQLite-Test prüft die DB-Verweigerung gegen B und den erhaltenen Datensatz.
+Keine neue Taskrevision, SQL-Abfrage, Sicherheitsautorität oder Writerregel.
+
+STALE hält Formular und Entwurf offen, ohne Erfolgsmeldung/Retry. PREPARATION- und
+ACTIVE-Ansicht erklären den Konflikt. Nur „Entwurf verwerfen und Aufgabe neu laden“
+verwendet nach dem sichtbaren Hinweis auf Verlust von Fälligkeit/Zuordnungen den
+**bestehenden** autorisierten vollständigen Task-Boardread. Kein neuer unbegrenzter
+Fallback, keine stille Teilliste. Dieser Legacy-Read ist weiterhin kein kompakter
+Detailreader oder neues Speicher-/Performanceversprechen. Erst gültiges vollständiges
+Resultat derselben Aktion/Task-ID ersetzt Expected, Auswahl und **alle** Inputfelder.
+Readfehler, fehlender/fremder Task ersetzen nichts. Kein automatischer Reload nach STALE.
+
+Eine lokale `formRevision` bindet die Formularinstanz, nicht Datenbank oder Session.
+`TaskForm` verwendet `key(formRevision)` für **den gesamten Feldbaum**. Nur neue bewusste
+Formularbindung, Verlassen/Clear oder erfolgreicher expliziter Reload ändern diese
+Identität. Normale Board-/Workspace-Refreshes ändern sie nicht. Dadurch werden beim
+Reload Titel, Priorität, Zuständigkeit, betroffene Person, Fälligkeit und die lokalen
+`remember`-Zustände für Datum/aufgeklappte Auswahl zusammen ersetzt. Ein unverändert
+alter Compose-Datumsstring kann nicht absichtlich über denselben Feldbaum mit dem neuen
+TaskInput kombiniert werden. Autofokus richtet sich nach Create/Edit-Bindung, nicht
+nach einer eventuell durch Refresh verschwundenen `selected`-Anzeige.
+
+Writecallbacks sind an Formularidentität, Action und READY-Generation gebunden und
+werden einmalig verarbeitet. Eine reine Read-Requestnummer darf keinen ansonsten
+aktuellen Commitcallback während eines Hintergrundrefreshes verlieren. Ein neuer
+Editor/Cancel/Navigation/Clear verwirft hingegen die alte Identität. Reloadcallbacks
+werden ebenfalls einmalig und nur für ihren noch gültigen Editor übernommen.
+Bestehendes `ProductViewModel.clearPersons()` ruft `tasks.clear()` bei Lock/BLOCKED,
+Generation- und Actionwechsel auf. Keine allgemeine Navigationsänderung.
+
+Nur ein expliziter Expected-Taskverweis zusätzlich zum separaten Entwurf; keine Registry,
+Seiten-/Historienkopie oder neue Freigabe für Produkt-RAM-Retention. Das ersetzt keine
+spätere gemeinsame Owner-/Budgetprüfung in #37. 8+8 MiB bleiben unverändert.
+
+### 51.3 Vollständige Editor-Matrix – Ausgangssnapshot und Entwurf
+
+Die Einstufungen beziehen sich **nur auf den genannten getesteten Vertrag**, nicht auf
+vollständige ABA-Sicherheit, globale Writerabdeckung oder Releasefreigabe. `Clear` meint
+die bestehenden Produkt-Lifecyclehooks; Repositorypublication verlangt weiterhin gültige
+Storage-Autorität und bestätigten Outcome/Cleanup. Navigation/Clear darf Entwürfe bewusst
+verwerfen, sie darf sie nicht heimlich mit einem frischen Expected weiterverwenden.
+
+| Produktpfad | Ausgangssnapshot / Zeitpunkt der Bindung | Entwurf | Refresh / Navigation / Expected |
+|---|---|---|---|
+| Action erstellen | Kein vorhandener Expected; `creating` | Lokale ActionForm-Strings, Start-/Enddatum | Formfelder per `remember(existing?.id)`; Navigation beendet die Ansicht. Createcallback hat selbst keine Request-/Editorfence. |
+| Action bearbeiten | `editing = selected` bei `ProductViewModel.edit()`; vollständige Action | Lokale ActionForm-Felder | Workspace ersetzt `editing` nicht; bewusstes erneutes `edit()` kann einen neuen Wert gleicher ID einsetzen, während `remember(id)` alte Felder behält. Allgemeine Callbackzugehörigkeit offen. |
+| Actionstatus bestätigen | `confirming = selected` beim Öffnen; SQL vergleicht **Status**, nicht komplette Action | Nächster Status, kein Textentwurf | Refresh ersetzt `confirming` nicht. `changed()` entfernt Bestätigung auch bei Rejection. Aktuelle Statusfolge monoton; Metadatenänderungen bei gleichem Status sind kein Konflikt dieses engeren Vertrags. |
+| Person erstellen | Kein vorhandener Expected | Lokaler Pseudonymstring | Workspace-Read ersetzt keinen Editorwert; `loadPersons()` ist dagegen ein bewusst destruktiver Reset, auch aus anderen erfolgreichen Actioncallbacks erreichbar. |
+| Person bearbeiten | Vollständiges `editingPerson` beim Öffnen, §48 | Pseudonym per `remember(id, personEditorRevision)` | Normales `readWorkspace` ändert Expected nicht. Expliziter Reload ändert Snapshot und Revision; Navigation/Clear verwirft. `loadPersons()` bleibt gesonderte Resetgrenze. |
+| Rolle erstellen | Kein vorhandener Expected | Zwei Oberflächen: lokaler Rollenname | Allgemeines `RoleManagement` setzt `name=""` unmittelbar nach `createRole(name)`; PreparationRoles wartet mit `submitted`/Effekt auf `!busy && error==null`. Kein einheitlicher Create-Formularvertrag. |
+| Rolle umbenennen | Vollständige `editingRole` beim Öffnen, §50 | Modellgebundener `roleName` | Boardrefresh verändert Expected/Draft nicht. Expliziter Reload ersetzt beides; Cancel/Clear entfernt. Callback zusätzlich an Editorzugehörigkeit gebunden. |
+| Rolle löschen | Vollständige `deletingRole` beim Öffnen, §50 | Explizite Bestätigung für ursprünglichen Namen | Liste kann neu sein, Bestätigung bleibt alt; Reload ersetzt nur nach Klick und verlangt erneute Deletebestätigung. Clear entfernt. |
+| Rollenplanung | `ExpectedPersonRolePlan` beim `plan()`, unveränderliche kopierte Menge, §49 | Rollenmenge und Hauptfunktion getrennt | Refresh ersetzt Expected nicht; expliziter Reload ersetzt ganzen Plan und Rollenoptionen; Clear/Cancel verwirft. |
+| Operations-Livestatus / Funktion | `expected: PersonOperationalState` beim `update()`/`changeFunction()` | Status, Rolle, Ort im Modell | Boardrefresh ersetzt Expected nicht. Keine explizite formularerhaltende Reloadfunktion; Abbrechen/Neuöffnen. Gemeinsame Operations-Readrequest kann ausstehenden Writecallback ungültig machen. |
+| Task erstellen | Kein vorhandener Expected; gebundene Action/Generation beim `add()` | Modell-TaskInput plus lokaler Datumsstring | Keine heimliche Bindung an neu selektierten Task; neue Formularidentität setzt lokale Felder zurück. Navigation/Clear verwirft. |
+| Task bearbeiten | Privater vollständiger `editorExpected` beim `edit()`, jetzt getrennt von `selected` | TaskInput und Datums-/Auswahlzustände unter Formularidentität | Reconcile/Refresh aktualisiert nur Anzeige. Nur expliziter Reload ersetzt Expected, Input und Feldidentität zusammen. |
+| Taskstatus ändern | Beim bewussten Quickaction-Klick aktuell ausgewählter Task; falls Formular offen, dessen eingefrorener Expected | Zielstatus, kein eigener Texteditor | Detailauswahl wird bei Refresh aktualisiert. SQL-Vollvergleich nach Klick, aber kein eigener eingefrorener Bestätigungsdialog für das vor dem Klick sichtbare Detail. |
+| Task löschen | Beim Klick aktuell ausgewählter Task; bei offenem Formular dessen eingefrorener Expected | Kein eigener Löschdialog im bisherigen Produkt | PREPARATION-only. SQL-Vollvergleich, aber keine dem Role-Delete vergleichbare persistierte UI-Bestätigungsidentität. Navigation/Clear entfernt Auswahl. |
+
+### 51.4 Editor-Matrix – Konflikt, Publication und Bewertung
+
+Für alle integrierten Mutationen gilt: COMMITTED erst nach äußerem Abschluss,
+ROLLED_BACK nur nach bestätigtem Rollback, UNKNOWN/Cleanupfehler ohne Erfolgscallback
+und ohne automatischen Retry. Product-Lock/BLOCKED/Clear entfernt sensible Formzustände;
+das ist kein Beweis, dass jeder ältere UI-Callback innerhalb derselben READY-Generation
+zusätzlich durch eine eigene Editoridentität gefenct ist. Genau diese Unterschiede
+werden nachfolgend getrennt ausgewiesen.
+
+| Pfad | STALE / Entwurf / ausdrücklich neu laden | Erfolg / Lock / UNKNOWN und gewöhnliches Risiko | Klasse |
+|---|---|---|---|
+| Action Create | STALE nicht anwendbar; sonst kein allgemeines strukturiertes Create-Rejectionfeedback | Erfolgscallback beendet `creating`; Repo ist outcome-/scopegeschützt, UIcallback selbst nicht gegen spätere Navigation/Editorwahl gefenct. | PARTIALLY SAFE; CAS NOT APPLICABLE |
+| Action Edit | Rejection erhält `editing`; alte lokalen Felder bleiben. Cancel und bewusst neu öffnen, kein eigener Reloadrevision-Schritt | SQL-Vollvergleich korrekt; `changed()` ist nicht Request-/Editor-gebunden. `edit()` gleicher ID + remember(id) bleibt präziser Restbefund, nicht hier repariert. | PARTIALLY SAFE |
+| Actionstatus | STALE sichtbar, Bestätigung wird jedoch geschlossen; neu öffnen nötig | Monotoner erwarteter Status verhindert Status-ABA im erlaubten Lifecycle. Kein vollständiger Action-Identitätsvergleich/Editorcallbackvertrag. | PARTIALLY SAFE; Status-CAS SAFE FOR TESTED CONTRACT |
+| Person Create | Invalid/Duplicate erhält Formular; kein Expected-Reload nötig | Erfolg erst nach Repoantwort, gefenceter Personrequest; destruktive fremde `loadPersons()`-Resets gesondert prüfen. | PARTIALLY SAFE; CAS NOT APPLICABLE |
+| Person Edit | §48: STALE erhält Entwurf, expliziter Reload ersetzt revisioniert; fehlgeschlagener Read erhält Entwurf | Gewöhnlicher Lost Update verhindert; eigener Request-/Generation-/Action-/Reloadschutz getestet. Destruktiver übergreifender Reset kein universeller Editorowner. | SAFE FOR TESTED CONTRACT (§48), ABA offen |
+| Role Create | Allgemeine Oberfläche verwirft Namen schon am Klick, auch bei Rejection; Preparation wartet auf Ergebnis | Nachweisbarer Entwurfsverlust trotz fehlendem Commit/Publication in allgemeiner Oberfläche. Keine neue Korrektur in diesem Slice. | UNSAFE / OPEN für Entwurferhalt; CAS NOT APPLICABLE |
+| Role Rename | §50: STALE erhält Namen; expliziter Reload oder bewusst verwerfen | Vollwert-CAS, Editorserial/Generations-/Actionschutz und Once-Callbacks getestet. Operations-Refresh/Write-Requestüberschneidung bleibt allgemeiner Livenessrestpunkt. | SAFE FOR TESTED CONTRACT (§50), ABA offen |
+| Role Delete | §50: STALE/IN_USE erhält Bestätigung; Reload löscht nicht automatisch | Vollwert-CAS und Referenzgates; alte Dialoge löschen geänderte Rollen nicht. | SAFE FOR TESTED CONTRACT (§50), ABA offen |
+| Rollenplan | §49: STALE erhält Menge/Primary, nur ausdrücklicher Reload ersetzt sie | Vollwert-CAS und immutable Expected getestet; Operations-Request-Liveness bleibt gesondert offen. | SAFE FOR TESTED CONTRACT (§49), ABA offen |
+| Operations live/Funktion | STALE zeigt bisher „Lage geändert, neu öffnen“; Entwurf bleibt, Cancel/Neuöffnen möglich | SQL-Vollvergleich schützt gewöhnliche veraltete Writes. Kein einheitlicher Reload-/Formidentitäts-/Editorcallbackvertrag; Readrefresh kann Callback verlieren/busy belassen. | PARTIALLY SAFE |
+| Task Create | Fehler erhält Input/Feldinstanz; kein Existing-Expected-Reload | Neue Formular-/Action-/Generationsbindung und Once-Publication; UNKNOWN ohne optimistischen Abschluss, Clear verwirft. | SAFE FOR TESTED CONTRACT; CAS NOT APPLICABLE |
+| Task Edit | Jetzt STALE mit Entwurferhalt, ausdrücklich bestätigter Reload aller Felder, Fehler erhalten Entwurf | A bleibt Expected trotz Anzeige B; SQL verweigert A. Alte Reload-/Writecallbacks verändern keinen neuen Editor. Keine gemessene native Compose-Fokusfreigabe. | SAFE FOR TESTED CONTRACT dieses Slices; ABA offen |
+| Taskstatus | STALE ohne automatischen Retry; Detail muss bewusst neu geöffnet werden, kein Textentwurf | Vollwert-CAS und TaskEvent atomar/exactly once getestet. Aktualisierte Detailauswahl vor Klick ist kein eingefrorener Statusdialog. | PARTIALLY SAFE UI; DB SAFE FOR TESTED CONTRACT |
+| Taskdelete | STALE ohne Retry; vorhandene Auswahl kann bewusst neu geöffnet werden | SQL-CAS/PREPARATION/FK-Cascade getestet. Keine Role-Delete-artige Bestätigung, mögliche Anzeige-/Klickintentfrage bei Refresh bleibt UI-Arbeit. | PARTIALLY SAFE |
+
+### 51.5 GETESTET – Task-Expected, Events und Grenzen des UI-Nachweises
+
+Hosttests prüfen Refresh A→B bei erhaltenem Entwurf/Expected A, SQL-STALE mit erhaltenem B,
+bewussten B-Reload mit neuem Expected und erfolgreichem Folgewriter, alle TaskInputfelder,
+Formularrevision, fehlgeschlagenen/missing/foreign Reload, Lock/Generation/Action-Clear,
+verspätete/doppelte Callbacks und Readrefresh während ausstehendem Writecallback.
+Letzterer darf einen aktuellen gültigen Commit nicht allein wegen geänderter Readnummer
+verlieren. Ein neuer Editor darf durch diesen Callback trotzdem nicht geändert werden.
+
+Echte SQLite-/Schema-11-Tests mit unverändertem `TaskStore`/gemeinsamer Writergrenze
+prüfen Edit gegen Transition, Transition gegen Edit und zwei alte Transitionen.
+**Genau ein Event je erfolgreicher Statusänderung**, kein Zusatzereignis bei Edit,
+STALE oder Rollback. Bestehende UNKNOWN-, Event-SQL-Abbruch-, Cleanup-, Revoke-vor/nach-
+Commit-, doppelte Worker-/Maincallback- und Pendingproofs laufen unverändert mit.
+Kein automatischer Retry. Native Room-/Key-/Bindingrennen bleiben im Host simuliert.
+
+Der erste neue ABA-Test verwendete fälschlich IN_PROGRESS→OPEN und wurde von der
+bestehenden Fachregel als INVALID abgelehnt. Korrigiert wurde ausschließlich die
+Testsequenz zu OPEN→CANCELLED→OPEN; keine gelockerten Assertions oder Produktregeln.
+
+`TaskStorageTest.frozenEditorExpectedRejectsNewerTaskAndTransitionWithoutExtraEvents`
+ist für die tatsächlichen Repositories/Room/SQLCipher zusätzlich vorbereitet und
+**nur offline kompiliert**. Kein Gerätetest. Compose-Fälligkeits-/Auswahlzustände werden
+durch den expliziten `key(formRevision)`-Feldbaum und Hostprüfungen der unveränderten/
+geänderten Formidentität abgesichert. **Kein gerenderter Android-Fokus-/IME-/Datumstest
+wurde ausgeführt**; dieser bleibt Integrationstestbedarf, kein behaupteter Runtime-PASS.
+Keine neue Testdependency oder Geräteinstrumentation.
+
+Gezielt:
+`./gradlew :app:testDebugUnitTest --tests '*TaskModelTest' :data:testDebugUnitTest --tests '*TaskMutationSqliteTest' --tests '*CoreWriterIntegrationTest' --offline`.
+Vollständig:
+`./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline`.
+**648 App + 781 Data + 4 Security = 1433 Hosttests, 0 Fehler, 0 Skips.**
+Domain-Testtask ohne Testquellen; keine zusätzlichen Tests gezählt. Der Abschlusslauf
+mit den zusätzlichen direkten Workspace-/verschwundenen Auswahlproofs ist ebenfalls
+erfolgreich. Offline-Appbuild, beide Androidtest-Kompilationen, Architekturcheck und
+Produkt-/Demo-Manifestchecks erfolgreich. Compilerwarnungen bleiben sichtbar; keine
+Fehler unterdrückt. Keine Geräteinstallation oder connectedAndroidTest.
+
+### 51.6 ABA-Risikomatrix und Migrationsfolgen – keine Implementierung
+
+| Modell/Vertrag | Befund unter Schema 11 | Nachweis / notwendige spätere Entscheidung |
+|---|---|---|
+| Person | Tatsächlich reproduziertes A→B→A mit gleichem vollständigem Wert | Negativtest §48; persistierte monotone Personenrevision nötig für vollständigen ABA-Schutz. |
+| Role | Tatsächlich reproduziertes A→B→A; betrifft Rename und alte Deletebestätigung | Negativtest §50; monotone Rollenrevision einschließlich Rename/Delete/Recreate-Identität separat entscheiden. |
+| PersonRolePlan | Tatsächlich reproduziert; leere fehlende/gespeicherte Planung fachlich gleich | §49; Planrevision muss auch leere Pläne und alle Zuweisungswriter abdecken, darf beim Löschen nicht unbemerkt wieder bei altem Wert beginnen. |
+| Task | Vollzustand kann trotz Edit und Statuszyklus wieder gleich werden | Neuer echter SQLite-Negativtest mit **injiziertem gleichem Millisekundenwert**; kein Durchsatzbeweis dreier Writes innerhalb einer realen Millisekunde. `updatedAt=now()` ist nicht verbindlich monoton. Events sind erhalten, aber nicht Teil des Task-CAS. Persistierte Revision müsste Edit/Transition/weitere Taskwriter umfassen. |
+| Action, vollständiger Edit | Tatsächlich mit SQLite reproduziert: Titel B und zurück A, createdAt unverändert | Action hat keinen bei Edit fortgeschriebenen Revisionswert. Voll-ABA erfordert eigene persistierte Revision aller relevanten Actionwrites. |
+| Action, nur Statusadvance | Status-ABA durch monotone erlaubte Fachfolge ausgeschlossen | Bestehender Expected-Status-Vertrag schützt genau diese Folge. Kein Beweis vollständiger Actionidentität oder UIzustimmung zu zwischenzeitlich geänderten Metadaten. Keine pauschale Revision nur für unmöglichen Rückwärtsstatus nötig. |
+| PersonOperationalState | Vollwert-ABA mit gleichem injiziertem `updatedAt` in SQLite reproduziert | Neuer Corewriter-Negativtest; Uhrzeit ist keine garantierte Revision. Monotone persistierte Personen-Operationsrevision nötig für vollständigen ABA-Schutz über alle Snapshotwriter. |
+
+Die neuen Negativtests verwenden die vorhandenen Store-Clock-/Binding-Simulationen
+innerhalb echter SQL-Transaktionen. Sie beweisen die fehlende vertragliche Revision,
+keine neue Autorität. Sichere spezielle Verträge sind weiterhin volle Expected-Gleichheit
+gegen gewöhnliche Konflikte, atomare Status/Eventwrites, monotone Actionstatusfolge
+und getestete Lifecyclefences – nicht universelle ABA-Sicherheit.
+
+Eine spätere Entscheidung benötigt Schema-/Migrationfreigabe, Initialisierung alter
+Datensätze, atomare Fortschreibung sämtlicher beteiligter Writer, Overflow-/Recreate-/
+Delete-Semantik sowie Revision in Detail-/Seiten-/Formularverträgen. UI-Zähler, Uhrzeiten
+oder flüchtige Mutationsepochen sind kein Ersatz. **Keine Migration implementiert,
+Schema 11 unverändert.**
+
+### 51.7 Priorisierte Restpunkte und Sicherheitsgrenzen
+
+1. **UNSAFE / OPEN:** CreateRole-Entwurferhalt in beiden Oberflächen vereinheitlichen;
+   besonders unmittelbares `name=""` in allgemeinem RoleManagement beseitigen. Eigener
+   Integrationsslice mit bestätigter Publication/Fehler-/UNKNOWN- und Lifecycleproofs.
+2. **PARTIALLY SAFE:** Actionform gleicher ID/remember-Felder, Action-Create/Edit/Status-
+   Callbackzugehörigkeit und destruktive fremde `loadPersons()`-Resets prüfen. Dazu
+   Operations-Live-Reload-/Formidentität und gemeinsame Read-/Write-Request-Liveness.
+   Keine stillschweigende umfassende Editorfreigabe aus bestehenden DB-CAS ableiten.
+3. Task-Quickaction-/Delete-Intent bei aktualisierter Detailauswahl sowie tatsächliche
+   Android-Compose-Fokus-/Datum-/IME- und Fehlerdarstellung nach Integration nachweisen.
+4. Persistierte Revisionen/ABA als gesonderte Architektur-/Migrationsentscheidung.
+
+[#35](https://github.com/JulianGKK/action-planner/issues/35): gemeinsame Writergrenze
+unverändert; übrige Familien §46/47 **UNWIRED / NOT SAFE FOR RAM REUSE**.
+[#36](https://github.com/JulianGKK/action-planner/issues/36): Task-Expected-Minimalfix und
+Audit **IMPLEMENTIERT / GETESTET** im genannten Hostvertrag; Resteditoren/ABA offen.
+[#37](https://github.com/JulianGKK/action-planner/issues/37): gemeinsamer Snapshotowner
+**NOCH NICHT ANGEBUNDEN**, keine RAM-Hits oder Cacheaktivierung.
+[#38](https://github.com/JulianGKK/action-planner/issues/38): keine Navigationseinbindung
+oder Performancefreigabe; native UI-/Lazy-/Fokusnachweise bleiben Integration.
+[#32](https://github.com/JulianGKK/action-planner/issues/32): unabhängiger Cursor-/Cleanup-
+**BLOCKER** bleibt: `SQLCipherStatement.close()` schließt Cursor nicht explizit;
+Hostcleanup/FD-PASS beweisen keine vollständige native Cursorfreigabe.
+
+SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink, B2Driver, Schema 11,
+180 s absolut/30 s READY idle und 8+8-MiB-Budget unverändert. Keine zweite Autorität oder
+Snapshotowner. Keine Geräteinstallation/Instrumentation oder Änderung installierter Apps.
+Geändert: TaskModel.kt, TaskScreen.kt, ActiveTasks.kt, TaskModelTest.kt,
+TaskMutationSqliteTest.kt, CoreWriterIntegrationTest.kt (zusätzliche ABA-Proofs),
+TaskStorageTest.kt (offline vorbereitet) und dieser Abschnitt. Keine pauschalen anderen
+Writer-/Editorumbauten, kein Produktupdate. Abschluss mit Diff-/Statusprüfung, regulärem
+WIP-Commit/Push und unabhängigem Remote-SHA-Abgleich. Keine APKs, Schlüssel, Datenbanken,
+Rohlogs, Credentials, persönlichen Pfade oder Gerätekennungen einchecken.
+Danach **STOPP bis zum unabhängigen GitHub-Review**. Kein Force-Push, Merge, Release oder
+vollständige Editor-/Release-1.0-Freigabe.

@@ -123,6 +123,16 @@ class TaskStorageTest {
             if(TaskRules.mayDelete(s)){assertTrue(deletion is OperationsResult.Value);use(i){assertTrue(it.tasks().events("a").none{e->e.taskId==t.id})}}else rejected(deletion,OperationsFailure.NOT_ALLOWED)
         }
     }
+    @Test fun frozenEditorExpectedRejectsNewerTaskAndTransitionWithoutExtraEvents(){
+        val i=fixture();val r=repo(i);val a=create(i)
+        var b:Task?=null;r.edit("a",a,a.input().copy(title="New writer")){b=value(it)}
+        r.edit("a",a,a.input().copy(title="Old form")){rejected(it,OperationsFailure.STALE)}
+        assertEquals(b,board(i).tasks.single());assertEquals(1,board(i).events.size)
+        var c:Task?=null;r.transition("a",b!!,TaskStatus.IN_PROGRESS){c=value(it)}
+        r.edit("a",b!!,b!!.input().copy(title="Old edit after transition")){rejected(it,OperationsFailure.STALE)}
+        r.transition("a",b!!,TaskStatus.DONE){rejected(it,OperationsFailure.STALE)}
+        assertEquals(c,board(i).tasks.single());assertEquals(2,board(i).events.size)
+    }
     @Test fun crossActionAndExclusiveAssignment(){
         val i=fixture();val r=role(i,"b");val t=create(i)
         for(input in listOf(TaskInput("x",assigneePersonId="other"),TaskInput("x",assigneeRoleId=r.id),TaskInput("x",affectedPersonId="other"))){

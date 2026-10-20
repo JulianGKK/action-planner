@@ -11,17 +11,90 @@ class TaskModelTest {
     private var onInteraction:()->Unit={}
     private var onLeaveSensitive:()->Unit={}
     private class Repo:TaskRepository {
-        var writes=0;var input:TaskInput?=null;var deferred=false
+        var deferWrites=false;var pending:((OperationsResult<Task>)->Unit)?=null
+        var writes=0;var expected:Task?=null;var input:TaskInput?=null;var deferred=false
         var callback:((OperationsResult<TaskBoard>)->Unit)?=null
         var tasks=listOf(Task("t","a","EA kontaktieren",TaskPriority.HIGH,TaskStatus.OPEN,null,"r","motte",null,null,1,1,null))
         override fun board(actionId:String,publish:(OperationsResult<TaskBoard>)->Unit){if(deferred)callback=publish else publish(OperationsResult.Value(TaskBoard(actionId,tasks,emptyList())))}
         override fun create(actionId:String,input:TaskInput,publish:(OperationsResult<Task>)->Unit){writes++;this.input=input;val t=tasks.first().copy(id="new",title=input.title,affectedPersonId=input.affectedPersonId);tasks=tasks+t;publish(OperationsResult.Value(t))}
-        override fun edit(actionId:String,expected:Task,input:TaskInput,publish:(OperationsResult<Task>)->Unit){writes++;this.input=input;val t=expected.copy(title=input.title);tasks=tasks.map{if(it.id==t.id)t else it};publish(OperationsResult.Value(t))}
+        override fun edit(actionId:String,expected:Task,input:TaskInput,publish:(OperationsResult<Task>)->Unit){writes++;this.expected=expected;this.input=input;if(deferWrites){pending=publish;return};if(tasks.singleOrNull{it.id==expected.id}!=expected)publish(OperationsResult.Rejected(OperationsFailure.STALE)) else {val t=expected.copy(title=input.title,priority=input.priority,assigneePersonId=input.assigneePersonId,assigneeRoleId=input.assigneeRoleId,affectedPersonId=input.affectedPersonId,dueAt=input.dueAt);tasks=tasks.map{if(it.id==t.id)t else it};publish(OperationsResult.Value(t))}}
         override fun transition(actionId:String,expected:Task,status:TaskStatus,publish:(OperationsResult<Task>)->Unit){writes++;val t=TaskRules.transition(expected,status,5)!!;tasks=tasks.map{if(it.id==t.id)t else it};publish(OperationsResult.Value(t))}
         override fun delete(actionId:String,expected:Task,publish:(OperationsResult<Unit>)->Unit){writes++;tasks=tasks.filterNot{it.id==expected.id};publish(OperationsResult.Value(Unit))}
     }
     private val repo=Repo()
     private val model=TaskModel(repo,{session},{action},{interactions++;onInteraction()},{onLeaveSensitive()})
+    @Test fun workspaceRefreshKeepsOriginalEditorExpectedAndNewerPersistedTask(){
+        model.refresh();val a=repo.tasks.first();model.open(a);model.edit()
+        model.change(model.input.copy(title="Old draft"))
+        val b=a.copy(title="Other writer",updatedAt=2);repo.tasks=listOf(b);model.refresh()
+        assertEquals(b,model.selected);assertEquals("Old draft",model.input.title)
+        model.save();assertEquals(a,repo.expected);assertEquals(OperationsFailure.STALE,model.error);assertEquals(b,repo.tasks.single());assertEquals("Old draft",model.input.title)
+    }
+    @Test fun onlyExplicitReloadReplacesExpectedAllInputFieldsAndComposeIdentity(){
+        model.refresh();val a=repo.tasks.first();model.open(a);model.edit()
+        val revision=model.formRevision
+        val draft=a.input().copy(title="Draft",dueAt=100,priority=TaskPriority.LOW,assigneeRoleId=null,assigneePersonId="p",affectedPersonId=null)
+        model.change(draft)
+        val b=a.copy(title="New",priority=TaskPriority.NORMAL,assigneeRoleId=null,assigneePersonId="other",affectedPersonId="p",dueAt=200,updatedAt=2)
+        repo.tasks=listOf(b);model.refresh();assertEquals(revision,model.formRevision);assertEquals(draft,model.input)
+        model.save();assertEquals(a,repo.expected);assertEquals(OperationsFailure.STALE,model.error)
+        model.reloadEditor();assertEquals(b.input(),model.input);assertTrue(model.formRevision>revision)
+        model.change(model.input.copy(title="Confirmed new draft"));model.save()
+        assertEquals(b,repo.expected);assertEquals("Confirmed new draft",repo.tasks.single().title);assertFalse(model.form)
+    }
+    @Test fun failedReloadMissingOrForeignTaskPreservesDraftAndRevision(){
+        for(kind in listOf("failure","missing","foreign")){
+            model.clear();repo.deferred=false;model.refresh();val a=repo.tasks.first();model.open(a);model.edit()
+            model.change(model.input.copy(title="Draft",dueAt=300));repo.tasks=listOf(a.copy(updatedAt=a.updatedAt+1));model.save()
+            val draft=model.input;val revision=model.formRevision;repo.deferred=true;model.reloadEditor()
+            repo.callback!!(when(kind){"failure"->OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED);"missing"->OperationsResult.Value(TaskBoard("a",emptyList(),emptyList()));else->OperationsResult.Value(TaskBoard("b",listOf(a.copy(actionId="b")),emptyList()))})
+            assertEquals(draft,model.input);assertEquals(revision,model.formRevision);assertFalse(model.busy)
+        }
+    }
+    @Test fun lateDuplicateReloadCannotReplaceAnotherEditorOrItsDueDraft(){
+        model.refresh();val a=repo.tasks.first();model.open(a);model.edit();repo.tasks=listOf(a.copy(updatedAt=2));model.save()
+        repo.deferred=true;model.reloadEditor();val old=repo.callback!!
+        model.clear();repo.deferred=false;model.refresh();model.open(repo.tasks.first());model.edit()
+        model.change(model.input.copy(title="New editor",dueAt=400));val revision=model.formRevision
+        old(OperationsResult.Value(TaskBoard("a",listOf(a),emptyList())))
+        assertEquals("New editor",model.input.title);assertEquals(400L,model.input.dueAt);assertEquals(revision,model.formRevision)
+    }
+    @Test fun readRefreshWhileWritePendingDoesNotRebindOrLoseCommitCallback(){
+        model.refresh();val a=repo.tasks.first();model.open(a);model.edit();model.change(model.input.copy(title="Submitted"))
+        repo.deferWrites=true;model.save();val callback=repo.pending!!
+        model.refresh();assertTrue(model.busy);assertEquals(a,repo.expected)
+        callback(OperationsResult.Value(a.copy(title="Submitted")));assertFalse(model.busy);assertFalse(model.form)
+        model.open(a);model.edit();model.change(model.input.copy(title="New draft"));val revision=model.formRevision
+        callback(OperationsResult.Value(a));assertEquals("New draft",model.input.title);assertEquals(revision,model.formRevision)
+    }
+    @Test fun lockGenerationActionChangesRejectReloadAndWritePublication(){
+        for(kind in listOf("lock","generation","action"))for(reload in listOf(false,true)){
+            session=SessionSnapshot(SessionState.READY,session.generation+1);action=action.copy(id="a")
+            model.clear();repo.deferred=false;repo.deferWrites=false;model.refresh();val a=repo.tasks.first();model.open(a);model.edit()
+            if(reload){repo.tasks=listOf(a.copy(updatedAt=a.updatedAt+1));model.save();repo.deferred=true;model.reloadEditor()}
+            else {repo.deferWrites=true;model.save()}
+            val oldRead=repo.callback;val oldWrite=repo.pending
+            when(kind){"lock"->session=SessionSnapshot(SessionState.LOCKED,session.generation+1);"generation"->session=SessionSnapshot(SessionState.READY,session.generation+1);else->action=action.copy(id="b")}
+            model.clear()
+            if(reload)oldRead!!(OperationsResult.Value(TaskBoard("a",listOf(a),emptyList()))) else oldWrite!!(OperationsResult.Value(a))
+            assertFalse(model.form);assertEquals(TaskInput(""),model.input);assertNull(model.selected)
+        }
+    }
+    @Test fun suppliedWorkspaceReconciliationCannotReplaceEditorExpected(){
+        val a=repo.tasks.first();var workspace=TaskBoard("a",listOf(a),emptyList())
+        val editor=TaskModel(repo,{session},{action},{},{},suppliedBoard={workspace},refreshWorkspace={})
+        editor.open(a);editor.edit();editor.change(a.input().copy(title="Workspace draft"))
+        val b=a.copy(title="Workspace B",updatedAt=2);repo.tasks=listOf(b);workspace=TaskBoard("a",listOf(b),emptyList())
+        editor.reconcileSelection();assertEquals(b,editor.selected)
+        editor.save();assertEquals(a,repo.expected);assertEquals(OperationsFailure.STALE,editor.error)
+        assertEquals("Workspace draft",editor.input.title);assertEquals(b,repo.tasks.single())
+    }
+    @Test fun disappearanceFromDisplayCannotTurnEditIntoCreate(){
+        model.refresh();val a=repo.tasks.first();model.open(a);model.edit();model.change(a.input().copy(title="Still an edit"))
+        repo.tasks=emptyList();model.refresh();assertNull(model.selected);assertTrue(model.editingExisting)
+        model.save();assertEquals(a,repo.expected);assertEquals(OperationsFailure.STALE,model.error)
+        assertTrue(repo.tasks.isEmpty());assertTrue(model.form)
+    }
     @Test fun creationHasMinimalDefaultsAndAffectedCanBeRemoved(){model.refresh();model.add("motte");assertEquals("motte",model.input.affectedPersonId);assertEquals(TaskPriority.NORMAL,model.input.priority);model.change(model.input.copy(title="x",affectedPersonId=null));model.save();assertNull(repo.input!!.affectedPersonId);assertEquals(1,repo.writes)}
     @Test fun cancelCreateAndEditNeverMutate(){model.refresh();model.add();model.change(TaskInput("draft"));model.cancel();model.open(repo.tasks.first());model.edit();model.change(TaskInput("edited"));model.cancel();assertEquals(0,repo.writes);assertEquals("EA kontaktieren",repo.tasks.first().title);assertFalse(model.form);assertEquals("",model.input.title)}
     @Test fun quickActionsCompleteAndReopen(){model.refresh();model.open(repo.tasks.first());model.transition(TaskStatus.IN_PROGRESS);assertEquals(TaskStatus.IN_PROGRESS,model.selected!!.status);model.transition(TaskStatus.DONE);assertEquals(TaskStatus.DONE,model.selected!!.status);assertNotNull(model.selected!!.completedAt);model.transition(TaskStatus.OPEN);assertNull(model.selected!!.completedAt);assertEquals(TaskStatus.OPEN,model.selected!!.status);model.transition(TaskStatus.CANCELLED);model.transition(TaskStatus.OPEN);assertEquals(5,repo.writes)}

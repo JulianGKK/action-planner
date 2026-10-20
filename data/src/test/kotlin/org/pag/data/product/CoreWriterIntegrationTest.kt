@@ -420,6 +420,21 @@ class CoreWriterIntegrationTest {
             assertFalse(h.epoch.ramReuseEnabled)
         }
     }
+    @Test fun actionAndOperationalFullValuesCanRepeatWithoutPersistentRevision()=H().use{h->
+        val a=h.actionRow()
+        fun fields(title:String)=NewAction(title,a.description,a.startAt,a.expectedEndAt)
+        fun change(expected:Action,title:String)=h.write<ActionChangeResult>(WorkspaceWriterFamily.ACTION_EDIT,{it is ActionChangeResult.Rejected},{null}){ActionWriterStore(h.data,it).change(expected,fields(title))}
+        assertTrue(change(a,"B") is ActionChangeResult.Applied)
+        assertTrue(change(h.actionRow(),a.title) is ActionChangeResult.Applied);assertEquals(a,h.actionRow())
+        assertTrue(change(a,"Old action editor after ABA") is ActionChangeResult.Applied)
+        h.advance(ActionStatus.PREPARATION);val original=h.state()
+        fun update(expected:PersonOperationalState,status:OperationalStatus)=h.write<OperationsResult<Unit>>(WorkspaceWriterFamily.OPERATIONS,{it is OperationsResult.Rejected},{null}){c->
+            // Same injected millisecond is a clock possibility, not a production revision.
+            OperationsStore(h.data,c){original.updatedAt}.snapshot("a","p0",expected,status,null,"")
+        }
+        value(update(original,OperationalStatus.ON_SITE));value(update(h.state(),original.status))
+        assertEquals(original,h.state());assertTrue(update(original,OperationalStatus.LEFT) is OperationsResult.Value)
+    }
     @Test fun crossFamilyPendingUsesOneEpochAndTaskProofCannotBypassIt()=H().use { h->
         var personCalls=0;var roleResult:OperationsResult<Role>?=null;var taskResult:OperationsResult<Task>?=null
         h.queue<PersonResult<Person>>(WorkspaceWriterFamily.PERSON,{it is PersonResult.Rejected},{null},{personCalls++}){PersonWriterStore(h.data,it).change("a",null,"Synthetic queued")}

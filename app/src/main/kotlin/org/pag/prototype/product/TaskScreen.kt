@@ -20,7 +20,7 @@ import java.time.format.FormatStyle
     Text("Aufgaben",Modifier.semantics { heading() },style=MaterialTheme.typography.titleLarge)
     model.error?.let{Text(when(it){
         OperationsFailure.INVALID->"Bitte Titel (1–120 Zeichen), Zuständigkeit und Fälligkeit prüfen."
-        OperationsFailure.STALE->"Die Aufgabe wurde inzwischen geändert. Bitte neu öffnen."
+        OperationsFailure.STALE->"Die Aufgabe wurde inzwischen geändert. Dein Entwurf bleibt erhalten; bitte bewusst neu laden."
         OperationsFailure.NOT_ALLOWED->"Im aktuellen Aktionsstatus ist diese Änderung nicht möglich."
         else->"Die Aufgabe oder Zuordnung ist in dieser Aktion nicht verfügbar."
     })}
@@ -70,8 +70,11 @@ import java.time.format.FormatStyle
     }
 }
 @Composable internal fun TaskForm(model:TaskModel,people:OperationalBoard) {
+    key(model.formRevision){TaskFormFields(model,people)}
+}
+@Composable private fun TaskFormFields(model:TaskModel,people:OperationalBoard) {
     val i=model.input
-    FormTextField(i.title,{model.change(i.copy(title=it))},label={Text("Titel")},autoFocus=model.selected==null,keyboardOptions=productKeyboard(ProductTextKind.TASK_TITLE),singleLine=true,enabled=!model.busy,modifier=Modifier.fillMaxWidth(),supportingText={Text("Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · ${Character.codePointCount(i.title.trim(),0,i.title.trim().length)} / 120 Zeichen")})
+    FormTextField(i.title,{model.change(i.copy(title=it))},label={Text("Titel")},autoFocus=!model.editingExisting,keyboardOptions=productKeyboard(ProductTextKind.TASK_TITLE),singleLine=true,enabled=!model.busy,modifier=Modifier.fillMaxWidth(),supportingText={Text("Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · ${Character.codePointCount(i.title.trim(),0,i.title.trim().length)} / 120 Zeichen")})
     Text("Priorität")
     TaskPriority.entries.forEach{p->FormOutlinedButton({model.change(i.copy(priority=p))},enabled=!model.busy){Text((if(i.priority==p)"✓ " else "")+priorityLabel(p))}}
     var assignments by remember{mutableStateOf(false)}
@@ -90,6 +93,10 @@ import java.time.format.FormatStyle
     var due by remember{mutableStateOf(i.dueAt?.let{Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))}.orEmpty())}
     val parsed=parseTaskDue(due)
     FormTextField(due,{due=it;model.change(model.input.copy(dueAt=parseTaskDue(it)))},label={Text("Fällig (optional): TT.MM.JJJJ HH:MM")},keyboardOptions=productKeyboard(ProductTextKind.DATE),singleLine=true,enabled=!model.busy,supportingText={if(due.isNotBlank() && parsed==null)Text("Ungültiges Datum oder durch Zeitumstellung nicht eindeutige Uhrzeit. Bitte Datum oder Uhrzeit korrigieren.")})
+    if(model.error==OperationsFailure.STALE && model.editingExisting){
+        Text("Beim Neuladen wird dein bisheriger Entwurf einschließlich Fälligkeit und Zuordnungen ersetzt.")
+        FormOutlinedButton(model::reloadEditor,enabled=!model.busy){Text("Entwurf verwerfen und Aufgabe neu laden")}
+    }
     FormButton(model::save,enabled=!model.busy && TaskRules.valid(i) && (due.isBlank() || parsed!=null)){Text("Speichern")}
     FormOutlinedButton(model::cancel,enabled=!model.busy){Text("Abbrechen")}
 }
