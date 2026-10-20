@@ -274,4 +274,19 @@ class DocumentDeleteTest {
             assertEquals(1,unlinks)
         }finally{release.countDown();executor.shutdownNow()}
     }
+    @Test fun revokeAfterReturnedReservationRetainsParentFileAndReservedJob() {
+        val d=fixture();afterReserve={c.allowed=false}
+        assertThrows(StorageAccessRevoked::class.java){delete(d)}
+        assertEquals(1,dao.docs.size);assertTrue(blob(d).isFile)
+        assertEquals("DELETE_RESERVED",dao.jobs.single().phase);assertEquals(0,unlinks)
+    }
+    @Test fun interruptionAfterReturnedDetachDoesNotRollBackEarlierParentRemoval() {
+        val d=fixture();afterDetach={throw IOException("synthetic post detach cleanup")}
+        invalid{delete(d)}
+        assertTrue(dao.docs.isEmpty());assertTrue(blob(d).isFile)
+        assertEquals("DELETE_FILE_PENDING",dao.jobs.single().phase);assertEquals(0,unlinks)
+        coordinator().recover(maintenance,dao.jobs.single().id)
+        assertFalse(blob(d).exists());assertTrue(dao.jobs.isEmpty());assertEquals(1,unlinks)
+    }
+
 }

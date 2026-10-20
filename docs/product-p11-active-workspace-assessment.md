@@ -8307,3 +8307,284 @@ WIP-Commit/Push auf den bestehenden Branch und unabhängiger GitHub-Ref-Abgleich
 Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
 Gerätekennungen eingecheckt. Danach **STOPP BIS ZUM UNABHÄNGIGEN GITHUB-REVIEW**.
 Kein Force-Push, Merge, Release oder Produktupdate.
+
+## 57. Dokument-/Recovery-Mutationsinventar
+
+Issue #35 – unabhängiger Inventar-/Kontrakttest-Slice auf Basis
+`86a8b5b495ef7299112e089d16c741b1f26d6ca2`.
+Branch und lokaler HEAD entsprachen vor Änderungen dem unabhängig per GitHub-Ref
+abgefragten Remote-HEAD; Arbeitsbaum und Diff waren leer.
+**BESTEHEND / UNWIRED:** Der Dokumentpfad ist weiterhin nicht an
+`WorkspaceWriteBoundary` oder die gemeinsame Mutationsepoche angeschlossen.
+Dieser Slice verändert ausschließlich Hosttests und dieses Assessment.
+Kein konzeptioneller Vertrag ist eine implementierte Integration.
+
+### 57.1 Bestehender Ablauf und Grenzen der Belege
+
+`DocumentRepository → ProductDocumentRepository → DocumentProductDispatch →
+DocumentImportStaging / DocumentPublication / DocumentDelete → jeweilige
+SqlCipherDocument…Database → DocumentDao / Room / SQLCipher`.
+Der Runtime-Documentanschluss erhält keinen `workspaceMutations`-Port.
+Import-Reserve, Phasenwechsel, finale Veröffentlichung sowie Delete-Reserve,
+Parent-Detach und Jobabschluss verwenden jeweils eigene kurze
+`withWriteTransaction`-Scopes. DAO-`@Transaction`-Aufrufe innerhalb dieser Scopes
+sind kein zusätzlicher unabhängig dauerhafter Commit. Datei-I/O liegt außerhalb
+dieser DB-/Key-Leases. Es gibt keinen globalen Import-/Delete-Rollback.
+
+**BESTEHEND:** READY, aktuelle Operationsberechtigung, persistierter Actionstatus,
+Storage-Preflights und bestehender Keyowner autorisieren Produktoperationen.
+COMMIT-Gates prüfen Berechtigung, belegen aber allein keinen zurückgekehrten
+physischen Commit. Ein erfolgreich zurückgekehrter DB-/Keyscope ist die
+bestehende lokale Abschlussgrenze; der Dokumentpfad liefert bislang keinen
+expliziten gemeinsamen `WorkspaceWriteCompletion`-Beleg. Eine Exception kann
+nach einem vorherigen dauerhaften Schritt eintreten. Weder ein
+`DocumentResult.Value` noch ein Jobname beweist fsync oder vollständiges Recovery.
+
+**HOSTGETESTET:** Die Phasentests verwenden echte temporäre Hostdateien und Tink,
+die tatsächliche DAO-Validierungslogik und isolierte Fake-DBs mit simuliertem
+Rollback. Die Dispatchtests benutzen einen ausdrücklich simulierten dauerhaften
+Ledger. Das ist kein neuer SQLite-/Room-/SQLCipher-Commit-, Powerloss- oder nativer
+Cleanupnachweis. Die Produkt-DB-Adapter wurden am Code geprüft; Android-Fixtures
+wurden ausschließlich offline kompiliert.
+
+### 57.2 Phasen-/Seiteneffektmatrix
+
+Die Spalte DB beschreibt getrennte Schritte bei erfolgreicher Rückkehr des
+jeweiligen DB-Scopes. Bei unbekanntem Rückkehr-/Cleanupzustand muss ein frischer
+autorisierter Inventarread den tatsächlichen Zustand feststellen. „Datei vorhanden“
+beweist ohne zurückgekehrten Sync keine Crash-Dauerhaftigkeit.
+
+| Phase | Vorher → nachher DB | Tatsächliches Dateisystem / Ressourcen | Autorisierte Fortsetzung, Recovery und UI |
+| --- | --- | --- | --- |
+| A Import reservieren | kein Job → IMPORT_RESERVED; noch kein Document | noch kein Namespacezugriff; neuer Dateischlüssel wird scoped erzeugt und als Jobkopie gespeichert | READY; Ablehnung vor Insert erzeugt keine Datei; nach Reserve kein UI-Erfolg |
+| B WRITING markieren | IMPORT_RESERVED → IMPORT_WRITING | weiterhin keine Datei erforderlich; DB-/Keyscope endet vor I/O | READY; Revoke danach lässt WRITING stehen; MAINTENANCE erforderlich |
+| C Staging erstellen | IMPORT_WRITING bleibt | bekannte leere Struktur ggf. initialisieren; CREATE_NEW/WRITE/NOFOLLOW_LINKS öffnet genau ein neues Leaf | READY und exaktes Inventar; keine Überschreib-/Unlink-Kompensation; Fehler lässt Job und ggf. Teilroot/Datei |
+| D Verschlüsselt schreiben | IMPORT_WRITING bleibt | eine Sourceöffnung, Tink-Stream, begrenzter Buffer, AAD an documentId; keine Klartextdatei | STEP-Gates; Abbruch erhält WRITING und mögliche Teilcipherdatei; kein Retry |
+| E Schließen / File-Sync | IMPORT_WRITING bleibt | Streamfinalisierung, flush, FileChannel.force(true), dann Channel.close; use/finally und Schlüssel-/Bufferzeroisierung | Sync-/Closefehler verhindert CLOSED; physische Finalisierung nach Revoke erteilt keine Publication |
+| F CLOSED markieren | IMPORT_WRITING → IMPORT_CLOSED samt tatsächlicher Größe | geschlossene, synchronisierte Stagingdatei; Inventar vor DB-Schritt erneut exakt geprüft | READY; fehlgeschlagener Schritt kann WRITING lassen; Revoke nach Rückkehr lässt CLOSED; kein UI-Erfolg |
+| G Rename | IMPORT_CLOSED bleibt | authentifiziertes EOF/Größe/Format prüfen; atomic no-replace Rename staging → files; Inode/Größe/mtime prüfen | READY oder MAINTENANCE; Rename ist kein DB-Commit; CLOSED mit finaler Datei ist Recoveryzustand |
+| H Verzeichnisse synchronisieren | IMPORT_CLOSED bleibt | files, dann staging fsync; Inventar erneut prüfen | Fehler auch beim zweiten Sync lässt CLOSED mit finalem Blob; nur MAINTENANCE nimmt diesen Zustand wieder auf |
+| I FILE_PUBLISHED markieren | IMPORT_CLOSED → FILE_PUBLISHED | finaler Blob vorhanden, beide Sync-Aufrufe vorher zurückgekehrt | DB-Schritt unabhängig; anschließender Fehler macht Rename und vorherige Phase nicht rückgängig |
+| J Document veröffentlichen | FILE_PUBLISHED → DocumentRow eingefügt UND Job entfernt in einer DB-Transaktion | finaler Blob erneut vollständig authentifiziert; Snapshot-Schlüssel werden geschlossen/zeroisiert | erst nach vollständiger Rückkehr und gültiger zentraler Main-Publication möglicher UI-Erfolg; Revoke nach Commit erfindet keinen Rollback |
+| K Delete reservieren | Document → Document + DELETE_RESERVED | Blob bleibt; Job enthält keinen Schlüssel/Namen/Formatpayload | READY; vollständiger Expected-Document-Vergleich; Job blendet Parent bereits aus count/list/get aus; noch kein UI-Erfolg |
+| L Parent entfernen | DELETE_RESERVED → DELETE_FILE_PENDING UND Parent entfernt, atomarer lokaler DB-Schritt | Blob bleibt; kein DB-/Keylease über Unlink | READY oder MAINTENANCE; späterer Fehler stellt Parent nicht wieder her |
+| M Unlink | DELETE_FILE_PENDING bleibt | exakt gebundener bekannter Blob wird entfernt; vor Unlink frischer DB-Snapshot und Inventar | fehlender Blob nur bei PENDING akzeptiert; fremde Dateien/Symlinks blockieren; kein manuelles Cleanup |
+| N Verzeichnis synchronisieren | DELETE_FILE_PENDING bleibt | files fsync auch bei bereits fehlendem Blob | Fehler lässt PENDING zur Recovery; erneute autorisierte Recovery synchronisiert ohne zweites Unlink |
+| O Deletejob abschließen | DELETE_FILE_PENDING → kein Job; Parent bereits weg | Inventar bestätigt Abwesenheit, Sync zurückgekehrt | eigener DB-Schritt; Revoke danach verhindert UI-Erfolg, ändert physischen Abschluss nicht |
+| P Import-Recovery | RESERVED abbrechen; WRITING nach Dateientfernung abbrechen; CLOSED/FILE_PUBLISHED über Publication fortsetzen | vollständiges globales Inventar VOR erster Mutation; WRITING-Staging unlink + Sync vor Jobentfernung; CLOSED genau staging XOR final | ausschließlich MAINTENANCE; CLOSED-final wird ohne zweiten Rename erneut geprüft/synchronisiert; unbekannte Artefakte bleiben unangetastet; kein Source-Reopen |
+| Q Delete-Recovery | RESERVED über Detach → PENDING → Jobabschluss; PENDING direkt fortsetzen | Reserve benötigt Parent+Blob; PENDING akzeptiert fehlenden Blob und synchronisiert | ausschließlich MAINTENANCE; finales Inventar muss jobs/staging leer und files exakt documents bestätigen; keine direkte Dokument-Erfolgs-UI |
+
+**BLOCKER:** Zwischen B und C ist WRITING ohne Root erreichbar. Recovery verweigert
+diesen Zustand derzeit, siehe 57.5. Auch ein partiell initialisierter Root wird
+fail-closed erhalten, nicht still rekonstruiert. Prozessabbruch kann diese
+Zwischenstände hinterlassen; Host-Exceptions simulieren Unterbrechungsstellen,
+keinen Stromausfall oder Kernel-Dauerhaftigkeitsbeweis.
+
+### 57.3 Namespace-Lane, Session und Recovery
+
+**BESTEHEND:** `DocumentProductDispatch.run` erwirbt READY und nimmt
+`DocumentNamespaceLane.ticket()` **vor** `worker.execute`. Erst im Worker folgt
+`exclusive(ticket)`, dann OPERATION-Gate und Arbeit. Erste DB-Mutation ist beim
+Import reserve, beim Delete reserveDelete (nach kurzlebigem Expected-Read).
+Dateisystemmutation folgt erst nach zurückgekehrtem WRITING bzw. Delete-Detach.
+Der Namespace-Monitor serialisiert Dokumentarbeit/Reader und Recovery, ist aber
+weder Sessionautorität noch gemeinsame Mutationsepoche. Er serialisiert nicht
+Task-, Operations-, Material-, Expense- oder Protocolwriter.
+
+`drainAndFence` wartet auf laufende Lane-Arbeit und erhöht die lokale Epoche,
+sodass ältere noch nicht gestartete Tickets scheitern. Revoke kann an jeder
+STEP-/COMMIT-/Publicationgrenze wirksam werden; es rollt frühere getrennte
+Commits oder Dateioperationen nicht zurück. Nach Lane-Freigabe wird Main
+beauftragt und `StorageContext.publish` geprüft. Die Lane schützt diesen bereits
+eingereihten Maincallback nicht erneut, siehe RED-3.
+
+`reconcileProductDocuments` läuft im vorhandenen autorisierten
+MAINTENANCE-/Unwrap-Keyscope, durch `documentMaintenanceBarrier` vor READY-Owner-
+Vorbereitung. `withDocumentMaintenanceKey` bindet den synchron geborgten Schlüssel
+an denselben Context und Thread; die Delete-DB-Seam kopiert/zeroisiert ihre
+Einzelschritt-Lease. Recovery drain/fenced dieselbe Lane und validiert ALLE
+DB-/Dateibindungen vor Cleanup sowie danach ein frisches finales Inventar.
+Ungültiger Scope, Revoke, unbekannte Dateien, fehlende fertige Blobs oder
+widersprüchliche Jobs sperren READY. Ein Job allein ist kein Recoveryabschluss.
+
+### 57.4 Vorgeschlagener Evidence- und Invalidierungsvertrag
+
+**VORGESCHLAGEN / UNWIRED, noch zu reviewen:** Ein Dokumentauftrag braucht einen
+phasenbezogenen, key-/pfad-/payloadfreien Beleg, getrennt nach:
+
+1. DB-Schritt: nicht gestartet / bestätigt zurückgerollt / bestätigt committet /
+   unbekannt, jeweils an Operation und erwartete persistierte Phase gebunden.
+2. Dateischritt: nicht gestartet / bestätigt ausgeführt / Sync bestätigt /
+   Abschluss unbekannt; Rename und Unlink jeweils getrennt von Verzeichnis-fsync.
+3. Namespace: Zeitpunkt und geprüfte Job-/Dokumentbindungen des Inventars;
+   Ergebnis ist keine zeitlich unbegrenzte Gültigkeitszusage.
+4. Ressourcen: DB-/Keylease, Channels/Streams und Snapshots jeweils vollständig
+   geschlossen oder fehlgeschlagen/unbestätigt.
+5. Recovery: nicht nötig / bestimmter persistierter Job erneut zu inventarisieren /
+   widersprüchlicher Zustand BLOCKED; kein automatischer blinder Retry.
+6. UI: noch nicht angeboten / zentral autorisiert veröffentlicht / verweigert /
+   Dispatch unbekannt. Ein physischer Commit bleibt auch ohne UI-Erfolg ein Commit.
+
+Nichtausführung vor Mutation und Busy-Rejection sind keine ausgeführten
+DB-Rollbacks. Ein späterer Dateifehler macht einen früheren WRITING-Commit nicht
+zu ROLLED_BACK. `WorkspaceWriteOutcome` und `WorkspaceWriteCompletion` bleiben
+unverändert; ein einzelnes Completion darf nicht den mehrstufigen Auftrag als
+globalen Commit bescheinigen. Den gesamten Import in
+`confirmedWorkspaceTransaction` zu wickeln wäre falsch.
+
+Spätere enge Integration: auf dem bestehenden Runtime-Ownerthread vor
+Worker-Queueeintritt denselben Invalidierungsport um einen explizit geprüften
+mehrphasigen Dokumentvertrag erweitern. Betroffen sind tatsächlich Document-
+Summary/Anzahl im Workspace und Dokumentliste; Viewer erhalten weiter ihre
+bestehenden Expected-/Session-/Dateibindungen. Nur Dirty-/Validity-Metadaten,
+keine Dokumenttexte, Blobs oder Schlüssel im ACTIVE-Kern. Bestehende
+Namespace-Lane zusätzlich beibehalten; gemeinsame Pending-Grenze und Lane haben
+verschiedene Aufgaben. Recovery muss dieselben Metadaten vor ihrer Queue bzw.
+vor READY-Freigabe fail-closed halten. Bei unbekanntem Phasen-/Cleanupabschluss
+keine alte Projektion wieder freigeben. Erst nach überprüftem Endinventar,
+Ressourcenabschluss und aktuellem zentralem Scope mögliche UI-Publication.
+Kein zweiter Key-/Sessionowner und keine unabhängige Epoche. Das heutige
+`Pending.finish(WorkspaceWriteCompletion)` kann diese mehrphasige Evidence nicht
+verlustfrei ausdrücken; die Portentscheidung benötigt gesondertes Review.
+`ProductRuntime` bleibt bei `UncachedWorkspaceMutations`, `ramReuseEnabled=false`.
+
+### 57.5 Neue Hostregressionen und tatsächliche RED-Befunde
+
+**HOSTGETESTET:** Neuer `DocumentRecoveryDispatchContractTest` (12 Fälle) trennt
+simulierten dauerhaften Zustand, Workerwirkung und Callback. Vier bestehende
+Testdateien wurden um zwölf Phasen-/Recoveryfälle erweitert. Insgesamt 24 neue
+Tests. Bestehende Assertions wurden nicht abgeschwächt; keine Skips eingeführt.
+
+Neue Phasentests prüfen Revoke vor Reserve, nach zurückgekehrter Reserve,
+nach WRITING vor Namespacezugriff und nach CLOSED; zweiten Directory-Syncfehler,
+Fehler nach FILE_PUBLISHED samt Snapshot-Zeroisierung; Revoke nach Delete-Reserve,
+Unterbrechung nach Parent-Detach mit späterer expliziter Recovery; ungültige
+Maintenance, WRITING-Unlink gefolgt von Syncfehler und anschließend frischer
+Recovery, fehlgeschlagenen finalen Recovery-DB-Schritt sowie WRITING ohne Root.
+
+Bestehende Suites decken zusätzlich Source-/Write-/File-Sync-/Closefehler,
+Rename-Verweigerung/Kollision, FILE_PUBLISHED ohne finale Publication,
+Delete-Unlink-/Sync-/Jobfehler, fehlende/abweichende Parent-/Dateibindungen,
+Symlinks/Hardlinks/fremde Dateien, MAINTENANCE-Scope, Reader-/Recovery-Drain und
+alte Tickets ab. Echte SessionCoordinator-Tests prüfen den Maintenance-Barrier,
+READY erst nach Erfolg und unveränderte absolute Frist. READY-Dokumente werden
+beim Unlock nur inventarisiert, nicht automatisch vollständig entschlüsselt.
+
+**BLOCKER – RED-1:** Doppelt ausgeführter Document-Worker führt dessen Workclosure
+zweimal aus. RED-2: doppelt ausgeführter Main-Runnable publiziert zweimal.
+RED-3: nach Workerabschluss ausgeführtes `drainAndFence` unterdrückt dessen
+bereits gequeuete Main-Publication nicht. Deterministischer erster RED-Lauf:
+11 Tests, 3 Assertionfehler; erwartet jeweils einmal/einmal/keine Publication,
+tatsächlich zwei/zwei/eine. Das sind tatsächliche Dispatch-Vertragslücken unter
+diesen Executor-/Fencefolgen, kein Beweis, dass ein normaler Executor von selbst
+Runnables dupliziert. Ein Revoke bzw. Generationwechsel unterdrückt den Callback
+weiterhin über den bestehenden Context.
+
+Reproduktion auf diesem Stand: In `DocumentRecoveryDispatchContractTest` nur
+für einen lokalen RED-Lauf in `gapDuplicateWorkerExecutesWorkTwice` die erwartete
+Mutationsanzahl 2 → 1, in `gapDuplicateMainPublishesTwice` Callbackanzahl 2 → 1
+und in `gapFenceAfterWorkerDoesNotFenceQueuedMainPublication` Callbackanzahl
+1 → 0 ändern. Dann
+`./gradlew :data:testDebugUnitTest --tests '*DocumentRecoveryDispatchContractTest' --offline`.
+Danach ausschließlich diese lokalen RED-Assertionänderungen zurücknehmen.
+Die eingecheckten grünen `gap…`-Tests charakterisieren ausdrücklich den offenen
+IST-Zustand; sie behaupten keinen sicheren Zielvertrag.
+
+**BLOCKER – RED-4:** `gapWritingWithoutNamespaceBlocksMaintenanceAndPreservesJob`:
+synthetisch gültiger IMPORT_WRITING-Job ohne Root; `reconcile()` wirft
+ProductStorageFailure. Ein eigener RED-Lauf mit direktem `reconcile()` statt
+`invalid{reconcile()}` ergab 1 Test / 1 Fehler. Der Zustand ist durch den neuen
+Stagingtest `revokeAfterReturnedWritingPreservesJobBeforeNamespaceCreation`
+auch aus dem tatsächlichen Stagingkoordinator erreichbar. Die aktuelle Recovery
+bewahrt den Job/Dateizustand und blockiert, statt automatisch zu bereinigen.
+RED-4 prüft damit einen vorgeschlagenen Verfügbarkeitsvertrag, keine bereits
+zugesagte automatische Reparatur und keine nachgewiesene Vertraulichkeits- oder
+Integritätsverletzung. Wiederherstellungspolitik gesondert reviewen; keine
+Reparatur in diesem Slice.
+
+**UNWIRED:** Der zusätzliche Cross-Family-Test hält ein gemeinsames Task-Pending
+und führt dennoch DocumentDispatch-Arbeit aus. Die gemeinsame Epoche bleibt
+unverändert; Operations ist im gemeinsamen Port weiter busy. Das belegt die
+fehlende Portverbindung in dieser isolierten Kombination, keine produktive
+Cachefreigabe. Es gibt weiterhin keine RAM-Hits.
+
+Weitere Dispatchtests prüfen Lock vor Worker, Generationwechsel nach Wirkung,
+BLOCKED/READY-Verweigerung als Contextsimulation, verlorenen Main-Dispatch,
+Worker-/Main-Dispatchexceptions und Fehler nach simuliertem dauerhaftem Schritt.
+Fehlender Maincallback erzeugt keinen automatischen Retry/Erfolg. Die produktiven
+Action-/Permissionwechsel sind über die bestehenden StorageContext-Checks
+gebunden; dafür wird hier kein zusätzlicher nativer Integrationstest behauptet.
+Eine zunächst falsche Testannahme zur Recovery-Sync-Exception wurde korrigiert:
+Recovery reicht IOException weiter, anders als `documentFileBoundary` in den
+Produktkoordinatoren. Das war ein Testfehler, keine zusätzliche Produktlücke.
+
+### 57.6 Android-Fixtures: Checkliste vor gesonderter Gerätefreigabe
+
+**BESTEHEND / BLOCKER vor einem nativen Lauf:**
+
+- DocumentText/Image/PdfStorageTest benutzen zufällige `p10c2-`/`p10c1-`/
+  `p10c3-`-Unterwurzeln des kanonischen noBackupFilesDir;
+  DocumentReconciliationStorageTest benutzt `p10c4-test-`. CoreWriterBoundary-
+  StorageTest benutzt `p11-corewriter-` unter noBackupFilesDir. Vor Ausführung
+  Paket, exakte Selektoren und tatsächlichen targetContext unabhängig prüfen;
+  ein Namenspräfix allein ist keine Isolation gegenüber Produktverzeichnissen.
+- Dokumentfixtures haben `@After` mit Key-Zeroisierung und präfix-/parentgeprüftem
+  `deleteRecursively`; Rückgabewerte der Löschung werden dort nicht nachgewiesen.
+  Diese Routinen sind keine in diesem Slice freigegebene sichere Bereinigung.
+  Vor Gerätetest kanonische Bindung, NOFOLLOW-/Symlink-/Hardlinkverhalten,
+  exklusiven Besitz, zulässige Leafliste und nachprüfbaren Restzustand reviewen.
+  Keine rekursive Löschung eines produktiv genutzten Roots hinzufügen.
+- CoreWriterBoundaryStorageTest invalidiert im finally den Owner und zeroisiert
+  den Schlüssel, hat aber keine nachgewiesene Verzeichnisbereinigung. Vor Lauf
+  gesonderten engen Bereinigungsplan abnehmen, keine pauschale Löschroutine.
+- Für jeden konkreten Selektor sämtliche Owner-Bindungen, Snapshot-/Stream-/
+  Renderer-Lifetimes, Bytearraykopien und finally-Pfade auch bei Setupfehler,
+  Assertionfehler, Revoke und fehlgeschlagenem Cleanup prüfen. Vorhandene finally-
+  und @After-Blöcke allein sind kein vollständiger nativer Ressourcenbeweis.
+- Vorher-/Nachherinventar des isolierten Testnamespace, DB-/Datei-Endzustand,
+  Ownerinvalidierung und Zeroisierung belegen; keine Dokumentjob-Artefakte vor
+  autorisierter Recovery manuell entfernen. Keine neuen Verzeichnisse/Permissions.
+- Android-/Room-/SQLCiphertests wurden nicht installiert und nicht ausgeführt.
+  Offline-Kompilation ersetzt weder native Rename-/fsync-Evidence noch
+  Cursor-/Key-Lease-Cleanup. Issue #32 bleibt offen:
+  `SQLCipherStatement.close()` schließt den Cursor nicht explizit.
+
+### 57.7 Abschluss und nächste enge Reviewentscheidung
+
+**HOSTGETESTET:** Abschlusszahlen und Offline-Buildnachweise siehe nachfolgenden
+Validierungsabsatz. **VORGESCHLAGEN:** Zuerst einen separaten kleinen Dispatch-
+Lifecycle-Slice für at-most-once Worker/Main und Fence-gebundene Publication
+reviewen; getrennt davon Recoverypolitik für WRITING ohne vollständigen Root
+festlegen. Erst danach den mehrphasigen Evidence-/Invalidierungsport reviewen.
+Keine globale Completion aus einem einzelnen DB- oder Dateischritt ableiten.
+
+**UNWIRED:** DocumentWriter, Leadership/P3b und Maintenance/Recovery gegenüber
+dem gemeinsamen Runtime-Mutationsport; kein Snapshotowner (#37), keine
+Performance-/Navigationsintegration (#38). Writer-/Recoveryarbeiten gehören
+weiter zu #35; bestehende Editor-/CAS- und ABA-Grenzen zu #36 werden nicht durch
+dieses Inventar geschlossen. **BLOCKER:** vier oben reproduzierte Zielvertrags-
+REDs, fehlender mehrphasiger Outcome-/Cleanupbeleg und natives Cursor-/Cleanup-
+Risiko #32. Keine vollständige Release-1.0- oder P11-Snapshotfreigabe.
+
+Unverändert bleiben SessionCoordinator, StorageAccess, SessionDbKeyOwner,
+SQLCipher/Tink/B2Driver, Schema 11, 180 Sekunden absolut / 30 Sekunden READY-idle,
+8+8-MiB-Budget, Dateilimits, noBackup-Root-/Namespaceprüfung, CREATE_NEW,
+NOFOLLOW, atomic no-replace Rename, File-/Directory-fsync und authentifizierte
+Verschlüsselung. Keine Produktionsdatei, Permission, Dependency, Navigation,
+installierte App oder bereits integrierte Writerfamilie wurde verändert.
+
+Validierung: gezielter Lauf
+`./gradlew :data:testDebugUnitTest --tests '*Document*Test' --offline`:
+236 Tests, 0 Fehler, 0 Skips. Anschließend vollständiger angeforderter Offline-Lauf
+mit `:app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest
+:domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin
+:app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest
+:app:verifyDemoManifest --offline`: **BUILD SUCCESSFUL**. Auswertung ausschließlich
+der Debug-Unit-Test-XMLs: App 671, Data 910, Security 4 = **1.585 bestanden,
+0 Failures, 0 Errors, 0 Testskips**. Unveränderte App-/Securitychecks und
+Androidtest-Kompilationen wurden von Gradle teilweise als UP-TO-DATE bestätigt;
+Domain hat keine eigenen Testquellen. Der Gradle-Lifecycle-Task
+`preDebugAndroidTestBuild SKIPPED` ist kein übersprungener Testfall.
+`git diff --check` erfolgreich. Keine Instrumentation/Installation, keine neuen
+Android-Fixtures und kein nativer Cleanupnachweis. Rohlogs/Artefakte bleiben
+außerhalb des Commits. Regulärer WIP-Commit/Push; danach unabhängiges GitHub-Review.

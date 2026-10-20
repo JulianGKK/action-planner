@@ -54,6 +54,8 @@ class DocumentImportStagingTest {
         var inDb = false
         val phases = mutableListOf<String>()
         var beforeAdvance: (DocumentJobRow) -> Unit = {}
+        var afterReserve: () -> Unit = {}
+        var afterAdvance: () -> Unit = {}
         private fun <T> tx(work: suspend () -> T): T {
             check(!inDb); inDb = true
             val old = dao.jobs.map { copy(it) }.toMutableList()
@@ -64,13 +66,13 @@ class DocumentImportStagingTest {
         override fun inventory(c: StorageContext) = tx { dao.importInventory(c) }
         override fun reserve(c: StorageContext,job: DocumentJobRow): OperationsResult<Unit> = tx {
             dao.reserveImport(job,c).also { if(it is OperationsResult.Value) phases.add("IMPORT_RESERVED") }
-        }
+        }.also { afterReserve() }
         override fun advance(c: StorageContext,expected: DocumentJobRow,size: Long?) = tx {
             beforeAdvance(expected)
             dao.advanceImport(expected,size,c)
             phases.add(dao.jobs.single { it.id == expected.id }.phase)
             Unit
-        }
+        }.also { afterAdvance() }
     }
     private fun root() = File(temp.root,"pag-documents-v1")
     private fun source(db: Database,bytes: ByteArray): () -> InputStream = {
@@ -280,4 +282,34 @@ class DocumentImportStagingTest {
             assertEquals(if(extra==0)"IMPORT_CLOSED" else "IMPORT_WRITING",db.dao.jobs.single().phase)
         }
     }
+    @Test fun revokeBeforeReservationLeavesNeitherJobNorNamespace() {
+        val db=Database();c.allowed=false
+        assertThrows(StorageAccessRevoked::class.java) {
+            DocumentImportStaging(db,temp.root).stage(c,"a","x",DocumentFormat.TEXT) { error("No source") }
+        }
+        assertTrue(db.dao.jobs.isEmpty());assertFalse(root().exists())
+    }
+    @Test fun revokeAfterReturnedReservationPreservesReservedWithoutFilesystemWork() {
+        val db=Database();db.afterReserve={c.allowed=false}
+        assertThrows(StorageAccessRevoked::class.java) {
+            DocumentImportStaging(db,temp.root).stage(c,"a","x",DocumentFormat.TEXT) { error("No source") }
+        }
+        assertEquals("IMPORT_RESERVED",db.dao.jobs.single().phase);assertFalse(root().exists())
+    }
+    @Test fun revokeAfterReturnedWritingPreservesJobBeforeNamespaceCreation() {
+        val db=Database();db.afterAdvance={c.allowed=false}
+        assertThrows(StorageAccessRevoked::class.java) {
+            DocumentImportStaging(db,temp.root).stage(c,"a","x",DocumentFormat.TEXT) { error("No source") }
+        }
+        assertEquals("IMPORT_WRITING",db.dao.jobs.single().phase);assertFalse(root().exists())
+    }
+    @Test fun revokeAfterReturnedClosedPreservesSyncedStagingWithoutDocument() {
+        val db=Database();db.afterAdvance={if(db.dao.jobs.single().phase=="IMPORT_CLOSED")c.allowed=false}
+        assertThrows(StorageAccessRevoked::class.java) {
+            DocumentImportStaging(db,temp.root).stage(c,"a","x",DocumentFormat.TEXT,source(db,byteArrayOf(120)))
+        }
+        val j=db.dao.jobs.single();assertEquals("IMPORT_CLOSED",j.phase)
+        assertTrue(File(root(),"staging/${j.stagingName}").isFile);assertTrue(db.dao.docs.isEmpty())
+    }
+
 }

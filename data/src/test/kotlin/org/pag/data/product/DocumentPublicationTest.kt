@@ -239,4 +239,23 @@ class DocumentPublicationTest {
         val ticket=DocumentNamespaceLane.ticket();DocumentNamespaceLane.drainAndFence {}
         invalid { DocumentNamespaceLane.exclusive(ticket) { error("No mutation") } }
     }
+    @Test fun secondDirectorySyncFailurePreservesClosedFinalWithoutDocument() {
+        val j=fixture();var syncCalls=0
+        val fail=object:DocumentPublishFileOps by ops {
+            override fun syncDirectory(directory:Path) {
+                syncCalls++;if(syncCalls==2)throw IOException("synthetic second directory sync")
+                ops.syncDirectory(directory)
+            }
+        }
+        invalid { complete(j,fail) }
+        assertEquals(2,syncCalls);assertFalse(staging(j).exists());assertTrue(final(j).isFile)
+        assertEquals("IMPORT_CLOSED",dao.jobs.single().phase);assertTrue(dao.docs.isEmpty())
+    }
+    @Test fun failureAfterReturnedPublishedStepKeepsPublishedJobAndClosedKeyLeases() {
+        val j=fixture();afterMark={throw IOException("synthetic after phase commit")}
+        invalid { complete(j) }
+        assertEquals("FILE_PUBLISHED",dao.jobs.single().phase);assertTrue(final(j).isFile)
+        assertTrue(dao.docs.isEmpty());assertTrue(leakedSnapshots.all { it.job.fileKey!!.all { b->b==0.toByte() } })
+    }
+
 }

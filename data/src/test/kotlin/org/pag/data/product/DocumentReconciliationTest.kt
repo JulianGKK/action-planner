@@ -178,4 +178,32 @@ class DocumentReconciliationTest {
         assertEquals(!failure&&!expire,prepared)
         if(!failure&&!expire){now=minOf(delay+30_000,180_000);session.checkExpiry();assertEquals(SessionState.LOCKED,session.snapshot().state)}
     }
+    @Test fun revokedMaintenanceBeforeInventoryPreservesWritingAndStaging() {
+        val j=job("IMPORT_WRITING","staging");c.allowed=false
+        assertThrows(StorageAccessRevoked::class.java){reconcile()}
+        assertTrue(stage(j).isFile);assertEquals("IMPORT_WRITING",dao.jobs.single().phase)
+        assertEquals(0,unlinks);assertEquals(0,syncs)
+    }
+    @Test fun writingRecoverySyncFailureKeepsJobAfterUnlinkThenFreshRecoverySettles() {
+        val j=job("IMPORT_WRITING","staging")
+        val fail=object:DocumentPublishFileOps by ops {
+            override fun syncDirectory(directory:Path){throw IOException("synthetic recovery directory sync")}
+        }
+        assertThrows(IOException::class.java){DocumentReconciliation(db,db,temp.root,fail).run(c)}
+        assertFalse(stage(j).exists());assertEquals("IMPORT_WRITING",dao.jobs.single().phase)
+        assertEquals(1,unlinks);assertTrue(dao.docs.isEmpty())
+        reconcile();assertTrue(dao.jobs.isEmpty());assertEquals(1,unlinks);assertEquals(1,syncs)
+    }
+    @Test fun publishedRecoveryCommitFailurePreservesVerifiedBlobAndJob() {
+        val j=job("FILE_PUBLISHED","final");beforeCommit={throw IOException("synthetic before final DB step")}
+        assertThrows(IOException::class.java){reconcile()}
+        assertTrue(final(j).isFile);assertEquals("FILE_PUBLISHED",dao.jobs.single().phase)
+        assertTrue(dao.docs.isEmpty());assertEquals(0,unlinks);assertEquals(0,links)
+    }
+    @Test fun gapWritingWithoutNamespaceBlocksMaintenanceAndPreservesJob() {
+        job("IMPORT_WRITING") // reachable after returned WRITING and before initialize
+        invalid{reconcile()} // OPEN: direct reconcile() reproduced RED; current outcome is BLOCKED (§57)
+        assertFalse(root().exists());assertEquals("IMPORT_WRITING",dao.jobs.single().phase)
+        assertEquals(0,unlinks);assertEquals(0,syncs)
+    }
 }
