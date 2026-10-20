@@ -5751,3 +5751,293 @@ Berechtigungen, Produktwrite-/UI-/Security-/Schemaänderungen. Keine APKs, Schl�
 Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder Gerätekennungen im Commit.
 Regulärer WIP-Commit/Push mit unabhängigem Remote-SHA-Abgleich; danach **STOPP bis
 zum unabhängigen GitHub-Review**. Kein Force-Push, Merge, Release oder Produktupdate.
+
+
+## 46. Issue #35 – Produktive Mutations- und Invalidierungsverträge
+
+### 46.1 Status und präziser Integrationsumfang
+
+**IMPLEMENTIERT (2026-10-20):** regulärer Branch
+`p11-performance-optimization`, sauberer und unabhängig lokal/remote bestätigter
+Ausgangspunkt `52b0dcb284abb196027c6bffeb8de417d4dc5778`.
+Erster begrenzter produktiver Slice: **ProductTaskRepository.create/edit/transition/
+delete**, einschließlich atomarer TaskEvents. Gemeinsamer synchroner Vor-Queue-Port,
+getrennte tatsächliche Transaktions-/Cleanupbelege, Einmalabschluss und gegatete
+Repositorypublication. Kein pauschaler Umbau anderer Writer.
+
+**GETESTET:** dieselbe TaskStore-Fachlogik, dieselbe Transaktionsbelegfunktion und
+dieselbe Queue-/Publicationgrenze mit echtem SQLite/Schema 11; bestehender
+ActiveWorkspaceValidity-Vertrag mit neuem Adapter und allen bisherigen Regressionen.
+**NOCH NICHT ANGEBUNDEN:** der Adapter an einen produktiven ACTIVE-Snapshotowner,
+aktuelle Action-/Permissionbindung und Read-/Editorlebensdauer. Es existiert weiterhin
+kein produktiver Snapshotowner oder RAM-Hit. ProductRuntime verwendet ausdrücklich
+die begrenzte Metadatenfence `UncachedWorkspaceMutations`: **ramReuseEnabled bleibt
+unveränderlich false**, ohne Read-/Hit-/Payload-API. Andere Writerfamilien sind
+**UNWIRED / NOT SAFE FOR RAM REUSE**. Dieser Slice gibt keine produktive Wiederverwendung
+oder schnelle Navigation frei.
+
+### 46.2 Vollständige Writer-Matrix des gegenwärtigen Produktpfades
+
+Inventar: alle in ProductRuntime verdrahteten Repositories und produktiven Start-/
+Maintenance-/Datei-/Keystorepfade, deren Stores/DAOs, Transaktionen und Trigger.
+Prototyp-/manuelle Probe-Repositories sind getrennte Testdatenpfade und keine
+zusätzlichen Produktwriter. Keine Behauptung über noch nicht implementierte Lösch-
+oder Berechtigungssysteme.
+
+Für die Tabellen gelten folgende **konkreten Grenzprofile**; jede Zeile nennt das
+zutreffende Profil, damit Queue, Commit, Rollback, UNKNOWN, Cleanup und Publication
+nicht aus einem Value-Callback erraten werden:
+
+- **S (bisheriger einzelner SQL-Write):** Einstieg im genannten öffentlichen Repository,
+  acquire(READY) vor `worker.execute`; bisher **keine** Workspaceinvalidierung dort.
+  Worker: Inventory/SessionDbKeyOwner.withDbKey/ActionDatabaseAccess.use; T =
+  `withWriteTransaction` (Room IMMEDIATE), C = äußerer SQL-END-Rücklauf, B2 prüft COMMIT
+  nochmals am tatsächlichen Statement. R = Throw löst Room-Rollback aus; normal
+  zurückgegebene fachliche Rejections können eine leere Transaktion committen.
+  U = kein positiver Outcome-Beleg bei Throw, insbesondere END/Revoke/Cleanup;
+  bisher generischer Fehlerpfad statt sicherer Commit-/Rollbackklassifikation.
+  L = Native-Preflight-Close, Room.close, parent.cancelAndJoin, driver.close,
+  Lifecycle-Healthy-Prüfung, DB-Publicationcheck, Keylease-Wipe/-Scopeende.
+  P = `main.execute { context.publish { callback(result) } }` erst nach Rücklauf
+  dieser Scopes; Fehler melden bei noch gültigem Kontext Storage-BLOCKED. **UNWIRED.**
+- **T (neuer Task-Slice):** acquire/check READY, synchroner Invalidierungsport **vor**
+  Workerqueue. T = tatsächliche Room-`useWriterConnection` und nicht verschachtelte
+  IMMEDIATE-Transaktion. C/R-Beleg erst nach erfolgreichem äußerem END/ROLLBACK und
+  `inTransaction()==false`, noch vor Connectionpool-/DB-/Key-Cleanup. Fachrejection
+  ruft ausdrücklich `TransactionScope.rollback(result)`. U = jeder geworfene
+  BEGIN/Body/END/ROLLBACK ohne bestätigten Endrücklauf bleibt UNKNOWN; kein Retry.
+  L = erst vollständiger normaler Rücklauf aus demselben DB-/Keyscope bestätigt COMPLETE;
+  sonst FAILED_OR_UNCONFIRMED, auch bei bereits belegtem COMMITTED. P = Main-Abschluss
+  der Invalidierung, Einmalkonsum, danach ursprüngliches Context.publish + aktuelle
+  Ticket-/Bindingprüfung. Keine Payload bei unbekanntem/fehlerhaftem Ausgang.
+- **L (Leadership):** `run` reserviert einmalige Cleanup-Runnable, acquire READY und
+  queue; `mutate`/Grantprüfungen und Requestcounter ergänzen den Kontext. SQL-T/C/R wie S,
+  außerhalb SQL ggf. Keystore- und Kryptoschritte. U ist nicht atomar über diese Ressourcen;
+  SensitiveProblem wird fachlich abgelehnt, sonst UNAVAILABLE; kein Workspace-Outcome-Beleg.
+  Cleanup wischt Passphrasen/temporäre Keys, cancelt Grants bei Revoke/Queuefehler und
+  schließt jeden DB-/Keyscope. Main-Publication prüft Request/Grant und ursprüngliches
+  Context.publish. Dies ersetzt **keine** gemeinsame Workspaceinvalidierung.
+- **D (Dokumente):** `DocumentProductDispatch.run`: acquire READY + Namespace-Ticket
+  vor Queue, Worker unter exklusiver Lane, jede unten genannte DB-Phase eigenständig
+  transaktional. Keine globale DB/Dateisystematomarität, kein Workspace-Vor-Queue-Hook.
+  Persistierte Jobphasen markieren bestätigte Teilschritte; zwischen ihnen gilt UNKNOWN/
+  Recoverybedarf. File-/Stream-/Snapshot-/Key-/DBcleanup und Laneende vor endgültiger
+  Main-Contextpublication. Sourcefehler: MAINTENANCE_REQUIRED bzw. Rejection, kein
+  behaupteter Gesamtrollback. Storage-/Cleanupfehler: BLOCKED; Revoke unterdrückt Callback.
+- **M (Maintenance/Start):** bestehender SessionCoordinator autorisiert AUTHENTICATING/
+  MAINTENANCE, kein READY-Reuse; Runtime queue mit Cancelprobe. DB-/File-/Keysteps nur
+  unter diesem Kontext. Keine neue Sessionautorität oder Recoveryzustandsmaschine.
+  READY erst nach gesamter Barriere/Operation-Cleanup, erneuten Kontextchecks und
+  `done(success)`; Zwischenfehler bleiben unklar/partial/BLOCKED, keine READY-Freigabe.
+
+Kernlegende: **A** Action, **P** Personen/Karten, **O** Operations/Funktionssummary,
+**T** Tasks/Details/Chronik, **Z** globale/gefilterte/personenbezogene Taskzähler.
+Module außerhalb des jetzigen retained Kerns sind ausdrücklich zusätzlich genannt;
+„kein direkter Kernpayload“ bedeutet niemals Freigabe für einen ungeprüften RAM-Hit.
+Bei UNKNOWN, Permission-/Sessionverlust oder Recovery muss der spätere einzige Owner
+sämtliche betroffenen Bindings/Seiten invalidieren und darf keinen Scopehit liefern.
+
+| Produktiver Einstieg vor Queue | T / C / R / U / Cleanup / endgültige Publication | betroffene Projektionen | Anschluss |
+|---|---|---|---|
+| ProductActionRepository.createAction | S; Syntaxprüfung vor run; eine Action-INSERT-Transaktion | A/Aktionsliste; spätere Scopeauswahl | UNWIRED / NOT SAFE FOR RAM REUSE |
+| updateAction → changeAction | S; gespeicherte Action == expected, Felder/Status im selben T geprüft; COMMIT-Gate nach UPDATE | A; abgeleitete Kernheader/Editoren | UNWIRED / NOT SAFE FOR RAM REUSE |
+| advanceActionStatus → advanceAction | S; erwarteter Status; bei PREPARATION→ACTIVE alle Operationssnapshots + Action-UPDATE atomar; bei COMPLETED completedAt; keine separate Callback-Commitannahme | A/P/O/T/Z, gesamtes Binding/Paging | UNWIRED / NOT SAFE FOR RAM REUSE |
+| ProductPersonRepository.createPerson/updatePerson → changePerson | S; Persistenzstatus PREPARATION, Duplikatprüfung und INSERT/Rename im selben T | P, personbezogene Label/Editoren, Tasks mit Personenbezug/Z | UNWIRED / NOT SAFE FOR RAM REUSE |
+| ProductOperationsRepository.createRole/renameRole/deleteRole | S; Scope/Normalisierung/Referenzen im T, RoleDelete IN_USE bei Planung/Status/Taskreferenzen | O/P; Rollenlabels in Tasks/Editoren | UNWIRED / NOT SAFE FOR RAM REUSE |
+| planRoles → OperationsStore.plan | S; assignments entfernen/neu einfügen + primary plan im selben T, nur PREPARATION | P/O/Detail-/Editorplanung; spätere ACTIVE-Initialzustände | UNWIRED / NOT SAFE FOR RAM REUSE |
+| updateSnapshot → OperationsStore.snapshot | S; vollständiger erwarteter Snapshot, Status/Rolle/Ort und UPDATE im T | P/O, Funktionsmitglieder-/Personenseiten, Detail | UNWIRED / NOT SAFE FOR RAM REUSE |
+| ProductTaskRepository.create | T; Task-INSERT + genau ein CREATED-INSERT im selben T; keine automatische Wiederholung | T/Z/P-Karten (betroffene Taskzahlen) | IMPLEMENTIERT; Snapshotowner NOCH NICHT ANGEBUNDEN |
+| edit | T; vollständiger Taskvergleich im IMMEDIATE-T, UPDATE; kein zusätzliches Event bei Inhaltsedit | T/Z/P-Karten | IMPLEMENTIERT; Snapshotowner NOCH NICHT ANGEBUNDEN |
+| transition | T; expected + TaskRules, UPDATE + genau ein fachliches TaskEvent im selben T | T/Z/P-Karten und Chronik | IMPLEMENTIERT; Snapshotowner NOCH NICHT ANGEBUNDEN |
+| delete (nur PREPARATION) | T; expected und Status im T; Event-FK-CASCADE; produktiver materials_detach_task-Trigger nullt Materiallink im selben T | T/Z/P; zusätzlich Material-/Linkprojektion außerhalb aktuellem Kern | IMPLEMENTIERT für Kern; Material-RAM bleibt UNWIRED |
+| ProductMaterialRepository.create/edit/delete | S; Referenzen, expected, Task-/Personenlinks und Materialänderung im T | Materialsummary/Board/Editor außerhalb Kern; kein direkter Kernpayload | UNWIRED / NOT SAFE FOR RAM REUSE |
+| ProductExpenseRepository.create/edit/delete | S; Parent + sämtliche Payments atomar, expected/Statusprüfung; keine Zahlungs-Teilpublication | Kostensummary/Board/Editor außerhalb Kern | UNWIRED / NOT SAFE FOR RAM REUSE |
+| ProductProtocolRepository.createEntry/reviseEntry/markMistaken | S; expectedActionStatus/expectedRevision; Entry/Revision + betroffene/gemeldete Personen + Kennzeichen im selben T; Eingabelisten vor Queue eingefroren | Aktionsprotokollsummary/Timeline/Detail außerhalb Kern; Personenbezug unabhängig von Taskassignee | UNWIRED / NOT SAFE FOR RAM REUSE |
+| ProductMemoryReportRepository.create/saveSection | S; eingefrorene Abschnittswerte, Header/Revision + Antworten atomar; CAS über Header | Berichtsummary/Editor/Antworten außerhalb Kern | UNWIRED / NOT SAFE FOR RAM REUSE |
+| complete/addAddendum | S; expected Header/Status, Abschluss bzw. append-only Nachtrag + Revision im T | Berichtsummary/Detail außerhalb Kern | UNWIRED / NOT SAFE FOR RAM REUSE |
+| ProductLeadershipRepository.setup | L; RESERVED-INSERT; Argon2id/Envelope/Devicealias; gesondertes READY-UPDATE mit expected Root; kein atomarer Gesamtcommit | P3b/Leadership-Scopes, Permissionrevision/gesamtes sensibles Binding | UNWIRED / NOT SAFE FOR RAM REUSE |
+| save/deleteArea → mutate | L; Grant/Root-Epoch/expected Bereich, INSERT/UPDATE/DELETE im T; key/cipher cleanup im finally | sensibles Personendetail/Grant, gegebenenfalls gesamtes Permissionbinding | UNWIRED / NOT SAFE FOR RAM REUSE |
+| deletePerson | L; nur sensitive Bereiche der Person, passphrasen-/rootgeprüfte SQL-Löschung; **kein** Löschen der Basis-Person | P3b/Personendetail/Grant | UNWIRED / NOT SAFE FOR RAM REUSE |
+| deleteAction | L; DELETE_PENDING-UPDATE; revoke + Devicealias-Löschung; danach Bereiche/Root in zweitem T entfernen. Teilzustände bewusst nicht als Gesamtrollback interpretieren | alle P3b-/Permissionbindings dieser Aktion; Kern bei geändertem Leserecht invalid | UNWIRED / NOT SAFE FOR RAM REUSE |
+| open/revoke und Runtime.leadershipLifetime | L für Open; Request-/Grant-/Keyänderung ohne Fach-SQLwrite; Revoke synchron, Pending-Cleanup idempotent; keine neue globale Berechtigungsrevision implementiert | sensible Detail-/Formularrechte; für späteren Permissionadapter gesamte Actionbindung | UNWIRED für Workspace / NOT SAFE FOR RAM REUSE |
+
+Rollen/Funktionen verleihen **keine** Appberechtigungen. Es gibt keinen produktiven
+allgemeinen Permission-/RBAC-Writer; `permissionRevision` muss künftig vom geprüften
+Rechteadapter kommen, nicht aus einer Rollenkarte oder UI-Boolean. Änderungen/UNKNOWN
+in diesem Bereich sind bis zu dessen Anschluss kein Beleg für RAM-Reuse.
+
+| Dokument-/Recovery-/Startpfad vor Queue | tatsächliche Transaktionen/Commit, Rollback/UNKNOWN, Cleanup und Publication | Projektionen / Anschluss |
+|---|---|---|
+| ProductDocumentRepository.importDocument → DocumentImportStaging.stage | D: reserveImport → IMPORT_RESERVED-T; advanceImport → IMPORT_WRITING-T **vor** Quelldateiöffnung; CREATE_NEW, Verschlüsselung, Streamclose/fsync; advanceImport(length) → IMPORT_CLOSED-T. Jeder T eigener Commit/Roomrollback, Filezustand bleibt bei Fehler ggf. liegen | Dokumentcount/Listen/Detail/Namespace; Kernbindung bei Recovery/Storagefehler. UNWIRED / NOT SAFE FOR RAM REUSE |
+| DocumentPublication.complete | D: gebundene Snapshots; atomarer RENAME_NOREPLACE + beide Directory-syncs; markPublished → FILE_PUBLISHED-T; finish → Dokument-INSERT/Jobentfernung im T. Erfolg erst nach Gesamtpipeline; UNKNOWN zwischen SQL-/Fileschritten, keine optimistische Importpublication | Dokumentmodule/Namespace, Recoverybindung. UNWIRED / NOT SAFE FOR RAM REUSE |
+| ProductDocumentRepository.deleteDocument → DocumentDelete.delete | D: read expected; reserveDelete → DELETE_RESERVED-T; detachDeleteParent → Parententfernung + DELETE_FILE_PENDING-T; unlink/fsync/Inventar; finishDelete-T. Keine globale Rückrollbarkeit nach unlink, Job ermöglicht Recovery | Dokumentmodule/Namespace. UNWIRED / NOT SAFE FOR RAM REUSE |
+| DocumentReconciliation.run (MAINTENANCE), Abort abgebrochener Imports | M/D: Lane drainAndFence, Inventar; IMPORT_RESERVED/WRITING-Staging entsorgen/syncen und Job entfernen in eigenen abort-T; IMPORT_CLOSED/FILE_PUBLISHED kontrolliert weiterpublizieren, Deletejobs über obige Schritte abschließen; danach frisches Inventar/Jobscheck. Fehler verhindern READY; kein Teil-Recovery als erfolgreicher Kerncommit | gesamte Generation/Bindung/Seiten/Editoren. UNWIRED für Workspace / NOT SAFE FOR RAM REUSE |
+| ProductRuntime.authorizedMaintenance → reconcileProductDocuments | M: bestehende unwrapped-Key-Leihe, Dokumentbarriere; SessionDbKeyOwner.bind erst nach Reconciliation; operation.release und Fehler-Keyinvalidate vor Main done(success). Callback bindet keine eigenen Sessionfristen | gesamte Generation/Binding; kein READY-Hit während MAINTENANCE. Snapshot-Revoke-Adapter noch UNWIRED |
+| ProductRuntime.start(initialize) / ProductCredentialAuthentication.start | M/Setup: acquire Credentialflow; im Worker ProductInventory.reserve(intent), ProductDbEnvelope.prepareNewRoot (Keystore + Publicdatei), später authentifiziert Envelope schreiben; keine DBtransaktion vor Keyauth. Cancel/Fehler kann PARTIAL hinterlassen; kein erfundener Rollback/Reparaturpfad | gesamte Storage-/Sessionwurzel. UNWIRED für Workspace / NOT SAFE FOR RAM REUSE |
+| Initialisierungs-Maintenance: prepareDatabaseDirectory / ActionDatabaseAccess.use(creates) / Inventory.finish | M: Verzeichnis/Room-Schema/DBanlage, erneute Preflights, complete-Marker mit fsync; Einzeldateischritte nicht global atomar. keykopien/finale Scopes werden gewischt/beendet; READY nur nach Barriere | gesamte Storagewurzel/Generation. UNWIRED für Workspace / NOT SAFE FOR RAM REUSE |
+| ActionDatabaseAccess.open: Room-Migrationen 1→11 und OnCreate-Constrainttrigger | Implizite mögliche SQLwrites bereits beim Öffnen, vor Repositorybody; unter bestehendem Driver-/Contextguard. Migrationen transaktional von Room, Journal-/Dateierzeugung nicht gleich Fachsnapshot. Kein eigener Workspacehook in bisherigen Read-/Openpfaden; kein neuer Migrationscode hier | alle Projektionen. BLOCKER für spätere Wiederverwendung; Schema muss vor Scopeadmission stabil sein |
+| LOCKED/BLOCKED/Close/Grant-Revoke/Recoverybeginn | kein Fach-SQL-T: SessionCoordinator widerruft bestehende Autorität; Runtime invalidiert Keyowner/Grants. Zukünftiger einziger Snapshotowner muss synchron sämtliche Payloadreferenzen freigeben; dies ist nicht durch Taskoutcomes ersetzt | alle Bindings/Seiten/Editoren. #37 NOCH NICHT ANGEBUNDEN |
+
+Nicht vorhandene Pfade explizit: kein produktiver allgemeiner Action-/Basis-Person-
+Delete-Endpoint, keine globale Retention-/Purgeimplementierung und kein allgemeiner
+P3b-Passphrasenwechsel-/RBAC-Writer. Entsprechende Ziele/Schemastatus sind keine bereits
+abgedeckten Writer. Die Schema-FK-/Material-Detachtrigger sind Folgewrites ihrer
+Parenttransaktion; künftige Parentdeletepfade müssen diese Module ebenfalls invalidieren.
+Neue Pfade müssen **vor** möglicher RAM-Aktivierung dieselbe Matrix erweitern.
+
+### 46.3 Zentraler Vor-Queue-Vertrag und bestehende Validity
+
+Domainport `WorkspaceMutationInvalidation.beforeTaskQueue(actionId,generation)` ist
+synchron auf dem Ownerthread, nach bestehender READY-Zulassung und **vor** dem ersten
+`worker.execute`. Ein verweigertes Ticket führt zu keinem Writequeue-Eintrag; ein
+zweiter überlappender Editor bekommt STALE. Metadaten allein erteilen keine Storage-
+oder Writeberechtigung; Persistenzstatus, Referenzen, expected Task und COMMIT werden
+weiterhin in der autorisierten Transaktion geprüft.
+
+`ActiveWorkspaceMutationAdapter` delegiert auf **dieselbe** bestehende
+ActiveWorkspaceValidity-Instanz. Taskmutation invalidiert TASKS, TASK_COUNTS und PEOPLE
+(die neuen Personenkarten enthalten betroffene Taskzahlen). Keine Action-/Operations-
+Payload wird durch Taskwrites fachlich geändert. Das jeweilige globale Mutationsepoch-
+Fencing verhindert trotzdem Seitenmischung. Pending sperrt sämtliche beginRead-/
+canReuse-Versuche dieser Instanz. COMMITTED oder ROLLED_BACK + COMPLETE schließen nur
+Pending; beide bleiben dirty bis zu einem vollständigen autorisierten Reload.
+UNKNOWN oder FAILED_OR_UNCONFIRMED wird auf RECOVERY_REQUIRED abgebildet. Kein
+Repository-Value ruft `publishMutation` auf oder erklärt eine Teilprojection für clean.
+
+Die neue `writerResultCurrent`-Prüfung erlaubt lediglich einen aktuellen fachlichen
+Repositorycallback, niemals einen RAM-Hit. Neuer Read/neue Mutation, Action-/Generation-/
+Permissionwechsel, Revoke oder Recovery fencen den alten Writerabschluss. Doppelte
+Abschlussversuche werden von bestehenden Ticketidentitäten bzw. der Dispatch-Einmalgrenze
+abgewiesen. Keine neuen Session-/Berechtigungstokens oder Payloadregistry.
+
+**NOCH NICHT ANGEBUNDEN:** ProductRuntime konstruiert keinen ActiveWorkspaceValidity-
+Snapshotowner und installiert den Adapter nicht automatisch. Der Default
+UncachedWorkspaceMutations hält nur Epoch + höchstens eine pending/latest Ticketidentität,
+keine Action-/Personen-/Taskpayload und keine Read-API. Er zählt und sperrt produktive
+Taskarbeit vor Queue; UNKNOWN/unbestätigtes Cleanup sperrt diese Generation. Nach einem
+neuen, vom bestehenden READY-Kontext gelieferten Generationwechsel und ohne altes Pending
+ist frische **ungecachte** Writebuchführung zulässig. Das restauriert niemals eine
+revokte/unklare ActiveWorkspaceValidity, kein Payload und keinen Cache. Verlorene Main-
+Dispatches bleiben pending/dirty; keine Workerthread-Reparatur oder automatische Wiederholung.
+Die spätere Komposition mit einem einzigen vertrauenswürdigen Owner bleibt #37.
+
+### 46.4 Tatsächlicher Transaktions- und Cleanupbeleg im Taskwriter
+
+`confirmedTaskTransaction` verwendet die bereits geöffnete Room-Writerconnection.
+Ein bereits aktiver äußerer T wird verweigert: ein SAVEPOINT-RELEASE ist kein
+bestätigter Gesamtcommit. Schon ab Ressourcen-/Openversuch ist der Ausgang UNKNOWN
+(Öffnen kann selbst Room-Migrationswrites auslösen); vor dem äußeren T ebenfalls. Erst nach
+Rückkehr aus `Transactor.withTransaction(IMMEDIATE)` und überprüft beendetem T wird
+COMMITTED (Value) oder ROLLED_BACK (explizite fachliche Rejection) notiert.
+Die lokale Room-3.0.3-Quellimplementierung wurde dafür geprüft: withWriteTransaction
+ist useWriterConnection + IMMEDIATE; Passthrough führt END/ROLLBACK im finally aus.
+Der bestehende B2Driver prüft weiterhin am wirklichen END/COMMIT; unverändert.
+
+Keine Behauptung eines bestätigten Rollbacks bei beliebiger Exception: selbst wenn
+SQLite tatsächlich zurückgerollt hat, fehlen nach geworfenem END/ROLLBACK oder
+spätem Wrapperfehler ggf. verlässliche Belege. Ein synthetisch erfolgreicher Task-
+Rückgabewert ohne diesen Transaktionsbeleg wird verworfen. Kein Commitbeleg aus
+`OperationsResult.Value` allein, kein optimistischer Erfolgszustand bei UNKNOWN.
+
+`TaskWriteProgress` trennt Outcome und Cleanup. Öffnen setzt Cleanup auf
+FAILED_OR_UNCONFIRMED. COMPLETE wird erst nach dem normalen Rücklauf aus der gesamten
+Inventory-/Keylease-/ActionDatabaseAccess-/Room-/Transaktionsarbeit gesetzt. Ein nach
+bestätigtem Commit geworfener DB-/Lease-/Publicationcheck erhält den bekannten
+COMMITTED-Befund, **aber kein erfolgreicher Gesamtabschluss**; Validity wird unbrauchbar.
+Wenn der bestehende Wrapper bei Revoke nach Cleanup wirft, kann der Slice Cleanup
+nicht separat beweisen und verweigert konservativ. SessionDbKeyOwner,
+ActionDatabaseAccess, SessionCoordinator, StorageAccess und B2Driver wurden dafür
+nicht umgebaut. Throw vor jedem Ressourcen-/Transaktionsversuch ist als Nichtausführung
+ROLLED_BACK/COMPLETE erkennbar, kein erfolgreicher Fachwrite.
+
+Ein AtomicBoolean konsumiert den Workerdispatch einmal (auch duplizierte Runnables
+schreiben nicht zweimal), ein zweites den Mainabschluss. Tatsächlicher Persistenzcommit
+kann vor einem später verweigerten Callback liegen; es wird deshalb **nicht erneut
+geschrieben**. Main-Publication erfolgt erst nach Cleanup und Ticketfinish, unter dem
+ursprünglichen StorageContext und aktueller Metadatenprüfung. Schlägt Mainqueue fehl,
+bleibt Pending bestehen; fällt die Workerqueue sicher vor Beginn aus, wird Nichtausführung
+abgeschlossen. Keine Reparatur durch zweite Ausführung.
+
+### 46.5 Tests, belegte Fälle und Grenzen
+
+**GETESTET auf echtem SQLite/Schema 11:** TaskStoreData ist ein kleiner interner
+Persistenzport. Produktiv delegiert RoomTaskStoreData auf dieselben bisherigen Room-
+DAOs; HostTaskData führt echte SQL-Statements auf der vorhandenen In-Memory-Bridge aus.
+TaskStore-Regeln, erwarteter vollständiger Taskvergleich und Write-/Eventlogik bleiben
+identisch. Hosttransactor führt wirklich BEGIN IMMEDIATE/COMMIT/ROLLBACK aus und
+injiziert gezielte Fehler/Races; keine gemockten Commitantworten als SQLbeweis.
+
+Elf neue Data-Hostmethoden prüfen: Vor-Queue-Epoch, Pending/zweite Editoren, Create mit
+CREATED, Edit ohne Event, vier fachliche Statuswechsel mit **genau einem** weiteren
+Event je Erfolg, STALE-Konflikte mit explizitem Rollback/ohne Event, ungültige Eingaben,
+Delete samt Event-CASCADE, Event-/Body-/BEGIN-/END-/ROLLBACKfehler, echten SQLite-
+Event-INSERT-Abbruchtrigger, bestätigten SQLcommit mit danach verlorenem Endrücklauf
+(UNKNOWN, gespeicherte Zeile + Event bleiben genau einmal), Revoke vor Queue/nach Queue/
+vor Commit/nach Commit/vor Publication, Generationwechsel vor Maincallback, beide
+Cleanupfehler nach Commit sowie Cleanupfehler nach bestätigtem Rollback, doppelte
+Worker/Main-Runnables, Queuefehler, verbotene Nesting-Savepoints und einen Value ohne
+Transaktionsbeleg. Bei Fehlern keine Erfolgspublication, kein Retry, kein Doppelevent.
+
+Vier neue App-Adaptermethoden plus alle bestehenden Validity-/Session-/Securitytests:
+sauber geladene Projektionen synchron dirty/Pending vor Queue, verweigerter RAMread,
+alle Outcome-/Cleanupkombinationen, weiterhin dirty nach Commit/Rollback, terminales
+UNKNOWN, Action-/Generation-/Permission-/UNKNOWN-/Revoke-Bindingverlust, neue Reads/
+Editoren gegen alte Resultate und doppelte Abschlüsse. Der Produktdefault kann auch
+nach neuem Generationstart niemals RAM-Reuse erlauben.
+
+Ein zusätzlicher **nur offline kompilierter** Androidtest
+`TaskStorageTest.repositoryWriterEvidenceIsAfterCleanupAndNeverInventedByTaskCallback`
+ist für den echten ProductTaskRepository→Room/B2→DB-/Key-Cleanup-Pfad vorbereitet.
+Er prüft den Commit bei noch verzögertem Callback, Einmalabschluss, fachlichen Rollback
+und genau ein Statusereignis. **NICHT AM GERÄT GETESTET.** Hosttests ersetzen weder
+native Room-/SQLCipher-/Keystore-/Cursorfreigabe noch einen realen Session-Revoke-
+Instrumentationsnachweis. Keine Geräteinstallation oder connectedAndroidTest.
+
+Reproduktion fokussiert:
+`./gradlew :data:testDebugUnitTest --tests '*TaskMutationSqliteTest' :app:testDebugUnitTest --tests '*ActiveWorkspace*' --offline`.
+Abschlusslauf mit `:app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest
+:app:assembleDebug :data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin
+:app:verifyPrototypeManifest :app:verifyDemoManifest --offline`: **617 App + 752 Data +
+4 Security = 1373 Hosttests, 0 Fehler, 0 Skips**; Architekturcheck, Offline-Appbuild,
+beide Androidtest-Kompilationen und Produkt-/Demo-Manifeste grün. Anschließend wurde
+die verstärkte UNKNOWN-Assertion vor Tasktransaktionsbeginn mit den fokussierten
+Data-/Validity-/Sessiontests nochmals geprüft; keine funktionale Produktionsänderung
+zwischen diesen Läufen. Kein Androidtest
+installiert oder ausgeführt. `git diff --check` und `git status -sb` geprüft.
+
+### 46.6 BLOCKER und Grenzen für die folgenden Slices
+
+- [#35](https://github.com/JulianGKK/action-planner/issues/35): Taskwritergrenze und
+  integrierbarer bestehender Validity-Adapter IMPLEMENTIERT/hostgetestet. Alle übrigen
+  obigen Writer und impliziten Migrationen bleiben ausdrücklich **UNWIRED / NOT SAFE
+  FOR RAM REUSE**. Kein vollständiger globaler Invalidierungsschutz behauptet.
+- [#36](https://github.com/JulianGKK/action-planner/issues/36): vorhandener vollständiger
+  expected-Taskvergleich im IMMEDIATE-T bleibt bestehen. Kein neuer revisionsbasierter
+  allgemeiner Editor-CAS-/ABA-Vertrag, keine Optimistic-UI-Aktivierung. Monotone Revision,
+  Scope-/Formularbindung und Konflikt-UX aller Editoren sind ein eigener Slice.
+- [#37](https://github.com/JulianGKK/action-planner/issues/37): produktiver einziger
+  Snapshot-/Formular-/Seitenowner und autoritative Action-/Permissionadapter, synchroner
+  Payload-Revoke, Recovery-/Generationwechsel sowie Anschluss **aller** Writer fehlen.
+  Der Metadatenport ist kein zweiter Payloadowner. Keine längere RAM-Vorhaltung freigegeben.
+- [#38](https://github.com/JulianGKK/action-planner/issues/38): keine Navigation verändert,
+  keine RAM-Hits/Snapshotaktivierung und keine neue Produktperformancebehauptung.
+- [#32](https://github.com/JulianGKK/action-planner/issues/32): Cursor-/Cleanup-/Native-
+  BLOCKER unverändert. SQLCipherStatement.close() schließt den Cursor nicht explizit;
+  erfolgreiche DBwrapper-Rückkehr, Hoststatement-Close und frühere FD-PASS beweisen keine
+  vollständige native Cursorfreigabe. Dieser Slice erzeugt keinen spekulativen Driverfix.
+
+Unverändert: SessionCoordinator/StorageAccess/SessionDbKeyOwner, SQLCipher/Tink/B2Driver,
+Schema 11, 180-s-Absoluttimeout/30-s-READY-Idle und 8+8-MiB-Budget. ProductViewModel,
+TaskModel, TaskScreen, übrige Writer und Produktnavigation unangetastet. Keine neuen
+Permissions, Dependencies, Klartextdateien oder Registry. Keine Änderung installierter Apps.
+
+Neue Dateien: WorkspaceMutationInvalidation.kt, TaskMutationBoundary.kt,
+ActiveWorkspaceMutationAdapter.kt, TaskMutationSqliteTest.kt, HostTaskData.kt und
+ActiveWorkspaceMutationAdapterTest.kt. Geändert: ProductTaskRepository.kt,
+ProductRuntime.kt (Portkomposition, weiterhin ungecachter Default),
+ActiveWorkspaceValidity.kt (reine Writerresultat-Fence), TaskStorageTest.kt (nur offline
+vorbereiteter zusätzlicher Androidproof) und dieser Assessmentabschnitt.
+Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder
+Gerätekennungen im Commit. Regulärer WIP-Commit/Push; unabhängiger Remote-SHA-Abgleich;
+danach **STOPP bis zum unabhängigen GitHub-Review**. Kein Force-Push, Merge, Release
+oder Produktupdate. Release 1.0 nicht als performant/produktionsreif freigegeben.

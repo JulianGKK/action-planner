@@ -7,7 +7,8 @@ import org.pag.domain.StorageAccess
 import org.pag.domain.StorageContext
 
 /**
- * Metadata only; NOT wired to navigation or writers. One owner thread, one ACTIVE binding,
+ * Metadata only; writer adapter available, NOT wired to product navigation/retention.
+ * One owner thread, one ACTIVE binding,
  * no rebinding/reset after revoke or uncertain storage outcome. No payload/IO/key ownership.
  *
  * [currentBinding] must later come from the trusted scope/permission adapter, not a form.
@@ -49,6 +50,7 @@ internal class ActiveWorkspaceValidity(
     private var read: Read? = null
     private var pending: Mutation? = null
     private var committed: Mutation? = null
+    private var writerCompletion: Mutation? = null
     private var publishing = false
 
     private fun owner() { check(Thread.currentThread() === thread) }
@@ -72,7 +74,7 @@ internal class ActiveWorkspaceValidity(
         // Terminal identity invalidation does not require an increment (or risk overflow).
         if (state == State.RECOVERY_REQUIRED) return
         state = next
-        read = null; pending = null; committed = null; clean.clear()
+        read = null; pending = null; committed = null; writerCompletion = null; clean.clear()
     }
     fun revoke() { owner(); terminate(State.REVOKED) }
     private fun advance(mutation: Boolean): Boolean = try {
@@ -95,7 +97,7 @@ internal class ActiveWorkspaceValidity(
     fun beginMutation(parts: Set<Projection>): MutationTicket? {
         context() ?: return null
         if (publishing || pending != null || parts.isEmpty() || !advance(true)) return null
-        read = null; committed = null; clean.removeAll(parts)
+        read = null; committed = null; writerCompletion = null; clean.removeAll(parts)
         return MutationTicket().also { pending = Mutation(it, mutationEpoch, parts.toSet()) }
     }
 
@@ -112,8 +114,20 @@ internal class ActiveWorkspaceValidity(
         if (pending !== write) return false
         pending = null
         committed = write.takeIf { outcome == Outcome.COMMITTED }
+        writerCompletion = write
         // A definite rollback remains dirty until a fresh authorized read.
         return true
+    }
+
+    /** A repository result is NOT a complete projection patch and never marks clean.
+     * Owner-thread check used inside the original StorageContext publication gate. New read,
+     * mutation, scope/permission loss or UNKNOWN fences an old repository callback.
+     */
+    fun writerResultCurrent(ticket: MutationTicket): Boolean {
+        context() ?: return false
+        return !publishing && pending == null && writerCompletion?.let {
+            it.ticket === ticket && it.epoch == mutationEpoch
+        } == true
     }
 
     /** Same demand coalesces; a different concurrent demand is denied, not queued unboundedly. */
@@ -122,7 +136,7 @@ internal class ActiveWorkspaceValidity(
         if (publishing || pending != null || parts.isEmpty()) return null
         read?.let { return it.ticket.takeIf { _ -> it.parts == parts } }
         if (!advance(false)) return null
-        committed = null; clean.removeAll(parts)
+        committed = null; writerCompletion = null; clean.removeAll(parts)
         return ReadTicket().also { read = Read(it, mutationEpoch, loadEpoch, parts.toSet()) }
     }
 

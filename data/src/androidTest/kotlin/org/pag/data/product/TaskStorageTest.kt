@@ -53,6 +53,38 @@ class TaskStorageTest {
         return ProductTaskRepository(app,object:StorageAccess{override fun acquire(scope:AccessScope)=c.takeIf{it.check(AccessPoint.OPERATION)}},i,{owner},direct,main,{fail("P5A-UNEXPECTED-STORAGE-BLOCK")}){++time}
     }
     @After fun wipe(){owners.forEach{it.invalidate()};key.fill(0)}
+    /** Prepared offline only in P11 #35; no device execution implied. Exercises the real
+     * ProductTaskRepository -> Room/B2 transaction -> DB/key cleanup -> evidence callback.
+     */
+    @Test fun repositoryWriterEvidenceIsAfterCleanupAndNeverInventedByTaskCallback() {
+        val i=fixture();val c=context();val owner=SessionDbKeyOwner.bind(c,key);owners.add(owner)
+        val pending=mutableListOf<Runnable>();val completions=mutableListOf<WorkspaceWriteCompletion>()
+        val uncached=UncachedWorkspaceMutations()
+        val sink=object:WorkspaceMutationInvalidation {
+            override fun beforeTaskQueue(actionId:String,generation:Long):WorkspaceMutationInvalidation.Pending? {
+                val ticket=uncached.beforeTaskQueue(actionId,generation)?:return null
+                return object:WorkspaceMutationInvalidation.Pending {
+                    override fun finish(completion:WorkspaceWriteCompletion):Boolean {completions.add(completion);return ticket.finish(completion)}
+                    override fun isCurrent()=ticket.isCurrent()
+                }
+            }
+        }
+        val r=ProductTaskRepository(app,object:StorageAccess {override fun acquire(scope:AccessScope)=c.takeIf{it.check(AccessPoint.OPERATION)}},
+            i,{owner},direct,Executor{pending.add(it)},{fail("P11-WRITER-UNEXPECTED-BLOCK")},sink){++time}
+        var task:Task?=null
+        r.create("a",TaskInput("Synthetic writer proof")){task=value(it)}
+        assertNull(task);assertTrue(completions.isEmpty());assertEquals(1L,uncached.mutationEpoch)
+        assertEquals(1,board(i).events.size) // committed in SQL, callback still queued
+        val callback=pending.removeAt(0);callback.run();callback.run()
+        assertNotNull(task);assertEquals(listOf(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)),completions)
+        r.create("a",TaskInput("")){rejected(it,OperationsFailure.INVALID)}
+        pending.removeAt(0).run()
+        assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),completions.last())
+        r.transition("a",task!!,TaskStatus.DONE){task=value(it)};pending.removeAt(0).run()
+        assertEquals(2,board(i).events.size);assertEquals(TaskStatus.DONE,task!!.status)
+        r.transition("a",task!!,TaskStatus.DONE){rejected(it,OperationsFailure.INVALID)};pending.removeAt(0).run()
+        assertEquals(2,board(i).events.size);assertFalse(uncached.ramReuseEnabled)
+    }
     @Test fun integrationReopenAndSnapshotStaySeparate(){
         val i=fixture();val r=role(i);advance(i)
         use(i){d->d.withWriteTransaction{val old=d.operations().state("a","Motte")!!.model();value(OperationsStore(d,context()){++time}.snapshot("a","Motte",old,OperationalStatus.IN_CUSTODY,null,"Gesa 1"))}}

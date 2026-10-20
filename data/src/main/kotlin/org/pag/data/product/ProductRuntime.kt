@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 /** Activity-owned composition. No global key/database registry, no retained session. */
 class ProductRuntime(activity: Activity, private val worker: Executor, private val main: Executor,
+    taskMutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(),
     foreground: () -> Boolean) {
     private val noBackupRoot = productNoBackupRoot(activity.noBackupFilesDir)
     private val root = File(noBackupRoot, "pag-db-v1")
@@ -81,7 +82,7 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
     val persons: PersonRepository = ProductPersonRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
     val tasks: TaskRepository = ProductTaskRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure)
+        { owner.get() }, worker, main, session::storageFailure, mutations = taskMutations)
     val protocol: ProtocolRepository = ProductProtocolRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure)
     val material: MaterialRepository = ProductMaterialRepository(activity.applicationContext, session, inventory,
