@@ -6,12 +6,12 @@ package org.pag.domain
 data class ActiveCoreReservation(val retained: ActiveWorkspaceBudget.Units,
     val transition: ActiveWorkspaceBudget.Units)
 
-/** One action object, complete people/functions/operations and ONE explicit task page.
+/** One action object, one people page + complete function counts and ONE explicit task page.
  * No full TaskBoard, provenance/editor copies or event history. State is the same trusted
  * binding/epoch metadata used by compact paging; it grants no session permission.
  */
 data class ActiveCorePayload(val state: CompactTaskState, val action: Action,
-    val operations: OperationalBoard, val tasks: CompactTaskPage)
+    val people: CompactPeoplePage, val functions: CompactFunctions, val tasks: CompactTaskPage)
 
 sealed interface ActiveCoreResult {
     data class Value(val core: ActiveCorePayload, val reservation: ActiveCoreReservation,

@@ -35,14 +35,20 @@ class ProductActiveCoreReader(app: Context, private val access: StorageAccess,
 internal fun activeCoreRead(state: CompactTaskState, access: StorageAccess,
     currentState: () -> CompactTaskState?, blocked: () -> Unit,
     work: (StorageContext, () -> Boolean) -> ActiveCoreResult.Value): ActiveCoreResult {
-    fun denied(status: BoundedActiveStatus) = ActiveCoreResult.Rejected(status)
+    return boundedProjectionRead(state, access, currentState, blocked, { ActiveCoreResult.Rejected(it) }, work)
+}
+
+/** Shared boundary for complete core/page/detail: cleanup must precede publication. */
+internal fun <R, V : R> boundedProjectionRead(state: CompactTaskState, access: StorageAccess,
+    currentState: () -> CompactTaskState?, blocked: () -> Unit,
+    denied: (BoundedActiveStatus) -> R, work: (StorageContext, () -> Boolean) -> V): R {
     val c = access.acquire(AccessScope.READY) ?: return denied(BoundedActiveStatus.ACCESS_REVOKED)
     fun current() = c.scope == AccessScope.READY && c.generation == state.binding.generation && currentState() == state
     if (!current()) return denied(BoundedActiveStatus.ACCESS_REVOKED)
     return try {
         requireOperations(c, AccessPoint.OPERATION)
         val value = work(c, ::current)
-        var result: ActiveCoreResult = denied(BoundedActiveStatus.ACCESS_REVOKED)
+        var result: R = denied(BoundedActiveStatus.ACCESS_REVOKED)
         val accepted = c.publish { if (current()) result = value }
         if (accepted && c.check(AccessPoint.PUBLICATION) && current()) result
         else denied(BoundedActiveStatus.ACCESS_REVOKED)

@@ -5493,3 +5493,261 @@ Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade o
 Gerätekennungen im Commit. Regulärer WIP-Commit/Push mit unabhängigem Remote-SHA-
 Abgleich; danach STOPP bis zum unabhängigen GitHub-Review. Kein Force-Push, Merge,
 Release oder Produktupdate.
+
+
+## 45. Issue #33/#34 – Kompakte Personen- und Funktionsprojektion
+
+### 45.1 Umsetzung und erhaltene Fachsemantik
+
+**IMPLEMENTIERT, SQLITE-HOSTGETESTET, NICHT PRODUKTIV ANGEBUNDEN (2026-10-20).**
+Sauberer Ausgangszustand auf `p11-performance-optimization`, Basis
+`8efaddc382fee7b92a5dcd9f74b868639b99d47c`.
+Der gemeinsame `ActiveCorePayload` enthält jetzt genau eine Action, eine
+`CompactPeoplePage` mit höchstens 32 Karten, `CompactFunctions` mit vollständigen
+Rollenidentitäten und exakten Belegungszahlen sowie die bisherige begrenzte Taskseite.
+Er enthält **kein OperationalBoard**, keine vollständige Taskliste und keine Events.
+Die vollständigen `BoundedActiveStore`-/`BoundedTaskStore`-Reader und deren Grenzen,
+Fachmodelle, Writes sowie vorhandenen Host-/Android-Proofs bleiben verfügbar.
+
+Geprüfte tatsächliche Abhängigkeiten:
+
+- `ActivePeople` verwendet heute `OperationalBoard.persons`, vollständige Statuscounts,
+  Rollenlookup, Ort/Zeit und `TaskBoard.affectedCount`. Neue Karten enthalten genau
+  Pseudonym, Erstellungszeit/ID, Operationsstatus, aktuelle Rollen-ID/-Name, Ort,
+  Updatezeit und exakte Anzahl betroffener OPEN/IN_PROGRESS-Tasks. Die letzte Zahl
+  kommt aus allen Tasks der Aktion, nicht aus der Taskseite oder Zuständigkeit.
+  Die vorhandenen Anzeige-/Zeitregeln bleiben Sache der späteren UI-Integration.
+- `ActiveFunctions`/`activeFunctionPeople` gruppieren ausschließlich **ON_SITE** nach
+  aktueller Rolle. Geplante Rollen und NO_STATUS mit vorgemerkter aktueller Rolle
+  zählen dort nicht. `CompactFunctions` liefert alle Rollen, auch unbesetzte, mit
+  exakten ON_SITE-Zählern, Ohne-Funktion-Zahl, ON_SITE-Gesamtzahl und Zahl verwendeter
+  Funktionen. Keine vollständigen Pseudonym-/Mitgliederlisten pro Gruppe im Kern.
+- `OperationalBoard` sortiert Personen nach `createdAt`, dann Kotlin-UTF16-ID;
+  Rollen nach `OperationalRules.normalizedName`, dann UTF16-ID. Dies bleibt erhalten,
+  einschließlich Gleichständen, Unicode, Supplementary-Zeichen und eingebettetem NUL.
+- `OperationsModel` erwartet vollständige Rollenplanung, `preferredRoles`, aktuellen
+  Snapshot als erwarteten Writezustand und derzeit auch globale Ortsvorschläge.
+  `ProductViewModel` hält weiterhin ein vollständiges `WorkspaceSnapshot.operations`.
+  Beide sind **nicht** auf den neuen Vertrag umgestellt. Ortsvorschläge sämtlicher
+  Personen werden nicht heimlich in den neuen Detailread aufgenommen.
+
+### 45.2 Paging, vollständige Details und Autorität
+
+`CompactActivePeopleReader`/`ProductCompactPeopleReader` bieten ausdrückliche
+Workerreads: allgemeine Personenseite, Funktionsmitgliederseite und vollständiges
+Detail einer ausgewählten Person. Funktionsfilter `Function(null)` bedeutet ON_SITE
+ohne Funktion, `Function(roleId)` ausschließlich aktuelle ON_SITE-Mitgliedschaft;
+`All` bedeutet alle Personen. Dies ist getrennt vom Taskfilter `affectedPersonId`.
+Jede Seite enthält globale Verteilung aller acht Statuswerte und die **gesamte**
+Trefferzahl ihres Filters; nie aus den höchstens 32 Karten abgeleitet.
+
+Keyset nach `(createdAt, UTF16(id))`, kein OFFSET und keine Kotlin-Vollsortierung
+aller Personen. SQL wählt nur begrenzte Schlüssel, dann werden die zugelassenen
+höchstens 32 Karten materialisiert/sortiert. Für ASCII-IDs BINARY-Fastpath, sonst
+skalare UTF8-BLOB-Rekursion mit UTF16-Sortierschlüssel, einschließlich NUL. IDs sind
+vor Sortierung auf 256 UTF8-Bytes begrenzt. Rollen werden erst nach Admission als
+vollständiger **zugelassener** Katalog sortiert; übergroße Kataloge werden verweigert.
+Keine Rollenplanung aller Personen oder Ereignischronik im Kartenpfad.
+
+Fortsetzung enthält dieselbe Action/Generation/Permission/Mutationsepoche wie das
+bestehende `CompactTaskState`, zusätzlich Filter und letzten tatsächlichen Schlüssel.
+Jeder Read prüft READY und den aktuellen vertrauenswürdigen Zustand erneut sowie
+Existenz/Filterzugehörigkeit des Endpunkts. Eine volle letzte Seite kann noch einen
+Cursor liefern; die folgende leere Seite markiert ausdrücklich das Ende. Wiederholung
+ist ein bewusster neuer SQL-Read, kein Cache. Seiten verschiedener Zustände dürfen
+niemals zusammengefügt werden; Rejection verwirft bisherige Seiten. Ein gestohlener
+oder konstruierter Cursor ist keine Autorisierung.
+
+`detail(personId)` lädt genau die vollständige `Person`, sämtliche geplanten Rollen-IDs,
+optionale Hauptrolle und vollständigen aktuellen `PersonOperationalState`. Auch mehr
+als 32 Planungsrelationen werden vollständig in 32er-SQL-Batches geliefert, nach eigener
+Admission des gesamten **ausgewählten** Details; bei Budgetüberschreitung Rejection,
+keine abgeschnittene Planung. Rollenwahl nutzt die vollständigen Rollenidentitäten,
+kein erfundenes Teil-OperationalBoard. Globale Vorschlags-/Editor-UX muss #38 gesondert
+lösen. Taskdetail/-chronik bleibt im unveränderten bewussten Taskreader mit Eventpaging.
+
+Gleiche produktive Grenzen wie §44: `SessionCoordinator`, READY-`StorageAccess` und
+`StorageContext`, vorhandener `SessionDbKeyOwner`, `ActionDatabaseAccess`, Namespace-
+Lane, SQLCipher-/Room-Preflights und genau eine Readtransaktion. Keine parallele
+Sessionautorität, keine Änderung an B2Driver, Schema 11 oder Sessionfristen.
+`boundedProjectionRead` ist die unverändert fail-closed arbeitende, gemeinsam genutzte
+Cleanup-/Publicationgrenze des bisherigen Kernreaders: Return/Publication erst nach
+Transaktions-/DB-/Key-Cleanup; nochmals Kontext-/Epochprüfung nach Publicationcallback.
+Revoke, Pending/UNKNOWN, Action-/Permission-/Generations-/Mutationswechsel, BLOCKED,
+Recovery und Cleanup-/Storagefehler liefern keine Teilpayload. Die Adapterzustände
+werden nur vertrauenswürdig simuliert; reale Writer-/UNKNOWN-Hooks bleiben #35.
+
+### 45.3 Metadaten, gemeinsame Admission und konkrete Charges
+
+`CompactPeopleStore` nutzt den bestehenden vollständigen Reader ausschließlich für
+dessen **metadatenreines** `prepare` als Encoding-/Typ-/Status-/Relations-/Kardinalitäts-
+Preflight. Dieser Vollgraphplan wird weder zugelassen noch materialisiert oder im
+Resultat gehalten. Die bisherigen frühen Einzeltext-/Metadaten-Kardinalitätsgrenzen
+bleiben konservativ erhalten. Task-Preflight sichert auch betroffene Taskzahlen.
+Danach COUNT/MAX/SUM der tatsächlich ausgewählten Karten, Action und vollständigen
+Rollenzusammenfassung, einschließlich transient gelesener Normalisierungsfelder.
+Globale Referenz-/Typ-/Statusfehler verweigern bereits vor Payload; vollständige
+Text-/Domainvalidierung erfolgt für jeden **ausgewählten** Payload vor dessen
+Publication, nicht als behauptete Vollvalidierung aller Offpage-Editordaten.
+
+Alle Metadaten beider Kernkomponenten zuerst, dann genau eine synchrone
+`CoreReadAdmission` mit einem Ledger und unverändert **8388608 Bytes retained sowie
+8388608 Bytes transition**. Erst danach Action, Personen/Funktionen und Taskseite.
+Threadgebundene Ledger/Representation-Tickets überqueren keine suspendierende
+SQL-Operation; Units und Einmal-Materialisierungspläne bleiben wie §44 unveränderlich.
+Keine zweite Actionbuchung oder versteckte Personenseite. Kein Retry/Vollread-Fallback.
+
+Neue Units beschreiben die wirklich verkleinerte Darstellung, mit unveränderten
+Engineeringgewichten und 4-/16-fachen Kopier-/Übergangsfaktoren. Personenkomponente:
+`r = Actionzeilen + Karten + Rollen`, `f = alle ausgewählten Textfelder inklusive
+nullable`, `b = deren UTF8-Bytes`. Pro Faktor `c` werden `(r+16)*c*8` Objekte,
+`(f+16)*c` Strings/Arrays, `(b+16384)*c` UTF16-Units und Arraypayloadbytes,
+16 Listen, `(r+32)*c` Listenkapazität, 8 Maps mit `r*c` Kapazität sowie
+`(r+32)*c*16` Referenzen gebucht. Die feste Reserve deckt Metadaten, Sortier-/Cursor-
+und Formularreferenzen ab. Decoder-/Zeilen-/Zwischenobjekte sind enthalten; keine
+Gewichts- oder Limiterhöhung. Taskunits und gemeinsame Hülle unverändert (§44).
+
+Echtes SQLite/Schema 11; sechs Rollen, zwei geplante Rollen und eine Hauptrolle pro
+Person, ON_SITE-Zuordnung, unabhängige Taskzuständigkeit/betroffene Person. Vollständige
+synthetische Lifecycle-Eventbestände sind in SQL gespeichert und per COUNT geprüft;
+der Kern fragt die Eventtabelle überhaupt nicht ab.
+
+| Personen / Tasks / gespeicherte Events | Action + Karten + Funktionen R / T Bytes | Taskseite R / T Bytes | gemeinsame Hülle R / T Bytes | Gesamt R / T Bytes | Ergebnis |
+|---|---:|---:|---:|---:|---|
+| 20 / 40 / 480 | 718460 / 2864624 | 580304 / 2314304 | 2080 / 7808 | **1300844 / 5186736** | ADMITTED |
+| 100 / 250 / 10000 | 861548 / 3436976 | 739152 / 2949696 | 2080 / 7808 | **1602780 / 6394480** | ADMITTED |
+| 200 / 1000 / 128000 | 861548 / 3436976 | 739612 / 2951536 | 2080 / 7808 | **1603240 / 6396320** | ADMITTED |
+
+Beim großen Bestand liegen retained **6785368 Bytes**, transition **1992288 Bytes**
+unter dem jeweiligen Limit. Gegenüber §44 sinkt der gesamte Transitionbedarf von
+33199200 auf 6396320 Bytes; die damaligen 30239856 Bytes der vollständigen
+Personenkomponente werden durch 3436976 Bytes für Action + 32 Karten + sechs
+Funktionszusammenfassungen ersetzt. Alle 200 Personen bleiben über Keysets und
+vollständige bewusste Details erreichbar; keine Aufgabe oder Eventhistorie gelöscht.
+
+**Getrennte Kataloggrenze:** 200/1000/128000 mit allen 200 ON_SITE-Personen in einer
+Funktion und **32** vorhandenen Rollen: **1816064 / 7247616 Bytes**, ADMITTED;
+alle Rollenidentitäten einschließlich 31 unbesetzter Funktionen vorhanden, sieben
+Mitgliederseiten ohne Lücken/Duplikate. Mit **100** Rollen: **2372676 / 9474064 Bytes**,
+BUDGET_REFUSED vor erstem Payload-BLOB, transition **1085456 Bytes** über Limit.
+Die gemeinsame Admission enthält dann 6514720 Transition-Bytes für die Personen-/
+Funktionskomponente (133 Zeilen, 693 Textfelder, 6468 UTF8-Bytes):
+`133*20608 + 693*2272 + 6468*80 + 1681920 = 6514720`, dazu unverändert 2951536
+Task- und 7808 Hüllenbytes. Ursache ist der vollständige Rollenkatalog mit den
+konservativen Übergangsgewichten; kein Event-Prefetch. Nicht als PASS umgedeutet. Noch größere
+Rollenkataloge benötigen einen gesonderten paginierten Katalog-/Editorwahlvertrag;
+kein unbounded Ersatzread und keine automatische Budgeterhöhung.
+
+Zwei einzeln passende reale Projektionen mit gepolsterter Actionbeschreibung werden
+weiterhin gemeinsam verweigert: **2471880 / 9870880 Bytes**, null Payload und kein
+Korruptionssignal. Bytegrenze des neuen kleinen Kerns: zusätzliche 40023 Beschreibungs-
+bytes ergeben **2101304 / 8388576 Bytes** (32 Bytes unter Limit); nächstes Byte erhöht
+transition um 80 und wird vor beiden Materialisierern verweigert. Keine Behauptung,
+dass dieser durch 80 teilbare Eingabepfad exakt das letzte Limitbyte erreicht.
+
+Tatsächliche Standalone-Charges **R / T Bytes** (keine zusätzliche Retentionfreigabe):
+
+| Personen | erste Personenseite | Personenfolge | Funktionsmitgliederfolge r0 | vollständiges Detail p0 |
+|---|---:|---:|---:|---:|
+| 20 | 660664 / 2633440 | 422784 / 1681920 | 422784 / 1681920 | 451928 / 1798496 |
+| 100 | 803752 / 3205792 | 804352 / 3208192 | 422784 / 1681920 | 451928 / 1798496 |
+| 200 | 803752 / 3205792 | 804352 / 3208192 | 446752 / 1777792 | 451928 / 1798496 |
+
+Eine Einzelrückgabe autorisiert **keine** Co-Retention von Kern + weiteren Seiten oder
+Editoren. Der Readvertrag ersetzt Seiten; gemeinsame Lebensdauer-/Ersetzungsbuchung
+und Formularreferenzen müssen im einzigen zukünftigen Owner aus #37 erfolgen. Keine
+zweite unabhängige 8-MiB-Produktfreigabe durch den Standalone-Reader.
+
+### 45.4 Reproduzierbare Hostzeiten und Aussagegrenzen
+
+Bestehende In-Memory-SQLite-Bridge mit Schema 11 auf dem Host aus §44; zwei Warmups,
+20 Messwerte je Größe, Median der beiden mittleren Werte, p95 nearest rank (19/20).
+Erster gemeinsamer Kernread bedeutet ein frischer vollständiger Readeraufruf auf
+warmem Host, kein RAM-Hit und keine Messung eines kalten Androidstarts. Gesamt umfasst
+Hosttransaktion, simuliertes DB-/Lease-Cleanup und Publication; IPC ist eingeschlossen.
+
+| Personen | Metadaten Median / p95 ms | Admission Median / p95 ms | Materialisierung Median / p95 ms | gemeinsamer Kernread Median / p95 ms |
+|---|---:|---:|---:|---:|
+| 20 | 5,619 / 6,707 | 0,019 / 0,032 | 2,435 / 3,032 | 8,266 / 9,798 |
+| 100 | 8,255 / 11,222 | 0,014 / 0,017 | 3,859 / 4,657 | 12,400 / 16,109 |
+| 200 | 17,168 / 18,495 | 0,014 / 0,018 | 4,030 / 4,799 | 21,377 / 23,268 |
+
+| Personen | Personenfolge Median / p95 ms | Funktionsmitgliederfolge Median / p95 ms | vollständiges Personendetail Median / p95 ms |
+|---|---:|---:|---:|
+| 20 | 4,172 / 5,026 | 4,035 / 4,872 | 4,095 / 4,877 |
+| 100 | 8,066 / 10,326 | 6,150 / 7,898 | 5,576 / 7,362 |
+| 200 | 12,286 / 14,698 | 10,742 / 12,209 | 9,776 / 12,629 |
+
+Die Personenfolge enthält bei 100/200 weitere 32 Karten; bei 20 ist der bewusste
+Endpunktread leer. Funktionsfolge r0 enthält bei 200 noch zwei Mitglieder nach den
+vollen ersten 32; bei 20/100 ist der Endpunktread leer. Der gesonderte 200-in-einer-
+Funktion-Test prüft außerdem sieben echte Mitgliedsseiten. Detail enthält sämtliche
+Planungsrelationen und Operationsdaten der gewählten Person, keine gekürzte Karte.
+**Engineering-Charges sind keine gemessenen ART-/Native-Heapwerte.** Hostmedian/p95
+sind keine SQLCipher-/Android-/Compose-Navigationsperformance, insbesondere kein
+100–150-ms-Produktnachweis. Für den getesteten großen Sechs-Rollen-Bestand ist der
+Datenpfad innerhalb 8+8 MiB tragfähig; dies ist keine universelle Größenfreigabe.
+
+### 45.5 Prüfungen, Änderungsumfang und verbleibende BLOCKER
+
+Sieben neue SQLite-Hostmethoden plus weiterentwickelte zwölf Kernmethoden:
+alle drei Größen, vollständige Personen-/Gruppenpagingabdeckung ohne Duplikate,
+exakte Status-/Funktions-/Filterzahlen, Ohne Funktion, NO_STATUS-Rollenvormerkung,
+unbenutzte Rollen, gemischte Planungen, vom Assignee unabhängige Taskbetroffenheit,
+Detailgleichheit mit dem bisherigen OperationalBoard (wo dessen Vollbudget zulässt)
+und erwarteten vollständigen Fachmodellen für alle 200 Personen, 100 geplante Rollen
+in einem Detail über mehrere Batches, UTF16-/NUL-/Unicode-/Zeitgleichstände, lange
+Pseudonyme/Funktionsnamen, überlange Orte/Texte vor Payload, ungültige Cross-Action-
+Referenzen, stale/fremde Cursor, Mutation/Revoke/UNKNOWN, Threadwechsel, SQL-/Storage-
+und Cleanupfehler, verspätete Publication und gemeinsame Budgetverweigerung.
+Keine Rollenplanungs- oder Eventpayloadqueries im Kern. Die bestehenden Vollreader-
+und Taskpaging-Proofs bleiben Teil des Regressionlaufs.
+
+Die ersten neuen Negativfixtures scheiterten vor dem Reader an UNIQUE-/FK-Constraints
+(mehrere geplante Rollen auf dieselbe ID; DROP einer referenzierten Tabelle).
+Fixtures gezielt korrigiert, erwartete Fail-closed-Assertions beibehalten. Der erste
+100-Rollen-Versuch war eine echte Budgetverweigerung; oben ausdrücklich als solche
+beibehalten und um den zugelassenen 32-Rollen-Fall ergänzt.
+
+Reproduktion: `./gradlew :data:testDebugUnitTest --tests '*ActiveCoreStoreTest' --tests
+'*CompactPeopleStoreTest' --offline` (für neue Messungen bei UP-TO-DATE gezielt
+`--rerun-tasks`). Vollständiger Offline-Lauf: **613 App + 741 Data + 4 Security = 1358 Hosttests,
+0 Fehler, 0 Skips**. Nach Ergänzung weiterer Assertions für exakte Filtercounts jeder
+Seite und betroffene Taskzahlen aller 200 Karten zusätzlich 19 fokussierte Kern-/
+Personenmethoden grün; keine Produktionsänderung zwischen den Läufen. Tabellenzeiten
+stammen aus dem vollständigen Offline-Lauf. Offline `:app:assembleDebug`, App-/Data-
+`compileDebugAndroidTestKotlin`, Architekturcheck und Produkt-/Demo-Manifestchecks
+erfolgreich. Keine Androidtests ausgeführt, kein connectedAndroidTest, keine
+Geräteinstallation oder Veränderung installierter Apps.
+
+- [#33](https://github.com/JulianGKK/action-planner/issues/33) /
+  [#34](https://github.com/JulianGKK/action-planner/issues/34): nachgewiesener
+  200-Personen-Vollgraphblocker für den getesteten 6-/32-Rollen-Bestand behoben;
+  größere Rollenkataloge weiterhin explizit budgetbegrenzt. Unabhängiger Review nötig.
+- [#35](https://github.com/JulianGKK/action-planner/issues/35): reale Writer-/UNKNOWN-/
+  Recovery-/Permissionhooks und atomare Invalidierung vor Writes bleiben offen.
+- [#37](https://github.com/JulianGKK/action-planner/issues/37): einziger produktiver
+  Snapshot-/Seiten-/Detail-/Formularowner, synchrone Revoke-Lebensdauer und Ersatz-
+  Admission offen. Keine Registry oder neue sensible Produkt-RAM-Lebensdauer eingebaut.
+- [#38](https://github.com/JulianGKK/action-planner/issues/38): ActivePeople und
+  ActiveFunctions verwenden weiter vollständige Boards, eager `forEach` und volle
+  Pseudonymjoins. Vor Integration separate Seiten-/Lade-/Fehler-/Leer-/Endzustände,
+  stabile Lazy-Keys/Listen, Zähler aus Metadaten statt Kartenzahl, bewusste vollständige
+  Editorloads, bounded Vorschlags-/Rollenwahl und Taskfilteranschluss implementieren.
+  ProductViewModel, OperationsModel, TaskModel, TaskScreen und Navigation unverändert;
+  keine RAM-Hits aktiviert. Reale Content-OnDraw-Messung erst nach Integration.
+- [#32](https://github.com/JulianGKK/action-planner/issues/32): Cursor-/CursorWindow-/
+  Native-/FD-/Lease-BLOCKER separat unverändert offen. `SQLCipherStatement.close()`
+  schließt den Cursor nicht explizit. Host-Statementende und simulierte Cleanupreihenfolge
+  sowie frühere FD-PASS beweisen keine vollständige native Cursorfreigabe.
+
+Neue Dateien: `CompactActivePeople.kt`, `CompactPeopleStore.kt`,
+`ProductCompactPeopleReader.kt`, `CompactSqlText.kt`, `CompactPeopleStoreTest.kt`.
+Geändert: `ActiveCoreRead.kt`, `ActiveCoreStore.kt`, `ProductActiveCoreReader.kt`
+(gemeinsame identische Publicationgrenze), `CompactTaskStore.kt` (identischen skalaren
+UTF8-Validator extrahiert; Preflight wiederverwendbar), `ActiveCoreStoreTest.kt` und
+nur dieser neue Assessmentabschnitt. Keine Dependencies, Klartextpersistenz,
+Berechtigungen, Produktwrite-/UI-/Security-/Schemaänderungen. Keine APKs, Schlüssel,
+Datenbanken, Rohlogs, Credentials, persönlichen Pfade oder Gerätekennungen im Commit.
+Regulärer WIP-Commit/Push mit unabhängigem Remote-SHA-Abgleich; danach **STOPP bis
+zum unabhängigen GitHub-Review**. Kein Force-Push, Merge, Release oder Produktupdate.

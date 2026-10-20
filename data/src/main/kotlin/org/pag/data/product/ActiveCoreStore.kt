@@ -21,9 +21,9 @@ internal class ActiveCoreStore(private val sql: PooledConnection, private val co
         gate()
         if (context.generation != state.binding.generation) throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)
         val start = System.nanoTime()
-        val people = BoundedActiveStore(sql, context, current) {
-            if (it == BoundedActiveStore.Phase.ROW) observe(Phase.PEOPLE_ROW)
-        }.prepare(state.binding)
+        val people = CompactPeopleStore(sql, context, current) {
+            if (it == CompactPeopleStore.Phase.ROW) observe(Phase.PEOPLE_ROW)
+        }.prepareCore(state)
         val tasks = CompactTaskStore(sql, context, current) {
             if (it == CompactTaskStore.Phase.ROW) observe(Phase.TASK_ROW)
         }.preparePage(state, CompactTaskQuery(affectedPersonId = affectedPersonId), null)
@@ -39,10 +39,10 @@ internal class ActiveCoreStore(private val sql: PooledConnection, private val co
         val taskPage = tasks.materialize(admission)
         gate()
         if (personPayload.action.id != state.binding.actionId || personPayload.action.status != ActionStatus.ACTIVE ||
-            personPayload.operations.actionId != state.binding.actionId || personPayload.operations.status != ActionStatus.ACTIVE ||
+            personPayload.people.state != state || personPayload.people.items.size > 32 ||
             taskPage.state != state || taskPage.query != CompactTaskQuery(affectedPersonId = affectedPersonId) || taskPage.items.size > 32)
             throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
-        val result = ActiveCoreResult.Value(ActiveCorePayload(state, personPayload.action, personPayload.operations, taskPage),
+        val result = ActiveCoreResult.Value(ActiveCorePayload(state, personPayload.action, personPayload.people, personPayload.functions, taskPage),
             admission.reservation, admission.retained, admission.transition)
         measured(Metric.MATERIALIZATION, System.nanoTime() - materializationStart)
         observe(Phase.COMPLETE); gate()
@@ -50,7 +50,7 @@ internal class ActiveCoreStore(private val sql: PooledConnection, private val co
     }
     companion object {
         // Additional disjoint joint wrapper/plan/accounting reference capacity. The Action
-        // itself belongs only to BoundedActiveStore's units, never the compact task units.
+        // itself belongs only to CompactPeopleStore's units, never the compact task units.
         internal val envelope = ActiveCoreReservation(
             ActiveWorkspaceBudget.Units(objects = 12, lists = 2, listCapacity = 4, references = 32),
             ActiveWorkspaceBudget.Units(objects = 48, lists = 4, listCapacity = 16, references = 128))

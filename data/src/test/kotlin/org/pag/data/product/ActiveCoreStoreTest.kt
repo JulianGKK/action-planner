@@ -17,7 +17,7 @@ import kotlin.coroutines.suspendCoroutine
  * not actual Android SQLCipher, Room-close, key-lease or native-memory proof.
  */
 class ActiveCoreStoreTest {
-    private class H(val people: Int = 20, val taskCount: Int = 40, val history: Int = 12,
+    internal class H(val people: Int = 20, val taskCount: Int = 40, val history: Int = 12,
         val roleCount: Int = 6) : AutoCloseable {
         val db = SqliteHostConnection()
         val requested = CompactTaskState(BoundedActiveBinding("a",1,2),0)
@@ -78,6 +78,9 @@ class ActiveCoreStoreTest {
                 "WHEN i<=prefix THEN CASE WHEN prefix%2=1 AND i<=3 THEN CASE i WHEN 1 THEN 'STARTED' WHEN 2 THEN 'COMPLETED' ELSE 'REOPENED' END "+
                 "ELSE CASE (i-CASE WHEN prefix%2=1 THEN 3 ELSE 0 END)%2 WHEN 1 THEN 'CANCELLED' ELSE 'REOPENED' END END "+
                 "ELSE CASE status WHEN 'DONE' THEN CASE WHEN i=prefix+1 THEN 'STARTED' ELSE 'COMPLETED' END WHEN 'IN_PROGRESS' THEN 'STARTED' ELSE 'CANCELLED' END END,i/3 FROM h ORDER BY taskId,i")
+            runBlocking { db.usePrepared("SELECT COUNT(*) FROM task_events") { s ->
+                assertTrue(s.step());assertEquals(taskCount.toLong()*history,s.getLong(0));assertFalse(s.step())
+            } }
             db.beforePrepare = { statement ->
                 queries.add(statement)
                 if (statement.startsWith("SELECT rowid,")) assertTrue("No payload before JOINT admission",ActiveCoreStore.Phase.ADMITTED in phases)
@@ -111,11 +114,36 @@ class ActiveCoreStoreTest {
             blobsAtStart=db.blobReads
             return result
         }
+        fun peopleRead(filter: CompactPeopleQuery = CompactPeopleQuery.All, after: CompactPeopleCursor? = null,
+            detail: String? = null): CompactPeopleResult {
+            phases.clear();queries.clear()
+            val result=boundedProjectionRead<CompactPeopleResult, CompactPeopleResult.Value>(requested,object:StorageAccess {
+                override fun acquire(scope:AccessScope)=context.takeIf{scope==AccessScope.READY && ready.get()}
+            },authority::get,{blocked++},{CompactPeopleResult.Rejected(it)}) { c,current ->
+                leaseOpen=true;handleOpen=true
+                try { runBlocking {
+                    db.execute("BEGIN")
+                    try {
+                        val store=CompactPeopleStore(db,c,current) {
+                            when(it) {
+                                CompactPeopleStore.Phase.METADATA->phase(ActiveCoreStore.Phase.METADATA)
+                                CompactPeopleStore.Phase.ADMITTED->{phases.add(ActiveCoreStore.Phase.ADMITTED);phase(ActiveCoreStore.Phase.ADMITTED)}
+                                CompactPeopleStore.Phase.ROW->phase(ActiveCoreStore.Phase.PEOPLE_ROW)
+                                CompactPeopleStore.Phase.COMPLETE->phase(ActiveCoreStore.Phase.COMPLETE)
+                            }
+                        }
+                        if(detail==null) store.page(requested,filter,after) else store.detail(requested,detail)
+                    } finally {db.execute("ROLLBACK");handleOpen=false;afterDatabaseCleanup()}
+                } } finally {leaseOpen=false;afterLeaseCleanup()}
+            }
+            blobsAtStart=db.blobReads
+            return result
+        }
         private var blobsAtStart = 0
         fun metadata(): Pair<ActiveCoreReservation,ActiveCoreReservation> = runBlocking {
             db.execute("BEGIN")
             try {
-                BoundedActiveStore(db,context,{true}).prepare(requested.binding).reservation to
+                CompactPeopleStore(db,context,{true}).prepareCore(requested).reservation to
                     CompactTaskStore(db,context,{true}).preparePage(requested,CompactTaskQuery(),null).reservation
             } finally { db.execute("ROLLBACK") }
         }
@@ -133,16 +161,22 @@ class ActiveCoreStoreTest {
         val v=result as ActiveCoreResult.Value
         assertEquals(h.requested,v.core.state);assertEquals(h.requested,v.core.tasks.state)
         assertEquals(Action("a","Synthetic action","Synthetic description",1,2,0,ActionStatus.ACTIVE),v.core.action)
-        val ops=v.core.operations
-        assertEquals(h.people,ops.persons.size);assertEquals(h.roleCount,ops.roles.size)
-        assertEquals((0 until h.roleCount).map{Role("r$it","a","Synthetic role $it",it.toLong())},ops.roles)
-        assertEquals((0 until h.people).map{"p$it"},ops.persons.map{it.person.id})
-        for((i,p) in ops.persons.withIndex()) {
-            assertEquals(Person("p$i","a","Synthetic person $i",i.toLong()),p.person)
-            assertEquals(setOf("r${i%h.roleCount}","r${(i+1)%h.roleCount}"),p.plan.roleIds)
-            assertEquals("r${i%h.roleCount}",p.plan.primaryRoleId)
-            assertEquals(PersonOperationalState("a","p$i","r${i%h.roleCount}",OperationalStatus.ON_SITE,null,1),p.state)
+        val page=v.core.people
+        val functions=v.core.functions
+        assertEquals(h.people.toLong(),page.overall.total)
+        assertEquals(h.people.toLong(),page.overall.onSite)
+        assertEquals(h.roleCount,functions.items.size)
+        assertEquals((0 until h.roleCount).map{Role("r$it","a","Synthetic role $it",it.toLong())},functions.items.map{it.role})
+        assertEquals((0 until minOf(h.people,32)).map{"p$it"},page.items.map{it.id})
+        for((i,p) in page.items.withIndex()) {
+            assertEquals("Synthetic person $i",p.pseudonym)
+            assertEquals("r${i%h.roleCount}",p.currentRoleId)
+            assertEquals("Synthetic role ${i%h.roleCount}",p.currentRoleName)
+            assertEquals(OperationalStatus.ON_SITE,p.status)
+            assertEquals(h.expected.count{it.affectedPersonId==p.id && TaskRules.active(it.status)}.toLong(),p.affectedActiveTasks)
         }
+        assertEquals(h.people.toLong(),functions.items.sumOf{it.onSiteCount})
+        assertEquals(0L,functions.withoutFunction)
         assertEquals(counts(h.expected),v.core.tasks.overall)
         val filtered=h.expected.filter{person==null || it.affectedPersonId==person}
         assertEquals(counts(filtered),v.core.tasks.filtered)
@@ -153,6 +187,8 @@ class ActiveCoreStoreTest {
         assertEquals(1,h.queries.count { it.startsWith("SELECT rowid,") && it.contains(" FROM actions ") })
         assertFalse(h.queries.any { it.contains("task_events") })
         assertFalse(h.queries.any { it.contains("CAST(sourceTemplateKey AS BLOB)") })
+        assertFalse(h.queries.any { it.startsWith("SELECT rowid,") &&
+            (it.contains(" FROM person_planned_roles ") || it.contains(" FROM person_role_plans ")) })
     }
 
     @Test fun realisticCombinedSizesAndMedianP95HaveNoPreAdmissionPayloadOrEventPrefetch() {
@@ -183,7 +219,7 @@ class ActiveCoreStoreTest {
                 return "$median/$p95"
             }
             println("CORE people=$people roles=${h.roleCount} tasks=$tasks events=${tasks*events} admitted=$admitted "+
-                "peopleRows=${p.transition.objects/128} peopleFields=${p.transition.strings/16} peopleUtf8Bytes=${p.transition.utf16Units/16} "+
+                "peopleRows=${p.transition.objects/128-16} peopleFields=${p.transition.strings/16-16} peopleUtf8Bytes=${p.transition.utf16Units/16-16384} "+
                 "peopleR=${cost(p.retained)} peopleT=${cost(p.transition)} taskR=${cost(t.retained)} taskT=${cost(t.transition)} jointR=$expectedR jointT=$expectedT "+
                 samples.entries.joinToString { (name,values)->"$name-ms-median/p95=${stats(values)}" })
             assertEquals(0,h.blocked)
@@ -198,6 +234,10 @@ class ActiveCoreStoreTest {
     }
 
     @Test fun twoIndividuallyFittingRealProjectionsAreJointlyRefusedBeforeAnyPayload()=H(35,250).use { h ->
+        val (before,tasks)=h.metadata()
+        val target=ActiveWorkspaceBudget.LIMIT_BYTES-cost(tasks.transition)/2
+        val padding=(target-cost(before.transition))/80
+        h.exec("UPDATE actions SET description=description||printf('%0${padding}d',0)")
         val (p,t)=h.metadata()
         for(part in listOf(p,t)) {
             assertTrue(cost(part.retained)<=ActiveWorkspaceBudget.LIMIT_BYTES)
@@ -218,14 +258,13 @@ class ActiveCoreStoreTest {
         assertCore(h,result)
     }
 
-    @Test fun exactCombinedBudgetAndOneByteBeyondAreDecidedBeforeEitherMaterializer()=H().use { h ->
+    @Test fun lastRepresentableCombinedByteBoundaryRefusesBeforeEitherMaterializer()=H().use { h ->
         val baseline=h.read() as ActiveCoreResult.Value
         val difference=ActiveWorkspaceBudget.LIMIT_BYTES-baseline.transitionCharge
-        assertEquals(0L,difference%80)
         val padding=difference/80
         h.exec("UPDATE actions SET description=description||printf('%0${padding}d',0)")
         val exact=h.read() as ActiveCoreResult.Value
-        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,exact.transitionCharge)
+        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES-difference%80,exact.transitionCharge)
         assertEquals(baseline.retainedCharge+padding*20,exact.retainedCharge)
         assertEquals(baseline.core.action.description.length+padding.toInt(),exact.core.action.description.length)
         val blobs=h.db.blobReads;val payloads=h.db.payloadStatements
