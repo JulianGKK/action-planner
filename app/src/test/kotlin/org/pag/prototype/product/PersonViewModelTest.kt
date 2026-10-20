@@ -29,28 +29,85 @@ class PersonViewModelTest {
         override fun advanceActionStatus(id: String, expected: ActionStatus, publish: (ActionChangeResult) -> Unit) { error("unused") }
     }
     private class People : PersonRepository {
-        var writes=0; var lists=0
+        var writes=0; var lists=0; var reads=0; var expectedWrite:Person?=null
+        var deferDetail=false; var pendingDetail:((PersonResult<Person?>)->Unit)?=null
         var onList:()->Unit={}
         var writeResult: PersonResult<Person>? = null
         var deferWrite = false
         var pendingWrite: ((PersonResult<Person>) -> Unit)? = null
-        val row=Person("synthetic-person","synthetic-action","synthetic-01",1)
+        var row=Person("synthetic-person","synthetic-action","synthetic-01",1)
         var deferred: ((PersonResult<List<Person>>) -> Unit)?=null
         var defer=false
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) {
             onList(); lists++; if (defer) deferred=publish else publish(PersonResult.Value(listOf(row.copy(actionId=actionId))))
         }
-        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(row))
+        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) { reads++; if(deferDetail) pendingDetail=publish else publish(PersonResult.Value(row)) }
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {
             writes++; if (deferWrite) pendingWrite=publish else publish(writeResult ?: PersonResult.Value(row.copy(pseudonym=pseudonym)))
         }
-        override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {
-            writes++; if (deferWrite) pendingWrite=publish else publish(writeResult ?: PersonResult.Value(row.copy(pseudonym=pseudonym)))
+        override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {
+            expectedWrite=expected; writes++; if (deferWrite) pendingWrite=publish else publish(writeResult ?: PersonResult.Value(row.copy(pseudonym=pseudonym)))
         }
     }
     private val session=Session(); private val actions=Actions(); private val people=People()
     private val model=ProductViewModel(session,actions,ProductStorageState.READY_TO_OPEN,people) {}
     private fun open() = model.detail(actions.row.id)
+    @Test fun staleSaveUsesEditorOpenSnapshotAndOnlyExplicitReloadReplacesIt() {
+        open();model.personDetail(people.row.id);model.editPerson()
+        val original=model.editingPerson!!;val reads=people.reads
+        people.row=original.copy(pseudonym="Other editor")
+        people.writeResult=PersonResult.Rejected(PersonRejection.STALE)
+        model.savePerson("My unsaved draft")
+        assertEquals(original,people.expectedWrite);assertEquals(reads,people.reads)
+        assertEquals(PersonRejection.STALE,model.personError);assertTrue(model.personForm)
+        assertEquals(original,model.editingPerson);assertNull(model.feedback);assertFalse(model.personSaving)
+        val revision=model.personEditorRevision
+        model.reloadPersonEditor()
+        assertEquals(people.row,model.editingPerson);assertEquals(revision+1,model.personEditorRevision)
+        assertNull(model.personError);assertTrue(model.personForm)
+        people.writeResult=null;model.savePerson("My revised draft")
+        assertEquals(people.row,people.expectedWrite);assertEquals("Person gespeichert",model.feedback!!.text)
+    }
+    @Test fun staleSaveCannotLeaveAnEarlierSuccessBannerVisible() {
+        open();model.addPerson();model.savePerson("First success");assertNotNull(model.feedback)
+        model.personDetail(people.row.id);model.editPerson()
+        people.writeResult=PersonResult.Rejected(PersonRejection.STALE);model.savePerson("Stale draft")
+        assertNull(model.feedback);assertTrue(model.personForm);assertEquals(PersonRejection.STALE,model.personError)
+    }
+    @Test fun delayedEditorReloadCannotCrossLockOrActionChange() {
+        for(lock in listOf(false,true)) {
+            val session=Session();val actions=Actions();val people=People()
+            val model=ProductViewModel(session,actions,ProductStorageState.READY_TO_OPEN,people) {}
+            model.detail(actions.row.id);model.personDetail(people.row.id);model.editPerson()
+            people.writeResult=PersonResult.Rejected(PersonRejection.STALE);model.savePerson("Draft")
+            people.deferDetail=true;model.reloadPersonEditor();val old=people.pendingDetail!!
+            if(lock)session.lock() else model.detail("other-action")
+            old(PersonResult.Value(people.row.copy(pseudonym="Late")))
+            assertNull(model.editingPerson);assertFalse(model.personForm);assertNull(model.feedback)
+        }
+    }
+    @Test fun explicitReloadConsumesCallbackOnceAndIgnoresForeignIdentity() {
+        open();model.personDetail(people.row.id);model.editPerson();val original=model.editingPerson
+        people.writeResult=PersonResult.Rejected(PersonRejection.STALE);model.savePerson("Draft")
+        people.deferDetail=true;model.reloadPersonEditor();val old=people.pendingDetail!!
+        old(PersonResult.Value(people.row.copy(actionId="other")))
+        assertEquals(PersonRejection.STALE,model.personError);assertEquals(original,model.editingPerson)
+        model.reloadPersonEditor();val fresh=people.pendingDetail!!
+        fresh(PersonResult.Value(people.row.copy(pseudonym="Current")))
+        val revision=model.personEditorRevision
+        fresh(PersonResult.Value(people.row.copy(pseudonym="Duplicate callback")))
+        old(PersonResult.Value(people.row.copy(pseudonym="Late callback")))
+        assertEquals(revision,model.personEditorRevision);assertEquals("Current",model.editingPerson!!.pseudonym)
+        assertNull(model.feedback)
+    }
+    @Test fun failedExplicitReloadKeepsOriginalEditorSnapshot() {
+        open();model.personDetail(people.row.id);model.editPerson();val original=model.editingPerson
+        people.writeResult=PersonResult.Rejected(PersonRejection.STALE);model.savePerson("Draft")
+        people.deferDetail=true;model.reloadPersonEditor()
+        people.pendingDetail!!(PersonResult.Value(null))
+        assertEquals(PersonRejection.NOT_FOUND,model.personError);assertEquals(original,model.editingPerson)
+        assertTrue(model.personForm);assertEquals(0L,model.personEditorRevision);assertNull(model.feedback)
+    }
     @Test fun bannerTimerExpiresWithoutUserInteraction() = runBlocking {
         open(); model.addPerson(); model.savePerson("synthetic")
         val id=model.feedback!!.id

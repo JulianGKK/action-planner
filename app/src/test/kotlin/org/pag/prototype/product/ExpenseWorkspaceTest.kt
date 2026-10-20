@@ -33,7 +33,7 @@ class ExpenseWorkspaceTest {
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { error("Existing operations board supplies people") }
         override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) { error("No P8 person detail read") }
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("No P8 person create") }
-        override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("No P8 person edit") }
+        override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("No P8 person edit") }
     }
     private class Ops : OperationsRepository {
         val reads = mutableListOf<(OperationsResult<OperationalBoard>) -> Unit>()

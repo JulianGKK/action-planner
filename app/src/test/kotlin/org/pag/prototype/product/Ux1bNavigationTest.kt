@@ -31,7 +31,7 @@ class Ux1bNavigationTest {
         override fun listPersons(actionId:String,publish:(PersonResult<List<Person>>)->Unit){lists++;publish(PersonResult.Value(emptyList()))}
         override fun getPerson(actionId:String,personId:String,publish:(PersonResult<Person?>)->Unit){gets++;publish(PersonResult.Value(Person(personId,actionId,"synthetic",0)))}
         override fun createPerson(actionId:String,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
-        override fun updatePerson(actionId:String,personId:String,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
+        override fun updatePerson(actionId:String,expected: Person,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
     }
     private class Ops(private val status:()->ActionStatus):OperationsRepository {
         var reads=0;var writes=0

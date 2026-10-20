@@ -46,7 +46,7 @@ class ActiveIntegrationTest {
             override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) = publish(PersonResult.Value(people.map { it.person }))
             override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(people.find { it.person.id == personId }?.person))
             override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
-            override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
+            override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
         }
         val ops = object : OperationsRepository {
             override fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit) { opReads++; if (defer) pendingOps.add(publish) else publish(OperationsResult.Value(operations())) }

@@ -159,11 +159,15 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
     when {
         model.personForm -> {
             val existing = model.editingPerson
-            var pseudonym by remember(existing?.id) { mutableStateOf(existing?.pseudonym ?: "") }
+            var pseudonym by remember(existing?.id, model.personEditorRevision) { mutableStateOf(existing?.pseudonym ?: "") }
             PreparationHeading(if (existing == null) "Person hinzufügen" else "Person bearbeiten")
             FormTextField(pseudonym, { model.interaction(); pseudonym = it },
                 label = { Text("Pseudonym") }, autoFocus=existing==null, keyboardOptions=productKeyboard(ProductTextKind.PERSON), modifier = Modifier.fillMaxWidth(), enabled = !model.personSaving)
             FormButton(onClick = { model.savePerson(pseudonym) }, enabled = !model.personSaving) { Text("Speichern") }
+            if (model.personError == PersonRejection.STALE && existing != null) {
+                Text("Beim Neuladen wird dein Entwurf durch den aktuellen Stand ersetzt.")
+                FormOutlinedButton(onClick = model::reloadPersonEditor, enabled = !model.personSaving) { Text("Aktuellen Stand neu laden") }
+            }
             FormOutlinedButton(onClick = model::cancelPerson, enabled = !model.personSaving) { Text("Abbrechen") }
         }
         model.selectedPerson != null -> {
@@ -198,6 +202,7 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
     }
 }
 private fun personErrorLabel(reason: PersonRejection) = when (reason) {
+    PersonRejection.STALE -> "Die Person wurde inzwischen geändert. Dein Entwurf bleibt erhalten. Bitte den aktuellen Stand neu laden."
     PersonRejection.ACTION_NOT_FOUND -> "Die Aktion ist nicht mehr vorhanden."
     PersonRejection.NOT_FOUND -> "Die Person ist in dieser Aktion nicht vorhanden."
     PersonRejection.NOT_ALLOWED -> "In diesem Status ist dieser Personenzugriff nicht möglich."

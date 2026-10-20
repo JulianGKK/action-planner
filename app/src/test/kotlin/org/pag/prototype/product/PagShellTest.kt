@@ -40,7 +40,7 @@ class PagShellTest {
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) {}
         override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) {}
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
-        override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
+        override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
     private val session = Session()
     private val repo = Repo()

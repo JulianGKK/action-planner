@@ -55,7 +55,7 @@ class Ux1bShellProbe : Instrumentation() {
         override fun listPersons(actionId:String,publish:(PersonResult<List<Person>>)->Unit)=publish(PersonResult.Value(emptyList()))
         override fun getPerson(actionId:String,personId:String,publish:(PersonResult<Person?>)->Unit)=publish(PersonResult.Value(Person(personId,actionId,"synthetic person",0)))
         override fun createPerson(actionId:String,pseudonym:String,publish:(PersonResult<Person>)->Unit)=publish(PersonResult.Value(Person("synthetic","synthetic",pseudonym,0)))
-        override fun updatePerson(actionId:String,personId:String,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
+        override fun updatePerson(actionId:String,expected: Person,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
     }
     private class NavigationOps(private val actions:Actions):OperationsRepository {
         var reads=0

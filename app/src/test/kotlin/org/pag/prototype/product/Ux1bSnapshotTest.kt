@@ -42,7 +42,7 @@ class Ux1bSnapshotTest {
         override fun listPersons(actionId:String,publish:(PersonResult<List<Person>>)->Unit){reads++}
         override fun getPerson(actionId:String,personId:String,publish:(PersonResult<Person?>)->Unit){}
         override fun createPerson(actionId:String,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
-        override fun updatePerson(actionId:String,personId:String,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
+        override fun updatePerson(actionId:String,expected: Person,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
     }
     private class Ops:OperationsRepository {
         var onRead:()->Unit={}

@@ -6298,3 +6298,135 @@ Keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials, persönlichen Pfade o
 Gerätekennungen im Commit. Regulärer WIP-Commit/Push, unabhängiger Remote-SHA-Abgleich;
 danach **STOPP bis zum unabhängigen GitHub-Review**. Kein Force-Push, Merge oder Release.
 Keine Freigabe von Release 1.0 als performant/produktionsreif.
+
+## 48. Issue #36 – P3a-Personen-CAS und veraltete Formulare
+
+### 48.1 Reproduzierter Ausgangsfehler und implementierter Vertrag
+
+Basis dieses Slices: `58c48be7a7bace81e379a3df21ca8c5790852d94`.
+Der unveränderte Hosttest
+`missingPersonCasRemainsAnExplicitUnfixedLostUpdateContract` wurde zunächst erfolgreich
+gegen den Ausgangscode ausgeführt: Zwei nacheinander akzeptierte Rename-Writes ließen
+den zweiten Wert zurück. Das war ein **bestätigter Lost Update**, kein positiver CAS-Proof.
+Der Nachfolgetest `stalePersonEditorIsRejectedAndFirstValueSurvives` verlangt jetzt
+STALE und den unveränderten Wert des ersten Editors.
+
+**IMPLEMENTIERT:** `PersonRepository.updatePerson(actionId, expected: Person, pseudonym, publish)`
+verlangt den vollständigen unveränderlichen Editor-Ausgangsstand. Der alte öffentliche
+ID-only-Rename-Vertrag ist entfernt; auch der interne Storage-Testwrapper und Store
+nehmen keinen ungeschützten ID-only-Updateauftrag mehr an. Bestehende Lesepfade und
+Create bleiben erhalten. Testdoubles und tatsächliche API-Aufrufstellen sind angepasst.
+
+Der produktive `PersonWriterStore` prüft weiterhin zuerst aktuelle READY-Autorität,
+existierende Aktion, PREPARATION-only-Schreibregel und gültiges neues Pseudonym.
+Innerhalb **derselben äußeren IMMEDIATE-Transaktion** wie das spätere UPDATE werden
+Action-ID und die vollständige aktuelle `Person` mit `expected` verglichen: Person-ID,
+Action-ID, exaktes bisheriges Pseudonym einschließlich Schreibweise/Whitespace und
+`createdAt`. Schema-11-Normalisierungsinkonsistenzen bleiben Storagefehler statt
+Rename-Reparatur. Erwartete fremde Action oder abweichender vorhandener Personenstand:
+**STALE vor UPDATE**. Fehlende Person: **NOT_FOUND**; fehlende Aktion: ACTION_NOT_FOUND.
+PREPARATION-Verweigerung bleibt NOT_ALLOWED, Duplicate-Pseudonym bleibt eigener Konflikt.
+
+Die bestehende `WorkspaceWriteBoundary` bestätigt den fachlichen Konflikt erst nach
+Rückkehr des tatsächlichen ROLLBACK und vollständigem DB-/Lease-Cleanup. Ein Rejection-
+Objekt allein beweist keinen Rollback. Geworfener/unbestätigter Transaktionsabschluss
+bleibt UNKNOWN, Cleanup separat FAILED_OR_UNCONFIRMED. Keine Erfolgspublication, kein
+Retry und kein RAM-Resultat bei solchen Fehlern. Ein bestätigter Commit bleibt von der
+zulässigen späteren UI-Publication getrennt; Revoke kann diese verhindern, ohne den
+bereits persistierten Write rückgängig zu machen.
+
+### 48.2 Gezieltes P3a-Formularverhalten
+
+**IMPLEMENTIERT:** `ProductViewModel.savePerson()` reicht den beim Öffnen des Editors
+festgehaltenen `editingPerson`-Snapshot unmittelbar als `expected` durch. Kein frischer
+DB-Snapshot beim Speichern und kein automatischer Konflikt-Retry. STALE schließt das
+Formular nicht, ersetzt weder den Snapshot noch den lokalen Compose-Pseudonymentwurf
+und erzeugt kein „Person gespeichert“. Ein neuer Speicherversuch entfernt auch ein
+noch sichtbares Erfolgsbanner eines früheren Vorgangs. Die sichtbare Meldung erklärt den Konflikt.
+
+Der ausdrücklich beschriftete Button „Aktuellen Stand neu laden“ erklärt vorab, dass
+dabei der Entwurf ersetzt wird. Nur diese Benutzeraktion liest die Person erneut.
+Ein gültiger vollständiger Rückgabestand derselben Person/Aktion ersetzt Snapshot und
+Entwurf über eine Editor-Revision; Fehler/Missing/Foreign-Identity ersetzen nichts.
+Request-, READY-, Generation-, Action- und Formularprüfungen verhindern die Übernahme
+verspäteter Ergebnisse nach Lock oder Navigation. Der Reloadcallback wird einmalig
+konsumiert. Die Revision enthält keine Payload und ist keine persistierte Personen-
+oder Autoritätsrevision. `navigateActive` und `clearPersons` bleiben unverändert.
+
+### 48.3 GETESTET und reproduzierbare Validierung
+
+Echtes SQLite mit vollständigem Schema 11/FKs/Indizes, unveränderte gemeinsame
+Transaktions-/Dispatchgrenze und dieselbe produktive Storelogik:
+
+- Erfolgreicher Rename erhält ID/Action/createdAt; ein neuer sequenzieller Editor kann
+  den bestätigten Stand weiterbearbeiten. Zwei Editoren desselben alten Standes:
+  zweiter Write STALE, erster Wert bleibt erhalten, bestätigter ROLLED_BACK/COMPLETE.
+- Abweichende Pseudonyme, Person-ID, Action-ID und createdAt; fehlende Person;
+  SQL-Prepare-Beobachtung belegt **null Personen-UPDATEs** für diese Rejections.
+  Bestehende Duplicate-/PREPARATION-/ACTIVE-Regeln und Cross-Action-Isolation erhalten.
+- Rename-spezifisch UNKNOWN vor/nach physischem Commit, Cleanupfehler, fehlgeschlagener
+  Rollback, Revoke nach Queue/vor/nach Commit, Permission-/Generation-/Actionwechsel,
+  Queuekonkurrenz, doppelte Worker-/Mainrunnables und verspätete Callbacks.
+  Persistierter Zustand und Callbackfreigabe werden getrennt geprüft.
+- Formular-Porttests: tatsächlich eingefrorenes `expected`, kein Detailread beim Save,
+  STALE ohne Erfolgsbanner/Formularverlust, expliziter Reload, fehlgeschlagener Reload,
+  fremde Identität sowie Lock/Actionwechsel und doppelte/veraltete Reloadcallbacks.
+- Bestehende Task-/Corewriter-, Validity-/Publication- und Securityregressionen laufen
+  mit. Unbeteiligte Writerimplementierungen und Taskproofs werden nicht geändert.
+
+Room-/Keyscope-/Bindingrennen werden im Host weiterhin vertrauenswürdig simuliert;
+das ist kein Android-Native-Laufzeitnachweis. Der neue
+`PersonStorageTest.staleEditorCannotReplaceConfirmedRename` und die vorhandenen
+Android-Storageproofs werden **nur offline kompiliert**, nicht installiert/ausgeführt.
+
+Fokussierte Reproduktion:
+`./gradlew :data:testDebugUnitTest --tests '*CoreWriterIntegrationTest' :app:testDebugUnitTest --tests '*PersonViewModelTest' --offline`.
+Vollständiger Abschlusslauf:
+`./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline`.
+**630 App + 766 Data + 4 Security = 1400 Hosttests, 0 Fehler, 0 Skips.**
+Domain-Testtask ohne Testquellen; keine zusätzlichen Tests daraus gezählt.
+Vollständiger Abschlusslauf erfolgreich; nach der letzten Bannerkorrektur sämtliche
+App-Hosttests, Offline-Appbuild, App-Androidtest-Kompilation und Manifestchecks erneut
+erfolgreich. Data-Androidtests ebenfalls offline kompiliert. Architekturcheck und
+Produkt-/Demo-Manifeste erfolgreich. Bestehende Kotlin-/Android-Deprecationwarnungen
+bleiben sichtbar; kein Testfehler wurde unterdrückt.
+
+### 48.4 Ehrliche CAS-Grenzen und offene BLOCKER
+
+**GETESTETER ABA-NEGATIVFALL:** A → B → A stellt bei unveränderter ID/Action/createdAt
+exakt denselben `Person`-Wert wieder her. Ein noch auf A basierender alter Editor wird
+danach akzeptiert. Vollzustandsvergleich verhindert gewöhnliche veraltete Updates,
+beweist aber **keine vollständige ABA-Sicherheit**. Schema 11 hat keine verbindliche
+monotone Personenrevision; Mutationsepoche und Zeitstempel ersetzen diese nicht.
+
+[#36](https://github.com/JulianGKK/action-planner/issues/36): Für vollständigen ABA-Schutz
+ist später ausdrücklich über eine persistierte monotone Personenrevision und deren
+atomare Fortschreibung in allen entsprechenden Writes sowie den Editor-Expected-
+Vertrag zu entscheiden, einschließlich Schema-/Migrationsfreigabe. Keine heimliche
+Migration in diesem Slice. Operations-/Task-/Action-Editor- und Revisionslücken werden
+hier nicht pauschal geschlossen; bestehende Vergleichsverträge gelten unverändert.
+Familienübergreifendes Busy-/Editorfeedback bleibt gesonderte Arbeit.
+
+[#35](https://github.com/JulianGKK/action-planner/issues/35): Gemeinsamer Writerport,
+Vor-Queue-Invalidierung, eine Mutationsepoche und tatsächliche Commit-/Rollback-/
+Cleanup-/Publicationgrenze bleiben unverändert. Weitere Writerfamilien gemäß §46/47
+bleiben **UNWIRED / NOT SAFE FOR RAM REUSE**.
+[#37](https://github.com/JulianGKK/action-planner/issues/37): Kein Snapshotowner und
+keine RAM-Hits aktiviert. [#38](https://github.com/JulianGKK/action-planner/issues/38):
+Keine Navigationsintegration oder Performancefreigabe.
+[#32](https://github.com/JulianGKK/action-planner/issues/32): Cursor-/Ressourcen-BLOCKER
+weiter offen: `SQLCipherStatement.close()` schließt den Cursor nicht explizit;
+Hostcleanup/FD-PASS beweisen keine vollständige native Cursorfreigabe.
+
+Unverändert bleiben SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/
+Tink/B2Driver, Schema 11, 180 s absolut/30 s READY idle und 8+8-MiB-Budget. Keine neuen
+Rechte, Klartextpersistenz oder Dependencies. Keine Geräteinstallation/Instrumentation,
+keine Änderung installierter Apps. Geändert sind Personen-Domain/API, Personenstore,
+die konkrete P3a-Formularübergabe samt Reload, notwendige Test-/Fixture-Signaturen und
+dieser Abschnitt. Kein Umbau von TaskModel/TaskScreen oder Produktnavigation.
+
+`git diff --check` und `git status -sb` vor dem regulären WIP-Commit geprüft.
+Nur Code/Tests/Dokumentation; keine APKs, Schlüssel, Datenbanken, Rohlogs, Credentials,
+persönlichen Pfade oder Gerätekennungen. Regulärer Push und unabhängiger Remote-SHA-
+Abgleich, danach **STOPP bis zum unabhängigen GitHub-Review**. Kein Force-Push, Merge,
+Release oder Produktupdate. Keine Produktionsreife von Release 1.0 behauptet.

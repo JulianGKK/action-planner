@@ -39,7 +39,7 @@ class LeadershipViewModelTest {
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {
             writes++; publish(PersonResult.Value(row.copy(pseudonym=pseudonym)))
         }
-        override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {
+        override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {
             writes++; publish(PersonResult.Value(row.copy(pseudonym=pseudonym)))
         }
     }

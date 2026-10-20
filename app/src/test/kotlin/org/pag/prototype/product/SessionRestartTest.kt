@@ -38,7 +38,7 @@ class SessionRestartTest {
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { publish(PersonResult.Value(listOf(person))) }
         override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) { publish(PersonResult.Value(person)) }
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
-        override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
+        override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
     private var activeGrant: SensitiveGrant? = null
     private val leadership = object : LeadershipRepository {

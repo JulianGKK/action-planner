@@ -35,7 +35,7 @@ class DocumentWorkspaceTest {
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { publish(PersonResult.Value(emptyList())) }
         override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) { error("No P7 person detail read") }
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("No P7 person create") }
-        override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("No P7 person edit") }
+        override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("No P7 person edit") }
     }
     private class Ops : OperationsRepository {
         val reads = mutableListOf<(OperationsResult<OperationalBoard>) -> Unit>()

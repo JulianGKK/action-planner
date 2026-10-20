@@ -32,16 +32,16 @@ class ProductPersonRepository(app: Context, private val access: StorageAccess,
         } }
     override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) =
         write(actionId,null,pseudonym,publish)
-    override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) =
-        write(actionId,personId,pseudonym,publish)
+    override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) =
+        write(actionId,expected,pseudonym,publish)
 
-    private fun write(actionId:String,personId:String?,pseudonym:String,publish:(PersonResult<Person>)->Unit) =
+    private fun write(actionId:String,expected:Person?,pseudonym:String,publish:(PersonResult<Person>)->Unit) =
         mutationBoundary.submit<PersonResult<Person>>(WorkspaceMutation(WorkspaceWriterFamily.PERSON,actionId),publish,
             {PersonResult.Rejected(PersonRejection.NOT_ALLOWED)},{it is PersonResult.Value}) { c,p ->
             if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
             (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->
                 db.useWriterConnection { tx -> confirmedWorkspaceTransaction(tx,c,p,{it is PersonResult.Rejected}) {
-                    PersonWriterStore(RoomCoreWriterData(db),c).change(actionId,personId,pseudonym)
+                    PersonWriterStore(RoomCoreWriterData(db),c).change(actionId,expected,pseudonym)
                 } }
             }}
         }
@@ -74,16 +74,22 @@ private suspend fun permitted(data:CoreWriterData,actionId:String,context:Storag
     return if (allowed) null else PersonResult.Rejected(PersonRejection.NOT_ALLOWED)
 }
 /** Existing storage proofs keep their transaction wrapper. Product boundary owns the outer T. */
-internal suspend fun ActionDatabase.changePerson(actionId:String,personId:String?,pseudonym:String,context:StorageContext):PersonResult<Person> =
-    withWriteTransaction { PersonWriterStore(RoomCoreWriterData(this@changePerson),context).change(actionId,personId,pseudonym) }
+internal suspend fun ActionDatabase.changePerson(actionId:String,expected:Person?,pseudonym:String,context:StorageContext):PersonResult<Person> =
+    withWriteTransaction { PersonWriterStore(RoomCoreWriterData(this@changePerson),context).change(actionId,expected,pseudonym) }
 internal class PersonWriterStore(private val data:CoreWriterData,private val context:StorageContext,
     private val now:()->Long=System::currentTimeMillis) {
-    suspend fun change(actionId:String,personId:String?,pseudonym:String):PersonResult<Person> {
+    suspend fun change(actionId:String,expected:Person?,pseudonym:String):PersonResult<Person> {
         permitted(data, actionId, context, true)?.let { return it }
         if (!PersonRules.valid(pseudonym)) return PersonResult.Rejected(PersonRejection.INVALID_PSEUDONYM)
         requirePersonAccess(context)
-        val existing = if (personId == null) null else data.persons.get(actionId, personId)?.also { it.model() }
-            ?: return PersonResult.Rejected(PersonRejection.NOT_FOUND)
+        val existing = if (expected == null) null else {
+            if (expected.actionId != actionId) return PersonResult.Rejected(PersonRejection.STALE)
+            val row = data.persons.get(actionId, expected.id)
+                ?: return PersonResult.Rejected(PersonRejection.NOT_FOUND)
+            // Same outer IMMEDIATE transaction as UPDATE; includes every domain identity field.
+            if (row.model() != expected) return PersonResult.Rejected(PersonRejection.STALE)
+            row
+        }
         val normalized = PersonRules.normalized(pseudonym)
         requirePersonAccess(context)
         val duplicate = data.persons.samePseudonym(actionId, normalized)?.also { it.model() }
@@ -93,7 +99,7 @@ internal class PersonWriterStore(private val data:CoreWriterData,private val con
             ?: PersonRow(UUID.randomUUID().toString(), actionId, pseudonym, normalized, now())
         requirePersonAccess(context)
         if (existing == null) data.persons.insert(row)
-        else if (data.persons.rename(actionId, personId!!, pseudonym, normalized) != 1) throw ProductStorageFailure()
+        else if (data.persons.rename(actionId, existing.id, pseudonym, normalized) != 1) throw ProductStorageFailure()
         if (!context.check(AccessPoint.COMMIT)) throw StorageAccessRevoked()
         return PersonResult.Value(row.model())
     }

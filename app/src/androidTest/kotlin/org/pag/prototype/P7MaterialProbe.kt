@@ -41,7 +41,7 @@ class P7MaterialProbe : Instrumentation() {
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { error("Operations supplies people") }
         override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) { error("No P7 person detail") }
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("No P7 person write") }
-        override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("No P7 person write") }
+        override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("No P7 person write") }
     }
     private class Ops(private val actions: Actions) : OperationsRepository {
         override fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit) = publish(OperationsResult.Value(

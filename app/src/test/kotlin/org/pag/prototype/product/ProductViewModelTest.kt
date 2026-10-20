@@ -41,7 +41,7 @@ class ProductViewModelTest {
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) = publish(PersonResult.Value(emptyList()))
         override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(null))
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("no person write expected") }
-        override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("no person write expected") }
+        override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) { error("no person write expected") }
     }
     private val model=ProductViewModel(session,repo,ProductStorageState.READY_TO_OPEN,people) {}
     private fun selected() { model.detail(repo.row.id) }

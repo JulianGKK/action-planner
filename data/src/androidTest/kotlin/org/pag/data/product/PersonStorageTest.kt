@@ -77,23 +77,30 @@ class PersonStorageTest {
         assertEquals("  Synthetic-01  ",first.pseudonym)
         r.getPerson(first.actionId,first.id) { assertEquals(PersonResult.Value(first),it) }
         var updated: Person?=null
-        r.updatePerson(first.actionId,first.id,"Synthetic-02") { updated=(it as PersonResult.Value).value }
+        r.updatePerson(first.actionId,first,"Synthetic-02") { updated=(it as PersonResult.Value).value }
         assertEquals(first.id,updated!!.id); assertEquals(first.createdAt,updated!!.createdAt)
         assertEquals(first.actionId,updated!!.actionId); assertEquals(listOf(updated),list(r))
         resetSession(); assertEquals(listOf(updated),list(repo(inv)))
+    }
+    @Test fun staleEditorCannotReplaceConfirmedRename() {
+        val inv=initialized();val r=repo(inv);val original=create(r)
+        val first=original.copy(pseudonym="synthetic-first")
+        r.updatePerson(original.actionId,original,first.pseudonym) { assertEquals(PersonResult.Value(first),it) }
+        r.updatePerson(original.actionId,original,"synthetic-stale") { assertEquals(PersonResult.Rejected(PersonRejection.STALE),it) }
+        assertEquals(listOf(first),list(r))
     }
     @Test fun duplicatesAreScopedAndRejectedForCreateAndUpdate() {
         val inv=initialized(); val r=repo(inv); val first=create(r," Synthetic-01 "); val second=create(r,"synthetic-02")
         val other=create(r,"synthetic-01","synthetic-b")
         r.createPerson("synthetic-a","sYnThEtIc-01") { assertEquals(PersonResult.Rejected(PersonRejection.DUPLICATE_PSEUDONYM),it) }
-        r.updatePerson("synthetic-a",second.id," SYNTHETIC-01 ") { assertEquals(PersonResult.Rejected(PersonRejection.DUPLICATE_PSEUDONYM),it) }
-        r.updatePerson("synthetic-a",first.id,"synthetic-01") { assertTrue(it is PersonResult.Value) }
+        r.updatePerson("synthetic-a",second," SYNTHETIC-01 ") { assertEquals(PersonResult.Rejected(PersonRejection.DUPLICATE_PSEUDONYM),it) }
+        r.updatePerson("synthetic-a",first,"synthetic-01") { assertTrue(it is PersonResult.Value) }
         assertEquals(2,list(r).size); assertEquals(listOf(other),list(r,"synthetic-b"))
     }
     @Test fun wrongActionCannotReadOrChangePerson() {
         val inv=initialized(); val r=repo(inv); val first=create(r)
         r.getPerson("synthetic-b",first.id) { assertEquals(PersonResult.Value<Person?>(null),it) }
-        r.updatePerson("synthetic-b",first.id,"synthetic-forbidden") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_FOUND),it) }
+        r.updatePerson("synthetic-b",first,"synthetic-forbidden") { assertEquals(PersonResult.Rejected(PersonRejection.STALE),it) }
         assertTrue(list(r,"synthetic-b").isEmpty()); assertEquals(listOf(first),list(r))
     }
     @Test fun blankAndUnknownIdsAreRejectedWithoutWrites() {
@@ -102,7 +109,7 @@ class PersonStorageTest {
         r.createPerson("synthetic-missing","synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.ACTION_NOT_FOUND),it) }
         r.listPersons("synthetic-missing") { assertEquals(PersonResult.Rejected(PersonRejection.ACTION_NOT_FOUND),it) }
         r.getPerson("synthetic-missing","synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.ACTION_NOT_FOUND),it) }
-        r.updatePerson("synthetic-a","synthetic-missing","synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_FOUND),it) }
+        r.updatePerson("synthetic-a",Person("synthetic-missing","synthetic-a","synthetic",0),"synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_FOUND),it) }
         assertTrue(list(r).isEmpty())
     }
     @Test fun draftAndDeletionPendingDenyReadsAndWrites() {
@@ -112,7 +119,7 @@ class PersonStorageTest {
             r.listPersons("synthetic-a") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
             r.getPerson("synthetic-a","synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
             r.createPerson("synthetic-a","synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
-            r.updatePerson("synthetic-a","synthetic","synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
+            r.updatePerson("synthetic-a",Person("synthetic","synthetic-a","synthetic",0),"synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
         }
     }
     @Test fun activeAndCompletedRemainReadableButRejectWrites() {
@@ -122,7 +129,7 @@ class PersonStorageTest {
             assertEquals(listOf(person),list(r))
             r.getPerson(person.actionId,person.id) { assertEquals(PersonResult.Value(person),it) }
             r.createPerson(person.actionId,"synthetic-new") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
-            r.updatePerson(person.actionId,person.id,"synthetic-changed") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
+            r.updatePerson(person.actionId,person,"synthetic-changed") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
             assertEquals(listOf(person),list(r))
         }
     }
@@ -137,7 +144,7 @@ class PersonStorageTest {
     }
     @Test fun changesDoNotAffectOtherActionsOrPersons() {
         val inv=initialized(); val r=repo(inv); val first=create(r); val second=create(r,"synthetic-02"); val other=create(r,"synthetic-03","synthetic-b")
-        r.updatePerson(first.actionId,first.id,"synthetic-updated") {}
+        r.updatePerson(first.actionId,first,"synthetic-updated") {}
         assertEquals(second,list(r).single { it.id==second.id }); assertEquals(listOf(other),list(r,"synthetic-b"))
         ActionDatabaseAccess(app).use(inv.database,key,context()) { db ->
             assertEquals(action("synthetic-a"),db.actions().get("synthetic-a")); assertEquals(action("synthetic-b"),db.actions().get("synthetic-b"))
@@ -148,7 +155,7 @@ class PersonStorageTest {
         allowed=false
         r.listPersons(person.actionId) { fail("P3A-NO-LOCKED-PUBLICATION") }
         r.createPerson(person.actionId,"synthetic-new") { fail("P3A-NO-LOCKED-PUBLICATION") }
-        r.updatePerson(person.actionId,person.id,"synthetic-lost") { fail("P3A-NO-LOCKED-PUBLICATION") }
+        r.updatePerson(person.actionId,person,"synthetic-lost") { fail("P3A-NO-LOCKED-PUBLICATION") }
         resetSession()
         r.getPerson(person.actionId,person.id) { fail("P3A-NO-STALE-PUBLICATION") }
         assertEquals(listOf(person),list(repo(inv)))
@@ -160,7 +167,7 @@ class PersonStorageTest {
             assertThrows(StorageAccessRevoked::class.java) {
                 val result=ActionDatabaseAccess(app).use(inv.database,key,c) { db ->
                     denyCommit=true
-                    db.changePerson(person.actionId,if(updating) person.id else null,"synthetic-lost",c)
+                    db.changePerson(person.actionId,if(updating) person else null,"synthetic-lost",c)
                 }
                 c.publish { published=true; assertNotNull(result) }
             }
@@ -187,7 +194,7 @@ class PersonStorageTest {
         val inv=initialized(); val row=PersonRow("synthetic-invalid","synthetic-a","synthetic-visible","synthetic-wrong",0)
         ActionDatabaseAccess(app).use(inv.database,key,context()) { db -> db.withWriteTransaction { db.persons().insert(row) } }
         var blocked=false
-        repo(inv,blocked={blocked=true}).updatePerson(row.actionId,row.id,"synthetic-repair") { fail("P3A-NO-INVALID-SUCCESS") }
+        repo(inv,blocked={blocked=true}).updatePerson(row.actionId,Person(row.id,row.actionId,row.pseudonym,row.createdAt),"synthetic-repair") { fail("P3A-NO-INVALID-SUCCESS") }
         assertTrue(blocked)
         ActionDatabaseAccess(app).use(inv.database,key,context()) { db -> assertEquals(row,db.persons().get(row.actionId,row.id)) }
     }

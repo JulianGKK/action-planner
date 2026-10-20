@@ -37,7 +37,7 @@ object P11FunctionsFixture {
             if (operations == null) Person(personId, actionId, "Motte", 0)
             else rows().singleOrNull { it.id == personId && it.actionId == actionId }))
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
-        override fun updatePerson(actionId: String, personId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
+        override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
     class Ops : OperationsRepository {
         var roles = listOf(Role("plan", "synthetic", "Blockierende", 0), Role("current", "synthetic", "Support", 0))

@@ -98,7 +98,9 @@ class CoreWriterIntegrationTest {
             else->count("roles")==2L
         }
         fun advance(from:ActionStatus)=write<ActionChangeResult>(WorkspaceWriterFamily.ACTION_STATUS,{it is ActionChangeResult.Rejected},{ActionChangeResult.Rejected(ActionChangeRejection.STALE)}){ActionWriterStore(data,it){++time}.advance("a",from)}
-        fun person(id:String?,name:String)=write<PersonResult<Person>>(WorkspaceWriterFamily.PERSON,{it is PersonResult.Rejected},{PersonResult.Rejected(PersonRejection.NOT_ALLOWED)}){PersonWriterStore(data,it){++time}.change("a",id,name)}
+        fun personRow(id:String="p0")=runBlocking{data.persons.get("a",id)!!.model()}
+        fun person(id:String?,name:String)=personExpected(id?.let{personRow(it)},name)
+        fun personExpected(expected:Person?,name:String)=write<PersonResult<Person>>(WorkspaceWriterFamily.PERSON,{it is PersonResult.Rejected},{PersonResult.Rejected(PersonRejection.NOT_ALLOWED)}){PersonWriterStore(data,it){++time}.change("a",expected,name)}
         fun <T> ops(work:suspend(OperationsStore)->OperationsResult<T>)=write<OperationsResult<T>>(WorkspaceWriterFamily.OPERATIONS,{it is OperationsResult.Rejected},{OperationsResult.Rejected(OperationsFailure.STALE)}){work(OperationsStore(data,it){++time})}
         fun tx(c:StorageContext)=object:Transactor {
             override suspend fun <R> usePrepared(sql:String,block:suspend(SQLiteStatement)->R)=db.usePrepared(sql,block)
@@ -178,11 +180,74 @@ class CoreWriterIntegrationTest {
         val card=compact.people.items.single{it.id=="p0"};assertEquals("Synthetic renamed",card.pseudonym);assertEquals("Synthetic role renamed",card.currentRoleName)
         assertEquals(0,h.blocks);assertFalse(h.epoch.ramReuseEnabled)
     }
-    @Test fun missingPersonCasRemainsAnExplicitUnfixedLostUpdateContract()=H().use { h->
-        assertTrue(h.person("p0","Editor one") is PersonResult.Value)
-        assertTrue(h.person("p0","Editor two from same old form") is PersonResult.Value)
+    @Test fun stalePersonEditorIsRejectedAndFirstValueSurvives()=H().use { h->
+        val original=h.personRow()
+        assertTrue(h.personExpected(original,"Editor one") is PersonResult.Value)
+        assertEquals(PersonResult.Rejected(PersonRejection.STALE),h.personExpected(original,"Editor two from same old form"))
+        assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),h.completions.last())
         val persisted=runBlocking{h.data.persons.get("a","p0")!!.model()}
-        assertEquals("Editor two from same old form",persisted.pseudonym) // #36, NOT claimed fixed
+        assertEquals("Editor one",persisted.pseudonym)
+    }
+    @Test fun fullPersonIdentityAndActionAreComparedBeforeAnyRenameSql()=H().use { h->
+        val original=h.personRow()
+        var updates=0
+        h.db.beforePrepare={if(it.trimStart().startsWith("UPDATE persons",true)) updates++}
+        for(expected in listOf(original.copy(pseudonym="Old"),original.copy(id="p1"),original.copy(createdAt=99),original.copy(actionId="b"))) {
+            assertEquals(PersonResult.Rejected(PersonRejection.STALE),h.personExpected(expected,"Must not write"))
+            assertEquals(WorkspaceWriteOutcome.ROLLED_BACK,h.completions.last().outcome)
+        }
+        assertEquals(PersonResult.Rejected(PersonRejection.NOT_FOUND),h.personExpected(original.copy(id="missing"),"Missing"))
+        assertEquals(0,updates);assertEquals(original,h.personRow())
+        val changed=(h.personExpected(original,"New value") as PersonResult.Value).value
+        assertEquals(original.copy(pseudonym="New value"),changed)
+        assertTrue(h.personExpected(changed,"Sequential editor") is PersonResult.Value)
+        assertEquals(2,updates);assertEquals(0,h.blocks)
+    }
+    @Test fun schema11FullStateCasExplicitlyCannotDetectAba()=H().use { h->
+        val original=h.personRow()
+        val b=(h.personExpected(original,"B") as PersonResult.Value).value
+        val a=(h.personExpected(b,original.pseudonym) as PersonResult.Value).value
+        assertEquals(original,a) // No persistent monotone revision in schema 11.
+        assertTrue(h.personExpected(original,"Stale after ABA") is PersonResult.Value)
+        assertEquals("Stale after ABA",h.personRow().pseudonym)
+    }
+    @Test fun personRenameUnknownCleanupAndRevokeCannotPublishValue() {
+        for(at in listOf("end-before","end-after","cleanup","rollback","queued","commit","after-commit","permission","generation","action")) H().use {h->
+            val original=h.personRow();var calls=0
+            when(at){
+                "end-before"->h.failEndBefore=true
+                "end-after"->h.failEndAfter=true
+                "cleanup"->h.dbCleanup={error("SYNTHETIC_CLEANUP")}
+                "rollback"->h.failRollback=true
+                "commit"->h.beforeEnd={h.ready=false}
+                "after-commit"->h.afterEnd={h.ready=false}
+            }
+            h.queue<PersonResult<Person>>(WorkspaceWriterFamily.PERSON,{it is PersonResult.Rejected},{null},{calls++}) {
+                PersonWriterStore(h.data,it).change("a",if(at=="rollback")original.copy(createdAt=99) else original,"Renamed")
+            }
+            if(at=="queued")h.ready=false
+            h.worker.drain()
+            when(at){"permission"->h.permission++;"generation"->h.generation++;"action"->h.action="b"}
+            val late=h.main.jobs.firstOrNull();h.main.drain();late?.run()
+            assertEquals(0,calls)
+            assertEquals(if(at in listOf("end-after","cleanup","after-commit","permission","generation","action"))"Renamed" else original.pseudonym,h.personRow().pseudonym)
+            if(at.startsWith("end") || at=="rollback")assertEquals(WorkspaceWriteOutcome.UNKNOWN,h.completions.single().outcome)
+            if(at=="cleanup")assertEquals(WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED,h.completions.single().cleanup)
+        }
+    }
+    @Test fun competingPersonEditorsAndDuplicateDispatchCannotSilentlyOverwrite()=H().use {h->
+        val original=h.personRow();val results=ArrayList<PersonResult<Person>>()
+        fun enqueue(name:String)=h.queue<PersonResult<Person>>(WorkspaceWriterFamily.PERSON,{it is PersonResult.Rejected},{PersonResult.Rejected(PersonRejection.NOT_ALLOWED)},{results.add(it)}) {
+            PersonWriterStore(h.data,it).change("a",original,name)
+        }
+        enqueue("First");enqueue("Concurrent busy")
+        assertEquals(1,h.worker.jobs.size);assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),results.single())
+        val work=h.worker.jobs.removeFirst();work.run();work.run()
+        val publication=h.main.jobs.removeFirst();publication.run();publication.run()
+        assertEquals(2,results.size);assertEquals("First",h.personRow().pseudonym)
+        enqueue("Old queued editor");h.worker.drain();h.main.drain()
+        assertEquals(PersonResult.Rejected(PersonRejection.STALE),results.last())
+        assertEquals("First",h.personRow().pseudonym);assertFalse(h.epoch.ramReuseEnabled)
     }
     @Test fun crossFamilyPendingUsesOneEpochAndTaskProofCannotBypassIt()=H().use { h->
         var personCalls=0;var roleResult:OperationsResult<Role>?=null;var taskResult:OperationsResult<Task>?=null

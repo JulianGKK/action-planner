@@ -518,6 +518,34 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         interaction()
         if (!personSaving) { personRequest++; personDetailLoading = false; clearSensitive(); selectedPerson = null; personError = null }
     }
+    // Only an explicit user action replaces the editor-open snapshot and draft.
+    var personEditorRevision by mutableStateOf(0L); private set
+    fun reloadPersonEditor() {
+        interaction()
+        val action = selected?.takeIf { personsEditable && personForm && !personSaving } ?: return
+        val expected = editingPerson ?: return
+        if (personError != PersonRejection.STALE) return
+        val request = ++personRequest
+        val generation = snapshot.generation
+        personSaving = true
+        var delivered = false
+        personRepository.getPerson(action.id, expected.id) { result ->
+            if (delivered) return@getPerson
+            delivered = true
+            if (request != personRequest || snapshot.state != SessionState.READY || snapshot.generation != generation ||
+                selected?.id != action.id || !personsEditable || !personForm || editingPerson != expected) return@getPerson
+            personSaving = false
+            when (result) {
+                is PersonResult.Value -> {
+                    val fresh = result.value
+                    if (fresh == null) personError = PersonRejection.NOT_FOUND
+                    else if (fresh.id != expected.id || fresh.actionId != action.id) personError = PersonRejection.STALE
+                    else { editingPerson = fresh; selectedPerson = fresh; personEditorRevision++; personError = null }
+                }
+                is PersonResult.Rejected -> personError = result.reason
+            }
+        }
+    }
     fun savePerson(pseudonym: String) {
         interaction()
         val action = selected?.takeIf { personsEditable && personForm && !personSaving } ?: return
@@ -525,6 +553,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val request = personRequest
         val generation = snapshot.generation
         personSaving = true
+        feedback = null
         val publish: (PersonResult<Person>) -> Unit = { result ->
             if (request == personRequest && selected?.id == action.id && personsVisible) {
                 personSaving = false
@@ -540,7 +569,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         }
         val existing = editingPerson
         if (existing == null) personRepository.createPerson(action.id, pseudonym, publish)
-        else personRepository.updatePerson(action.id, existing.id, pseudonym, publish)
+        else personRepository.updatePerson(action.id, existing, pseudonym, publish)
     }
     var sensitiveInventory by mutableStateOf<SensitiveInventory?>(null); private set
     var sensitiveInventoryLoading by mutableStateOf(false); private set
