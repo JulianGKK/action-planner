@@ -19,7 +19,7 @@
         <!-- Product storage stays in the main process. The isolated PDF process never opens Room. -->
         <service android:name="androidx.room3.MultiInstanceInvalidationService" tools:node="remove" tools:ignore="MissingClass" />
         <!-- CameraX configuration comes from PagApplication; no metadata-only service needed. -->
-        <service android:name="androidx.camera.core.impl.MetadataHolderService" tools:node="remove" tools:ignore="MissingClass" />
+        <service android:name="androidx.camera.core.impl.MetadataHolderService" tools:node="remove" tools:ignore="MissingClass,Instantiatable" />
         <service android:name="org.pag.prototype.product.PdfRenderService" android:exported="false" android:isolatedProcess="true" android:process=":pdf_renderer" />
         <activity android:name="org.pag.prototype.MainActivity" android:exported="true">
             <intent-filter>

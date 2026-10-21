@@ -1,0 +1,19 @@
+§78 strict-Compose RED history (all on the isolated P77 package/device)
+
+Attempt 1 added direct ViewModel/compact-state and hierarchy assertions. The assertion
+ran inside runOnMainSync, so the target process crashed before the runner could report a
+normal failure. DropBox identified the assertion as an area mismatch (`HUB != PERSONS`),
+not an out-of-memory failure.
+
+Attempt 2 moved checks off the target main thread and observed `activeArea=PERSONS`,
+`compactActiveMode=true`; however, no expected visible text was found before timeout.
+
+Attempt 3 added the missing compact area heading and reported the actual accessibility
+root. The active root belonged to `org.pag.prototype.a.p77runtime`, while zero of the
+three expected PERSONS texts were discoverable. Full latest report is in
+`p77-runtime-compose-runner.txt`.
+
+The app-level `:app:connectedAndroidTest` task ran zero tests because the custom probe is
+an `Instrumentation`, not a JUnit test. That is not counted as a green instrumentation
+run. The direct targeted `am instrument` invocation did execute the probe and returned
+its explicit P77 FAIL result.

@@ -27,11 +27,15 @@ import org.pag.prototype.demo.DemoScreen
 import org.pag.prototype.product.ProductScreen
 import org.pag.prototype.product.ProductViewModel
 import java.util.concurrent.Executors
+import java.util.ServiceLoader
 
 /** Product composition root. PrototypeActivity remains unregistered historical evidence. */
 class MainActivity : ComponentActivity() {
     private lateinit var runtime: ProductRuntime
-    private var p77Harness: org.pag.data.product.P77ProductRuntimeHarness? = null
+    private var runtimeClose: (() -> Unit)? = null
+    // Opaque test diagnostics only; the main source set has no reference to P77 classes.
+    private var p77Harness: Any? = null
+    private var testAuthorityBanner = false
     private lateinit var model: ProductViewModel
     private val worker by lazy { Executors.newSingleThreadExecutor() }
     private val handler by lazy { Handler(Looper.getMainLooper()) }
@@ -91,10 +95,20 @@ class MainActivity : ComponentActivity() {
         val foregroundCheck = {
             resumed && window.decorView.hasWindowFocus() && !getSystemService(KeyguardManager::class.java).isDeviceLocked
         }
-        runtime = if (BuildConfig.PAG_P77_RUNTIME_E2E) {
-            org.pag.data.product.P77ProductRuntimeHarness.create(this, worker, mainExecutor, foregroundCheck)
-                .also { p77Harness = it }.runtime
-        } else ProductRuntime(this, worker, mainExecutor, foreground = foregroundCheck)
+        if (BuildConfig.PAG_P77_RUNTIME_E2E) {
+            check(BuildConfig.APPLICATION_ID == "org.pag.prototype.a.p77runtime" &&
+                packageName == "org.pag.prototype.a.p77runtime") { "P77 runtime test requires its isolated application ID" }
+            val providers = ServiceLoader.load(ProductRuntimeLaunchProvider::class.java, classLoader).toList()
+            check(providers.size == 1) { "P77 runtime test requires exactly one variant-local provider" }
+            val launch = providers.single().create(this, worker, mainExecutor, foregroundCheck)
+            runtime = launch.runtime
+            runtimeClose = launch.close
+            p77Harness = launch.testHandle
+            testAuthorityBanner = launch.testAuthorityBanner
+        } else {
+            runtime = ProductRuntime(this, worker, mainExecutor, foreground = foregroundCheck)
+            runtimeClose = runtime::close
+        }
         val state = runtime.inventory.state()
         if (state == ProductStorageState.PARTIAL_OR_INVALID) runtime.session.storageFailure()
         model = ProductViewModel(runtime.session, runtime.actions, state, runtime.persons, runtime.leadership, runtime.operations, runtime.tasks, runtime.protocol, runtime.material, runtime.expenses, runtime.memoryReports, runtime::start)
@@ -153,7 +167,7 @@ class MainActivity : ComponentActivity() {
         val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenOff, filter, Context.RECEIVER_NOT_EXPORTED)
         else registerReceiver(screenOff, filter)
-        setContent { ProductScreen(model, testAuthorityBanner = BuildConfig.PAG_P77_RUNTIME_E2E) }
+        setContent { ProductScreen(model, testAuthorityBanner = testAuthorityBanner) }
     }
     override fun onResume() {
         super.onResume(); resumed = true
@@ -196,8 +210,10 @@ class MainActivity : ComponentActivity() {
         demo?.end(); demo = null
         if (::runtime.isInitialized) {
             handler.removeCallbacks(expiry)
-            p77Harness?.close() ?: runtime.close()
-            p77Harness=null; worker.shutdownNow(); unregisterReceiver(screenOff)
+            runtimeClose?.invoke() ?: runtime.close()
+            p77Harness = null
+            runtimeClose = null
+            worker.shutdownNow(); unregisterReceiver(screenOff)
         }
         super.onDestroy()
     }

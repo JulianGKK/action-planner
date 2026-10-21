@@ -1,3 +1,4 @@
+import java.util.zip.ZipFile
 plugins { id("com.android.application"); id("org.jetbrains.kotlin.plugin.compose") }
 android {
     namespace = "org.pag.prototype"
@@ -214,5 +215,44 @@ val verifyP77RuntimeIsolation = tasks.register("verifyP77RuntimeIsolation") {
         check("PAG_P77_RUNTIME_E2E = true" in build && "PAG_P76_PREVIEW = false" in build && "PAG_DEMO_ONLY = false" in build)
         val app=main.getElementsByTagName("application").item(0) as org.w3c.dom.Element
         check(app.getAttributeNS("http://schemas.android.com/apk/res/android","allowBackup")=="false")
+    }
+}
+val verifyReleaseVariantSafety = tasks.register("verifyReleaseVariantSafety") {
+    dependsOn("assembleRelease")
+    doLast {
+        val factory = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply {
+            isNamespaceAware = true
+            setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+        }
+        val manifestFile = layout.buildDirectory.file(
+            "intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml"
+        ).get().asFile
+        val manifest = factory.newDocumentBuilder().parse(manifestFile)
+        check(manifest.documentElement.getAttribute("package") == "org.pag.prototype.a")
+        check(manifest.getElementsByTagName("instrumentation").length == 0)
+        val services = manifest.getElementsByTagName("service")
+        check(services.length == 1)
+        check((services.item(0) as org.w3c.dom.Element).getAttributeNS(
+            "http://schemas.android.com/apk/res/android", "name"
+        ) == "org.pag.prototype.product.PdfRenderService")
+        check("P77RuntimeE2EProbe" !in manifestFile.readText())
+
+        val build = layout.buildDirectory.file(
+            "generated/source/buildConfig/release/org/pag/prototype/BuildConfig.java"
+        ).get().asFile.readText()
+        check("PAG_P77_RUNTIME_E2E = false" in build)
+        val apkDirectory = layout.buildDirectory.dir("outputs/apk/release").get().asFile
+        val apks = apkDirectory.listFiles()?.filter { it.extension == "apk" }.orEmpty()
+        check(apks.size == 1) { "Expected one release APK, found ${apks.map { it.name }}" }
+        ZipFile(apks.single()).use { zip ->
+            val dexEntries = zip.entries().asSequence().filter { it.name.matches(Regex("classes(\\d+)?\\.dex")) }
+            val dexText = dexEntries.joinToString("\n") { entry ->
+                zip.getInputStream(entry).use { String(it.readBytes(), Charsets.ISO_8859_1) }
+            }
+            listOf("P77RuntimeLaunchProvider", "P77ProductRuntimeHarness", "P11SyntheticFixture",
+                "P77 ISOLATED SYNTHETIC TEST KEY").forEach { forbidden ->
+                check(forbidden !in dexText) { "Release APK contains isolated P77/test-auth code: $forbidden" }
+            }
+        }
     }
 }

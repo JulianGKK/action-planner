@@ -11822,3 +11822,79 @@ offen. P76 ist ein ausschließlich synthetischer UI-Vorschaubuild, kein Security
 `app/src/main/kotlin/org/pag/prototype/demo/DemoScreen.kt`,
 `docs/p11-p76-demo-preview.md`, `docs/p11-p76/device-draws.csv`,
 `docs/product-p11-active-workspace-assessment.md`.
+
+## §78 – Release Variant Safety + Native RAM Gate Completion
+
+**Basis:** `4c0969b3d12a59f8e1fbb52985f39d593f1596d5` auf
+`p11-performance-optimization`; Remote-HEAD wurde vor Änderungen unabhängig als derselbe
+SHA geprüft.
+
+**IMPLEMENTIERT – Release-Variantgrenze:** `MainActivity` aus `src/main` referenziert
+keine P77-Klasse mehr. Die isolierte Komposition läuft über einen generischen
+`ProductRuntimeLaunchProvider`; nur `src/p77runtime` registriert den P77-Provider. Der
+normale Runtimepfad konstruiert weiter `ProductRuntime` mit
+`ProductCredentialAuthentication`. Der P77-Testkonstruktor validiert Paket-ID und
+Debuggable-Flag als Argument vor der Delegation in den primären Konstruktor und damit vor
+Runtime-/Ressourceninitialisierung. Es gibt keinen Reflection-Zugriff auf Session- oder
+Keyownerfelder. Der P77-Reuse-Schalter ist nur in der isolierten P77-Variante gesetzt;
+normale Produktvarianten behalten `reuseEnabled=false`.
+
+**HOSTGETESTET / BUILD:** `ProductRuntimeTestAuthorityGuardTest` prüft die
+Paket-/Buildidentitätsgrenze. `:data:compileReleaseKotlin`,
+`:app:compileReleaseKotlin`, `:app:assembleRelease` und
+`verifyReleaseVariantSafety` liefen erfolgreich. Der Release-Merged-Manifestcheck
+bestätigt Application-ID `org.pag.prototype.a`, keine Instrumentation und nur den
+erwarteten PDF-Service. DEX-Prüfung fand weder P77-Provider/Harness noch synthetische
+Fixture-/Schlüsselmarker. Der Manifest-Lint-Ignore für die entfernte CameraX-
+`MetadataHolderService`-Deklaration wurde auf `MissingClass,Instantiatable` begrenzt;
+die entfernte Service-Deklaration bleibt im gemergten Manifest geprüft.
+P77-Target/Androidtest sowie P76demo wurden separat gebaut; `verifyP77RuntimeIsolation`
+und `verifyP76DemoIsolation` waren erfolgreich. Das ist ein Build-/Manifestbeleg, kein
+Test der Produktanmeldung.
+
+**ANDROID-GREEN – begrenzte §77-Evidenz:** Auf dem bestätigten Samsung SM-M526BR
+(RFCT1186YRJ) wurden nur die eigens isolierten Pakete
+`org.pag.prototype.a.p77runtime` und `.test` installiert/aktualisiert. Vorherige
+Paketprüfung zeigte diese Pakete nicht installiert; APK-IDs, Runner und Signatur
+`9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134` wurden vor den
+Installationen geprüft. Die geschützten Pakete `org.pag.prototype.a.p76demo`,
+`org.pag.prototype.a` und `org.pag.perf.p11probe` wurden nicht verändert. Der bereits
+akzeptierte P77-Runner belegte mit synthetischer Testautorität einen ProductRuntime-
+SQLCipher-Read, ein originales Ticket, 80/80 erfolgreiche `authorizeHit`-Prüfungen,
+keine zusätzlichen Reads/Tickets, identische Payload und Lock-Revoke. Rohreport:
+[`p77-runtime-runner.txt`](p11-p78/p77-runtime-runner.txt). Diese Messreihe wird als
+isolierte Evidenz erhalten; sie ersetzt keine reguläre Credential-/Lifecycle-Abnahme.
+
+**IMPLEMENTIERT / ANDROID-RED – tatsächliche kompakte UI-Prüfung:** Der strengere
+P77-Test prüft jetzt ViewModel-Area, kompakten Modus und erwartete sichtbare Texte für
+HUB/PERSONS/FUNCTIONS/TASKS. Dabei wurde ein fehlender kompakter Bereichstitel gefunden
+und `PreparationHeading(area.label)` ergänzt. Der gezielte Probe-Lauf bestätigt danach
+`area=PERSONS` und `compact=true`, aber `UiAutomation.rootInActiveWindow` lieferte für
+die P77-Aktivität keine der drei erwarteten Accessibility-Texte. Der Lauf endet daher
+weiter mit `P77 FAIL` beim Nachweis des Compose-Contents. Die früheren
+`P77_DRAW`-Zeiten messen nur den ersten Decor-View-OnDraw nach ausgelöster Navigation;
+ohne sichtbare Area-/Kartenvalidierung sind sie kein vollständiger
+Content-OnDraw-PASS. Der Gradle-`connectedP77runtimeAndroidTest`-Task führte 0 Tests aus
+(custom `Instrumentation`, JUnit-Suite daher nicht ausgeführt); maßgeblich ist der
+gezielte `am instrument`-Report, kein behaupteter Gradle-Test-GREEN. Diagnoseartefakte:
+[`p77-runtime-compose-runner.txt`](p11-p78/p77-runtime-compose-runner.txt) und
+[`p77-runtime-compose-runner-red.txt`](p11-p78/p77-runtime-compose-runner-red.txt).
+
+**NICHT BEWIESEN / BLOCKER:** Keine neue positive E2E-Bilanz der UI-Texte/Karten und
+keine erneute gültige Content-OnDraw-Median-/p95-Reihe nach der strikten Prüfung. Die
+80 isolierten Hits bleiben als zuvor unabhängige §77-Evidenz erhalten, werden nicht als
+§78 sichtbare UI-Hits ausgegeben. §78 führte keine gezielten Revoke-Läufe für BLOCKED,
+30-s-idle, 180-s-absolut, Core-/DOCUMENT-Writer, UNKNOWN/Recovery, Action-/Status-/
+Generationwechsel, Reauth, verlorene Mainzustellung, callback-then-false, Activity-
+Neuerstellung oder echte OS-Keyguardereignisse aus. #32 Room-/Statement-/DB-/Keylease-
+Fehlercleanup, #33/#34 8+8-MiB-Referenzüberlappung, #39 Lifecycle-/Keyguard-Revoke,
+#36 Editor-/ABA und RED-4 bleiben offene Produktfreigabegates. Produktweites
+`reuseEnabled` bleibt deaktiviert; kein cachefreier Release-1.0-Pfad wird festgelegt.
+
+**GO/NO-GO:** NO-GO für allgemeine Produkt-RAM-Aktivierung bis der isolierte echte
+Runtime→ViewModel→Compose-Probe einen sichtbaren kompakten Zielzustand zuverlässig
+belegt und die genannten nativen Writer-/Session-/Speichergrenzen unabhängig abgenommen
+sind. Der nächste enge Fix ist ein belastbarer Compose-Content-Beobachter für den
+Custom-Instrumentation-Pfad (oder ein gleichwertiger isolierter UI-Testanschluss), danach
+gezielte Wiederholung der vier Areas und der noch offenen Revoke-Fälle. P76 bleibt
+installiert und unangetastet.

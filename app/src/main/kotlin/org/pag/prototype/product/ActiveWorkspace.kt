@@ -144,6 +144,7 @@ internal fun activeCompactHubCards(core:ActiveCorePayload):List<HubCard> = listO
 )
 
 @Composable private fun CompactActiveContent(core:ActiveCorePayload,area:ActiveArea,enabled:Boolean,onOpen:(ActiveArea)->Unit) {
+    PreparationHeading(area.label)
     when(area) {
         ActiveArea.HUB -> {
             ActiveHubGrid(activeCompactHubCards(core),enabled,onOpen=onOpen)

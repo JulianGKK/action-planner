@@ -77,10 +77,15 @@ class P77RuntimeE2EProbe : Instrumentation() {
             val rows = mutableListOf<String>()
             val sequence = listOf(ActiveArea.PERSONS, ActiveArea.FUNCTIONS, ActiveArea.TASKS, ActiveArea.HUB)
             repeat(20) { for (area in sequence) {
+                val navigationState = AtomicReference<String>()
                 val elapsed = drawAfter(activity) {
                     model.activeArea(area)
                     check(model.activeCore === original.get())
+                    navigationState.set("area=${model.activeArea},enabled=${model.activeNavigationEnabled},selected=${model.selected?.id},status=${model.selected?.status},session=${model.snapshot.state},generation=${model.snapshot.generation}")
                 }
+                check(navigationState.get().startsWith("area=$area,")) { "Compact navigation did not select $area: ${navigationState.get()}" }
+                val visible = awaitVisibleArea(activity, model, originalCore, area)
+                rows += "P77_COMPOSE,$area,${visible.joinToString("|")}"
                 rows += "P77_DRAW,$area,$elapsed"
             } }
             val idleAfter = requireNotNull(runtime.session.remainingAbsoluteMillis())
@@ -124,13 +129,62 @@ class P77RuntimeE2EProbe : Instrumentation() {
         }
     }
 
-    private fun await(label: String, timeoutSeconds: Long = 90, condition: () -> Boolean) {
+    private fun await(label: String, timeoutSeconds: Long = 90, details: () -> String = { "" }, condition: () -> Boolean) {
         val end = SystemClock.elapsedRealtime() + TimeUnit.SECONDS.toMillis(timeoutSeconds)
         while (SystemClock.elapsedRealtime() < end) {
             if (condition()) return
             Thread.sleep(100)
         }
-        error("Timed out waiting for $label")
+        error("Timed out waiting for $label${details().takeIf { it.isNotEmpty() }?.let { ": $it" } ?: ""}")
+    }
+
+    private fun awaitVisibleArea(activity: MainActivity, model: ProductViewModel,
+        core: org.pag.domain.ActiveCorePayload, area: ActiveArea): Set<String> {
+        var expected = emptySet<String>()
+        var visible = emptySet<String>()
+        var currentArea: ActiveArea? = null
+        var compact = false
+        var rootPackage: String? = null
+        await("composed compact $area", timeoutSeconds = 8, details = {
+            "area=$currentArea compact=$compact root=$rootPackage visible=${visible.size}/${expected.size} text=${visible.joinToString("|")}"
+        }, condition = {
+            runOnMainSync {
+                currentArea = model.activeArea
+                compact = model.compactActiveMode
+            }
+            if (currentArea != area || !compact) return@await false
+            expected = when (area) {
+                ActiveArea.HUB -> setOf("Lagebild", "${core.people.overall.total} insgesamt",
+                    "Personen öffnen", "Aufgaben öffnen", "Funktionen öffnen")
+                ActiveArea.PERSONS -> setOf("Personen",
+                    "${core.people.items.size} von ${core.people.overall.total} angezeigt · weitere Einträge verfügbar",
+                    requireNotNull(core.people.items.firstOrNull()?.pseudonym))
+                ActiveArea.FUNCTIONS -> setOf("Funktionen",
+                    "${core.functions.onSiteCount} Personen vor Ort · ${core.functions.withoutFunction} ohne Funktion")
+                ActiveArea.TASKS -> setOf("Aufgaben",
+                    "${core.tasks.items.size} von ${core.tasks.overall.open + core.tasks.overall.inProgress} angezeigt · weitere Einträge verfügbar",
+                    requireNotNull(core.tasks.items.firstOrNull()?.title))
+                else -> emptySet()
+            }
+            visible = expected.filter { isVisibleText(it) { rootPackage = it } }.toSet()
+            expected.isNotEmpty() && visible.containsAll(expected)
+        })
+        return expected
+    }
+
+    private fun isVisibleText(search: String, onRoot: (String?) -> Unit): Boolean {
+        val root = uiAutomation.rootInActiveWindow ?: run { onRoot(null); return false }
+        onRoot(root.packageName?.toString())
+        return try {
+            root.findAccessibilityNodeInfosByText(search).orEmpty().any { node ->
+                val visible = node.text?.toString()?.contains(search) == true ||
+                    node.contentDescription?.toString()?.contains(search) == true
+                node.recycle()
+                visible
+            }
+        } finally {
+            root.recycle()
+        }
     }
 
     private fun memorySample():String {

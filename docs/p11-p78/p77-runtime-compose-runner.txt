@@ -1,0 +1,11 @@
+Isolated runner component: org.pag.prototype.a.p77runtime.test/org.pag.prototype.P77RuntimeE2EProbe
+Target package: org.pag.prototype.a.p77runtime
+Device: RFCT1186YRJ, Samsung SM-M526BR
+
+INSTRUMENTATION_RESULT: result=P77 FAIL: java.lang.IllegalStateException: Timed out waiting for composed compact PERSONS: area=PERSONS compact=true root=org.pag.prototype.a.p77runtime visible=0/3 text=
+	at org.pag.prototype.P77RuntimeE2EProbe.await(P77RuntimeE2EProbe.kt:138)
+	at org.pag.prototype.P77RuntimeE2EProbe.awaitVisibleArea(P77RuntimeE2EProbe.kt:148)
+	at org.pag.prototype.P77RuntimeE2EProbe.onStart(P77RuntimeE2EProbe.kt:87)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+INSTRUMENTATION_CODE: 0

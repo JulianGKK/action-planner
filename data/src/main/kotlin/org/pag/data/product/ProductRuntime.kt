@@ -24,12 +24,8 @@ class ProductRuntime private constructor(activity: Activity, private val worker:
 
     internal constructor(activity: Activity, worker: Executor, main: Executor,
         workspaceMutations: WorkspaceMutationInvalidation, testAuthority: ProductRuntimeTestAuthority,
-        foreground: () -> Boolean) : this(activity, worker, main, workspaceMutations, testAuthority, foreground, Unit) {
-        check(activity.packageName == "org.pag.prototype.a.p77runtime" &&
-            activity.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
-            "Synthetic Runtime authority is restricted to the isolated P77 debug package"
-        }
-    }
+        foreground: () -> Boolean) : this(activity, worker, main, workspaceMutations,
+        requireP77TestAuthority(activity.packageName, activity.applicationInfo.flags, testAuthority), foreground, Unit)
     private val noBackupRoot = testAuthority?.noBackupRoot ?: productNoBackupRoot(activity.noBackupFilesDir)
     private val root = File(noBackupRoot, "pag-db-v1")
     private val envelope = ProductDbEnvelope(root, "org.pag.product.database.rsa.v1")
@@ -139,3 +135,13 @@ internal data class ProductRuntimeTestAuthority(
     val reuseEnabled: Boolean = false,
     val observation: ActiveCoreLoadObservation? = null
 )
+
+/** Runs as a secondary-constructor argument, before the primary constructor initializes resources. */
+internal fun requireP77TestAuthority(packageName: String, applicationFlags: Int,
+    authority: ProductRuntimeTestAuthority): ProductRuntimeTestAuthority {
+    check(packageName == "org.pag.prototype.a.p77runtime" &&
+        applicationFlags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+        "Synthetic Runtime authority is restricted to the isolated P77 debug package"
+    }
+    return authority
+}
