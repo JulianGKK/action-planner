@@ -12,4 +12,3 @@ P73_OWNER,worker_install,PASS,next_draw_has_no_valid_core
 P73_OWNER,action_change,PASS,next_draw_has_no_valid_core
 P73_OWNER,status_change,PASS,next_draw_has_no_valid_core
 P73_OWNER_OK cases=13; synthetic payload/auth; no Runtime/DB E2E
-

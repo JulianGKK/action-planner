@@ -9,4 +9,3 @@ P73_OWNER,unknown,PASS,next_draw_has_no_valid_core
 P73_OWNER,late_main,PASS,next_draw_has_no_valid_core
 P73_OWNER,false_after_callback,PASS,next_draw_has_no_valid_core
 P73_OWNER_OK cases=10; synthetic payload/auth; no Runtime/DB E2E
-
