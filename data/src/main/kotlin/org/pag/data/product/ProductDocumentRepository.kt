@@ -19,10 +19,7 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
     private val dispatch = DocumentProductDispatch(access,worker,main,blocked)
     private val database = ActionDatabaseAccess(app.applicationContext)
     private val noBackupRoot = productNoBackupRoot(app.noBackupFilesDir)
-    private val steps = SqlCipherDocumentImportDatabase(app, inventory, owner)
-    private val staging = DocumentImportStaging(steps, noBackupRoot)
-    private val publication = DocumentPublication(steps, noBackupRoot)
-    private val deletion = DocumentDelete(SqlCipherDocumentDeleteDatabase(app, inventory, owner), noBackupRoot)
+    private val application=app.applicationContext
     override fun readPdf(actionId:String,expected:DocumentAsset,page:Int,request:DocumentPdfRequest,
         renderer:DocumentPdfRenderer,publish:(DocumentResult<DocumentPdfPage>)->Unit) {
         val requested=System.nanoTime()
@@ -92,11 +89,13 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
             } finally {held?.close()}
         }
     }
-    private fun <T> read(c: StorageContext, work: suspend (ActionDatabase) -> T): T {
+    private fun <T> read(c: StorageContext, evidence:DocumentMutationEvidence?=null, work: suspend (ActionDatabase) -> T): T {
         requireOperations(c, AccessPoint.OPERATION)
         if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
-        return withDocumentReadKey(owner() ?: throw ProductStorageFailure(),c) { key ->
-            database.use(inventory.database, key, c) { db -> db.withReadTransaction { work(db) } }
+        return documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.DB_KEY) {
+            withDocumentReadKey(owner() ?: throw ProductStorageFailure(),c) { key ->
+                database.use(inventory.database, key, c) { db -> db.withReadTransaction { work(db) } }
+            }
         }
     }
     private suspend fun allowed(db: ActionDatabase, c: StorageContext, a: String): DocumentFailure? {
@@ -123,12 +122,14 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
         }
     }
     override fun importDocument(actionId: String, name: String, format: DocumentFormat, source: DocumentSource,
-        publish: (DocumentResult<Unit>) -> Unit) = run(publish) { c ->
-        if (interruptedGeneration == c.generation) return@run DocumentResult.Rejected(DocumentFailure.MAINTENANCE_REQUIRED)
+        publish: (DocumentResult<Unit>) -> Unit) = runMutation(DocumentMutationEvidence.Operation.IMPORT,publish) { c,evidence ->
+        if (interruptedGeneration == c.generation) return@runMutation DocumentResult.Rejected(DocumentFailure.MAINTENANCE_REQUIRED)
         val normalized = DocumentRules.normalizedName(name)
-        if (!DocumentRules.validName(normalized)) return@run DocumentResult.Rejected(DocumentFailure.INVALID)
+        if (!DocumentRules.validName(normalized)) return@runMutation DocumentResult.Rejected(DocumentFailure.INVALID)
         try {
-            when (val result = staging.stage(c,actionId,normalized,format) { oneAttemptSource(c,source) }) {
+            val steps=SqlCipherDocumentImportDatabase(application,inventory,owner,evidence=evidence)
+            val producer=DocumentMutationProducer(noBackupRoot,evidence)
+            when (val result = producer.import(c,steps,steps,steps,actionId,normalized,format) { oneAttemptSource(c,source) }) {
                 is OperationsResult.Rejected -> DocumentResult.Rejected(when(result.reason) {
                     OperationsFailure.IN_USE -> DocumentFailure.CAPACITY
                     OperationsFailure.NOT_FOUND -> DocumentFailure.NOT_FOUND
@@ -138,15 +139,14 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
                 })
                 is OperationsResult.Value -> {
                     requireOperations(c)
-                    publication.complete(c,result.value.jobId)
                     DocumentResult.Value(Unit)
                 }
             }
         } catch (failure: DocumentInputFailure) { interruptedGeneration=c.generation; DocumentResult.Rejected(failure.reason) }
     }
-    override fun deleteDocument(actionId: String, expected: DocumentAsset, publish: (DocumentResult<Unit>) -> Unit) = run(publish) { c ->
-        if (interruptedGeneration == c.generation) return@run DocumentResult.Rejected(DocumentFailure.MAINTENANCE_REQUIRED)
-        val rejection = read(c) { db ->
+    override fun deleteDocument(actionId: String, expected: DocumentAsset, publish: (DocumentResult<Unit>) -> Unit) = runMutation(DocumentMutationEvidence.Operation.DELETE,publish) { c,evidence ->
+        if (interruptedGeneration == c.generation) return@runMutation DocumentResult.Rejected(DocumentFailure.MAINTENANCE_REQUIRED)
+        val rejection = read(c,evidence) { db ->
             allowed(db,c,actionId) ?: run {
                 requireOperations(c)
                 val current = db.documents().get(actionId,expected.id)?.model()
@@ -154,7 +154,16 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
             }
         }
         if (rejection != null) DocumentResult.Rejected(rejection)
-        else { deletion.delete(c,actionId,expected); DocumentResult.Value(Unit) }
+        else {
+            val steps=SqlCipherDocumentDeleteDatabase(application,inventory,owner,evidence=evidence)
+            DocumentMutationProducer(noBackupRoot,evidence).delete(c,steps,steps,actionId,expected)
+            DocumentResult.Value(Unit)
+        }
+    }
+    private fun <T> runMutation(operation:DocumentMutationEvidence.Operation,publish:(DocumentResult<T>)->Unit,
+        work:(StorageContext,DocumentMutationEvidence)->DocumentResult<T>) {
+        val evidence=DocumentMutationEvidence(operation)
+        dispatch.run(publish){c->try{work(c,evidence)}finally{evidence.seal()}}
     }
     private fun <T> run(publish: (DocumentResult<T>) -> Unit, work: (StorageContext) -> DocumentResult<T>) = dispatch.run(publish,work)
 }

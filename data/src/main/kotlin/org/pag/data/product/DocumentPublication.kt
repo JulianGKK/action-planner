@@ -11,7 +11,13 @@ import java.nio.file.attribute.BasicFileAttributes
 
 /** Scoped internal snapshot, deliberately not a data class or domain projection. */
 internal class DocumentPublicationSnapshot(val job: DocumentJobRow, val inventory: DocumentImportInventory) : AutoCloseable {
-    override fun close() { job.fileKey?.fill(0) }
+    private var evidence:DocumentMutationEvidence?=null
+    private var closed=false
+    fun observe(e:DocumentMutationEvidence?) { check(!closed && evidence==null);evidence=e;e?.acquired(DocumentMutationEvidence.Resource.SNAPSHOT) }
+    override fun close() {
+        if(closed)return
+        job.fileKey?.fill(0);closed=true;evidence?.closed(DocumentMutationEvidence.Resource.SNAPSHOT)
+    }
 }
 internal interface DocumentPublicationDatabase {
     fun snapshot(c: StorageContext, id: String, phase: String, expected: DocumentJobRow? = null): DocumentPublicationSnapshot
@@ -41,7 +47,9 @@ internal object AndroidDocumentPublishFileOps : DocumentPublishFileOps {
 
 /** Internal technical completion, never a UI publication. Only a job ID is accepted. */
 internal class DocumentPublication(private val database: DocumentPublicationDatabase, noBackupFilesDir: File,
-    private val fileOps: DocumentPublishFileOps = AndroidDocumentPublishFileOps) {
+    fileOps: DocumentPublishFileOps = AndroidDocumentPublishFileOps,
+    private val evidence:DocumentMutationEvidence?=null) {
+    private val fileOps=if(evidence==null)fileOps else EvidenceDocumentFileOps(fileOps,evidence)
     private val root = noBackupFilesDir.toPath().toAbsolutePath().resolve("pag-documents-v1")
     private val inventory = DocumentFileInventory(noBackupFilesDir)
 
@@ -62,9 +70,9 @@ internal class DocumentPublication(private val database: DocumentPublicationData
                 val j=closed.job
                 val staging=j.stagingName!! in closed.inventory.staging
                 if(!staging && (scope!=AccessScope.MAINTENANCE || j.blobName !in closed.inventory.files))throw ProductStorageFailure()
-                inventory.verifyExisting(c,if(staging)DocumentFileArea.STAGING else DocumentFileArea.FILES,
+                documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.VERIFY) { inventory.verifyExisting(c,if(staging)DocumentFileArea.STAGING else DocumentFileArea.FILES,
                     if(staging)j.stagingName else j.blobName,closed.inventory.staging,closed.inventory.files,
-                    j.documentId,j.fileKey!!,j.plaintextSize!!,DocumentFormat.valueOf(j.format!!)).requireCurrent(c)
+                    j.documentId,j.fileKey!!,j.plaintextSize!!,DocumentFormat.valueOf(j.format!!)).requireCurrent(c) }
                 database.snapshot(c,jobId,"IMPORT_CLOSED",j).use { current ->
                     gate(c,g,scope);requireInventory(c,current.inventory)
                     if(staging) moveExclusive(c,g,current,scope)
@@ -87,8 +95,8 @@ internal class DocumentPublication(private val database: DocumentPublicationData
         database.snapshot(c,jobId,"FILE_PUBLISHED",expected).use { final ->
             gate(c,g,scope);requireInventory(c,final.inventory)
             val f=final.job
-            inventory.verifyExisting(c,DocumentFileArea.FILES,f.blobName,final.inventory.staging,final.inventory.files,
-                f.documentId,f.fileKey!!,f.plaintextSize!!,DocumentFormat.valueOf(f.format!!)).requireCurrent(c)
+            documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.VERIFY) { inventory.verifyExisting(c,DocumentFileArea.FILES,f.blobName,final.inventory.staging,final.inventory.files,
+                f.documentId,f.fileKey!!,f.plaintextSize!!,DocumentFormat.valueOf(f.format!!)).requireCurrent(c) }
             gate(c,g,scope);requireInventory(c,final.inventory)
             database.finish(c,f);gate(c,g,scope)
         }
@@ -98,7 +106,8 @@ internal class DocumentPublication(private val database: DocumentPublicationData
         if (c.scope != scope) throw ProductStorageFailure()
         documentFileGate(c,generation)
     }
-    private fun requireInventory(c: StorageContext, expected: DocumentImportInventory) {
+    private fun requireInventory(c: StorageContext, expected: DocumentImportInventory) =
+        documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.VERIFY) {
         val actual = inventory.inspect(c,expected.staging,expected.files)
         if (!actual.rootPresent || actual.staging != expected.staging || actual.files != expected.files) throw ProductStorageFailure()
     }

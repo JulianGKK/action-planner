@@ -48,6 +48,18 @@ internal class DocumentFileInventory(noBackupFilesDir: File) {
         if(c.scope!=org.pag.domain.AccessScope.MAINTENANCE)throw ProductStorageFailure()
         val g=c.generation
         val result=inspectInternal(c,knownStaging,knownFiles,true)
+        checkLeafIdentities(c,g,result)
+        return result
+    }
+    internal fun inspectFinal(c:StorageContext,knownStaging:Set<String>,knownFiles:Set<String>):DocumentNamespaceSnapshot {
+        if(c.scope!=org.pag.domain.AccessScope.READY)throw ProductStorageFailure()
+        val result=inspectInternal(c,knownStaging,knownFiles,false)
+        if(!result.rootPresent)throw ProductStorageFailure()
+        checkLeafIdentities(c,c.generation,result)
+        if(inspectInternal(c,knownStaging,knownFiles,false)!=result)throw ProductStorageFailure()
+        return result
+    }
+    private fun checkLeafIdentities(c:StorageContext,g:Long,result:DocumentNamespaceSnapshot) {
         val identities=mutableSetOf<Any>()
         if(result.rootPresent) for((area,names) in listOf("staging" to result.staging,"files" to result.files)) {
             for(name in names) {
@@ -57,7 +69,6 @@ internal class DocumentFileInventory(noBackupFilesDir: File) {
             }
         }
         documentFileGate(c,g)
-        return result
     }
     private fun inspectInternal(c: StorageContext, knownStaging: Set<String>, knownFiles: Set<String>, allowMissingRoot:Boolean): DocumentNamespaceSnapshot = documentFileBoundary {
         val generation = c.generation

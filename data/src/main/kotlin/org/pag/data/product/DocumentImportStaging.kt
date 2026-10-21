@@ -2,6 +2,7 @@ package org.pag.data.product
 
 import android.content.Context
 import androidx.room3.withWriteTransaction
+import androidx.room3.useWriterConnection
 import org.pag.domain.*
 import java.io.File
 import java.io.InputStream
@@ -33,36 +34,46 @@ internal interface DocumentImportDatabase {
     fun advance(c: StorageContext, expected: DocumentJobRow, size: Long?)
 }
 internal class SqlCipherDocumentImportDatabase(app: Context, private val inventory: ProductInventory,
-    private val owner: () -> SessionDbKeyOwner?, private val now: () -> Long = System::currentTimeMillis) : DocumentImportDatabase, DocumentPublicationDatabase {
+    private val owner: () -> SessionDbKeyOwner?, private val now: () -> Long = System::currentTimeMillis,
+    private val evidence:DocumentMutationEvidence?=null) : DocumentImportDatabase, DocumentPublicationDatabase, DocumentFinalInventoryDatabase {
     private val access = ActionDatabaseAccess(app.applicationContext)
     private fun <T> use(c: StorageContext, work: suspend (ActionDatabase) -> T): T {
         if (c.scope != AccessScope.READY || inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
-        return (owner() ?: throw ProductStorageFailure()).withDbKey(c) { key ->
-            access.use(inventory.database,key,c,work=work)
+        return documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.DB_KEY) {
+            (owner() ?: throw ProductStorageFailure()).withDbKey(c) { key ->
+                access.use(inventory.database,key,c,work=work)
+            }
         }
     }
     override fun snapshot(c: StorageContext, id: String, phase: String, expected: DocumentJobRow?): DocumentPublicationSnapshot {
         var leased: DocumentPublicationSnapshot? = null
         var returned = false
         try {
-            val result = use(c) { db -> db.documents().publicationSnapshot(id,phase,expected,c).also { leased = it } }
+            val result = use(c) { db -> db.documents().publicationSnapshot(id,phase,expected,c).also { it.observe(evidence);leased = it } }
             returned = true
             return result
         } finally { if (!returned) leased?.close() }
     }
+    private suspend fun <T> write(db:ActionDatabase,c:StorageContext,step:DocumentMutationEvidence.Step,
+        changed:(T)->Boolean={true},work:suspend()->T):T {
+        val e=evidence ?: return db.withWriteTransaction{work()}
+        return db.useWriterConnection{tx->confirmedDocumentTransaction(tx,c,e,step,changed,work)}
+    }
     override fun markPublished(c: StorageContext, expected: DocumentJobRow) = use(c) { db ->
-        db.withWriteTransaction { db.documents().markFilePublished(expected,c) }
+        write(db,c,DocumentMutationEvidence.Step.PUBLISHED){db.documents().markFilePublished(expected,c)}
     }
     override fun finish(c: StorageContext, expected: DocumentJobRow) = use(c) { db ->
-        db.withWriteTransaction { db.documents().commitPublishedDocument(expected,now(),c) }
+        write(db,c,DocumentMutationEvidence.Step.DOCUMENT_COMMIT){db.documents().commitPublishedDocument(expected,now(),c)}
     }
     override fun inventory(c: StorageContext) = use(c) { db -> db.documents().importInventory(c) }
+    override fun finalInventory(c:StorageContext)=use(c){db->db.documents().completedInventory(c)}
     override fun reserve(c: StorageContext, job: DocumentJobRow) = use(c) { db ->
-        db.withWriteTransaction { db.documents().reserveImport(job,c) }
+        write(db,c,DocumentMutationEvidence.Step.RESERVED,{it is OperationsResult.Value}){db.documents().reserveImport(job,c)}
     }
     override fun advance(c: StorageContext, expected: DocumentJobRow, size: Long?) = use(c) { db ->
-        db.withWriteTransaction { db.documents().advanceImport(expected,size,c) }
+        write(db,c,if(size==null)DocumentMutationEvidence.Step.WRITING else DocumentMutationEvidence.Step.CLOSED){db.documents().advanceImport(expected,size,c)}
     }
+
 }
 
 /** Process-local namespace lane, never the SessionCoordinator monitor.
@@ -108,7 +119,10 @@ internal class DocumentImportStaging(private val database: DocumentImportDatabas
     private val inventory = DocumentFileInventory(noBackupFilesDir)
 
     fun stage(c: StorageContext, actionId: String, displayName: String, format: DocumentFormat,
-        source: () -> InputStream): OperationsResult<DocumentStagingReceipt> = documentFileBoundary {
+        source: () -> InputStream): OperationsResult<DocumentStagingReceipt> = stageObserved(c,actionId,displayName,format,null,source)
+
+    fun stageObserved(c:StorageContext,actionId:String,displayName:String,format:DocumentFormat,
+        evidence:DocumentMutationEvidence?,source:()->InputStream):OperationsResult<DocumentStagingReceipt> = documentFileBoundary {
         val generation = c.generation
         val ticket = DocumentNamespaceLane.ticket()
         DocumentNamespaceLane.exclusive(ticket) {
@@ -117,7 +131,7 @@ internal class DocumentImportStaging(private val database: DocumentImportDatabas
                 return@exclusive OperationsResult.Rejected(OperationsFailure.INVALID)
             val known = database.inventory(c)
             // No document-namespace access until the durable WRITING transition below.
-            DocumentFileStreams.withNewKey(c) { key ->
+            DocumentFileStreams.withNewKeyObserved(c,evidence) { key ->
                 val names = List(4) { UUID.randomUUID().toString() }
                 if (names.toSet().size != 4) throw ProductStorageFailure()
                 val reserved = DocumentJobRow(names[0],actionId,names[1],"IMPORT","IMPORT_RESERVED",names[2],names[3],displayName,format.name,null,key)
@@ -129,23 +143,31 @@ internal class DocumentImportStaging(private val database: DocumentImportDatabas
                         documentFileGate(c,generation)
                         val writing = DocumentJobRow(reserved.id,actionId,reserved.documentId,"IMPORT","IMPORT_WRITING",reserved.stagingName,
                             reserved.blobName,displayName,format.name,null,key)
-                        if (known.empty) initialize(c,generation) else requireInventory(c,known)
+                        if (known.empty) {
+                            evidence?.starting(DocumentMutationEvidence.Step.INITIALIZE)
+                            documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.VERIFY){initialize(c,generation)}
+                            evidence?.returned(DocumentMutationEvidence.Step.INITIALIZE)
+                        } else requireInventory(c,known,evidence)
                         val target = root.resolve("staging").resolve(writing.stagingName!!)
                         documentFileGate(c,generation)
                         // Atomic exclusive leaf creation; no retry and no unlink on any failure.
-                        val length = FileChannel.open(target,CREATE_NEW,WRITE,NOFOLLOW_LINKS).use { channel ->
+                        evidence?.starting(DocumentMutationEvidence.Step.CREATE)
+                        val length = documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.STREAM) {
+                            FileChannel.open(target,CREATE_NEW,WRITE,NOFOLLOW_LINKS)
+                        }.documentEvidenceUse(evidence,DocumentMutationEvidence.Resource.STREAM) { channel ->
+                            evidence?.returned(DocumentMutationEvidence.Step.CREATE)
                             documentFileGate(c,generation)
                             checkDirectory(c,generation,root.resolve("staging"))
-                            val output = SyncOnClose(channel,sync)
-                            output.use {
+                            val output = SyncOnClose(channel,sync,evidence)
+                            output.documentEvidenceUse(evidence,DocumentMutationEvidence.Resource.STREAM) {
                                 documentFileGate(c,generation)
                                 val input = source() // exactly one invocation, only after WRITING and exclusive create
-                                DocumentFileStreams.encrypt(c,writing.documentId,key,input,it,format)
+                                DocumentFileStreams.encrypt(c,writing.documentId,key,input,it,format,evidence)
                             }
                         }
                         documentFileGate(c,generation)
                         // Recheck exact known namespace including this staging, before CLOSED commit.
-                        requireInventory(c,DocumentImportInventory(known.files,known.staging + writing.stagingName))
+                        requireInventory(c,DocumentImportInventory(known.files,known.staging + writing.stagingName),evidence)
                         database.advance(c,writing,length)
                         documentFileGate(c,generation)
                         OperationsResult.Value(DocumentStagingReceipt(writing.id,length))
@@ -186,7 +208,8 @@ internal class DocumentImportStaging(private val database: DocumentImportDatabas
         }
         inventory.inspect(c,emptySet(),emptySet())
     }
-    private fun requireInventory(c: StorageContext, known: DocumentImportInventory) {
+    private fun requireInventory(c: StorageContext, known: DocumentImportInventory,evidence:DocumentMutationEvidence?) =
+        documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.VERIFY) {
         val actual = inventory.inspect(c,known.staging,known.files)
         if (!actual.rootPresent || actual.staging != known.staging || actual.files != known.files) throw ProductStorageFailure()
     }
@@ -195,15 +218,23 @@ internal class DocumentImportStaging(private val database: DocumentImportDatabas
 /** Tink closes this wrapper: sync happens while the channel is still open, then close.
  * Repeated closes are no-ops. Any write/flush/force/close failure prevents CLOSED.
  */
-private class SyncOnClose(private val channel: FileChannel, private val sync: (FileChannel) -> Unit) : OutputStream() {
+private class SyncOnClose(private val channel: FileChannel, private val sync: (FileChannel) -> Unit,
+    private val evidence:DocumentMutationEvidence?) : OutputStream() {
     private val stream = Channels.newOutputStream(channel)
     private var closed = false
-    override fun write(b: Int) = stream.write(b)
-    override fun write(b: ByteArray, off: Int, len: Int) = stream.write(b,off,len)
+    override fun write(b: Int) {
+        evidence?.starting(DocumentMutationEvidence.Step.WRITE);stream.write(b);evidence?.returned(DocumentMutationEvidence.Step.WRITE)
+    }
+    override fun write(b: ByteArray, off: Int, len: Int) {
+        evidence?.starting(DocumentMutationEvidence.Step.WRITE);stream.write(b,off,len);evidence?.returned(DocumentMutationEvidence.Step.WRITE)
+    }
     override fun flush() = stream.flush()
     override fun close() {
         if (closed) return
         closed = true
-        try { stream.flush(); sync(channel) } finally { channel.close() }
+        try {
+            stream.flush();evidence?.starting(DocumentMutationEvidence.Step.FILE_SYNC)
+            sync(channel);evidence?.returned(DocumentMutationEvidence.Step.FILE_SYNC)
+        } finally { channel.close() }
     }
 }

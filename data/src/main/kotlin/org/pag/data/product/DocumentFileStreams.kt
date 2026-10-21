@@ -48,10 +48,12 @@ internal class DocumentInputFailure(val reason: org.pag.domain.DocumentFailure) 
 internal object DocumentFileStreams {
     const val BUFFER_BYTES = 32 * 1024
 
-    fun <T> withNewKey(c: StorageContext, consume: (ByteArray) -> T): T = documentFileBoundary {
+    fun <T> withNewKey(c:StorageContext,consume:(ByteArray)->T):T=withNewKeyObserved(c,null,consume)
+    fun <T> withNewKeyObserved(c: StorageContext, evidence:DocumentMutationEvidence?, consume: (ByteArray) -> T): T = documentFileBoundary {
         val generation = c.generation
         documentFileGate(c, generation, AccessPoint.OPERATION)
         val key = ByteArray(32)
+        evidence?.acquired(DocumentMutationEvidence.Resource.FILE_KEY)
         try {
             documentFileGate(c, generation)
             SecureRandom().nextBytes(key)
@@ -59,34 +61,36 @@ internal object DocumentFileStreams {
             val result = consume(key)
             documentFileGate(c, generation)
             result
-        } finally { key.fill(0) }
+        } finally { key.fill(0);evidence?.closed(DocumentMutationEvidence.Resource.FILE_KEY) }
     }
 
     private fun <T> cipher(c: StorageContext, generation: Long, documentId: String, key: ByteArray,
-        consume: (FileStreamingCipher, ByteArray) -> T): T {
+        evidence:DocumentMutationEvidence?=null, consume: (FileStreamingCipher, ByteArray) -> T): T {
         if (!DocumentStorageRules.opaque(documentId) || key.size != 32) throw ProductStorageFailure()
         val copy = key.copyOf()
+        evidence?.acquired(DocumentMutationEvidence.Resource.FILE_KEY)
         try {
             documentFileGate(c, generation, AccessPoint.OPERATION)
-            FileStreamingCipher.fromUnwrappedKey(copy).use { cipher ->
+            documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.FILE_KEY) { FileStreamingCipher.fromUnwrappedKey(copy) }.documentEvidenceUse(evidence,DocumentMutationEvidence.Resource.FILE_KEY) { cipher ->
                 documentFileGate(c, generation)
                 return consume(cipher, documentId.toByteArray(Charsets.UTF_8))
             }
-        } finally { copy.fill(0) }
+        } finally { copy.fill(0);evidence?.closed(DocumentMutationEvidence.Resource.FILE_KEY) }
     }
 
     /** Owns and closes both supplied streams even on early denial; result is only actual byte count. */
     fun encrypt(c: StorageContext, documentId: String, key: ByteArray, source: InputStream,
-        destination: OutputStream, format: DocumentFormat? = null): Long = documentFileBoundary {
+        destination: OutputStream, format: DocumentFormat? = null, evidence:DocumentMutationEvidence?=null): Long = documentFileBoundary {
         val generation = c.generation
-        source.use { input -> destination.use { output ->
-            cipher(c, generation, documentId, key) { cipher, aad ->
+        source.documentEvidenceUse(evidence,DocumentMutationEvidence.Resource.STREAM) { input ->
+            destination.documentEvidenceUse(evidence,DocumentMutationEvidence.Resource.STREAM) { output ->
+            cipher(c, generation, documentId, key,evidence) { cipher, aad ->
                 val buffer = ByteArray(BUFFER_BYTES)
                 try {
                     var length = 0L
                     val formatCheck = format?.let { DocumentFormatCheck(it, true) }
                     try {
-                        cipher.encrypt(output, aad).use { encrypted ->
+                        documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.STREAM) { cipher.encrypt(output, aad) }.documentEvidenceUse(evidence,DocumentMutationEvidence.Resource.STREAM) { encrypted ->
                             while (true) {
                                 documentFileGate(c, generation)
                                 // Read at most one byte past the hard limit, including at exact maximum.
@@ -109,6 +113,7 @@ internal object DocumentFileStreams {
                             formatCheck?.finish()
                             documentFileGate(c, generation)
                         } // close may physically finish a last segment after revoke; it grants nothing.
+                        evidence?.returned(DocumentMutationEvidence.Step.CIPHER_CLOSE)
                         documentFileGate(c, generation)
                         length
                     } finally { formatCheck?.close() }

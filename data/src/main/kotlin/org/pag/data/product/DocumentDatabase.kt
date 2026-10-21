@@ -323,6 +323,15 @@ internal object DocumentStorageRules {
     }
 
     /** Key-free, fully checked namespace snapshot. No file I/O inside this transaction. */
+    @Transaction open suspend fun completedInventory(c: StorageContext): DocumentImportInventory = deleteState(c) { docs,jobs ->
+        if(c.scope != AccessScope.READY || jobs.isNotEmpty())throw ProductStorageFailure()
+        docs.map{it.actionId}.toSet().forEach { action ->
+            if(actionStatus(action) !in setOf("PREPARATION","ACTIVE","COMPLETED","DELETION_PENDING"))throw ProductStorageFailure()
+        }
+        requireDocumentDelete(c)
+        DocumentImportInventory(docs.map{it.blobName}.toSet(),emptySet())
+    }
+
     @Transaction open suspend fun importInventory(c: StorageContext): DocumentImportInventory {
         requireOperations(c)
         val docs = inventoryDocuments()

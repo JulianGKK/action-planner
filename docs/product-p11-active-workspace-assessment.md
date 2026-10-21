@@ -10091,3 +10091,301 @@ Gradle-Konfigurations-/Lifecycle-SKIPPED bedeutet keinen übersprungenen Testfal
 Keine Logs, APKs, DBs, Keys oder Testartefakte im Commit. Regulärer WIP-Commit und
 Push auf `p11-performance-optimization`; Remote-SHA unabhängig über GitHub prüfen.
 Danach **STOPP bis zum unabhängigen GitHub-Review**.
+
+## 64. Produktive Document-Evidence für Import und Delete
+
+### 64.1 Basis und implementierter kritischer Pfad
+
+Verbindliche Basis `81c3e90b580a018f7e676bd066eb274652ca744c`, Branch
+`p11-performance-optimization`. Vor Änderungen: lokaler HEAD und unabhängiger
+GitHub-Remote-Ref identisch, Arbeitsbaum und Diff leer. §§57–63 sowie Repository,
+Dispatch/Lane, Staging/Publication/Delete, deren SQLCipher-/DB-/Keyscopes,
+Inventory/DAO, Reconciliation, typisierter Port, WriteBoundary und Runtime geprüft.
+Die zwischenzeitliche autorisierte Handyinstallation ist keine Quellcodeänderung;
+in diesem Slice keine Geräteinstallation oder Änderung installierter Apps.
+
+**IMPLEMENTIERT:** Produktive auftragslokale Evidence für **beide** Operationen.
+ProductDocumentRepository erzeugt pro Import/Delete eine neue
+DocumentMutationEvidence und ruft die neuen produktiven Producerpfade auf. Der
+Import verwendet beobachtete Staging-/Publication- und SQLCipher-Adapter, Delete
+die entsprechende beobachtete Reserve-/Detach-/Unlink-/Finishfolge. Beide führen
+nach dem letzten mutierenden DB-Schritt einen zusätzlichen autorisierten globalen
+DB-/Filesystemcheck aus. Kein weiterer reiner Modell- oder Analyseslice.
+
+RAM-Cache und schnelle ACTIVE-Navigation bleiben zwingende Release-1.0-Ziele.
+Dieser Slice liefert deren produktive Evidence-Voraussetzung, keine alternative
+1.0 ohne Cache. **UNWIRED:** Der §63-Pending-Port ist noch nicht angeschlossen;
+ProductRuntime, beforeDocumentQueue/finishDocument, ACTIVE-Owner und RAM-Hits
+bleiben unverändert. §65 ist der nächste getrennt reviewbare Anschluss, keine
+Release- oder Cachefreigabe durch diese Producer.
+
+### 64.2 Begrenzte Evidence und lokaler Abschluss
+
+DocumentMutationEvidence enthält ausschließlich Operationenum, feste Bitmasken
+für bestätigte/unklare Schritte, Flags, einen festen kleinen Ressourcenzählervektor
+und den eingefrorenen DocumentWriteCompletion. Keine Keys, Inhalte, Dokument-
+oder Blobnamen, URIs, Pfade, Sources, Observer-/UI-Callbacks oder Ereignislisten.
+Ressourcen je Kategorie sind zusätzlich begrenzt; Überlauf kann keine saubere
+Freigabe ergeben. Kein zweiter Pendingowner, Sessionowner oder Persistenzort.
+Die Producerklasse hält ihre normalen kurzlebigen DB-/Filesystemargumente; der
+Collector hält keine Rückreferenz auf Producer, Snapshots oder Handles.
+
+Ein Collector wird einmal für seine Operation beansprucht und am Ende (auch bei
+Exception) eingefroren. Nachträgliche Beobachtungen oder Wiederverwendung für
+einen zweiten Auftrag sind verboten; spätere Callbackverluste/Fences ändern den
+physischen Abschluss nicht. Kleine synchronisierte Metadatenmethoden können von
+den bestehenden Room-Coroutine-/Workerthreads aufgerufen werden. Unter ihrem
+Monitor läuft keine Datei-/DBarbeit, kein Sessioncheck und kein fachlicher
+Callback; er ist keine Namespace-/Sessionautorität.
+
+| Typisierter Abschluss | Tatsächliche Producerbedingung |
+| --- | --- |
+| NOT_EXECUTED | Keine beobachtete Dokumentwirkung und keine unbestätigte Operation/Ressource; z.B. Syntaxablehnung vor DB-/Keyarbeit oder CAPACITY vor Insert nach vollständig zurückgekehrten DB-/Keyscopes |
+| COMPLETE | Alle erforderlichen getrennten DB-/Datei-/Syncbelege, zulässiger Unlink oder frisch belegte Abwesenheit bei Delete, finales konsistentes globales Inventar und sämtliche beobachteten Ressourcen geschlossen |
+| RECOVERY_REQUIRED | Bekannte Wirkung/Phase, aber kein vollständiger Abschluss; etwa SOURCE_UNAVAILABLE/TOO_LARGE bei erhaltenem WRITING oder Revoke nach zurückgekehrtem Detach mit Blob |
+| UNKNOWN | Unbestätigtes Transaktions-/Datei-/Syncende, Inventar-/Scopefehler, fehlgeschlagenes oder nicht vollständig beobachtetes Cleanup; frühere bestätigte Schritte bleiben erhalten |
+
+DocumentResult.Value oder Rejected setzen diese Werte **nicht**. Das Repository
+verwendet technische Stagingquittungen weiterhin nur zur vorhandenen Ablaufsteuerung.
+Der Collector berechnet COMPLETE separat aus seinen Schritt-/Scope-/Inventarbelegen.
+Ein fehlgeschlagener DB-Open oder ein nicht zurückgekehrter Keyscope bleibt UNKNOWN,
+auch wenn der gewünschte DAO-Körper nicht erreicht wurde. Die erfolgreiche leere
+Reserve-Transaktion bei CAPACITY wird als zurückgekehrter lokaler DB-Schritt ohne
+Dokumentinsert erfasst, nicht als angeblicher SQL-Rollback. Es wird kein allgemeiner
+Nachweis behauptet, dass Room beim Öffnen niemals Migrationsarbeit leisten könnte;
+aktuelle READY-Autorität und vollständig zurückgekehrtes Öffnen/Cleanup bleiben
+Vorbedingungen. Kein unbestätigter Open wird als Nichtausführung klassifiziert.
+
+### 64.3 Produktive DB- und Cleanupgrenzen
+
+Die beobachteten SQLCipher-Dokumentadapter verwenden einen schmalen
+`confirmedDocumentTransaction`-Helper auf der bestehenden Writerconnection:
+vorher keine laufende äußere Transaktion; IMMEDIATE-Transaktion; vorhandene
+DAO-Regeln/Expected-/Action-/COMMIT-Gates; Bestätigung erst nach Rückkehr aus
+withTransaction und erneuter Prüfung, dass keine Transaktion mehr läuft.
+Generierte DAO-Transaktionen innerhalb dieses äußeren Schritts sind keine
+separaten Commitbelege. Begin-/Body-/Endfehler bleiben UNKNOWN; es wird kein
+lokaler oder globaler Rollback aus einer Exception geraten. Die Core-
+WorkspaceWriteCompletion-/WriteProgress-Semantik wird nicht geändert/verwendet.
+
+Unabhängig davon umschließt `documentEvidenceScope(DB_KEY)` den vollständigen
+Rücklauf aus ActionDatabaseAccess **und** SessionDbKeyOwner.withDbKey. Ein schon
+bestätigter lokaler Commit bleibt deshalb bei anschließendem Open-/Health-/
+Context-/DBclose-/Keyscopefehler bestätigt; Cleanup bleibt unbestätigt und das
+Gesamtergebnis UNKNOWN. ActionDatabaseAccess und SessionDbKeyOwner selbst wurden
+nicht umgebaut. Alte unbeobachtete Aufrufer/Maintenance nutzen weiterhin ihren
+bisherigen Transaktionspfad.
+
+`documentEvidenceUse` erhält die vorhandene use-/Suppressionsemantik und bestätigt
+Close getrennt vom Workkörper: Quellen, Cipher-/Outputstreams, Channels und
+Cipherinstanzen schließen auch bei Eingabefehlern; erst zurückgekehrter Close
+reduziert den Ressourcenstatus. File-Key und kontrollierte Cipher-Keykopie werden
+an ihrem tatsächlichen finally-Wipe beobachtet. Snapshot-Keywipe/Close wird am
+DocumentPublicationSnapshot selbst einmalig bestätigt. Factory-/Verify-/Inventar-
+und native FileOps-Grenzen werden zusätzlich konservativ umschlossen: eine
+exceptionelle Rückkehr zertifiziert deren Cleanup nicht optimistisch.
+
+Ein Sync-/Closefehler kann somit trotz später physisch geschlossenem Channel
+FAILED_OR_UNCONFIRMED bleiben. Das ist bewusst konservativ: Der Collector
+rekonstruiert keinen sauberen Abschluss aus Dateiexistenz oder Exceptiontypen.
+Er bestätigt den logischen Java-/Room-/Keyscope-Vertrag; ein neuer vollständiger
+nativer Cursor-/Handle-/Flash-Erasebeweis folgt daraus nicht (#32 bleibt offen).
+
+### 64.4 Beobachtete Importfolge
+
+| Produktgrenze | Getrennte Evidence / spätere Fehler |
+| --- | --- |
+| IMPORT_RESERVED | Eigener äußerer Commit; Job-/Kapazitätsbindung; kein Namespacezugriff vorher |
+| IMPORT_WRITING | Zweiter eigener Commit; Revoke danach kann weiterhin rootloses WRITING erhalten |
+| Initialisierung / CREATE_NEW / Schreiben | Bestehende Reihenfolge unverändert, keine Vor-WRITING-Anlage. CREATE und Write-Rückkehr getrennt; Fehler kann partielle Struktur/Datei erhalten |
+| Cipherstream-Abschluss | Erst nach Rückkehr des verschlüsselten Stream-close; nachfolgende Cipher-/Source-/Channel-/Keyscopes sind weiter separat offen zu berücksichtigen |
+| FileChannel.force(true) | Rückkehr am offenen Channel in SyncOnClose; ein fehlgeschlagener Close/Sync verhindert bestätigten Gesamtabschluss |
+| IMPORT_CLOSED | Dritter eigener Commit samt Größe; kein globales COMMITTED, kein fachlicher DocumentRow-Erfolg |
+| Atomarer Rename | Physischer staging→files-Schritt separat bestätigt; späterer Syncfehler lässt diesen Schritt und die ältere CLOSED-DBphase bestehen |
+| files-Sync / staging-Sync | Zwei unabhängige Rückkehrbelege aus den vorhandenen Directory-fsync-/fdclose-Primitiven, keine neuen Syncaufrufe als Reparatur |
+| FILE_PUBLISHED | Vierter eigener Commit; späterer Fehler erhält finalen Blob und PUBLISHED-Job |
+| DocumentRow-Insert + Jobentfernung | Fünfter eigener äußerer Commit, beide SQL-Effekte lokal atomar; danach Snapshots schließen |
+| Frisches globales Abschlussinventar | Neuer READY-Read NACH dem fünften Schritt und nach Publication-Snapshotabschluss; anschließend erst mögliche COMPLETE-Evidence |
+
+Keine Sourcewiederöffnung, kein Klartexttempfile, keine zusätzliche Kryptografie,
+kein Retry und keine rückwirkende Umdeutung früherer Commits. Die Beobachtung
+ändert FileChannel.force, Tinkformat/-AAD, CREATE_NEW/NOFOLLOW oder Rename nicht.
+Verlorene physische Rückkehrbelege bleiben UNKNOWN, selbst wenn ein Hostread
+später passende Daten sieht. Keine gemeinsame DB-/Filesystemtransaktion.
+
+### 64.5 Beobachtete Deletefolge
+
+| Produktgrenze | Evidence / erhaltene Wirkung |
+| --- | --- |
+| DELETE_RESERVED | Erster lokaler Commit; Parent/Blob noch vorhanden, sichtbare Listen können bereits beeinflusst sein |
+| Parent-Detach + DELETE_FILE_PENDING | Zweiter Commit; Parent bleibt auch bei nachfolgendem Fehler entfernt |
+| Unlink | Eigenständiger physischer Beleg; keine Gleichsetzung mit Directorysync |
+| Bereits fehlender Pendingblob | Nur nach den bestehenden frischen DB-/vollständigen Namespaceprüfungen als ABSENT beobachtet; kein neuer rootloser Abbruchpfad |
+| files-Directorysync | Eigener Rückkehrbeleg, auch bei bereits fehlendem Blob, unveränderte bestehende Reihenfolge |
+| Deletejob-Remove | Dritter lokaler Commit; danach zusätzlicher globaler Abschlusscheck |
+| Frisches Abschlussinventar | Keine Jobs/stagings, files exakt die verbleibenden Documents, vollständiger Root; erst mit Cleanup und übrigen Belegen COMPLETE |
+
+Revoke nach Detach oder Unlinkfehler stellt keinen Parent wieder her. Es gibt
+keine globale ROLLED_BACK-Klassifikation für einen solchen Auftrag.
+
+### 64.6 Globaler Abschlusscheck, keine zweite Recoveryarchitektur
+
+Kleinste zusätzliche READY-Lesegrenze: DocumentDao.completedInventory verwendet
+die bestehenden globalen deleteState-/DocumentStorageRules-Bindungs-/Kapazitäts-
+und Keywipe-Regeln, verlangt READY, keine verbleibenden Jobs und gültige
+referenzierte Actionzustände. Die Rückgabe enthält nur flüchtige bekannte
+Dateinamen, keine Keys. Beide SQLCipher-Adapter bieten denselben schmalen
+DocumentFinalInventoryDatabase-Read; kein neuer Persistenzort oder zweite
+Inventarimplementierung.
+
+`confirmDocumentFinalInventory` verlangt die bestehende exklusive Namespace-Lane.
+Erst nach vollständigem DB-/Keyscoperücklauf folgt `inspectFinal` auf derselben
+DocumentFileInventory: vollständiger Root, nur erlaubte bekannte Leaves,
+kanonische Pfade/NOFOLLOW, Directory-/File-Rechecks und die vorhandene Prüfung
+nicht-null Leaf-fileKeys auf Hardlinkkollision. Der Leafidentitätscheck wurde
+lediglich mit dem vorhandenen Recoverycheck geteilt; dessen Verhalten und
+fehlender-Root-Regel bleiben erhalten. Nach Identitätsprüfung folgt ein weiterer
+strikter Namespacevergleich. Kein mkdir, unlink, rename, Reparatur- oder
+Sourcezugriff durch den Abschlusscheck.
+
+Fehlende erwartete Datei, unbekanntes Leaf, Symlink-/Teilroot, Hardlinkduplikat,
+fehlerhafte DB-Bindung, verbleibender Job oder fehlgeschlagener Read verhindert
+COMPLETE. Wegen konservativ unbestätigter Inventar-/Cleanupgrenze ist das Ergebnis
+in diesen Fehlerfällen UNKNOWN. Der Check ist ein frischer autorisierter
+Zeitpunktbeleg nach letzter Dokumentmutation, kein über DB und Dateisystem
+atomarer Schutz gegen spätere externe Änderungen. Er authentifiziert nicht
+sämtliche bestehenden Dokumentinhalte neu; der neue Import wird wie bisher vor
+Publication vollständig geprüft. Kein langfristiger Read-/Snapshot-Gültigkeits-
+oder READY-Beleg aus dem Inventarflag.
+
+### 64.7 Hostbelege und native Grenzen
+
+**HOSTGETESTET:** Neue ProductiveDocumentEvidenceTest mit 34 Fällen führt die
+**produktiven** Evidence-, Producer-, Transaktionsbeobachter-, Staging-,
+Publication-, Delete- und finalen DAO-/Inventorypfade aus. DAO-Speicher und
+Transaktionsengine sind ausdrücklich Fake; Tinkstreams und temporäre Hostdateien
+sind echt. Die Host-FileOps simulieren die Plattformgrenze und zählen tatsächliche
+Move-/Unlink-/Forceaufrufe; Hostmove ist kein nativer RENAME_NOREPLACE-Beweis.
+
+Getrennte Assertions: DBphase/Bestand und lokale Commitanzahl, Filesystemstand,
+Fileforce-/Directorysync-Versuche und Rückkehr, Cleanup, typisiertes Outcome,
+finaler Inventarread nach genau DOCUMENT_COMMIT/DELETE_FINISH, Sourceversuche/
+Close und Callbackzahl (bei direkten Koordinatoraufrufen null).
+
+Belegt sind INVALID, CAPACITY vor Insert, SOURCE_UNAVAILABLE und TOO_LARGE nach
+WRITING, Revoke nach WRITING ohne Root, Cipherclose/Fileforce vor fehlgeschlagenem
+CLOSEDschritt, Fileforcefehler, Rename vor Syncfehler, Fehler nach PUBLISHED,
+vollständiger Import, Fehler/Revoke nach Detach, Unlink vor Syncfehler und
+vollständiger Delete. Zusätzliche Tests verweigern COMPLETE bei finalem Readfehler
+für beide Operationen, Fremdleaf, Hardlinkduplikat, Symlink-/Teilroot, fehlendem
+Blob, ungültigen DB-Bindungen und offenem Job. Cleanupfehler nach Commit,
+Sourceclosefehler und ein gezielt injizierter Snapshotclosefehler bleiben UNKNOWN;
+frühere Commit-/Syncbelege werden nicht verworfen. Der Snapshotfehler ist eine
+Hostinjektion am produktiven Close-Beobachter, kein neu beobachteter nativer Fehler.
+
+Echte DocumentProductDispatch-Folgen prüfen einmalige Worker/Mainwirkung,
+SOURCE_UNAVAILABLE-Rejectioncallback ohne COMPLETE, einmaliges Blocked statt
+Erfolg bei fehlendem finalem Inventar, verlorene Mainzustellung für Import/Delete
+und Maintenance-Fence ohne Undo fertiger physischer Evidence. Wiederverwendung
+oder nachträgliches Ändern des eingefrorenen Collectors ist verweigert. Ein
+Strukturtest bestätigt nur feste Metadatenfelder; kein Heap-/Native-Erasebeweis.
+
+**HOSTGETESTET, echte SQLite separat:** DocumentEvidenceSqliteTest (2 Fälle)
+führt denselben produktiven äußeren Transaktionsbeobachter auf der vorhandenen
+realen In-memory-SQLite-Harness mit Schema-11-Entities aus: bestätigte Reserve/
+WRITING-Schritte bleiben nach späterem echten SQL-Rollback erhalten; physischer
+Commit mit Exception vor Rückkehr bleibt unbestätigt/UNKNOWN. Dies ist kein
+Ausführungstest der generierten Room-Dokument-DAOs oder der nativen Adapter und
+kein zusätzlicher Trigger-/Powerlossbeweis. Die vorhandenen unveränderten drei
+Dokument-SQL-Skripte (3+4+4 Fälle) wurden zusätzlich grün ausgeführt und prüfen
+gezielt die vorhandenen Phasen-/Publish-/Delete-Constraints und Atomarität.
+
+**NICHT BEWIESEN:** Android-SQLCipher-/Room-End-to-End-Ausführung der beobachteten
+Adapter, native Cursor-/Key-/Descriptorlifetimes, Directory-/Parent-fsync- und
+Crash-/Powerlossdauerhaftigkeit sowie sichere Androidfixture-Isolation/Cleanup.
+Die SQLCipher-Adapter sind produktiv geändert und offline kompiliert, auf dem
+Host werden ihre gemeinsamen Helper/Koordinatoren und reale DAO-Regeln geprüft;
+das ist ausdrücklich kein vorgetäuschter nativer Adapterlauf. Kein Androidtest,
+keine Installation und keine Änderung installierter Appdateien in diesem Slice.
+#32 bleibt offen, einschließlich fehlendem explizitem Cursorclosebeleg durch
+SQLCipherStatement.close().
+
+Ein erster Host-Kompilierlauf erkannte eine nicht erhaltene zweistellige
+withNewKey(c,work)-Aufrufform. Die ursprüngliche Signatur wurde als delegierender
+Einstieg beibehalten und die beobachtete Form separat benannt. Bestehende Tests
+unverändert; keine Assertion abgeschwächt oder geskippt.
+
+### 64.8 Voraussetzungen für §65 und unveränderte Blocker
+
+**IMPLEMENTIERT:** Beide logischen Producerketten können bei tatsächlichem
+Schritt-/Scope-/Inventarabschluss einen DocumentWriteCompletion mit Outcome COMPLETE liefern;
+Partial- und unbekannte Fälle bleiben konservativ. Die Producer werden im
+Repositorypfad ausgeführt und ihre Evidence im finally eingefroren. **UNWIRED:**
+Es gibt noch keinen Konsumenten dieser Completion im gemeinsamen Runtime-Port;
+kein beforeDocumentQueue/finishDocument im Repository oder Dispatch und kein
+workspaceMutations-Parameter bei ProductRuntime.documents. §62-Bypass-
+Characterizations bleiben deshalb weiterhin wahr, keine falsche PASS-Aussage zur
+produktiven Invalidierung.
+
+**VORGESCHLAGEN für den separaten §65-Anschluss:** Genau dieselbe Runtime-
+Portinstanz und Epoche synchron auf dem Ownerthread vor worker.execute anmelden,
+Busy ohne Worker verweigern, Collector/Completion dem einen Ticket zuordnen und
+finishDocument erst nach vollständiger Worker-/Ressourcenbeobachtung auf dem
+Ownerthread konsumieren. Ein Scope-/Worker-/Mainfehler darf nie künstlich
+NOT_EXECUTED oder sauber COMPLETE werden. Die eingefrorene Evidence muss auch
+bei Rejection/Revoke/Exception erhalten bleiben; verlorene Mainzustellung darf
+ein Pending nicht optimistisch freigeben. Sessionpublication, one-shot Worker/
+Main und §60-Lane-CAS bleiben zusätzlich erforderlich. Keine automatische
+Cleanmarkierung; DocumentSummary-/Listen-/Overview-Validity und Viewer-/Lifecycle-
+Anschluss bleiben vor aktivem Snapshotowner separat zu reviewen (#37/#38).
+
+**BLOCKER:** RED-4 bleibt unverändert fail-closed: rootloses IMPORT_WRITING ist
+historisch mehrdeutig; keine Joblöschung, Rootrekonstruktion, Streamwiederaufnahme
+oder §61-Stagingumordnung. Reconciliation/Maintenancepolitik nicht geändert.
+Native Cleanup-/Cursor-/Fixturegrenze #32 offen; #36 Editor-/CAS-/ABA-Grenzen
+unverändert. RAM-Cache/ACTIVE-Navigation sind noch nicht freigegeben, bleiben
+aber verbindlicher Release-1.0-Kritischer Pfad.
+
+SessionCoordinator, StorageAccess, SessionDbKeyOwner, ActionDatabaseAccess,
+SQLCipher/Tink/B2Driver, Schema 11, Fristen 180/30 s, 8+8-MiB-Budget, Namespace-
+Lane, Dispatch/CAS, bestehende Corewriter, Leadership/P3b und Navigation bleiben
+unverändert. Keine neue Dependency/Permission/Migration, kein Snapshotowner,
+keine RAM-Hits, Geräteinstallation, automatische Recovery, Merge oder Release.
+
+### 64.9 Abschlussvalidierung und Dateiliste
+
+**HOSTGETESTET:** Gezielter Offline-Lauf
+`./gradlew :data:testDebugUnitTest --tests '*Document*Test' --tests '*Workspace*Test' --tests '*Writer*Test' --tests '*TaskMutationSqliteTest' --tests '*Session*Test' --offline`:
+**618 Tests, 0 Failures, 0 Errors, 0 Skips; BUILD SUCCESSFUL**.
+Darin 34 neue Producerfälle und zwei neue echte Host-SQLite-Observerfälle.
+Separat bestehende SQL-Skripte: **11 Tests, 0 Fehler, 0 Skips**.
+
+Anschließend vollständig ausgeführt:
+`./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline`:
+**BUILD SUCCESSFUL**. Debug-Test-XMLs: App **673**, Data **1.058**, Security **4** =
+**1.735 Hosttests, 0 Failures, 0 Errors, 0 Testskips**. App/Data ausgeführt,
+unveränderte Securitytests UP-TO-DATE bestätigt. Domain ohne eigene Testquellen;
+bestehende Porttests im Data-SourceSet eingeschlossen. Beide Androidtest-
+Kompilationen, Debugassemble und beide Manifestchecks erfolgreich ausgeführt.
+Gradle-Konfigurations-/Lifecycle-SKIPPED sind keine übersprungenen Testfälle.
+Keine Androidinstrumentation, Installation oder native Crash-/Cleanupprüfung.
+
+`git diff --check` sauber; ausschließlich diese zwölf Dateien geändert:
+
+- `data/src/main/kotlin/org/pag/data/product/DocumentMutationEvidence.kt`
+- `data/src/main/kotlin/org/pag/data/product/DocumentMutationProducer.kt`
+- `data/src/main/kotlin/org/pag/data/product/DocumentDatabase.kt`
+- `data/src/main/kotlin/org/pag/data/product/DocumentImportStaging.kt`
+- `data/src/main/kotlin/org/pag/data/product/DocumentPublication.kt`
+- `data/src/main/kotlin/org/pag/data/product/DocumentDelete.kt`
+- `data/src/main/kotlin/org/pag/data/product/DocumentFileInventory.kt`
+- `data/src/main/kotlin/org/pag/data/product/DocumentFileStreams.kt`
+- `data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt`
+- `data/src/test/kotlin/org/pag/data/product/ProductiveDocumentEvidenceTest.kt`
+- `data/src/test/kotlin/org/pag/data/product/DocumentEvidenceSqliteTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+
+Bestehende Assertions unverändert stark, keine Testskips ergänzt. Keine Logs,
+APKs, DBs, Keys oder Testartefakte im Commit. Regulärer WIP-Commit und Push;
+Remote-SHA separat über GitHub bestätigen. Danach **STOPP bis zum unabhängigen
+GitHub-Review**.

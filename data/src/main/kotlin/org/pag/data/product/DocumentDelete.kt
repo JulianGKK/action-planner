@@ -2,6 +2,7 @@ package org.pag.data.product
 
 import android.content.Context
 import androidx.room3.withWriteTransaction
+import androidx.room3.useWriterConnection
 import org.pag.domain.*
 import java.io.File
 import java.util.UUID
@@ -32,9 +33,12 @@ internal interface DocumentDeleteDatabase {
 internal class SqlCipherDocumentDeleteDatabase(app: Context, private val inventory: ProductInventory,
     private val owner: () -> SessionDbKeyOwner?,
     private val maintenanceKeyForStep: ((StorageContext,(ByteArray) -> Unit) -> Unit)? = null,
-    preflight:ActionPreflightHooks=ActionPreflightHooks()) : DocumentDeleteDatabase {
+    preflight:ActionPreflightHooks=ActionPreflightHooks(),
+    private val evidence:DocumentMutationEvidence?=null) : DocumentDeleteDatabase, DocumentFinalInventoryDatabase {
     private val access=ActionDatabaseAccess(app.applicationContext,preflight)
-    private fun <T> use(c: StorageContext,work:suspend (ActionDatabase)->T): T {
+    private fun <T> use(c: StorageContext,work:suspend (ActionDatabase)->T): T =
+        documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.DB_KEY){useScoped(c,work)}
+    private fun <T> useScoped(c: StorageContext,work:suspend (ActionDatabase)->T): T {
         requireDocumentDelete(c,AccessPoint.OPERATION)
         if (inventory.state()!=ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
         if(c.scope==AccessScope.READY) return (owner() ?: throw ProductStorageFailure()).withDbKey(c) { key ->
@@ -60,17 +64,25 @@ internal class SqlCipherDocumentDeleteDatabase(app: Context, private val invento
         if(c.scope!=AccessScope.MAINTENANCE)throw ProductStorageFailure()
         return use(c,work)
     }
+    private suspend fun <T> write(db:ActionDatabase,c:StorageContext,step:DocumentMutationEvidence.Step,work:suspend()->T):T {
+        val e=evidence ?: return db.withWriteTransaction{work()}
+        return db.useWriterConnection{tx->confirmedDocumentTransaction(tx,c,e,step,work=work)}
+    }
     override fun reserve(c:StorageContext,actionId:String,expected:DocumentAsset,jobId:String)=use(c) { db ->
-        db.withWriteTransaction { db.documents().reserveDelete(actionId,expected,jobId,c) }
+        write(db,c,DocumentMutationEvidence.Step.DELETE_RESERVED){db.documents().reserveDelete(actionId,expected,jobId,c)}
     }
     override fun snapshot(c:StorageContext,id:String,expected:DocumentDeleteSnapshot?)=use(c) { db -> db.documents().deleteSnapshot(id,expected,c) }
-    override fun detach(c:StorageContext,expected:DocumentDeleteSnapshot)=use(c) { db -> db.withWriteTransaction { db.documents().detachDeleteParent(expected,c) } }
-    override fun finish(c:StorageContext,expected:DocumentDeleteSnapshot)=use(c) { db -> db.withWriteTransaction { db.documents().finishDelete(expected,c) } }
+    override fun detach(c:StorageContext,expected:DocumentDeleteSnapshot)=use(c) { db -> write(db,c,DocumentMutationEvidence.Step.DETACH){db.documents().detachDeleteParent(expected,c)} }
+    override fun finish(c:StorageContext,expected:DocumentDeleteSnapshot)=use(c) { db -> write(db,c,DocumentMutationEvidence.Step.DELETE_FINISH){db.documents().finishDelete(expected,c)} }
+    override fun finalInventory(c:StorageContext)=use(c){db->db.documents().completedInventory(c)}
+
 }
 
 /** One-document deletion/recovery only, not a maintenance orchestrator or UI feature. */
 internal class DocumentDelete(private val database: DocumentDeleteDatabase,noBackupFilesDir:File,
-    private val fileOps:DocumentPublishFileOps=AndroidDocumentPublishFileOps) {
+    fileOps:DocumentPublishFileOps=AndroidDocumentPublishFileOps,
+    private val evidence:DocumentMutationEvidence?=null) {
+    private val fileOps=if(evidence==null)fileOps else EvidenceDocumentFileOps(fileOps,evidence,true)
     private val directory=noBackupFilesDir.toPath().toAbsolutePath().resolve("pag-documents-v1/files")
     private val inventory=DocumentFileInventory(noBackupFilesDir)
 
@@ -103,11 +115,12 @@ internal class DocumentDelete(private val database: DocumentDeleteDatabase,noBac
         if(c.scope!=scope)throw ProductStorageFailure()
         documentFileGate(c,g)
     }
-    private fun inspect(c:StorageContext,snapshot:DocumentDeleteSnapshot):Set<String> {
+    private fun inspect(c:StorageContext,snapshot:DocumentDeleteSnapshot):Set<String> =
+        documentEvidenceScope(evidence,DocumentMutationEvidence.Resource.VERIFY) {
         val known=snapshot.inventory
         val actual=inventory.inspect(c,known.staging,known.requiredFiles+known.optionalFiles)
         if(!actual.rootPresent || actual.staging!=known.staging || !actual.files.containsAll(known.requiredFiles))throw ProductStorageFailure()
-        return actual.files
+        actual.files
     }
     private fun continueDelete(c:StorageContext,g:Long,start:DocumentDeleteSnapshot,scope:AccessScope) {
         gate(c,g,scope)
@@ -130,7 +143,7 @@ internal class DocumentDelete(private val database: DocumentDeleteDatabase,noBac
             gate(c,g,scope)
             fileOps.unlink(directory.resolve(current.job.blobName))
             gate(c,g,scope)
-        }
+        } else evidence?.returned(DocumentMutationEvidence.Step.ABSENT)
         // Also sync on already-missing target: prior unlink may have preceded a crash.
         gate(c,g,scope)
         fileOps.syncDirectory(directory)
