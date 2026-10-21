@@ -1,0 +1,4 @@
+stage,fd,native_heap_bytes,pss_kib,art_gc_count
+native_candidate_waiting_main,83,5504704,46991,11
+atomic_test_slot_loaded,83,5504752,47025,11
+atomic_test_slot_revoked,83,5511904,47045,11

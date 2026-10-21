@@ -1,0 +1,11 @@
+gradle.beforeProject { p ->
+    p.plugins.withId('com.android.application') {
+        if (p.path == ':app') {
+            p.extensions.getByName('androidComponents').finalizeDsl { dsl ->
+                dsl.defaultConfig.applicationId = 'org.pag.validation.p74'
+                dsl.defaultConfig.testApplicationId = 'org.pag.validation.p74.test'
+                dsl.defaultConfig.manifestPlaceholders['pagTestTargetPackage'] = 'org.pag.validation.p74'
+            }
+        }
+    }
+}

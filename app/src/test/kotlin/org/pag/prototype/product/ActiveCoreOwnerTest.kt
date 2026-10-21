@@ -9,20 +9,23 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ActiveCoreOwnerTest {
     private class Session:SessionPort {
         var state=SessionSnapshot(SessionState.READY,1)
+        var interactions=0
         private val observers=mutableListOf<(SessionSnapshot)->Unit>()
         override fun snapshot()=state
         override fun observe(observer:(SessionSnapshot)->Unit):Subscription {observers.add(observer);observer(state);return Subscription{observers.remove(observer)}}
         fun change(next:SessionSnapshot){state=next;observers.toList().forEach{it(next)}}
         override fun authenticate(experiment:Experiment){}
         override fun testAccess(){}
-        override fun userInteraction(){}
+        override fun userInteraction(){interactions++}
         override fun lock(){change(SessionSnapshot(SessionState.LOCKED,state.generation+1))}
     }
     private class Lifetime:ActiveCoreLifetime {
         val live=AtomicBoolean(true);var invalidator:(()->Unit)?=null
         var falseAfter=false;var duringInstall:(()->Unit)?=null
+        var publications=0
         override fun isCurrent()=live.get()
         override fun publish(install:()->Unit):Boolean {
+            publications++
             if(!live.get())return false
             install();duringInstall?.invoke()
             return !falseAfter && live.get()
@@ -78,6 +81,20 @@ class ActiveCoreOwnerTest {
         assertEquals(1,h.port.reads)
         val product=H();val old=product.port.deliver();product.model.activeArea(ActiveArea.PERSONS)
         assertEquals(2,product.port.reads);assertNull(product.model.activeCore);assertFalse(old.live.get())
+    }
+    /** RED prerequisite characterization, NOT permission to enable the product gate.
+     * The actual VM bypasses even lifetime.publish on its host-only reuse branch and
+     * reports interaction. A future hit must acquire/check/publish without renewing idle.
+     */
+    @Test fun gapHostReuseHasNoPerHitPublicationAndReportsInteraction() {
+        val h=H(true);val life=h.port.deliver()
+        val before=h.session.interactions;val publications=life.publications
+        life.falseAfter=true
+        h.model.activeArea(ActiveArea.TASKS)
+        assertNotNull(h.model.activeCore)
+        assertEquals(publications,life.publications)
+        assertEquals(before+1,h.session.interactions)
+        assertEquals(1,h.port.reads)
     }
     @Test fun inactiveForeignAndOverBudgetCandidatesNeverInstall() {
         for(status in listOf(ActionStatus.PREPARATION,ActionStatus.COMPLETED)) {val h=H(status=status);assertEquals(0,h.port.reads);assertNull(h.model.activeCore)}

@@ -11423,3 +11423,102 @@ keine cachelose Releasefreigabe. RED-4 und #36Editor/ABA bleiben offen.
 
 Details, Rohwerte, vollständige RED-/GREEN-Reports und genaue Befehle:
 [p11-native-active-core-results-73.md](p11-native-active-core-results-73.md).
+
+## 74. ACTIVE Runtime-to-Compose E2E + RAM Gate Prerequisites
+
+**AUSGANGSBASIS:** `67c42d6a8b221b633a31747f85339e5a580d9c3b`, lokal/Remote exakt,
+Branch `p11-performance-optimization`, sauberer Arbeitsbaum. Unabhängige §73-Reviews
+#32/#37/#38/#39 gelesen. Keine Produkt-RAM-Hits, keine geänderten Session-, Writer-,
+Key-, Cipher-, Schema- oder Recoveryverträge. Cache bleibt zwingende 1.0-Voraussetzung.
+
+**IMPLEMENTIERT:** Enger nativer Windowwachstums-/Produkt-close-Test, isolierte echte
+MainActivity-/Runtime-/ViewModel-/Compose-OS-Probe im LOCKED-Zustand, negativer
+Host-Reuse-Gegentest am bestehenden ProductViewModel. Keine neue Registry oder Epoche,
+kein Runtime-Testcredential-Bypass, keine Änderung an ProductCredentialAuthentication.
+
+**ANDROID-GREEN / WINDOW:** Drei echte B2Driver/SQLCipher-4.19.1-Zyklen, je 4.000 Rows
+und 16.384.000 Zelltextbytes in einem beobachteten CursorWindow. startPosition bleibt0,
+Java-Größengetter65536, gehaltene Windowobjektidentität gleich. Nach Produkt-close
+Cursor geschlossen, Herstellercursorfeldnull, mWindowPtr0. Herstellerquelle und
+gepinntes AAR-Bytecode erklären die Beobachtung: native maybeInflate/realloc vergrößert
+den Buffer; der Java-Größengetter ist keine aktuelle native Kapazitätsmessung.
+
+**ANDROID-RED / DIAGNOSE:** `actualWindowRefillRequired_RED73` unverändert erneut
+fehlgeschlagen (`No actual refill observed`). Report vollständig erhalten. Die
+Anfangsgröße erzwingt keinen Refill, die bisherige feste-Kapazitäts-Prämisse ist
+widerlegt. Der neue Wachstumstest ersetzt diese Prämisse fachlich, nicht durch eine
+abgeschwächte Assertion oder unabhängige SQL-Batches. Kein Refill-PASS, keine Aussage
+über OOM-/realloc-Faults oder universelle physische Freigabe. Native Buffer sind nicht
+automatisch durch die 8-MiB-Payloadcharge begrenzt.
+
+**ANDROID-GREEN / OS, BEGRENZT:** Tatsächliche MainActivity mit ihrer normalen Runtime,
+ihrem eigenen ViewModel und ProductScreen; kein Testcontent-Ersatz. HOME-Intent erzeugt
+OS-onStop, Rückkehr onStart; Activity.recreate erzeugt andere Runtime. Initial, nach
+HOME, Rückkehr und Neuerstellung: LOCKED, keine Readadmission, kein Core. Nächster echter
+Draw bestätigt leeren Slot. Fünf Custom-Runner-Prüfungen bestanden. Keine Credentials,
+kein DB-/Envelope-/Keystore-Setup; kein synthetisch behauptetes READY.
+
+**BLOCKER / NICHT BEWIESEN – E2E:** Der positive ProductRuntime→Room/SQLCipher→ViewModel→
+Compose-Pfad wurde NICHT nachgewiesen. Runtime erstellt ProductCredentialAuthentication
+intern; READY verlangt DEVICE_CREDENTIAL-CryptoObject, unwrap, Maintenance und Bindung
+des echten Keyowners. Ohne Benutzercredentials fehlt ein separat abgesicherter
+Debug-Testinitialisierungsport für synthetische isolierte Daten. Keine Reflection-
+Installation eines Keys oder Ersatzsession als E2E. Kleinster nächster Anschluss:
+testpaketgebundene Runtime-Initialisierung unter derselben Session/Maintenance/Owner-
+Lebensdauer; synthetische Auth dennoch ausdrücklich getrennt von Credential-E2E.
+
+Deshalb keine kombinierte E2E-Freigabe für ACTIVE-Revoke bei Lock/BLOCKED/30s/180s,
+Workerexpiry, Core-/DOCUMENT-/UNKNOWN, Action-/Statuswechsel, Reauth, altem Main,
+callback-then-false, VM-Clear und Neuerstellung mit gehaltenem Core. Tatsächlicher
+Keyguard-/Screenlockentzug und Prozessneustart NICHT BEWIESEN. Locked-OS-GREEN ist kein
+Revoke-bei-READY-GREEN. OnDraw-State ist keine Pixel-/Framebuffer-/Heaplöschung.
+
+**ANDROID-GREEN / NATIVE TEILBELEGE:** Acht ausgewählte Data-JUnit-Tests bestanden:
+neuer Windowtest, tatsächliche Java-Keylease/Driver-Ende-Probe, synthetische reset-/
+close-Faults um native Herstellerinstanz und fünf bestehende P73-Lifetime-Tests mit
+echtem Room-/SQLCipher-Core. 200Personen/1000Tasks, Budget-/Invaliddata-/SQL-Hookfehler,
+Workerexpiry, Rowloop-Revoke/BLOCKED/Writer/DOCUMENT, verlorener Main und UNKNOWN.
+Auth/Maintenance und Atomic-Testslot bleiben synthetisch, keine Runtime-E2E-Autorität.
+
+**BLOCKER #32:** Native Room-usePrepared-/DB-close-/Keycleanupfehler sind nicht sicher
+injiziert. ActionDatabaseAccess baut Room/Driver intern, vorhandene Beobachtungshooks
+ersetzen keine Ressourcenfault-Factory. Resetfehler in der Diagnose kann Cursor offen
+lassen; explizites Rescue ist kein Produktcleanup. Keine erfundene COMMITTED-/Rollback-
+Evidence, kein Retry oder globaler Driverfix.
+
+**NICHT BEWIESEN / 8+8 MiB:** Eine gemeinsame CoreReadAdmission und unveränderte8+8MiB.
+Rohbeobachtungen200/1000 im Data-Testslot: FD83/83/83, NativeHeap5504704/5504752/5511904B,
+PSS46991/47025/47045KiB, GC11/11/11. Keine exakten Retentionwerte, kein Leakfreiheitspass.
+METADATA32.226303ms, ADMISSION0.136719ms, MATERIALIZATION24.912344ms einmal beobachtet;
+keine End-to-End-/Median-/p95-Messung. Compose/Editor/Frames nicht enthalten. Gemeinsame
+Überlappung alterSlot/neuerKandidat/Main/Compose/Editor/nativeWindow/Key-/DBscope sowie
+Unicode-/Langtext-/Eventwachstumsserie bleiben offen. Keine Budgeterhöhung.
+
+**HOSTGETESTET / NEGATIVE HITVORAUSSETZUNG:** Neuer Gegentest hält bei ausschließlich
+hostseitig aktiviertem Reuse den Core trotz künftig false-lieferndem lifetime.publish;
+der Navigationszweig ruft publish gar nicht erneut auf und meldet userInteraction.
+Damit sind frische zentrale Hitpublication und nicht verlängerte Idlefrist NICHT
+implementiert. Grüne Charakterisierung eines offenen RED-Zielvertrags. Produktgate
+bleibtfalse. Nächster enger Patch: frisches acquireREADY/check/publish pro Hit, originale
+Lifetime/Ticket/Action/Generation/Epoche/Load/ACTIVE/Lane und Pending-/UNKNOWN-Freiheit;
+kein neues Ticket für alten Core, kein SQL für gültigen Hit, keine interaction()-
+Idleverlängerung. Terminales false muss Slot verwerfen. Noch keine Gatefreigabe.
+
+**VALIDIERUNG:** 1.811 Hosttests (app683/data1124/security4; domainNO-SOURCE), 0Fehler/
+0Skips. Gezielt Owner/Loader/B2Cleanup, danach vollständiger geforderter Offline-Lauf
+mit assembleDebug, beiden Androidtest-Kompilationen und beiden Manifestprüfungen
+erfolgreich. 9nativeJUnit-Ausführungen:8GREEN/1separateDiagnoseRED/0Skips. Zusätzlich
+5Custom-Runner-OS-Prüfungen GREEN, keine fünf weiteren JUnit-Tests. Alle Reports erhalten.
+
+**ISOLIERUNG:** Bestätigtes Samsung/RFCT1186YRJ. unlockprobe sowie neu isolierte
+org.pag.validation.p74/.test vor Installation nicht vorhanden, APK-IDs/Runner/Signaturen
+geprüft. Danach leere eigene no_backup-Wurzeln bestätigt und exakt diese drei Pakete
+entfernt. Geschützte prototype.a/perf.p11probe mit unveränderten Versionen, Signaturen
+und Installationszeiten. Kein Produktupdate, keine Benutzercredentials.
+
+**NO-GO / BLOCKER:** Noch keine durchgängige ACTIVE-Abnahme, kein echter Keyguardrevoke,
+keine gemeinsame Ressourcenüberlappung, kein Room-Upstream-Faultcleanup und kein
+per-Hit-Gate. #32/#33/#34/#37/#38/#39 offen; #36 Editor/ABA und RED-4 eigenständig offen.
+Details, Quellbelege, vollständige Runnerreports, Rohwerte und Befehle:
+[p11-native-active-core-results-74.md](p11-native-active-core-results-74.md).
+Nach regulärem WIP-Push STOPP bis zum unabhängigen GitHub-Review; kein Merge/Release.

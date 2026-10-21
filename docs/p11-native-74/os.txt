@@ -1,0 +1,3 @@
+P74_OS,cases=5,home_stop_start=true,recreated=true,locked_draw=true,active_e2e=false,keyguard_event_tested=false,keyguard_locked=false
+INSTRUMENTATION_RESULT: result=PASS: 5 LOCKED Runtime/OS checks; ACTIVE E2E BLOCKED by credential initialization
+INSTRUMENTATION_CODE: -1
