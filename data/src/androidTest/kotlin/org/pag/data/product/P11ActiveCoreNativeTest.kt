@@ -11,6 +11,9 @@ import org.pag.domain.*
 
 /** PREPARED ONLY. Metrics are observations, never a leak-free tolerance assertion. */
 class P11ActiveCoreNativeTest {
+    @Test fun productiveB2StatementCloseReleasesCursor_GREEN32() {
+        P11SyntheticFixture(app).use { it.productStatementCleanupProbe() }
+    }
     /** Expected RED with pinned 4.19.1: close only sets closed; reset closes cursor.
      * Do not ignore/skip this assertion or treat connection close as cursor evidence. */
     @Test fun statementCloseMustReleaseQueryCursor_RED32() {

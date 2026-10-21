@@ -1,0 +1,7 @@
+gradle.beforeProject { p ->
+    p.plugins.withId('com.android.library') {
+        if (p.path == ':data') {
+            p.extensions.getByName('android').defaultConfig.testApplicationId = 'org.pag.data.unlockprobe'
+        }
+    }
+}

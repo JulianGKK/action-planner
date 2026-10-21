@@ -11290,3 +11290,59 @@ app 682, data 1118, security 4 = **1804 Hosttests, 0 Fehler, 0 Errors, 0 Skips**
 domain:test NO-SOURCE. Beide Androidtest-Kompilationen, assembleDebug und beide
 Manifestprüfungen erfolgreich. Vier neue Cleanup-Tests auch separat erfolgreich.
 `git diff --check` sauber. Androidtestmethoden ausschließlich kompiliert.
+
+## 72 – Native SQLCipher RED→GREEN + Isolated ACTIVE Core Validation
+
+Basis `bdc71f92e7c4fedd775c4afa56e12976298d586c`; Remote/lokal identisch,
+Arbeitsbaum initial sauber; unabhängigen §71-Review in #32 gelesen.
+
+**ANDROID-RED:** Echter SQLCipher4.19.1-Herstelleradapter lässt den SELECT-Cursor nach
+close offen (`VENDOR_CURSOR_OPEN_AFTER_CLOSE`). Der Bytecodebefund aus §71 ist nativ
+bestätigt. reset nach close kehrte ohne Exception zurück; separates natives isClosed
+nach reset noch nicht behauptet. Erster Harnessversuch scheiterte vor Query an fehlender
+interner MAINTENANCE-Scopebrücke; korrigiert entsprechend ActionDatabaseAccess mit
+unverändertem READY-check. Diagnosecleanup versucht beide Freigaben und bewahrt
+primäre Fehler plus suppressed Cleanupfehler.
+
+**IMPLEMENTIERT:** Minimaler B2Driver-Statementabschluss über B2StatementCleanup:
+reset-vor-close, beide Versuche auch bei Exception/Revoke, Doppelclose idempotent,
+keine Cleanupfehlerunterdrückung beim ersten Abschluss. Keine Änderung an SQLCipher,
+B2Nativeflags, Keyformat, Sessionautorisierung oder Schema11. Keine Umdeutung bereits
+bestätigter lokaler Commits oder Core-/Document-Completionsemantik.
+
+**ANDROID-GREEN:** Produktiver Wrappercursor nach close geschlossen; fünfmal500Rows,
+leere SELECTs, getText/getLong-Indexfehler, step-SQL-overflow, Revoke beim Getter,
+Rollback, Doppelclose und Connection-/Driverabschluss. Eigener Wrapper-Reflexionsharness
+benötigte vor finalem Lauf Deduplication identischer Herstellerreferenzen.
+Finale ausgewählte Suite3/3 bestanden: Wrapper plus zwei echte Readerfälle.
+66 vollständige Core-Readzyklen (je2 Warmups+20Samples für4/8,64/200,200/1000).
+Non-ACTIVE/missingAction verweigert, Revoke nach Readerende vor Main verhindert Callback.
+
+**HOSTGETESTET:** Vollständiger Offline-Lauf erfolgreich:1810Tests
+(app682/data1124/security4),0Fehler/Errors/Skips; domain NO-SOURCE. Beide Androidtest-
+Kompilationen, assemble und Manifestchecks grün. Vier neue Cleanup- und zwei
+Diagnosecleanup-Regressionen; bestehende Assertions unverändert.
+
+**ANDROID-GRENZE:** Insgesamt6 native Testausführungen in4Runneraufrufen:3GREEN,
+1erwarteter Hersteller-RED,2korrigierte Harnessfehler,0Skips. Kein pauschaler Android-PASS.
+Nur vom Benutzer ausdrücklich isoliert bestätigtes SM-M526BR/RFCT1186YRJ.
+Ausschließlich initial fehlendes org.pag.data.unlockprobe installiert/aktualisiert;
+Target=Test als selbstinstrumentierendes Library-APK, Manifest/Runner/Signatur geprüft.
+Keine Produkt-App-Installation. Nach leerer Fixture-Restprüfung eigenes Paket entfernt.
+Geschützte Pakete org.pag.prototype.a und org.pag.perf.p11probe unangetastet;
+Versionen/Signaturen/Installationszeiten vor/nach identisch.
+
+**BLOCKER / NICHT AUSGEFÜHRT:** #32 bleibt für CursorWindow-/Roomstatement-/Leasezähler,
+native Cleanupfehlerinjektion und Core-Faultmatrix offen. Keine nachgewiesenen mehreren
+CursorWindowbatches allein durch500Rows. BLOCKED/UNKNOWN/DOCUMENT-/Corewriter während
+Read, Budgetverweigerung und Rowloop-Revoke noch nicht nativ injiziert. #39 benötigt
+echten Session/ViewModel/Compose-Lifecycle-/Keyguard-/OnDraw-Harness; sofortiger Entzug,
+Compose-State, Pixel und Heap getrennt. #33/#34 gemeinsame8+8MiB-/Referenzüberlappung
+weiter abnehmen. #38: Frische Reads Median/p95 ca1226/1237,1241/1266,1292/1309ms;
+keine RAM-/Content-OnDraw-Messung und kein Release-p95. FD in60Samples83konstant,
+kein Leakfreiheitsbeweis. Produktreusefalse bleibt unverändert; RED-4 fail-closed.
+
+Rohdaten, vollständige RED-/GREEN-Reports, Grenzen und genaue Folgebefehle:
+[p11-native-active-core-results-72.md](p11-native-active-core-results-72.md).
+Nächster Schritt: native Fault-/Lifecycle-/Referenzüberlappungsabnahme, anschließend
+separater unabhängiger Gate-Review. Kein RAM-Hit, kein Merge, kein Release.

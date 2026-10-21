@@ -1,0 +1,59 @@
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P11ActiveCoreNativeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+org.pag.data.product.P11ActiveCoreNativeTest:
+INSTRUMENTATION_STATUS: test=statementCloseMustReleaseQueryCursor_RED32
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P11ActiveCoreNativeTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stack=java.lang.IllegalStateException: VENDOR_CURSOR_OPEN_AFTER_CLOSE
+	at org.pag.data.product.P11SyntheticFixture.statementCloseReleasesCursor$lambda$0$0$0(P11SyntheticFixture.kt:221)
+	at org.pag.data.product.P11SyntheticFixture.$r8$lambda$VL2gkFkH8OkcjZfQ8hH9qfhPv2U(Unknown Source:0)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda11.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P11DiagnosticCleanupKt.p11DiagnosticCleanup(P11DiagnosticCleanup.kt:6)
+	at org.pag.data.product.P11SyntheticFixture.statementCloseReleasesCursor$lambda$0(P11SyntheticFixture.kt:214)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.SessionDbKeyOwner.withDbKey(SessionDbKeyOwner.kt:15)
+	at org.pag.data.product.P11SyntheticFixture.statementCloseReleasesCursor(P11SyntheticFixture.kt:210)
+	at org.pag.data.product.P11ActiveCoreNativeTest.statementCloseMustReleaseQueryCursor_RED32(P11ActiveCoreNativeTest.kt:17)
+
+INSTRUMENTATION_STATUS: stream=
+Error in statementCloseMustReleaseQueryCursor_RED32(org.pag.data.product.P11ActiveCoreNativeTest):
+java.lang.IllegalStateException: VENDOR_CURSOR_OPEN_AFTER_CLOSE
+	at org.pag.data.product.P11SyntheticFixture.statementCloseReleasesCursor$lambda$0$0$0(P11SyntheticFixture.kt:221)
+	at org.pag.data.product.P11SyntheticFixture.$r8$lambda$VL2gkFkH8OkcjZfQ8hH9qfhPv2U(Unknown Source:0)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda11.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P11DiagnosticCleanupKt.p11DiagnosticCleanup(P11DiagnosticCleanup.kt:6)
+	at org.pag.data.product.P11SyntheticFixture.statementCloseReleasesCursor$lambda$0(P11SyntheticFixture.kt:214)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.SessionDbKeyOwner.withDbKey(SessionDbKeyOwner.kt:15)
+	at org.pag.data.product.P11SyntheticFixture.statementCloseReleasesCursor(P11SyntheticFixture.kt:210)
+	at org.pag.data.product.P11ActiveCoreNativeTest.statementCloseMustReleaseQueryCursor_RED32(P11ActiveCoreNativeTest.kt:17)
+
+INSTRUMENTATION_STATUS: test=statementCloseMustReleaseQueryCursor_RED32
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 1,646
+There was 1 failure:
+1) statementCloseMustReleaseQueryCursor_RED32(org.pag.data.product.P11ActiveCoreNativeTest)
+java.lang.IllegalStateException: VENDOR_CURSOR_OPEN_AFTER_CLOSE
+	at org.pag.data.product.P11SyntheticFixture.statementCloseReleasesCursor$lambda$0$0$0(P11SyntheticFixture.kt:221)
+	at org.pag.data.product.P11SyntheticFixture.$r8$lambda$VL2gkFkH8OkcjZfQ8hH9qfhPv2U(Unknown Source:0)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda11.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P11DiagnosticCleanupKt.p11DiagnosticCleanup(P11DiagnosticCleanup.kt:6)
+	at org.pag.data.product.P11SyntheticFixture.statementCloseReleasesCursor$lambda$0(P11SyntheticFixture.kt:214)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.SessionDbKeyOwner.withDbKey(SessionDbKeyOwner.kt:15)
+	at org.pag.data.product.P11SyntheticFixture.statementCloseReleasesCursor(P11SyntheticFixture.kt:210)
+	at org.pag.data.product.P11ActiveCoreNativeTest.statementCloseMustReleaseQueryCursor_RED32(P11ActiveCoreNativeTest.kt:17)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

@@ -1,5 +1,10 @@
 # §71: spätere isolierte ACTIVE-Core-Abnahme
 
+Fortschreibung §72: Die ausdrücklich isoliert freigegebene native Teilabnahme wurde
+inzwischen ausgeführt. Ergebnisse und verbleibende Grenzen stehen in
+[§72-Report](p11-native-active-core-results-72.md). Der folgende Text dokumentiert den
+Vorbereitungsstand §71 und ist keine pauschale Ausführungs- oder RAM-Gatefreigabe.
+
 Vorbereitung, keine Ausführungsfreigabe. In §71 wurde weder installiert noch instrumentiert.
 Produkt-RAM-Reuse bleibt false. Bestehende Installationen `org.pag.prototype.a` und
 `org.pag.perf.p11probe` dürfen nicht verändert werden.

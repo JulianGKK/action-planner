@@ -208,16 +208,87 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         check(app.packageName=="org.pag.data.unlockprobe")
         val c=requireNotNull(access.acquire(AccessScope.READY))
         return requireNotNull(owner.get()).withDbKey(c) { leased ->
-            org.pag.data.prototype.b2.B2Native.open(inventory.database,leased,c).use { native ->
+            val driverContext=object:StorageContext by c { override val scope=AccessScope.MAINTENANCE }
+            org.pag.data.prototype.b2.B2Native.open(inventory.database,leased,driverContext).use { native ->
                 val statement=net.zetetic.database.sqlcipher.driver.SQLCipherConnection(native).prepare("SELECT 1")
-                try {
+                p11DiagnosticCleanup({
                     check(statement.step())
                     val field=statement.javaClass.getDeclaredField("cursor").apply{isAccessible=true}
                     val cursor=field.get(statement) as android.database.Cursor
                     statement.close()
-                    cursor.isClosed
-                } finally { statement.reset();statement.close() }
+                    val closed=cursor.isClosed
+                    // Retain the native finding even if reset-after-close fails.
+                    check(closed) { "VENDOR_CURSOR_OPEN_AFTER_CLOSE" }
+                    closed
+                }, { statement.reset() }, { statement.close() })
             }
+        }
+    }
+    /** Actual B2Driver query wrapper, not the direct vendor adapter. No cursor escapes. */
+    fun productStatementCleanupProbe() {
+        check(app.packageName=="org.pag.data.unlockprobe")
+        val c=requireNotNull(access.acquire(AccessScope.READY))
+        requireNotNull(owner.get()).withDbKey(c) { leased ->
+            var denied=false
+            val driverContext=object:StorageContext by c {
+                override val scope=AccessScope.MAINTENANCE
+                override fun check(point:AccessPoint)=!denied && c.check(point)
+            }
+            val driver=org.pag.data.prototype.b2.B2Driver(inventory.database,leased,driverContext,
+                org.pag.data.prototype.b2.B2Hooks())
+            driver.use {
+                val connection=driver.open(inventory.database.path)
+                fun probe(sql:String,read:(androidx.sqlite.SQLiteStatement)->Unit) {
+                    val statement=connection.prepare(sql)
+                    val vendor=statement.javaClass.declaredFields.map { field ->
+                        field.isAccessible=true;field.get(statement)
+                    }.filterIsInstance<net.zetetic.database.sqlcipher.driver.SQLCipherStatement>().distinct().single()
+                    var cursor:android.database.Cursor?=null
+                    p11DiagnosticCleanup({
+                        read(statement)
+                    }, {
+                        val field=vendor.javaClass.getDeclaredField("cursor").apply{isAccessible=true}
+                        cursor=field.get(vendor) as android.database.Cursor?
+                        check(cursor!=null && !cursor!!.isClosed)
+                    }, { statement.close() }, {
+                        check(cursor?.isClosed==true) { "PRODUCT_CURSOR_NOT_CLOSED" }
+                        statement.close()
+                    })
+                }
+                repeat(5) {
+                    probe("WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<500) SELECT x FROM n") { s ->
+                        var rows=0;while(s.step()){check(s.getLong(0)==(++rows).toLong())};check(rows==500)
+                    }
+                    probe("SELECT 1 WHERE 0") { check(!it.step()) }
+                }
+                probe("SELECT 1") { s ->
+                    check(s.step());denied=true
+                    try { s.getLong(0);error("REVOKE_NOT_ENFORCED") }
+                    catch(_:org.pag.data.prototype.b2.StorageAccessRevoked) { }
+                }
+                denied=false
+                probe("SELECT 1") { s ->
+                    check(s.step())
+                    var failed=false
+                    try { s.getLong(99) } catch(_:org.pag.data.prototype.b2.B2Exception) { failed=true }
+                    check(failed)
+                }
+                probe("SELECT 'synthetic'") { s ->
+                    check(s.step())
+                    var failed=false
+                    try { s.getText(99) } catch(_:org.pag.data.prototype.b2.B2Exception) { failed=true }
+                    check(failed)
+                }
+                probe("SELECT abs(-9223372036854775808)") { s ->
+                    var failed=false
+                    try { s.step() } catch(_:org.pag.data.prototype.b2.B2Exception) { failed=true }
+                    check(failed)
+                }
+                connection.prepare("BEGIN TRANSACTION").use{it.step()}
+                connection.prepare("ROLLBACK TRANSACTION").use{it.step()}
+                connection.close()
+            }
+            check(driver.resourcesClosed())
         }
     }
 }

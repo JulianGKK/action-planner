@@ -47,7 +47,9 @@ internal class B2Driver(private val file: File, key: ByteArray,
                     }
                 }
                 val statement = delegate.prepare(sql)
+                val cleanup = B2StatementCleanup(statement)
                 object : SQLiteStatement by statement {
+                    override fun close() = cleanup.close()
                     override fun step(): Boolean = sanitizedB2 {
                         if (released.get() || closed) throw B2Exception(B2Failure.CLOSED)
                         if (!rollback) {
