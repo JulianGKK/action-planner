@@ -15,14 +15,19 @@ import org.pag.domain.*
  * Task count is explicit for bounded tests; existing benchmark/manual callers keep default 100.
  */
 class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, main:Executor=Executor{it.run()},
-    taskCountPerAction:Int=100, personCountPerAction:Int=20):AutoCloseable {
+    taskCountPerAction:Int=100, personCountPerAction:Int=20, baseDirectory:File?=null):AutoCloseable {
     private val app=context.applicationContext.also {
         require(taskCountPerAction>=0)
         require(personCountPerAction in 0..200)
-        check(it.packageName in setOf("org.pag.data.unlockprobe","org.pag.perf.p11probe"))
+        check(it.packageName in setOf("org.pag.data.unlockprobe","org.pag.perf.p11probe","org.pag.prototype.a.p77runtime"))
+        if(baseDirectory!=null) check(it.packageName=="org.pag.prototype.a.p77runtime")
     }
     private val parent=app.noBackupFilesDir.canonicalFile
-    private val base=File(parent,"p11-fixture-${UUID.randomUUID()}").apply{check(mkdirs())}
+    internal val base=baseDirectory?.canonicalFile ?: File(parent,"p11-fixture-${UUID.randomUUID()}").apply{check(mkdirs())}
+    init {
+        check(base.parentFile?.canonicalFile==parent)
+        if(baseDirectory!=null) check(base.name.startsWith("p11-fixture-") && base.mkdir())
+    }
     private val fixtureRoot=P11FixtureRoot(parent.toPath(),base.toPath())
     private val wrapped=object:ContextWrapper(app) {
         override fun getApplicationContext():Context=this
@@ -201,7 +206,34 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         check(app.packageName=="org.pag.data.unlockprobe")
         val mutations=UncachedWorkspaceMutations()
         val reader=ProductActiveCoreReader(wrapped,access,inventory,owner::get,blocked=::fail)
-        return ProductActiveCoreLoader(access,mutations,worker,main) { c,t,l -> reader.readForTicket(c,t,l) }
+        return ProductActiveCoreLoader(access,mutations,worker,main,readCandidate={ c,t,l -> reader.readForTicket(c,t,l) })
+    }
+    /** The test authority is fed into the real ProductRuntime only by the isolated P77 debug factory.
+     * SessionCoordinator, Maintenance, key owner, Room and core reader remain ProductRuntime's.
+     */
+    internal fun runtimeAuthority(reuseEnabled:Boolean, observation:ActiveCoreLoadObservation):ProductRuntimeTestAuthority {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        val synthetic=object:org.pag.security.AuthenticationExperiment {
+            override fun start(mode:org.pag.security.KeyExperiment,
+                complete:(org.pag.security.AuthenticationOutcome)->Unit):org.pag.security.Cancellation {
+                check(mode==org.pag.security.KeyExperiment.STORAGE_UNWRAP)
+                val released=java.util.concurrent.atomic.AtomicBoolean(false)
+                val operation=object:org.pag.security.SyntheticOperation {
+                    override val properties="P77 ISOLATED SYNTHETIC TEST KEY"
+                    override fun perform()=org.pag.security.OperationResult.NOT_AUTHORIZED
+                    override fun release(){released.set(true)}
+                    override fun useUnwrappedKey(allowed:()->Boolean,consume:(ByteArray)->Unit):org.pag.security.OperationResult {
+                        if(released.get() || !allowed())return org.pag.security.OperationResult.NOT_AUTHORIZED
+                        val lease=key.copyOf()
+                        return try {consume(lease);if(allowed())org.pag.security.OperationResult.SUCCEEDED else org.pag.security.OperationResult.NOT_AUTHORIZED}
+                            finally {lease.fill(0)}
+                    }
+                }
+                complete(org.pag.security.AuthenticationOutcome.Granted(operation,android.os.SystemClock.elapsedRealtime()))
+                return org.pag.security.Cancellation{}
+            }
+        }
+        return ProductRuntimeTestAuthority(base,synthetic,{true},{true},reuseEnabled,observation)
     }
     /** Isolated native fault harness. Same reader/DB; supplied session is not product authentication. */
     internal fun coreForSession(session:StorageAccess,mutations:WorkspaceMutationInvalidation,
@@ -211,9 +243,9 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         val c=requireNotNull(session.acquire(AccessScope.READY))
         owner.getAndSet(SessionDbKeyOwner.bind(c,key))?.invalidate()
         val reader=ProductActiveCoreReader(wrapped,session,inventory,owner::get,blocked=blocked)
-        return ProductActiveCoreLoader(session,mutations,worker,main) { context,ticket,lane ->
+        return ProductActiveCoreLoader(session,mutations,worker,main,readCandidate={ context,ticket,lane ->
             reader.readForTicket(context,ticket,lane,observe=observe,measured=measured)
-        }
+        })
     }
     internal fun <T> nativeDriverProbe(work:(org.pag.data.prototype.b2.B2Driver)->T):T {
         check(app.packageName=="org.pag.data.unlockprobe")

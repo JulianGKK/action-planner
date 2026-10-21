@@ -1,0 +1,67 @@
+package org.pag.data.product
+
+import android.app.Activity
+import android.content.pm.ApplicationInfo
+import android.content.Context
+import org.pag.domain.WorkspaceMutationInvalidation
+import org.pag.domain.UncachedWorkspaceMutations
+import java.io.File
+import java.util.UUID
+import java.util.concurrent.Executor
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
+
+/**
+ * Isolated Android instrumentation entry point. It creates synthetic encrypted data inside
+ * this target package's no-backup directory, then delegates the live path to ProductRuntime.
+ * No method in normal/release source can construct this authority.
+ */
+class P77ProductRuntimeHarness private constructor(
+    val runtime: ProductRuntime,
+    private val fixture: P11SyntheticFixture,
+    val observations: Observations
+) : AutoCloseable {
+    class Observations internal constructor() : ActiveCoreLoadObservation {
+        val tickets = AtomicInteger()
+        val reads = AtomicInteger()
+        val hitAttempts = AtomicInteger()
+        val hitAccepted = AtomicInteger()
+        val hitNanos=java.util.Collections.synchronizedList(mutableListOf<Long>())
+        private val originalTicket = AtomicReference<WorkspaceMutationInvalidation.ActiveReadTicket?>()
+        override fun ticketIssued(ticket:WorkspaceMutationInvalidation.ActiveReadTicket) {
+            tickets.incrementAndGet();originalTicket.compareAndSet(null,ticket)
+        }
+        override fun readerStarted() { reads.incrementAndGet() }
+        override fun hitAuthorized(accepted:Boolean,elapsedNanos:Long) { hitAttempts.incrementAndGet();hitNanos.add(elapsedNanos);if(accepted)hitAccepted.incrementAndGet() }
+        fun hasSingleOriginalTicket() = tickets.get()==1 && originalTicket.get()?.isLive()==true
+    }
+    override fun close() {
+        runtime.close()
+        fixture.close()
+    }
+
+    companion object {
+        fun create(activity: Activity, worker: Executor, main: Executor, foreground: () -> Boolean): P77ProductRuntimeHarness {
+            check(activity.packageName == "org.pag.prototype.a.p77runtime")
+            check(activity.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0)
+            val parent=activity.noBackupFilesDir.canonicalFile
+            check(parent==parent.canonicalFile)
+            parent.listFiles()?.filter { it.name.startsWith("p11-fixture-") }?.forEach { stale ->
+                check(!java.nio.file.Files.isSymbolicLink(stale.toPath()) && stale.canonicalFile.parentFile==parent)
+                P11FixtureRoot(parent.toPath(),stale.toPath()).close()
+            }
+            val base = File(parent, "p11-fixture-${UUID.randomUUID()}")
+            val fixture = P11SyntheticFixture(activity, worker, main,
+                taskCountPerAction = 1000, personCountPerAction = 200, baseDirectory = base)
+            return try {
+                val observations=Observations()
+                val runtime = ProductRuntime(activity, worker, main, UncachedWorkspaceMutations(),
+                    fixture.runtimeAuthority(reuseEnabled = true,observations), foreground)
+                P77ProductRuntimeHarness(runtime, fixture,observations)
+            } catch (error: Throwable) {
+                fixture.close()
+                throw error
+            }
+        }
+    }
+}

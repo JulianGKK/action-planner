@@ -12,7 +12,8 @@ internal class ProductActiveCoreLifetime(
     private val ticket: WorkspaceMutationInvalidation.ActiveReadTicket,
     private val laneTicket: Long,
     private val owner: Thread,
-    private val loadCurrent: () -> Boolean
+    private val loadCurrent: () -> Boolean,
+    private val hitObservation: (Boolean,Long) -> Unit = {_,_->}
 ) : ActiveCoreLifetime {
     private val closed=AtomicBoolean(false)
     private val listener=AtomicReference<(() -> Unit)?>(null)
@@ -40,6 +41,7 @@ internal class ProductActiveCoreLifetime(
     override fun authorizeHit(actionId: String): Boolean {
         // No owner fields or central acquisition from a foreign thread.
         if(Thread.currentThread() !== owner) return false
+        val started=System.nanoTime()
         val valid=runCatching {
             if(actionId!=ticket.actionId || !isCurrent()) return@runCatching false
             val fresh=access.acquire(AccessScope.READY) ?: return@runCatching false
@@ -51,6 +53,7 @@ internal class ProductActiveCoreLifetime(
             val accepted=fresh.publish { if(current()) entered=true }
             accepted && entered && current()
         }.getOrDefault(false)
+        hitObservation(valid,System.nanoTime()-started)
         if(!valid) close()
         return valid
     }

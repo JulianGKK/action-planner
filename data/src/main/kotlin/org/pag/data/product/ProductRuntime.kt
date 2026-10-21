@@ -15,15 +15,28 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /** Activity-owned composition. No global key/database registry, no retained session. */
-class ProductRuntime(activity: Activity, private val worker: Executor, private val main: Executor,
-    private val workspaceMutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(),
-    foreground: () -> Boolean) {
-    private val noBackupRoot = productNoBackupRoot(activity.noBackupFilesDir)
+class ProductRuntime private constructor(activity: Activity, private val worker: Executor, private val main: Executor,
+    private val workspaceMutations: WorkspaceMutationInvalidation,
+    private val testAuthority: ProductRuntimeTestAuthority?, foreground: () -> Boolean, @Suppress("UNUSED_PARAMETER") marker: Unit) {
+    constructor(activity: Activity, worker: Executor, main: Executor,
+        workspaceMutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(), foreground: () -> Boolean) :
+        this(activity, worker, main, workspaceMutations, null, foreground, Unit)
+
+    internal constructor(activity: Activity, worker: Executor, main: Executor,
+        workspaceMutations: WorkspaceMutationInvalidation, testAuthority: ProductRuntimeTestAuthority,
+        foreground: () -> Boolean) : this(activity, worker, main, workspaceMutations, testAuthority, foreground, Unit) {
+        check(activity.packageName == "org.pag.prototype.a.p77runtime" &&
+            activity.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            "Synthetic Runtime authority is restricted to the isolated P77 debug package"
+        }
+    }
+    private val noBackupRoot = testAuthority?.noBackupRoot ?: productNoBackupRoot(activity.noBackupFilesDir)
     private val root = File(noBackupRoot, "pag-db-v1")
     private val envelope = ProductDbEnvelope(root, "org.pag.product.database.rsa.v1")
-    val inventory = ProductInventory(root, envelope::aliasPresent, envelope::structurallyValid)
+    val inventory = ProductInventory(root, testAuthority?.aliasPresent ?: envelope::aliasPresent,
+        testAuthority?.envelopeValid ?: envelope::structurallyValid)
     private val owner = AtomicReference<SessionDbKeyOwner?>()
-    val authentication = ProductCredentialAuthentication(activity, envelope, worker, foreground,
+    val authentication = testAuthority?.authentication ?: ProductCredentialAuthentication(activity, envelope, worker, foreground,
         inventory::reserve, { inventory.state() == ProductStorageState.READY_TO_OPEN })
     private var initializing = false // Explicit request mode, never an authorization bit.
     val session = SessionCoordinator(authentication, Maintenance { Subscription {} },
@@ -77,6 +90,7 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
         initializing = initialize
         session.authenticate(if (initialize) Experiment.STORAGE_INITIALIZE else Experiment.STORAGE_UNWRAP)
     }
+    fun authenticationForegroundAvailable() { (authentication as? ProductCredentialAuthentication)?.foregroundAvailable() }
     fun close() { session.lock(); keyLifetime.cancel(); leadershipLifetime.cancel(); leadership.revoke();
         workspaceMutations.revokeActiveRead(); owner.getAndSet(null)?.invalidate() }
     val actions: ActionRepository = ProductActionRepository(activity.applicationContext, session, inventory,
@@ -109,5 +123,19 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
      */
     private val activeCoreReader = ProductActiveCoreReader(activity.applicationContext,session,inventory,
         {owner.get()},blocked=session::storageFailure)
-    val activeCore = ProductActiveCoreLoader(session,workspaceMutations,worker,main,activeCoreReader::readForTicket)
+    val activeCore = ProductActiveCoreLoader(session,workspaceMutations,worker,main,activeCoreReader::readForTicket,
+        reuseEnabled = testAuthority?.reuseEnabled == true, observation = testAuthority?.observation)
 }
+
+/** Test-only synthetic credentials and storage binding. Construction is guarded above by an exact
+ * isolated application ID and debuggable package. Normal ProductRuntime always uses the device
+ * credential CryptoObject and its product envelope.
+ */
+internal data class ProductRuntimeTestAuthority(
+    val noBackupRoot: File,
+    val authentication: org.pag.security.AuthenticationExperiment,
+    val aliasPresent: () -> Boolean,
+    val envelopeValid: () -> Boolean,
+    val reuseEnabled: Boolean = false,
+    val observation: ActiveCoreLoadObservation? = null
+)

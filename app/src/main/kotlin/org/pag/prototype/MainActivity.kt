@@ -31,6 +31,7 @@ import java.util.concurrent.Executors
 /** Product composition root. PrototypeActivity remains unregistered historical evidence. */
 class MainActivity : ComponentActivity() {
     private lateinit var runtime: ProductRuntime
+    private var p77Harness: org.pag.data.product.P77ProductRuntimeHarness? = null
     private lateinit var model: ProductViewModel
     private val worker by lazy { Executors.newSingleThreadExecutor() }
     private val handler by lazy { Handler(Looper.getMainLooper()) }
@@ -87,9 +88,13 @@ class MainActivity : ComponentActivity() {
             product = { initializeProduct() })
     }
     private fun initializeProduct() {
-        runtime = ProductRuntime(this, worker, mainExecutor) {
+        val foregroundCheck = {
             resumed && window.decorView.hasWindowFocus() && !getSystemService(KeyguardManager::class.java).isDeviceLocked
         }
+        runtime = if (BuildConfig.PAG_P77_RUNTIME_E2E) {
+            org.pag.data.product.P77ProductRuntimeHarness.create(this, worker, mainExecutor, foregroundCheck)
+                .also { p77Harness = it }.runtime
+        } else ProductRuntime(this, worker, mainExecutor, foreground = foregroundCheck)
         val state = runtime.inventory.state()
         if (state == ProductStorageState.PARTIAL_OR_INVALID) runtime.session.storageFailure()
         model = ProductViewModel(runtime.session, runtime.actions, state, runtime.persons, runtime.leadership, runtime.operations, runtime.tasks, runtime.protocol, runtime.material, runtime.expenses, runtime.memoryReports, runtime::start)
@@ -148,7 +153,7 @@ class MainActivity : ComponentActivity() {
         val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenOff, filter, Context.RECEIVER_NOT_EXPORTED)
         else registerReceiver(screenOff, filter)
-        setContent { ProductScreen(model) }
+        setContent { ProductScreen(model, testAuthorityBanner = BuildConfig.PAG_P77_RUNTIME_E2E) }
     }
     override fun onResume() {
         super.onResume(); resumed = true
@@ -159,7 +164,7 @@ class MainActivity : ComponentActivity() {
             model.updateBootstrap(state)
             if (state == ProductStorageState.PARTIAL_OR_INVALID) runtime.session.storageFailure()
         }
-        runtime.authentication.foregroundAvailable()
+        runtime.authenticationForegroundAvailable()
         handler.removeCallbacks(expiry); handler.post(expiry)
     }
     override fun onPause() {
@@ -180,7 +185,7 @@ class MainActivity : ComponentActivity() {
         if (!hasFocus && runtime.session.snapshot().state != SessionState.AUTHENTICATING) runtime.session.foreground(false)
         if (hasFocus && resumed) {
             runtime.session.foreground(!getSystemService(KeyguardManager::class.java).isDeviceLocked)
-            runtime.authentication.foregroundAvailable()
+            runtime.authenticationForegroundAvailable()
         }
     }
     override fun onUserInteraction() { super.onUserInteraction(); if (::model.isInitialized && resumed) model.interaction() }
@@ -191,7 +196,8 @@ class MainActivity : ComponentActivity() {
         demo?.end(); demo = null
         if (::runtime.isInitialized) {
             handler.removeCallbacks(expiry)
-            runtime.close(); worker.shutdownNow(); unregisterReceiver(screenOff)
+            p77Harness?.close() ?: runtime.close()
+            p77Harness=null; worker.shutdownNow(); unregisterReceiver(screenOff)
         }
         super.onDestroy()
     }

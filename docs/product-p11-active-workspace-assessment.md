@@ -11652,6 +11652,109 @@ als1Fehler dokumentiert; kein Fehler aus der finalen Bilanz entfernt. diffcheck 
 `data/src/test/kotlin/org/pag/data/product/ProductActiveCoreLifetimeTest.kt`,
 `docs/product-p11-active-workspace-assessment.md`.
 
+## 77. Real ACTIVE Runtime-to-Compose Validation
+
+**BASIS:** `f319213ea9ef61344f3d89b6915ee99e4141df86`; lokaler HEAD und Branch
+vor Änderung geprüft, Arbeitsbaum sauber. Die P76-Demo und die geschützten Apps
+blieben installiert und unangetastet.
+
+**IMPLEMENTIERT – isolierter Testanschluss:** Ein eigener `p77runtime`-Buildtyp
+verwendet die Application-ID `org.pag.prototype.a.p77runtime` und ein eigenes
+Testpaket. Die debug-only Runtime-Komposition verlangt exakt diese Paketidentität
+und `FLAG_DEBUGGABLE`; das Manifest und die Buildfelder werden zusätzlich durch
+`verifyP77RuntimeIsolation` geprüft. Nur diese Komposition erhält synthetische
+Testauthentifizierung, Fixture-Root, Testzähler und den Test-Reuse-Schalter. Der
+normale Produktkonstruktor verwendet weiter `ProductCredentialAuthentication`,
+und der Produktdefault für Reuse bleibt `false`. Der sichtbare P77-Banner benennt
+die synthetische Testautorität ausdrücklich. Es wurde weder eine READY-Session per
+Reflection gesetzt noch ein Produkt-Authentifizierungspfad gelockert.
+
+Das Testfixture und die echte `ProductRuntime` teilen SessionCoordinator-,
+Maintenance-, `SessionDbKeyOwner`-, Room/SQLCipher-Reader-, Mutationport- und
+ViewModel-Lebensdauer. Die synthetische Testauthentifizierung ist keine
+DEVICE_CREDENTIAL-CryptoObject-E2E-Aussage. Der Lauf verwendet keine
+Benutzercredentials oder Produktdaten.
+
+**ANDROID-GREEN – echte Runtime-/Daten-/Compose-Kette unter Testautorität:** Auf
+dem bestätigten isolierten Samsung SM-M526BR / RFCT1186YRJ wurden nur die neuen
+eigenen P77-Pakete installiert. Vorher/nachher blieben
+`org.pag.prototype.a.p76demo`, `org.pag.prototype.a` und
+`org.pag.perf.p11probe` vorhanden und unangetastet. Der gezielte Runner startete
+die echte MainActivity, wartete auf den tatsächlichen Activity-Fokus und
+autorisierte anschließend den normalen ViewModel-Unlockpfad. Die Testaktion
+enthielt 200 Personen und 1.000 Aufgaben. Der echte Room/SQLCipher-Produktreader
+lieferte einen Core: genau ein Ticket, genau eine Readerausführung und eine
+finale ViewModel-Publikation. Die geladene Personen- und Aufgabenseite hatte
+jeweils 32 Einträge und `hasMore=true`; globale Counts waren 200 und 1.000.
+Funktionsidentitäten/Counts waren in diesem Fixture leer (0), nicht künstlich
+ergänzt. P3b-Daten blieben ausgeschlossen.
+
+Danach wurden über den echten `ProductActiveCoreLifetime.authorizeHit`-Pfad 20
+Zyklen HUB → PERSONS → FUNCTIONS → TASKS → HUB ausgeführt. Ergebnis: 80/80
+zugelassene Treffer, keine neuen SQL-Reads, keine neuen Tickets und dieselbe
+Payloadidentität. Die gemessene `authorizeHit`-Dauer über 80 Aufrufe hatte Median
+2,334 ms und p95 2,684 ms (Minimum 1,944 ms, Maximum 3,715 ms). Die Idle-Frist
+wurde nicht verlängert. Ein echter Session-Lock entzog anschließend den
+ViewModel-Slot.
+
+Erster ViewTree-OnDraw nach dem ViewModel-Navigationsaufruf, 20 Stichproben je
+Ziel (Millisekunden):
+
+| Ansicht | Median | p95 | Min–Max |
+|---|---:|---:|---:|
+| PERSONS | 14,438 | 18,629 | 12,127–26,227 |
+| FUNCTIONS | 15,153 | 17,221 | 12,702–17,942 |
+| TASKS | 13,914 | 16,469 | 11,456–17,422 |
+| HUB | 19,551 | 25,713 | 15,393–30,226 |
+
+Dies sind isolierte synthetische Testautorisierungswerte vom Navigationsaufruf
+bis zum ersten beobachteten Draw; sie sind keine Touch-to-Draw-Messung und keine
+Produkt-/Release-Performancefreigabe. Der P77-Runner, die vollständigen Draw-
+Rohdaten und die Hit-Rohdaten sind unter [P77-Artefakten](p11-p77/android-runner.txt),
+[Draw-Rohdaten](p11-p77/device-draws.csv) und
+[authorizeHit-Rohdaten](p11-p77/authorize-hit.csv) archiviert. §76 PERSONS-0-
+Rohdaten wurden nicht ergänzt oder rekonstruiert; §77 enthält 20 echte Messzeilen
+für PERSONS und klärt den historischen §76-Wert nicht rückwirkend.
+
+**HOSTGETESTET / BUILD:** Gezielte Owner-, Loader- und Lifetime-Tests liefen
+erfolgreich. Der vollständige geforderte Offline-Lauf lief mit **1.822 Hosttests
+(app 685, data 1.133, security 4; domain NO-SOURCE), 0 Fehlern und 0 Skips**.
+`assembleDebug`, beide Androidtest-Kotlin-Kompilierungen sowie
+`verifyPrototypeManifest` und `verifyDemoManifest` waren erfolgreich. P77 Target
+und Runner bauten;
+Isolationsprüfung sowie APK-Paket-/Runnerprüfung waren erfolgreich. Zwei frühere
+Androidversuche scheiterten am Testharness, nicht an einem entfernten Produkttest:
+zunächst passte der Fixture-Präfix nicht zur exakten Root-Allowlist, danach war
+die Activity beim synthetischen Unlock noch nicht fokussiert. Beide Ursachen
+wurden behoben; der finale Lauf ist GREEN. Eine frühere Testthread-Abfrage eines
+ownerthreadgebundenen ViewModel-Slots wurde ebenfalls auf den Ownerthread verlegt.
+Diese Fehlversuche sind in den archivierten Läufen nicht als Produkterfolg
+gezählt.
+
+**MESSGRENZEN:** Prozessstichprobe vor/nach Hitfolge und Lock: FD 131→128,
+PSS 175.504→158.886 KiB, NativeHeap 11.321.680→12.628.784 Bytes, ART-GC-Zähler
+0→1. Diese einzelnen Samples belegen weder Leaks noch deren Abwesenheit und
+beweisen keine vollständige Native-Heap-, CursorWindow-, DB- oder Keylease-
+Freigabe. Sie messen auch nicht die gesamte 8+8-MiB-Überlappung mit Compose,
+Editoren und Rendererreferenzen.
+
+**NICHT BEWIESEN / BLOCKER:** Keine echte DEVICE_CREDENTIAL-CryptoObject-Session.
+Der gezielte P77-Lauf beweist nicht alle verlangten Revoke-Races: tatsächliche
+OS-Keyguard-/Hintergrundereignisse, 30s/180s-Ablauf, BLOCKED/UNKNOWN, Core- und
+DOCUMENT-Writerbeginn, Activity-Neuerstellung, verspätete Main-Zustellung sowie
+callback-then-false wurden in dieser durchgängigen P77-Suite nicht sämtlich
+ausgeführt. Ebenso fehlen #32 Room-Upstream-Cleanupfaults, #33/#34 vollständige
+8+8-MiB-Referenzüberlappung, #39 Lifecycle-/Keyguardabnahme, #36 Editor-/ABA und
+RED-4 Recoverybelege. Die Beobachtung eines Session-Locks im P77-Lauf ist nur
+der dort tatsächlich ausgeführte Teilfall.
+
+**PRODUKTGATE:** Produktweites RAM-Reuse bleibt standardmäßig `false`; die
+synthetische Freigabe existiert ausschließlich im exakt paketgebundenen
+`p77runtime`-Debugbuild. Diese Android-GREEN-Evidence ist keine allgemeine
+Produktfreigabe. Keine P76-App wurde verändert; keine Migration, Schema-,
+Cipher-, Keyformat- oder Recoveryänderung erfolgte. Vor Freigabe bleiben die
+genannten nativen Grenzen und das unabhängige Review erforderlich.
+
 ## 76. DEMO-PRIORITÄT – isolierte ACTIVE UI Vorschau
 
 **BASIS:** §75 `f6960dce6d68fab145f62ed428bd3a71d91b3017`, lokaler HEAD/Remote,

@@ -21,7 +21,7 @@ import java.util.Locale
 
 internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>{null}
 
-@Composable fun ProductScreen(model: ProductViewModel) {
+@Composable fun ProductScreen(model: ProductViewModel, testAuthorityBanner: Boolean = false) {
     val observation=LocalProductObservation.current
     SideEffect { observation?.invoke("COMPOSITION") }
     MaterialTheme {
@@ -39,6 +39,10 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                     PagLockedScreen(model.bootstrap, model::unlock)
                 } else {
                     Column(Modifier.safeDrawingPadding()) {
+                        if (testAuthorityBanner) Text(
+                            "P77 ISOLIERTER TEST – synthetischer Schlüssel und synthetische Testdaten; keine Produktanmeldung",
+                            style = MaterialTheme.typography.labelSmall
+                        )
                         if (model.snapshot.state == SessionState.READY) {
                             FlowRow(Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,

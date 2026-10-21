@@ -14,6 +14,7 @@ android {
     defaultConfig {
         buildConfigField("boolean", "PAG_DEMO_ONLY", "false")
         buildConfigField("boolean", "PAG_P76_PREVIEW", "false")
+        buildConfigField("boolean", "PAG_P77_RUNTIME_E2E", "false")
         manifestPlaceholders["pagTestTargetPackage"] = "org.pag.prototype.a"
     }
     buildTypes {
@@ -33,7 +34,18 @@ android {
             matchingFallbacks += listOf("debug")
             buildConfigField("boolean", "PAG_DEMO_ONLY", "true")
             buildConfigField("boolean", "PAG_P76_PREVIEW", "true")
+            buildConfigField("boolean", "PAG_P77_RUNTIME_E2E", "false")
             manifestPlaceholders["pagTestTargetPackage"] = "org.pag.prototype.a.p76demo"
+        }
+        create("p77runtime") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".p77runtime"
+            versionNameSuffix = "-p77runtime-test"
+            matchingFallbacks += listOf("debug")
+            buildConfigField("boolean", "PAG_DEMO_ONLY", "false")
+            buildConfigField("boolean", "PAG_P76_PREVIEW", "false")
+            buildConfigField("boolean", "PAG_P77_RUNTIME_E2E", "true")
+            manifestPlaceholders["pagTestTargetPackage"] = "org.pag.prototype.a.p77runtime"
         }
     }
     // Default instrumentation names remain debug; opt in only for demo probes.
@@ -69,7 +81,7 @@ val preparePrototypeDebugKeystore = tasks.register("preparePrototypeDebugKeystor
         }
     }
 }
-tasks.matching { it.name in setOf("validateSigningDebug", "validateSigningDebugAndroidTest", "validateSigningDemo", "validateSigningDemoAndroidTest", "validateSigningP76demo", "validateSigningP76demoAndroidTest") }.configureEach { dependsOn(preparePrototypeDebugKeystore) }
+tasks.matching { it.name in setOf("validateSigningDebug", "validateSigningDebugAndroidTest", "validateSigningDemo", "validateSigningDemoAndroidTest", "validateSigningP76demo", "validateSigningP76demoAndroidTest", "validateSigningP77runtime", "validateSigningP77runtimeAndroidTest") }.configureEach { dependsOn(preparePrototypeDebugKeystore) }
 val verifyPrototypeManifest = tasks.register("verifyPrototypeManifest") {
     dependsOn("processDebugManifest")
     doLast {
@@ -183,5 +195,24 @@ val verifyP76DemoIsolation = tasks.register("verifyP76DemoIsolation") {
         check(app.getAttributeNS(namespace, "allowBackup") == "false")
         check(app.getAttributeNS(namespace, "usesCleartextTraffic") == "false")
         check(app.getAttributeNS(namespace, "label") == "PaG P76 UI Vorschau")
+    }
+}
+val verifyP77RuntimeIsolation = tasks.register("verifyP77RuntimeIsolation") {
+    dependsOn("processP77runtimeManifestForPackage", "generateP77runtimeBuildConfig", "processP77runtimeAndroidTestManifest")
+    doLast {
+        val factory=javax.xml.parsers.DocumentBuilderFactory.newInstance().apply {
+            isNamespaceAware=true;setFeature("http://apache.org/xml/features/disallow-doctype-decl",true)
+        }
+        val base=layout.buildDirectory.dir("intermediates/packaged_manifests").get().asFile
+        val main=factory.newDocumentBuilder().parse(File(base,"p77runtime/processP77runtimeManifestForPackage/AndroidManifest.xml"))
+        val test=factory.newDocumentBuilder().parse(File(base,"p77runtimeAndroidTest/processP77runtimeAndroidTestManifest/AndroidManifest.xml"))
+        check(main.documentElement.getAttribute("package")=="org.pag.prototype.a.p77runtime")
+        check(test.getElementsByTagName("instrumentation").let { nodes ->
+            (0 until nodes.length).any { (nodes.item(it) as org.w3c.dom.Element).getAttributeNS("http://schemas.android.com/apk/res/android","name")=="org.pag.prototype.P77RuntimeE2EProbe" }
+        })
+        val build=layout.buildDirectory.file("generated/source/buildConfig/p77runtime/org/pag/prototype/BuildConfig.java").get().asFile.readText()
+        check("PAG_P77_RUNTIME_E2E = true" in build && "PAG_P76_PREVIEW = false" in build && "PAG_DEMO_ONLY = false" in build)
+        val app=main.getElementsByTagName("application").item(0) as org.w3c.dom.Element
+        check(app.getAttributeNS("http://schemas.android.com/apk/res/android","allowBackup")=="false")
     }
 }

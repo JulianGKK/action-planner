@@ -5,6 +5,13 @@ import java.util.concurrent.Executor
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.atomic.AtomicBoolean
 
+/** Optional package-local counters; only the isolated P77 debug authority supplies one. */
+internal interface ActiveCoreLoadObservation {
+    fun ticketIssued(ticket: WorkspaceMutationInvalidation.ActiveReadTicket)
+    fun readerStarted()
+    fun hitAuthorized(accepted: Boolean, elapsedNanos:Long)
+}
+
 /** One-shot product bridge: owner-thread admission, existing worker reader, owner-thread
  * ticket/session/lane check and central publication. It hands off a transient result only;
  * it is not a snapshot owner and never enables RAM reuse.
@@ -16,6 +23,15 @@ class ProductActiveCoreLoader internal constructor(
     private val main: Executor,
     private val readCandidate: (StorageContext, WorkspaceMutationInvalidation.ActiveReadTicket, Long) -> ActiveCoreResult
 ) : ActiveCoreLoadPort {
+    private var reuseForIsolatedTest = false
+    private var observation: ActiveCoreLoadObservation? = null
+    override val reuseEnabled: Boolean get() = reuseForIsolatedTest
+    internal constructor(access:StorageAccess,mutations:WorkspaceMutationInvalidation,worker:Executor,main:Executor,
+        readCandidate:(StorageContext,WorkspaceMutationInvalidation.ActiveReadTicket,Long)->ActiveCoreResult,
+        reuseEnabled:Boolean,observation:ActiveCoreLoadObservation?) : this(access,mutations,worker,main,readCandidate) {
+        this.reuseForIsolatedTest=reuseEnabled
+        this.observation=observation
+    }
     private val ownerThread=Thread.currentThread()
     private var latestLoad: Any? = null
 
@@ -32,6 +48,7 @@ class ProductActiveCoreLoader internal constructor(
         val context=access.acquire(AccessScope.READY) ?: return false
         if(context.scope!=AccessScope.READY || context.generation<0 || !context.check(AccessPoint.OPERATION)) return false
         val ticket=mutations.beforeActiveRead(actionId,context.generation) ?: return false
+        observation?.ticketIssued(ticket)
         if(ticket.actionId!=actionId || ticket.generation!=context.generation || ticket.mutationEpoch<0L) {
             mutations.revokeActiveRead();return false
         }
@@ -48,6 +65,7 @@ class ProductActiveCoreLoader internal constructor(
             worker.execute {
                 if(!started.compareAndSet(false,true)) return@execute
                 if(!ticket.isLive() || !context.check(AccessPoint.STEP)) return@execute
+                observation?.readerStarted()
                 val result=try { readCandidate(context,ticket,laneTicket) }
                     catch (_: Exception) { ActiveCoreResult.Rejected(BoundedActiveStatus.STORAGE_FAILURE) }
                 if(!ticket.isLive() || !context.check(AccessPoint.STEP) || !DocumentNamespaceLane.isCurrent(laneTicket)) return@execute
@@ -83,7 +101,8 @@ class ProductActiveCoreLoader internal constructor(
                             return@execute
                         }
                         val lifetime=if(result is ActiveCoreResult.Value)
-                            ProductActiveCoreLifetime(access,context,mutations,ticket,laneTicket,ownerThread) { latestLoad === loadIdentity }
+                            ProductActiveCoreLifetime(access,context,mutations,ticket,laneTicket,ownerThread,
+                                { latestLoad === loadIdentity }, observation?.let { observer -> { accepted:Boolean,elapsed:Long -> observer.hitAuthorized(accepted,elapsed) } } ?: {_,_->})
                             else null
                         try { callback(result,lifetime) } catch(error:Exception) { lifetime?.close();throw error }
                     }
