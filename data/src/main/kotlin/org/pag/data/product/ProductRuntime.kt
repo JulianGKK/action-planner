@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 /** Activity-owned composition. No global key/database registry, no retained session. */
 class ProductRuntime(activity: Activity, private val worker: Executor, private val main: Executor,
-    workspaceMutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(),
+    private val workspaceMutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(),
     foreground: () -> Boolean) {
     private val noBackupRoot = productNoBackupRoot(activity.noBackupFilesDir)
     private val root = File(noBackupRoot, "pag-db-v1")
@@ -66,7 +66,10 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
             Subscription { cancelled.set(true); owner.getAndSet(null)?.invalidate() }
         })
     private val keyLifetime = session.observe { state ->
-        if (state.state in setOf(SessionState.LOCKED, SessionState.BLOCKED)) owner.getAndSet(null)?.invalidate()
+        if (state.state in setOf(SessionState.LOCKED, SessionState.BLOCKED)) {
+            workspaceMutations.revokeActiveRead()
+            owner.getAndSet(null)?.invalidate()
+        }
     }
     fun start(initialize: Boolean) {
         val expected = if (initialize) ProductStorageState.EMPTY else ProductStorageState.READY_TO_OPEN
@@ -74,7 +77,8 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
         initializing = initialize
         session.authenticate(if (initialize) Experiment.STORAGE_INITIALIZE else Experiment.STORAGE_UNWRAP)
     }
-    fun close() { session.lock(); keyLifetime.cancel(); leadershipLifetime.cancel(); leadership.revoke(); owner.getAndSet(null)?.invalidate() }
+    fun close() { session.lock(); keyLifetime.cancel(); leadershipLifetime.cancel(); leadership.revoke();
+        workspaceMutations.revokeActiveRead(); owner.getAndSet(null)?.invalidate() }
     val actions: ActionRepository = ProductActionRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, workspaceMutations, session::storageFailure)
     val workspace:WorkspaceRepository=ProductWorkspaceRepository(activity.applicationContext,session,inventory,

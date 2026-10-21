@@ -48,6 +48,25 @@ interface WorkspaceMutationInvalidation {
      * The port cannot authenticate a raw generation or certify prior maintenance itself.
      */
     fun beforeDocumentQueue(actionId: String, generation: Long): Pending? = null
+
+    /** Read-only admission from the SAME owner/epoch as writer admission. This ticket grants
+     * neither SessionAccess nor permission; callers must separately hold and recheck a current
+     * StorageContext. Implementations without an integrated owner fail closed.
+     */
+    fun beforeActiveRead(actionId: String, generation: Long): ActiveReadTicket? = null
+    /** Owner-thread final fence immediately before central StorageContext publication. */
+    fun isCurrentActiveRead(ticket: ActiveReadTicket): Boolean = false
+    /** Explicit lifecycle/action/revoke fence. Does not change the mutation epoch. */
+    fun revokeActiveRead() {}
+
+    interface ActiveReadTicket {
+        val actionId: String
+        val generation: Long
+        val mutationEpoch: Long
+        /** Worker-safe liveness hint only; final authorization must return to the owner thread. */
+        fun isLive(): Boolean
+    }
+
     interface Pending {
         fun finish(completion: WorkspaceWriteCompletion): Boolean
         /** Only a document ticket may consume this completion; old adapters deny by default.
@@ -60,11 +79,10 @@ interface WorkspaceMutationInvalidation {
 }
 
 /** Live default while the product snapshot owner is UNWIRED. Bounded metadata only (one
- * pending/latest identity), epoch advanced before queue, UNKNOWN terminal for that generation.
- * This is NOT an
- * alternative snapshot/session owner: it has no payload or read/hit API. RAM reuse remains
- * unconditionally disabled. Document metadata admission is available here in isolation;
- * document repositories/evidence producers and ACTIVE projections remain UNWIRED.
+ * pending/latest identity plus one revocable read ticket), epoch advanced before queue,
+ * UNKNOWN terminal for that generation. The read ticket is not a snapshot or hit API. RAM
+ * reuse remains unconditionally disabled. Document metadata admission is available here;
+ * ACTIVE permission binding/projections remain UNWIRED.
  */
 class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
     private enum class Kind { CORE, DOCUMENT }
@@ -73,6 +91,7 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
     private var latest: Ticket? = null
     private var uncertain = false
     private var generation: Long? = null
+    private var activeRead: ReadTicket? = null
     var mutationEpoch = 0L; private set
     val ramReuseEnabled: Boolean get() = false
     private fun owner() { check(Thread.currentThread() === owner) }
@@ -88,21 +107,50 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
         if (actionId.isBlank()) return null
         return begin(generation,Kind.DOCUMENT)
     }
+    override fun beforeActiveRead(actionId: String, generation: Long): WorkspaceMutationInvalidation.ActiveReadTicket? {
+        owner()
+        if (actionId.isBlank() || generation < 0) return null
+        if (!prepareGeneration(generation) || pending != null || uncertain) return null
+        activeRead?.invalidate()
+        return ReadTicket(actionId,generation,mutationEpoch).also { activeRead=it }
+    }
+    override fun isCurrentActiveRead(ticket: WorkspaceMutationInvalidation.ActiveReadTicket): Boolean {
+        owner()
+        val current=activeRead ?: return false
+        return ticket === current && current.isLive() && !uncertain && pending == null &&
+            generation == current.generation && mutationEpoch == current.mutationEpoch
+    }
+    override fun revokeActiveRead() {
+        owner(); activeRead?.invalidate(); activeRead=null
+    }
     private fun begin(generation: Long, kind: Kind): WorkspaceMutationInvalidation.Pending? {
-        if (generation < 0) return null
+        if (!prepareGeneration(generation)) return null
+        if (pending != null || uncertain) return null
+        // Revoke synchronously on the owner thread before the caller can queue worker.execute.
+        revokeActiveRead()
+        mutationEpoch = try { Math.incrementExact(mutationEpoch) } catch (_: ArithmeticException) {
+            uncertain = true; latest = null; return null
+        }
+        return Ticket(kind,generation).also { pending = it; latest = it }
+    }
+    private fun prepareGeneration(generation: Long): Boolean {
+        if (generation < 0) return false
         // Only a new READY generation supplied by the actual repository context may start
         // fresh UN-CACHED bookkeeping. It may supersede an abandoned DOCUMENT ticket after
         // authorized recovery; an unfinished CORE ticket keeps its established blocking rule.
         // The port itself does not certify maintenance or restore ActiveWorkspaceValidity.
         if (this.generation != generation) {
-            if (pending?.kind == Kind.CORE) return null
+            if (pending?.kind == Kind.CORE) return false
+            revokeActiveRead()
             this.generation = generation; uncertain = false; pending = null; latest = null
         }
-        if (pending != null || uncertain) return null
-        mutationEpoch = try { Math.incrementExact(mutationEpoch) } catch (_: ArithmeticException) {
-            uncertain = true; latest = null; return null
-        }
-        return Ticket(kind,generation).also { pending = it; latest = it }
+        return true
+    }
+    private inner class ReadTicket(override val actionId:String, override val generation:Long,
+        override val mutationEpoch:Long) : WorkspaceMutationInvalidation.ActiveReadTicket {
+        private val live=java.util.concurrent.atomic.AtomicBoolean(true)
+        fun invalidate() { live.set(false) }
+        override fun isLive() = live.get()
     }
     private inner class Ticket(val kind: Kind, private val admittedGeneration: Long) : WorkspaceMutationInvalidation.Pending {
         override fun finish(completion: WorkspaceWriteCompletion): Boolean {

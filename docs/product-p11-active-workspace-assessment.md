@@ -10664,3 +10664,146 @@ Projektionen sind **UNWIRED**. Eine produktive RAM-Freigabe ist **NICHT
 BEWIESEN** und bleibt bis zum genannten Portanschluss **BLOCKER**. Keine
 RAM-Hits, Geräteinstallation, Migration, Schema- oder Produktänderung wurden
 vorgenommen.
+
+## 67. Trusted ACTIVE Read Admission
+
+**Basis:** Remote-HEAD, lokaler HEAD und Branch waren vor der Änderung exakt
+`ff9705c4c0e13b0cba94d69191b11fe1e22c009f`; der Arbeitsbaum war sauber. §§43–66,
+die Port-/Reader-/Runtime- und Action-/Leadershippfade wurden erneut geprüft.
+GitHub Issues #35, #37 und #38 sind weiterhin offen.
+
+### 67.1 Implementierter gemeinsamer Readticket-Port
+
+**IMPLEMENTIERT:** `WorkspaceMutationInvalidation` besitzt jetzt die
+read-only Admission `beforeActiveRead(actionId, generation)`, die finale
+Ownerthreadprüfung `isCurrentActiveRead(ticket)` und `revokeActiveRead()`.
+Nicht vorbereitete Implementierungen verweigern diese API per Default.
+`ActiveReadTicket` ist payloadfrei und bindet Action-ID, READY-Generation,
+konkrete Ticketidentität/Portinstanz sowie die aktuelle gemeinsame
+Mutationsepoche. Es gewährt weder Session- noch Permissionrecht und hält keine
+Payload.
+
+`UncachedWorkspaceMutations` bleibt der einzige produktive Epoch-/Pending-/
+UNKNOWN-Owner. Er hält höchstens ein Readticket. Readadmission erhöht die
+Mutationsepoche nicht und blockiert keine Writer. Jede erfolgreiche Core- oder
+Document-Admission widerruft das Ticket synchron auf dem Ownerthread, bevor
+der Aufrufer `worker.execute` erreichen kann; der Writer erhöht danach genau
+die bestehende gemeinsame Epoche. Der Core-/Document-Abschluss revalidiert kein
+altes Ticket. Pending, UNKNOWN/RECOVERY_REQUIRED, unbestätigtes Cleanup,
+ungültige Eingabe und Epochenüberlauf verweigern neue Readadmission. Ein
+neues Action-/Generationticket und `revokeActiveRead()` invalidieren die alte
+Identität. Eine andere Portinstanz kann das Ticket nicht als aktuell
+bestätigen.
+
+Worker dürfen `ticket.isLive()` als atomare Widerrufsanzeige lesen. Das ist
+absichtlich kein Epoch- oder Sessionstate. Die endgültige Gültigkeit muss auf
+dem Ownerthread über `isCurrentActiveRead` und zusätzlich über den unveränderten
+READY-`StorageContext`-/`publish`-Gate geprüft werden. Der Port hält während
+I/O keinen Monitor. `ProductRuntime` ruft denselben injizierten Mutationowner
+bei LOCKED, BLOCKED und close synchron zum Read-Revoke auf; die bestehende
+Session-/Key-/Writerpolitik wurde nicht geändert.
+
+**HOSTGETESTET:** `ActiveReadAdmissionTest` prüft freie Admission ohne zweiten
+Epochzähler, Inputvalidierung, fremden Port, Threadgrenze, Core- und
+Document-Widerruf vor Queue, alle `WorkspaceWriterFamily`-Corezweige,
+UNKNOWN/RECOVERY/Cleanupfehler, verlorenen Mainabschluss, Action- und
+Generationwechsel, expliziten Revoke, Überlauf und Default-Deny alter
+Adapter. Der Test verwendet den echten `UncachedWorkspaceMutations`-Port,
+aber synthetische Tickets und keine Session-/DB-/Androidkomposition. Der
+Worker-Livenesscheck ist eine Zwischenprüfung; finale Publication wird in
+diesem Slice nicht implementiert. `ramReuseEnabled` bleibt `false`.
+
+### 67.2 Action-, Session- und P3b-Bindung
+
+**BESTEHEND:** `StorageAccess`/`SessionCoordinator` liefern den READY-Kontext
+und dessen Generation. Der produktive `ActiveCoreStore` liest die Action in
+der autorisierten DB-Transaktion und akzeptiert nur `ActionStatus.ACTIVE`.
+`ProductActionRepository` routet ACTION_CREATE, ACTION_EDIT und ACTION_STATUS
+durch dieselbe `WorkspaceWriteBoundary` und denselben Mutationport. Damit
+invalidiert eine lokale Action-/Statusmutation ein Readticket vor dem Worker.
+Der Readticket-Port authentifiziert rohe Action-/Generationswerte ausdrücklich
+nicht; der künftige Caller muss sie an den zentral erworbenen
+`StorageContext` binden und die frisch gelesene Action-Zeile prüfen.
+
+`BoundedActiveBinding.permissionRevision` hat im Produkt keinen autoritativen
+Lieferanten. Weder `Action` noch `WorkspaceSnapshot` enthält eine solche
+Revision. Deshalb wurde keine Konstante, UI-Zählung, Hash- oder Timestamp-
+Heuristik eingeführt und keine Permissionfreigabe behauptet. Für den
+nicht-sensitiven kompakten Kern zeigen die geprüften Pfade keinen separaten
+P3b-Zugriffsgrant: die Produktfreigabe beruht auf READY plus ACTIVE-Action;
+P3b-Daten und `LeadershipGrant` sind aus dem kompakten Kern ausgeschlossen.
+Eine spätere Binding-API muss daher entweder genau diese belegte
+READY/ACTIVE-/gemeinsame-Epoche-Regel explizit typisieren oder einen echten
+globalen Berechtigungsvertrag ergänzen. Die bestehende numerische
+`permissionRevision` darf nicht mit 0 gefüllt werden.
+
+**P3b-Mutationsmatrix, BESTEHEND:** `LeadershipRow.epoch` ist eine
+Root-Epoche; `SensitiveRow.revision` ist nur pro Action/Person/Area.
+Setup schreibt zunächst RESERVED/Root und später READY sowie Device-Key in
+getrennten Schritten. Save erhöht die Area-Revision, löscht bei leerem Inhalt
+die Area oder fügt/aktualisiert sie. DeleteArea entfernt nur die Area.
+DeletePerson entfernt die P3b-Personzeilen. DeleteAction schreibt erst
+DELETE_PENDING, widerruft Grants, löscht den Device-Key und entfernt danach
+Rows in einem späteren DB-Schritt. `LeadershipGrant` bindet Root-Epoche,
+Area-Revision und erwartete Werte; `revoke()` widerruft flüchtige Grants.
+Diese Werte sind keine globale ACTIVE-Revision: Area-Revisionen sind lokal,
+Delete/Neuanlage kann wieder bei Revision 1 beginnen, Root-Änderungen erfassen
+nicht alle Area-Schritte, und fachliche ABA-Werte sind keine Revisionsbelege.
+
+Die untersuchten P3b-Schreibpfade verändern nur Leadership-/Sensitive-Area-
+Datensätze bzw. Device-Key und Grantzustand; sie schreiben nicht Action-,
+Person-, Operations- oder Taskkernzeilen. Da der ACTIVE-Kern keine P3b-Payloads,
+Grants oder Root-/Area-Metadaten hält, wurde keine zweite P3b-Pendingregistry
+oder künstliche globale Revision hinzugefügt. Ein künftiger Snapshot, der
+P3b-Abhängigkeiten einschließt, braucht vor Produktivnutzung einen eigenen
+synchronen Invalidierungsvertrag für Setup, Save, DeleteArea, DeletePerson und
+alle Phasen von DeleteAction. P3b-Grenzen wurden in diesem Slice nicht
+produktiv an den Workspaceport angeschlossen.
+
+### 67.3 Unveränderte Ownergrenze und Blocker
+
+**UNWIRED:** `ProductActiveCoreReader` und `ProductCompactTaskReader` werden
+weiterhin nicht aus `ProductRuntime`/`ProductViewModel` aufgerufen.
+`ActiveWorkspaceValidity` bleibt ein separater, nicht installierter
+Vertragsbaustein; er wurde nicht als paralleler Writerowner verwendet. Es gibt
+noch keinen einzelnen ACTIVE Snapshotowner, keine retained Payload und keine
+RAM-Hits. Der kompakte People-/Taskseitenpayload wird nicht als vollständiges
+`WorkspaceSnapshot`, `OperationalBoard` oder `TaskBoard` dargestellt.
+
+**BLOCKER für Permissionbinding:** kein typed produktiver Vertrag verbindet
+`StorageContext` READY-Generation, frischen ACTIVE-Action-Read und das neue
+Readticket mit dem vorhandenen `BoundedActiveBinding`. Die vorhandene
+`permissionRevision` ist dafür unbelegt. Ein separater globaler P3b-Zähler wäre
+fachlich falsch für den P3b-freien Kern und würde für P3b zusätzlich keinen
+ABA-sicheren Nachweis liefern.
+
+**NICHT BEWIESEN:** keine native Room-/SQLCipher-/Key-/Cursor- oder
+Powerlossprüfung, keine Android-Lifecycle-/Keyguardinstrumentierung, kein
+physischer Heap-Löschbeleg. #32 bleibt offen. RED-4 und die unveränderte
+Dokument-Reconciliation bleiben fail-closed.
+
+**Voraussetzung für den nächsten ACTIVE-Snapshotowner:** den
+`BoundedActiveBinding`-Vertrag eng an die belegte READY-Generation, frisch
+gelesene ACTIVE-Action und das exakt aktuelle Readticket binden (ohne
+`permissionRevision = 0`); den Reader nur unter diesem Ticket ausführen; nach
+DB-/Keycleanup auf dem Ownerthread finale Ticket- und StorageContext-Prüfung
+vor dem kurzen Referenzswap verlangen. Dazu müssen Lifecycle-, Actionwechsel-
+und explizite Revoke-Hooks denselben Port synchron widerrufen. Erst der danach
+reviewte kompakte ViewModel-Pfad darf einen einzelnen Kern halten. Document-
+Overview-Validity, Viewer-/P3b-Scope und tatsächliche RAM-Hits bleiben weitere
+separate gates.
+
+**Dateien in §67:**
+
+- `domain/src/main/kotlin/org/pag/domain/WorkspaceMutationInvalidation.kt`
+- `data/src/main/kotlin/org/pag/data/product/ProductRuntime.kt`
+- `data/src/test/kotlin/org/pag/data/product/ActiveReadAdmissionTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+
+**Status:** Readticket-API und gemeinsame Epoche sind **IMPLEMENTIERT** und
+gegen den echten Hostport **HOSTGETESTET**. Action-/READY-Autorität ist als
+bestehende Daten-/Sessiongrenze untersucht, aber noch nicht als neuer
+Snapshotbinding-Vertrag verdrahtet. Globale Permissionrevision, P3b-
+Invalidierung und Snapshotowner bleiben **UNWIRED**. Native Grenzen sind
+**NICHT BEWIESEN**; #32 und RED-4 bleiben **BLOCKER**. Keine RAM-Hits,
+Schemaänderung, Migration oder Geräteinstallation.
