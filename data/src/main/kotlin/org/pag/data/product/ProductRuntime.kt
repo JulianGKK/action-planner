@@ -92,7 +92,7 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
     val expenses: ExpenseRepository = ProductExpenseRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
     val documents: DocumentRepository = ProductDocumentRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure)
+        { owner.get() }, worker, main, mutations = workspaceMutations, blocked = session::storageFailure)
     val operations: OperationsRepository = ProductOperationsRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
     val leadership: LeadershipRepository = ProductLeadershipRepository(activity.applicationContext, session, inventory,

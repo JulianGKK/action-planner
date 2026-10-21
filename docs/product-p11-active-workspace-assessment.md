@@ -10389,3 +10389,186 @@ Bestehende Assertions unverändert stark, keine Testskips ergänzt. Keine Logs,
 APKs, DBs, Keys oder Testartefakte im Commit. Regulärer WIP-Commit und Push;
 Remote-SHA separat über GitHub bestätigen. Danach **STOPP bis zum unabhängigen
 GitHub-Review**.
+
+## 65. Gemeinsame produktive DOCUMENT-Invalidierung
+
+**Ausgangsbasis:** §64 / Commit `2d05d549d1e688a6398bcb8b61c6663c945195ae`.
+Der vorhandene `WorkspaceMutationInvalidation`-Port aus §63 hatte bereits einen
+typisierten `beforeDocumentQueue`-/`finishDocument`-Vertrag. §64 hatte produktive
+Evidence-Erzeuger für Import und Delete ergänzt. Beide waren im Repositorypfad
+noch nicht gemeinsam angeschlossen. Dieser Abschnitt dokumentiert den nun
+implementierten Anschluss und seine Hostbelege; er aktiviert keine RAM-Hits.
+
+### 65.1 Ein Runtime-Port, Admission vor der Queue
+
+**IMPLEMENTIERT:** `ProductRuntime` gibt seine vorhandene
+`workspaceMutations`-Instanz jetzt auch an `ProductDocumentRepository`. Es wird
+keine weitere `UncachedWorkspaceMutations`-Instanz erzeugt. Task-, Operations-,
+Document- und übrige bestehende Writer verwenden damit dieselbe konkrete
+Pendingidentität und dieselbe `mutationEpoch`.
+
+`importDocument` und `deleteDocument` rufen über denselben
+`DocumentProductDispatch.runMutation` synchron auf dem aufrufenden Ownerthread
+`StorageAccess.acquire(READY)` auf. Derselbe erhaltene Kontext wird auf READY,
+nichtnegative Generation und aktuellen STEP-Zugriff geprüft und anschließend
+`beforeDocumentQueue(actionId, context.generation)` übergeben. Ein fehlender
+Port, leere Action-ID, fehlender/veralteter Kontext, falscher Ownerthread,
+unsicherer/beschäftigter Port oder abgelehnte Admission plant keinen Worker und
+führt keine Arbeit, Sourceöffnung, Datenbank- oder Dateimutationen aus. Der
+Callback wird bei Admissionverweigerung nicht aufgerufen; damit entsteht kein
+fälschliches CAPACITY- oder Korruptionsresultat. Direkte Repositorykonstruktionen
+ohne Port verweigern Dokumentwrites standardmäßig.
+
+Nach erfolgreicher Admission gibt es genau einen Worker-Runnable und genau ein
+lokales `DocumentMutationEvidence`. Das Repository führt dieselben §64-Producer
+und Koordinatoren aus. Die Evidence wird im Worker nach beobachteten Schritten
+eingefroren. `DocumentResult.Value` und `DocumentResult.Rejected` bestimmen den
+Abschluss nicht. SOURCE_UNAVAILABLE nach WRITING, TOO_LARGE nach Schreibbeginn,
+Fehler nach FILE_PUBLISHED und Fehler nach Parent-Detach können die gemeinsame
+Generation nicht sauber freigeben.
+
+### 65.2 Worker, Ownerthreadabschluss und UI-Publication
+
+**IMPLEMENTIERT:** Der Worker ändert weder Portpending noch Mutationsepoche und
+ruft `finishDocument` nicht auf. Erst der Main-/Ownerthread-Runnable konsumiert
+`evidence.seal()` mit genau einem `pending.finishDocument(completion)`-Versuch.
+Ein wahrer Rückgabewert belegt ausschließlich, dass der Metadatenabschluss
+konsumiert wurde. `RECOVERY_REQUIRED`, `UNKNOWN` oder unbestätigtes Cleanup
+machen die Generation über den bestehenden Port unsicher; daraus folgt weder
+ein fachlicher Erfolg noch eine Publication. Ein unsicherer Abschluss wird
+niemals als ROLLED_BACK oder harmlose Rejection ausgegeben.
+
+Eine fachliche Antwort kommt erst nach erfolgreichem Abschlussversuch und nur
+wenn Ticketidentität/-Generation, `pending.isCurrent()`, derselbe
+`StorageContext.publish`-Gate sowie `DocumentNamespaceLane`-Ticket und
+`tryAdmitPublication`-CAS gültig sind. §60 P-gegen-F bleibt unverändert. Ein
+späterer Corewriter invalidiert ein noch nicht veröffentlichtes altes
+Dokumentticket. Revoke nach vollständig bestätigter physischer Mutation macht
+diese nicht rückwirkend zu einem Rollback; die UI-Antwort kann aber unterdrückt
+werden. Keine Readprojektion wird durch `finishDocument` automatisch sauber.
+
+Die bestehenden `started.compareAndSet`-/`delivered.compareAndSet`-Gates der
+generischen Dispatchroute bleiben erhalten. Die Dokumentroute hat entsprechende
+Worker-/Main-one-shot-Gates. Wiederholte Runnables wiederholen weder Producer
+noch Callback. Wird der Worker nach Admission nicht gestartet, wird nicht
+optimistisch freigegeben. Eine nachweisbare Revoke-/Lane-Fence-Verweigerung vor
+Eintritt in Produktarbeit kann als tatsächliche NOT_EXECUTED-Evidence
+verbraucht werden, veröffentlicht aber bei ungültigem Kontext keinen Callback.
+Eine unerwartete Workerexception ohne passende Producer-Evidence wird UNKNOWN.
+
+Ein verlorener oder vom Mainexecutor abgelehnter Main-Runnable lässt das
+gemeinsame Pending offen; dieselbe Generation bleibt blockiert. Es gibt keine
+zweite Queue und keinen automatischen Retry. Eine neue READY-Generation kann
+alte Tickets ablösen. Dafür wurde `UncachedWorkspaceMutations` minimal
+angepasst: nur ein nächster Portaufruf mit einer anderen, vom Caller aus einem
+tatsächlichen READY-Kontext gelieferten Generation darf ein altes offenes
+DOCUMENT-Pending und dessen Unsicherheitsbuchführung verwerfen. Ein
+unvollständiges CORE-Pending behält seine bisherige generationsübergreifende
+Blockierregel. Bei gleicher Generation bleibt ein unvollständiger Abschluss
+terminal blockierend. Der Port
+authentifiziert weder Generation noch Maintenance; erfolgreiche autorisierte
+Recovery vor einem neuen READY-Kontext ist Caller-Vertrag. Alte Tickets können
+danach weder Core- noch Documentarbeit abschließen.
+
+### 65.3 Import, Delete und Readergrenze
+
+**IMPLEMENTIERT:** Ausschließlich `ProductDocumentRepository.importDocument`
+und `deleteDocument` verwenden die gemeinsame Admission und denselben
+typisierten §64-Abschluss. Der erfolgreiche Import muss alle lokalen Phasen,
+Datei-/Directory-Syncs, Snapshot-/Key-/DB-Cleanup und den frischen globalen
+Abschlussinventarcheck nach dem letzten DB-Commit belegen. Delete muss
+Parent-Detach, tatsächlichen Unlink/zulässige Abwesenheit, Directory-Sync,
+Jobentfernung, Cleanup und Abschlussinventar belegen. Ein zurückgekehrter
+Unlink allein ist keine Directory-Sync-Evidence. Frühere lokale Commits bleiben
+bei späteren Fehlern bestätigt.
+
+`summary`, `list`, `readPdf`, `readText` und `readImage` behalten den normalen
+`DocumentProductDispatch.run` beziehungsweise `DocumentReadDispatch`; sie
+rufen `beforeDocumentQueue` nicht auf. Viewer-/Payload-/Cleanupverträge wurden
+nicht geändert. Die §62-Characterization des früheren DOCUMENT-Bypasses bleibt
+im Testbestand; neue Zieltests prüfen zusätzlich den produktiven
+Mutationdispatch.
+
+### 65.4 Hostbelege und Grenzen
+
+**HOSTGETESTET, echte Hostdateien + Fake-DAO/Transaktion:** Neue strenge
+`DocumentWriterIntegrationTest`-Fälle verwenden eine einzige konkrete
+`UncachedWorkspaceMutations`-Instanz mit dem Produktions-Dispatch. Sie prüfen
+Core-/Document-Konflikte, Epochenerhöhung genau einmal, Admission vor Worker,
+Completion vor Callback, SOURCE_UNAVAILABLE nach WRITING, Revoke und Lane-Fence
+vor Worker, Fence zwischen Worker/Main, verlorene/abgelehnte Main-Zustellung,
+falschen Ownerthread, unerwartete Workerexception, Replay, sichere neue
+Generation und unveränderte Readerdispatches. Ein Runtime-Kompositionstest
+prüft, dass dieselbe `workspaceMutations`-Referenz an `documents` geht.
+
+Ergänzende Tests in `ProductiveDocumentEvidenceTest` führen die tatsächlichen
+§64-Import-/Delete-Producer mit temporären Hostdateien und Fake-DAO-/Transaktions-
+adaptern durch den neuen Dispatch aus. Sie prüfen COMPLETE für beide Operationen,
+gemeinsamen Pendingverbrauch und genau einen Callback, SOURCE-Rejection nach
+WRITING, TOO_LARGE mit Teilcipherdatei, Fehler nach FILE_PUBLISHED mit erhaltenem
+Blob und früheren Commits, Revoke nach Parent-Detach sowie fehlgeschlagenes
+Finalinventar. Die vorhandenen
+Characterization-Assertions wurden nicht gelöscht. §64s In-memory-SQLite-Tests
+und Dokument-SQL-Skripte bleiben getrennte Belegarten; neue §65-Dispatchtests
+verwenden Fake-DAO-Transaktionen.
+
+**NICHT BEWIESEN:** Kein Test führt ProductRuntime in einer Android-Activity mit
+generierter Room-DAO, SQLCipher, nativem Cursor/Key-/Directory-Handle oder
+Powerloss aus. Runtime-Kompositionstest und gemeinsame Portinstanz im
+Host-Dispatch belegen Verdrahtung und Portverhalten, aber keinen nativen
+Session-/Executorlauf. `StorageContext.publish`- und Lane-Races werden weiterhin
+durch getrennte bestehende Deterministiktests geprüft. Android-Instrumentation
+und Geräteinstallation wurden nicht ausgeführt.
+
+### 65.5 ACTIVE, Recovery und offene Releaseabhängigkeiten
+
+**UNWIRED:** `ActiveWorkspaceMutationAdapter`/`ActiveWorkspaceValidity` sind
+weiterhin nicht produktiv installiert und verweigern DOCUMENT admission
+default-deny. Es gibt keine aktive Validityprojektion für DocumentSummary,
+Dokumentliste, Workspace-Overview/-Anzahl, Expected-Snapshots oder laufende
+Viewer. `UncachedWorkspaceMutations.ramReuseEnabled` bleibt ausnahmslos `false`;
+der Abschluss markiert keinen Readstand sauber und hält keinen
+Snapshot-/Payloadowner.
+
+**BLOCKER:** RED-4 bleibt bestehen: historisches rootloses IMPORT_WRITING wird
+fail-closed behandelt; keine Joblöschung, Rootrekonstruktion oder geänderte
+Stagingfolge. Maintenance-/Reconciliationpolitik und Schema 11 bleiben
+unverändert. Native Cursor-/DB-/Key-/Fixture-Cleanupbelege aus #32 sowie
+SQLCipher-/Room-End-to-End-Beweise fehlen. Aktive Projektionen,
+Ownerthread-Lebensdauer, bounded Payloadowner und RAM-Hits bleiben
+Voraussetzungen eines separaten Snapshotowner-/Performance-Reviews (#37/#38).
+#36 Editor/CAS bleibt unverändert.
+
+**VORGESCHLAGEN als nächster Releasepfad, nicht hier implementiert:** Nach
+unabhängigem Review zuerst den autorisierten ACTIVE-Snapshotowner mit konkret
+definierten DokumentSummary-/Listen-/Overview-Abhängigkeiten bauen und prüfen.
+Danach Viewer-/Lifecycle-Invalidierung, native Cleanupbelege und kontrollierte
+RAM-Hittests ergänzen. Kein Portabschluss allein erlaubt RAM-Reuse oder einen
+1.0-Release.
+
+**Dateien in §65:**
+
+- `data/src/main/kotlin/org/pag/data/product/ProductRuntime.kt`
+- `data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt`
+- `data/src/main/kotlin/org/pag/data/product/DocumentMutationEvidence.kt`
+- `domain/src/main/kotlin/org/pag/domain/WorkspaceMutationInvalidation.kt`
+- `data/src/test/kotlin/org/pag/data/product/DocumentWriterIntegrationTest.kt`
+- `data/src/test/kotlin/org/pag/data/product/ProductiveDocumentEvidenceTest.kt`
+- `data/src/test/kotlin/org/pag/data/product/DocumentPendingContractTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+
+**Validierung:** Der gezielte Lauf
+`./gradlew :data:testDebugUnitTest --tests '*Document*Test' --tests '*Workspace*Test' --tests '*Writer*Test' --tests '*Session*Test' --tests '*Runtime*Test' --offline`
+bestand mit **629 Tests, 0 Fehlern und 0 Skips**. Der vollständige geforderte
+Offline-Lauf aller App-/Data-/Security-/Domain-Tests, Debugassemble,
+Androidtest-Kotlin-Kompilierung beider Module und beider Manifestprüfungen
+endete **BUILD SUCCESSFUL**. Test-XMLs: App **673**, Data **1.082**,
+Security **4**, gesamt **1.760 Hosttests, 0 Failures, 0 Errors, 0 Testskips**.
+`domain:test` hat keine eigenen Testquellen; die Porttests laufen im Data-
+TestsourceSet. Androidtest-Code wurde nur kompiliert, keine Instrumentierung
+oder Geräteinstallation ausgeführt. `git diff --check` war sauber.
+
+**Status:** Der DOCUMENT-Admission-/Completionanschluss ist **IMPLEMENTIERT**
+und auf Hostebene **HOSTGETESTET**. ACTIVE-Projektionen und RAM-Hits bleiben
+**UNWIRED**. Native Session-/SQLCipher-/Cleanup-/Powerlossbeweise sind
+**NICHT BEWIESEN**. RED-4 und #32 bleiben **BLOCKER**.

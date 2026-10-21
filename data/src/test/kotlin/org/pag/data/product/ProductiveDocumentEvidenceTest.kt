@@ -360,4 +360,105 @@ class ProductiveDocumentEvidenceTest {
         assertOutcome(DocumentWriteOutcome.COMPLETE)
     }
 
+    @Test fun actualImportProducerCompletionConsumesTheSameCommonPendingBeforeOneCallback() {
+        evidence=DocumentMutationEvidence(DocumentMutationEvidence.Operation.IMPORT)
+        val port=UncachedWorkspaceMutations();val worker=mutableListOf<Runnable>();val main=mutableListOf<Runnable>()
+        var callbacks=0
+        val access=object:StorageAccess{override fun acquire(scope:AccessScope)=c.also{assertEquals(AccessScope.READY,scope)}}
+        DocumentProductDispatch(access,java.util.concurrent.Executor{worker.add(it)},java.util.concurrent.Executor{main.add(it)},
+            {error("unexpected blocked")}).runMutation("a",port,evidence,{callbacks++}) {
+            import()
+        }
+        assertEquals(1L,port.mutationEpoch);assertEquals(1,worker.size);assertTrue(evidence.completion().outcome!=DocumentWriteOutcome.COMPLETE)
+        val w=worker.single();w.run();w.run()
+        assertEquals(DocumentWriteOutcome.COMPLETE,evidence.completion().outcome);assertEquals(1,main.size)
+        val m=main.single();m.run();m.run()
+        assertEquals(1,callbacks);assertEquals(5,commits);assertEquals(1,dao.docs.size)
+        val core=port.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.TASK,"a"),c.generation)!!
+        assertEquals(2L,port.mutationEpoch);core.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE))
+    }
+
+    @Test fun actualDeleteProducerCompletionConsumesTheSameCommonPendingBeforeOneCallback() {
+        val asset=prepareDelete();evidence=DocumentMutationEvidence(DocumentMutationEvidence.Operation.DELETE)
+        val port=UncachedWorkspaceMutations();val worker=mutableListOf<Runnable>();val main=mutableListOf<Runnable>()
+        var callbacks=0
+        val access=object:StorageAccess{override fun acquire(scope:AccessScope)=c.also{assertEquals(AccessScope.READY,scope)}}
+        DocumentProductDispatch(access,java.util.concurrent.Executor{worker.add(it)},java.util.concurrent.Executor{main.add(it)},
+            {error("unexpected blocked")}).runMutation<Unit>("a",port,evidence,{callbacks++}) {
+            delete(asset);DocumentResult.Value(Unit)
+        }
+        assertEquals(1L,port.mutationEpoch);worker.single().run();assertEquals(DocumentWriteOutcome.COMPLETE,evidence.completion().outcome)
+        main.single().run();main.single().run()
+        assertEquals(1,callbacks);assertEquals(3,commits);assertTrue(dao.docs.isEmpty());assertTrue(dao.jobs.isEmpty())
+        val core=port.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.OPERATIONS,"a"),c.generation)!!
+        assertEquals(2L,port.mutationEpoch);core.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE))
+    }
+
+    @Test fun actualSourceRejectionAfterWritingMakesSharedGenerationUncertainAndSuppressesCallback() {
+        val port=UncachedWorkspaceMutations();val worker=mutableListOf<Runnable>();val main=mutableListOf<Runnable>();var callbacks=0
+        val access=object:StorageAccess{override fun acquire(scope:AccessScope)=c}
+        DocumentProductDispatch(access,java.util.concurrent.Executor{worker.add(it)},java.util.concurrent.Executor{main.add(it)},
+            {error("unexpected blocked")}).runMutation("a",port,evidence,{callbacks++}) {
+            import { oneAttemptSource(c,DocumentSource{throw IOException("unavailable")}) }
+        }
+        worker.single().run();main.single().run()
+        assertEquals("IMPORT_WRITING",dao.jobs.single().phase);assertEquals(DocumentWriteOutcome.RECOVERY_REQUIRED,evidence.completion().outcome)
+        assertEquals(0,callbacks);assertNull(port.beforeDocumentQueue("a",c.generation))
+        assertNull(port.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.TASK,"a"),c.generation))
+    }
+
+    @Test fun actualTooLargeImportKeepsSharedGenerationUncertainAfterWriteStarted() {
+        val port=UncachedWorkspaceMutations();val worker=mutableListOf<Runnable>();val main=mutableListOf<Runnable>();var callbacks=0
+        val access=object:StorageAccess{override fun acquire(scope:AccessScope)=c}
+        DocumentProductDispatch(access,java.util.concurrent.Executor{worker.add(it)},java.util.concurrent.Executor{main.add(it)},
+            {error("unexpected blocked")}).runMutation("a",port,evidence,{callbacks++}) {
+            var left=DocumentRules.MAX_DOCUMENT_BYTES+1
+            import { object:InputStream(){override fun read():Int=error("bulk")
+                override fun read(b:ByteArray,off:Int,len:Int):Int {if(left==0L)return -1
+                    val n=minOf(left,len.toLong()).toInt();b.fill(120,off,off+n);left-=n;return n}} }
+        }
+        worker.single().run();main.single().run()
+        assertEquals(DocumentWriteOutcome.RECOVERY_REQUIRED,evidence.completion().outcome)
+        assertEquals("IMPORT_WRITING",dao.jobs.single().phase);assertTrue(File(root(),"staging").listFiles()!!.single().length()>0)
+        assertEquals(0,callbacks);assertNull(port.beforeDocumentQueue("a",c.generation))
+    }
+
+    @Test fun actualFinalInventoryFailureIsUnknownAndNeverPublishesSuccess() {
+        failFinalRead=true;val port=UncachedWorkspaceMutations();val worker=mutableListOf<Runnable>();val main=mutableListOf<Runnable>();var callbacks=0
+        val access=object:StorageAccess{override fun acquire(scope:AccessScope)=c}
+        DocumentProductDispatch(access,java.util.concurrent.Executor{worker.add(it)},java.util.concurrent.Executor{main.add(it)},
+            {error("unexpected blocked")}).runMutation("a",port,evidence,{callbacks++}) { import() }
+        worker.single().run();main.single().run()
+        assertEquals(5,commits);assertEquals(DocumentWriteOutcome.UNKNOWN,evidence.completion().outcome)
+        assertEquals(0,callbacks);assertNull(port.beforeDocumentQueue("a",c.generation))
+    }
+
+    @Test fun actualPublishedBlobAndEarlierCommitsSurviveLaterFailureWhileCommonPortBlocks() {
+        afterDb={if(it==DocumentMutationEvidence.Step.PUBLISHED)throw IOException("after published commit")}
+        val port=UncachedWorkspaceMutations();val worker=mutableListOf<Runnable>();val main=mutableListOf<Runnable>();var callbacks=0
+        val access=object:StorageAccess{override fun acquire(scope:AccessScope)=c}
+        DocumentProductDispatch(access,java.util.concurrent.Executor{worker.add(it)},java.util.concurrent.Executor{main.add(it)},
+            {error("unexpected blocked")}).runMutation("a",port,evidence,{callbacks++}) { import() }
+        worker.single().run();main.single().run()
+        assertTrue(evidence.isConfirmed(DocumentMutationEvidence.Step.PUBLISHED));assertEquals(4,commits)
+        assertEquals(1,Files.list(root().toPath().resolve("files")).use{it.count().toInt()})
+        assertEquals(DocumentWriteOutcome.RECOVERY_REQUIRED,evidence.completion().outcome);assertEquals(0,callbacks)
+        assertNull(port.beforeDocumentQueue("a",c.generation));assertNull(port.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.TASK,"a"),c.generation))
+    }
+
+    @Test fun revokeAfterParentDetachKeepsDetachAndSuppressesDeleteSuccess() {
+        val asset=prepareDelete();evidence=DocumentMutationEvidence(DocumentMutationEvidence.Operation.DELETE)
+        afterDb={if(it==DocumentMutationEvidence.Step.DETACH)c.allowed=false}
+        val port=UncachedWorkspaceMutations();val worker=mutableListOf<Runnable>();val main=mutableListOf<Runnable>();var callbacks=0
+        val access=object:StorageAccess{override fun acquire(scope:AccessScope)=c}
+        DocumentProductDispatch(access,java.util.concurrent.Executor{worker.add(it)},java.util.concurrent.Executor{main.add(it)},
+            {error("unexpected blocked")}).runMutation<Unit>("a",port,evidence,{callbacks++}) {
+            delete(asset);DocumentResult.Value(Unit)
+        }
+        worker.single().run();main.single().run()
+        assertEquals(2,commits);assertTrue(evidence.isConfirmed(DocumentMutationEvidence.Step.DETACH))
+        assertTrue(dao.docs.isEmpty());assertEquals("DELETE_FILE_PENDING",dao.jobs.single().phase)
+        assertEquals(0,callbacks);assertNull(port.beforeDocumentQueue("a",c.generation))
+    }
+
 }

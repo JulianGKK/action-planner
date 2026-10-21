@@ -18,6 +18,7 @@ internal class DocumentMutationEvidence(private val operation: Operation) {
     private var unknown = 0L
     private var effects = false
     private var failedCleanup = false
+    private var unobservedFailure = false
     private var finalInventory = false
     private var claimed = false
     private var frozen:DocumentWriteCompletion?=null
@@ -32,6 +33,13 @@ internal class DocumentMutationEvidence(private val operation: Operation) {
     @Synchronized fun acquired(resource:Resource) { check(frozen==null && active[resource.ordinal]<32);active[resource.ordinal]++ }
     @Synchronized fun closed(resource:Resource) { check(frozen==null && active[resource.ordinal]>0);active[resource.ordinal]-- }
     @Synchronized fun cleanupFailed() { check(frozen==null);failedCleanup=true }
+    /** Executor/dispatch failure outside an observed producer boundary is never a clean reject. */
+    @Synchronized fun markUnknown() { check(frozen==null);unobservedFailure=true }
+    @Synchronized fun sealAfterUnexpectedFailure():DocumentWriteCompletion {
+        if(frozen!=null)return frozen!!
+        unobservedFailure=true
+        return seal()
+    }
     @Synchronized fun finalInventoryConfirmed() { check(frozen==null);finalInventory=true }
     @Synchronized fun isConfirmed(step:Step)=confirmed and bit(step)!=0L
     @Synchronized fun completion():DocumentWriteCompletion {
@@ -41,7 +49,7 @@ internal class DocumentMutationEvidence(private val operation: Operation) {
             Step.FILE_SYNC,Step.CLOSED,Step.RENAME,Step.SYNC_FILES,Step.SYNC_STAGING,Step.PUBLISHED,Step.DOCUMENT_COMMIT)
             else listOf(Step.DELETE_RESERVED,Step.DETACH,Step.DELETE_SYNC,Step.DELETE_FINISH)
         val end=when {
-            unknown!=0L || cleanup!=WorkspaceWriteCleanup.COMPLETE -> DocumentWriteOutcome.UNKNOWN
+            unknown!=0L || unobservedFailure || cleanup!=WorkspaceWriteCleanup.COMPLETE -> DocumentWriteOutcome.UNKNOWN
             !effects -> DocumentWriteOutcome.NOT_EXECUTED
             finalInventory && required.all{confirmed and bit(it)!=0L} &&
                 (operation==Operation.IMPORT || isConfirmed(Step.UNLINK) || isConfirmed(Step.ABSENT)) -> DocumentWriteOutcome.COMPLETE

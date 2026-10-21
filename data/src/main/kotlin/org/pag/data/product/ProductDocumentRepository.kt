@@ -12,7 +12,11 @@ import java.util.concurrent.Executor
 /** Only metadata crosses the port. The established coordinators own all mutations. */
 class ProductDocumentRepository(app: Context, private val access: StorageAccess, private val inventory: ProductInventory,
     private val owner: () -> SessionDbKeyOwner?, private val worker: Executor, private val main: Executor,
+    private val mutations: WorkspaceMutationInvalidation?,
     private val blocked: () -> Unit) : DocumentRepository {
+    /** Compatibility constructor is default-deny for document mutations. */
+    constructor(app:Context,access:StorageAccess,inventory:ProductInventory,owner:()->SessionDbKeyOwner?,
+        worker:Executor,main:Executor,blocked:()->Unit):this(app,access,inventory,owner,worker,main,null,blocked)
     // Restrictive UX guard only: an expected source failure leaves WRITING for maintenance.
     // Never grants access or replaces persisted coordinator validation.
     private var interruptedGeneration: Long? = null
@@ -122,7 +126,7 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
         }
     }
     override fun importDocument(actionId: String, name: String, format: DocumentFormat, source: DocumentSource,
-        publish: (DocumentResult<Unit>) -> Unit) = runMutation(DocumentMutationEvidence.Operation.IMPORT,publish) { c,evidence ->
+        publish: (DocumentResult<Unit>) -> Unit) = runMutation(actionId,DocumentMutationEvidence.Operation.IMPORT,publish) { c,evidence ->
         if (interruptedGeneration == c.generation) return@runMutation DocumentResult.Rejected(DocumentFailure.MAINTENANCE_REQUIRED)
         val normalized = DocumentRules.normalizedName(name)
         if (!DocumentRules.validName(normalized)) return@runMutation DocumentResult.Rejected(DocumentFailure.INVALID)
@@ -144,7 +148,7 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
             }
         } catch (failure: DocumentInputFailure) { interruptedGeneration=c.generation; DocumentResult.Rejected(failure.reason) }
     }
-    override fun deleteDocument(actionId: String, expected: DocumentAsset, publish: (DocumentResult<Unit>) -> Unit) = runMutation(DocumentMutationEvidence.Operation.DELETE,publish) { c,evidence ->
+    override fun deleteDocument(actionId: String, expected: DocumentAsset, publish: (DocumentResult<Unit>) -> Unit) = runMutation(actionId,DocumentMutationEvidence.Operation.DELETE,publish) { c,evidence ->
         if (interruptedGeneration == c.generation) return@runMutation DocumentResult.Rejected(DocumentFailure.MAINTENANCE_REQUIRED)
         val rejection = read(c,evidence) { db ->
             allowed(db,c,actionId) ?: run {
@@ -160,10 +164,10 @@ class ProductDocumentRepository(app: Context, private val access: StorageAccess,
             DocumentResult.Value(Unit)
         }
     }
-    private fun <T> runMutation(operation:DocumentMutationEvidence.Operation,publish:(DocumentResult<T>)->Unit,
+    private fun <T> runMutation(actionId:String,operation:DocumentMutationEvidence.Operation,publish:(DocumentResult<T>)->Unit,
         work:(StorageContext,DocumentMutationEvidence)->DocumentResult<T>) {
         val evidence=DocumentMutationEvidence(operation)
-        dispatch.run(publish){c->try{work(c,evidence)}finally{evidence.seal()}}
+        dispatch.runMutation(actionId,mutations,evidence,publish){c->work(c,evidence)}
     }
     private fun <T> run(publish: (DocumentResult<T>) -> Unit, work: (StorageContext) -> DocumentResult<T>) = dispatch.run(publish,work)
 }
@@ -203,6 +207,67 @@ internal class DocumentProductDispatch(private val access: StorageAccess, privat
                 }
             } catch (_: StorageAccessRevoked) { /* inspect persisted state after the next real unlock */ }
               catch (_: Exception) { main.execute { if (delivered.compareAndSet(false,true) && c.check(AccessPoint.STEP)) blocked() } }
+        }
+    }
+
+    /** Document writer admission and completion share the runtime's exact common port.
+     * Admission is synchronous on the caller/owner thread, before the executor can run.
+     * A missing port, stale context, invalid action or busy/uncertain port denies silently.
+     */
+    fun <T> runMutation(actionId:String,mutations:WorkspaceMutationInvalidation?,evidence:DocumentMutationEvidence,
+        publish:(DocumentResult<T>)->Unit,work:(StorageContext)->DocumentResult<T>) {
+        if(actionId.isBlank() || mutations==null)return
+        val c=try{access.acquire(AccessScope.READY)}catch(_:RuntimeException){null}?:return
+        if(c.scope!=AccessScope.READY || c.generation<0 || !c.check(AccessPoint.STEP))return
+        val pending=try{mutations.beforeDocumentQueue(actionId,c.generation)}catch(_:RuntimeException){null}?:return
+        val laneTicket=DocumentNamespaceLane.ticket()
+        val started=java.util.concurrent.atomic.AtomicBoolean(false)
+        val delivered=java.util.concurrent.atomic.AtomicBoolean(false)
+        worker.execute {
+            if(!started.compareAndSet(false,true))return@execute
+            var enteredWork=false
+            val result=try {
+                if(!c.check(AccessPoint.OPERATION)) {
+                    evidence.seal()
+                    null
+                } else DocumentNamespaceLane.exclusive(laneTicket) {
+                    if(!c.check(AccessPoint.OPERATION)) {
+                        evidence.seal()
+                        null
+                    } else {
+                        enteredWork=true
+                        work(c).also { requireOperations(c) }
+                    }
+                }
+            } catch(_:StorageAccessRevoked) {
+                evidence.seal()
+                null
+            } catch(_:Exception) {
+                val authorityLostBeforeWork=!enteredWork &&
+                    (!runCatching { c.check(AccessPoint.STEP) }.getOrDefault(false) || !DocumentNamespaceLane.isCurrent(laneTicket))
+                if(authorityLostBeforeWork)evidence.seal()
+                else if(!enteredWork)evidence.markUnknown()
+                else evidence.sealAfterUnexpectedFailure()
+                null
+            }
+            val completion=evidence.seal()
+            try {
+                main.execute {
+                    if(!delivered.compareAndSet(false,true))return@execute
+                    if(!pending.finishDocument(completion))return@execute
+                    val value=result?:return@execute
+                    if(!pending.isCurrent() || !DocumentNamespaceLane.isCurrent(laneTicket))return@execute
+                    c.publish {
+                        if(pending.isCurrent() && DocumentNamespaceLane.isCurrent(laneTicket)) {
+                            afterFinalLaneCheck()
+                            if(DocumentNamespaceLane.tryAdmitPublication(laneTicket)) {
+                                afterPublicationAdmission()
+                                publish(value)
+                            }
+                        }
+                    }
+                }
+            } catch(_:RuntimeException) { /* lost main delivery keeps the common Pending fail-closed */ }
         }
     }
 }

@@ -55,9 +55,12 @@ class DocumentPendingContractTest {
         val valid=port.beforeDocumentQueue("a",0)!! // zero is allowed by the existing generation contract
         assertEquals(1L,port.mutationEpoch);valid.finishDocument(notExecuted())
     }
-    @Test fun pendingWithoutCompletionBlocksEvenCallerSuppliedDifferentGeneration() {
-        val port=UncachedWorkspaceMutations();port.beforeDocumentQueue("a",1)!!
-        assertBusy(port);assertBusy(port,2);assertEquals(1L,port.mutationEpoch)
+    @Test fun pendingWithoutCompletionBlocksSameGenerationButNewReadyGenerationInvalidatesIt() {
+        val port=UncachedWorkspaceMutations();val lost=port.beforeDocumentQueue("a",1)!!
+        assertBusy(port);assertEquals(1L,port.mutationEpoch)
+        val fresh=port.beforeDocumentQueue("a",2)!!
+        assertFalse(lost.isCurrent());assertFalse(lost.finishDocument(complete()));assertBusy(port,2)
+        assertEquals(2L,port.mutationEpoch);fresh.finishDocument(notExecuted())
     }
     @Test fun defaultTaskOnlyAndCoreCapableAdaptersDenyDocumentsWithoutFallback() {
         var tasks=0;var cores=0
@@ -175,6 +178,20 @@ class DocumentPendingContractTest {
         val next=port.beforeTaskQueue("a",2)!!;assertFalse(old.isCurrent());next.finish(coreCompletion())
         val latest=port.beforeDocumentQueue("a",3)!!;latest.finishDocument(complete())
         assertFalse(old.isCurrent());assertFalse(next.isCurrent());assertTrue(latest.isCurrent())
+    }
+    @Test fun authorizedNewGenerationInvalidatesAnUnfinishedLostDispatchTicket() {
+        val port=UncachedWorkspaceMutations();val lost=port.beforeDocumentQueue("a",1)!!
+        assertBusy(port,1)
+        val fresh=port.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.TASK,"a"),2)!!
+        assertFalse(lost.isCurrent());assertFalse(lost.finishDocument(complete()));assertFalse(lost.finish(coreCompletion()))
+        assertEquals(2L,port.mutationEpoch);assertBusy(port,2)
+        assertTrue(fresh.finish(coreCompletion()));assertFalse(lost.isCurrent())
+    }
+    @Test fun newGenerationDoesNotChangeUnfinishedCoreTicketBlockingRule() {
+        val port=UncachedWorkspaceMutations();val lostCore=operations(port,1)!!
+        assertNull(port.beforeDocumentQueue("a",2));assertNull(operations(port,2));assertEquals(1L,port.mutationEpoch)
+        assertTrue(lostCore.finish(coreCompletion()));val fresh=port.beforeDocumentQueue("a",2)!!
+        assertEquals(2L,port.mutationEpoch);fresh.finishDocument(notExecuted())
     }
     @Test fun coreUnknownAndCleanupFailuresAlsoBlockDocumentAdmissionInSameGeneration() {
         for(cleanupFailure in listOf(false,true)) {

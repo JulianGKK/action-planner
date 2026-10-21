@@ -89,19 +89,22 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
         return begin(generation,Kind.DOCUMENT)
     }
     private fun begin(generation: Long, kind: Kind): WorkspaceMutationInvalidation.Pending? {
-        if (pending != null || generation < 0) return null
+        if (generation < 0) return null
         // Only a new READY generation supplied by the actual repository context may start
-        // fresh UN-CACHED bookkeeping. Never restores an ActiveWorkspaceValidity instance.
+        // fresh UN-CACHED bookkeeping. It may supersede an abandoned DOCUMENT ticket after
+        // authorized recovery; an unfinished CORE ticket keeps its established blocking rule.
+        // The port itself does not certify maintenance or restore ActiveWorkspaceValidity.
         if (this.generation != generation) {
-            this.generation = generation; uncertain = false; latest = null
+            if (pending?.kind == Kind.CORE) return null
+            this.generation = generation; uncertain = false; pending = null; latest = null
         }
-        if (uncertain) return null
+        if (pending != null || uncertain) return null
         mutationEpoch = try { Math.incrementExact(mutationEpoch) } catch (_: ArithmeticException) {
             uncertain = true; latest = null; return null
         }
         return Ticket(kind,generation).also { pending = it; latest = it }
     }
-    private inner class Ticket(private val kind: Kind, private val admittedGeneration: Long) : WorkspaceMutationInvalidation.Pending {
+    private inner class Ticket(val kind: Kind, private val admittedGeneration: Long) : WorkspaceMutationInvalidation.Pending {
         override fun finish(completion: WorkspaceWriteCompletion): Boolean {
             owner()
             if (kind != Kind.CORE || pending !== this || generation != admittedGeneration) return false
