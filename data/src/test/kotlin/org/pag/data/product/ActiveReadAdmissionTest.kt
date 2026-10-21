@@ -7,6 +7,30 @@ import java.io.File
 
 /** Read tickets are metadata from the real shared writer port, never session authority. */
 class ActiveReadAdmissionTest {
+    @Test fun synchronousRevokeListenerCannotReenterWriterOrGenerationAdmission() {
+        for(writer in listOf(false,true)) {
+            val port=UncachedWorkspaceMutations();val old=port.beforeActiveRead("action",1)!!
+            var calls=0
+            val nested=mutableListOf<Any?>()
+            old.onInvalidated {
+                calls++
+                nested.add(port.beforeTaskQueue("action",99))
+                nested.add(port.beforeDocumentQueue("action",99))
+                nested.add(port.beforeActiveRead("other",99))
+            }
+            if(writer) {
+                val pending=port.beforeTaskQueue("action",1)!!
+                assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE)))
+                assertEquals(1L,port.mutationEpoch)
+            } else {
+                val next=port.beforeActiveRead("other",2)!!
+                assertTrue(port.isCurrentActiveRead(next));assertEquals(2L,next.generation)
+                assertEquals(0L,port.mutationEpoch)
+            }
+            assertEquals(1,calls);assertFalse(old.isLive())
+            assertEquals(3,nested.size);nested.forEach{assertNull(it)}
+        }
+    }
     private fun core(port:UncachedWorkspaceMutations,generation:Long=1)=port.beforeCoreQueue(
         WorkspaceMutation(WorkspaceWriterFamily.TASK,"action"),generation)!!
     private fun complete(p:WorkspaceMutationInvalidation.Pending) =

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import org.pag.domain.*
+import java.util.concurrent.atomic.AtomicReference
 
 /** Only domain ports; no DB, DAO, Cipher, key, saved state or retained unlock runtime. */
 class ProductViewModel(private val session: SessionPort, private val repository: ActionRepository,
@@ -16,6 +17,85 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private var documentRepository: DocumentRepository? = null
     private var documentPicker: DocumentPicker? = null
     private var workspaceRepository:WorkspaceRepository?=null
+    private val ownerThread=Thread.currentThread()
+    private var ownerDispatch: (() -> Unit) -> Unit = { work -> check(Thread.currentThread() === ownerThread);work() }
+    private var activeCorePort:ActiveCoreLoadPort?=null
+    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any) {
+        var subscription:Subscription?=null
+        fun close() { subscription?.cancel();lifetime.close() }
+    }
+    private val coreSlot=AtomicReference<CoreSlot?>(null)
+    private var coreLoad:Any?=null
+    private var coreSignal by mutableStateOf(0L)
+    private var fullActiveView by mutableStateOf(false)
+    fun bindActiveCore(port:ActiveCoreLoadPort,dispatch:((()->Unit)->Unit)) {
+        check(activeCorePort==null && Thread.currentThread() === ownerThread)
+        activeCorePort=port;ownerDispatch=dispatch
+    }
+    private fun dropCoreAuthority() { coreSlot.getAndSet(null)?.close() }
+    private fun clearActiveCore() { coreLoad=null;dropCoreAuthority();coreSignal++ }
+    val compactActiveMode get() = activeCorePort!=null && !fullActiveView && selected?.status==ActionStatus.ACTIVE &&
+        activeArea in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS) &&
+        selectedPerson==null && !personForm && !tasks.form && tasks.selected==null && operations.screen==OperationsScreen.OVERVIEW
+    val activeCore:ActiveCorePayload? get() {
+        coreSignal // Compose observation; foreign revocation clears the atomic reference first.
+        val slot=coreSlot.get() ?: return null
+        val core=slot.value.core
+        if(snapshot.state!=SessionState.READY || selected?.status!=ActionStatus.ACTIVE || selected?.id!=core.action.id ||
+            snapshot.generation!=core.state.binding.generation || !slot.lifetime.isCurrent()) {
+            if(coreSlot.compareAndSet(slot,null))slot.close()
+            return null
+        }
+        return core
+    }
+    fun useFullActiveView() {
+        if(!activeNavigationEnabled)return
+        clearActiveCore();fullActiveView=true;readWorkspace()
+    }
+    private fun loadActiveCore() {
+        val port=activeCorePort ?: return
+        val action=selected ?: return
+        if(action.status!=ActionStatus.ACTIVE || snapshot.state!=SessionState.READY)return
+        clearActiveCore();workspaceTicket?.cancel();workspaceTicket=null;workspaceRequest++
+        workspace=null;tasks.clear();operations.clear()
+        val identity=Any();coreLoad=identity
+        val generation=snapshot.generation
+        personsLoading=true;detailLoading=false;workspaceError=false
+        var consumed=false
+        val queued=port.loadOwned(action.id) { result,lifetime ->
+            if(consumed) {if(coreSlot.get()?.lifetime !== lifetime)lifetime?.close();return@loadOwned}
+            consumed=true
+            if(coreLoad !== identity || snapshot.state!=SessionState.READY || snapshot.generation!=generation ||
+                selected?.id!=action.id || selected?.status!=ActionStatus.ACTIVE || !compactActiveMode) { lifetime?.close();return@loadOwned }
+            if(result !is ActiveCoreResult.Value || lifetime==null) {
+                lifetime?.close();personsLoading=false;workspaceError=true;return@loadOwned
+            }
+            val core=result.core
+            if(core.action.id!=action.id || core.action.status!=ActionStatus.ACTIVE || core.state.binding.actionId!=action.id ||
+                core.state.binding.generation!=generation || core.people.state!=core.state || core.tasks.state!=core.state ||
+                core.people.items.size>32 || core.tasks.items.size>32 ||
+                ActiveWorkspaceBudget.estimateUnits(result.reservation.retained).let { it.first!=ActiveWorkspaceBudget.Decision.ADMITTED || it.second!=result.retainedCharge } ||
+                ActiveWorkspaceBudget.estimateUnits(result.reservation.transition).let { it.first!=ActiveWorkspaceBudget.Decision.ADMITTED || it.second!=result.transitionCharge } ||
+                result.retainedCharge !in 0..ActiveWorkspaceBudget.LIMIT_BYTES || result.transitionCharge !in 0..ActiveWorkspaceBudget.LIMIT_BYTES) {
+                lifetime.close();personsLoading=false;workspaceError=true;return@loadOwned
+            }
+            val slotIdentity=Any()
+            val slot=CoreSlot(result,lifetime,slotIdentity)
+            slot.subscription=lifetime.onInvalidated {
+                val held=coreSlot.get()
+                if(held?.identity === slotIdentity && coreSlot.compareAndSet(held,null)) {
+                    // No Compose mutation on a session worker; authority/reference already gone.
+                    runCatching { ownerDispatch { coreSignal++ } }
+                }
+            }
+            val installed=lifetime.publish { if(coreLoad === identity)coreSlot.set(slot) }
+            if(!installed || coreSlot.get() !== slot || !lifetime.isCurrent()) {
+                coreSlot.compareAndSet(slot,null);slot.close()
+            }
+            personsLoading=false;workspaceRefreshing=false;coreSignal++
+        }
+        if(!queued) {clearActiveCore();personsLoading=false;workspaceError=true}
+    }
     fun bindWorkspace(repository:WorkspaceRepository) {check(workspaceRepository==null);workspaceRepository=repository}
     val documentsAvailable get() = documentRepository != null
     /** Composition-time optional port, preserving all existing test/demo constructors. */
@@ -140,10 +220,14 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (!activeNavigationEnabled || (area == ActiveArea.MATERIAL && !materialAvailable) || (area == ActiveArea.COSTS && !expensesAvailable) || (area == ActiveArea.MEMORY_REPORTS && !memoryReportsAvailable)) return
         interaction()
         if (!activeNavigationEnabled || snapshot.generation != before.generation || selected?.id != action.id) return
-        clearPersons()
+        val reuse=retained==null && activeCorePort?.reuseEnabled==true &&
+            area in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS) && activeCore!=null
+        clearPersons(preserveCore=reuse)
         if (!activeNavigationEnabled || snapshot.generation != before.generation || selected?.id != action.id) return
         activeArea = area
+        if(retained!=null)fullActiveView=true
         confirming = null; changeError = null
+        if(reuse && activeCore!=null) {personsLoading=false;return}
         // A person-task tap already has both boards. Keep that valid snapshot so
         // its synchronous form opening needs no interaction from a load callback.
         if (area == ActiveArea.TASKS && retained?.actionId == action.id && retained.generation == before.generation &&
@@ -253,7 +337,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private fun showFeedback(text: String) {
         if (snapshot.state == SessionState.READY) feedback = StatusFeedback(++feedbackId, text)
     }
-    private fun clearPersons() {
+    private fun clearPersons(preserveCore:Boolean=false) {
+        if(!preserveCore)clearActiveCore()
+        fullActiveView=false
         workspaceTicket?.cancel();workspaceTicket=null
         preparationArea = PreparationArea.OVERVIEW; activeArea = ActiveArea.HUB; workspaceRefreshing = false
         workspaceRequest++; workspace = null; workspaceError = false; detailLoading = false; personDetailLoading = false
@@ -272,6 +358,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     internal fun loadWorkspace()=readWorkspace()
     private fun readWorkspace(expectedAction:Action?=null,onOpeningRejected:(()->Unit)?=null) {
         val action = selected?.takeIf { personsVisible } ?: return
+        if(compactActiveMode) {loadActiveCore();return}
+        if(activeCorePort!=null)clearActiveCore()
         val generation = snapshot.generation
         val request = ++workspaceRequest
         val previous = workspace
@@ -689,7 +777,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             sensitiveError=SensitiveFailure.DENIED
         }
     }
-    private val subscription = session.observe { next ->
+    private fun acceptSession(next:SessionSnapshot) {
         val entered = next.state == SessionState.READY && (snapshot.state != SessionState.READY || snapshot.generation != next.generation)
         val generationChanged = snapshot.generation != next.generation
         snapshot = next
@@ -709,6 +797,15 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             if (snapshot.state == SessionState.READY && snapshot.generation == next.generation) loadActions()
         }
     }
+    private val subscription = session.observe { next ->
+        // Preserve the existing synchronous unbound/test port contract. MainActivity always
+        // binds the core port and its UI dispatcher before product authentication begins.
+        if(Thread.currentThread() === ownerThread || activeCorePort==null) acceptSession(next)
+        else {
+            dropCoreAuthority()
+            runCatching { ownerDispatch { if(session.snapshot()==next)acceptSession(next) } }
+        }
+    }
     fun unlock() = begin(bootstrap == ProductStorageState.EMPTY)
     /** Explicit lock followed by the ordinary unlock. No navigation or editor continuation. */
     fun restartSession() {
@@ -724,7 +821,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     fun lock() { documentPicker?.cancel(); session.lock() }
     fun interaction() = session.userInteraction()
-    fun createScreen() { interaction(); if (snapshot.state == SessionState.READY) { selected = null; creating = true } }
+    fun createScreen() { interaction(); if (snapshot.state == SessionState.READY) { clearPersons();selected = null; creating = true } }
     fun back() { documentPicker?.cancel(); if (memoryReports.available && memoryReports.dirty) { memoryReports.requestLeave { back() }; return }; interaction(); selected = null; creating = false; editing = null; confirming = null; changeError = null; clearPersons() }
     fun edit() {
         interaction()
@@ -797,5 +894,5 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             loadActions()
         }
     }
-    override fun onCleared() { workspaceTicket?.cancel();workspaceTicket=null;protocol.clear(); material.clear(); expenses.clear(); memoryReports.clear(); documents.clear(); clearSensitive(); subscription.cancel(); session.lock() }
+    override fun onCleared() { documentPicker?.cancel();clearPersons();selected=null;subscription.cancel();session.lock() }
 }

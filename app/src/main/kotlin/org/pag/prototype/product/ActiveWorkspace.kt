@@ -89,6 +89,15 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
         return
     }
     if(!renderContent)return
+    if(model.compactActiveMode) {
+        val core=model.activeCore
+        if(core==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
+        CompactActiveContent(core,model.activeArea,model.activeNavigationEnabled,model::activeArea)
+        FormOutlinedButton(model::useFullActiveView,enabled=model.activeNavigationEnabled) { Text("Alle anzeigen und bearbeiten") }
+        if(model.activeArea==ActiveArea.HUB && model.documentsAvailable)
+            FormOutlinedButton(model::openDocuments,enabled=model.activeNavigationEnabled) { Text("Dokumente öffnen") }
+        return
+    }
     if (model.personDetailLoading) { PagLoadingState(); return }
     val content = model.workspace
     if (content == null) { if (model.workspaceError) PagErrorState() else PagLoadingState(); return }
@@ -122,6 +131,42 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             ActiveArea.MEMORY_REPORTS -> MemoryReportSection(model.memoryReports, content.persons,showHeading=false)
             ActiveArea.DETAILS -> Unit
         }
+    }
+}
+
+internal fun compactPageLabel(shown:Int,total:Long,hasMore:Boolean):String =
+    "$shown von $total angezeigt" + if(hasMore) " · weitere Einträge verfügbar" else ""
+
+internal fun activeCompactHubCards(core:ActiveCorePayload):List<HubCard> = listOf(
+    HubCard(ActiveArea.PERSONS,listOf("${core.people.overall.total} insgesamt","${core.people.overall.onSite} vor Ort")),
+    HubCard(ActiveArea.FUNCTIONS,listOf("${core.functions.items.size} Funktionen","${core.functions.onSiteCount} Personen vor Ort")),
+    HubCard(ActiveArea.TASKS,listOf("${core.tasks.overall.open} offen","${core.tasks.overall.inProgress} in Arbeit"))
+)
+
+@Composable private fun CompactActiveContent(core:ActiveCorePayload,area:ActiveArea,enabled:Boolean,onOpen:(ActiveArea)->Unit) {
+    when(area) {
+        ActiveArea.HUB -> {
+            ActiveHubGrid(activeCompactHubCards(core),enabled,onOpen=onOpen)
+            listOf(ActiveArea.PROTOCOL,ActiveArea.MATERIAL,ActiveArea.COSTS,ActiveArea.MEMORY_REPORTS,ActiveArea.DETAILS).forEach { next ->
+                FormOutlinedButton({onOpen(next)},enabled=enabled) {Text(next.label)}
+            }
+        }
+        ActiveArea.PERSONS -> {
+            Text(compactPageLabel(core.people.items.size,core.people.overall.total,core.people.hasMore))
+            OperationalStatus.entries.forEach { status -> Text("${operationalLabel(status)}: ${core.people.overall.count(status)}") }
+            core.people.items.forEach { person -> Text(person.pseudonym) }
+        }
+        ActiveArea.FUNCTIONS -> {
+            Text("${core.functions.onSiteCount} Personen vor Ort · ${core.functions.withoutFunction} ohne Funktion")
+            core.functions.items.forEach { function -> Text("${function.role.name}: ${function.onSiteCount} vor Ort") }
+        }
+        ActiveArea.TASKS -> {
+            val counts=core.tasks.overall
+            Text("${counts.open} offen · ${counts.inProgress} in Arbeit · ${counts.done} abgeschlossen · ${counts.cancelled} abgebrochen")
+            Text(compactPageLabel(core.tasks.items.size,counts.open+counts.inProgress,core.tasks.hasMore))
+            core.tasks.items.forEach { task -> Text(task.title) }
+        }
+        else -> Unit
     }
 }
 

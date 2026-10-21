@@ -67,6 +67,8 @@ interface WorkspaceMutationInvalidation {
         val mutationEpoch: Long
         /** Worker-safe liveness hint only; final authorization must return to the owner thread. */
         fun isLive(): Boolean
+        /** One bounded lifetime consumer; unprepared implementations deny retention. */
+        fun onInvalidated(invalidate: () -> Unit): Subscription { invalidate(); return Subscription {} }
     }
 
     interface Pending {
@@ -93,6 +95,7 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
     private var latest: Ticket? = null
     private var uncertain = false
     private var generation: Long? = null
+    private var admitting=false // Reentrant revoke listeners cannot start an overlapping admission.
     // Only ticket liveness may be revoked by a foreign-thread session observer.
     // Admission, pending and mutationEpoch remain owner-thread-only.
     private val activeRead = AtomicReference<ReadTicket?>(null)
@@ -113,11 +116,14 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
     }
     override fun beforeActiveRead(actionId: String, generation: Long): WorkspaceMutationInvalidation.ActiveReadTicket? {
         owner()
-        if (actionId.isBlank() || generation < 0) return null
-        if (!prepareGeneration(generation) || pending != null || uncertain) return null
-        val ticket=ReadTicket(actionId,generation,mutationEpoch)
-        activeRead.getAndSet(ticket)?.invalidate()
-        return ticket
+        if (admitting || actionId.isBlank() || generation < 0) return null
+        admitting=true
+        try {
+            if (!prepareGeneration(generation) || pending != null || uncertain) return null
+            val ticket=ReadTicket(actionId,generation,mutationEpoch)
+            activeRead.getAndSet(ticket)?.invalidate()
+            return ticket
+        } finally { admitting=false }
     }
     override fun isCurrentActiveRead(ticket: WorkspaceMutationInvalidation.ActiveReadTicket): Boolean {
         owner()
@@ -132,14 +138,18 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
         activeRead.getAndSet(null)?.invalidate()
     }
     private fun begin(generation: Long, kind: Kind): WorkspaceMutationInvalidation.Pending? {
-        if (!prepareGeneration(generation)) return null
-        if (pending != null || uncertain) return null
-        // Revoke synchronously on the owner thread before the caller can queue worker.execute.
-        revokeActiveRead()
-        mutationEpoch = try { Math.incrementExact(mutationEpoch) } catch (_: ArithmeticException) {
-            uncertain = true; latest = null; return null
-        }
-        return Ticket(kind,generation).also { pending = it; latest = it }
+        if(admitting)return null
+        admitting=true
+        try {
+            if (!prepareGeneration(generation)) return null
+            if (pending != null || uncertain) return null
+            // Revoke synchronously before queue; listeners cannot reenter this unfinished admission.
+            revokeActiveRead()
+            mutationEpoch = try { Math.incrementExact(mutationEpoch) } catch (_: ArithmeticException) {
+                uncertain = true; latest = null; return null
+            }
+            return Ticket(kind,generation).also { pending = it; latest = it }
+        } finally { admitting=false }
     }
     private fun prepareGeneration(generation: Long): Boolean {
         if (generation < 0) return false
@@ -157,8 +167,14 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
     private inner class ReadTicket(override val actionId:String, override val generation:Long,
         override val mutationEpoch:Long) : WorkspaceMutationInvalidation.ActiveReadTicket {
         private val live=java.util.concurrent.atomic.AtomicBoolean(true)
-        fun invalidate() { live.set(false) }
+        private val listener=AtomicReference<(() -> Unit)?>(null)
+        fun invalidate() { live.set(false); listener.getAndSet(null)?.let { runCatching(it) } }
         override fun isLive() = live.get()
+        override fun onInvalidated(invalidate: () -> Unit): Subscription {
+            check(listener.compareAndSet(null,invalidate)) { "One ACTIVE lifetime consumer" }
+            if(!live.get()) listener.getAndSet(null)?.let { runCatching(it) }
+            return Subscription { listener.compareAndSet(invalidate,null) }
+        }
     }
     private inner class Ticket(val kind: Kind, private val admittedGeneration: Long) : WorkspaceMutationInvalidation.Pending {
         override fun finish(completion: WorkspaceWriteCompletion): Boolean {

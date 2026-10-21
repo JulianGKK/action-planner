@@ -11054,3 +11054,182 @@ SQLite-hostgetestet. Ein dauerhafter Snapshotowner/RAM-Hit bleibt **UNWIRED**.
 Room-/SQLCipher-/Native-/Lifecycle-/Cursorbelege sind **NICHT BEWIESEN**;
 #32, RED-4 und #38 bleiben offene **BLOCKER**. Keine Schemaänderung,
 Migration, Geräteinstallation oder RAM-Hits.
+
+## 70. Single ACTIVE Snapshot Owner + Compact Navigation Integration
+
+**Basis:** Lokaler HEAD und unabhängig abgefragter Remote-Branch waren
+`7eccce41c46aef9b4a265761476e378f5b059fe9`; Branch
+`p11-performance-optimization`, sauberer Arbeitsbaum. Die unabhängigen
+§69-Reviews in #35 und #37 wurden gelesen. Der Reviewvorbehalt ist maßgeblich:
+der bisherige Consumer-Callback außerhalb von `StorageContext.publish` ist
+allein keine Retentionautorität.
+
+### 70.1 Installierter Owner und ursprüngliche Ticketautorität
+
+**IMPLEMENTIERT:** `MainActivity` bindet genau `runtime.activeCore` über den
+kleinen Domain-Port `ActiveCoreLoadPort` an das bestehende `ProductViewModel`.
+Der Runtime-Loader bleibt derselbe und verwendet den gemeinsamen
+`WorkspaceMutationInvalidation`-Owner aus §§65–69. Es gibt keine zusätzliche
+Uncached-Instanz, Mutationsepoche, Pendingliste, globale Payloadregistry oder
+Installation von `ActiveWorkspaceValidity` als Shadowowner.
+
+Der einzige neue Payloadslot ist ein `AtomicReference<CoreSlot?>` im
+ViewModel. Er hält genau einen vollständigen, gemeinsam budgetierten
+`ActiveCoreResult.Value` und dessen opake `ActiveCoreLifetime`. Der Loader
+erzeugt diese Lifetime ausschließlich für das Originalticket und den
+Original-READY-Kontext des abgeschlossenen Reads. Die Lifetime hält keine
+Payload; sie prüft auf dem Ownerthread dieselbe Portidentität/Ticketidentität,
+Generation, gemeinsame Epoche, Loadidentität, Session und Namespace-Fence.
+Sie stellt kein Ersatzticket und keine weitere Sessionberechtigung aus.
+
+**IMPLEMENTIERT:** Das Readticket besitzt genau einen atomar registrierten
+Invalidierungsconsumer. Bereits widerrufene bzw. nicht vorbereitete Tickets
+verweigern Retention. Core- und DOCUMENT-Admission invalidieren weiterhin das
+Originalticket synchron vor Workerqueue; die zusätzliche Benachrichtigung
+ändert keine Writer-/Completionsemantik. Der Callback leert den ViewModelslot
+atomar, bevor eine Compose-Benachrichtigung auf Main geplant wird.
+Ein ownerthreadgebundener kurzer Reentrancy-Guard verweigert verschachtelte
+Core-/DOCUMENT-/Readadmission aus einem synchronen Widerrufslistener, bis
+die ursprüngliche Admission ihre bestehende Pending-/Generationbuchführung
+beendet hat. Das ist keine weitere Pendingliste oder Epoche.
+Session-Workerrevoke führt nur Liveness-/Slotentzug und kurze atomare
+Metadatenarbeit aus, keine Compose-Mutation oder I/O. Unsubscribe/Close sind
+idempotent und können keine jüngere Ticketidentität widerrufen.
+
+### 70.2 Retention, Sessionthread und Callback-false
+
+**IMPLEMENTIERT:** Ein Consumer-Callback prüft zuerst ViewModel-Loadidentität,
+Action-ID/ACTIVE-Status, READY-Generation, identische People-/Taskbindung,
+Seitengröße und konsistente gemeinsame Budgetmetadaten. Danach registriert
+er den synchronen Widerruf und installiert die Referenz nur innerhalb von
+`ActiveCoreLifetime.publish`, also einer erneuten zentralen Publication auf
+dem ursprünglichen `StorageContext`. Der Rückgabewert und die Original-
+Lifetime werden nach dem kurzen Referenzswap nochmals geprüft. Bei
+callback-then-false, Revoke während Installation oder verlorener Autorität
+wird der Kandidat verworfen. Ein ausgeführter Installationscallback allein
+markiert keine Referenz als gültig. Jeder Zugriff auf den Owner prüft die
+Lifetime erneut; eine geschlossene Lifetime kann nicht wieder aktuell werden.
+
+Der ViewModel-Sessionobserver entzieht bei fremdthreadiger Sessionmeldung
+zuerst synchron die Coreautorität. Die übrige Compose-/Navigationsmutation
+erfolgt erst über den injizierten Main-Dispatcher und nur für die weiterhin
+aktuelle Sessionmeldung. Ein verlorener Main-Dispatch lässt keinen gültigen
+Core zurück. Bereits an einen Renderer ausgegebene Objektreferenzen werden
+damit weder physisch gelöscht noch rückwirkend aus einem Frame entfernt.
+Der historische ungebundene ViewModel-Port behält seinen synchronen
+Sessionobserververtrag für vorhandene Session-/P3b-Racetests. MainActivity
+bindet dagegen vor Produktauthentifizierung den Core-Port samt Main-Dispatcher;
+die neue produktive Threadgrenze ist ausdrücklich an diese Komposition gebunden.
+
+`clearPersons`, Actionwechsel/`openAction`, `back`, neue Loadidentität,
+Status-/Generationsverlust, Vollansichtswechsel und `onCleared` schließen die
+Lifetime und entfernen den Slot. `onCleared` entfernt auch die bestehenden
+Workspace-/Form-/Viewerreferenzen. Doppelte Consumerabschlüsse können keinen
+zweiten Payload installieren. Verlorene Mainzustellung erzeugt keinen Slot.
+
+### 70.3 Workspace, Budget und kompakte Oberfläche
+
+**IMPLEMENTIERT:** Auf dem kompakten ACTIVE-Pfad wird die vorherige
+`WorkspaceReadTicket` storniert, die Workspace-Loadidentität erhöht und
+`workspace`, Task-/Operationsauswahl sowie deren Graphreferenzen verworfen,
+bevor ein neuer Core angefordert wird. Der volle `WorkspaceSnapshot` wird
+nicht aus kompakten Seiten nachgebildet. Der explizite Weg „Alle anzeigen
+und bearbeiten“ schließt den Core und verwendet danach die bestehenden
+autorisierten Vollansichts-/Detail-/Editorpfade. Person-Task-Formnavigation
+mit einem explizit vorhandenen vollständigen Snapshot bleibt im alten Pfad.
+
+Die vorhandene gemeinsame `CoreReadAdmission` bleibt die einzige Budgetengine
+mit 8 MiB retained und 8 MiB transition. Ihre feste gemeinsame Hüllreserve
+berücksichtigt jetzt zusätzlich die bounded Lifetime-/Listener-/Slotobjekte:
+retained-Hülle 3.872 statt 2.080 Byte (+1.792), transition-Hülle unverändert
+7.808 Byte. Die exakte Accountingassertion wurde entsprechend erhöht; keine
+Budgetgrenze wurde erweitert und die Action bleibt genau einmal berechnet.
+Die ViewModelprüfung vergleicht nur die erhaltenen Metadaten, sie erzeugt
+keinen zweiten Ledger. Alte Compose-/Executorreferenzen sind damit kein
+belegter physischer Heapfreigabezustand; Übergabe-/Frameüberlappung bleibt
+vor Produkt-RAM-Hits nativ zu validieren.
+
+**IMPLEMENTIERT:** `ActiveWorkspace` verwendet echte kompakte read-only
+Darstellung für HUB, PERSONS, FUNCTIONS und TASKS. Personen-/Aufgabenlisten
+zeigen erste Seiten, globale Counts und `hasMore` ausdrücklich. Funktionen
+zeigen die vollständigen zugelassenen Identitäten mit globalen ON_SITE-
+Counts und keine erfundenen Mitgliedslisten. Der Hub verwendet globale
+Corecounts. Separate vollständige Listen/Editoren bleiben explizit erreichbar.
+PROTOCOL, MATERIAL, COSTS, MEMORY_REPORTS und DOCUMENTS benutzen weiterhin
+ihre bisherigen Read-/Viewerpfade. Keine Dokumentprojektion wird durch einen
+Coreabschluss clean, keine P3b-/Dokument-/Protokoll-/Reportpayload wird im
+Core gehalten.
+
+### 70.4 Hostbelege und festes Produktgate
+
+**HOSTGETESTET:** `ActiveCoreOwnerTest` prüft den echten ViewModel-Owner mit
+Domain-Session-/Loaderseams: maximal einen Kern, Ausschluss paralleler
+Workspace-Retention im Modell, ACTIVE-/Action-/Generations-/Budgetprüfung,
+alte Loadcallbacks, Actionwechsel, Vollansichtswechsel, Lock/BLOCKED,
+fremdthreadigen Sessionobserver mit verzögerter Composezustellung,
+callback-false, Widerruf während Installation, `ViewModelStore.clear`,
+Consumerreplay, globale Counts und explizites `hasMore`.
+
+Die neuen Data-Tests benutzen den echten `SessionCoordinator`, gemeinsamen
+Uncached-Port, Originaltickets und produktive `ProductActiveCoreLifetime`:
+Core-/DOCUMENT-Beginn entfernt den Slot vor Queue; Worker-Sessionablauf
+entzieht synchron die Lifetime ohne Exception; Reauth belebt sie nicht;
+callback-then-false und expliziter Revoke während Installation erlauben
+keinen Slot. Bestehende Pending-/UNKNOWN-/Recovery-/Cleanup-/One-shot-/
+Lost-Main-Tests und Bounded-/Compact-SQLite-Hosttests bleiben maßgeblich.
+Das ist keine native Room-/SQLCipher-/ART-/Android-Lifecycle-Evidence.
+
+**HOSTGETESTET:** Ein ausschließlich im Hosttest bereitgestellter
+Domain-Port mit `reuseEnabled=true` erlaubt Navigation zwischen den vier
+Coreansichten ohne zusätzlichen Read und mit derselben Payloadidentität.
+**IMPLEMENTIERT, Produktgate:** `ProductActiveCoreLoader` übernimmt unverändert
+das feste Domain-Default `reuseEnabled=false`; auch der gemeinsame
+Uncached-Port meldet weiterhin `ramReuseEnabled=false`. MainActivity und UI
+haben keinen Umschalter. Im installierbaren Produkt erfolgt bei Navigation
+ein neuer autorisierter Read; aktuelle Frischdaten können kompakt angezeigt
+werden, aber keine Cache-/Performancefreigabe wird behauptet.
+
+### 70.5 Offene Abnahmegrenzen
+
+**NICHT BEWIESEN / BLOCKER:** #32 native SQLCipher-/Cursor-/Key-/Fixturecleanup,
+ART-/Compose-/Executor-Referenzüberlappung, Android-Lifecycle-/Keyguard- und
+OnDraw-Widerruf, Viewer-/P3b-Leases, #36 Editor-/ABA-Grenzen und #38 tatsächliche
+Median-/p95-Content-OnDraw-Messung. RED-4 bleibt unverändert fail-closed.
+Synchron ungültige Retention bedeutet keine physische Heaplöschung oder
+garantierte sofortige Entfernung bereits gerenderter Pixel.
+
+**UNWIRED:** Produktive RAM-Hit-Freigabe, aktive Dokument-/Overviewcache-
+Projektionen und kompakte paginierte Detail-/Editorintegration. Vor dem
+isolierten Android-Performanceversuch sind #32 Fixture-Isolierung/Cleanup,
+Lifecycle-/Keyguard-/OnDraw-Revokebelege und Übergabe-/Framebudget auf dem
+Gerät separat zu prüfen. Eine Installation benötigt einen eigenen Auftrag.
+Erst nach unabhängiger Abnahme darf das feste Produktreuse-Gate in einem
+separaten Slice geändert und #38 mit echten 100–150-ms-/p95-Zielen gemessen
+werden. Keine Geräteinstallation oder RAM-Hit-Freigabe in §70.
+
+### 70.6 Abschlussvalidierung und Dateien
+
+**HOSTGETESTET:** Gezielte Owner-/ActiveWorkspace-/Navigation-/Session-/
+Writer-/Documenttests bestanden. Der abschließende vollständige angeforderte
+Offline-Lauf bestand mit **1.800 Unit-Tests**: 682 App, 1.114 Data, 4 Security,
+Domain `NO-SOURCE`; **0 Fehler, 0 Errors, 0 Skips**. `assembleDebug`, beide
+Android-Test-Kotlin-Kompilationen und beide Manifestprüfungen bestanden.
+Androidtests wurden ausschließlich kompiliert. `git diff --check` war sauber.
+Die zuvor gefundenen exakten Budget- und vier SessionRestart-Regressionsfälle
+wurden behoben; keine bestehenden Testassertions wurden abgeschwächt.
+
+Geändert:
+
+- `domain/.../ActiveCoreRead.kt`, `WorkspaceMutationInvalidation.kt`
+- `data/.../ProductActiveCoreLoader.kt`, `ProductActiveCoreLifetime.kt`, `ActiveCoreStore.kt`
+- `app/.../MainActivity.kt`, `ProductViewModel.kt`, `ActiveWorkspace.kt`
+- `app/.../ActiveCoreOwnerTest.kt`
+- `data/.../ProductActiveCoreLoaderTest.kt`, `ActiveReadAdmissionTest.kt`, `ActiveCoreStoreTest.kt`
+- dieses Assessment
+
+**Status:** ViewModel-Owner, Runtime-Lifetime, MainActivity-Komposition und
+kompakte Frischdatenanzeige sind **IMPLEMENTIERT** und begrenzt
+**HOSTGETESTET**. Die native Retentions-/OnDraw-/Cleanupabnahme bleibt
+**NICHT BEWIESEN** und **BLOCKER**; Produkt-RAM-Hits und isolierte
+Android-Performancevalidierung sind weiterhin **UNWIRED**. Stopp bis zum
+unabhängigen GitHub-Review.

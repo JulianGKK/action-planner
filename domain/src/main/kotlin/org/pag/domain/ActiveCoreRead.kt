@@ -32,3 +32,20 @@ sealed interface ActiveCoreResult {
 interface ActiveCoreReader {
     fun read(state: CompactTaskState, affectedPersonId: String? = null): ActiveCoreResult
 }
+
+/** Original-read lifetime only. No key, replacement ticket, or independent authorization. */
+interface ActiveCoreLifetime {
+    /** Owner-thread final validation against the original context and common port. */
+    fun isCurrent(): Boolean
+    /** Short reference installation only; false requires the consumer to drop its candidate. */
+    fun publish(install: () -> Unit): Boolean
+    /** One consumer; invalidation may run synchronously on a foreign session thread. */
+    fun onInvalidated(invalidate: () -> Unit): Subscription
+    fun close()
+}
+
+interface ActiveCoreLoadPort {
+    /** Runtime default is false. A UI switch cannot grant reuse. */
+    val reuseEnabled: Boolean get() = false
+    fun loadOwned(actionId: String, callback: (ActiveCoreResult, ActiveCoreLifetime?) -> Unit): Boolean
+}

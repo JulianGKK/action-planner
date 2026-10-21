@@ -15,7 +15,7 @@ class ProductActiveCoreLoader internal constructor(
     private val worker: Executor,
     private val main: Executor,
     private val readCandidate: (StorageContext, WorkspaceMutationInvalidation.ActiveReadTicket, Long) -> ActiveCoreResult
-) {
+) : ActiveCoreLoadPort {
     private val ownerThread=Thread.currentThread()
     private var latestLoad: Any? = null
 
@@ -24,6 +24,9 @@ class ProductActiveCoreLoader internal constructor(
      * freshly revalidated candidate; callers must not treat it as retained cache authority.
      */
     fun load(actionId: String, callback: (ActiveCoreResult) -> Unit): Boolean {
+        return loadOwned(actionId) { result,lifetime -> try { callback(result) } finally { lifetime?.close() } }
+    }
+    override fun loadOwned(actionId: String, callback: (ActiveCoreResult, ActiveCoreLifetime?) -> Unit): Boolean {
         check(Thread.currentThread() === ownerThread) { "ACTIVE core admission is owner-thread-only" }
         if(actionId.isBlank()) return false
         val context=access.acquire(AccessScope.READY) ?: return false
@@ -79,7 +82,10 @@ class ProductActiveCoreLoader internal constructor(
                             mutations.revokeActiveRead()
                             return@execute
                         }
-                        callback(result)
+                        val lifetime=if(result is ActiveCoreResult.Value)
+                            ProductActiveCoreLifetime(context,mutations,ticket,laneTicket,ownerThread) { latestLoad === loadIdentity }
+                            else null
+                        try { callback(result,lifetime) } catch(error:Exception) { lifetime?.close();throw error }
                     }
                 } catch (_: RejectedExecutionException) {
                     // This only revokes the outstanding ticket. No worker-side owner/epoch reset.

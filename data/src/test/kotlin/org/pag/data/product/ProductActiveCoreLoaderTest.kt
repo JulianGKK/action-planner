@@ -11,6 +11,54 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 class ProductActiveCoreLoaderTest {
+    @Test fun ownedOriginalLifetimeSynchronouslyDropsSlotBeforeCoreOrDocumentQueue() {
+        for(document in listOf(false,true)) {
+            val h=Harness();val w=QueueExecutor();val m=QueueExecutor()
+            val slot=AtomicReference<ActiveCoreResult?>();var lifetime:ActiveCoreLifetime?=null
+            val loader=h.loader(w,m){_,t,_->value(t)}
+            assertFalse(loader.reuseEnabled)
+            assertTrue(loader.loadOwned("action") { result,life ->
+                lifetime=life;life!!.onInvalidated {slot.set(null)}
+                assertTrue(life.publish {slot.set(result)})
+            })
+            w.take().run();m.take().run();assertNotNull(slot.get())
+            val generation=h.session.snapshot().generation
+            val pending=if(document)h.mutations.beforeDocumentQueue("action",generation)
+                else h.mutations.beforeTaskQueue("action",generation)
+            assertNotNull(pending);assertNull(slot.get());assertFalse(lifetime!!.isCurrent())
+            assertEquals(1L,h.mutations.mutationEpoch)
+        }
+    }
+    @Test fun ownedLifetimeDropsOnRealWorkerExpiryAndDoesNotReviveAfterReauthentication() {
+        val h=Harness();val w=QueueExecutor();val m=QueueExecutor();val slot=AtomicReference<ActiveCoreResult?>()
+        var lifetime:ActiveCoreLifetime?=null
+        h.loader(w,m){_,t,_->value(t)}.loadOwned("action") { result,life ->
+            lifetime=life;life!!.onInvalidated{slot.set(null)};assertTrue(life.publish{slot.set(result)})
+        }
+        w.take().run();m.take().run();assertNotNull(slot.get())
+        val context=h.session.acquire(AccessScope.READY)!!;h.now=30_000
+        val failure=AtomicReference<Throwable?>()
+        val thread=Thread {try{context.check(AccessPoint.STEP)}catch(error:Throwable){failure.set(error)}}
+        thread.start();thread.join(3000)
+        assertNull(failure.get());assertNull(slot.get());assertEquals(SessionState.LOCKED,h.session.snapshot().state)
+        h.session.authenticate(Experiment.PER_OPERATION)
+        assertFalse(lifetime!!.isCurrent());assertEquals(0L,h.mutations.mutationEpoch)
+    }
+    @Test fun retentionPublishCallbackThenFalseOrRevokeNeverAuthorizesSlot() {
+        for(revoke in listOf(false,true)) {
+            val port=UncachedWorkspaceMutations();val ticket=port.beforeActiveRead("action",1)!!
+            val slot=AtomicReference<Any?>()
+            val context=object:StorageContext {
+                override val scope=AccessScope.READY;override val generation=1L
+                override fun check(point:AccessPoint)=true
+                override fun publish(result:()->Unit):Boolean {result();if(revoke)port.revokeActiveRead();return revoke}
+            }
+            val life=ProductActiveCoreLifetime(context,port,ticket,DocumentNamespaceLane.ticket(),Thread.currentThread()){true}
+            life.onInvalidated{slot.set(null)}
+            assertFalse(life.publish{slot.set(Any())})
+            assertNull(slot.get());assertFalse(life.isCurrent())
+        }
+    }
     private class QueueExecutor : java.util.concurrent.Executor {
         val queue=mutableListOf<Runnable>();var reject=false
         override fun execute(command: Runnable) { if(reject) throw java.util.concurrent.RejectedExecutionException();queue.add(command) }

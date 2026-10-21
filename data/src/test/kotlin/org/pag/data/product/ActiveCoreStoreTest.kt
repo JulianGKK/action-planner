@@ -253,7 +253,8 @@ class ActiveCoreStoreTest {
         val (p,t)=h.metadata()
         assertEquals(0,h.db.blobReads);assertEquals(0,h.db.payloadStatements)
         val result=h.read() as ActiveCoreResult.Value
-        assertEquals(cost(p.retained)+cost(t.retained)+2080,result.retainedCharge)
+        // Joint wrappers plus bounded original-ticket lifetime/owner metadata; Action still counted once.
+        assertEquals(cost(p.retained)+cost(t.retained)+3872,result.retainedCharge)
         assertEquals(cost(p.transition)+cost(t.transition)+7808,result.transitionCharge)
         assertCore(h,result)
     }
