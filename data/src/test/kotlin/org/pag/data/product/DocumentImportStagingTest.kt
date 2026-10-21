@@ -16,9 +16,12 @@ class DocumentImportStagingTest {
     private class Access : StorageContext {
         var allowed = true
         var commitAllowed = true
+        var atCheck: () -> Unit = {}
         override val generation = 4L
         override val scope = AccessScope.READY
-        override fun check(point: AccessPoint) = allowed && (point != AccessPoint.COMMIT || commitAllowed)
+        override fun check(point: AccessPoint): Boolean {
+            atCheck();return allowed && (point != AccessPoint.COMMIT || commitAllowed)
+        }
         override fun publish(result: () -> Unit): Boolean = error("No publication allowed")
     }
     private val c = Access()
@@ -310,6 +313,51 @@ class DocumentImportStagingTest {
         }
         val j=db.dao.jobs.single();assertEquals("IMPORT_CLOSED",j.phase)
         assertTrue(File(root(),"staging/${j.stagingName}").isFile);assertTrue(db.dao.docs.isEmpty())
+    }
+
+    @Test fun actualRevokeAfterEachMkdirPreservesWritingWithoutSourceOrFileSync() {
+        for (count in 1..3) {
+            val base=temp.newFolder();val r=File(base,"pag-documents-v1");val db=Database()
+            var opens=0;var syncs=0;c.allowed=true
+            c.atCheck={
+                val visible=if(!r.exists())0 else 1+(if(File(r,"staging").exists())1 else 0)+(if(File(r,"files").exists())1 else 0)
+                if(visible==count)c.allowed=false
+            }
+            assertThrows(StorageAccessRevoked::class.java) {
+                DocumentImportStaging(db,base){syncs++}.stage(c,"a","x",DocumentFormat.TEXT) {
+                    opens++;ByteArrayInputStream(byteArrayOf(120))
+                }
+            }
+            assertEquals("IMPORT_WRITING",db.dao.jobs.single().phase)
+            assertEquals(count-1,r.list()!!.size);assertEquals(0,opens);assertEquals(0,syncs)
+            assertTrue(r.listFiles()!!.all { it.isDirectory && it.list()!!.isEmpty() })
+        }
+    }
+    @Test fun writingCommitDenialLeavesReservedWithoutNamespace() {
+        val db=Database();db.beforeAdvance={c.commitAllowed=false}
+        assertThrows(StorageAccessRevoked::class.java) {
+            DocumentImportStaging(db,temp.root).stage(c,"a","x",DocumentFormat.TEXT){error("No source")}
+        }
+        assertEquals("IMPORT_RESERVED",db.dao.jobs.single().phase);assertFalse(root().exists())
+    }
+    @Test fun concurrentImportWaitsForFirstClosedAndPreservesBothStagings() {
+        val db=Database();val entered=java.util.concurrent.CountDownLatch(1)
+        val release=java.util.concurrent.CountDownLatch(1);val secondStarted=java.util.concurrent.CountDownLatch(1)
+        val pool=java.util.concurrent.Executors.newFixedThreadPool(2)
+        val first=DocumentImportStaging(db,temp.root){ channel ->
+            entered.countDown();check(release.await(5,java.util.concurrent.TimeUnit.SECONDS));channel.force(true)
+        }
+        try {
+            val a=pool.submit {first.stage(c,"a","x",DocumentFormat.TEXT,source(db,byteArrayOf(120)))}
+            assertTrue(entered.await(5,java.util.concurrent.TimeUnit.SECONDS))
+            val b=pool.submit {secondStarted.countDown();DocumentImportStaging(db,temp.root).stage(c,"a","x",DocumentFormat.TEXT,source(db,byteArrayOf(121)))}
+            assertTrue(secondStarted.await(5,java.util.concurrent.TimeUnit.SECONDS))
+            assertThrows(java.util.concurrent.TimeoutException::class.java){b.get(50,java.util.concurrent.TimeUnit.MILLISECONDS)}
+            assertEquals(1,db.dao.jobs.size);assertEquals("IMPORT_WRITING",db.dao.jobs.single().phase)
+            release.countDown();a.get(5,java.util.concurrent.TimeUnit.SECONDS);b.get(5,java.util.concurrent.TimeUnit.SECONDS)
+            assertEquals(2,db.dao.jobs.size);assertTrue(db.dao.jobs.all{it.phase=="IMPORT_CLOSED"})
+            assertEquals(2,File(root(),"staging").list()!!.size)
+        } finally {release.countDown();pool.shutdownNow()}
     }
 
 }

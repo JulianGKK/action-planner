@@ -9171,3 +9171,295 @@ erfolgreich. Keine Instrumentation/Installation, keine neue native
 Ressourcen-/Crashprüfung. `git diff --check` sauber. Keine Rohlogs, APKs,
 Datenbanken oder Schlüssel im Commit. Regulärer WIP-Commit/Push; danach STOPP
 bis zum unabhängigen GitHub-Review.
+
+## 61. Prävention rootloser WRITING-Zustände
+
+### 61.1 Basis, Umfang und Ergebnis
+
+Issue #35 Writer/Recovery; verbindliche Basis
+`0e5b0a7b69afa35fb5c97732337216f0a73bab24`. Lokaler HEAD und GitHub-Remote-Ref
+(`gh api repos/JulianGKK/action-planner/git/ref/heads/p11-performance-optimization`)
+waren vor Änderungen identisch; Branch korrekt, Arbeitsbaum sauber.
+Die SSH-Abfrage `git ls-remote` lieferte zunächst keine Antwort; der unabhängige
+GitHub-API-Read bestätigte die Basis. Geprüft wurden §§57–60, P10b1 und der
+ursprüngliche P10b2c1-Stagingvertrag sowie Staging-/DB-/DAO-/Job-, Inventory-,
+Lane-, Reconciliation-, Maintenance-, Repository-/Runtime- und Publicationpfade
+mit ihren bestehenden Hosttests.
+
+**BESTEHEND:** Status quo bleibt produktiv unverändert. **HOSTGETESTET:**
+Unterbrechungszustände des echten Stagingcodes und eines ausdrücklich nur im
+Test vorhandenen Directory-Vorbereitungsmodells. **VORGESCHLAGEN / NICHT BEWIESEN:**
+Eine vollständige, identitätsgebundene und synchronisierte Struktur vor WRITING
+kann das spezielle Fenster „WRITING zurückgekehrt, Root noch nie angelegt“
+reduzieren. Sie beseitigt weder späteren Rootverlust noch die Teilrootfenster der
+Initialisierung. Mit unveränderter Recovery ist keine Variante für sämtliche
+Erstimport-Zwischenzustände als verfügbarkeitswahrend nachgewiesen.
+Kein konzeptioneller Vertrag ist hier implementiert oder freigegeben.
+
+### 61.2 Tatsächliche heutige Ordnung und Autorität
+
+Alle Schritte laufen unter derselben prozesslokalen Namespace-Lane und einem
+READY-Context derselben Generation. OPERATION-/STEP-/COMMIT-Gates autorisieren
+jeweils nur den nächsten Schritt; ein zurückgekehrter Check sperrt Revoke nicht
+über I/O hinweg. Jede DB-Methode des SQLCipher-Adapters endet ihren eigenen
+Room-/DB-Keyscope vor Rückkehr. Der kurzlebige Dateischlüssel bleibt dagegen im
+`withNewKey`-Scope bis zum finally-Wipe. Kein gemeinsamer DB-/Filesystemcommit.
+
+| Nr. / Schritt | Autorisierung, Scope und zurückgekehrter DB-Schritt | Filesystem / Recovery-Evidence | Revoke / Prozessabbruch / nächste erlaubte Arbeit |
+| --- | --- | --- | --- |
+| 1 DB-Inventar | OPERATION, READY, Name/Action; eigener autorisierter DB-/Keyscope, lesender Snapshot | kein Namespacezugriff; bekannte files/staging-Namen, globale DAO-Bindungen; unvollständige Jobs blockieren | Abbruch hinterlässt keinen neuen Job; danach nur Keyerzeugung bei weiter gültigem Context |
+| 2 neuer Dateischlüssel | `withNewKey`, bestehende Streaming-/Sessiongates; kein offener DBscope | keine Datei; DEK zunächst nur flüchtig, keine Root-Evidence | Revoke/Abbruch vor Reserve erzeugt keinen Job; dann geprüfte Reserve erlaubt |
+| 3 IMPORT_RESERVED | eigene WriteTransaction, vollständige DAO-/Kapazitäts-/Actionprüfung und COMMIT-Gate; Rückkehr beendet DB-/Keylease | Job mit DEK/UUID-Bindung, Größe null; weiterhin keinerlei Namespacezugriff | Revoke danach erhält RESERVED; bei unklarer Rückkehr tatsächlichen DB-Zustand frisch lesen; nächster Schritt nur Expected-Advance |
+| 4 IMPORT_WRITING | STEP vor/nach separatem `advance(reserved,null)`; Expected inkl. Key, Actionstatus, Phasen-WHERE und COMMIT | zurückgekehrter WRITING-Schritt, aber Root kann fehlen; Größe null belegt keine Nichtausführung | Revoke/Crash unmittelbar danach erzeugt §59-H0; nur bei gültigem Gate Initialisierung/Inventar erlaubt |
+| 5 Namespaceinitialisierung | DBscope bereits zu; bei vor Reserve leerem Inventar `checkInitial`, sonst exaktes `requireInventory` | ggf. mkdir root, staging, files; nach jedem Directorycheck; abschließendes Inventar; KEIN Directory-/Root-/Parent-Sync | nach jedem mkdir Teilroot möglich; kein Rollback/Unlink; danach erst zulässiges CREATE_NEW |
+| 6 CREATE_NEW | STEP; `FileChannel.open(CREATE_NEW,WRITE,NOFOLLOW_LINKS)`; anschließend STEP und staging-Directorycheck | genau neues Leaf, noch keine Source; Root-/Leafdauerhaftigkeit nicht durch Open bewiesen | Abbruch lässt WRITING mit leerem Leaf; kein Retry/Überschreiben; nach Gates einmalige Sourceöffnung |
+| 7 verschlüsseltes Schreiben | keine DB-/DB-Keylease; eine Sourcefactory, Tink mit documentId-AAD, begrenzte Buffer und Gates | nur Ciphertext, ggf. Teilcipher; WRITING bleibt; keine Klartextdatei | Revoke/Sourcefehler kann Teilcipher erhalten; physischer finally-Close darf enden, autorisiert kein CLOSED |
+| 8 FileChannel.force | Tinkfinalisierung/flush → `force(true)` am offenen Channel → close; DB weiter WRITING | zurückgekehrter Fileforce ist kein Sync des Leafnamens, Root oder Parents; keine eigene persistierte Syncphase | nach erfolgreichem Close vor nächstem DBcommit bleibt WRITING; bestehende Recovery verwirft auch authentifizierbare unpublizierte Datei |
+| 9 IMPORT_CLOSED | STEP, exaktes Inventar inkl. staging; separater Expected-Advance mit Größe, Action-/COMMIT-Gates; DB-/Keyscope endet | CLOSED samt Größe behauptet Streamabschluss; Publication prüft später erneut vollständig | Revoke nach Commit erhält CLOSED ohne UI-Erfolg; bei unbekannter Rückkehr neu inventarisieren; erst dann bestehende Publication, kein Source-Reopen |
+
+**BESTEHEND:** Rootloses WRITING ist nach Schritt 4 und vor Schritt 5 erreichbar,
+auch ohne jede Sourceöffnung. Erfolgreicher Methodenreturn, sichtbarer Hostzustand,
+zurückgekehrter Sync und SQLitecommit sind verschiedene Belege. Ein Fehler nach
+einem Commit behauptet keinen Rollback früherer Schritte.
+
+### 61.3 Warum die RESERVED-/WRITING-Grenze relevant ist
+
+Der ursprüngliche Vertrag in `product-p10b2c1-documents-import-staging.md`
+(Komponenten/Reihenfolge und Rootanlage) bindet alle Dokumentdateioperationen an
+die dauerhafte Schreibabsicht; Reserve darf wegen Action-/Kapazitäts-/Commit-
+Ablehnung keine Datei erzeugen. Zusammen mit der Sourcegrenze ermöglicht dies
+den bestehenden RESERVED-Abort ohne Datei-Cleanup. Das ist der dokumentierte
+Sicherheitszweck; eine weitergehende historische Autorenabsicht wird nicht
+unterstellt. Heute sind vor WRITING auch Namespaceprüfungen, mkdir, Leafanlage,
+Schreiben, Rename und Unlink im Stagingpfad ausgeschlossen.
+
+Leere Verzeichnisse enthalten keinen Dokumentklartext und sind deshalb enger
+als ein Stagingleaf zu bewerten. Ihre Anlage ist dennoch eine persistente
+Mutation: Teilroot kann nicht von beschädigtem Altbestand unterschieden werden.
+Eine Ausnahme benötigt ausdrücklich freigegebenen Zweck, globale Bestandsprüfung
+vor Reserve, aktuelle READY-/Generationgates vor/nach jeder Operation, dieselbe
+Lane, vertrauenswürdige kanonische Base, erlaubte leere Verzeichnisse, gebundene
+Identitäten und Syncgrenzen sowie eine bewertete Recovery für jeden Teilzustand.
+Allein „nur mkdir“ oder eine neue Codeposition erteilt diese Erlaubnis nicht.
+
+Unverändert zwingend: `DocumentSource.open()` höchstens einmal, erst nach
+zulässigem WRITING und erfolgreichem exklusivem CREATE_NEW samt Folgechecks;
+keine Source in Vorbereitung/Recovery, kein Klartext auf dem Dateisystem.
+
+### 61.4 Variantenvergleich
+
+Die nachfolgende Matrix gilt zusätzlich zu ALLEN Zwischenzuständen in 61.5.
+„Reduziert“ setzt gültige Bindung, erfolgreiche erforderliche Syncs und den
+Ausschluss externer Entfernung zwischen Prüfung und Commit voraus; keine
+uneingeschränkte Garantie.
+
+| Variante | Rootloses WRITING / neue Crashfenster / Commitfolge | Sync, Recovery, Historie | Bindung, Revoke, Maintenance, Bestand/Mehrfachimport |
+| --- | --- | --- | --- |
+| A heutige Folge | verhindert H0 nicht; RESERVED ohne Root, WRITING ohne/mit Teilroot erreichbar; Reserve und WRITING getrennt zurückgekehrt | kein Initialisierungs-Directorysync; bestehende fail-closed Recovery unverändert kompatibel, Legacy unverändert | heutige Gates/Lane/Inventare; Erstimport erlaubt; Folgeimports erhalten bekannte Documents/CLOSED; keine neue TOCTOU-Zusage |
+| B Reserve → vollständiger Namespace → WRITING | H0 bei bestätigter haltbarer Anlage reduziert; neuer RESERVED+Teilroot nach jedem mkdir, Fehler oder Revoke; auch Commitfehler lässt RESERVED+Root | staging/files/root/Parent-Sync vor WRITING nötig; Teilroot BLOCKED, vollständiger Root RESERVED abbrechbar; keine neue Rekonstruktion; Legacy-WRITING bleibt mehrdeutig | ändert ausdrücklichen Vor-WRITING-Vertrag; Base-/Root-/Unterdirectoryidentität und Rechecks erforderlich; Lane bleibt über kurze DB- und Dateischritte, Sessionmonitor nicht; Bestandsfall nur Inventar/Sync, niemals fehlende Struktur ergänzen |
+| C Namespace vor Reserve | H0 ebenfalls nur bedingt reduziert; zusätzliche Dateioperationen selbst bei späterer Reserveablehnung; Teilroot jetzt ohne Job | gleiche Syncpflicht; nackter Teilroot BLOCKED; kein Job belegt Zweck/Anlage; Fehler nach Sync vor Reserve lässt vollständigen leeren Root | noch größere Vertragsänderung; Revoke/Capacity-Rejection hinterlassen Artefakte ohne Job; Erstimport/Mehrfachimport benötigen exklusive alte Inventare; vorhandene Documents dürfen keine Rekonstruktion legitimieren |
+| D neue dauerhafte Evidence | separate gebundene PREPARE-/Namespace-Evidence könnte Absicht erklären; Marker vor mkdir lässt Teilroot, Marker nach mkdir lässt unmarkierten Root; bloßes Bit löst Reihenfolge nicht | braucht eigene crashgeordnete Update-/Sync-/Cleanupsemantik und ggf. Migration; neue Phase in Schema 11 hier verboten; kein Beleg für Legacy | muss Namespace-/Job-/Versionidentität und Mehrfachimport binden, unverändert globale Integritätsprüfung/Revoke/Fence; keine zweite Sessionautorität; extra Persistenz- und Manipulationsrisiken separat reviewen |
+| E ohne Migration: nur vorhandenen vollständigen Root vor WRITING prüfen/syncen, keine Initialisierung im Import | vermeidet eigenes mkdir-Fenster bei diesen Imports; kein universeller Schutz gegen späteren Verlust; fehlender/partieller Root vor WRITING ablehnen | kein neuer Teilroot durch Import; RESERVED-Abort bleibt möglich; Erstanlage braucht separaten autorisierten, crashsicher bewerteten Vertrag und ist damit ungelöster Blocker; Legacy unverändert | engster möglicher Teilfix für bestehenden vollständigen Bestand; verschärft Vor-WRITING-Grenze ausdrücklich nur um Read/Sync; Erstimport ohne Root wäre gesperrt, daher kein allein ausreichender Produktfix |
+
+Für B/C/D ist die Erstinitialisierung nicht als sicher abgeschlossen bewertet,
+solange Teilroot-Recovery und native Syncgrenzen offen sind. E ist nur ein enger
+Reviewkandidat für bereits vollständige Ablagen, keine Freigabe, erste Imports
+still abzuschalten. A bleibt implementiert. Keine Variante rechtfertigt
+unbekannte Leaves zu entfernen, Symlinks zu folgen oder Hardlinkkollisionen zu
+akzeptieren. NOFOLLOW am Leaf schützt keine ausgetauschten Parentkomponenten;
+kanonische Namen allein beweisen keine langlebige Namespaceidentität.
+
+### 61.5 Vollständige Zwischenzustandsmatrix
+
+Alle Recoveryentscheidungen setzen frische globale DB-/Filesysteminventare,
+gültige MAINTENANCE-Autorität, erfolgreiche DB-/Keycleanupschritte und das finale
+Inventar voraus. READY bedeutet ausschließlich mögliche Freigabe durch die
+bestehende Sessionbarriere. Revoke führt ggf. LOCKED statt BLOCKED herbei.
+Sichtbare Verzeichnisse sind keine persistierte Historienevidence.
+
+| Zustand | Erreichbarkeit / vorhandene Evidence | Unveränderte sichere Recovery / READY oder BLOCKED / Verlust |
+| --- | --- | --- |
+| A Root fehlt | heute vor mkdir; B nach Reserve vor Vorbereitung, C vor Vorbereitung; DB kann leer/RESERVED/WRITING sein | leer: READY möglich; nur RESERVED: geprüfter Abort/READY möglich; WRITING oder referenzierter Bestand: BLOCKED. Fehlende Bytes nicht rekonstruieren |
+| B nur Root | heute Crash nach erstem mkdir mit WRITING; B mit RESERVED; C ohne Job; auch externer Schaden | globaler Teilroot: BLOCKED unabhängig von Jobphase; kein Ergänzen/Abort. Keine legitime irreversible Löschung |
+| C Root+staging | heute nach zweitem mkdir; B RESERVED; C joblos; auch verlorenes files | BLOCKED, keine Rootrekonstruktion; mögliche fertige verlorene Dateien bleiben als Schaden erkennbar |
+| D Root+files | aus heutiger frischer mkdir-Reihenfolge nicht allein durch Prozessabbruch erreichbar; vorhandener Teilroot, externer Verlust oder unbewiesene Powerlossreihenfolge möglich | BLOCKED auch bei RESERVED; Dateien und DBbelege erhalten, kein staging-mkdir |
+| E vollständiger leerer Root | heute nach drittem mkdir, B/C nach Vorbereitung, auch vor jedem Sync; keine Jobphase allein belegt Directorydurability | ohne Job READY möglich; mit RESERVED wie H; WRITING wie J; Sichtbarkeit bestätigt keine überlebte Crashpersistenz |
+| F vollständiger Root mit Documents | normaler Folgeimport/bestehender Bestand; DB-Namen und Keys plus aktuelle Leaves | nur exakt gebundener Bestand erlaubt READY; fehlendes/unklares Leaf BLOCKED; kein Vervollständigen oder Löschen fertiger Documents |
+| G Teilroot+RESERVED | neu bei B, C nach späterer Reserve falls Prüfung fehlt; heute extern vor Reserve möglich, nachfolgendes Revoke/Commitversagen hält RESERVED | BLOCKED vor jedem Abort; sicherheitlich kein harmloser RESERVED-Zustand. Ohne Vertragsänderung keine automatische Reparatur |
+| H vollständiger Root+RESERVED | B nach Vorbereitung, C nach Reserve, heute bereits vorhandener kompletter Root und Revoke vor WRITING | bei fehlendem eigenen staging/final und gültigem Restinventar nur Job aborten, READY möglich; keine Source, kein Unlink; neue Syncgeschichte wird nicht aus DB abgeleitet |
+| I Teilroot+WRITING | heute nach mkdir-Unterbrechung, auch Fremdschaden; B nur bei Verlust/fehlerhafter Vorbedingung/fehlender Durability | BLOCKED, Job/Keys erhalten; keine nachträgliche Umdeutung zu sicherem Nichtstart |
+| J vollständiger Root+WRITING ohne Datei | heute vor CREATE_NEW; B nach WRITING, Fehler beim CREATE_NEW; frühere Recovery nach Unlink | staging sync, Recheck, geprüfter Jobabort; READY möglich. Kein Beweis „nie geschrieben“, keine Sourcewiederöffnung |
+| K WRITING+Teilcipher | echte Schreib-/Revoke-/Streamfehler oder Unterbrechung; bekannte staging-Bindung | genau bekanntes reguläres staging unlink, sync, recheck, dann abort; READY möglich. Unpublizierte Bytes werden bewusst verworfen, keine Wiederaufnahme |
+| L WRITING nach Cipherclose vor CLOSED | heute nach Force/Close, vor/bei gescheitertem CLOSEDcommit; Größe in DB weiterhin null | gleiche Abbruchregel wie K, auch bei gültigem Ciphertext. Verlust eines unbestätigten Imports möglich; niemals allein wegen Authentifizierbarkeit publizieren |
+| M Root zwischen Prüfungen ausgetauscht | externer Eingriff, keine reguläre PaG-Laneoperation; fileKey-Wechsel innerhalb Inventarrecheck erkennbar | erkannte Änderung BLOCKED; kein Cleanup. Austausch zwischen vollständig getrennten Inventaren mit identischem Inhalt ist nicht durch globale langlebige Root-ID bewiesen; Restore derselben Pfadnamen ist keine Identität |
+| N vollständig angelegter Root später weg | Fremdverlust oder unbewiesene Crashpersistenz; ursprünglicher Sync/Commit kann zurückgekehrt sein | WRITING bleibt BLOCKED, auch nach künftigem Präventionsfix. Bei Documents droht realer irreversibler Byteverlust; Joblöschung würde zusätzliche Key-/Schadensevidence entfernen |
+
+Zusätzliche Übergänge: Fehler vor mkdir hinterlässt A; Fehler während mkdir kann
+A oder den nächsten sichtbaren Teilzustand hinterlassen, bei unbekanntem Ergebnis
+nur neuer autorisierter Read. Syncfehler ändert keine DBphase; nach letztem mkdir
+ist der Hostzustand E/H, ohne dass Crashdurability folgt. Fehler nach erfolgreichem
+Sync vor WRITING bleibt H; zurückgerollter WRITINGcommit ebenfalls H, unbekannter
+Commitabschluss verlangt neuen Read (H oder J). Revoke nach WRITING vor CREATE_NEW
+bleibt J, sofern Root erhalten ist. Lane/Fence verhindern alte eigene Workers,
+aber keinen privilegierten externen Rootaustausch oder Dateisystemschaden.
+
+### 61.6 Filesystem-Durability und Identität
+
+**BESTEHEND:** `Files.createDirectory` legt genau eine Komponente an; erfolgreicher
+Return und Hostsichtbarkeit garantieren keine Crashpersistenz des Parent-Eintrags.
+Staging synchronisiert den Dateiinhalt/Metadaten mit `FileChannel.force(true)`;
+dies ersetzt weder staging-Directorysync noch root-/Parent-Directorysync.
+Publication synchronisiert später files und staging, was keine rückwirkende
+Bestätigung der ursprünglichen Rootanlage vor WRITING ist.
+
+**VORGESCHLAGEN:** Für eine neue vollständige Struktur vor einem DB-Phasenwechsel
+müssten mindestens staging und files (eigene Directorymetadaten), dann root
+(Einträge beider Kinder), dann die vertrauenswürdige noBackup-Base als Parent des
+Roots synchronisiert und Fehler weitergereicht werden. Ist auch dieser Parent
+neu, reicht dessen Sync für seinen eigenen Eintrag nicht: weitere vertrauenswürdige
+Parentkette oder eine separat belegte dauerhafte Plattformvorbedingung nötig.
+Bei vorhandenen Verzeichnissen sind Bestands-/Identitätsprüfung und passend
+bewertete Syncs nötig; nicht blind neu erstellen. Danach frisches exaktes Inventar,
+Contextgate, Expected-WRITINGcommit, anschließend erneute Bindungsprüfung vor
+CREATE_NEW. Datei-sync nach Verschlüsselung bleibt zusätzlich erforderlich.
+Die konkrete minimale Androidsequenz ist **NICHT BEWIESEN**; dieser Absatz ist
+kein Android-fsync-Fix und kein universeller POSIX-/Powerlossbeweis.
+
+Kanonische absolute normalisierte Pfade und NOFOLLOW-Attribute müssen vor/nach
+Operationen gelten. `DocumentFileInventory` vergleicht fileKey/Größe/mtime innerhalb
+einer Inventarisierung, prüft bei Recovery nicht-null Leaf-fileKeys auf Kollision;
+Staging-`checkDirectory` allein bindet keine dauerhafte Root-ID. Für den neuen
+Vorbereitungspunkt sind nicht-null Root-/Base-/Unterdirectoryidentitäten über
+Prüfung, Sync, Commit und CREATE_NEW oder ein separat reviewed descriptorgebundener
+Mechanismus nötig; Leafidentität vor/nach Nutzung weiter prüfen. Fehlende fileKeys
+nicht optimistisch als Beweis behandeln. Hardlinkduplikate zwischen bekannten
+Leaves bleiben verboten; die bestehenden Checks sind keine universelle Aussage
+über privilegierte externe Links außerhalb des inventarisierten Namespace.
+Eine Recheckfolge reduziert erkannte Races, schließt TOCTOU gegen austauschbare
+Parentkomponenten jedoch nicht atomar. Kein Java-Path-Aufruf ist eine gemeinsame
+Transaktion mit SQLite.
+
+Beweisstufen: (1) Java-Aufruf zurückgekehrt; (2) Datei am Host sichtbar;
+(3) File-/Directoryforce zurückgekehrt; (4) SQLite-/Roomcommit zurückgekehrt;
+(5) Bytes und Namespace über tatsächlichen Crash/Powerloss erhalten. Dieser Slice
+belegt ausgewählte (1)–(3) am Host mit Fake-DB; nicht (4) für die neue Folge und
+nicht (5). Keine neue native Dauerhaftigkeitsbehauptung.
+
+### 61.7 Deterministische Hostbelege und Grenzen
+
+Die bestehende `DocumentReconciliationTest`-Harness nutzt echte Hostdateien,
+echte DAO-Regeln, simulierten Transaktionsrollback und echte Recovery. Die neue
+`candidateEmptyDirectories`-Funktion ist ausschließlich ein Testmodell für B:
+keine produktive Autorisierung zur Vor-WRITING-Anlage. Sie stoppt nach jedem der
+drei mkdir und jedem der vier Host-Directoryforces. Kein Stagingleaf/Sourceaufruf
+ist Teil dieses Modells. Assertions prüfen Ereignisfolge, sichtbare Struktur,
+RESERVED-Erhalt, Recovery-Aborts/Unlinks/Syncs und echte Session-BLOCKED-/READY-
+Entscheidung. Recovery erzeugt dabei keine Verzeichnisse; nur das Testmodell
+zählt seine mkdir/Sync-Rückkehrpunkte. Ein späterer echter autorisierter
+Maintenance-/Unlockflow liest frisch und abortet nur erlaubte vollständige Fälle.
+
+Weitere neue Tests: mkdir-Kollision durch ein erhaltenes fremdes Leaf,
+injektierter Fehler beim ersten Directorysync (ein Versuch, null bestätigte Syncs),
+Fehler nach erfolgreichem Parent-Sync, verweigerter WRITINGcommit mit Fake-Rollback,
+WRITING vor CREATE_NEW, Rootverlust nach vollständig zurückgekehrter Vorbereitung,
+RESERVED mit files-only-Teilroot sowie Rootaustausch innerhalb des Inventarrechecks.
+Für den Austausch bleiben alter und neuer Testroot erhalten; keine Recoverymutation.
+Die Fehler sind kontrollierte Exceptions/Revoke, keine gestarteten/getöteten
+Prozesse oder Stromausfälle. Kandidaten-Sourceöffnungen sind strukturell null,
+nicht ein Ausführungstest einer zukünftigen Produktpipeline.
+
+`DocumentImportStagingTest` ergänzt den **echten unveränderten Stagingpfad**:
+Revoke nach jedem sichtbar gewordenen mkdir, null Sourceöffnungen/Fileforces,
+WRITING bleibt; Commitverweigerung vor WRITING erhält RESERVED ohne Root;
+zwei konkurrierende Imports werden über Latches an der ersten Filesyncgrenze
+geordnet, der zweite kann vor Freigabe nicht abschließen und beide CLOSED-
+Stagings bleiben anschließend erhalten. Die Accesscheck-Injektion ergänzt nur
+das Testdouble. Bestehende Tests prüfen bereits Revoke vor/nach Reserve und nach
+WRITING, kompletten/partiellen Root, unbekannte Leaves/Symlinkroot, Source-/File-
+Sync-/Closefehler, abgeschlossenes Cipherstreaming vor gescheitertem CLOSEDcommit,
+bestehende Documents/CLOSED-Stagings, Maintenance-Drain/alte Tickets und spätere
+frische Unlockgeneration. Die bestehenden §59-Ununterscheidbarkeitstests bleiben
+maßgeblich für Legacy und späteren Rootverlust.
+
+| Beweisstärke | Stand dieses Slices |
+| --- | --- |
+| Fake-DB + echte DAO-Regeln | HOSTGETESTET, einschließlich Rollbacksimulation, keine Roomengine |
+| echte temporäre Hostdateien + Tink/Channel-/Directoryforce | HOSTGETESTET an expliziten Grenzen; kein Powerlossbeweis |
+| echte SQLite für neue Präventionsfolge | NICHT BEWIESEN; kein neuer SQLite-Testlauf dieser Folge; historische SQL-Skripte sind kein Ersatz |
+| native SQLCipher-/Room-/Keyscope-/Directory-fsync-Prüfung | NICHT BEWIESEN; Androidtests ausschließlich offline kompiliert |
+
+### 61.8 Begrenzter späterer Patchvorschlag und offene Blocker
+
+**VORGESCHLAGEN, kein Implementierungsauftrag:** Zuerst die explizite Ausnahme
+für ausschließlich geprüfte Read-/Sync-Arbeit am bereits vollständigen Root
+reviewen (E). Nur dort nach Reserve und vor `database.advance(reserved,null)`
+das vorhandene vollständige globale Inventar samt gebundener Identität prüfen
+und erforderliche Directorysyncs bestätigen; danach Expected-Advance unverändert.
+Den bisherigen `initialize`-Aufruf keinesfalls lediglich vor Advance verschieben.
+Fehlender/partieller Root würde vor WRITING abgewiesen; der dafür nötige sichere
+Erstinitialisierungsvertrag ist vor Produktfreigabe separat zu lösen.
+
+Falls stattdessen B gewählt wird: exakt den heutigen `initialize`-/Bestands-
+Prüfblock zwischen zurückgekehrtes Reserve und WRITING verschieben, aber erst
+nach Freigabe der neuen Vor-WRITING-Ausnahme, Sync-/Identitätsmechanik und der
+Teilrootpolitik. Neue Zwischenstände G/H sind verpflichtend Teil des Vertrags;
+G bleibt mit heutiger Recovery BLOCKED, H darf ausschließlich wie bisher aborten.
+Kein Catch mit Rekonstruktion, Joblöschung oder Rückstufung als Kompensation.
+Solange dieses neue G-Verfügbarkeitsfenster nicht akzeptiert oder sicher gelöst
+ist, kein solcher produktiver Patch. C und D sind dafür keine kostenlosen Auswege.
+
+Erforderliche spätere strenge RED-Tests gegen den echten Produktpfad: fehlender
+Root darf beim E-Versuch nicht WRITING werden; vor-WRITING-Namespacezugriff braucht
+die freigegebene enge Ausnahme; jeder mkdir-/Syncfehler und Revoke vor/nach
+Operation/Commit; nie Source vor zulässigem WRITING/CREATE_NEW; Roottausch vor/nach
+Sync und Commit; unbekannte Leaves, Symlink-/Hardlinkkollision; alter Ticketfence,
+Mehrfachimport, vorhandener Bestand und leere Erstablage. Soll G künftig READY
+werden, ist das heute ein RED gegen die bewusst unveränderte Recovery und
+benötigt eine separate neue Sicherheitsentscheidung, keine abgeschwächte Assertion.
+
+Androidbelege vor Freigabe: tatsächliche Room-/SQLCipher-Commit-/Cleanupgrenzen,
+Base-/Root-/Leafidentität und NOFOLLOW auf Zielplattform, native Directory-/Parent-
+Syncfehler und deren Weitergabe, Crash-/Powerloss-Zwischenzustände inklusive
+mkdir/Sync/Commit, sichere Fixtureisolation und überprüfbare Bereinigung. Diese
+Belege sind hier nicht erhoben; keine Instrumentation, Installation oder Änderung
+installierter Apps und keine pauschale Fixturelöschung. Issue #32 bleibt offen.
+
+**BESTEHEND:** Historische Schema-11-WRITING-Jobs bleiben §59-mehrdeutig. Neue
+Codeordnung ist kein persistierter Versionsbeleg und kein Reparaturbeweis für
+alte Jobs. Selbst neue Imports können durch späteren Rootverlust N erreichen.
+Keine Änderung an globalem Inventar, unbekannten Leaves, Symlink-/Hardlinkregeln,
+Rootrekonstruktion, Source-Reopen oder READY-Barriere.
+
+**UNWIRED / BLOCKER:** #35 mehrphasige Dokument-Outcome-/Recovery-/Writeranbindung;
+#36 Editor/CAS-/ABA-Grenzen; #37 Snapshotowner; #38 Performance-/RAM-Integration;
+#32 native Cursor-/Cleanup- und Fixturegrenzen. Der §60-Admission-CAS und die
+Core-Mutationsepoche bleiben verschiedene Verträge. DOCUMENT wird nicht im Runtime
+verdrahtet, DocumentResult.Value ist kein globaler COMMITTED-Beleg, keine einzelne
+confirmedWorkspaceTransaction um die Pipeline und keine zweite Sessionautorität.
+SessionCoordinator, StorageAccess, SessionDbKeyOwner, SQLCipher/Tink/B2Driver,
+Schema 11, Fristen 180/30 Sekunden, 8+8-MiB-Budget, Lane/Dispatch, Publication,
+Delete, Reconciliation, Runtime/Repository, sämtliche Corewriter und P3b bleiben
+unverändert. Keine neue Dependency/Permission, kein RAM-Hit, Produktupdate oder
+Release. Nur zwei bestehende Hosttestdateien und dieses Assessment geändert.
+
+### 61.9 Abschlussvalidierung
+
+**HOSTGETESTET:** 17 neue Testmethoden (darunter der echte Staging-Revoke nach
+jedem der drei mkdir in einer Testmatrix). Gezielter Lauf
+`./gradlew :data:testDebugUnitTest --tests '*Document*Test' --tests '*Session*Test' --offline`:
+**396 Tests, 0 Failures, 0 Errors, 0 Skips; BUILD SUCCESSFUL**.
+Der erste Sandboxstart konnte die Gradle-Wrapper-Lockdatei im vorhandenen Cache
+nicht öffnen; der autorisierte Lauf mit Cachezugriff war erfolgreich.
+
+Anschließend vollständig ausgeführt:
+`./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline`:
+**BUILD SUCCESSFUL**. Debug-Test-XMLs: App 671, Data 975, Security 4 =
+**1.650 Tests, 0 Failures, 0 Errors, 0 Testskips**. Data wurde vollständig ausgeführt;
+unveränderte App-/Securitytests und Androidtest-Kompilationen waren UP-TO-DATE.
+Domain hat keine eigenen Testquellen. Gradle-Konfigurations-/Lifecycle-Tasks mit
+SKIPPED sind keine übersprungenen Testfälle. Beide Manifestchecks erfolgreich.
+Bestehende Assertions unverändert stark, keine Testskips ergänzt.
+`git diff --check` sauber; Arbeitsbaum enthält ausschließlich die drei benannten
+Dateien. Keine Logs, Builds, DBs oder Schlüssel im Commit. Regulärer WIP-Commit
+und Push auf `p11-performance-optimization`, unabhängige Remote-SHA-Bestätigung;
+anschließend **STOPP bis zum unabhängigen GitHub-Review**.

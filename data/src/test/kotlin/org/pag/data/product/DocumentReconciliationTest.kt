@@ -362,4 +362,110 @@ class DocumentReconciliationTest {
         assertEquals(1,inventoryReads);assertEquals("IMPORT_WRITING",dao.jobs.single().phase)
         assertEquals(0,aborts);assertEquals(0,unlinks);assertEquals(0,syncs)
     }
+    /** Candidate B only: deliberately NOT called by production staging. Each returned host
+     * operation is an injection boundary, not evidence of power-loss durability. */
+    private fun candidateEmptyDirectories(syncDirectory:(Path)->Unit = { path ->
+        FileChannel.open(path,READ).use { it.force(true) }
+    }, after:(String)->Unit) {
+        for ((name,path) in listOf("root" to root(), "staging" to File(root(),"staging"), "files" to File(root(),"files"))) {
+            assertFalse(inDb)
+            Files.createDirectory(path.toPath())
+            after("mkdir:$name")
+        }
+        for ((name,path) in listOf("staging" to File(root(),"staging"), "files" to File(root(),"files"),
+            "root" to root(), "parent" to temp.root)) {
+            assertFalse(inDb)
+            syncDirectory(path.toPath())
+            after("sync:$name")
+        }
+    }
+    private fun candidateCut(boundary:String, blocked:Boolean) {
+        val j=job("IMPORT_RESERVED");val events=mutableListOf<String>()
+        assertThrows(IOException::class.java) {
+            candidateEmptyDirectories { event -> events.add(event);if(event==boundary)throw IOException("synthetic cut") }
+        }
+        assertEquals(boundary,events.last());assertTrue(sameDocumentImport(j,dao.jobs.single()))
+        assertEquals(if(boundary=="mkdir:root")0 else if(boundary=="mkdir:staging")1 else 2,root().list()!!.size)
+        assertEquals(0,unlinks);assertEquals(0,aborts)
+        // No source or CREATE_NEW exists in this directory-only experiment.
+        assertTrue(root().listFiles()!!.all { it.isDirectory && it.list()!!.isEmpty() })
+        sessionFlow(blocked,false)
+        assertEquals(if(blocked)1 else 0,dao.jobs.size)
+        assertEquals(if(blocked)0 else 1,aborts);assertEquals(0,unlinks);assertEquals(0,syncs)
+    }
+    @Test fun candidateCutAfterRootMkdirLeavesReservedAndBlocksRealSession() = candidateCut("mkdir:root",true)
+    @Test fun candidateCutAfterStagingMkdirLeavesReservedAndBlocksRealSession() = candidateCut("mkdir:staging",true)
+    @Test fun candidateCutAfterFilesMkdirLeavesReservedAndMayReady() = candidateCut("mkdir:files",false)
+    @Test fun candidateCutAfterStagingSyncLeavesReservedAndMayReady() = candidateCut("sync:staging",false)
+    @Test fun candidateCutAfterFilesSyncLeavesReservedAndMayReady() = candidateCut("sync:files",false)
+    @Test fun candidateCutAfterRootSyncLeavesReservedAndMayReady() = candidateCut("sync:root",false)
+    @Test fun candidateCutAfterParentSyncLeavesReservedAndMayReady() = candidateCut("sync:parent",false)
+
+    @Test fun candidateMkdirFailurePreservesObstructionAndReserved() {
+        job("IMPORT_RESERVED");val events=mutableListOf<String>()
+        assertThrows(java.nio.file.FileAlreadyExistsException::class.java) {
+            candidateEmptyDirectories { event ->
+                events.add(event)
+                if(event=="mkdir:root")Files.write(File(root(),"staging").toPath(),byteArrayOf(42))
+            }
+        }
+        assertEquals(listOf("mkdir:root"),events)
+        sessionFlow(true,false);assertEquals("IMPORT_RESERVED",dao.jobs.single().phase)
+        assertArrayEquals(byteArrayOf(42),File(root(),"staging").readBytes());assertEquals(0,unlinks);assertEquals(0,aborts)
+    }
+    @Test fun candidateDirectorySyncFailureCannotAuthorizeWritingButRecoveryMayAbortReserved() {
+        val j=job("IMPORT_RESERVED");val events=mutableListOf<String>()
+        var attempts=0
+        assertThrows(IOException::class.java) {
+            candidateEmptyDirectories(syncDirectory={ attempts++;throw IOException("injected directory sync failure") }) {
+                events.add(it)
+            }
+        }
+        assertEquals(1,attempts)
+        assertEquals(listOf("mkdir:root","mkdir:staging","mkdir:files"),events)
+        assertTrue(sameDocumentImport(j,dao.jobs.single()))
+        // Sync was not confirmed. Current recovery validates visible structure, not its history.
+        sessionFlow(false,false);assertTrue(dao.jobs.isEmpty());assertEquals(0,syncs);assertEquals(0,unlinks)
+    }
+    @Test fun candidateWritingCommitFailureKeepsCompleteRootAndReservedThenFreshUnlockAborts() {
+        val j=job("IMPORT_RESERVED");val events=mutableListOf<String>()
+        candidateEmptyDirectories { events.add(it) };assertEquals(7,events.size)
+        val ready=Access(AccessScope.READY);ready.commit=false
+        assertThrows(StorageAccessRevoked::class.java){tx{dao.advanceImport(j,null,ready)}}
+        assertTrue(sameDocumentImport(j,dao.jobs.single()));assertEquals(0,unlinks)
+        sessionFlow(false,false);assertTrue(dao.jobs.isEmpty());assertEquals(1,aborts);assertEquals(0,syncs)
+    }
+    @Test fun candidateReturnedWritingBeforeCreateUsesExistingRecoveryWithoutSource() {
+        val j=job("IMPORT_RESERVED");candidateEmptyDirectories {}
+        tx{dao.advanceImport(j,null,Access(AccessScope.READY))}
+        assertEquals("IMPORT_WRITING",dao.jobs.single().phase);assertTrue(File(root(),"staging").list()!!.isEmpty())
+        sessionFlow(false,false);assertTrue(dao.jobs.isEmpty());assertEquals(0,unlinks);assertEquals(1,syncs)
+    }
+    @Test fun candidateCompleteThenLostRootStillBlocksWritingOnLaterUnlock() {
+        val j=job("IMPORT_RESERVED");candidateEmptyDirectories {}
+        tx{dao.advanceImport(j,null,Access(AccessScope.READY))}
+        // External loss simulation: only explicitly named empty test-owned directories.
+        Files.delete(File(root(),"staging").toPath());Files.delete(File(root(),"files").toPath());Files.delete(root().toPath())
+        sessionFlow(true,false);assertEquals("IMPORT_WRITING",dao.jobs.single().phase)
+        assertEquals(0,aborts);assertEquals(0,unlinks);assertEquals(0,syncs)
+    }
+    @Test fun reservedWithFilesOnlyPartialRootBlocksWithoutCompletingIt() {
+        job("IMPORT_RESERVED");Files.createDirectory(root().toPath());Files.createDirectory(File(root(),"files").toPath())
+        sessionFlow(true,false);assertEquals(1,dao.jobs.size);assertFalse(File(root(),"staging").exists())
+        assertEquals(0,aborts);assertEquals(0,unlinks);assertEquals(0,syncs)
+    }
+    @Test fun rootReplacementDuringInventoryIsDetectedWithoutCleanup() {
+        job("IMPORT_WRITING");dirs();var swapped=false
+        val saved=File(temp.root,"saved-root")
+        c.atCheck={
+            if(!swapped && Thread.currentThread().stackTrace.any {
+                it.className=="org.pag.data.product.DocumentFileInventory" && it.methodName=="unchanged"
+            }) {
+                swapped=true;Files.move(root().toPath(),saved.toPath());dirs()
+            }
+        }
+        invalid{reconcile()};assertTrue(swapped);assertTrue(saved.isDirectory);assertTrue(root().isDirectory)
+        assertEquals(1,dao.jobs.size);assertEquals(0,aborts);assertEquals(0,unlinks);assertEquals(0,syncs)
+    }
+
 }
