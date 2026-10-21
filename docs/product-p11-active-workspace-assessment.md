@@ -11233,3 +11233,60 @@ kompakte Frischdatenanzeige sind **IMPLEMENTIERT** und begrenzt
 **NICHT BEWIESEN** und **BLOCKER**; Produkt-RAM-Hits und isolierte
 Android-Performancevalidierung sind weiterhin **UNWIRED**. Stopp bis zum
 unabhängigen GitHub-Review.
+
+## 71 – ACTIVE Core Native Validation Preparation
+
+Ausgangsbasis: `3b4b0ff3d4fc03e08f52f55b8e9dac8b52a7c5c4`, lokaler und
+unabhängig abgefragter Remote-HEAD identisch, Arbeitsbaum vor Änderung sauber.
+§70-Reviews in #32/#35/#37/#38 gelesen. Dieser Slice bereitet eine begrenzte
+native Abnahme vor; keine Installation, keine Instrumentierung, keine Messwerte.
+
+**IMPLEMENTIERT:** Debug-Fixture-Cleanup mit erneutem NOFOLLOW-Root-/fileKey-Abgleich,
+exaktem Parent-/Namensvertrag, linkfolgelosem Walk, kontrollierter Löschrückgabe und
+expliziter Restprüfung. Revoke/Keyfreigabe erfolgt vor Löschen. Kein Löschen fremder
+Roots bei erkanntem Identitätswechsel. Hosttests decken Fehler, falsche Erfolgsmeldung,
+Erfolg und Rootaustausch ab. Das ist kein Beweis gegen beliebigen konkurrierenden
+Filesystemaustausch während des Walks; die isolierte synthetische Wurzel darf keinen
+fremden Writer haben. Konstruktorfehler-/parallel laufende Fixturearbeit benötigen
+weiterhin separate Prüfung; close darf erst nach vollständigem Harness-Drain erfolgen.
+
+**IMPLEMENTIERT / KOMPILIERT:** P11ActiveCoreNativeTest benutzt tatsächlichen
+ProductActiveCoreLoader und ProductActiveCoreReader, ActiveCoreStore und Compact-Stores,
+Room/SQLCipher und bestehende DB-/Keyscopes. Paketguard vor Fixturezugriff und erneut an
+neuen Testbrücken: ausschließlich org.pag.data.unlockprobe. Keine Produktcredentials.
+Bestehende Perf-Paketfreigabe anderer Fixturepfade ist keine Geräteausführungserlaubnis.
+Bestände 4/8, 64/200, 200/1000; 2 Warmups + 20 Samples je Bestand. FD, NativeHeap, PSS,
+GC-Zähler und Latenz als Rohbeobachtung, keine willkürliche Leakfreitoleranz. Non-ACTIVE,
+fehlende Action und Revoke vor Main vorbereitet. Kein Cachegate verändert.
+
+**BLOCKER #32 / NICHT AUSGEFÜHRT:** Pinned SQLCipher 4.19.1-Bytecode lokal geprüft:
+SQLCipherStatement.close setzt closed; reset schließt den Querycursor. B2Driver delegiert
+Statement-close. Gezielter Android-RED-Test verlangt Cursor.isClosed nach close und räumt
+selbst mit reset auf. Erwartet RED, nicht als ausgeführtes RED oder Android-PASS ausgegeben.
+Globaler Driver unverändert. Room usePrepared, DB-close und withDbKey-finally allein
+ersetzen keinen nativen Cursor-/CursorWindow-/Connection-/Leaseabschlussbeleg.
+
+**HOSTGETESTET:** Vier neue reine Filesystem-Cleanupregressionen. Vollständige
+Offline-Hostvalidierung und Androidtest-Kompilation siehe Abschlussprotokoll; keine
+Androidtests gestartet. Bestehende Host-Lifetime-/Revoke-/Budget-/Writerbelege bleiben
+Hostbelege. Keine Abschwächung vorhandener Assertions.
+
+**BLOCKER / NICHT AUSGEFÜHRT:** Native Faultinjektionen SQL-Exception/Budget/Read-Revoke,
+BLOCKED/UNKNOWN/DOCUMENT, Lease-/Statementzähler und wachsende TaskEventserien fehlen
+noch. Echte Lifecycle-/Keyguard-/Foreground-/30s-/180s-Tests und Core-Content-OnDraw-
+Harness fehlen. Der bestehende PerformanceProbe bindet noch nicht diesen Corepfad;
+sein gesperrtes Perf-Paket wird nicht verändert. #33/#34/#39: Compose-/ART-/Frame- und
+Referenzüberlappung bleiben unbelegt. Kein Heap-/Pixel-Löschbeweis.
+
+Detaillierte spätere Testanweisung und fehlende Matrix:
+[p11-native-active-core-acceptance.md](p11-native-active-core-acceptance.md).
+Vor separater Gerätefreigabe keine Ausführung. Gemeinsame 8+8-MiB-Grenze unverändert;
+alter Slot/Kandidat/Compose/Main/Editor/Frame müssen gemeinsam bewertet werden.
+Produkt-RAM-Hits weiterhin deaktiviert; #37/#38 bleiben Freigabeblocker. #36 Editor-/ABA
+und #35 RED-4 unverändert: keine Rootrekonstruktion, keine automatische Joblöschung.
+
+Validierung §71: vollständiger angeforderter Offline-Lauf BUILD SUCCESSFUL;
+app 682, data 1118, security 4 = **1804 Hosttests, 0 Fehler, 0 Errors, 0 Skips**;
+domain:test NO-SOURCE. Beide Androidtest-Kompilationen, assembleDebug und beide
+Manifestprüfungen erfolgreich. Vier neue Cleanup-Tests auch separat erfolgreich.
+`git diff --check` sauber. Androidtestmethoden ausschließlich kompiliert.

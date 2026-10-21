@@ -15,13 +15,15 @@ import org.pag.domain.*
  * Task count is explicit for bounded tests; existing benchmark/manual callers keep default 100.
  */
 class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, main:Executor=Executor{it.run()},
-    taskCountPerAction:Int=100):AutoCloseable {
+    taskCountPerAction:Int=100, personCountPerAction:Int=20):AutoCloseable {
     private val app=context.applicationContext.also {
         require(taskCountPerAction>=0)
+        require(personCountPerAction in 0..200)
         check(it.packageName in setOf("org.pag.data.unlockprobe","org.pag.perf.p11probe"))
     }
     private val parent=app.noBackupFilesDir.canonicalFile
     private val base=File(parent,"p11-fixture-${UUID.randomUUID()}").apply{check(mkdirs())}
+    private val fixtureRoot=P11FixtureRoot(parent.toPath(),base.toPath())
     private val wrapped=object:ContextWrapper(app) {
         override fun getApplicationContext():Context=this
         override fun getNoBackupFilesDir()=base
@@ -61,7 +63,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         ActionDatabaseAccess(wrapped).use(inventory.database,key,maintenance,true){db->db.withWriteTransaction {
             for((id,status) in listOf(preparationId to ActionStatus.PREPARATION,activeId to ActionStatus.ACTIVE,completedId to ActionStatus.COMPLETED)) {
                 db.actions().insert(ActionRow(id,"Synthetic action","Synthetic benchmark",1,2,0,status.name,completedAt=if(status==ActionStatus.COMPLETED)3 else null))
-                repeat(20){i->
+                repeat(personCountPerAction){i->
                     val p="person-$i"
                     db.persons().insert(PersonRow("$id-$p",id,"Synthetic $i",PersonRules.normalized("Synthetic $i"),i.toLong()))
                     if(status!=ActionStatus.PREPARATION)db.operations().insertState(OperationalRow(id,"$id-$p",null,"NO_STATUS",null,1))
@@ -192,7 +194,32 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         }}
     }
     fun revoke(){allowed=false;epoch++;owner.getAndSet(null)?.invalidate()}
-    override fun close(){revoke();key.fill(0);check(base.parentFile==parent && base.name.startsWith("p11-fixture-"));base.deleteRecursively()}
+    override fun close(){revoke();key.fill(0);fixtureRoot.close()}
+
+    /** Test-only bridge through the actual product loader/reader/Room/key scopes. No cache. */
+    fun activeCore(worker:Executor=Executor{it.run()},main:Executor=Executor{it.run()}):ProductActiveCoreLoader {
+        check(app.packageName=="org.pag.data.unlockprobe")
+        val mutations=UncachedWorkspaceMutations()
+        val reader=ProductActiveCoreReader(wrapped,access,inventory,owner::get,blocked=::fail)
+        return ProductActiveCoreLoader(access,mutations,worker,main) { c,t,l -> reader.readForTicket(c,t,l) }
+    }
+    /** Diagnostic RED probe for the pinned adapter. Reflection is confined to debug tests. */
+    fun statementCloseReleasesCursor():Boolean {
+        check(app.packageName=="org.pag.data.unlockprobe")
+        val c=requireNotNull(access.acquire(AccessScope.READY))
+        return requireNotNull(owner.get()).withDbKey(c) { leased ->
+            org.pag.data.prototype.b2.B2Native.open(inventory.database,leased,c).use { native ->
+                val statement=net.zetetic.database.sqlcipher.driver.SQLCipherConnection(native).prepare("SELECT 1")
+                try {
+                    check(statement.step())
+                    val field=statement.javaClass.getDeclaredField("cursor").apply{isAccessible=true}
+                    val cursor=field.get(statement) as android.database.Cursor
+                    statement.close()
+                    cursor.isClosed
+                } finally { statement.reset();statement.close() }
+            }
+        }
+    }
 }
 
 class P11UnlockProbe(val session:SessionPort,val actions:ActionRepository,private val authNanos:java.util.concurrent.atomic.AtomicLong,private val cleanup:()->Unit):AutoCloseable {
