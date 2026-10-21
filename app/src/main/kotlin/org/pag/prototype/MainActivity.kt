@@ -80,6 +80,7 @@ class MainActivity : ComponentActivity() {
         launchAppMode(BuildConfig.PAG_DEMO_ONLY,
             demo = {
                 val state = DemoState()
+                if (BuildConfig.PAG_P76_PREVIEW) state.begin(org.pag.prototype.demo.DemoScenario.ACTIVE)
                 demo = state
                 setContent { DemoScreen(state) }
             },

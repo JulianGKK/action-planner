@@ -11651,3 +11651,71 @@ als1Fehler dokumentiert; kein Fehler aus der finalen Bilanz entfernt. diffcheck 
 `data/src/test/kotlin/org/pag/data/product/ProductActiveCoreLoaderTest.kt`,
 `data/src/test/kotlin/org/pag/data/product/ProductActiveCoreLifetimeTest.kt`,
 `docs/product-p11-active-workspace-assessment.md`.
+
+## 76. DEMO-PRIORITÄT – isolierte ACTIVE UI Vorschau
+
+**BASIS:** §75 `f6960dce6d68fab145f62ed428bd3a71d91b3017`, lokaler HEAD/Remote,
+Branch identisch und zuvor sauber. §75 Reviews #37/#38 gelesen. Kein produktweiter
+RAM-Reuse und kein Release.
+
+**IMPLEMENTIERT:** Eigenständiger Buildtyp `p76demo`, feste Application-ID
+`org.pag.prototype.a.p76demo`, eigene Manifestentfernung von CAMERA/Biometric/PDF-Service,
+strikte `verifyP76DemoIsolation`-Prüfung. Build-gebundene `PAG_P76_PREVIEW=true` startet
+ausschließlich diese Variante im synthetischen ACTIVE-Lagebild. Produktdefault und
+normale `.demo`-Variante bleiben false. Sichtbarer Vorschauhinweis nennt synthetische
+Daten und fehlende Produktautorisierung/RAM-Hits. Bestehende Demo-Editoren bleiben
+zugänglich. Keine alternative Produkt-Cache-/Lifetime-/Sessionarchitektur.
+
+**BLOCKER – Live-Hit sicher nicht erreichbar:** ProductRuntime bindet READY an
+DEVICE_CREDENTIAL-CryptoObject, ProductDbEnvelope, autorisierte Maintenance und den
+Keyowner. Ohne Benutzercredentials gibt es keinen isolierten echten Runtime-Bootstrap.
+Den echten §75-Hitpfad durch ein zweites Test-Session-/Fixture-Setup in ProductRuntime
+zu ersetzen oder als Produkt-Hit zu beschreiben wäre eine unbewiesene Autorität.
+P76 nutzt daher bewusst ausschließlich DemoState/DemoScreen und behauptet keine
+ProductActiveCoreLifetime.authorizeHit-Aufrufe.
+
+**ANDROID-GREEN – isolierter Vorschaupfad:** Bestätigtes Samsung SM-M526BR/
+RFCT1186YRJ. Vorher nur geschützte Pakete; eigenes Target `org.pag.prototype.a.p76demo`
+und Runnerziel `.p76demo.test` fehlten. APK-ID, tatsächliche Runnerkomponente,
+Manifest und Debugsignatur SHA256
+`9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134` geprüft.
+Permissions-Set allein dynamischer Nicht-Exported-Receiver; keine Services, Provider,
+Backup oder Cleartext. Target SHA256
+`1fccc301f4083ae7df548c68ec6910313e8cb0343eda8c8ed04283ef8ed53d8d`.
+P76 Runner-APK SHA256
+`2872b71130c189bd717b74aa2068a54e0f67c121cd050efcd4884325f1b859cf`.
+
+Gezielter Custom-Runner hat im echten Demo-Compose 20 Statewechsel pro PERSONS,
+FUNCTIONS, TASKS, HUB vorgenommen und jeweils genau den ersten nächsten ViewTree-OnDraw
+gemessen: 80/80, Runnerstatus0. Median/p95: PERSONS25.057/32.094ms,
+FUNCTIONS13.272/19.298ms, TASKS12.460/23.535ms, HUB5.952/9.417ms. Das sind
+Statewechsel-bis-Draw-Zeiten der synthetischen Oberfläche; kein Touch-to-Draw,
+Produkt-RAM-Content-OnDraw oder Release-p95. Report/Rohdaten:
+[P76-Vorschauergebnis](p11-p76-demo-preview.md),
+[Draw-Rohwerte](p11-p76/device-draws.csv).
+
+Gezählte P76-Demomessung: **autorisierte RAM-Hits 0, Fresh-SQL-Reads 0, SQL-Reads
+0, Readtickets 0**; dies sind bewusst keine vorgetäuschten Produktzähler. Host
+`DemoStateTest`:21 bestanden, 0Fehler/Skips. P76 assemble/Instrumentationkompilation
+und Isolationsmanifestprüfung erfolgreich. Keine echte §75 authorizeHit-Anfrage im
+Runner. Produkt-RAM-Gate bleibtfalse.
+
+P76-Testpaket nach dem Lauf entfernt, ausschließlich eigenes Demo-Target bleibt für
+unmittelbare Präsentation installiert und läuft im Vordergrund. `prototype.a` und
+`perf.p11probe` vor/nach mit unveränderten Versionen, Signaturen und Installationszeiten.
+Keine Credentials/Produktdaten verwendet.
+
+**NICHT BEWIESEN / BLOCKER:** Kein ProductRuntime/SQLCipher/Room/ViewModel-Snapshot-
+E2E, keine frische per-Hit-Context-/Publication-/Ticketzahl, keine Session-/Writer-/
+UNKNOWN-Revokeprüfung im aktiven Trefferpfad, keine Produkt-RAM-Hits. #32/#33/#34/#39
+und natives ACTIVE-E2E bleiben Produktfreigabegates. RED-4 fail-closed, #36 Editor-ABA
+offen. P76 ist ein ausschließlich synthetischer UI-Vorschaubuild, kein Security-Green.
+
+**DATEIEN (7):**
+`app/build.gradle.kts`, `app/src/p76demo/AndroidManifest.xml`,
+`app/src/androidTest/AndroidManifest.xml`,
+`app/src/androidTest/kotlin/org/pag/prototype/P76DemoPreviewProbe.kt`,
+`app/src/main/kotlin/org/pag/prototype/MainActivity.kt`,
+`app/src/main/kotlin/org/pag/prototype/demo/DemoScreen.kt`,
+`docs/p11-p76-demo-preview.md`, `docs/p11-p76/device-draws.csv`,
+`docs/product-p11-active-workspace-assessment.md`.

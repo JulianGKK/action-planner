@@ -33,4 +33,5 @@
     <instrumentation android:name="org.pag.prototype.P11PdfVariantProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P73ActiveOwnerProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P74RuntimeLifecycleProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P76DemoPreviewProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

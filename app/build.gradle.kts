@@ -11,7 +11,11 @@ android {
         testInstrumentationRunner = "org.pag.prototype.I3LifecycleProbe"
     }
     buildFeatures { compose = true; buildConfig = true }
-    defaultConfig { buildConfigField("boolean", "PAG_DEMO_ONLY", "false"); manifestPlaceholders["pagTestTargetPackage"] = "org.pag.prototype.a" }
+    defaultConfig {
+        buildConfigField("boolean", "PAG_DEMO_ONLY", "false")
+        buildConfigField("boolean", "PAG_P76_PREVIEW", "false")
+        manifestPlaceholders["pagTestTargetPackage"] = "org.pag.prototype.a"
+    }
     buildTypes {
         create("demo") {
             initWith(getByName("debug"))
@@ -19,7 +23,17 @@ android {
             versionNameSuffix = "-demo"
             matchingFallbacks += listOf("debug")
             buildConfigField("boolean", "PAG_DEMO_ONLY", "true")
+            buildConfigField("boolean", "PAG_P76_PREVIEW", "false")
             manifestPlaceholders["pagTestTargetPackage"] = "org.pag.prototype.a.demo"
+        }
+        create("p76demo") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".p76demo"
+            versionNameSuffix = "-p76demo"
+            matchingFallbacks += listOf("debug")
+            buildConfigField("boolean", "PAG_DEMO_ONLY", "true")
+            buildConfigField("boolean", "PAG_P76_PREVIEW", "true")
+            manifestPlaceholders["pagTestTargetPackage"] = "org.pag.prototype.a.p76demo"
         }
     }
     // Default instrumentation names remain debug; opt in only for demo probes.
@@ -55,7 +69,7 @@ val preparePrototypeDebugKeystore = tasks.register("preparePrototypeDebugKeystor
         }
     }
 }
-tasks.matching { it.name in setOf("validateSigningDebug", "validateSigningDebugAndroidTest", "validateSigningDemo", "validateSigningDemoAndroidTest") }.configureEach { dependsOn(preparePrototypeDebugKeystore) }
+tasks.matching { it.name in setOf("validateSigningDebug", "validateSigningDebugAndroidTest", "validateSigningDemo", "validateSigningDemoAndroidTest", "validateSigningP76demo", "validateSigningP76demoAndroidTest") }.configureEach { dependsOn(preparePrototypeDebugKeystore) }
 val verifyPrototypeManifest = tasks.register("verifyPrototypeManifest") {
     dependsOn("processDebugManifest")
     doLast {
@@ -144,3 +158,30 @@ val verifyDemoManifest = tasks.register("verifyDemoManifest") {
     }
 }
 tasks.matching { it.name == "check" }.configureEach { dependsOn(verifyDemoManifest) }
+val verifyP76DemoIsolation = tasks.register("verifyP76DemoIsolation") {
+    dependsOn("processP76demoManifest")
+    doLast {
+        val manifest = layout.buildDirectory.file("intermediates/merged_manifests/p76demo/processP76demoManifest/AndroidManifest.xml").get().asFile
+        val factory = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply {
+            isNamespaceAware = true
+            setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+        }
+        val document = factory.newDocumentBuilder().parse(manifest)
+        val namespace = "http://schemas.android.com/apk/res/android"
+        check(document.documentElement.getAttribute("package") == "org.pag.prototype.a.p76demo")
+        val buildConfig = layout.buildDirectory.file("generated/source/buildConfig/p76demo/org/pag/prototype/BuildConfig.java").get().asFile.readText()
+        check("PAG_DEMO_ONLY = true" in buildConfig && "PAG_P76_PREVIEW = true" in buildConfig)
+        val permissions = document.getElementsByTagName("uses-permission")
+        val actual = (0 until permissions.length).map {
+            (permissions.item(it) as org.w3c.dom.Element).getAttributeNS(namespace, "name")
+        }.filter { it.isNotEmpty() }.toSet()
+        check(actual == setOf("org.pag.prototype.a.p76demo.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION")) { "Unexpected permissions: $actual" }
+        check(document.getElementsByTagName("provider").length == 0)
+        check(document.getElementsByTagName("receiver").length == 0)
+        check(document.getElementsByTagName("service").length == 0) { "P76 UI preview must not package product services" }
+        val app = document.getElementsByTagName("application").item(0) as org.w3c.dom.Element
+        check(app.getAttributeNS(namespace, "allowBackup") == "false")
+        check(app.getAttributeNS(namespace, "usesCleartextTraffic") == "false")
+        check(app.getAttributeNS(namespace, "label") == "PaG P76 UI Vorschau")
+    }
+}

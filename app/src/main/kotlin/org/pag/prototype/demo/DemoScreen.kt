@@ -19,8 +19,9 @@ import java.time.ZoneId
         ProductInputScope(listOf(model.revision, model.page, model.editor, model.personId, model.taskId)) {
             Column(Modifier.fillMaxSize().safeDrawingPadding()) {
                 Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("DEMO – nur Beispieldaten", Modifier.semantics { heading() }, style = MaterialTheme.typography.titleMedium)
+                    Text("SYNTHETISCHE UI-VORSCHAU – nur Beispieldaten", Modifier.semantics { heading() }, style = MaterialTheme.typography.titleMedium)
                     Text("Bitte keine echten Daten eingeben.", style = MaterialTheme.typography.bodySmall)
+                    Text("Keine Produktautorisierung und keine freigegebenen RAM-Hits. Alle Inhalte sind erfunden und bleiben im Arbeitsspeicher.", style = MaterialTheme.typography.bodySmall)
                     if (model.action != null) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         FormOutlinedButton(model::reset) { Text("Demo zurücksetzen") }
                         FormOutlinedButton(model::end) { Text("Demo beenden") }
