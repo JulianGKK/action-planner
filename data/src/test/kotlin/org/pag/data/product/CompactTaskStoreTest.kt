@@ -11,7 +11,7 @@ import org.pag.domain.*
 class CompactTaskStoreTest {
     private class Harness(people: Int=20, count: Int=40, history: Int=12) : AutoCloseable {
         val db=SqliteHostConnection()
-        val binding=BoundedActiveBinding("active",1,2)
+        val binding=BoundedActiveBinding("active",1)
         var state: CompactTaskState?=CompactTaskState(binding,0)
         var allowed=true
         var publication=true
@@ -303,7 +303,7 @@ class CompactTaskStoreTest {
         assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.page(closed,first.next!!.copy(id="missing")))
         assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.page(closed,first.next!!.copy(updatedAt=999)))
         val old=h.current
-        for(next in listOf(old.copy(mutationEpoch=1),old.copy(binding=old.binding.copy(permissionRevision=3)),old.copy(binding=old.binding.copy(generation=2)),old.copy(binding=old.binding.copy(actionId="other")))) {
+        for(next in listOf(old.copy(mutationEpoch=1),old.copy(binding=old.binding.copy(generation=2)),old.copy(binding=old.binding.copy(actionId="other")))) {
             h.state=next
             assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.page(closed,first.next,old))
         }
@@ -380,7 +380,7 @@ class CompactTaskStoreTest {
                 override fun check(point:AccessPoint)=true
                 override fun publish(result:()->Unit):Boolean { result();return true }
             }
-            try { runBlocking { CompactTaskStore(db,c,{true}).page(CompactTaskState(BoundedActiveBinding("a",1,0),0),CompactTaskQuery(),null) };fail() }
+            try { runBlocking { CompactTaskStore(db,c,{true}).page(CompactTaskState(BoundedActiveBinding("a",1),0),CompactTaskQuery(),null) };fail() }
             catch(f:BoundedActiveRejected) {assertEquals(BoundedActiveStatus.INVALID_DATA,f.status)}
         }
     }

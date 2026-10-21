@@ -42,7 +42,10 @@ internal class ActiveCoreStore(private val sql: PooledConnection, private val co
             personPayload.people.state != state || personPayload.people.items.size > 32 ||
             taskPage.state != state || taskPage.query != CompactTaskQuery(affectedPersonId = affectedPersonId) || taskPage.items.size > 32)
             throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
-        val result = ActiveCoreResult.Value(ActiveCorePayload(state, personPayload.action, personPayload.people, personPayload.functions, taskPage),
+        val corePeople=ActiveCorePeoplePage(state,personPayload.people.overall,personPayload.people.filteredCount,
+            personPayload.people.items,personPayload.people.next!=null)
+        val coreTasks=ActiveCoreTaskPage(state,taskPage.overall,taskPage.filtered,taskPage.items,taskPage.next!=null)
+        val result = ActiveCoreResult.Value(ActiveCorePayload(state, personPayload.action, corePeople, personPayload.functions, coreTasks),
             admission.reservation, admission.retained, admission.transition)
         measured(Metric.MATERIALIZATION, System.nanoTime() - materializationStart)
         observe(Phase.COMPLETE); gate()

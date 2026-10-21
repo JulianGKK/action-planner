@@ -10913,3 +10913,144 @@ Bindingvertrag und produktive Runtime-Readerverdrahtung bleiben **UNWIRED**;
 ihre sichere Freigabe ist **NICHT BEWIESEN** und bleibt **BLOCKER** für
 Snapshotowner/RAM-Reuse. Es gab keine Schemaänderung, Geräteinstallation,
 P3b-Payloadretention oder RAM-Hits.
+
+## 69. Productive Trusted ACTIVE Core Read
+
+**Basis:** Lokaler HEAD, Branch und unabhängig abgefragter Remote-HEAD waren
+`375ef3075e52a76c8ae283b383c6fa125f42d903`; der Arbeitsbaum war sauber.
+Der §68-Review in #35 akzeptierte den Threadfix und verlangte den echten
+typed Readeranschluss. Der Review in #37 hob zusätzlich die alte
+`permissionRevision`-Abhängigkeit, die Workerpublication und den Bedarf an
+finalem Ownerthread-Ticket-/Sessiongate hervor. §§65–68 und die unten
+genannten Runtime-/Readerpfade wurden geprüft.
+
+### 69.1 P3b-freie Core-Bindung
+
+**IMPLEMENTIERT:** `P3bFreeActiveCoreBinding` enthält nur Action-ID und
+READY-Generation. `CompactTaskState.mutationEpoch` ist separat und wird im
+Produktpfad ausschließlich aus dem `mutationEpoch` des echten gemeinsamen
+`ActiveReadTicket` gebildet. Der historische Typname
+`BoundedActiveBinding` ist nur ein Typealias ohne `permissionRevision`;
+es gibt keinen 0-/Null-Sentinel, UI-Zähler, Hash oder zweite Epoche. Das
+Binding selbst ist kein Session- oder Berechtigungstoken.
+
+Der Produktpfad erhält seine tatsächliche Autorität aus dem auf dem
+Ownerthread erworbenen READY-`StorageContext`, derselben Generation, dem
+Ticket der injizierten gemeinsamen `WorkspaceMutationInvalidation`-Instanz
+und der frischen ACTIVE-Zeile innerhalb der vorhandenen autorisierten
+Room-Readtransaktion. `ActiveCoreStore` prüft Action-ID und ACTIVE-Status
+nochmals am materialisierten Ergebnis. P3b-Grants, SensitiveArea-Daten,
+Dokumente, Protokollvolltexte, Memory-Reports, Schlüssel, Leases und Cursor
+sind keine Core-Payloadbestandteile. P3b-Berechtigung und P3b-abhängige
+Projektionen sind damit nicht freigegeben.
+
+**BESTEHENDE isolierte Belege:** Die Bounded-/Compact-Hosttests behalten ihre
+SQLite-Hostseams, Budgetgrenzen, Seitengrößen und Cursorbindung. Die
+unbelegte Permissionrevision ist aus diesem Bounded-/Compact-Vertrag entfernt;
+Änderungstests prüfen Action-ID, Generation und gemeinsame Epoche statt einer
+fingierten Revision. Diese SQLite-Hosttests sind kein Room-/SQLCipher-
+Instrumentierungsbeleg.
+
+### 69.2 Produktive Runtime-Readerverdrahtung
+
+**IMPLEMENTIERT:** `ProductRuntime.activeCore` ist der produktive
+Ladeeingang. Runtime übergibt ihm genau ihre bestehende
+`workspaceMutations`-Instanz, `SessionCoordinator`/`StorageAccess`, Worker-
+und Main-Executor, Inventar und den vorhandenen `SessionDbKeyOwner`. Der
+Loader erstellt keine weitere Portinstanz, Pendingregistry, Epoche oder
+Payloadregistry.
+
+Auf dem Runtime-Ownerthread holt der Loader einen zentralen READY-Kontext,
+prüft Generation und Session und ruft danach synchron `beforeActiveRead` auf
+dem gemeinsamen Port auf. Bei fehlender Admission wird kein Worker gestartet.
+Ein zweiter Kontext wird nicht erworben. Der Worker erhält denselben
+`StorageContext` und das originale Ticket; `ticket.isLive()` ist nur ein
+zusätzlicher Widerrufshinweis. `ProductActiveCoreReader.readForTicket` führt
+die bestehende `DocumentNamespaceLane`-Fence, den vorhandenen
+`ActiveCoreStore`, die Compact-People-/Task-Stores und genau eine bestehende
+`CoreReadAdmission` im 8-MiB-retained-/8-MiB-transition-Vertrag aus. Die
+cursortragenden temporären Compact-Seiten werden vor der Rückgabe in
+`ActiveCorePeoplePage`/`ActiveCoreTaskPage` ohne Cursor, aber mit `hasMore`,
+überführt. Die vollständigen Room-, DB-Key- und Statementscopes müssen vor
+der Rückgabe geschlossen sein. Der Reader publiziert auf diesem Pfad nicht
+selbst und legt keinen Slot an.
+
+### 69.3 Ownerthread- und zentrale Publicationgrenzen
+
+**IMPLEMENTIERT:** Der Main-Runnable ist einmalig konsumierbar. Er prüft auf
+dem Ownerthread die Loadidentität, das Originalticket über
+`isCurrentActiveRead`, Ticket-Liveness, Action-ID, Generation, gemeinsame
+Epoche, ACTIVE-Status des gelesenen Actionresultats, Sessionkontext und
+Namespace-Lane-Epoche erneut. Erst danach wird `StorageContext.publish`
+aufgerufen. Dessen Callback ändert nur ein lokales Boolean und kann keinen
+Payloadowner/Slot installieren. Liefert `publish` nach Callbackausführung
+`false`, wird der Callbackkandidat verworfen, das Ticket widerrufen und keine
+Resultatübergabe ausgeführt. Bei `true` werden Kontext und Ticket nochmals
+geprüft, bevor der einmalige Callback den transienten `ActiveCoreResult`
+erhält. Worker- oder Main-Executor-Rejection lässt keine erfolgreiche
+Publication entstehen; falscher Thread, doppelter Worker und doppelter Main-
+Runnable werden fail-closed behandelt.
+
+**HOSTGETESTET:** `ProductActiveCoreLoaderTest` verwendet den echten
+`SessionCoordinator`, `UncachedWorkspaceMutations`, echte Tickets und
+deterministische Executor-/Readseams. Geprüft werden READY-Ablehnung,
+Core-/DOCUMENT-Pending und UNKNOWN, korrekte Action-/Generation-/Epoch-
+Bindung, gemeinsames Ticket, Writer während Workerread, Writer nach Read
+und Cleanup vor Main, Sessionablauf auf Worker, falsche Action/Status,
+callback-then-false, Executor-Rejection, fremder Mainthread, doppelte
+Workerausführung, doppelte Mainausführung, verlorene Mainzustellung und
+`ramReuseEnabled == false`.
+Diese Tests prüfen den Loader-/Portvertrag; sie simulieren nicht Room,
+SQLCipher, Android-Keyscope, native Cursor oder Powerloss.
+
+Die bestehenden `ActiveCoreStoreTest`-/Compact-/Bounded-Tests führen die
+tatsächlichen Store-SQL-/Validierungs-/Budgetpfade gegen eine SQLite-
+Hostinfrastruktur aus. Das belegt die Hoststorelogik und ihren gemeinsamen
+Budgetentscheid, nicht den Android Room-/SQLCipher-Adapter oder reale
+Device-Keycleanupgrenzen. Es wurden keine Android-Instrumentationstests oder
+Geräteinstallationen ausgeführt.
+
+### 69.4 Snapshotowner und Releasegrenzen
+
+**UNWIRED:** `ProductViewModel` hält und verwendet den neuen Kandidaten noch
+nicht. Der Callback ist ein transienter Ladeabschluss, kein RAM-Hit und kein
+`WorkspaceSnapshot`, `OperationalBoard` oder vollständiges `TaskBoard`.
+Kompakte Seiten behalten ihre expliziten globalen Counts und Paginggrenzen;
+sie werden nicht als vollständige Personen-/Aufgabenlisten dargestellt. Es
+gibt weiterhin genau keinen produktiven Snapshotowner und keine RAM-Hits.
+
+**NICHT BEWIESEN / BLOCKER:** Keine native SQLCipher-/Room-/Cursor-/Keycleanup-
+oder Fixture-Isolierungsbestätigung (#32), keine Android-Lifecycle-/Keyguard-
+Prüfung, keine reale 100–150-ms-/p95-Messung (#38), keine physische
+Heaplöschung und keine P3b-/Viewer-/Lifecycle-Retentionautorität. RED-4 bleibt
+fail-closed. Ein `callback-then-false` kann den lokalen Callbackeffekt nicht
+rückgängig machen; der §69-Pfad verhindert aber, dass dieser Effekt selbst
+eine dauerhafte Retention autorisiert, weil innerhalb des Publishcallbacks
+kein Produktcallback/Slot geschrieben wird.
+
+**Voraussetzung für den ersten sicheren RAM-Hit:** Ein separater
+ViewModel-Slice muss genau einen instanzlokalen Snapshotowner an diese
+transiente, bereits final geprüfte Übergabe anschließen; er braucht einen
+atomaren kurzen Referenzswap, synchrones Unpublishing bei Writer-/Session-/
+Action-/Lifecycleverlust und RED-Tests für callback-false, verspätete Main-
+Runnable, fremde Generation, UNKNOWN und Cleanupfehler. Erst danach sind
+kompakte ACTIVE-UI-Navigation und Messung sinnvoll. Bis dahin bleiben alle
+RAM-Hits deaktiviert.
+
+**Dateien in §69:**
+
+- `domain/src/main/kotlin/org/pag/domain/BoundedActiveRead.kt`
+- `domain/src/main/kotlin/org/pag/domain/CompactActiveTasks.kt`
+- `data/src/main/kotlin/org/pag/data/product/ProductActiveCoreReader.kt`
+- `data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLoader.kt`
+- `data/src/main/kotlin/org/pag/data/product/ProductRuntime.kt`
+- Bounded-/Compact-Hosttests und `ProductActiveCoreLoaderTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+
+**Status:** Typisierte P3b-freie Core-Bindung und produktive Runtime-/Reader-
+Verdrahtung sind **IMPLEMENTIERT**. Sequenz-, Ticket-, Session- und
+Ownerthread-Loaderverträge sind **HOSTGETESTET**; Store-SQL ist separat
+SQLite-hostgetestet. Ein dauerhafter Snapshotowner/RAM-Hit bleibt **UNWIRED**.
+Room-/SQLCipher-/Native-/Lifecycle-/Cursorbelege sind **NICHT BEWIESEN**;
+#32, RED-4 und #38 bleiben offene **BLOCKER**. Keine Schemaänderung,
+Migration, Geräteinstallation oder RAM-Hits.

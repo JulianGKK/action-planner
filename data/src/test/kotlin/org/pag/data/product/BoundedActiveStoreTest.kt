@@ -11,8 +11,8 @@ class BoundedActiveStoreTest {
         val db = SqliteHostConnection(encoding)
         var allowed = true
         var generation = 1L
+        var actionId = "a"
         var bound = true
-        var permission = 0L
         var publications = 0
         var blocks = 0
         var onPublication: () -> Unit = {}
@@ -42,14 +42,14 @@ class BoundedActiveStoreTest {
                 "INSERT INTO roles SELECT 'r'||i,'a','synthetic role '||i,'synthetic role '||i,i FROM n")
         }
         fun read(id: String = "a", requestedGeneration: Long = 1): BoundedActiveResult = boundedActiveRead(
-            BoundedActiveBinding(id, requestedGeneration, 0),
+            BoundedActiveBinding(id, requestedGeneration),
             object : StorageAccess { override fun acquire(scope: AccessScope) = c.takeIf { allowed } },
-            { if (bound) BoundedActiveBinding("a", generation, permission) else null }, { blocks++ }) { context, current ->
+            { if (bound) BoundedActiveBinding(actionId, generation) else null }, { blocks++ }) { context, current ->
             runBlocking {
                 db.execute("BEGIN")
                 try {
                     BoundedActiveStore(db, context, current, { phases.add(it); onPhase(it) })
-                        .read(BoundedActiveBinding(id, requestedGeneration, 0))
+                        .read(BoundedActiveBinding(id, requestedGeneration))
                 } finally {
                     db.execute("ROLLBACK"); assertEquals(0, db.openStatements); onCleanup()
                 }
@@ -231,10 +231,10 @@ class BoundedActiveStoreTest {
         assertEquals(0, h.db.openStatements)
     }
 
-    @Test fun noLatePublicationAfterCleanupLockGenerationOrPermissionChange() {
+    @Test fun noLatePublicationAfterCleanupLockGenerationOrActionChange() {
         for (kind in 0..2) H().use { h ->
             h.seed(); h.onPublication = {
-                when (kind) { 0 -> h.allowed = false; 1 -> h.generation = 2; else -> h.permission = 1 }
+                when (kind) { 0 -> h.allowed = false; 1 -> h.generation = 2; else -> h.actionId = "other" }
             }
             rejected(BoundedActiveStatus.ACCESS_REVOKED, h.read())
             assertEquals(0, h.db.openStatements)
@@ -273,7 +273,7 @@ class BoundedActiveStoreTest {
         }
         try {
             val value = runBlocking(dispatcher) {
-                BoundedActiveStore(sql, h.c, { true }).read(BoundedActiveBinding("a", 1, 0))
+                BoundedActiveStore(sql, h.c, { true }).read(BoundedActiveBinding("a", 1))
             }
             assertEquals(1, value.operations.persons.size)
         } finally { h.exec("ROLLBACK"); assertEquals(0, h.db.openStatements) }

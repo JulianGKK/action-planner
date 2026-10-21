@@ -11,7 +11,7 @@ class BoundedTaskStoreTest {
         val db = SqliteHostConnection(encoding)
         var allowed = true
         var generation = 1L
-        var permission = 0L
+        var actionId = "a"
         var bound = true
         var blocks = 0
         var publications = 0
@@ -40,13 +40,13 @@ class BoundedTaskStoreTest {
                 "INSERT INTO task_events SELECT 'e'||i,'a','t1','CREATED',i FROM n")
         }
         fun read(id: String = "a", requestedGeneration: Long = 1): BoundedTaskResult = boundedTaskRead(
-            BoundedActiveBinding(id, requestedGeneration, 0),
+            BoundedActiveBinding(id, requestedGeneration),
             object : StorageAccess { override fun acquire(scope: AccessScope) = c.takeIf { allowed } },
-            { if (bound) BoundedActiveBinding("a", generation, permission) else null }, { blocks++ }) { context, current ->
+            { if (bound) BoundedActiveBinding(actionId, generation) else null }, { blocks++ }) { context, current ->
             runBlocking {
                 db.execute("BEGIN")
                 try { BoundedTaskStore(db, context, current) { phases.add(it); onPhase(it) }
-                    .read(BoundedActiveBinding(id, requestedGeneration, 0)) }
+                    .read(BoundedActiveBinding(id, requestedGeneration)) }
                 finally { db.execute("ROLLBACK"); assertEquals(0, db.openStatements); onCleanup() }
             }
         }
@@ -227,18 +227,18 @@ class BoundedTaskStoreTest {
             rejected(BoundedActiveStatus.ACCESS_REVOKED,h.read())
         }
     }
-    @Test fun generationBindingAndPermissionChangeDuringReadDenyPayload() {
+    @Test fun generationAndActionBindingChangesDuringReadDenyPayload() {
         for(kind in 0..2) H().use { h ->
-            h.seed();h.onPhase={if(it==BoundedTaskStore.Phase.ROW)when(kind){0->h.generation++;1->h.bound=false;else->h.permission++}}
+            h.seed();h.onPhase={if(it==BoundedTaskStore.Phase.ROW)when(kind){0->h.generation++;1->h.bound=false;else->h.actionId="other"}}
             rejected(BoundedActiveStatus.ACCESS_REVOKED,h.read())
         }
         H().use{h->h.seed();rejected(BoundedActiveStatus.ACCESS_REVOKED,h.read(requestedGeneration=2));assertEquals(0,h.db.blobReads)}
     }
     @Test fun latePublicationAfterCleanupIsDenied() {
         for(kind in 0..2) H().use { h ->
-            h.seed();h.onPublication={when(kind){0->h.allowed=false;1->h.generation++;else->h.permission++}}
+            h.seed();h.onPublication={when(kind){0->h.allowed=false;1->h.generation++;else->h.actionId="other"}}
             rejected(BoundedActiveStatus.ACCESS_REVOKED,h.read())
-            // Permission change enters the central publish callback, whose inner binding gate denies payload.
+            // Action identity change enters the central publish callback, whose inner binding gate denies payload.
             assertEquals(if(kind==2)1 else 0,h.publications);assertEquals(0,h.db.openStatements)
         }
     }

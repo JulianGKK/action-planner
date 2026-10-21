@@ -50,12 +50,12 @@ class BoundedTaskFixturePreconditionTest {
                 override fun publish(result: () -> Unit): Boolean { result(); return true }
             }
             var blocks = 0
-            val result = boundedTaskRead(BoundedActiveBinding("p11-active",1,0),
+            val result = boundedTaskRead(BoundedActiveBinding("p11-active",1),
                 object : StorageAccess { override fun acquire(scope: AccessScope) = c },
-                { BoundedActiveBinding("p11-active",1,0) }, { blocks++ }) { context, current ->
+                { BoundedActiveBinding("p11-active",1) }, { blocks++ }) { context, current ->
                 runBlocking {
                     db.execute("BEGIN")
-                    try { BoundedTaskStore(db,context,current).read(BoundedActiveBinding("p11-active",1,0)) }
+                    try { BoundedTaskStore(db,context,current).read(BoundedActiveBinding("p11-active",1)) }
                     finally { db.execute("ROLLBACK") }
                 }
             }
@@ -92,12 +92,12 @@ class BoundedTaskFixturePreconditionTest {
                 exec("INSERT INTO task_events VALUES('$event','p11-active','$id','CREATED',1)")
             }
         }
-        fun read():BoundedTaskResult=boundedTaskRead(BoundedActiveBinding("p11-active",1,0),
+        fun read():BoundedTaskResult=boundedTaskRead(BoundedActiveBinding("p11-active",1),
             object:StorageAccess{override fun acquire(scope:AccessScope)=c.takeIf{allowed}},
-            {BoundedActiveBinding("p11-active",1,0)},{blocks++}){context,current->
+            {BoundedActiveBinding("p11-active",1)},{blocks++}){context,current->
             runBlocking {
                 cleaned=false;db.execute("BEGIN")
-                try{BoundedTaskStore(db,context,current).read(BoundedActiveBinding("p11-active",1,0))}
+                try{BoundedTaskStore(db,context,current).read(BoundedActiveBinding("p11-active",1))}
                 finally{db.execute("ROLLBACK");assertEquals(0,db.openStatements);cleaned=true}
             }
         }

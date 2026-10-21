@@ -1,10 +1,9 @@
 package org.pag.domain
 
-/** Read metadata, never authority. The trusted adapter must return null while a mutation is
- * pending, after UNKNOWN/failed cleanup, on revoke, or on an unobserved write. Epochs must not
- * be reused. No production adapter/retention is enabled by this standalone contract (#34/#37).
+/** P3b-free core scope metadata; no permission revision or session authority. The epoch is
+ * the common writer-port epoch from the same ActiveReadTicket, never a second counter.
  */
-data class CompactTaskState(val binding: BoundedActiveBinding, val mutationEpoch: Long) {
+data class CompactTaskState(val binding: P3bFreeActiveCoreBinding, val mutationEpoch: Long) {
     init { require(mutationEpoch >= 0) }
 }
 

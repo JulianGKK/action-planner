@@ -184,7 +184,7 @@ class CoreWriterIntegrationTest {
         assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),h.person("p0","Must not rename ACTIVE"))
         assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED),h.ops{it.role("a",h.roleRow(),"Must not rename ACTIVE")})
         val c=h.context
-        val compact=runBlocking{val p=CompactPeopleStore(h.db,c,{true}).prepareCore(CompactTaskState(BoundedActiveBinding("a",1,2),h.epoch.mutationEpoch));p.materialize(CoreReadAdmission.admit(listOf(p)))}
+        val compact=runBlocking{val p=CompactPeopleStore(h.db,c,{true}).prepareCore(CompactTaskState(BoundedActiveBinding("a",1),h.epoch.mutationEpoch));p.materialize(CoreReadAdmission.admit(listOf(p)))}
         assertEquals(3L,compact.people.overall.total);assertEquals(2L,compact.people.overall.onSite);assertEquals(1L,compact.people.overall.inCustody)
         assertEquals(1L,compact.functions.withoutFunction);assertEquals(1L,compact.functions.usedFunctions)
         assertEquals(1L,compact.functions.items.single{it.role.id=="r0"}.onSiteCount)

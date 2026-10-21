@@ -5,16 +5,16 @@ import androidx.room3.withReadTransaction
 import org.pag.data.prototype.b2.StorageAccessRevoked
 import org.pag.domain.*
 
-/** Explicit worker-only proof path; NOT constructed by ProductRuntime/ProductViewModel.
- * Trusted state must invalidate BEFORE writers, and be null for Pending/UNKNOWN/BLOCKED/
- * Recovery/revoke. Real writer hooks (#35) and payload ownership (#37) remain unwired.
+/** Existing compact SQL/materialization path. The product loader below supplies a common
+ * ticket and READY context, then performs final owner-thread publication separately.
  */
 class ProductActiveCoreReader(app: Context, private val access: StorageAccess,
     private val inventory: ProductInventory, private val owner: () -> SessionDbKeyOwner?,
-    private val currentState: () -> CompactTaskState?, private val blocked: () -> Unit) : ActiveCoreReader {
+    private val currentState: (() -> CompactTaskState?)? = null, private val blocked: () -> Unit) : ActiveCoreReader {
     private val database = ActionDatabaseAccess(app.applicationContext)
-    override fun read(state: CompactTaskState, affectedPersonId: String?): ActiveCoreResult =
-        activeCoreRead(state, access, currentState, blocked) { c, current ->
+    override fun read(state: CompactTaskState, affectedPersonId: String?): ActiveCoreResult {
+        val trustedState=currentState ?: return ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED)
+        return activeCoreRead(state, access, trustedState, blocked) { c, current ->
             requireOperations(c, AccessPoint.OPERATION)
             if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
             DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()) {
@@ -27,6 +27,42 @@ class ProductActiveCoreReader(app: Context, private val access: StorageAccess,
                 }
             }
         }
+    }
+
+    /** Worker-only candidate read. It reuses the same Room transaction, stores and joint budget,
+     * but deliberately does not call StorageContext.publish or retain a payload.
+     */
+    internal fun readForTicket(context: StorageContext,
+        ticket: WorkspaceMutationInvalidation.ActiveReadTicket, laneTicket: Long,
+        affectedPersonId: String? = null): ActiveCoreResult {
+        val state=CompactTaskState(P3bFreeActiveCoreBinding(ticket.actionId,ticket.generation),ticket.mutationEpoch)
+        fun current() = context.scope == AccessScope.READY && context.generation == ticket.generation &&
+            ticket.isLive() && context.check(AccessPoint.STEP)
+        if (!current()) return ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED)
+        return try {
+            requireOperations(context,AccessPoint.OPERATION)
+            if(inventory.state()!=ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
+            DocumentNamespaceLane.exclusive(laneTicket) {
+                requireOperations(context)
+                if(!current()) throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)
+                (owner() ?: throw ProductStorageFailure()).withDbKey(context) { key ->
+                    database.use(inventory.database,key,context) { db ->
+                        db.withReadTransaction { ActiveCoreStore(this,context,::current).read(state,affectedPersonId) }
+                    }
+                }
+            }
+        } catch (_: StorageAccessRevoked) { ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED) }
+        catch (failure: BoundedActiveRejected) {
+            if (!current()) ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED)
+            else {
+                if(failure.status==BoundedActiveStatus.INVALID_DATA) blocked()
+                ActiveCoreResult.Rejected(failure.status)
+            }
+        } catch (_: Exception) {
+            if (!current()) ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED)
+            else { blocked(); ActiveCoreResult.Rejected(BoundedActiveStatus.STORAGE_FAILURE) }
+        }
+    }
 }
 
 /** Work cannot return until original DB/transaction/key cleanup has completed. Only then

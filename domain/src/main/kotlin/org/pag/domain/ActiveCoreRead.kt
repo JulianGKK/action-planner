@@ -6,12 +6,16 @@ package org.pag.domain
 data class ActiveCoreReservation(val retained: ActiveWorkspaceBudget.Units,
     val transition: ActiveWorkspaceBudget.Units)
 
-/** One action object, one people page + complete function counts and ONE explicit task page.
- * No full TaskBoard, provenance/editor copies or event history. State is the same trusted
- * binding/epoch metadata used by compact paging; it grants no session permission.
+/** The core owns cursor-free first-page views. Separate Compact*Page/ Cursor values are
+ * produced only by explicit follow-up reads and never retained in this core payload.
  */
 data class ActiveCorePayload(val state: CompactTaskState, val action: Action,
-    val people: CompactPeoplePage, val functions: CompactFunctions, val tasks: CompactTaskPage)
+    val people: ActiveCorePeoplePage, val functions: CompactFunctions, val tasks: ActiveCoreTaskPage)
+
+data class ActiveCorePeoplePage(val state: CompactTaskState, val overall: CompactPeopleCounts,
+    val filteredCount: Long, val items: List<CompactPersonCard>, val hasMore: Boolean)
+data class ActiveCoreTaskPage(val state: CompactTaskState, val overall: CompactTaskCounts,
+    val filtered: CompactTaskCounts, val items: List<CompactTaskItem>, val hasMore: Boolean)
 
 sealed interface ActiveCoreResult {
     data class Value(val core: ActiveCorePayload, val reservation: ActiveCoreReservation,

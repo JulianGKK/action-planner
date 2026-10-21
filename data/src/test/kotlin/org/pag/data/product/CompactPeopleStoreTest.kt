@@ -53,7 +53,7 @@ class CompactPeopleStoreTest {
                 val legacy=runBlocking { BoundedActiveStore(h.db,h.context,{true}).read(h.requested.binding) }
                 for(p in legacy.operations.persons) assertEquals(p,detail(h.peopleRead(detail=p.person.id)))
             }
-            val first=core.core.people.next
+            val first=(h.peopleRead() as CompactPeopleResult.Value).payload.let { (it as CompactPeoplePage).next }
             val groupFirst=page(h.peopleRead(CompactPeopleQuery.Function("r0"))).next
             val samples=linkedMapOf<String,MutableList<Long>>()
             fun measure(name: String,sample: Int,work:()->Unit) {
@@ -176,11 +176,10 @@ class CompactPeopleStoreTest {
     }
 
     @Test fun invalidReferencesAndUnknownRevokeMutationsNeverReturnOldPagesOrDetails() {
-        for(change in listOf("mutation","permission","action","generation","unknown","revoke")) ActiveCoreStoreTest.H(200,1000,128).use { h ->
+        for(change in listOf("mutation","action","generation","unknown","revoke")) ActiveCoreStoreTest.H(200,1000,128).use { h ->
             val cursor=page(h.peopleRead()).next!!
             when(change) {
                 "mutation"->h.authority.set(h.requested.copy(mutationEpoch=1))
-                "permission"->h.authority.set(h.requested.copy(binding=h.requested.binding.copy(permissionRevision=4)))
                 "action"->h.authority.set(h.requested.copy(binding=h.requested.binding.copy(actionId="b")))
                 "generation"->h.authority.set(h.requested.copy(binding=h.requested.binding.copy(generation=2)))
                 "revoke"->h.ready.set(false)

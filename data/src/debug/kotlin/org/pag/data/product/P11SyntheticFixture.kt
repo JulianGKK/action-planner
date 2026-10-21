@@ -93,7 +93,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
     val documents:DocumentRepository=ProductDocumentRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
     /** Explicit test entry only; not part of the runtime/navigation fixture setup. */
     fun boundedActive(actionId:String=activeId,allowPublication:Boolean=true):BoundedActiveResult {
-        val binding=BoundedActiveBinding(actionId,epoch,0)
+        val binding=BoundedActiveBinding(actionId,epoch)
         val gated=object:StorageAccess {
             override fun acquire(scope:AccessScope):StorageContext? {
                 val c=access.acquire(scope) ?: return null
@@ -103,12 +103,12 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
             }
         }
         return ProductBoundedActiveReader(wrapped,gated,inventory,owner::get,
-            {if(allowed)BoundedActiveBinding(actionId,epoch,0)else null},::fail).read(binding)
+            {if(allowed)BoundedActiveBinding(actionId,epoch)else null},::fail).read(binding)
     }
     /** Explicit test entry only; not part of the runtime/navigation fixture setup. */
     fun boundedTasks(actionId:String=activeId,allowPublication:Boolean=true,
         onPublicationAttempt:()->Unit={}):BoundedTaskResult {
-        val binding=BoundedActiveBinding(actionId,epoch,0)
+        val binding=BoundedActiveBinding(actionId,epoch)
         val gated=object:StorageAccess {
             override fun acquire(scope:AccessScope):StorageContext? {
                 val c=access.acquire(scope) ?: return null
@@ -121,7 +121,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
             }
         }
         return ProductBoundedTaskReader(wrapped,gated,inventory,owner::get,
-            {if(allowed)BoundedActiveBinding(actionId,epoch,0)else null},::fail).read(binding)
+            {if(allowed)BoundedActiveBinding(actionId,epoch)else null},::fail).read(binding)
     }
     fun databaseRead(report:(String,Long)->Unit) {
         val c=access.acquire(AccessScope.READY) ?: error("SYNTHETIC_REVOKED")

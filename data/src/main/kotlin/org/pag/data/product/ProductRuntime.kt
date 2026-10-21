@@ -104,4 +104,10 @@ class ProductRuntime(activity: Activity, private val worker: Executor, private v
     private val leadershipLifetime = session.observe { state ->
         if (state.state != SessionState.READY) leadership.revoke()
     }
+    /** Bounded P3b-free core read through the same SessionCoordinator and writer/ticket owner.
+     * This is a transient candidate path only; ProductViewModel retention/RAM hits remain off.
+     */
+    private val activeCoreReader = ProductActiveCoreReader(activity.applicationContext,session,inventory,
+        {owner.get()},blocked=session::storageFailure)
+    val activeCore = ProductActiveCoreLoader(session,workspaceMutations,worker,main,activeCoreReader::readForTicket)
 }

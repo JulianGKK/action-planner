@@ -20,7 +20,7 @@ class ActiveCoreStoreTest {
     internal class H(val people: Int = 20, val taskCount: Int = 40, val history: Int = 12,
         val roleCount: Int = 6) : AutoCloseable {
         val db = SqliteHostConnection()
-        val requested = CompactTaskState(BoundedActiveBinding("a",1,2),0)
+        val requested = CompactTaskState(P3bFreeActiveCoreBinding("a",1),0)
         val authority = AtomicReference<CompactTaskState?>(requested)
         val ready = AtomicBoolean(true)
         var blocked = 0
@@ -229,7 +229,7 @@ class ActiveCoreStoreTest {
     @Test fun filteredCountsUseWholeTaskSetAndPeopleRolesAreComplete()=H(20,250).use { h ->
         for(person in listOf(null,"p0","p1","p19","missing")) assertCore(h,h.read(person),person)
         val all=h.read() as ActiveCoreResult.Value
-        assertEquals(32,all.core.tasks.items.size);assertNotNull(all.core.tasks.next)
+        assertEquals(32,all.core.tasks.items.size);assertTrue(all.core.tasks.hasMore)
         assertEquals(250L,all.core.tasks.overall.total)
     }
 
@@ -275,11 +275,10 @@ class ActiveCoreStoreTest {
     }
 
     @Test fun everyStateLossAtEveryPhaseDeniesWholeCoreAndClosesStatements() {
-        for(at in ActiveCoreStore.Phase.entries) for(change in listOf("revoke","mutation","permission","action","generation","unknown","blocked","recovery")) H().use { h ->
+        for(at in ActiveCoreStore.Phase.entries) for(change in listOf("revoke","mutation","action","generation","unknown","blocked","recovery")) H().use { h ->
             h.phase={ if(it==at) when(change) {
                 "revoke","blocked" -> h.ready.set(false)
                 "mutation" -> h.authority.set(h.requested.copy(mutationEpoch=1))
-                "permission" -> h.authority.set(h.requested.copy(binding=h.requested.binding.copy(permissionRevision=3)))
                 "action" -> h.authority.set(h.requested.copy(binding=h.requested.binding.copy(actionId="other")))
                 "generation" -> h.authority.set(h.requested.copy(binding=h.requested.binding.copy(generation=2)))
                 else -> h.authority.set(null)
