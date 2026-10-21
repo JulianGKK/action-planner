@@ -11898,3 +11898,105 @@ sind. Der nächste enge Fix ist ein belastbarer Compose-Content-Beobachter für 
 Custom-Instrumentation-Pfad (oder ein gleichwertiger isolierter UI-Testanschluss), danach
 gezielte Wiederholung der vier Areas und der noch offenen Revoke-Fälle. P76 bleibt
 installiert und unangetastet.
+
+## §79 – Fix compact ACTIVE UI routing and verify real Content-OnDraw
+
+**Basis:** `ecfbb317d59fada7d05dd874e54daf564976a0c6`, Branch
+`p11-performance-optimization`. Lokaler und Remote-HEAD stimmten vor der Arbeit
+überein. Der unabhängige §78-Review in #37/#38 bestätigte den konkreten Fehler:
+`productEntityListRoute` wählte für ACTIVE-PERSONS/TASKS immer
+`ProductEntityList`, obwohl kompakte ACTIVE-Reads absichtlich nur
+`ActiveCorePayload` und kein `WorkspaceSnapshot` halten.
+
+**IMPLEMENTIERT:** ACTIVE-PERSONS/TASKS gehen nur noch dann in die alte
+`ProductEntityList`, wenn `compactActiveMode` aus ist. Der reguläre
+`ProductScreen` routet den kompakten Modus über `ActiveWorkspace` und
+`CompactActiveContent`; sein Rendering-Subtree wird an Aktion, Status, ACTIVE-
+Bereich, Vorbereitungssicht, Kompaktmodus und Rendereroute gebunden. So wird eine
+vorherige Fläche beim Bereichswechsel aus der Komposition entfernt. Der kompakte
+Renderer besitzt seine einzelne Bereichsüberschrift selbst; die vollständige
+ACTIVE-Ansicht behält den bisherigen Überschriftenpfad. Die kompakte Überschrift
+folgt der aktiven Core-Fläche, nicht einem noch offenen Formular-Unterbereich.
+PREPARATION-Listen und ausdrücklich gewählte vollständige ACTIVE-Listen bleiben
+auf dem bisherigen LazyList-Pfad. Fehlt/wird der Core widerrufen, bleibt der
+kompakte Loading-/Errorpfad aktiv; es gibt keinen vollständigen Workspace-Read
+als Fallback. Eine leere Funktionsliste zeigt zusätzlich „Noch keine aktuellen
+Funktionen“ mit den globalen Null-/Countwerten.
+
+**HOSTGETESTET:** Neue Tests rufen die tatsächliche Routerfunktion mit dem
+ViewModel auf. Sie sichern kompakte HUB/PERSONS/FUNCTIONS/TASKS bei
+`workspace == null`, vollständige ACTIVE- und PREPARATION-LazyLists sowie den
+Fall, in dem Ticketwiderruf den Core entfernt: keine Umleitung zur vollständigen
+Liste. Kompakte Seitenlabels behalten globale Gesamtwerte und `hasMore`. Dies
+sind Port-/ViewModel-Hosttests; sie ersetzen keinen Android-Beleg.
+
+**ANDROID-GREEN – isolierter P77-Runner:** Auf Samsung SM-M526BR
+`RFCT1186YRJ` wurde ausschließlich der gezielte Runner
+`org.pag.prototype.a.p77runtime.test/org.pag.prototype.P77RuntimeE2EProbe`
+ausgeführt. Target und Runner waren vor dem Lauf anhand Paket-ID, Manifest,
+Runner und Signatur geprüft; beide APKs tragen SHA-256-Zertifikat
+`9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134`.
+Der Pfad verwendet die produktive P77-`ProductRuntime`, den echten
+SQLCipher-/Room-Core-Reader, das originale Ticket, denselben ViewModel-Slot und
+die echte `ProductScreen`-Compose-Hierarchie mit synthetischer Testautorität.
+Gemeldet wurden genau **1 Core-Read**, **1 originales Ticket**, **80/80
+autorisierte Hits**, **0 zusätzliche Reads/Tickets**, gleiche Payloadidentität,
+kein Idle-Reset und synchroner Slotentzug bei Lock.
+
+Die Semantics-Prüfung traversiert den aktiven Accessibility-/Compose-Baum,
+fordert sichtbare Viewportinhalte und exakt eine Bereichsüberschrift. PERSONS
+zeigte 32 von 200, alle acht korrekten Statuscounts und `Synthetic 0`; FUNCTIONS
+zeigte die leere Liste mit korrekten Nullcounts; TASKS zeigte 32 von 1000,
+1000 offen, die übrigen Statuscounts und einen Core-Titel; HUB zeigte 200
+Personen und die drei Öffnungskarten. In allen vier Flächen war `hasMore=true`
+für die begrenzten Person-/Taskseiten. Die 32er-Seiten wurden nicht als
+vollständig dargestellt.
+
+**ANDROID-RED → GREEN / Harnessdiagnose:** Der erste strenge Lauf blieb trotz
+sichtbarer Texte im aktiven Window-Baum rot, weil
+`findAccessibilityNodeInfosByText` auf diesem Compose-/Instrumentation-Pfad
+keine Treffer lieferte. Der unveränderte vollständige Dump ist
+[`p77-accessibility-query-red.txt`](p11-p79/p77-accessibility-query-red.txt).
+Die Abfrage wurde auf Traversierung des tatsächlich aktiven Hierarchiebaums mit
+Viewportprüfung umgestellt. Diese Prüfung deckte zusätzlich veraltete
+ACTIVE-Flächen/Überschriften bei Rücknavigation auf; die Route wird nun am
+`ProductScreen`-Subtree gekeyt und der kompakte Renderer zeichnet genau eine
+eigene Flächenüberschrift. Der letzte gezielte Lauf ist
+[`p77-runtime-compose-runner.txt`](p11-p79/p77-runtime-compose-runner.txt).
+
+**Content-OnDraw-Messgrenze:** 20 Werte pro Bereich wurden nach sichtbarer
+Semantics-Bestätigung und anschließendem echten `OnDraw` des Zielinhalts
+aufgezeichnet. Die Zeit läuft ab ViewModel-Navigationsaufruf und schließt die
+Accessibility-Abfrage-/Pollingzeit des Testharnesses ein; danach wird ein
+Decor-Draw nur nach verifizierten Zieltexten angefordert. Das ist eine
+konservative Navigation→Semantics→Draw-Probe, kein Touch-to-Content-OnDraw und
+kein Release-p95-Wert. Rohwerte stehen in
+[`content-draws.csv`](p11-p79/content-draws.csv); authorizeHit-Einzelwerte und
+übrige Laufdaten stehen im Runnerreport.
+
+| Fläche | n | Median (ms) | p95 nearest-rank (ms) |
+|---|---:|---:|---:|
+| PERSONS | 20 | 199,533 | 215,981 |
+| FUNCTIONS | 20 | 150,137 | 233,114 |
+| TASKS | 20 | 283,152 | 425,068 |
+| HUB | 20 | 185,910 | 289,312 |
+
+Die 80 authorizeHit-Zeiten lagen bei Median **2,740 ms**, p95 **4,229 ms**.
+Die gemessenen Navigation→Draw-Zeiten erfüllen das 100–150-ms-Ziel noch nicht;
+vor allem TASKS bleibt klar darüber. Die enthaltene Accessibility-Pollingzeit
+verzerrt diese Zahlen nach oben. Für das Releaseziel ist weiterhin eine
+Touch-/Compose-Content-OnDraw-Messung mit niedrigerem Messobserver-Overhead nötig.
+
+**INSTALLATIONSSCHUTZ:** Vor und nach dem Lauf waren
+`org.pag.prototype.a.p76demo`, `org.pag.prototype.a` und
+`org.pag.perf.p11probe` vorhanden; Version, Installations-/Updatezeit und
+Signaturmetadaten blieben unverändert. Aktualisiert wurden nur die zuvor
+identifizierten P77-eigenen Target-/Runnerpakete. P76 bleibt installiert.
+
+**NICHT BEWIESEN / BLOCKER:** Die P77-Sitzung ist synthetisch autorisiert und
+belegt keine Device-Credential-E2E. Die 80 isolierten RAM-Hits sind keine
+produktweite Freigabe. `reuseEnabled=false` in regulären Produktbuilds bleibt
+unverändert. #32 Room-/Key-/DB-Cleanup-Faults, #33/#34 gemeinsame
+8+8-MiB-Referenzüberlappung, #39 echte OS-Keyguard-/Lifecycle-/Revoke-Races,
+#36 Editor-/ABA und RED-4 bleiben offen. Der Renderer- und Routingfix behebt
+den sichtbaren §78-Fehler, hebt diese Freigabeblocker nicht auf.

@@ -162,6 +162,39 @@ class ActiveCoreOwnerTest {
         assertEquals("32 von 100 angezeigt · weitere Einträge verfügbar",compactPageLabel(32,100,true))
         assertEquals("100 insgesamt",activeCompactHubCards(value).first().summary.first())
     }
+    @Test fun actualProductRouterSelectsCompactRendererForEveryCompactActiveArea() {
+        val h=H(true);h.port.deliver()
+        assertTrue(h.model.compactActiveMode)
+        assertNull(h.model.workspace)
+        for(area in listOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS)) {
+            h.model.activeArea(area)
+            assertNotNull(h.model.activeCore)
+            assertEquals(area,activeWorkspaceShownArea(h.model))
+            assertFalse("$area must stay on ActiveWorkspace/CompactActiveContent",productEntityListRoute(h.model))
+        }
+    }
+    @Test fun revokedCompactCoreDoesNotFallBackToFullEntityList() {
+        val h=H(true);val lifetime=h.port.deliver()
+        h.model.activeArea(ActiveArea.PERSONS)
+        assertFalse(productEntityListRoute(h.model))
+        lifetime.close()
+        assertTrue(h.model.compactActiveMode)
+        assertNull(h.model.activeCore)
+        assertNull(h.model.workspace)
+        assertFalse("Missing compact payload must render loading/error, never the full list",productEntityListRoute(h.model))
+    }
+    @Test fun fullActiveAndPreparationEntityListsKeepTheirExistingRoute() {
+        for(area in listOf(ActiveArea.PERSONS,ActiveArea.TASKS)) {
+            val active=H(true);active.port.deliver();active.model.activeArea(area);active.model.useFullActiveView()
+            assertFalse(active.model.compactActiveMode)
+            assertTrue("Full ACTIVE $area retains ProductEntityList",productEntityListRoute(active.model))
+        }
+        val preparation=H(status=ActionStatus.PREPARATION)
+        preparation.model.preparationArea(PreparationArea.PERSONS)
+        assertTrue(productEntityListRoute(preparation.model))
+        preparation.model.preparationArea(PreparationArea.TASKS)
+        assertTrue(productEntityListRoute(preparation.model))
+    }
     @Test fun workerSessionObserverDropsSlotBeforeComposeDispatchAndOnClearedClosesLifetime() {
         val h=H();val life=h.port.deliver()
         val failure=java.util.concurrent.atomic.AtomicReference<Throwable?>()

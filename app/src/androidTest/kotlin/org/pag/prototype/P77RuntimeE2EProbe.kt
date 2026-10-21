@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import android.os.Debug
+import android.graphics.Rect
 import android.view.View
 import android.view.ViewTreeObserver
 import org.pag.data.product.P77ProductRuntimeHarness
@@ -78,13 +79,15 @@ class P77RuntimeE2EProbe : Instrumentation() {
             val sequence = listOf(ActiveArea.PERSONS, ActiveArea.FUNCTIONS, ActiveArea.TASKS, ActiveArea.HUB)
             repeat(20) { for (area in sequence) {
                 val navigationState = AtomicReference<String>()
-                val elapsed = drawAfter(activity) {
+                val started = SystemClock.elapsedRealtimeNanos()
+                runOnMainSync {
                     model.activeArea(area)
                     check(model.activeCore === original.get())
                     navigationState.set("area=${model.activeArea},enabled=${model.activeNavigationEnabled},selected=${model.selected?.id},status=${model.selected?.status},session=${model.snapshot.state},generation=${model.snapshot.generation}")
                 }
                 check(navigationState.get().startsWith("area=$area,")) { "Compact navigation did not select $area: ${navigationState.get()}" }
                 val visible = awaitVisibleArea(activity, model, originalCore, area)
+                val elapsed = drawVerifiedContent(activity, started)
                 rows += "P77_COMPOSE,$area,${visible.joinToString("|")}"
                 rows += "P77_DRAW,$area,$elapsed"
             } }
@@ -144,13 +147,15 @@ class P77RuntimeE2EProbe : Instrumentation() {
         var visible = emptySet<String>()
         var currentArea: ActiveArea? = null
         var compact = false
+        var viewState=""
         var rootPackage: String? = null
         await("composed compact $area", timeoutSeconds = 8, details = {
-            "area=$currentArea compact=$compact root=$rootPackage visible=${visible.size}/${expected.size} text=${visible.joinToString("|")}"
+            "area=$currentArea compact=$compact state=$viewState root=$rootPackage visible=${visible.size}/${expected.size} text=${visible.joinToString("|")} ui=${describeActiveRoot()}"
         }, condition = {
             runOnMainSync {
                 currentArea = model.activeArea
                 compact = model.compactActiveMode
+                viewState="selected=${model.selected?.status},core=${model.activeCore!=null},workspace=${model.workspace!=null},ops=${model.operations.screen},selectedPerson=${model.selectedPerson!=null},taskForm=${model.tasks.form},selectedTask=${model.tasks.selected!=null},personsLoading=${model.personsLoading},error=${model.workspaceError}"
             }
             if (currentArea != area || !compact) return@await false
             expected = when (area) {
@@ -158,30 +163,77 @@ class P77RuntimeE2EProbe : Instrumentation() {
                     "Personen öffnen", "Aufgaben öffnen", "Funktionen öffnen")
                 ActiveArea.PERSONS -> setOf("Personen",
                     "${core.people.items.size} von ${core.people.overall.total} angezeigt · weitere Einträge verfügbar",
-                    requireNotNull(core.people.items.firstOrNull()?.pseudonym))
+                    requireNotNull(core.people.items.firstOrNull()?.pseudonym)) + org.pag.domain.OperationalStatus.entries.map {
+                        "${org.pag.prototype.product.operationalLabel(it)}: ${core.people.overall.count(it)}"
+                    }
                 ActiveArea.FUNCTIONS -> setOf("Funktionen",
-                    "${core.functions.onSiteCount} Personen vor Ort · ${core.functions.withoutFunction} ohne Funktion")
+                    "${core.functions.onSiteCount} Personen vor Ort · ${core.functions.withoutFunction} ohne Funktion") +
+                    if (core.functions.items.isEmpty()) setOf("Noch keine aktuellen Funktionen") else core.functions.items.map {
+                        "${it.role.name}: ${it.onSiteCount} vor Ort"
+                    }.toSet()
                 ActiveArea.TASKS -> setOf("Aufgaben",
                     "${core.tasks.items.size} von ${core.tasks.overall.open + core.tasks.overall.inProgress} angezeigt · weitere Einträge verfügbar",
+                    "${core.tasks.overall.open} offen · ${core.tasks.overall.inProgress} in Arbeit · ${core.tasks.overall.done} abgeschlossen · ${core.tasks.overall.cancelled} abgebrochen",
                     requireNotNull(core.tasks.items.firstOrNull()?.title))
                 else -> emptySet()
             }
             visible = expected.filter { isVisibleText(it) { rootPackage = it } }.toSet()
-            expected.isNotEmpty() && visible.containsAll(expected)
+            expected.isNotEmpty() && visible.containsAll(expected) && exactVisibleTextCount(area.label)==1
         })
         return expected
+    }
+
+    private fun describeActiveRoot():String {
+        val root=uiAutomation.rootInActiveWindow ?: return "<no active root>"
+        return try {
+            val out=StringBuilder("package=${root.packageName},children=${root.childCount}")
+            fun append(node:android.view.accessibility.AccessibilityNodeInfo,depth:Int) {
+                if(depth>12 || out.length>12000)return
+                val bounds=Rect().also(node::getBoundsInScreen)
+                out.append("\n").append(" ".repeat(depth)).append(node.className).append(" text=")
+                    .append(node.text).append(" desc=").append(node.contentDescription)
+                    .append(" visible=").append(node.isVisibleToUser).append(" bounds=").append(bounds)
+                    .append(" children=").append(node.childCount)
+                for(i in 0 until node.childCount) node.getChild(i)?.let { child -> try{append(child,depth+1)}finally{child.recycle()} }
+            }
+            append(root,0);out.toString()
+        } finally {root.recycle()}
+    }
+
+    private fun exactVisibleTextCount(search: String): Int {
+        val root=uiAutomation.rootInActiveWindow ?: return 0
+        return try {
+            val viewport=Rect().also(root::getBoundsInScreen)
+            fun count(node:android.view.accessibility.AccessibilityNodeInfo):Int {
+                val text=node.text?.toString()
+                val bounds=Rect().also(node::getBoundsInScreen)
+                val visible=text==search && node.isVisibleToUser && Rect.intersects(viewport,bounds)
+                var total=if(visible)1 else 0
+                for(i in 0 until node.childCount)node.getChild(i)?.let{child->try{total+=count(child)}finally{child.recycle()}}
+                return total
+            }
+            count(root)
+        } finally {root.recycle()}
     }
 
     private fun isVisibleText(search: String, onRoot: (String?) -> Unit): Boolean {
         val root = uiAutomation.rootInActiveWindow ?: run { onRoot(null); return false }
         onRoot(root.packageName?.toString())
         return try {
-            root.findAccessibilityNodeInfosByText(search).orEmpty().any { node ->
-                val visible = node.text?.toString()?.contains(search) == true ||
+            val viewport = Rect().also(root::getBoundsInScreen)
+            fun find(node:android.view.accessibility.AccessibilityNodeInfo):Boolean {
+                val matches = node.text?.toString()?.contains(search) == true ||
                     node.contentDescription?.toString()?.contains(search) == true
-                node.recycle()
-                visible
+                if (matches && !node.isVisibleToUser) node.performAction(
+                    android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.id)
+                if (matches) node.refresh()
+                val bounds=Rect().also(node::getBoundsInScreen)
+                val visible=matches && node.isVisibleToUser && Rect.intersects(viewport,bounds)
+                if(visible)return true
+                for(i in 0 until node.childCount)node.getChild(i)?.let{child->try{if(find(child))return true}finally{child.recycle()}}
+                return false
             }
+            find(root)
         } finally {
             root.recycle()
         }
@@ -193,27 +245,27 @@ class P77RuntimeE2EProbe : Instrumentation() {
     }
     private var runtimePhase=0
 
-    private fun drawAfter(activity: MainActivity, action: () -> Unit): Long {
+    /** Measures navigation start through a real draw scheduled only after the expected compact
+     * accessibility content is present. This avoids counting an unrelated decor invalidation. */
+    private fun drawVerifiedContent(activity: MainActivity, navigationStartedNanos: Long): Long {
         val view = activity.window.decorView
         val done = CountDownLatch(1)
         val once = AtomicBoolean(false)
-        val started = AtomicLong()
         val elapsed = AtomicLong()
         lateinit var listener: ViewTreeObserver.OnDrawListener
         runOnMainSync {
             listener = ViewTreeObserver.OnDrawListener {
                 if (once.compareAndSet(false, true)) {
-                    elapsed.set(SystemClock.elapsedRealtimeNanos() - started.get())
+                    elapsed.set(SystemClock.elapsedRealtimeNanos() - navigationStartedNanos)
                     done.countDown()
                     view.post { if (view.viewTreeObserver.isAlive) view.viewTreeObserver.removeOnDrawListener(listener) }
                 }
             }
             view.viewTreeObserver.addOnDrawListener(listener)
-            started.set(SystemClock.elapsedRealtimeNanos())
-            action()
+            // Content has already been checked against the core payload by awaitVisibleArea.
             view.invalidate()
         }
-        check(done.await(10, TimeUnit.SECONDS)) { "No Content OnDraw after navigation" }
+        check(done.await(10, TimeUnit.SECONDS)) { "No draw after verified compact content" }
         runOnMainSync { if (view.viewTreeObserver.isAlive) view.viewTreeObserver.removeOnDrawListener(listener) }
         return elapsed.get()
     }

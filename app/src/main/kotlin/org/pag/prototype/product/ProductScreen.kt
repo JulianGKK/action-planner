@@ -63,8 +63,9 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                         BoxWithConstraints(Modifier.fillMaxSize()) {
                         val viewport=loadingViewportMinimum(constraints.maxHeight,with(LocalDensity.current){48.dp.roundToPx()})
                         val listPositions=remember(model.snapshot.generation,model.selected?.id){ProductScrollPositions()}
-                        if(productEntityListRoute(model)) ProductEntityList(model,listPositions)
-                        else {
+                        key(model.selected?.id,model.selected?.status,model.activeArea,model.preparationArea,
+                            model.compactActiveMode,productEntityListRoute(model)) {
+                        if(productEntityListRoute(model)) ProductEntityList(model,listPositions) else {
                         val scroll=rememberScrollState()
                         val geometry=productScrollGeometry(model,scroll,viewport,listPositions)
                         Column(Modifier.padding(24.dp).verticalScroll(scroll).then(geometry), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -144,6 +145,7 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                                     }
                                 }
                             }
+                        }
                         }
                         }
                         }

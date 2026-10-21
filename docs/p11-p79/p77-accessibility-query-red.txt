@@ -1,0 +1,43 @@
+INSTRUMENTATION_RESULT: result=P77 FAIL: java.lang.IllegalStateException: Timed out waiting for composed compact PERSONS: area=PERSONS compact=true root=org.pag.prototype.a.p77runtime visible=0/11 text= ui=package=org.pag.prototype.a.p77runtime,children=3
+android.widget.FrameLayout text=null desc=null visible=true bounds=Rect(0, 0 - 1080, 2400) children=3
+ android.widget.FrameLayout text=null desc=null visible=true bounds=Rect(0, 0 - 1080, 2274) children=1
+  android.widget.FrameLayout text=null desc=null visible=true bounds=Rect(0, 90 - 1080, 2274) children=1
+   androidx.compose.ui.platform.ComposeView text=null desc=null visible=true bounds=Rect(0, 90 - 1080, 2274) children=1
+    android.view.View text=null desc=null visible=true bounds=Rect(0, 90 - 1080, 2274) children=1
+     android.view.View text=null desc=null visible=true bounds=Rect(0, 90 - 1080, 2274) children=4
+      android.widget.TextView text=P77 ISOLIERTER TEST – synthetischer Schlüssel und synthetische Testdaten; keine Produktanmeldung desc=null visible=true bounds=Rect(0, 90 - 1080, 166) children=0
+      android.view.View text=null desc=Sitzung: maximal noch 2 Minuten 47 Sekunden. Inaktivität kann früher sperren. visible=true bounds=Rect(63, 201 - 225, 258) children=0
+      android.view.View text=null desc=null visible=true bounds=Rect(771, 166 - 1017, 292) children=2
+       android.widget.TextView text=Sperren desc=null visible=true bounds=Rect(834, 205 - 954, 253) children=0
+       android.widget.Button text=null desc=null visible=true bounds=Rect(771, 166 - 1017, 292) children=0
+      android.widget.ScrollView text=null desc=null visible=true bounds=Rect(63, 355 - 935, 2211) children=18
+       android.view.View text=null desc=null visible=true bounds=Rect(63, 355 - 342, 481) children=2
+        android.widget.TextView text=‹ Aktionen desc=null visible=true bounds=Rect(126, 394 - 279, 442) children=0
+        android.widget.Button text=null desc=null visible=true bounds=Rect(63, 355 - 342, 481) children=0
+       android.widget.TextView text=Synthetic action desc=null visible=true bounds=Rect(63, 523 - 534, 609) children=0
+       android.widget.TextView text=AKTIV desc=null visible=true bounds=Rect(63, 651 - 159, 699) children=0
+       android.view.View text=null desc=null visible=true bounds=Rect(63, 741 - 413, 867) children=2
+        android.widget.TextView text=‹ Zum Lagebild desc=null visible=true bounds=Rect(126, 780 - 350, 828) children=0
+        android.widget.Button text=null desc=null visible=true bounds=Rect(63, 741 - 413, 867) children=0
+       android.widget.TextView text=Personen desc=null visible=true bounds=Rect(63, 909 - 277, 976) children=0
+       android.widget.TextView text=32 von 200 angezeigt · weitere Einträge verfügbar desc=null visible=true bounds=Rect(63, 1018 - 935, 1075) children=0
+       android.widget.TextView text=Keine Lageangabe: 200 desc=null visible=true bounds=Rect(63, 1117 - 473, 1174) children=0
+       android.widget.TextView text=Vor Ort: 0 desc=null visible=true bounds=Rect(63, 1216 - 232, 1273) children=0
+       android.widget.TextView text=Identitätsfeststellung: 0 desc=null visible=true bounds=Rect(63, 1315 - 481, 1372) children=0
+       android.widget.TextView text=In Gewahrsam: 0 desc=null visible=true bounds=Rect(63, 1414 - 357, 1471) children=0
+       android.widget.TextView text=Nicht erreichbar: 0 desc=null visible=true bounds=Rect(63, 1513 - 388, 1570) children=0
+       android.widget.TextView text=Wieder frei: 0 desc=null visible=true bounds=Rect(63, 1612 - 299, 1669) children=0
+       android.widget.TextView text=Nicht mehr vor Ort: 0 desc=null visible=true bounds=Rect(63, 1711 - 428, 1768) children=0
+       android.widget.TextView text=Unklar: 0 desc=null visible=true bounds=Rect(63, 1810 - 219, 1867) children=0
+       android.widget.TextView text=Synthetic 0 desc=null visible=true bounds=Rect(63, 1909 - 259, 1966) children=0
+       android.widget.TextView text=Synthetic 1 desc=null visible=true bounds=Rect(63, 2008 - 259, 2065) children=0
+       android.widget.TextView text=Synthetic 2 desc=null visible=true bounds=Rect(63, 2107 - 259, 2164) children=0
+       android.widget.TextView text=Synthetic 3 desc=null visible=true bounds=Rect(63, 2206 - 259, 2211) children=0
+ android.view.View text=null desc=null visible=true bounds=Rect(0, 0 - 1080, 90) children=0
+ android.view.View text=null desc=null visible=true bounds=Rect(0, 2274 - 1080, 2400) children=0
+	at org.pag.prototype.P77RuntimeE2EProbe.await(P77RuntimeE2EProbe.kt:141)
+	at org.pag.prototype.P77RuntimeE2EProbe.awaitVisibleArea(P77RuntimeE2EProbe.kt:151)
+	at org.pag.prototype.P77RuntimeE2EProbe.onStart(P77RuntimeE2EProbe.kt:89)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+INSTRUMENTATION_CODE: 0

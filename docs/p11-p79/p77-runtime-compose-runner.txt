@@ -1,0 +1,248 @@
+INSTRUMENTATION_STATUS: stream=P77_RESULT,synthetic_test_authority=true,product_runtime=true,reader_invocations=1,tickets=1,hit_attempts=80,accepted_hits=80,retained_payload_same=true,idle_extended=false,lock_revoked=true
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,199738125
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,165873541
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,425067552
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,214510625
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,241328281
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,158619322
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,297820937
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,324304166
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,215980521
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,233114375
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,525209115
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,190750677
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,208924218
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,240086094
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,292820313
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,188344844
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,209293073
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,156187656
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,283444895
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,182615104
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,200689843
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,157765052
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,173344844
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,182735833
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,191598489
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,149293594
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,283023072
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,183110312
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,200320937
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,148320781
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,391283958
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,183075417
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,191342344
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,149502813
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,274354375
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,174896666
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,191146094
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,141299635
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,283003333
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,200788959
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,199440677
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,147896511
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,175021771
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,198910572
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,200797344
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,148497552
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,283100989
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,190724895
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,192287604
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,157633542
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,265077708
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,181152448
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,200378386
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,148705000
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,283588125
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,264758646
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,190449688
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,147924844
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,299930104
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,181208490
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,192679479
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,148538594
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,175097656
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,289311510
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,192120520
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,148432605
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,283559219
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,183474375
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,198542552
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,157671407
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,274170052
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,175559688
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,199625677
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,157301666
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,283202343
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,199004271
+P77_COMPOSE,PERSONS,Personen|32 von 200 angezeigt · weitere Einträge verfügbar|Synthetic 0|Keine Lageangabe: 200|Vor Ort: 0|Identitätsfeststellung: 0|In Gewahrsam: 0|Nicht erreichbar: 0|Wieder frei: 0|Nicht mehr vor Ort: 0|Unklar: 0
+P77_DRAW,PERSONS,198528542
+P77_COMPOSE,FUNCTIONS,Funktionen|0 Personen vor Ort · 0 ohne Funktion|Noch keine aktuellen Funktionen
+P77_DRAW,FUNCTIONS,150771198
+P77_COMPOSE,TASKS,Aufgaben|32 von 1000 angezeigt · weitere Einträge verfügbar|1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen|Synthetic task 546
+P77_DRAW,TASKS,182821302
+P77_COMPOSE,HUB,Lagebild|200 insgesamt|Personen öffnen|Aufgaben öffnen|Funktionen öffnen
+P77_DRAW,HUB,181993490
+P77_HIT,1,2562968
+P77_HIT,2,2494271
+P77_HIT,3,2249636
+P77_HIT,4,2832761
+P77_HIT,5,3575521
+P77_HIT,6,2296458
+P77_HIT,7,2836979
+P77_HIT,8,2708125
+P77_HIT,9,2341146
+P77_HIT,10,2185104
+P77_HIT,11,2928385
+P77_HIT,12,3130000
+P77_HIT,13,2158541
+P77_HIT,14,4625156
+P77_HIT,15,2343177
+P77_HIT,16,4229011
+P77_HIT,17,2927187
+P77_HIT,18,2488802
+P77_HIT,19,3731979
+P77_HIT,20,2650156
+P77_HIT,21,2435781
+P77_HIT,22,2430521
+P77_HIT,23,2617240
+P77_HIT,24,2773333
+P77_HIT,25,2442188
+P77_HIT,26,2479636
+P77_HIT,27,2793281
+P77_HIT,28,3374844
+P77_HIT,29,3045625
+P77_HIT,30,3094636
+P77_HIT,31,2651615
+P77_HIT,32,2942292
+P77_HIT,33,2819895
+P77_HIT,34,2887864
+P77_HIT,35,2655521
+P77_HIT,36,2483906
+P77_HIT,37,2822969
+P77_HIT,38,2980521
+P77_HIT,39,2628073
+P77_HIT,40,3140833
+P77_HIT,41,2998854
+P77_HIT,42,2499635
+P77_HIT,43,2664635
+P77_HIT,44,3382084
+P77_HIT,45,2326563
+P77_HIT,46,2490365
+P77_HIT,47,2797344
+P77_HIT,48,2367083
+P77_HIT,49,2605625
+P77_HIT,50,2408437
+P77_HIT,51,2750937
+P77_HIT,52,2494739
+P77_HIT,53,2798542
+P77_HIT,54,3114636
+P77_HIT,55,2746354
+P77_HIT,56,4868802
+P77_HIT,57,2997292
+P77_HIT,58,2529688
+P77_HIT,59,2221563
+P77_HIT,60,2905469
+P77_HIT,61,2402031
+P77_HIT,62,2913855
+P77_HIT,63,2750781
+P77_HIT,64,4614948
+P77_HIT,65,2115573
+P77_HIT,66,3029167
+P77_HIT,67,2369635
+P77_HIT,68,2734583
+P77_HIT,69,2243802
+P77_HIT,70,2963073
+P77_HIT,71,2449063
+P77_HIT,72,2343125
+P77_HIT,73,3022344
+P77_HIT,74,2856510
+P77_HIT,75,2382657
+P77_HIT,76,4457969
+P77_HIT,77,2515416
+P77_HIT,78,3195781
+P77_HIT,79,2495052
+P77_HIT,80,3670053
+P77_MEMORY,phase=after_core_before_hits,pid=21133,fd=131,pss_kb=183122,native_heap_bytes=11436336,art_gc_count=0
+P77_MEMORY,phase=after_hits_and_lock,pid=21133,fd=136,pss_kb=155609,native_heap_bytes=10066176,art_gc_count=11
+P77_COUNTS,people=200,tasks=1000,functions=0,global_people=200,global_tasks=1000,people_page=32,tasks_page=32,people_hasMore=true,tasks_hasMore=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P77 PASS: ProductRuntime SQLCipher core read, one ticket/read and 80 authorized hits; synthetic authority only
+INSTRUMENTATION_CODE: -1

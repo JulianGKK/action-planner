@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -11,6 +12,16 @@ import org.pag.domain.*
 
 /** Navigation is ephemeral UI state, never session authority. */
 enum class ActiveArea(val label: String) { HUB("Lagebild"), PERSONS("Personen"), TASKS("Aufgaben"), FUNCTIONS("Funktionen"), PROTOCOL("Protokoll"), MATERIAL("Material"), COSTS("Kosten"), MEMORY_REPORTS("Gedächtnisprotokolle"), DETAILS("Aktionsdetails") }
+internal fun activeWorkspaceShownArea(model:ProductViewModel):ActiveArea = when {
+    model.compactActiveMode -> model.activeArea
+    model.operations.screen in setOf(OperationsScreen.LIVE,OperationsScreen.FUNCTION,OperationsScreen.PERSON) || model.selectedPerson!=null -> ActiveArea.PERSONS
+    model.operations.screen in setOf(OperationsScreen.ROLES,OperationsScreen.FUNCTION_DETAIL,OperationsScreen.NEW_FUNCTION) -> ActiveArea.FUNCTIONS
+    model.protocol.nested -> ActiveArea.PROTOCOL
+    model.material.form || model.material.confirmingDelete -> ActiveArea.MATERIAL
+    model.expenses.form || model.expenses.confirmingDelete -> ActiveArea.COSTS
+    model.tasks.form || model.tasks.selected!=null -> ActiveArea.TASKS
+    else -> model.activeArea
+}
 internal data class HubCard(val area: ActiveArea, val summary: List<String>, val attention: String? = null, val documents: Boolean = false) {
     val label get() = if (documents) "Dokumente" else area.label
 }
@@ -57,16 +68,8 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
         model.selectedPerson != null || model.tasks.form || model.tasks.selected != null) {
         FormOutlinedButton({ model.activeArea(ActiveArea.HUB) }, enabled = model.activeNavigationEnabled) { Text("‹ Zum Lagebild") }
     }
-    val shownArea = when {
-        model.operations.screen in setOf(OperationsScreen.LIVE, OperationsScreen.FUNCTION, OperationsScreen.PERSON) || model.selectedPerson != null -> ActiveArea.PERSONS
-        model.operations.screen in setOf(OperationsScreen.ROLES, OperationsScreen.FUNCTION_DETAIL, OperationsScreen.NEW_FUNCTION) -> ActiveArea.FUNCTIONS
-        model.protocol.nested -> ActiveArea.PROTOCOL
-        model.material.form || model.material.confirmingDelete -> ActiveArea.MATERIAL
-        model.expenses.form || model.expenses.confirmingDelete -> ActiveArea.COSTS
-        model.tasks.form || model.tasks.selected != null -> ActiveArea.TASKS
-        else -> model.activeArea
-    }
-    PreparationHeading(shownArea.label)
+    val shownArea = activeWorkspaceShownArea(model)
+    if(!model.compactActiveMode) PreparationHeading(shownArea.label)
     if (model.protocol.nested || model.operations.screen != OperationsScreen.OVERVIEW || model.selectedPerson != null || model.tasks.form || model.tasks.selected != null) {
         FormOutlinedButton({
             when {
@@ -92,7 +95,9 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
     if(model.compactActiveMode) {
         val core=model.activeCore
         if(core==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
-        CompactActiveContent(core,model.activeArea,model.activeNavigationEnabled,model::activeArea)
+        key(model.activeArea) {
+            CompactActiveContent(core,model.activeArea,model.activeNavigationEnabled,model::activeArea)
+        }
         FormOutlinedButton(model::useFullActiveView,enabled=model.activeNavigationEnabled) { Text("Alle anzeigen und bearbeiten") }
         if(model.activeArea==ActiveArea.HUB && model.documentsAvailable)
             FormOutlinedButton(model::openDocuments,enabled=model.activeNavigationEnabled) { Text("Dokumente öffnen") }
@@ -159,6 +164,7 @@ internal fun activeCompactHubCards(core:ActiveCorePayload):List<HubCard> = listO
         }
         ActiveArea.FUNCTIONS -> {
             Text("${core.functions.onSiteCount} Personen vor Ort · ${core.functions.withoutFunction} ohne Funktion")
+            if (core.functions.items.isEmpty()) Text("Noch keine aktuellen Funktionen")
             core.functions.items.forEach { function -> Text("${function.role.name}: ${function.onSiteCount} vor Ort") }
         }
         ActiveArea.TASKS -> {

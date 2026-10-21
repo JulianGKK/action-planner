@@ -20,7 +20,7 @@ internal fun productEntityListRoute(m:ProductViewModel):Boolean =
     m.snapshot.state==SessionState.READY && !m.documents.available && !m.creating && m.editing==null &&
     !m.detailLoading && !m.personDetailLoading && m.selectedPerson==null && !m.personForm && !m.sensitiveSetup &&
     m.operations.screen==OperationsScreen.OVERVIEW && !m.tasks.form && m.tasks.selected==null &&
-    ((m.selected?.status==ActionStatus.ACTIVE && m.activeArea in setOf(ActiveArea.PERSONS,ActiveArea.TASKS)) ||
+    ((m.selected?.status==ActionStatus.ACTIVE && !m.compactActiveMode && m.activeArea in setOf(ActiveArea.PERSONS,ActiveArea.TASKS)) ||
      (m.selected?.status==ActionStatus.PREPARATION && m.preparationArea in setOf(PreparationArea.PERSONS,PreparationArea.TASKS)))
 
 /** Null outside isolated probes; observation carries UI scroll state only. */
