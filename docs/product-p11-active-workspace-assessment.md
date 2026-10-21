@@ -10807,3 +10807,109 @@ Snapshotbinding-Vertrag verdrahtet. Globale Permissionrevision, P3b-
 Invalidierung und Snapshotowner bleiben **UNWIRED**. Native Grenzen sind
 **NICHT BEWIESEN**; #32 und RED-4 bleiben **BLOCKER**. Keine RAM-Hits,
 Schemaänderung, Migration oder Geräteinstallation.
+
+## 68. Safe Revoke + Trusted ACTIVE Core Binding
+
+**Basis:** Remote-Branch, lokaler Branch und HEAD waren vor der Änderung auf
+`15def393a427894808355541c2c19601c7cbc405`; der Arbeitsbaum war sauber.
+GitHub-Issues #35/#37 wurden auf die §67-Reviewgrenze geprüft. §§65–67 sowie
+Session-, Runtime-, Mutationport-, ActiveCore- und Action-/Leadershippfade
+wurden untersucht.
+
+### 68.1 Session-Revoke auf fremdem Thread
+
+**HOSTGETESTET – RED reproduziert:** Ein neuer Test verwendet den echten
+`SessionCoordinator`, synthetische Authentifizierung und kontrollierbare
+MonotonicTime. Nach Ausstellung eines echten `ActiveReadTicket` ruft ein
+Worker `StorageContext.check()` nach Ablauf der READY-idle-Frist auf. Der
+Coordinator invalidiert synchron und ruft seinen Observer auf demselben
+Worker auf. Vor dem Fix warf der Runtime-Observer dort die
+Ownerthread-Assertion von `revokeActiveRead()`; der Sessionzustand wechselte
+bereits zu LOCKED, aber das Ticket blieb live. Das war eine echte
+Session-/Port-Threadgrenzenverletzung, keine bloße Source-Substring-Annahme.
+
+**IMPLEMENTIERT:** `UncachedWorkspaceMutations` hält die eine aktuelle
+Readticket-Referenz jetzt in einem `AtomicReference`. `revokeActiveRead()`
+führt thread-sicher ausschließlich `getAndSet(null)` und den Widerruf der
+konkreten Ticket-Liveness aus. Sie verändert weder Pending noch gemeinsame
+Mutationsepoche noch Ownerthread-Admission. Admission, finale
+`isCurrentActiveRead`-Prüfung, Writerabschluss und Epochbuchführung bleiben
+ownerthread-gebunden. Worker dürfen weiterhin nur `ticket.isLive()` lesen;
+das ist keine finale Publicationautorität. Es gibt keine zweite Registry,
+Epoche oder Sessionautorität.
+
+**HOSTGETESTET:** Der RED/GREEN-Test prüft Idle-Timeout bei 30 Sekunden,
+absolute Frist bei 180 Sekunden, Sessionzustand und fehlenden READY-Kontext
+nach Sperre, Ticketwiderruf ohne Wiederbelebung, BLOCKED aus Worker-Kontext,
+expliziten Lock, mehrfachen/reentranten Observer-Revoke und einen
+ownerthread-eigenen Writerstart nach workerseitigem Ticketwiderruf. Die
+Session bleibt nach LOCKED/BLOCKED gesperrt; Revoke allein erhöht die Epoche
+nicht; ein späterer Writer erhöht nur die vorhandene gemeinsame Epoche und
+behält die normale Pendingautorität.
+
+### 68.2 P3b-freier Kern und Bindinggrenze
+
+**BESTEHEND:** `ActiveCoreStore` liest Action und ACTIVE-Status innerhalb der
+autorisierten Room-Readtransaktion und schließt P3b-Grants, SensitiveArea-
+Metadaten/-Payload, Dokumente, Protokollvolltexte, Memory-Reports, Keys und
+DB-Leases aus seinem kompakten Resultat aus. Für diesen Kern ist kein
+LeadershipGrant erforderlich. Das belegt jedoch erst die DB-seitige
+ACTIVE-Prüfung, nicht die vollständige READY-/Ticketbindung eines
+produktiven Callers. P3b-Views bleiben separat und kurzlebig; spätere
+P3b-abhängige Projektionen brauchen eigene Invalidierung.
+
+**NICHT BEWIESEN / BLOCKER für B:** Die öffentliche
+`BoundedActiveBinding`-Form verlangt weiterhin `permissionRevision`, während
+kein autoritativer globaler Wert für den P3b-freien Kern existiert. Der
+`ProductActiveCoreReader` erwartet außerdem vor dem DB-Read einen
+`CompactTaskState` samt Caller-`currentState`; es gibt keine bestehende
+typisierte Factory, die zentral erworbenen READY-`StorageContext`, passende
+Generation, gemeinsames Ticket/Epoche und danach frisch transaktional
+bestätigte ACTIVE-Action zusammenbindet. `permissionRevision = 0`, UI-Zähler,
+P3b-Root-/Area-Revision oder ein Callbackwert wären unbelegte
+Ersatzautorität. Deshalb wurde kein Bindingtyp durch bloße Benennung als
+vertrauenswürdig ausgegeben.
+
+### 68.3 Reader-/Publicationgrenze
+
+**UNWIRED:** `ProductActiveCoreReader` bleibt außerhalb von `ProductRuntime`
+und `ProductViewModel`. Der generische `boundedProjectionRead` publiziert
+sein lokales Resultat aktuell innerhalb der Workerarbeit über
+`StorageContext.publish`; die geforderte finale gemeinsame Ticketprüfung und
+zentrale Publication auf dem Ownerthread existieren noch nicht. Ein
+Runtime-Aufruf ohne Refaktor dieses Rückgabe-/Publicationpfads könnte nach
+Writer, Revoke oder Callback-`false` keine sichere Übergabe an einen späteren
+Snapshotowner belegen. Deshalb wurde der Reader in diesem Slice nicht
+angeschlossen und kein RAM-Hit aktiviert.
+
+**VORGESCHLAGEN, nächster begrenzter Slice:** Einen P3b-freien, ausdrücklich
+typisierten Core-Readrequest mit Action-ID, READY-Generation und Ticket aus
+genau derselben Runtime-Portinstanz einführen; die Action innerhalb der
+autorisierten Readtransaktion frisch als ACTIVE bestätigen; die vorhandene
+gemeinsame `CoreReadAdmission` beibehalten; DB-/Keycleanup vollständig vor
+Rückgabe bestätigen; danach auf dem Ownerthread Ticket/Epoche und
+`StorageContext` erneut prüfen und nur über eine kurze zentrale Publication
+an genau einen Snapshotowner übergeben. Vor Retention sind RED-Tests für
+Writer während I/O, Revoke, Generation-/Actionwechsel, verlorene/doppelte
+Mainzustellung und `publish`-Callback-mit-`false` erforderlich. Der
+`BoundedActiveBinding`-/Pagingvertrag muss dabei ohne erfundene
+Permissionrevision refaktoriert werden; Cursorbindung und Budgettests bleiben
+erhalten.
+
+**NICHT BEWIESEN:** Keine Room-/SQLCipher-/native Keycleanup- oder
+Cursorinstrumentierung, keine Android-Lifecycle-/Keyguardprüfung, keine
+physische Heaplöschung. #32 bleibt offen; RED-4 bleibt fail-closed. Es gibt
+keinen Snapshotowner, keine produktive Permissionrevision und keine RAM-Hits.
+
+**Dateien in §68:**
+
+- `domain/src/main/kotlin/org/pag/domain/WorkspaceMutationInvalidation.kt`
+- `data/src/test/kotlin/org/pag/data/product/ActiveReadSessionThreadTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+
+**Status:** Thread-sicherer Ticket-Revoke ist **IMPLEMENTIERT** und mit dem
+echten Host-`SessionCoordinator` **HOSTGETESTET**. Trusted P3b-freier
+Bindingvertrag und produktive Runtime-Readerverdrahtung bleiben **UNWIRED**;
+ihre sichere Freigabe ist **NICHT BEWIESEN** und bleibt **BLOCKER** für
+Snapshotowner/RAM-Reuse. Es gab keine Schemaänderung, Geräteinstallation,
+P3b-Payloadretention oder RAM-Hits.

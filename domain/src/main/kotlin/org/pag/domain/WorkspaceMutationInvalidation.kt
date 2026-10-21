@@ -1,5 +1,7 @@
 package org.pag.domain
 
+import java.util.concurrent.atomic.AtomicReference
+
 /** Data evidence, never inferred from a repository success callback. COMMITTED/ROLLED_BACK
  * require a successful outer transaction end (or proven nonexecution for ROLLED_BACK);
  * cleanup requires the entire DB/key scope return.
@@ -91,7 +93,9 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
     private var latest: Ticket? = null
     private var uncertain = false
     private var generation: Long? = null
-    private var activeRead: ReadTicket? = null
+    // Only ticket liveness may be revoked by a foreign-thread session observer.
+    // Admission, pending and mutationEpoch remain owner-thread-only.
+    private val activeRead = AtomicReference<ReadTicket?>(null)
     var mutationEpoch = 0L; private set
     val ramReuseEnabled: Boolean get() = false
     private fun owner() { check(Thread.currentThread() === owner) }
@@ -111,17 +115,21 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
         owner()
         if (actionId.isBlank() || generation < 0) return null
         if (!prepareGeneration(generation) || pending != null || uncertain) return null
-        activeRead?.invalidate()
-        return ReadTicket(actionId,generation,mutationEpoch).also { activeRead=it }
+        val ticket=ReadTicket(actionId,generation,mutationEpoch)
+        activeRead.getAndSet(ticket)?.invalidate()
+        return ticket
     }
     override fun isCurrentActiveRead(ticket: WorkspaceMutationInvalidation.ActiveReadTicket): Boolean {
         owner()
-        val current=activeRead ?: return false
+        val current=activeRead.get() ?: return false
         return ticket === current && current.isLive() && !uncertain && pending == null &&
             generation == current.generation && mutationEpoch == current.mutationEpoch
     }
     override fun revokeActiveRead() {
-        owner(); activeRead?.invalidate(); activeRead=null
+        // SessionCoordinator publishes synchronously on the thread that discovers
+        // expiry. This operation only revokes the exact ticket; it never touches
+        // owner-thread admission, pending, or epoch state.
+        activeRead.getAndSet(null)?.invalidate()
     }
     private fun begin(generation: Long, kind: Kind): WorkspaceMutationInvalidation.Pending? {
         if (!prepareGeneration(generation)) return null
