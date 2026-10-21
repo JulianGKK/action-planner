@@ -101,6 +101,22 @@ class ActiveWorkspaceValiditySessionTest {
         assertFalse(fresh.canReuse(h.parts)); assertNotNull(fresh.beginRead(h.parts))
     }
 
+    @Test fun missingTrustedPermissionBindingDeniesTheInitialCoreRead() {
+        val h = Harness()
+        var acquisitions = 0
+        val access = object : StorageAccess {
+            override fun acquire(scope: AccessScope): StorageContext? {
+                acquisitions++
+                return h.session.acquire(scope)
+            }
+        }
+        val noTrustedBinding = ActiveWorkspaceValidity(h.binding!!, access) { null }
+        assertNull(noTrustedBinding.beginRead(h.parts))
+        assertFalse(noTrustedBinding.canReuse(h.parts))
+        assertEquals("Binding failure precedes READY acquisition", 0, acquisitions)
+        assertEquals(State.REVOKED, noTrustedBinding.state)
+    }
+
     @Test fun aNewReadySessionDoesNotClearUnknownRecoveryState() {
         val h = Harness(); val write = h.contract.beginMutation(h.parts)!!
         h.contract.finishMutation(write, Outcome.UNKNOWN, Cleanup.COMPLETE)

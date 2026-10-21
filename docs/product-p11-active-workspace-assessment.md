@@ -10572,3 +10572,95 @@ oder Geräteinstallation ausgeführt. `git diff --check` war sauber.
 und auf Hostebene **HOSTGETESTET**. ACTIVE-Projektionen und RAM-Hits bleiben
 **UNWIRED**. Native Session-/SQLCipher-/Cleanup-/Powerlossbeweise sind
 **NICHT BEWIESEN**. RED-4 und #32 bleiben **BLOCKER**.
+
+### 66. Single ACTIVE Snapshot Owner: sichere Teilmenge und RED-Grenze
+
+**Ausgangsbasis:** `52ad11ea595df5d03d0f7b86758ff35b656dd986`; lokaler HEAD,
+Remote-HEAD `p11-performance-optimization` und sauberer Arbeitsbaum stimmten
+vor dieser Änderung überein. §§43–65 sowie die Produktdefinition, Runtime-,
+ViewModel-, Session-, Bounded-Reader-, Mutation- und P3b-Pfade wurden geprüft.
+
+**BESTEHEND:** `ProductRuntime` gibt dieselbe injizierte
+`WorkspaceMutationInvalidation`-Instanz an die Corewriter und seit §65 an
+`ProductDocumentRepository`. Im normalen Runtime-Aufruf wird ein
+`UncachedWorkspaceMutations`-Owner angelegt. Er zählt die gemeinsame
+Mutationsepoche und serialisiert Core-/Document-Pendings. Seine
+`ramReuseEnabled`-Eigenschaft ist dauerhaft `false`. Das ist die tatsächliche
+gemeinsame Writergrenze; es ist noch kein Snapshotowner.
+
+**UNWIRED:** `ProductActiveCoreReader` ist ausdrücklich nicht Teil von
+`ProductRuntime` oder `ProductViewModel`. Er nutzt die vorhandenen
+`ActiveCoreStore`/`CoreReadAdmission`-Komponenten und wartet im Workerpfad bis
+DB-/Keycleanup beendet ist, bevor sein Readresultat zentral publiziert werden
+kann. Es gibt aber keinen produktiven vertrauenswürdigen Lieferanten für
+`BoundedActiveBinding.permissionRevision`. Die Suche findet diesen Wert nur im
+Bounded-Vertrag, in synthetischen Fixtures und in Tests; `Action`,
+`WorkspaceSnapshot`, `SessionCoordinator`, `StorageAccess` und das P3b-Repository
+stellen keine passende autoritative Revision für einen Core-Snapshot bereit.
+Der Wert `0` aus Fixtures ist kein Produktbeleg und wird nicht verwendet.
+
+Zusätzlich bietet der Live-Mutationsport kein lesbares, pending-freies
+Readticket, mit dem der Owner exakt dieselbe Mutationsepoche samt Pending- und
+UNKNOWN-Zustand atomar an die Corelesung binden könnte. Eine lokale Shadow-Epoche
+oder die Compose-Auswahl `selected` würde keine gemeinsame Autorität herstellen.
+Deshalb wurde kein produktiver `ProductActiveCoreReader`-Aufruf, kein
+`ActiveWorkspaceValidity`-Owner und keine Cache-Retention in Runtime oder
+ViewModel installiert. Das ist die sichere Teilmenge: kein neuer Hitpfad und
+keine unsichere Permission- oder Epochbehauptung.
+
+Die bestehenden Typen begrenzen auch den möglichen ViewModel-Anschluss:
+`ActiveCorePayload` enthält kompakte People-/Taskseiten mit globalen Counts;
+`WorkspaceSnapshot`, `OperationalBoard` und `TaskBoard` stehen für andere,
+vollständige UI-Verträge. Der Payload wurde weder gecastet noch als vollständige
+Liste ausgegeben. `ActiveWorkspaceValidity.Projection` enthält noch keine
+Dokumentanzahl, Dokumentliste, DocumentSummary, Expected-Snapshot- oder
+Workspace-Overview-Projektion. §65-Dokumentwriter invalidieren bereits den
+gemeinsamen Writerport, aber mangels aktivem Snapshotowner gibt es noch keine
+entsprechende aktive Readvalidity, die Overview- und Dokumentprojektionen vor
+Queue synchron dirty setzt.
+
+**HOSTGETESTET:** Bestehende Tests prüfen den isolierten Reader-/Admission-
+Budgetvertrag, Cleanup-vor-Readpublication, Active-Validity-Races,
+Session-/Lock-/180-/30-Sekunden-Widerruf, gemeinsame Writer-Epochen sowie die
+fail-closed Mutationfälle. In diesem Slice wurde ein gezielter
+`ActiveWorkspaceValiditySessionTest` ergänzt: fehlt die vertrauenswürdige
+Bindingquelle, wird die erste Readadmission vor READY-Acquisition verweigert;
+es entsteht keine Reuseberechtigung. Das ist ein synthetischer Domain-Porttest,
+kein ProductRuntime-, Android-, SQLCipher-, P3b- oder End-to-End-Beleg.
+
+**NICHT BEWIESEN / BLOCKER:** Es gibt keinen produktiven, autoritativen
+Permission-/P3b-Revisionsanschluss; keinen gemeinsamen Readticket-Ausgang aus
+dem tatsächlichen Writerowner; keine synchrone Retentioninvalidierung aus
+diesem Owner; keine aktive Dokument-/Overview-Validity; keine
+ProductViewModel/Corereader-Komposition; keine Android-Lifecycle-/Keyguard-
+Instrumentierung und keine native SQLCipher-/Cleanupmessung (#32). Die
+bestehenden Core-/Document-Writer behalten ihre gemeinsame Admission; es wurde
+keine Writerfamilie in eine unabhängige Active-Adapter-Instanz umgeleitet.
+
+**VORGESCHLAGEN, nächster konkreter Anschluss:** Ein separater kleiner
+Autorisierungs-/Mutationportschritt muss aus dem zentralen READY-Kontext eine
+autoritative ACTIVE-Bindung samt echter Permissionrevision bereitstellen und
+aus genau derselben produktiven Writerinstanz einen pending-freien
+Readticket-Snapshot (gemeinsame Epoche und terminaler Unsicherheitszustand)
+liefern. Derselbe Owner muss vor jedem Familien- und Document-Workerstart
+synchron die abhängigen Projections dirty/unpubliziert markieren. Erst danach
+kann `ProductRuntime` den vorhandenen `ProductActiveCoreReader` an genau diesen
+Owner binden, und `ProductViewModel` einen einzelnen vorbereiteten kompakten
+ACTIVE-Kern nach abgeschlossenem DB-/Keycleanup und zentralem kurzen
+Referenzswap entgegennehmen. Vor UI-Verwendung sind gezielte RED-Tests für
+Action-/Generation-/Permissionbindung, alle Writerfamilien, Document-Overview,
+Lock/Fence/late callback und Budgetverweigerung erforderlich. Bis zu diesem
+Anschluss bleibt RAM-Reuse **UNWIRED** und verweigert.
+
+**Dateien in §66:**
+
+- `app/src/test/kotlin/org/pag/prototype/product/ActiveWorkspaceValiditySessionTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+
+**Status:** Gemeinsame Writergrenze und bounded Reader-/Validity-Bausteine sind
+**BESTEHEND**; ihre isolierten Verträge sind **HOSTGETESTET**. Der einzelne
+produktive ACTIVE Snapshot Owner, trusted Permissionbindung und aktive
+Projektionen sind **UNWIRED**. Eine produktive RAM-Freigabe ist **NICHT
+BEWIESEN** und bleibt bis zum genannten Portanschluss **BLOCKER**. Keine
+RAM-Hits, Geräteinstallation, Migration, Schema- oder Produktänderung wurden
+vorgenommen.
