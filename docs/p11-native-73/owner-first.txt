@@ -1,0 +1,12 @@
+P73_OWNER,lock,PASS,next_draw_has_no_valid_core
+P73_OWNER,worker_idle,PASS,next_draw_has_no_valid_core
+P73_OWNER,absolute,PASS,next_draw_has_no_valid_core
+P73_OWNER,blocked,PASS,next_draw_has_no_valid_core
+P73_OWNER,foreground,PASS,next_draw_has_no_valid_core
+P73_OWNER,core,PASS,next_draw_has_no_valid_core
+P73_OWNER,document,PASS,next_draw_has_no_valid_core
+P73_OWNER,unknown,PASS,next_draw_has_no_valid_core
+P73_OWNER,late_main,PASS,next_draw_has_no_valid_core
+P73_OWNER,false_after_callback,PASS,next_draw_has_no_valid_core
+P73_OWNER_OK cases=10; synthetic payload/auth; no Runtime/DB E2E
+

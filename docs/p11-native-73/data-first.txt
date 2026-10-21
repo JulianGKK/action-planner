@@ -1,0 +1,142 @@
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=
+org.pag.data.product.P73NativeFaultTest:
+INSTRUMENTATION_STATUS: test=injectedResetAndCloseFailuresRemainErrorsAndNativeResourcesAreExplicitlyReclaimed
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=injectedResetAndCloseFailuresRemainErrorsAndNativeResourcesAreExplicitlyReclaimed
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=actualWindowRefillsAndNativePointerIsReleasedByProductClose
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: No actual refill observed
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillsAndNativePointerIsReleasedByProductClose$lambda$0$0(P73NativeFaultTest.kt:39)
+	at org.pag.data.product.P73NativeFaultTest.$r8$lambda$BCTVYhfTWDsy_d2LgWgSeyLLNV0(Unknown Source:0)
+	at org.pag.data.product.P73NativeFaultTest$$ExternalSyntheticLambda1.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$lambda$0(P11SyntheticFixture.kt:224)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda9.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.SessionDbKeyOwner.withDbKey(SessionDbKeyOwner.kt:15)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$data(P11SyntheticFixture.kt:221)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillsAndNativePointerIsReleasedByProductClose(P73NativeFaultTest.kt:22)
+
+INSTRUMENTATION_STATUS: stream=
+Error in actualWindowRefillsAndNativePointerIsReleasedByProductClose(org.pag.data.product.P73NativeFaultTest):
+java.lang.AssertionError: No actual refill observed
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillsAndNativePointerIsReleasedByProductClose$lambda$0$0(P73NativeFaultTest.kt:39)
+	at org.pag.data.product.P73NativeFaultTest.$r8$lambda$BCTVYhfTWDsy_d2LgWgSeyLLNV0(Unknown Source:0)
+	at org.pag.data.product.P73NativeFaultTest$$ExternalSyntheticLambda1.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$lambda$0(P11SyntheticFixture.kt:224)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda9.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.SessionDbKeyOwner.withDbKey(SessionDbKeyOwner.kt:15)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$data(P11SyntheticFixture.kt:221)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillsAndNativePointerIsReleasedByProductClose(P73NativeFaultTest.kt:22)
+
+INSTRUMENTATION_STATUS: test=actualWindowRefillsAndNativePointerIsReleasedByProductClose
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=
+org.pag.data.product.P73ActiveLifetimeTest:
+INSTRUMENTATION_STATUS: test=completeReadPhasesAndUnknownAdmissionAreSeparateFromRamReuse
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=P73_PHASE,METADATA,87050938
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P73_PHASE,ADMISSION,808802
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P73_PHASE,MATERIALIZATION,21813698
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=completeReadPhasesAndUnknownAdmissionAreSeparateFromRamReuse
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=writerRevokeAndLostMainAfterNativeCleanupNeverRestoreOldRead
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=writerRevokeAndLostMainAfterNativeCleanupNeverRestoreOldRead
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=realLifetimeRevokedSynchronouslyByWorkerIdleAndAbsoluteExpiry
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=realLifetimeRevokedSynchronouslyByWorkerIdleAndAbsoluteExpiry
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=6
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=nativeRowloopRevokeOrWriterInvalidatesBeforeFinalPublication
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=6
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=6
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=nativeRowloopRevokeOrWriterInvalidatesBeforeFinalPublication
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 36,909
+There was 1 failure:
+1) actualWindowRefillsAndNativePointerIsReleasedByProductClose(org.pag.data.product.P73NativeFaultTest)
+java.lang.AssertionError: No actual refill observed
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillsAndNativePointerIsReleasedByProductClose$lambda$0$0(P73NativeFaultTest.kt:39)
+	at org.pag.data.product.P73NativeFaultTest.$r8$lambda$BCTVYhfTWDsy_d2LgWgSeyLLNV0(Unknown Source:0)
+	at org.pag.data.product.P73NativeFaultTest$$ExternalSyntheticLambda1.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$lambda$0(P11SyntheticFixture.kt:224)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda9.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.SessionDbKeyOwner.withDbKey(SessionDbKeyOwner.kt:15)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$data(P11SyntheticFixture.kt:221)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillsAndNativePointerIsReleasedByProductClose(P73NativeFaultTest.kt:22)
+
+FAILURES!!!
+Tests run: 6,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

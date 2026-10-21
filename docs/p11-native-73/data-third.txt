@@ -1,0 +1,215 @@
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+org.pag.data.product.P73NativeFaultTest:
+INSTRUMENTATION_STATUS: test=realKeyLeaseArrayAndDriverEndAfterNativeQueryAndInjectedException
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=realKeyLeaseArrayAndDriverEndAfterNativeQueryAndInjectedException
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=injectedResetAndCloseFailuresRemainErrorsAndNativeResourcesAreExplicitlyReclaimed
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=injectedResetAndCloseFailuresRemainErrorsAndNativeResourcesAreExplicitlyReclaimed
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=nativeWindowPointersCloseAcrossIndependentSqlBatches
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=P73_BATCH,0,rows=1000,native_window_ptr_after_close=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P73_BATCH,1,rows=1000,native_window_ptr_after_close=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P73_BATCH,2,rows=1000,native_window_ptr_after_close=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P73_BATCH,3,rows=1000,native_window_ptr_after_close=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=nativeWindowPointersCloseAcrossIndependentSqlBatches
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+org.pag.data.product.P73ActiveLifetimeTest:
+INSTRUMENTATION_STATUS: test=budgetInvalidDataAndInjectedSqlExceptionNeverPublishPartialCore
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Partial core published in invalid
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.pag.data.product.P73ActiveLifetimeTest.budgetInvalidDataAndInjectedSqlExceptionNeverPublishPartialCore$lambda$0$3(P73ActiveLifetimeTest.kt:164)
+	at org.pag.data.product.P73ActiveLifetimeTest.$r8$lambda$i5TFPfeNerUeGf2qCnjs89zxQOE(Unknown Source:0)
+	at org.pag.data.product.P73ActiveLifetimeTest$$ExternalSyntheticLambda21.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P73ActiveLifetimeTest.main$lambda$0(P73ActiveLifetimeTest.kt:19)
+	at org.pag.data.product.P73ActiveLifetimeTest$$ExternalSyntheticLambda5.run(D8$$SyntheticClass:0)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2353)
+	at android.os.Handler.handleCallback(Handler.java:942)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loopOnce(Looper.java:226)
+	at android.os.Looper.loop(Looper.java:313)
+	at android.app.ActivityThread.main(ActivityThread.java:8762)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:604)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1067)
+
+INSTRUMENTATION_STATUS: stream=
+Error in budgetInvalidDataAndInjectedSqlExceptionNeverPublishPartialCore(org.pag.data.product.P73ActiveLifetimeTest):
+java.lang.AssertionError: Partial core published in invalid
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.pag.data.product.P73ActiveLifetimeTest.budgetInvalidDataAndInjectedSqlExceptionNeverPublishPartialCore$lambda$0$3(P73ActiveLifetimeTest.kt:164)
+	at org.pag.data.product.P73ActiveLifetimeTest.$r8$lambda$i5TFPfeNerUeGf2qCnjs89zxQOE(Unknown Source:0)
+	at org.pag.data.product.P73ActiveLifetimeTest$$ExternalSyntheticLambda21.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P73ActiveLifetimeTest.main$lambda$0(P73ActiveLifetimeTest.kt:19)
+	at org.pag.data.product.P73ActiveLifetimeTest$$ExternalSyntheticLambda5.run(D8$$SyntheticClass:0)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2353)
+	at android.os.Handler.handleCallback(Handler.java:942)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loopOnce(Looper.java:226)
+	at android.os.Looper.loop(Looper.java:313)
+	at android.app.ActivityThread.main(ActivityThread.java:8762)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:604)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1067)
+
+INSTRUMENTATION_STATUS: test=budgetInvalidDataAndInjectedSqlExceptionNeverPublishPartialCore
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=completeReadPhasesAndUnknownAdmissionAreSeparateFromRamReuse
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=P73_MEMORY,native_candidate_waiting_main,83,5645584,50382,8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P73_MEMORY,atomic_test_slot_loaded,83,5645632,50410,8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P73_PHASE,METADATA,33628437
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P73_PHASE,ADMISSION,130469
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P73_PHASE,MATERIALIZATION,20370208
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P73_MEMORY,atomic_test_slot_revoked,83,5645680,50418,8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=completeReadPhasesAndUnknownAdmissionAreSeparateFromRamReuse
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=6
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=writerRevokeAndLostMainAfterNativeCleanupNeverRestoreOldRead
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=6
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=writerRevokeAndLostMainAfterNativeCleanupNeverRestoreOldRead
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=7
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=realLifetimeRevokedSynchronouslyByWorkerIdleAndAbsoluteExpiry
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=7
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=realLifetimeRevokedSynchronouslyByWorkerIdleAndAbsoluteExpiry
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=8
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=nativeRowloopRevokeOrWriterInvalidatesBeforeFinalPublication
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73ActiveLifetimeTest
+INSTRUMENTATION_STATUS: current=8
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=8
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=nativeRowloopRevokeOrWriterInvalidatesBeforeFinalPublication
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 46,288
+There was 1 failure:
+1) budgetInvalidDataAndInjectedSqlExceptionNeverPublishPartialCore(org.pag.data.product.P73ActiveLifetimeTest)
+java.lang.AssertionError: Partial core published in invalid
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.pag.data.product.P73ActiveLifetimeTest.budgetInvalidDataAndInjectedSqlExceptionNeverPublishPartialCore$lambda$0$3(P73ActiveLifetimeTest.kt:164)
+	at org.pag.data.product.P73ActiveLifetimeTest.$r8$lambda$i5TFPfeNerUeGf2qCnjs89zxQOE(Unknown Source:0)
+	at org.pag.data.product.P73ActiveLifetimeTest$$ExternalSyntheticLambda21.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P73ActiveLifetimeTest.main$lambda$0(P73ActiveLifetimeTest.kt:19)
+	at org.pag.data.product.P73ActiveLifetimeTest$$ExternalSyntheticLambda5.run(D8$$SyntheticClass:0)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:463)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2353)
+	at android.os.Handler.handleCallback(Handler.java:942)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loopOnce(Looper.java:226)
+	at android.os.Looper.loop(Looper.java:313)
+	at android.app.ActivityThread.main(ActivityThread.java:8762)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:604)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1067)
+
+FAILURES!!!
+Tests run: 8,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

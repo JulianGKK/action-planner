@@ -11346,3 +11346,80 @@ Rohdaten, vollständige RED-/GREEN-Reports, Grenzen und genaue Folgebefehle:
 [p11-native-active-core-results-72.md](p11-native-active-core-results-72.md).
 Nächster Schritt: native Fault-/Lifecycle-/Referenzüberlappungsabnahme, anschließend
 separater unabhängiger Gate-Review. Kein RAM-Hit, kein Merge, kein Release.
+
+## 73 – Native Faults and ACTIVE Lifetime Validation
+
+Ausgangsbasis `a6d3fe704500a6be2b538a4568b465aa3fbe27c7`, Remote/lokal identisch,
+Arbeitsbaum initial sauber. §72-Reviews #32/#37/#38/#39 gelesen.
+
+**IMPLEMENTIERT:** Schmale interne Store-Phasen-/Zeitbeobachtung im bestehenden
+ProductActiveCoreReader.readForTicket (leere Produktdefaults), Debug-Proben für native
+Driver-/Leasearbeit und ein Debug-Bridge zum tatsächlichen Loader/Lifetime. Keine neue
+Registry/Epoche/Sessionautorität im Produkt, kein Gate aktiviert. Separate isolierte
+App-Test-ID über versionierten finalizeDsl-Init-Script. Keine neue SQL-Readerarchitektur.
+
+**ANDROID-GREEN:** Finale8Data-JUnit-Zieltests. Tatsächlicher Room-/SQLCipher-Reader mit
+200Personen/1000Aufgaben für Lifetimefälle: Workeridle30s/absolut180s (kontrollierte Uhr),
+LOCKED/BLOCKED, Core-/DOCUMENT-Admisson während PEOPLE_ROW, Writer/Lock/Foregroundentzug
+nach DBread vor Main, verlorener Main, UNKNOWN. Echter großer Tasktitel führt zu
+BUDGET_REFUSED; leerer Actiontitel und synthetisch während METADATA injizierte
+SQLiteException verhindern Teilpublication/BLOCKED. Echte SessionCoordinator-Policy,
+aber Authentifizierung und Maintenance synthetisch, kein Produktunlock-E2E.
+
+**ANDROID-GREEN #32, begrenzte Evidence:** Vier unabhängige1000Row-SQL-Batches über den
+Produktwrapper: Querycursor während Read offen; nach Produktclose Cursorfeld null und
+gehaltene native CursorWindowhandles mWindowPtr=0. Reset-/Close-Exceptions synthetisch um
+echte Herstellerinstanz und tatsächliche Cleanupklasse injiziert: Fehler erhalten,
+zweiter Cleanup versucht, suppressed erhalten. Resetfehler lässt Cursor offen; explizite
+Testrettung zählt NICHT als Produktcleanup. Nach echter nativer Queryarbeit/definierter
+Exception ist geliehenes SessionDbKeyOwner-ByteArray nullgesetzt, driver.resourcesClosed
+bestätigt. Keine globale Lease-/Roomstatementzählung oder physische Speicherlöschung.
+
+**ANDROID-RED / BLOCKER:** Strenge tatsächliche Window-Refillassertion bleibt rot,
+auch nach angeforderter kleinerer initialer Windowgröße. Vier separate SQL-Batches sind
+kein Ersatzbeweis für Refills. Hersteller-Wachstumsvertrag/mehrere Windowfüllungen weiter
+offen. Keine behauptete native Hardwarefehlerinjektion oder vollständige Room-Upstream-
+Freigabe nach DB-/Keycleanupfehlern. B2StatementCleanup aus §72 bleibt unverändert.
+
+**ANDROID-GREEN #39, begrenzt:** Separater Custom-Runner13/13Szenarien mit realem
+SessionCoordinator, ProductActiveCoreLoader/Lifetime, ProductViewModel und ProductScreen/
+Compose. Synthetischer Core/Repos/Auth/Maintenance, ausdrücklich kein Runtime-/DB-E2E.
+Lock/Workeridle/absolute/BLOCKED/Foregroundaufruf/Core/DOCUMENT/UNKNOWN/alter Main nach
+Reauth/callback-then-false/Workerrevoke während Übernahme/Action-/Statuswechsel.
+Workerexpiry leert tatsächlichen ViewModel-Atomic-Slot synchron; Main-Composeverarbeitung
+und nächster OnDraw mit ungültigem Core beobachtet. Keine Pixel-/Frame-/Heaplöschung
+behauptet. Echte OS-Keyguard-/Hintergrund-/Credentialereignisse noch NICHT AUSGEFÜHRT.
+
+**NATIVE ROHWERTE #33/#34/#38:** Ein großer Core: Kandidat/Mainqueued→Atomic-Testslot→
+Revoke: FD83/83/83, NativeHeap5607328/5607376/5607424Bytes,
+PSS50568/50597/50601KiB, GC9/9/9. Keine Toleranz-Leakfreigabe und keine vollständige
+Compose-/Editor-/Frameüberlappung. Storemetadata30,530ms, gemeinsameAdmission0,130ms,
+Materialisierung20,034ms, jeweils Einzelbeobachtung. Kein neuer Median/p95/OnDraw-Latenz-
+Nachweis; §72frische Reads weiter1,23–1,31SEKUNDEN. Keine RAM-Hits;8+8MiB unverändert.
+
+**HOSTGETESTET:** Gezielt und vollständiger Offline-Lauf grün:1810Hosttests
+(app682/data1124/security4),0Fehler/Errors/Skips; domain NO-SOURCE. Beide Androidtest-
+Kompilationen, assembleDebug, beide Manifestchecks erfolgreich; diffcheck sauber.
+
+**VOLLSTÄNDIGE ANDROIDBILANZ:**30JUnit-Ausführungen,25bestanden/5fehlgeschlagen/0Skips.
+Final8GREEN +separat1RED; frühere Fehler: zweimal fehlender Refilleffekt, falsche
+Template-Budgetannahme und zulässiger Randspace-Titel als ungültiger Input. Keine
+Assertion abgeschwächt. Zusätzlich23Custom-Runner-Szenarien (10+13),alle bestanden.
+Fehlerhafte Import-/Manifest-/ID-Buildstände vor Ausführung korrigiert; Produkt-ID-APK
+nie installiert. Alle Runnerreports erhalten.
+
+**ISOLIERUNG:** Nur bestätigtes Samsung/RFCT1186YRJ; initial fehlende unlockprobe und
+org.pag.validation.p73/.test installiert, IDs/Runner/Signaturen aus APKs geprüft. Nach
+leeren eigenen no_backup-Wurzeln genau diese drei eigenen Pakete entfernt. Geschützte
+org.pag.prototype.a und org.pag.perf.p11probe unangetastet, Versions-/Signatur-/Install-
+Metadaten vor/nach identisch. Keine Produktdaten/Benutzercredentials.
+
+**BLOCKER / NO-GO FÜR PRODUKT-RAM-GATE:** Native Window-/Roomcleanup-Faultgrenze,
+durchgängige Runtime-/DB-/ViewModel-/OS-Lifecyclekette und8+8MiB-Referenzüberlappung weiter
+abnehmen. Jeder spätere Hit muss zentral acquire/check/publish plus originale Lifetime/
+Ticket-/Writerautorität prüfen, ohne30sIdle künstlich zu verlängern. Erst separater
+unabhängiger Gate-Review, dann Content-OnDraw-Serie. Cache bleibt zwingend für1.0;
+keine cachelose Releasefreigabe. RED-4 und #36Editor/ABA bleiben offen.
+
+Details, Rohwerte, vollständige RED-/GREEN-Reports und genaue Befehle:
+[p11-native-active-core-results-73.md](p11-native-active-core-results-73.md).

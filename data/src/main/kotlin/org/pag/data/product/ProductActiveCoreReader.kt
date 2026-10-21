@@ -34,7 +34,9 @@ class ProductActiveCoreReader(app: Context, private val access: StorageAccess,
      */
     internal fun readForTicket(context: StorageContext,
         ticket: WorkspaceMutationInvalidation.ActiveReadTicket, laneTicket: Long,
-        affectedPersonId: String? = null): ActiveCoreResult {
+        affectedPersonId: String? = null,
+        observe: (ActiveCoreStore.Phase) -> Unit = {},
+        measured: (ActiveCoreStore.Metric, Long) -> Unit = { _, _ -> }): ActiveCoreResult {
         val state=CompactTaskState(P3bFreeActiveCoreBinding(ticket.actionId,ticket.generation),ticket.mutationEpoch)
         fun current() = context.scope == AccessScope.READY && context.generation == ticket.generation &&
             ticket.isLive() && context.check(AccessPoint.STEP)
@@ -47,7 +49,7 @@ class ProductActiveCoreReader(app: Context, private val access: StorageAccess,
                 if(!current()) throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)
                 (owner() ?: throw ProductStorageFailure()).withDbKey(context) { key ->
                     database.use(inventory.database,key,context) { db ->
-                        db.withReadTransaction { ActiveCoreStore(this,context,::current).read(state,affectedPersonId) }
+                        db.withReadTransaction { ActiveCoreStore(this,context,::current,observe,measured).read(state,affectedPersonId) }
                     }
                 }
             }

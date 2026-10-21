@@ -1,0 +1,62 @@
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+org.pag.data.product.P73NativeFaultTest:
+INSTRUMENTATION_STATUS: test=actualWindowRefillRequired_RED73
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=org.pag.data.product.P73NativeFaultTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: No actual refill observed
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillRequired_RED73$lambda$0$0(P73NativeFaultTest.kt:49)
+	at org.pag.data.product.P73NativeFaultTest.$r8$lambda$8DOmNAicRoYtDD_nnUiZDHFRewg(Unknown Source:0)
+	at org.pag.data.product.P73NativeFaultTest$$ExternalSyntheticLambda2.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$lambda$0(P11SyntheticFixture.kt:224)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda9.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.SessionDbKeyOwner.withDbKey(SessionDbKeyOwner.kt:15)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$data(P11SyntheticFixture.kt:221)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillRequired_RED73(P73NativeFaultTest.kt:32)
+
+INSTRUMENTATION_STATUS: stream=
+Error in actualWindowRefillRequired_RED73(org.pag.data.product.P73NativeFaultTest):
+java.lang.AssertionError: No actual refill observed
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillRequired_RED73$lambda$0$0(P73NativeFaultTest.kt:49)
+	at org.pag.data.product.P73NativeFaultTest.$r8$lambda$8DOmNAicRoYtDD_nnUiZDHFRewg(Unknown Source:0)
+	at org.pag.data.product.P73NativeFaultTest$$ExternalSyntheticLambda2.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$lambda$0(P11SyntheticFixture.kt:224)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda9.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.SessionDbKeyOwner.withDbKey(SessionDbKeyOwner.kt:15)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$data(P11SyntheticFixture.kt:221)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillRequired_RED73(P73NativeFaultTest.kt:32)
+
+INSTRUMENTATION_STATUS: test=actualWindowRefillRequired_RED73
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 1,733
+There was 1 failure:
+1) actualWindowRefillRequired_RED73(org.pag.data.product.P73NativeFaultTest)
+java.lang.AssertionError: No actual refill observed
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillRequired_RED73$lambda$0$0(P73NativeFaultTest.kt:49)
+	at org.pag.data.product.P73NativeFaultTest.$r8$lambda$8DOmNAicRoYtDD_nnUiZDHFRewg(Unknown Source:0)
+	at org.pag.data.product.P73NativeFaultTest$$ExternalSyntheticLambda2.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$lambda$0(P11SyntheticFixture.kt:224)
+	at org.pag.data.product.P11SyntheticFixture$$ExternalSyntheticLambda9.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.SessionDbKeyOwner.withDbKey(SessionDbKeyOwner.kt:15)
+	at org.pag.data.product.P11SyntheticFixture.nativeDriverProbe$data(P11SyntheticFixture.kt:221)
+	at org.pag.data.product.P73NativeFaultTest.actualWindowRefillRequired_RED73(P73NativeFaultTest.kt:32)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

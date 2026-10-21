@@ -203,6 +203,55 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         val reader=ProductActiveCoreReader(wrapped,access,inventory,owner::get,blocked=::fail)
         return ProductActiveCoreLoader(access,mutations,worker,main) { c,t,l -> reader.readForTicket(c,t,l) }
     }
+    /** Isolated native fault harness. Same reader/DB; supplied session is not product authentication. */
+    internal fun coreForSession(session:StorageAccess,mutations:WorkspaceMutationInvalidation,
+        worker:Executor,main:Executor,observe:(ActiveCoreStore.Phase)->Unit={},
+        measured:(ActiveCoreStore.Metric,Long)->Unit={_,_->},blocked:()->Unit=::fail):ProductActiveCoreLoader {
+        check(app.packageName=="org.pag.data.unlockprobe")
+        val c=requireNotNull(session.acquire(AccessScope.READY))
+        owner.getAndSet(SessionDbKeyOwner.bind(c,key))?.invalidate()
+        val reader=ProductActiveCoreReader(wrapped,session,inventory,owner::get,blocked=blocked)
+        return ProductActiveCoreLoader(session,mutations,worker,main) { context,ticket,lane ->
+            reader.readForTicket(context,ticket,lane,observe=observe,measured=measured)
+        }
+    }
+    internal fun <T> nativeDriverProbe(work:(org.pag.data.prototype.b2.B2Driver)->T):T {
+        check(app.packageName=="org.pag.data.unlockprobe")
+        val c=requireNotNull(access.acquire(AccessScope.READY))
+        return requireNotNull(owner.get()).withDbKey(c) { leased ->
+            val dc=object:StorageContext by c { override val scope=AccessScope.MAINTENANCE }
+            val driver=org.pag.data.prototype.b2.B2Driver(inventory.database,leased,dc,org.pag.data.prototype.b2.B2Hooks())
+            driver.use { work(it) }.also { check(driver.resourcesClosed()) }
+        }
+    }
+    internal fun databasePathForProbe():String {
+        check(app.packageName=="org.pag.data.unlockprobe");return inventory.database.path
+    }
+    internal fun keyLeaseAfterNativeFailureProbe(fail:Boolean):Boolean {
+        check(app.packageName=="org.pag.data.unlockprobe")
+        val c=requireNotNull(access.acquire(AccessScope.READY))
+        var borrowed:ByteArray?=null
+        var driver:org.pag.data.prototype.b2.B2Driver?=null
+        val expected=IllegalStateException("SYNTHETIC_AFTER_QUERY")
+        val result=runCatching {
+            requireNotNull(owner.get()).withDbKey(c) { leased ->
+                borrowed=leased
+                val dc=object:StorageContext by c { override val scope=AccessScope.MAINTENANCE }
+                val native=org.pag.data.prototype.b2.B2Driver(inventory.database,leased,dc,org.pag.data.prototype.b2.B2Hooks())
+                driver=native
+                native.use {
+                    it.open(inventory.database.path).use { connection ->
+                        connection.prepare("SELECT 1").use { statement ->
+                            check(statement.step());check(statement.getLong(0)==1L)
+                            if(fail)throw expected
+                        }
+                    }
+                }
+            }
+        }
+        check(if(fail)result.exceptionOrNull()===expected else result.isSuccess)
+        return borrowed?.all{it==0.toByte()}==true && driver?.resourcesClosed()==true
+    }
     /** Diagnostic RED probe for the pinned adapter. Reflection is confined to debug tests. */
     fun statementCloseReleasesCursor():Boolean {
         check(app.packageName=="org.pag.data.unlockprobe")

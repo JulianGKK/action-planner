@@ -1,0 +1,4 @@
+phase,fd_count,native_heap_bytes,pss_kib,art_gc_count
+native_candidate_waiting_main,83,5607328,50568,9
+atomic_test_slot_loaded,83,5607376,50597,9
+atomic_test_slot_revoked,83,5607424,50601,9
