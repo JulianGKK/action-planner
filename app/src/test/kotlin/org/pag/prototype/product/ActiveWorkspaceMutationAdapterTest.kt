@@ -6,14 +6,14 @@ import org.pag.domain.*
 import org.pag.prototype.product.ActiveWorkspaceValidity.*
 
 class ActiveWorkspaceMutationAdapterTest {
-    private class H {
-        val initial=Binding("a",ActionStatus.ACTIVE,1,2)
+    private class H(private val testGeneration:Long=1) {
+        val initial=Binding("a",ActionStatus.ACTIVE,testGeneration,2)
         var binding:Binding?=initial
         var allowed=true
         val access=object:StorageAccess {
             override fun acquire(scope:AccessScope):StorageContext?=if(!allowed)null else object:StorageContext {
                 override val scope=AccessScope.READY
-                override val generation=1L
+                override val generation=testGeneration
                 override fun check(point:AccessPoint)=allowed
                 override fun publish(result:()->Unit):Boolean {if(!allowed)return false;result();return true}
             }
@@ -73,4 +73,23 @@ class ActiveWorkspaceMutationAdapterTest {
         other.validity.beginRead(other.parts)!!
         assertFalse(completed.isCurrent());assertFalse(other.validity.canReuse(other.parts))
     }
+    /** Proposed conservative document fallback uses UNKNOWN; exercise the existing TASK port
+     * only. DOCUMENT projection labels/adapter and runtime hookup remain UNWIRED. */
+    @Test fun partialMultiPhaseFallbackNeverRestoresOldReadsEvenAfterNewReadyGeneration() {
+        val old=H();old.load()
+        val stale=old.validity.beginRead(old.parts)!!
+        val pending=old.adapter.beforeTaskQueue("a",1)!!
+        assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.UNKNOWN,WorkspaceWriteCleanup.COMPLETE)))
+        var publications=0
+        assertFalse(old.validity.publishRead(stale,old.parts,Cleanup.COMPLETE){publications++})
+        assertEquals(State.RECOVERY_REQUIRED,old.validity.state)
+        old.binding=old.initial.copy(generation=2)
+        assertFalse(old.validity.canReuse(old.parts));assertNull(old.validity.beginRead(old.parts))
+        val fresh=H(2)
+        assertFalse(fresh.validity.canReuse(fresh.parts))
+        fresh.load();assertTrue(fresh.validity.canReuse(fresh.parts))
+        assertFalse(old.validity.publishRead(stale,old.parts,Cleanup.COMPLETE){publications++})
+        assertEquals(0,publications);assertFalse(pending.isCurrent())
+    }
+
 }

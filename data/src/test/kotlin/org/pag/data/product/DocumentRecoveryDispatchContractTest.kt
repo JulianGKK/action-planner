@@ -98,6 +98,7 @@ class DocumentRecoveryDispatchContractTest {
         submit(); worker.next(); DocumentNamespaceLane.drainAndFence {}; main.next()
         assertEquals("FILE_PUBLISHED", phase); assertEquals(0, callbacks)
     }
+    /** UNWIRED characterization: this PASS proves the bypass, NOT document invalidation. */
     @Test fun gapDocumentDispatchDoesNotConsultCommonPendingOrAdvanceItsEpoch() {
         val common=UncachedWorkspaceMutations()
         val pending=common.beforeTaskQueue("synthetic-action",generation)!!
@@ -211,4 +212,49 @@ class DocumentRecoveryDispatchContractTest {
             assertEquals(1,callbacks);release.countDown();holding.get(5,java.util.concurrent.TimeUnit.SECONDS)
         } finally {release.countDown();pool.shutdownNow()}
     }
+    /** UNWIRED: work here is a named simulated step, not an actual repository/SQLite call. */
+    @Test fun gapImportAndDeleteRunDuringTaskAndOperationsPendingWithoutEpochAdvance() {
+        for(family in listOf(WorkspaceWriterFamily.TASK,WorkspaceWriterFamily.OPERATIONS)) {
+            val common=UncachedWorkspaceMutations()
+            val pending=common.beforeCoreQueue(WorkspaceMutation(family,"synthetic-action"),generation)!!
+            val before=common.mutationEpoch
+            for(next in listOf("IMPORT_WRITING","DELETE_FILE_PENDING")) {
+                dispatch().run<Unit>({callbacks++}) {mutations++;phase=next;DocumentResult.Value(Unit)}
+                worker.next();assertEquals(next,phase);assertEquals(before,common.mutationEpoch)
+                main.next();assertFalse(pending.isCurrent())
+                assertNull(common.beforeTaskQueue("synthetic-action",generation))
+            }
+            assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE)))
+        }
+        assertEquals(4,mutations);assertEquals(4,callbacks)
+    }
+    /** UNWIRED: a later core writer does not automatically fence a document maincallback. */
+    @Test fun gapDocumentBeforeLaterCoreWriterStillPublishesWhileCommonPendingIsHeld() {
+        val common=UncachedWorkspaceMutations();submit();worker.next()
+        assertEquals(0L,common.mutationEpoch)
+        val core=common.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.OPERATIONS,"synthetic-action"),generation)!!
+        main.next();assertEquals(1,callbacks);assertEquals(1L,common.mutationEpoch)
+        assertNull(common.beforeTaskQueue("synthetic-action",generation));assertFalse(core.isCurrent())
+        assertTrue(core.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.UNKNOWN,WorkspaceWriteCleanup.COMPLETE)))
+        assertNull(common.beforeTaskQueue("synthetic-action",generation));assertFalse(core.isCurrent())
+        assertFalse(common.ramReuseEnabled)
+    }
+    /** Proposed UNKNOWN fallback exercised on the EXISTING core port, not a DOCUMENT hookup. */
+    @Test fun conservativePartialEvidenceKeepsCommonGenerationUncertainDespiteDocumentCallback() {
+        val common=UncachedWorkspaceMutations()
+        val core=common.beforeTaskQueue("synthetic-action",generation)!!
+        val draft=DocumentEvidenceDraft(DocumentEvidenceDraft.Operation.IMPORT)
+        draft.dbStarted(DocumentEvidenceDraft.Db.WRITING)
+        draft.dbEnded(DocumentEvidenceDraft.Db.WRITING,DocumentEvidenceDraft.DbEnd.COMMITTED,true)
+        assertTrue(core.finish(draft.conservativeCompletion()))
+        submit();worker.next();main.next()
+        assertEquals(1,callbacks);assertFalse(core.isCurrent())
+        assertNull(common.beforeTaskQueue("synthetic-action",generation))
+        generation++
+        val fresh=common.beforeTaskQueue("synthetic-action",generation)!!
+        assertFalse(core.isCurrent());assertFalse(common.ramReuseEnabled)
+        fresh.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE))
+        assertFalse(core.isCurrent());assertTrue(fresh.isCurrent())
+    }
+
 }
