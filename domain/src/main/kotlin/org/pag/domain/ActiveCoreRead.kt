@@ -35,6 +35,10 @@ interface ActiveCoreReader {
 
 /** Original-read lifetime only. No key, replacement ticket, or independent authorization. */
 interface ActiveCoreLifetime {
+    /** Owner-thread hit authorization using a fresh central READY context and the original
+     * read identity. No UI side effects, new read/ticket, or idle renewal. Default deny.
+     */
+    fun authorizeHit(actionId: String): Boolean = false
     /** Owner-thread final validation against the original context and common port. */
     fun isCurrent(): Boolean
     /** Short reference installation only; false requires the consumer to drop its candidate. */

@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 /** Metadata of exactly the admitted read. It never holds a payload or mints a ticket. */
 internal class ProductActiveCoreLifetime(
+    private val access: StorageAccess,
     private val context: StorageContext,
     private val mutations: WorkspaceMutationInvalidation,
     private val ticket: WorkspaceMutationInvalidation.ActiveReadTicket,
@@ -33,6 +34,23 @@ internal class ProductActiveCoreLifetime(
         var entered=false
         val accepted=runCatching { context.publish { if(isCurrent()) { entered=true;install() } } }.getOrDefault(false)
         val valid=accepted && entered && isCurrent()
+        if(!valid) close()
+        return valid
+    }
+    override fun authorizeHit(actionId: String): Boolean {
+        // No owner fields or central acquisition from a foreign thread.
+        if(Thread.currentThread() !== owner) return false
+        val valid=runCatching {
+            if(actionId!=ticket.actionId || !isCurrent()) return@runCatching false
+            val fresh=access.acquire(AccessScope.READY) ?: return@runCatching false
+            fun current() = fresh.scope==AccessScope.READY && fresh.generation==ticket.generation &&
+                fresh.check(AccessPoint.PUBLICATION) && actionId==ticket.actionId && isCurrent()
+            if(!current()) return@runCatching false
+            var entered=false
+            // Only a local receipt inside the gate: no slot/UI changes before its return.
+            val accepted=fresh.publish { if(current()) entered=true }
+            accepted && entered && current()
+        }.getOrDefault(false)
         if(!valid) close()
         return valid
     }

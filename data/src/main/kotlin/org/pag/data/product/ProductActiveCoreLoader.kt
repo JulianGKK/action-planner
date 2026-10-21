@@ -83,7 +83,7 @@ class ProductActiveCoreLoader internal constructor(
                             return@execute
                         }
                         val lifetime=if(result is ActiveCoreResult.Value)
-                            ProductActiveCoreLifetime(context,mutations,ticket,laneTicket,ownerThread) { latestLoad === loadIdentity }
+                            ProductActiveCoreLifetime(access,context,mutations,ticket,laneTicket,ownerThread) { latestLoad === loadIdentity }
                             else null
                         try { callback(result,lifetime) } catch(error:Exception) { lifetime?.close();throw error }
                     }

@@ -214,20 +214,39 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         !saving && !personSaving && !sensitiveBusy && !tasks.busy && !operations.busy && !protocol.busy && !material.busy && !expenses.busy && !memoryReports.busy && !documents.busy
     fun activeArea(area: ActiveArea) = navigateActive(area)
     private fun navigateActive(area: ActiveArea, retained: WorkspaceSnapshot? = null) {
+        if(Thread.currentThread() !== ownerThread)return
         if (memoryReports.available && memoryReports.dirty) { memoryReports.requestLeave { navigateActive(area, retained) }; return }
         val before = snapshot
         val action = selected ?: return
         if (!activeNavigationEnabled || (area == ActiveArea.MATERIAL && !materialAvailable) || (area == ActiveArea.COSTS && !expensesAvailable) || (area == ActiveArea.MEMORY_REPORTS && !memoryReportsAvailable)) return
-        interaction()
-        if (!activeNavigationEnabled || snapshot.generation != before.generation || selected?.id != action.id) return
-        val reuse=retained==null && activeCorePort?.reuseEnabled==true &&
-            area in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS) && activeCore!=null
+        val hitNavigation=retained==null && activeCorePort?.reuseEnabled==true &&
+            area in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS)
+        val candidate=coreSlot.get().takeIf { hitNavigation }
+        fun currentNavigation() = activeNavigationEnabled && snapshot.generation==before.generation &&
+            session.snapshot().let {it.state==SessionState.READY && it.generation==before.generation} &&
+            selected?.id==action.id && selected?.status==ActionStatus.ACTIVE
+        val reuse=if(candidate!=null) {
+            // Validate the original slot around the fresh central gate. Never renew idle
+            // for an attempted hit, including a denial that falls back to a fresh read.
+            val admitted=activeCore===candidate.value.core && candidate.lifetime.authorizeHit(action.id)
+            val valid=admitted && currentNavigation() && coreSlot.get()===candidate &&
+                activeCore===candidate.value.core
+            if(!valid) {if(coreSlot.compareAndSet(candidate,null))candidate.close()}
+            valid
+        } else {
+            // A synchronous revoke may already have removed the slot. This fallback
+            // must not turn a denied hit into an idle renewal either. Gate-off fresh
+            // reads and ordinary non-core/editor navigation retain their semantics.
+            if(!hitNavigation)interaction()
+            false
+        }
+        if (!currentNavigation()) return
         clearPersons(preserveCore=reuse)
-        if (!activeNavigationEnabled || snapshot.generation != before.generation || selected?.id != action.id) return
+        if (!currentNavigation()) return
         activeArea = area
         if(retained!=null)fullActiveView=true
         confirming = null; changeError = null
-        if(reuse && activeCore!=null) {personsLoading=false;return}
+        if(reuse && coreSlot.get()===candidate && activeCore===candidate?.value?.core) {personsLoading=false;return}
         // A person-task tap already has both boards. Keep that valid snapshot so
         // its synchronous form opening needs no interaction from a load callback.
         if (area == ActiveArea.TASKS && retained?.actionId == action.id && retained.generation == before.generation &&

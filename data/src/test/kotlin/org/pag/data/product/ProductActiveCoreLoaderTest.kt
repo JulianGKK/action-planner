@@ -53,7 +53,7 @@ class ProductActiveCoreLoaderTest {
                 override fun check(point:AccessPoint)=true
                 override fun publish(result:()->Unit):Boolean {result();if(revoke)port.revokeActiveRead();return revoke}
             }
-            val life=ProductActiveCoreLifetime(context,port,ticket,DocumentNamespaceLane.ticket(),Thread.currentThread()){true}
+            val life=ProductActiveCoreLifetime(object:StorageAccess {override fun acquire(scope:AccessScope)=context},context,port,ticket,DocumentNamespaceLane.ticket(),Thread.currentThread()){true}
             life.onInvalidated{slot.set(null)}
             assertFalse(life.publish{slot.set(Any())})
             assertNull(slot.get());assertFalse(life.isCurrent())

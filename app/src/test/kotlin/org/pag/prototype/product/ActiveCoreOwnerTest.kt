@@ -23,6 +23,8 @@ class ActiveCoreOwnerTest {
         val live=AtomicBoolean(true);var invalidator:(()->Unit)?=null
         var falseAfter=false;var duringInstall:(()->Unit)?=null
         var publications=0
+        var hits=0
+        override fun authorizeHit(actionId:String):Boolean {hits++;return publish {}}
         override fun isCurrent()=live.get()
         override fun publish(install:()->Unit):Boolean {
             publications++
@@ -82,19 +84,48 @@ class ActiveCoreOwnerTest {
         val product=H();val old=product.port.deliver();product.model.activeArea(ActiveArea.PERSONS)
         assertEquals(2,product.port.reads);assertNull(product.model.activeCore);assertFalse(old.live.get())
     }
-    /** RED prerequisite characterization, NOT permission to enable the product gate.
-     * The actual VM bypasses even lifetime.publish on its host-only reuse branch and
-     * reports interaction. A future hit must acquire/check/publish without renewing idle.
-     */
+    /** §74 gap retained by name, now the positive §75 contract. Runtime proof is in data. */
     @Test fun gapHostReuseHasNoPerHitPublicationAndReportsInteraction() {
         val h=H(true);val life=h.port.deliver()
         val before=h.session.interactions;val publications=life.publications
+        val core=h.model.activeCore
+        for(area in listOf(ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS,ActiveArea.HUB)) {
+            h.model.activeArea(area);assertSame(core,h.model.activeCore)
+        }
+        assertEquals(publications+4,life.publications);assertEquals(4,life.hits)
+        assertEquals(before,h.session.interactions);assertEquals(1,h.port.reads)
         life.falseAfter=true
         h.model.activeArea(ActiveArea.TASKS)
-        assertNotNull(h.model.activeCore)
-        assertEquals(publications,life.publications)
-        assertEquals(before+1,h.session.interactions)
-        assertEquals(1,h.port.reads)
+        assertNull(h.model.activeCore);assertFalse(life.live.get())
+        assertEquals(publications+5,life.publications)
+        assertEquals(before,h.session.interactions)
+        assertEquals(2,h.port.reads) // Safe fresh load, no reuse or interaction on denial.
+    }
+    @Test fun hitPublicationHasNoEarlyNavigationAndLockDuringHitCannotRestoreSlot() {
+        val h=H(true);val life=h.port.deliver();val interactions=h.session.interactions
+        life.duringInstall={
+            assertEquals(ActiveArea.HUB,h.model.activeArea)
+            assertEquals(interactions,h.session.interactions)
+            h.session.lock()
+        }
+        h.model.activeArea(ActiveArea.TASKS)
+        assertNull(h.model.activeCore);assertFalse(life.live.get())
+        assertEquals(interactions,h.session.interactions);assertEquals(1,h.port.reads)
+        assertNotEquals(ActiveArea.TASKS,h.model.activeArea)
+    }
+    @Test fun revokeImmediatelyAfterHitAndStatusChangeRemoveOriginalAuthority() {
+        val h=H(true);val life=h.port.deliver();h.model.activeArea(ActiveArea.PERSONS)
+        val t=Thread{life.close()};t.start();t.join(3000);assertFalse(t.isAlive)
+        assertNull(h.model.activeCore)
+        h.dispatch.toList().forEach{it()};assertNull(h.model.activeCore)
+        val before=h.session.interactions
+        h.model.activeArea(ActiveArea.TASKS)
+        assertEquals(before,h.session.interactions);assertEquals(2,h.port.reads)
+        val changed=H(true);val old=changed.port.deliver()
+        changed.repo.action=changed.repo.action.copy(status=ActionStatus.COMPLETED,completedAt=1)
+        changed.model.detail("a");changed.model.activeArea(ActiveArea.TASKS)
+        assertNull(changed.model.activeCore);assertFalse(old.live.get())
+        assertEquals(0,old.hits)
     }
     @Test fun inactiveForeignAndOverBudgetCandidatesNeverInstall() {
         for(status in listOf(ActionStatus.PREPARATION,ActionStatus.COMPLETED)) {val h=H(status=status);assertEquals(0,h.port.reads);assertNull(h.model.activeCore)}

@@ -11522,3 +11522,132 @@ per-Hit-Gate. #32/#33/#34/#37/#38/#39 offen; #36 Editor/ABA und RED-4 eigenstän
 Details, Quellbelege, vollständige Runnerreports, Rohwerte und Befehle:
 [p11-native-active-core-results-74.md](p11-native-active-core-results-74.md).
 Nach regulärem WIP-Push STOPP bis zum unabhängigen GitHub-Review; kein Merge/Release.
+
+## 75. Productive ACTIVE RAM-Hit Authorization
+
+**BASIS:** `a2342e5a27b9ded9c46b2c92ce1d9d41eda8fc85`, lokal und Remote identisch,
+Branch `p11-performance-optimization`, sauberer Arbeitsbaum. Unabhängige §74-Reviews
+#37/#38 gelesen. Dieser Slice korrigiert den Produktcode; das Produkt-RAM-Gate bleibt
+fest deaktiviert. Keine Android-Ausführung oder Geräte-/Produkt-App-Installation.
+
+**IMPLEMENTIERT – opake API und Runtime-Anschluss:**
+`ActiveCoreLifetime.authorizeHit(actionId: String): Boolean` mit Default-DENY für
+unvorbereitete Implementierungen. ProductActiveCoreLifetime implementiert den Vertrag;
+ProductActiveCoreLoader übergibt dafür exakt seine vorhandene StorageAccess-Instanz.
+In ProductRuntime ist das derselbe SessionCoordinator wie bei ursprünglicher Admission
+und allen Runtime-Repositories. Kein neuer Runtimeowner, StorageAccess, Mutationport,
+Snapshot, Readticket, Schlüsselowner oder zweite Epoche. ProductRuntime selbst braucht
+keine neue Verdrahtung: sein vorhandener Loader reicht die ursprüngliche Instanz weiter.
+
+Ein Hit läuft ausschließlich auf dem ursprünglichen Ownerthread. Vor Erwerb werden
+Action-ID und ursprüngliche Lifetime geprüft; anschließend **frisches acquire(READY)**.
+READY-Scope und Generation müssen zum Originalticket passen. Vor, innerhalb und nach
+Publication werden frischer Context.check und ursprüngliche Lifetime erneut geprüft.
+Letztere bindet originales Context/Readticket, konkrete gemeinsame Portidentität,
+Mutationsepoche, Pending-/UNKNOWN-Freiheit, Loadidentität, Namespace-Fence und nicht
+geschlossenen Owner. Fremdthread-Aufrufe verweigern vor Acquire/Ownerfeldzugriff.
+
+**ACTIVE-/Actionbeleg:** Das ursprüngliche ProductActiveCoreReader/Loader-Ergebnis wurde
+im bestehenden autorisierten DB-Read als ACTIVE bestätigt. Weitergeltung beruht auf
+dem unveränderten Originalticket der gemeinsamen Writergrenze; ein Action-/Statuswriter
+widerruft es wie jeder andere Corewriter. Es wird kein neuer DB-Read, keine konstante
+Permissionrevision und kein Ersatzticket als vermeintlicher Statusbeleg erzeugt. Das
+ViewModel prüft zusätzlich aktuelle ausgewählte ACTIVE-Action, Generation, originale
+Slot-/Payloadidentität und Sessionzustand vor/nach der Hit-Autorisierung.
+
+**IMPLEMENTIERT – zentrale Publication:** `fresh.publish` setzt nur ein lokales
+Eintrittsbit. Kein Compose-/ViewModel-Callback, kein Referenzswap, keine DB-/Datei-I/O
+innerhalb dieser neuen Grenze. Erst akzeptierte Rückgabe + Eintritt + finale Prüfung
+erlauben true. Callback-then-false, ausgebliebener Callback, fehlendes READY, falscher
+Scope/Generation/Action, verlorene Originalbindung und Exception verweigern und schließen
+die Lifetime terminal; dadurch verliert der vorhandene Slot seine Autorität. Keine
+Rollbacks oder physische Löschung behauptet. Die ältere initiale Retentionspublication
+bleibt unverändert und getrennt von diesem neuen pro-Hit-Gate.
+
+**IMPLEMENTIERT – ViewModel / Idle:** navigateActive ist ownerthreadgebunden. Für
+HUB/PERSONS/FUNCTIONS/TASKS bei ausdrücklich aktiviertem Reuse-Port prüft es den
+ursprünglichen Slot, ruft authorizeHit auf und revalidiert dieselbe Identität, bevor
+Navigationszustand/Forms verändert werden. Nur danach darf derselbe Core ohne Read
+weiterverwendet werden. Verweigerung verwirft den alten Slot; ein noch berechtigter
+Frischlesepfad kann starten, aber niemals das alte Payloadobjekt als Hit verwenden.
+
+Auf diesem hitfähigen Pfad läuft **kein interaction()**, auch nicht bei verweigertem
+Hit oder bereits synchron entferntem Slot mit anschließendem Frischread-Fallback.
+Damit wird ein Revoke nicht indirekt zum Idle-Reset. Der heute installierbare
+Gate-off-Frischlesepfad und gewöhnliche Nicht-Core-/Editoraktionen behalten ihre
+bisherige Interaktionssemantik. Keine Änderung an SessionCoordinator, 30s READY-idle
+oder 180s absolut. Hitprüfungen sind keine Benutzerinteraktion und verlängern nichts.
+
+**HOSTGETESTET – tatsächliches RED→GREEN:** Der Test
+`gapHostReuseHasNoPerHitPublicationAndReportsInteraction` wurde unter exakt demselben
+Namen erhalten und zum positiven Vertragsnachweis weiterentwickelt. Vor dem Produktfix
+gezielt ausgeführt: **1 Test / 1 erwarteter Fehler / 0 Skips**, Assertion
+`expected:<5> but was:<1>` (fehlende vier Hitpublications). Nach Fix GREEN: ein
+Core-Read für HUB→PERSONS→FUNCTIONS→TASKS→HUB, gleiche Payloadidentität, vier
+Hitprüfungen, unveränderter userInteraction-Zähler. Danach false-after-callback:
+kein alter Slot, ein neuer Frischread, weiterhin kein interaction(). Diese Fake-Lifetime-
+ViewModelprüfung wird ausdrücklich durch die folgenden echten Data-Komponenten ergänzt.
+
+**HOSTGETESTET – ProductActiveCoreLifetimeTest:** Echter ProductActiveCoreLoader,
+ProductActiveCoreLifetime, SessionCoordinator und EIN UncachedWorkspaceMutations.
+Nur Auth/Maintenance und initialer Readkandidat sind synthetisch; keine SQLite-/Native-
+oder Runtime-Credential-E2E-Behauptung. Vier erfolgreiche Hits verursachen vier neue
+Acquire-/Publication-Aufrufe, fünf unterschiedliche Contextwrapper einschließlich
+Originalread, weiterhin exakt einen Readeraufruf, dasselbe aktuelle Originalticket,
+dieselbe Payload/Reservation und Epoche0. Ein neues Ticket würde die geprüfte
+Originalticket-Gültigkeit aufheben. Kein zweiter Budgetbeleg oder Key-/SQL-Pfad im Hit.
+
+Neun Data-Testmethoden prüfen zusätzlich in Varianten:
+
+| Grenze | Tatsächlicher Hostnachweis |
+|---|---|
+| Publication | true, false nach Callback, fehlender Callback, Exception nach Publication |
+| READY/Bindung | fehlendes Acquire, fremde Generation, falscher Scope/Action, fremder Port lehnt Originalticket ab, neues Actionticket verwirft alten Read |
+| Writer | Core-/DOCUMENT-Beginn vor und innerhalb Publication; jeweils auch UNKNOWN/unbestätigtes Cleanup |
+| Sessionrace | Lock innerhalb Publication; Worker-Lock nach zentralem Callback, vor terminalem Rücklauf; alte Lifetime nach Reauth bleibt ungültig |
+| Idle | Hit bei29999ms, Worker-Contextcheck bei30000ms sperrt synchron; keine Exception, Slotnull, Epoche unverändert |
+| Späterer Revoke | nach gültigem Hit Lock, BLOCKED, Lifetime-close oder neuer Load; keine Wiederbelebung |
+| Namespace | Fence vor Hit oder nach zentraler Publication verweigert ohne Main-Wait auf Dokument-I/O |
+| Thread/Default | fremder Thread ohne Acquire/Epochenänderung; unvorbereitete Lifetime Default-DENY ohne publish-Fallback |
+
+Zusätzliche ViewModeltests: kein früher Navigationswechsel innerhalb Hitpublication,
+Lock während Hit lässt keinen TASKS-Wechsel/Slot zurück; sofortiger Worker-Revoke nach
+Hit; verzögerte Ownerbenachrichtigung stellt nichts wieder her; ACTIVE→COMPLETED
+entfernt die originale Lifetime. Bestehende Loader-/Readticket-/Writer-/Document-/Session-
+Regressionsfälle einschließlich alter/doppelter Main-Runnables bleiben erhalten.
+Keine Behauptung, ein bereits gerenderter Frame werde synchron physisch gelöscht.
+
+**PRODUKTGATE:** ActiveCoreLoadPort.reuseEnabled weiterhinfalse,
+UncachedWorkspaceMutations.ramReuseEnabled weiterhinfalse. Keine UI-Einstellung kann
+die installierbare Runtime freischalten. Der neue produktive Autorisierungspfad ist
+vorbereitet und hostgetestet, aber Produkt-RAM-Hits sind NICHT freigegeben.
+
+**ANDROID-GREEN:** In §75 keine neue Android-Evidence; Androidtests nur kompiliert.
+Frühere §72–§74-Teilbelege behalten ihren jeweiligen engen Umfang. **NICHT BEWIESEN /
+BLOCKER:** positives ProductRuntime→DB→ViewModel→Compose-E2E, tatsächliches Keyguard-
+Revoke, Room-Upstream-/DB-/Keycleanupfaults, gesamte8+8MiB-Referenzüberlappung inklusive
+Compose/Editor/nativeBuffer, tatsächliche Content-OnDraw-Median-/p95-Werte. Keine
+synthetischen Hostbelege als Androidabnahme. #32/#33/#34/#37/#38/#39 bleiben offen;
+#36 Editor/ABA und RED-4 rootloses IMPORT_WRITING eigenständig unverändert offen.
+
+**FREIGABEVORBEHALT:** GO nur für Review des implementierten pro-Hit-Vertrags;
+NO-GO für Produktgate bis zur unabhängigen Abnahme und den genannten nativen Belegen.
+Keine cachelose1.0-Alternative, kein Merge/Release. Nach regulärem WIP-Push STOPP bis
+zum unabhängigen GitHub-Review.
+
+**ABSCHLUSSVALIDIERUNG:** Gezielte Owner-/Lifetime-/Loader-/ActiveRead-/Session-/Workspace-/
+Writer-/Document-Tests GREEN. Danach vollständiger geforderter Offline-Lauf mit
+**1.822 Hosttests = app685 + data1133 + security4**, domainNO-SOURCE, **0Fehler/0Skips**.
+assembleDebug, data/app compileDebugAndroidTestKotlin, verifyPrototypeManifest und
+verifyDemoManifest erfolgreich. Der absichtlich vorangestellte RED-Lauf bleibt separat
+als1Fehler dokumentiert; kein Fehler aus der finalen Bilanz entfernt. diffcheck sauber.
+
+**DATEIEN (8):**
+`domain/src/main/kotlin/org/pag/domain/ActiveCoreRead.kt`,
+`data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLifetime.kt`,
+`data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLoader.kt`,
+`app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt`,
+`app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt`,
+`data/src/test/kotlin/org/pag/data/product/ProductActiveCoreLoaderTest.kt`,
+`data/src/test/kotlin/org/pag/data/product/ProductActiveCoreLifetimeTest.kt`,
+`docs/product-p11-active-workspace-assessment.md`.
