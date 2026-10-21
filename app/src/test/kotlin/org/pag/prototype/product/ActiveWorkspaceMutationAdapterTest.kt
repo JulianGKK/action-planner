@@ -92,4 +92,17 @@ class ActiveWorkspaceMutationAdapterTest {
         assertEquals(0,publications);assertFalse(pending.isCurrent())
     }
 
+    @Test fun unpreparedActiveAdapterDeniesDocumentsAndTypedFinishWithoutCoreFallbackOrCleanChanges() {
+        val h=H();h.load();val before=h.validity.mutationEpoch
+        assertNull(h.adapter.beforeDocumentQueue("a",1))
+        assertEquals(before,h.validity.mutationEpoch);assertFalse(h.validity.isPending())
+        val core=h.adapter.beforeTaskQueue("a",1)!!
+        assertFalse(core.finishDocument(DocumentWriteCompletion(DocumentWriteOutcome.COMPLETE,WorkspaceWriteCleanup.COMPLETE,true)))
+        assertTrue(h.validity.isPending());assertFalse(h.validity.canReuse(h.parts))
+        assertTrue(core.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)))
+        assertFalse(h.validity.canReuse(h.parts))
+        assertNull(h.adapter.beforeDocumentQueue("a",1));assertFalse(h.validity.canReuse(h.parts))
+        h.load();assertTrue(h.validity.canReuse(h.parts))
+    }
+
 }

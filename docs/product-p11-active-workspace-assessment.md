@@ -9842,3 +9842,252 @@ Bestehende Assertions nicht abgeschwächt, keine Skips hinzugefügt. Keine Logs,
 APKs, Datenbanken, Schlüssel oder Testartefakte im Commit. Regulärer WIP-Commit
 und regulärer Push auf `p11-performance-optimization`; Remote-SHA separat über
 GitHub bestätigen. Danach **STOPP bis zum unabhängigen GitHub-Review**.
+
+## 63. Typed Document Pending Contract
+
+### 63.1 Basis und enger Implementierungsumfang
+
+Issue #35; verbindliche Basis `fdd36fbe340b5a80ddccc7f536272627faa23256`.
+Vor Änderungen waren lokaler HEAD und unabhängig per GitHub-API gelesener
+Remote-Ref identisch, Branch `p11-performance-optimization`, Arbeitsbaum und
+Diff sauber. Grundlage sind §§57–62 und die geprüften Domain-/Uncached-/
+WriteBoundary-/Progress-, ACTIVE-Validity-/Adapter- und Dokumentrepository-/
+Dispatchverträge samt §62-Evidencemodell und Writer-/Workspace-Hosttests.
+
+**IMPLEMENTIERT:** Ausschließlich Domain-Metadatenport und dessen vorhandene
+Uncached-Implementierung erweitert; dazu reine Host-Porttests und ein enger
+Default-Deny-Test am vorhandenen ACTIVE-Adapter. **UNWIRED:** Kein Dokument-
+Repository, Dispatch oder Runtime ruft die neue API auf. Kein Data-Producer,
+kein neuer globaler Inventarread oder Datei-/Sync-Hook. Ein implementierter
+Portvertrag ist keine End-to-End-Writerfreigabe und schließt den §62-Bypass nicht.
+
+Die bestehende Core-Semantik bleibt: WorkspaceWriteCompletion mit COMMITTED,
+ROLLED_BACK oder UNKNOWN beschreibt den bestätigten äußeren lokalen
+Transaktionsschritt (bzw. belegte Nichtausführung), Cleanup ist separat.
+WorkspaceWriteProgress/WorkspaceWriteBoundary und sämtliche Corewriter wurden
+nicht geändert. Eine Dokumentpipeline erhält keinen erfundenen äußeren ACID-
+Gesamtcommit und wird nicht durch confirmedWorkspaceTransaction gewickelt.
+
+### 63.2 API, Default-Deny und derselbe Pendingowner
+
+**IMPLEMENTIERT:** Neue Domain-Typen:
+
+- `DocumentWriteOutcome`: NOT_EXECUTED, COMPLETE, RECOVERY_REQUIRED, UNKNOWN.
+- `DocumentWriteCompletion(outcome, cleanup, finalInventoryConfirmed=false)`;
+  Cleanup verwendet unverändert WorkspaceWriteCleanup.
+- `WorkspaceMutationInvalidation.beforeDocumentQueue(actionId, generation)`;
+  Interface-Default **null**, kein Delegieren an beforeCoreQueue/beforeTaskQueue.
+- `WorkspaceMutationInvalidation.Pending.finishDocument(completion)`;
+  Interface-Default **false**, kein Delegieren an Core-finish.
+
+WorkspaceWriterFamily bleibt unverändert, ohne DOCUMENT-Eintrag. Damit können
+alte Core-/Taskadapter nicht durch einen bisherigen Default-Familienzweig
+Dokumente zulassen. Die neue Admission ist ausdrücklich opt-in.
+
+UncachedWorkspaceMutations führt beide Admissions über dieselbe private begin-
+Routine: derselbe Ownerthread, derselbe einzelne `pending`-Slot, dieselbe
+`latest`-Identität, derselbe Unsicherheitszustand, dieselbe Generation und genau
+eine `mutationEpoch`. Erfolgreiche Admission erhöht diese einmal; Busy, ungültige
+Metadaten oder terminale Unsicherheit nicht. Kein zweiter Port, Pendingcontainer,
+Dokumentepochenzähler, Sessionowner oder Generationenregister.
+
+Das vorhandene innere Ticket erhält lediglich einen CORE-/DOCUMENT-Typmarker
+und eine Kopie der Admissiongeneration. Beides sind begrenzte Metadaten. Es
+speichert weder Completionwerte noch Dokumentpayloads/Keys/Blobnamen/URIs oder
+Callbackreferenzen. Die Portinstanz hält weiterhin höchstens die aktuelle und
+letzte Ticketidentität, keine Auftragshistorie.
+
+**HOSTGETESTET:** TASK/OPERATIONS-Pending verweigert Dokumentadmission; Document-
+Pending verweigert Task, Operations und zweites Dokument. Abwechselnde Core-/
+Dokumentaufträge erhöhen auf derselben Instanz denselben Zähler. Fehlender
+Abschluss bleibt Pending und sperrt auch eine angefragte andere Generation;
+es gibt keinen Timeout, Busy-Bypass, Retry oder automatisches Recovery im Port.
+
+### 63.3 Typisierte Abschlüsse und finaler Inventarvorbehalt
+
+| Dokumentoutcome | Erforderliche Produzentenaussage | Verhalten bei bestätigtem Cleanup |
+| --- | --- | --- |
+| NOT_EXECUTED | Tatsächliche Nichtausführung; keine eigene DB-/Dateiwirkung, keine unklare DBöffnung oder Ressource | Pending konsumieren; aktuelles Metadataticket möglich, keine automatische Cleanmarkierung und kein Mutationserfolg daraus |
+| COMPLETE | Alle erforderlichen lokalen Phasen/Dateioperationen/Syncs beendet; kein offener Job; frisches konsistentes globales Inventar NACH dem letzten DB-Schritt | Nur mit finalInventoryConfirmed=true konstruierbar; Pending konsumieren, Readprojektionen weiterhin nicht clean |
+| RECOVERY_REQUIRED | Bekannte Wirkung/Jobzwischenstand, aber Auftrag nicht vollständig abgeschlossen | Pending konsumieren und dieselbe Generation terminal unsicher halten; weitere Core-/Documentadmission verweigern |
+| UNKNOWN | Entscheidende DB-/Datei-/Sync-/Inventar-/Cleanup-Aussage unbestätigt | Gleiche terminale Unsicherheit, keine weitere Mutation dieser Generation |
+
+FAILED_OR_UNCONFIRMED-Cleanup erzwingt für **jeden** Outcome dieselbe terminale
+Unsicherheit, auch bei NOT_EXECUTED oder behauptetem COMPLETE. Deshalb darf der
+Completiontyp eine solche Kombination transportieren; sie ist niemals eine
+saubere Gesamtfreigabe. `finishDocument` liefert true für das einmalige Konsumieren
+des korrekten Pending, auch wenn dessen Folge terminale Unsicherheit ist.
+True ist weder „Mutation erfolgreich“ noch „Session/Publication zugelassen“.
+
+**IMPLEMENTIERT:** COMPLETE ohne finalInventoryConfirmed ist ungültig:
+Konstruktor und data-class-copy werfen IllegalArgumentException. Das eigentliche
+Pending bleibt dabei unangetastet. Auch mit fehlgeschlagenem Cleanup darf der
+finale Inventarvorbehalt nicht umgangen werden. Ein positiver Inventarwert bei
+UNKNOWN/RECOVERY_REQUIRED oder unbestätigtem Cleanup hebt deren Sperre nicht auf;
+ein Inventar kann konsistent sein, während eine andere Aussage unbestätigt ist.
+
+**NICHT BEWIESEN / UNWIRED:** Der Boolean ist eine Behauptung eines späteren
+vertrauenswürdigen Data-Producers, kein automatisch geprüfter Datenträgerbeleg.
+Der Producer muss sämtliche erforderlichen lokalen Commit-/File-/Syncschritte,
+fehlende Jobs, den frischen globalen Check nach letztem DB-Ende und bestätigtes
+DB-/Key-/File-/Snapshotcleanup unabhängig nachweisen. Die API erzeugt diesen
+Beleg nicht. DocumentResult.Value, DocumentResult.Rejected und bloßes Setzen des
+Flags dürfen diese Anforderungen nicht ersetzen. §62 trennt weiterhin die lokalen
+DB-/Filesystemschritte; die dortige Fake-DB-/Hostharness ist kein produktiver
+Producer oder nativer Cleanupnachweis.
+
+### 63.4 Tickettyp, Identität, Generation und Thread
+
+**IMPLEMENTIERT / HOSTGETESTET:** Core-finish auf einem Documentticket liefert
+false, ebenso finishDocument auf einem Coreticket. Das gilt für alle jeweiligen
+Outcome-/Cleanupkombinationen; das echte Pending bleibt bestehen und wird weder
+sauber beendet noch durch den falschen Abschluss künstlich als unsicher konsumiert.
+Erst der korrekte Abschlusstyp kann es beenden. Doppelter/staler Abschluss liefert
+false und verändert ein neueres Pending nicht. Ticketgenerationsvergleich und
+Objektidentität müssen zum aktiven Pending passen; alte Tickets bleiben auch
+nach neuem Auftrag/Generationswechsel ungültig.
+
+Ein Abschluss wird am Ticketreceiver aufgerufen, nicht als fremdes Ticket an eine
+Portmethode übergeben. Ein Ticket einer anderen Instanz kann ausschließlich seinen
+eigenen Port abschließen. Der Isolationstest beendet das andere Pending und
+belegt, dass die ursprüngliche Instanz busy bleibt; er behauptet keine nicht
+existierende Fremdticket-Parameterprüfung. Alte Ticketreceiver liefern false,
+während die ursprüngliche Instanz ein anderes/neueres Pending besitzt.
+
+Admission, beide finish-Methoden und isCurrent prüfen denselben Ownerthread.
+Auf einem fremden Thread werfen sie IllegalStateException, bevor Pending/Epoche
+geändert werden. Auch falscher Abschlusstyp auf dem fremden Thread erteilt keine
+Ausnahme von der Threadbindung. Der begrenzte Executortest bestätigt anschließend
+auf dem Ownerthread das erhaltene Pending und dessen regulären Abschluss.
+
+**Unveränderte Generationsregel:** Blank/Whitespace-Action wird verweigert,
+negative Generation ebenso; Generation 0 bleibt wie bei Core zulässig. Ein
+nichtnegativer Long allein belegt weder aktuelle READY-Autorisierung noch
+Maintenanceerfolg. Der spätere Aufrufer muss den gültigen autorisierten Actionbezug und die aktuelle
+Generation des zentral autorisierten StorageContext verwenden und vor worker.execute auf
+dem Ownerthread synchron anmelden. Der Port besitzt bewusst keinen StorageAccess
+oder SessionCoordinator und kann erfundene/veraltete Rohzahlen nicht unabhängig
+authentifizieren. Es wird keine neue Monotonie-/Generationentabelle eingeführt.
+
+Wie bisher kann nach beendetem Pending nur ein **tatsächlich autorisierter neuer
+READY-Generationskontext nach erfolgreicher Maintenance** die Uncached-Buchführung
+neu beginnen. Derselbe Generationswert bleibt nach UNKNOWN/Recovery/Cleanupfehler
+terminal gesperrt; bei neuer Admission werden alte Identitäten verworfen. Keine
+Zahl/Completion meldet von sich aus Maintenance erfolgreich. Bleibt ein Pending
+unbestätigt offen, wird es auch durch eine andere angefragte Generation nicht
+verdrängt. Das ist der bestehende Vertrag, kein neuer Session-Recoverymechanismus.
+
+### 63.5 Uncached-Live-Port und ACTIVE weiterhin DENY
+
+**IMPLEMENTIERT:** UncachedWorkspaceMutations stellt die neue Fähigkeit isoliert
+bereit. Der bestehende Runtime-Default bleibt dieselbe Uncached-Klasse; es wird
+keine zusätzliche Instanz gebaut oder injiziert. `ramReuseEnabled` bleibt
+unbedingt false, vor/während/nach jedem Dokumentabschluss. Es gibt weiterhin
+keine Read-/Hit-/Clean-/Publicationfunktion auf dem Uncached-Port. isCurrent ist
+nur Metadatenidentität; sie kann sowohl nach NOT_EXECUTED als auch nach COMPLETE
+true sein und beweist gerade deshalb keinen Mutationserfolg.
+
+**UNWIRED / HOSTGETESTET:** ActiveWorkspaceMutationAdapter bleibt produktiv nicht
+installiert und erbt ausdrücklich den neuen Default-Deny. Keine Produktänderung
+an Adapter/Validity nötig: beforeDocumentQueue liefert null ohne Corefallback;
+ein Corepending verweigert finishDocument über den Default und bleibt pending/
+dirty. Anschließendes echtes Core-finish markiert ebenfalls nichts clean, erst
+ein frischer autorisierter Read darf das. Der bestehende §62-Test zum terminalen
+alten Validityowner/Readticket bleibt erhalten. Keine vorgetäuschten aktiven
+Dokumentprojektionen und kein Dokument-Cleanbeweis durch einen Core-Test.
+
+Eine spätere aktive Unterstützung benötigt separat geprüfte DocumentSummary-/
+Count-, Listen-/Expected- und Overviewabhängigkeiten sowie Viewer-Cancellation/
+Cleanup und Lifecyclebindung. #37 bleibt offen, kein Snapshotowner installiert.
+§60-Lane-Admission und gemeinsame Mutationsepoche bleiben getrennte Verträge.
+
+### 63.6 Tatsächliche Hosttests und Beweisgrenzen
+
+Neue `DocumentPendingContractTest` im vorhandenen Data-JUnit-HosttestsourceSet:
+21 Methoden, reine echte Domain-Portaufrufe mit synthetischen Metadaten. Keine
+neue Testdependency im Domainmodul. Getestet sind gemeinsame Admission/Epoche,
+Busy in beiden Richtungen, Default-Deny bei Task-/Coreadaptern und alten Pendings,
+blanke Actions/negative Generation, fehlender Abschluss, alle vier Outcomes mit
+beiden Cleanupwerten, finaler Inventarvorbehalt inklusive copy, falsche Tickettypen,
+Doppelabschluss, altes Ticket, Instanzisolation, neue Generation ohne
+Ticketrestauration, Core-UNKNOWN-/Cleanup-Sperre für Dokumente und falscher Thread.
+Ein Strukturtest bestätigt ausschließlich Outcome-/Cleanupenum und Boolean im
+Completionobjekt sowie fehlende Read-/Clean-/Callbackmethoden am Pending.
+
+Ein neuer Test in ActiveWorkspaceMutationAdapterTest belegt das unverändert
+geerbte DENY und das erhaltene dirty Corepending bei falschem Abschluss.
+Insgesamt 22 neue Testmethoden, keine abgeschwächten bestehenden Assertions.
+Die unveränderten Dokument-GAP-/Evidence-/Recoverytests werden weiterhin ausgeführt:
+Sie beweisen weiterhin fehlende Produktanbindung, nicht funktionierende neue
+Repositoryinvalidierung. Bestehende Corewriter-Transaktions-/Rollback-/Cleanup-
+und Epochenregressionen sichern die unveränderte Core-Semantik zusätzlich ab.
+
+Ein erster isolierter Lauf ergab 21 Tests, einen Fehler im neuen Reflectiontest:
+Kotlin generiert für die Defaultmethode eine synthetische `access$…$jd`-Brücke.
+Die Prüfung wurde auf die nichtsynthetischen API-Methoden präzisiert; die exakte
+Erwartung finish/finishDocument/isCurrent bleibt erhalten. Kein Portfehler,
+kein übersprungener Test und keine abgeschwächte fachliche Assertion.
+
+**HOSTGETESTET:** Portzustandsmaschinen-/Thread-/Metadatenvertrag.
+**NICHT BEWIESEN:** tatsächliche Nichtausführung, Dokumentgesamtabschluss,
+SQLite-/Room-/SQLCiphercommit, nativer Key-/Cursor-/Filecleanup, Directory-fsync
+oder Powerloss aus diesen neuen Porttests. Die Completionwerte sind synthetische
+Producerbehauptungen. Bestehende DB-/Dateitests behalten ihre bisherigen
+Fake-/SQLite-/Hostgrenzen; dieser Slice ergänzt keinen nativen Evidenzbeleg.
+
+### 63.7 Nächster eigenständiger Slice und offene Blocker
+
+**VORGESCHLAGEN:** Als separaten nächsten Slice zunächst vertrauenswürdige
+Data-Evidence-Produzenten an den in §62 benannten äußeren DB-End-/Scopecleanup-,
+File-/Sync- und finalen globalen Inventargrenzen reviewen. Erst danach separat
+Import/Delete synchron vor Queue an dieselbe Runtime-Portinstanz anschließen,
+korrekte Generation/Action, Busyverweigerung, typisierten Abschluss und unabhängige
+Session-/Lane-/UI-Zulassung nachweisen. Keine Komplettpipeline über Core-COMMITTED
+oder confirmedWorkspaceTransaction abkürzen. Lifecycle/Maintenance-/Validity-
+Adapter und aktive Dokumentprojektionen benötigen weiterhin eigenes Review.
+
+**UNWIRED / BLOCKER:** #35 Data-Produzenten und Repository-/Dispatch-/Runtime-
+Integration fehlen; §59 RED-4 bleibt historisch mehrdeutig und fail-closed,
+§61-Präventions-/Teilrootfragen ungelöst. Keine Joblöschung, Rootrekonstruktion,
+Importwiederaufnahme, neue Erstinitialisierung oder Änderung der Phasenfolge.
+#32 nativer Cursor-/Cleanup-/Fixtureblocker offen. #36 Editor-/CAS-/ABA-Grenzen,
+#37 Snapshotowner und #38 Performanceintegration/RAM-Hits unverändert offen.
+
+Unverändert bleiben SessionCoordinator, StorageAccess, SessionDbKeyOwner,
+SQLCipher/Tink/B2Driver, Schema 11, 180 Sekunden absolut / 30 Sekunden READY-idle,
+8+8-MiB-Budget, Lane/Dispatch/Admission-CAS, FileChannel.force, Directory-fsync,
+NOFOLLOW/CREATE_NEW/Atomic-No-Replace-Rename, alle Dokument-DBadapter/-Koordinatoren,
+Maintenance-/Recoverypolitik, ProductRuntime, ProductDocumentRepository, bestehende
+Corewriter, Navigation und Leadership/P3b. Keine neue Dependency/Permission,
+Migration, Geräteinstallation, Änderung installierter Apps, RAM-Hits oder
+Snapshot-/Payloadowner; kein Merge, Produktupdate oder Release.
+
+### 63.8 Abschlussvalidierung und Dateiliste
+
+**HOSTGETESTET:** Gezielte Port-/Dokument-/Workspace-/Writer-Auswahl:
+`./gradlew :data:testDebugUnitTest --tests '*Document*Test' --tests '*Workspace*Test' --tests '*Writer*Test' --tests '*TaskMutationSqliteTest' --offline`:
+**487 Tests, 0 Failures, 0 Errors, 0 Skips; BUILD SUCCESSFUL**.
+Gezielte Appauswahl:
+`./gradlew :app:testDebugUnitTest --tests '*Workspace*Test' --tests '*Document*Test' --offline`:
+**253 Tests, 0 Failures, 0 Errors, 0 Skips; BUILD SUCCESSFUL**.
+
+Anschließend vollständiger geforderter Offline-Lauf:
+`./gradlew :app:testDebugUnitTest :data:testDebugUnitTest :security:testDebugUnitTest :domain:test :app:assembleDebug :data:compileDebugAndroidTestKotlin :app:compileDebugAndroidTestKotlin :app:verifyPrototypeManifest :app:verifyDemoManifest --offline`:
+**BUILD SUCCESSFUL**. Debug-Test-XMLs: App **673**, Data **1.022**, Security **4** =
+**1.699 Hosttests, 0 Failures, 0 Errors, 0 Testskips**. App/Data ausgeführt,
+unveränderte Securitytests UP-TO-DATE bestätigt; Domain weiterhin ohne eigene
+Testquellen, seine neuen Porttests laufen im vorhandenen Data-HosttestsourceSet.
+Beide Androidtest-Kompilationen, Debugassemble und beide Manifestprüfungen
+wurden erfolgreich ausgeführt. Keine Androidinstrumentation/-installation.
+Gradle-Konfigurations-/Lifecycle-SKIPPED bedeutet keinen übersprungenen Testfall.
+
+`git diff --check` sauber; ausschließlich vier Dateien geändert:
+
+- `domain/src/main/kotlin/org/pag/domain/WorkspaceMutationInvalidation.kt`
+- `data/src/test/kotlin/org/pag/data/product/DocumentPendingContractTest.kt`
+- `app/src/test/kotlin/org/pag/prototype/product/ActiveWorkspaceMutationAdapterTest.kt`
+- `docs/product-p11-active-workspace-assessment.md`
+
+Keine Logs, APKs, DBs, Keys oder Testartefakte im Commit. Regulärer WIP-Commit und
+Push auf `p11-performance-optimization`; Remote-SHA unabhängig über GitHub prüfen.
+Danach **STOPP bis zum unabhängigen GitHub-Review**.
