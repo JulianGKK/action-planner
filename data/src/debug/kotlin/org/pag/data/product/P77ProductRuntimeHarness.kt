@@ -19,9 +19,11 @@ import java.util.concurrent.atomic.AtomicReference
 class P77ProductRuntimeHarness private constructor(
     val runtime: ProductRuntime,
     private val fixture: P11SyntheticFixture,
-    val observations: Observations
+    val observations: Observations,
+    val mutations:UncachedWorkspaceMutations,
+    val faults:P81RuntimeFaults
 ) : AutoCloseable {
-    class Observations internal constructor() : ActiveCoreLoadObservation {
+    class Observations internal constructor(private val faults:P81RuntimeFaults) : ActiveCoreLoadObservation {
         val tickets = AtomicInteger()
         val reads = AtomicInteger()
         val hitAttempts = AtomicInteger()
@@ -31,13 +33,17 @@ class P77ProductRuntimeHarness private constructor(
         override fun ticketIssued(ticket:WorkspaceMutationInvalidation.ActiveReadTicket) {
             tickets.incrementAndGet();originalTicket.compareAndSet(null,ticket)
         }
-        override fun readerStarted() { reads.incrementAndGet() }
+        override fun readerStarted() { reads.incrementAndGet();if(faults.holdNextCoreMain.getAndSet(false))faults.main.holdNext() }
         override fun hitAuthorized(accepted:Boolean,elapsedNanos:Long) { hitAttempts.incrementAndGet();hitNanos.add(elapsedNanos);if(accepted)hitAccepted.incrementAndGet() }
+        fun originalTicketLive()=originalTicket.get()?.isLive()==true
         fun hasSingleOriginalTicket() = tickets.get()==1 && originalTicket.get()?.isLive()==true
     }
+    val cleanupConfirmed=java.util.concurrent.atomic.AtomicBoolean(false)
     override fun close() {
+        faults.clear()
         runtime.close()
         fixture.close()
+        cleanupConfirmed.set(true)
     }
 
     companion object {
@@ -54,10 +60,12 @@ class P77ProductRuntimeHarness private constructor(
             val fixture = P11SyntheticFixture(activity, worker, main,
                 taskCountPerAction = 1000, personCountPerAction = 200, baseDirectory = base)
             return try {
-                val observations=Observations()
-                val runtime = ProductRuntime(activity, worker, main, UncachedWorkspaceMutations(),
-                    fixture.runtimeAuthority(reuseEnabled = true,observations), foreground)
-                P77ProductRuntimeHarness(runtime, fixture,observations)
+                val faults=P81RuntimeFaults()
+                val observations=Observations(faults)
+                val mutations=UncachedWorkspaceMutations()
+                val runtime = ProductRuntime(activity, faults.worker.wrap(worker), faults.main.wrap(main), mutations,
+                    fixture.runtimeAuthority(reuseEnabled = true,observations,faults::wrap), foreground)
+                P77ProductRuntimeHarness(runtime, fixture,observations,mutations,faults)
             } catch (error: Throwable) {
                 fixture.close()
                 throw error

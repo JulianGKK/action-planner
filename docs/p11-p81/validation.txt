@@ -1,0 +1,27 @@
+app:testDebugUnitTest: {'tests': 688, 'failures': 0, 'errors': 0, 'skipped': 0}
+
+data:testDebugUnitTest: {'tests': 1139, 'failures': 0, 'errors': 0, 'skipped': 0}
+
+security:testDebugUnitTest: {'tests': 4, 'failures': 0, 'errors': 0, 'skipped': 0}
+
+domain:test: {'tests': 0, 'failures': 0, 'errors': 0, 'skipped': 0}
+
+app:testP77runtimeUnitTest: {'tests': 2, 'failures': 0, 'errors': 0, 'skipped': 0}
+
+p81-full.log: BUILD SUCCESSFUL in 6m 32s
+
+p81-final-full.log: BUILD SUCCESSFUL in 6m 37s
+
+p81-final-p77-build.log: BUILD SUCCESSFUL in 1m 2s
+
+p81-targeted-final.log: BUILD SUCCESSFUL in 9s
+
+Final own P77 run-as fixture inventory: zero p11-fixture-* roots, exit 0. Inventory performed no deletion.
+
+Android: 47 complete custom-runner attempts, 41 GREEN, 2 historical product assertion RED, 2 early reporting/process aborts, 2 guarded NOT EXECUTED keyguard attempts. Latest of 27 scenarios: 26 GREEN, 1 BLOCKED. See attempts.csv; no reports removed.
+
+Android attempts span development builds; the final owned-ticket revoke was natively rechecked in action_change-04, callback_false-04, worker_install-02, writer_during_hit-02, recreate-03, core_writer-03 and document_writer-03, all GREEN. Final APK hashes recorded in installed-artifacts.json.
+
+Host diagnostic history: 1 intended lifetime-close RED; 2 subsequent expectation failures retained in host-transition-failures.txt. Final regular 1831 + isolated Collector 2 passed, no skips.
+
+P77 test variant uses explicit -PpagTestBuildType=p77runtime for its isolation task, separate from the complete debug Androidtest compilation graph. Explicit adb am instrument custom runner; no zero-JUnit PASS claim.

@@ -63,7 +63,10 @@ internal class ProductActiveCoreLifetime(
         return Subscription { listener.compareAndSet(invalidate,null) }
     }
     override fun close() {
-        if(closed.compareAndSet(false,true)) listener.getAndSet(null)?.let { runCatching(it) }
+        if(closed.compareAndSet(false,true)) {
+            mutations.revokeActiveRead(ticket)
+            listener.getAndSet(null)?.let { runCatching(it) }
+        }
         registration.getAndSet(null)?.cancel()
     }
 }

@@ -1,0 +1,19 @@
+INSTRUMENTATION_STATUS: stream=P81_START,action_change,real_reader=1,original_ticket=1,real_hit=1,visible_persons=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P81 FAIL action_change: java.lang.IllegalStateException: Original readticket still live
+	at org.pag.prototype.P81ActiveRevokeProbe.onStart$revoked$lambda$11(P81ActiveRevokeProbe.kt:113)
+	at org.pag.prototype.P81ActiveRevokeProbe$$ExternalSyntheticLambda77.invoke(D8$$SyntheticClass:0)
+	at org.pag.prototype.P81ActiveRevokeProbe.main$lambda$0(P81ActiveRevokeProbe.kt:27)
+	at org.pag.prototype.P81ActiveRevokeProbe$$ExternalSyntheticLambda76.run(D8$$SyntheticClass:0)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2353)
+	at android.os.Handler.handleCallback(Handler.java:942)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loopOnce(Looper.java:226)
+	at android.os.Looper.loop(Looper.java:313)
+	at android.app.ActivityThread.main(ActivityThread.java:8762)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:604)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1067)
+; events=focus=true
+INSTRUMENTATION_CODE: 0

@@ -7,6 +7,28 @@ import java.io.File
 
 /** Read tickets are metadata from the real shared writer port, never session authority. */
 class ActiveReadAdmissionTest {
+    @Test fun scopedWorkerRevokeCannotCancelNewTicketOrMutateEpochPending() {
+        val port=UncachedWorkspaceMutations()
+        val old=port.beforeActiveRead("action",1)!!
+        val next=port.beforeActiveRead("other",1)!!
+        val failure=java.util.concurrent.atomic.AtomicReference<Throwable?>()
+        fun worker(work:()->Unit) {
+            Thread{try{work()}catch(t:Throwable){failure.set(t)}}.also{it.start();it.join()}
+            failure.get()?.let{throw it}
+        }
+        val foreign=UncachedWorkspaceMutations().beforeActiveRead("foreign",1)!!
+        worker{port.revokeActiveRead(old);port.revokeActiveRead(foreign)}
+        assertTrue(foreign.isLive())
+        assertTrue(next.isLive());assertTrue(port.isCurrentActiveRead(next))
+        worker{port.revokeActiveRead(next);port.revokeActiveRead(next)}
+        assertFalse(next.isLive());assertEquals(0L,port.mutationEpoch)
+        val pending=port.beforeTaskQueue("action",1)!!
+        worker{port.revokeActiveRead(old);port.revokeActiveRead(next)}
+        assertNull(port.beforeActiveRead("action",1))
+        assertNull(port.beforeDocumentQueue("action",1))
+        assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE)))
+        assertTrue(pending.isCurrent());assertEquals(1L,port.mutationEpoch)
+    }
     @Test fun synchronousRevokeListenerCannotReenterWriterOrGenerationAdmission() {
         for(writer in listOf(false,true)) {
             val port=UncachedWorkspaceMutations();val old=port.beforeActiveRead("action",1)!!

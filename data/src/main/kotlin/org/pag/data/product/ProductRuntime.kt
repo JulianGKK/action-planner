@@ -119,7 +119,7 @@ class ProductRuntime private constructor(activity: Activity, private val worker:
      */
     private val activeCoreReader = ProductActiveCoreReader(activity.applicationContext,session,inventory,
         {owner.get()},blocked=session::storageFailure)
-    val activeCore = ProductActiveCoreLoader(session,workspaceMutations,worker,main,activeCoreReader::readForTicket,
+    val activeCore = ProductActiveCoreLoader(testAuthority?.coreAccess?.invoke(session) ?: session,workspaceMutations,worker,main,activeCoreReader::readForTicket,
         reuseEnabled = testAuthority?.reuseEnabled == true, observation = testAuthority?.observation)
 }
 
@@ -133,7 +133,8 @@ internal data class ProductRuntimeTestAuthority(
     val aliasPresent: () -> Boolean,
     val envelopeValid: () -> Boolean,
     val reuseEnabled: Boolean = false,
-    val observation: ActiveCoreLoadObservation? = null
+    val observation: ActiveCoreLoadObservation? = null,
+    val coreAccess: ((StorageAccess) -> StorageAccess)? = null
 )
 
 /** Runs as a secondary-constructor argument, before the primary constructor initializes resources. */

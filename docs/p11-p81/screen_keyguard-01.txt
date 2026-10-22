@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P81_START,screen_keyguard,real_reader=1,original_ticket=1,real_hit=1,visible_persons=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P81 FAIL screen_keyguard: java.lang.IllegalStateException: NOT EXECUTED: secure/unknown keyguard must not be changed
+	at org.pag.prototype.P81ActiveRevokeProbe.onStart(P81ActiveRevokeProbe.kt:240)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+; events=focus=true
+INSTRUMENTATION_CODE: 0

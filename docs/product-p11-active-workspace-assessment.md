@@ -12128,3 +12128,178 @@ und RED-4 Recovery bleiben eigenständig offen und fail-closed.
 Nächste Freigabe benötigt diese unabhängigen Sicherheitsabnahmen und anschließend
 echten Touch-to-Content-Nachweis unter regulärer DeviceCredential-Autorität.
 Kein Merge, Release oder allgemeines Produkt-RAM-GO; Stopp bis unabhängiger Review.
+
+## §81 – Native ACTIVE RAM Revoke and Lifecycle Acceptance
+
+**Basis / Reviews:** `807fada166c3b4d2079f9efb6f50a3467603d1db`, Branch
+`p11-performance-optimization`, lokal/remote identisch und Arbeitsbaum vor Beginn sauber.
+§80-Reviews in #38/#39/#44 gelesen. Keine Cachearchitektur oder Performanceoptimierung;
+§80 bleibt die akzeptierte isolierte Draw-Messung. Normales Produktreuse bleibt false.
+
+**IMPLEMENTIERT – konkret reproduzierter Revoke-Fix:** Bei Aktionswechsel und
+Callback-then-false entfernte die bisherige `ProductActiveCoreLifetime.close()` die
+Lifetime/den Slot, widerrief aber nicht das originale `ActiveReadTicket` im gemeinsamen
+Port. Die native Assertion „Original readticket still live“ und ein gezielter Host-RED
+belegen das. Es wurde kein erfolgreicher unautorisierter Hit beobachtet: Die geschlossene
+Lifetime verweigerte ihn bereits. Es fehlte der ausdrücklich geforderte Ticketentzug.
+
+Der neue overload `WorkspaceMutationInvalidation.revokeActiveRead(ticket)` widerruft
+nur die konkrete ausgegebene Identität. `UncachedWorkspaceMutations` prüft die
+bereits im inneren Ticket vorhandene Portidentität, entfernt nur diese Referenz per CAS
+und invalidiert das eigene Originalticket auch dann unmittelbar, wenn eine konkurrierende
+Admission es gerade abgelöst hat. Ein fremdes oder neues Ticket bleibt unberührt.
+`ProductActiveCoreLifetime.close()` benutzt diesen Schritt. Keine neue Registry,
+Session-/Permissionautorität oder Epoche. Worker dürfen ausschließlich Ticketliveness
+widerrufen; Pending, Generation, Epochadmission und finale Prüfung bleiben beim Owner.
+Die globale Session-Revoke-Grenze und Core-/Document-Completionsemantiken sind unverändert.
+
+**IMPLEMENTIERT – begrenzte Testanschlüsse:** Neuer `P81ActiveRevokeProbe` im
+Androidtest-Source-Set. Der vorhandene, exakt an P77-ID und Debugflag gebundene
+Runtime-Testkonstruktor kann ausschließlich für seine Core-Zugriffe einen optionalen
+StorageAccess-Wrapper erhalten. Normale Produktkonstruktion nutzt weiterhin direkt den
+originalen Coordinator und `ProductCredentialAuthentication`. Der Debug-only
+`P81RuntimeFaults` delegiert echten READY-Acquire, Kontextprüfung, Generation, Keyadmission
+und Publication; Fehlerhooks können nur verweigern oder real widerrufen, keine Session
+gewähren. Einmalige Executor-Gates halten höchstens je einen echten Runnable; keine
+Retrylogik. Worker-Wartehooks liegen außerhalb des Session-Publication-Monitors. Der
+Release-DEX-Guard verlangt zusätzlich Abwesenheit dieser Faultimplementierung.
+
+Der bestehende P77-Harness exponiert ausschließlich seine schon an Runtime übergebene
+konkrete Mutationportinstanz für Diagnosen. Keine zusätzliche Instanz. Der Runner liest
+Runtime-/Slot-/Lifetimereferenzen zur Beobachtung; keine reflektierte Änderung von
+READY-, Keyowner- oder ViewModel-Feldern. Die Activity-Neuerstellung und Ereignislisten
+werden threadsicher beobachtet. Jeder GREEN-Report wartet außerdem auf bestätigten
+Rücklauf des tatsächlichen Fixture-Cleanups bei Activity-Zerstörung.
+
+**ANDROID-GREEN – echter initialer Produktpfad:** Jeder wesentliche Fall verlangt
+zunächst denselben Ablauf: synthetisch authentifizierte READY-Session, reale autorisierte
+Maintenance und SessionDbKeyOwner, Produkt-Room/SQLCipher-Core-Read mit 200 Personen/
+1000 Aufgaben, ein Originalticket aus dem gemeinsamen Port, ein ViewModel-CoreSlot,
+reale kompakte ProductScreen-Darstellung und einen autorisierten PERSONS-Hit mit
+unveränderter Payloadinstanz. Sichtbar sind `Synthetic 0` und 32/200 + hasMore; die
+Core-Counts 200/1000 sind geprüft. Kein künstlicher Core oder Fake-Lifetime.
+Die späteren Lost-/Late-/Install-Szenarien führen absichtlich einen zweiten echten
+Frischread mit eigenem Ticket aus; die Gesamtzahlen 2/2 stehen im jeweiligen Report.
+Das ist kein Ersatzticket zur Freigabe alter Daten. P3b-/Dokumentpayloads bleiben aus
+Payloadtyp und Reader ausgeschlossen; kein neuer sensitiver Inhalt wird geladen.
+
+**Session / reale Zeitgrenzen:** LOCKED, BLOCKED, Worker-Lock, Reauth/neue Generation,
+Aktionswechsel und ACTIVE→COMPLETED sind GREEN. Der Statuswechsel wurde sowohl am
+echten Runtimewriter als auch über `requestAdvance()`→`confirmAdvance()`→produktiven
+Writer→ViewModel/Compose geprüft. 30 Sekunden READY idle wurden unverändert auf
+Gerätezeit geprüft; im zusätzlichen Workerfall wartet Main kontrolliert außerhalb eines
+Sessionmonitors, bis ein fremder Thread über den echten Kontext den Ablauf entdeckt.
+Originalticket und atomarer Slot sind schon vor Main-Fortsetzung ungültig, keine
+IllegalStateException. Es wird keine synthetische Clock fortgeschrieben.
+
+Die **180-s-absolute Grenze** wurde tatsächlich auf Gerätezeit abgewartet, während
+elf echte injizierte MotionEvent-Touches im Abstand unter 30 Sekunden Idle offen hielten.
+Ergebnis: `B0-ABSOLUTE-EXPIRED`, Generationwechsel/LOCKED, Originalticket/Lifetime tot
+und Slot unbrauchbar. Keine Friständerung oder künstliche Cacheinteraktion.
+
+**Echte Touch-/Idle-Semantik:** Injizierte Android-DOWN/UP-Ereignisse gehen durch das
+reale Activity-Window; vor Touch wird die eigene aktive P77-Window-Identität geprüft.
+Touch auf die sichtbare HUB-Personenkarte führt durch die echte Navigation und
+`authorizeHit` (insgesamt 3 akzeptierte Hits bei 1 Read/1 Ticket in diesem Fall).
+`MainActivity.onUserInteraction()` meldet legitime Eingabe an die Session, auch wenn
+eine daraufhin verlangte Cacheverwendung wegen Writer-Pending verweigert wird.
+Das ist vorgesehene Nutzereingabe, kein Cache-Refresh. Ein weiterer Test berührt nach
+15 s eine sichtbare Überschrift, ist nach der ursprünglichen 30-s-Frist noch READY,
+führt dann einen programmatischen Hit aus und sperrt trotzdem ca. 30 s nach dem echten
+Touch mit `B0-IDLE-EXPIRED`. Der Hit selbst erneuert Idle nicht. Die absolute Grenze
+wird trotz wiederholter legitimer Eingabe eingehalten. Keine Touch-Latenz-/Release-
+Performancebehauptung aus diesen Ereignissen.
+
+**Tatsächliche OS-Lifecycle-GREENs:** Mit schon gehaltenem Core startet ein echtes
+HOME-Intent; onPause/onStop und danach onStart/onResume/Window-Fokus werden beobachtet.
+Die Rückkehr bleibt LOCKED. Ein echtes Android-Dialogfenster erzeugt Fokusverlust und
+Revoke, Dismiss/Focus-Rückkehr keine neue READY-Berechtigung. Tatsächliches
+`Activity.recreate()` erzeugt neue Activity/Runtime/ViewModel, während die alte Lifetime
+tot bleibt; die neue Instanz ist LOCKED und ein echter Draw beobachtet keinen Core.
+Das ist Activity-, kein Process-death-Test. Teardown-onPause/onStop wird in allen
+Reports mitgeloggt, aber nicht fälschlich als jeweils eigener HOME-Test gezählt.
+
+**NICHT AUSGEFÜHRT / BLOCKER – Screen-off / Keyguard:** Die native Vorprüfung meldet
+`deviceSecure=true`, `keyguardSecure=true`, anfänglich `keyguardLocked=false` und
+`deviceLocked=false`. Deshalb bricht der Guard vor Power-Key, SCREEN_OFF-Broadcast,
+Keyguard-Lock oder Dismiss ab. Keine Credentialeingabe, Änderung der Gerätesperre oder
+synthetische Foreground-Meldung als Ersatz. Beide geblockten Reports bleiben RED/
+NOT EXECUTED erhalten. Echte sichere Keyguard-/Screen-off-/Unlock-Ereignisse mit
+vorher geladenem Core sind weiterhin nicht abgenommen.
+
+**Writer / UNKNOWN / Cleanup:** Der reale Runtime-TASK-Writer und der reale
+Document-import-Eingang verwenden denselben originalen Port. Angehaltener Worker,
+Epoch +1, gesetztes Pending, verweigerte weitere Read-/Writeradmission, synchron totes
+Originalticket und bereits leerer atomarer Slot werden vor Worker-I/O geprüft. TASK
+liefert anschließend den echten Erfolgscallback nach SQLCipher-Transaktion. DOCUMENT
+verwirft hier bewusst leeren Namen vor Reserve; Sourceöffnung wäre ein Testfehler.
+Dies belegt Admission/Invalidierung, keinen Dokumentcommit oder nativen File-Cleanup.
+UNKNOWN und separat NOT_EXECUTED + FAILED_OR_UNCONFIRMED sperren die Generation am
+Port; diese gezielten Completion-Injektionen sind ausdrücklich keine native DB-/Key-
+Cleanup- oder echte persistierte Recoveryfehler-Evidence.
+
+**Thread-/Publication-GREENs mit Faultinjektion:** Materialisierter echter Kandidat
+bei verlorener Mainzustellung, doppelte Mainzustellung nach neuer Generation/Aktion,
+Worker-Lock unmittelbar nach realem Install im Publicationcallback sowie tatsächlicher
+TASK-Beginn zwischen frischem READY-Acquire und Hit-publication verhindern Wiederbelebung.
+Die Worker-Lock-Wartephase liegt nach Rücklauf des zugrunde liegenden publish und damit
+außerhalb seines Monitors. Der Callback-then-false-Fall benutzt den echten zentralen
+Callback und eine zusätzliche false-Rückgabe des denial-only Wrappers. Er beweist die
+Produktreaktion auf diesen Interface-Ausgang, kein natürlich beobachtetes
+SessionCoordinator-false-after-callback. Keine neue Ticketausgabe durch alte Callbacks.
+
+**Autorität / Slot / Compose / Frame getrennt:** GREEN verlangt zuerst totes originales
+Ticket und tote originale Lifetime, dann den bereits leeren rohen Atomic-CoreSlot
+**vor** dem öffentlichen Coregetter. Danach wird eine echte nachfolgende OnDraw-
+Beobachtung mit leerem Slot und die Entfernung alter sichtbarer kompakter Inhalte im
+Compose-/Accessibility-Baum verlangt. Replacement-Draw bei Activity-Neuerstellung ist
+separat beobachtet. Ein autorisierter abgeschlossener Vollbestand darf dieselben Namen
+anzeigen; der COMPLETED-Test prüft deshalb Status und Abwesenheit des alten kompakten
+Seitenlabels. Die OnDraw-/Semantics-Beobachtungen sind keine Sessionautorität und kein
+atomarer Pixelinhaltssnapshot desselben Frames. Bereits gerenderte Pixel, GPU-Referenzen,
+Compose-/Editorgraphen und absichtlich gehaltene diagnostische Java-Referenzen gelten
+nicht als physisch gelöscht. Diese Messgrenzen bleiben ausdrücklich offen.
+
+**Laufbilanz / HOSTGETESTET / ANDROID-RED→GREEN:** Alle Runnerreports liegen unter
+[`p11-p81`](p11-p81/README.md), mit [vollständiger Versuchsbilanz](p11-p81/attempts.csv)
+und reproduzierbarer Auswertung. **47 native Runnerläufe: 41 GREEN, 2 historische
+Produkt-Assertions-RED („Original readticket still live“), 2 frühe Harness-
+Prozessabbrüche ohne Assertionreport, 2 Guardabbrüche vor sicherer OS-Keyguard-Ausführung.**
+Die Prozessabbrüche werden nicht rückwirkend als GREEN oder weitere bewiesene
+Produktcrashes ausgegeben. Der sichere Main-Assertion-Reporter macht danach den
+präzisen Produktfehler sichtbar. Letzter Stand je **27 Szenarien: 26 GREEN, 1 BLOCKER/
+NOT EXECUTED**. Der finale scoped-Revoke wurde zusätzlich gezielt in sieben betroffenen
+nativen Fällen erneut GREEN geprüft; keine alten RED-Dateien wurden entfernt.
+
+1.831 reguläre Hosttests (app 688, data 1.139, security 4, domain NO-SOURCE) plus
+2 P77-Collector-Hosttests, final 0 Fehler/Skips. Der absichtliche Host-RED (1 Fehler)
+und zwei zwischenzeitliche Erwartungsfehler bleiben archiviert. Ein neuer Test hatte
+Pending.isCurrent irrtümlich während offener Mutation erwartet; der endgültige Test
+verlangt stattdessen weiterhin busy, erfolgreichen eigenen finish und erst danach
+Publikations-current. Der bestehende transiente Loadtest verlangt jetzt Autorität im
+Callback und vollständigen Ticketentzug nach Rücklauf, statt ein geschlossenes Ticket
+weiterhin current zu erwarten. Keine Abschwächung von Writer-/Publicationassertions.
+Vollständige Offline-/Debug-/Release-/Androidtest-Kompilation, Manifest-/Release-
+Sicherheitscheck und separater P77-Build/Isolationscheck GREEN; native Tests ausschließlich
+expliziter Custom-Runner, keine Null-JUnit-Ausführung als PASS.
+
+**Isolierung / Abschluss:** Vor jedem Update Geräte-ID/Modell, Paketbestand, reale APK-
+IDs, Runner/Manifest, Buildvariante und alte/neue Signatur geprüft. Nur eigene
+`org.pag.prototype.a.p77runtime` und `.test` aktualisiert; finale Artifact-Hashes,
+Signer und Schutzpaketmetadaten archiviert. `org.pag.prototype.a.p76demo`,
+`org.pag.prototype.a` und `org.pag.perf.p11probe` bleiben installiert und hinsichtlich
+Version, Installations-/Updatezeit und Signatur unverändert. Keine Daten dieser Apps
+geöffnet, gelöscht oder verändert. Alle GREENs bestätigen erfolgreiches Fixture-close;
+finale nur lesende Inventur im eigenen P77-Paket findet keine synthetische Fixturewurzel.
+
+**Freigabe / offene Grenzen:** Produktweites RAM-Gate bleibt false; keine neue Session-,
+Permission-, Cipher-, Keyformat-, Schema-, Dependency- oder Budgetänderung. 8+8 MiB
+unverändert, keine P3b-/Dokumentretention. Issue #39 ist **teilabgenommen, kein Security-
+Release-GO**: sicherer OS-Keyguard/Screen-off, echte persistierte Recoveryfailure sowie
+ungetestete native Room-/DB-/Key-Cleanupfaults und vollständige Referenzüberlappung sind
+nicht durch diese Injektionen bewiesen. #32, #33/#34, #36 und RED-4 bleiben eigenständig
+BLOCKER; keine Rootrekonstruktion oder automatische Joblöschung. Nächster enger Schritt
+ist eine separat koordinierte passive Keyguard-/Screen-off-Abnahme auf bekanntem
+isoliertem Profil mit vom Nutzer selbst bedienter Entsperrung, danach echte Recovery-/
+Upstream-Cleanupfaults und 8+8-MiB-Overlap. Keine Annahme von Benutzercredentials durch
+den Test. Kein cachefreier 1.0-Pfad, Merge oder Release. Stopp bis unabhängiger Review.

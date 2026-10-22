@@ -73,6 +73,21 @@ class ProductActiveCoreLifetimeTest {
             }
         }
     }
+    @Test fun oldLifetimeCloseCannotRevokeNewRead() {
+        val h=H();val old=h.life
+        val next=h.port.beforeActiveRead("other",h.ticket.generation)!!
+        old.close();old.close()
+        assertTrue(next.isLive());assertTrue(h.port.isCurrentActiveRead(next))
+        assertEquals(0L,h.port.mutationEpoch)
+    }
+    @Test fun explicitLifetimeCloseMustRevokeOriginalReadTicket() {
+        val h=H()
+        h.life.close()
+        assertFalse(h.ticket.isLive())
+        assertFalse(h.port.isCurrentActiveRead(h.ticket))
+        assertNull(h.slot.get())
+        assertEquals(0L,h.port.mutationEpoch)
+    }
     @Test fun eachHitAcquiresFreshReadyPublishesAndKeepsExactReadPayloadBudgetAndEpoch() {
         val h=H();val original=h.ticket;val payload=h.slot.get();val initial=h.publications
         repeat(4) {

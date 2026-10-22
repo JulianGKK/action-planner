@@ -60,6 +60,10 @@ interface WorkspaceMutationInvalidation {
     fun isCurrentActiveRead(ticket: ActiveReadTicket): Boolean = false
     /** Explicit lifecycle/action/revoke fence. Does not change the mutation epoch. */
     fun revokeActiveRead() {}
+    /** Worker-safe cancellation of only this exact read identity. Closing an old lifetime
+     * must never revoke a newer read. Does not mutate pending, epoch or owner admission.
+     */
+    fun revokeActiveRead(ticket: ActiveReadTicket) {}
 
     interface ActiveReadTicket {
         val actionId: String
@@ -137,6 +141,14 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
         // owner-thread admission, pending, or epoch state.
         activeRead.getAndSet(null)?.invalidate()
     }
+    override fun revokeActiveRead(ticket: WorkspaceMutationInvalidation.ActiveReadTicket) {
+        if(ticket is ReadTicket && ticket.belongsTo(this)) {
+            // Revoke the issued ticket even if a concurrent admission has already detached it.
+            // CAS protects a newer registry entry; the original liveness must still end now.
+            activeRead.compareAndSet(ticket,null)
+            ticket.invalidate()
+        }
+    }
     private fun begin(generation: Long, kind: Kind): WorkspaceMutationInvalidation.Pending? {
         if(admitting)return null
         admitting=true
@@ -166,6 +178,7 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
     }
     private inner class ReadTicket(override val actionId:String, override val generation:Long,
         override val mutationEpoch:Long) : WorkspaceMutationInvalidation.ActiveReadTicket {
+        fun belongsTo(port:UncachedWorkspaceMutations)=this@UncachedWorkspaceMutations === port
         private val live=java.util.concurrent.atomic.AtomicBoolean(true)
         private val listener=AtomicReference<(() -> Unit)?>(null)
         fun invalidate() { live.set(false); listener.getAndSet(null)?.let { runCatching(it) } }

@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P81_START,touch_idle,real_reader=1,original_ticket=1,real_hit=1,visible_persons=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P81_CASE,touch_idle,GREEN,real_initial_reader=1,initial_ticket=1,initial_hit=1,old_ticket_dead=true,old_lifetime_dead=true,slot_revoked=true,os_events=focus=true|real_touch|terminal_state=LOCKED,reason=B0-IDLE-EXPIRED,generation=2|onPause|focus=false|onStop|onDestroy|fixture_cleanup_confirmed,reads_total=1,tickets_total=1,hits_accepted=2,hit_attempts=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P81 PASS touch_idle; real Runtime/SQLCipher/VM/Compose, synthetic credentials; no product RAM gate
+INSTRUMENTATION_CODE: -1

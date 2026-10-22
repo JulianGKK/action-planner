@@ -98,13 +98,18 @@ class ProductActiveCoreLoaderTest {
         val h=Harness();val worker=QueueExecutor();val main=QueueExecutor();val calls=AtomicInteger()
         val seen=AtomicReference<WorkspaceMutationInvalidation.ActiveReadTicket?>()
         val loader=h.loader(worker,main){_,ticket,_->seen.set(ticket);value(ticket)}
-        assertTrue(loader.load("action") { result -> calls.incrementAndGet();assertTrue(result is ActiveCoreResult.Value) })
+        assertTrue(loader.load("action") { result ->
+            calls.incrementAndGet();assertTrue(result is ActiveCoreResult.Value)
+            assertTrue(h.mutations.isCurrentActiveRead(seen.get()!!))
+        })
         assertEquals(0,h.mutations.mutationEpoch);assertEquals(1,worker.queue.size)
         val runnable=worker.take();runnable.run();assertEquals(1,main.queue.size)
         val mainRun=main.take();mainRun.run();mainRun.run()
         assertEquals(1,calls.get());assertEquals("action",seen.get()!!.actionId)
         assertEquals(h.session.snapshot().generation,seen.get()!!.generation)
-        assertEquals(0L,seen.get()!!.mutationEpoch);assertTrue(h.mutations.isCurrentActiveRead(seen.get()!!))
+        assertEquals(0L,seen.get()!!.mutationEpoch)
+        // Transient load closes its lifetime after callback; completed reads must not stay live.
+        assertFalse(seen.get()!!.isLive());assertFalse(h.mutations.isCurrentActiveRead(seen.get()!!))
         assertFalse(h.mutations.ramReuseEnabled)
     }
 

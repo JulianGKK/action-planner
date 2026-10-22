@@ -1,0 +1,65 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:processResources NO-SOURCE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:preDebugUnitTestBuild
+> Task :data:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :domain:compileKotlin
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar
+> Task :data:kspDebugKotlin
+> Task :data:compileDebugKotlin
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :data:bundleLibRuntimeToJarDebug
+> Task :data:bundleLibCompileToJarDebug
+> Task :data:kspDebugUnitTestKotlin
+> Task :data:compileDebugUnitTestKotlin
+> Task :data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :data:testDebugUnitTest
+
+ActiveReadAdmissionTest > scopedWorkerRevokeCannotCancelNewTicketOrMutateEpochPending FAILED
+    java.lang.AssertionError at ActiveReadAdmissionTest.kt:25
+
+ProductActiveCoreLoaderTest > readyTicketUsesTypedActionGenerationAndCommonEpochThenPublishesOnceOnOwner FAILED
+    java.lang.AssertionError at ProductActiveCoreLoaderTest.kt:107
+
+46 tests completed, 2 failed
+
+> Task :data:testDebugUnitTest FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':data:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 19s
+30 actionable tasks: 10 executed, 20 up-to-date

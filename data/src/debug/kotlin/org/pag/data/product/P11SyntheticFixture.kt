@@ -211,7 +211,8 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
     /** The test authority is fed into the real ProductRuntime only by the isolated P77 debug factory.
      * SessionCoordinator, Maintenance, key owner, Room and core reader remain ProductRuntime's.
      */
-    internal fun runtimeAuthority(reuseEnabled:Boolean, observation:ActiveCoreLoadObservation):ProductRuntimeTestAuthority {
+    internal fun runtimeAuthority(reuseEnabled:Boolean, observation:ActiveCoreLoadObservation,
+        coreAccess:((StorageAccess)->StorageAccess)?=null):ProductRuntimeTestAuthority {
         check(app.packageName=="org.pag.prototype.a.p77runtime")
         val synthetic=object:org.pag.security.AuthenticationExperiment {
             override fun start(mode:org.pag.security.KeyExperiment,
@@ -233,7 +234,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
                 return org.pag.security.Cancellation{}
             }
         }
-        return ProductRuntimeTestAuthority(base,synthetic,{true},{true},reuseEnabled,observation)
+        return ProductRuntimeTestAuthority(base,synthetic,{true},{true},reuseEnabled,observation,coreAccess)
     }
     /** Isolated native fault harness. Same reader/DB; supplied session is not product authentication. */
     internal fun coreForSession(session:StorageAccess,mutations:WorkspaceMutationInvalidation,
