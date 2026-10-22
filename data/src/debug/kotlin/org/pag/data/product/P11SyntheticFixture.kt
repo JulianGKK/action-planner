@@ -104,6 +104,9 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
             exec("UPDATE tasks SET title=?||title WHERE actionId=?",taskText,activeId)
             exec("UPDATE person_operational_states SET currentRoleId='p83-r0',operationalStatus='ON_SITE' WHERE actionId=?",activeId)
             if(stress)exec("WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<128000) INSERT INTO task_events SELECT 'p83-e'||x,?,(SELECT id FROM tasks WHERE actionId=? ORDER BY id LIMIT 1),CASE WHEN x%2=1 THEN 'CANCELLED' ELSE 'REOPENED' END,x+100 FROM n",activeId,activeId)
+            if(stress)usePrepared("SELECT COUNT(*) FROM task_events WHERE actionId=?") { s ->
+                s.bindText(1,activeId);check(s.step() && s.getLong(0)==129000L && !s.step())
+            }
         }}
     }
     private fun fail():Nothing=error("SYNTHETIC_STORAGE_FAILURE")

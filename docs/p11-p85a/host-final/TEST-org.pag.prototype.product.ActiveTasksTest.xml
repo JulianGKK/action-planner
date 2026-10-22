@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveTasksTest" tests="29" skipped="0" failures="0" errors="0" timestamp="2026-10-22T12:14:29.899Z" hostname="iuzjhtgvfc" time="0.622">
+  <properties/>
+  <testcase name="lockClearsDetailEditorFilterAndDisclosure" classname="org.pag.prototype.product.ActiveTasksTest" time="0.358"/>
+  <testcase name="unassignedIsExplicit" classname="org.pag.prototype.product.ActiveTasksTest" time="0.037"/>
+  <testcase name="staleRefreshRequestAndGenerationAreDiscarded" classname="org.pag.prototype.product.ActiveTasksTest" time="0.013"/>
+  <testcase name="cancellingActiveEditReturnsToOriginalDetailWithoutReadOrWrite" classname="org.pag.prototype.product.ActiveTasksTest" time="0.008"/>
+  <testcase name="affectedPersonIsIndependentOfAssignee" classname="org.pag.prototype.product.ActiveTasksTest" time="0.002"/>
+  <testcase name="progressHasOnlyCloseActions" classname="org.pag.prototype.product.ActiveTasksTest" time="0.003"/>
+  <testcase name="refreshKeepsSummaryActiveAndClosedCountTogether" classname="org.pag.prototype.product.ActiveTasksTest" time="0.006"/>
+  <testcase name="synchronousInteractionRevokeCannotRestoreDisclosureOrCancelState" classname="org.pag.prototype.product.ActiveTasksTest" time="0.006"/>
+  <testcase name="filterUsesAffectedRatherThanAssignmentAndHasConsistentCounts" classname="org.pag.prototype.product.ActiveTasksTest" time="0.035"/>
+  <testcase name="initialTasksRevealIsAtomic" classname="org.pag.prototype.product.ActiveTasksTest" time="0.005"/>
+  <testcase name="personTaskPathPrefillsAffectedAndRemovingFilterDoesNotRead" classname="org.pag.prototype.product.ActiveTasksTest" time="0.004"/>
+  <testcase name="cardOpeningDoesNotLoadBoardOrProtection" classname="org.pag.prototype.product.ActiveTasksTest" time="0.003"/>
+  <testcase name="bothClosedStatusesOnlyReopen" classname="org.pag.prototype.product.ActiveTasksTest" time="0.001"/>
+  <testcase name="lifecycleChronicleContainsOnlyExistingEvents" classname="org.pag.prototype.product.ActiveTasksTest" time="0.021"/>
+  <testcase name="closedSectionStartsCollapsedAndIsRamOnly" classname="org.pag.prototype.product.ActiveTasksTest" time="0.005"/>
+  <testcase name="personAssigneeUsesPseudonym" classname="org.pag.prototype.product.ActiveTasksTest" time="0.003"/>
+  <testcase name="emptyBoardHasNoFakeCounts" classname="org.pag.prototype.product.ActiveTasksTest" time="0.001"/>
+  <testcase name="staleWriteCannotRestoreTaskOrFeedbackAfterLock" classname="org.pag.prototype.product.ActiveTasksTest" time="0.006"/>
+  <testcase name="summarySeparatesOpenProgressAndOnlyActiveHigh" classname="org.pag.prototype.product.ActiveTasksTest" time="0.002"/>
+  <testcase name="createHasExistingDefaultsAndFeedback" classname="org.pag.prototype.product.ActiveTasksTest" time="0.037"/>
+  <testcase name="roleAssigneeIsResolvedWithoutPersonFallback" classname="org.pag.prototype.product.ActiveTasksTest" time="0.001"/>
+  <testcase name="activeCannotDeleteAndCompletedCannotWrite" classname="org.pag.prototype.product.ActiveTasksTest" time="0.006"/>
+  <testcase name="dueTimeUsesLocalDayWithoutChangingTimestampSemantics" classname="org.pag.prototype.product.ActiveTasksTest" time="0.01"/>
+  <testcase name="closedOnlyBoardHasNoHighAttention" classname="org.pag.prototype.product.ActiveTasksTest" time="0.002"/>
+  <testcase name="domainSortAndStableTieBreakersArePreserved" classname="org.pag.prototype.product.ActiveTasksTest" time="0.001"/>
+  <testcase name="cardsHaveTitlePriorityAndStatusForEveryExistingStatus" classname="org.pag.prototype.product.ActiveTasksTest" time="0.002"/>
+  <testcase name="openHasOnlyP5aActions" classname="org.pag.prototype.product.ActiveTasksTest" time="0.001"/>
+  <testcase name="transitionKeepsClosedTaskVisibleUntilDeliberateBack" classname="org.pag.prototype.product.ActiveTasksTest" time="0.005"/>
+  <testcase name="editSaveKeepsFocusAndUpdatesSummaryAfterCompleteReplacement" classname="org.pag.prototype.product.ActiveTasksTest" time="0.015"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

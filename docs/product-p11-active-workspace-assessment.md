@@ -12624,3 +12624,48 @@ und installiert; eigene Fixtureinventur leer. Nur isolierte P77-Pakete aktualisi
 Runner/Manifeste/Signaturen/Variante geprüft. reuseEnabled=false und ramReuseEnabled=false;
 30s idle/180s absolut unverändert. Regulärer WIP-Commit/Push, kein Merge/Release/Force-Push.
 Danach STOPP bis zum unabhängigen GitHub-Review.
+
+
+## §85a — Taskhistorie ohne actionweites Eager-Loading (WIP, #45)
+
+Basis `f85b558637c1ab824636ffc8945d224299a9e711`, lokaler/Remote-HEAD bestätigt.
+[Assessment und vollständige Belege](p11-p85a/assessment.md).
+
+**IMPLEMENTIERT:** WorkspaceStore und TaskRepository.board lesen weiterhin vollständige
+Task-Snapshots, aber keine Events. `eventsComplete=false` bedeutet ausdrücklich nicht
+angeforderte Chronik. Beide Taskdetail-Verbraucher nutzen dieselbe explizite, ersetzende
+32er-Seite aus CompactTaskStore. Seitennummer/letzte Seite lesen nur einen skalaren Sortieranker
+und verwenden anschließend denselben Keyset-Materialisierer; kein vollständiger Eventprefix,
+keine Kürzung. Damit bleiben auch späte Ereignisse innerhalb der unveränderten Sessionfristen
+gezielt erreichbar. PREPARATION/ACTIVE/COMPLETED-Leserechte, Taskstatus/Zähler/Editor-CAS/
+Lifecycle-Schreibtransaktionen bleiben erhalten.
+
+Eine Seitenanfrage inklusive Main gleichzeitig im vorhandenen Repository. Frisches READY,
+Originalticket desselben Mutationports, Generation/Epoche/Taskbindung, Documentlane, zentrale
+Publication und bestätigtes DB-/Keyscope-Ende bleiben nötig. Fehler/unbestätigtes Ende sperrt,
+kein Ersatzkeyowner oder Retry. Keine zweite Registry/Mutationsepoche, Schema-/Cryptoänderung,
+Dependency oder Budgeterhöhung. Die §84-Core-Lifetime bleibt einschließlich unbestätigter
+Compose-/Frame-/Fullviewreferenzen gesperrt; Produkt-RAM-Gates bleiben false.
+
+**HOSTGETESTET:** 290 verschiedene gezielte Hosttests (57 Data, 233 App), keine Fehler/Skips;
+233 gemeinsame App-Tests in P77 zusätzlich wiederholt. Real-SQLite-Vollständigkeit: 128.001
+Events eines Tasks innerhalb 129.000 gespeicherter Events in 4.001 Seiten, jede ID/Reihenfolge
+geprüft, keine gesammelte Gesamtliste. Direkter mittlerer/letzter Einstieg, Seitenende,
+Überlauf/ungültige Seite, Revoke/Fehler, Unicode und unveränderte Editor-/Writerfälle geprüft.
+Finale gezielte Debug-/Androidtest-/P77-Isolations-/Release-Builds offline erfolgreich.
+
+**ANDROID-GREEN (gezielt):** 200 Personen / 1.000 Tasks / exakt 129.000 Events: Workspace
+5.303 ms ohne eager Eventpayload; Editor gezeichnet und real gespeichert. Erste zwei Seiten
+je 32, letzte Seite 4.001 mit 1, mittlere Seite 2.001 mit 32 Events; exakte sichtbare Bereiche
+bestätigt. Direkteinstieg inklusive UI-Prüfung 7.307/10.340 ms, keine p95-Aussage. CORE-/DOCUMENT-
+Main-Fence, alter Cursorepoch, UNKNOWN und Lock bestehen; Writercompletion/UNKNOWN hier
+Metadateninjektion, kein Nativefehler. Drei frühere Harness-FAILs und alle Buildfehler bleiben
+archiviert. Der originale §83-Stress-RED bleibt ein Beleg des alten Eager-Pfads.
+
+**NICHT BEWIESEN / OFFEN:** vollständiger 4.001-Seiten-Androiddurchlauf und kompletter
+IME-/Touch-E2E, genuine Native-Cleanupfaults des neuen Endpoints, kombinierte 8+8-MiB-
+Kalibrierung einschließlich SQLite-Sortierung/alter Frames/Fullviews. Keine pauschale
+CursorWindow-/Allocatorfreigabe aus FD/PSS. #45 bleibt für unabhängiges Review/gezielte
+Restabnahme offen; #32/#36/#39 und RED-4 bleiben eigene Gates. P76/Produkt/P11probe geschützt,
+nur isolierte P77-Pakete nach Signatur-/Manifest-/Runner-/Variantenprüfung aktualisiert.
+Kein Merge oder Release; regulärer WIP-Commit/Push und unabhängige Remoteprüfung.

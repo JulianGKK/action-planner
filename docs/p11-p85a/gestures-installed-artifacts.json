@@ -1,0 +1,10 @@
+[
+  {
+    "package": "org.pag.prototype.a.p77runtime",
+    "sha256": "2b4493edcc0fcd02fbbcbfe1621455fe06bfdd515811ce575a34af5bfe79a4ae"
+  },
+  {
+    "package": "org.pag.prototype.a.p77runtime.test",
+    "sha256": "f4ec6e8c81a8ee09a278a78d8621dc78ee7d6b92b2f8f00ae4bb87dafd640323"
+  }
+]

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveWorkspaceBudgetTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-22T12:11:53.055Z" hostname="iuzjhtgvfc" time="0.11">
+  <properties/>
+  <testcase name="boundaryPlusOneByteCannotBeMaterializedOrSealed" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.035"/>
+  <testcase name="enormousSingleTextIsRefusedUsingOnlyItsLengthBeforeFetch" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.001"/>
+  <testcase name="negativeAggregatesAreInvalidDataEvenAfterBudgetRefusal" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.004"/>
+  <testcase name="multiplicationAndAdditionOverflowNeverWrapToSmallCharge" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.0"/>
+  <testcase name="retainedAndExactlyOneTransitionHaveIndependentLimits" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.0"/>
+  <testcase name="objectsArraysCollectionsIndexesReferencesAndCopiesAreAllCharged" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.001"/>
+  <testcase name="budgetRefusalCannotConferValidityOrStorageRights" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.034"/>
+  <testcase name="exactEightMiBBoundaryIsAdmittedButNextAllocationIsRefused" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.003"/>
+  <testcase name="inconsistentPayloadWithoutAllocationCountIsInvalidData" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.001"/>
+  <testcase name="sealedOrForeignRepresentationCannotBeChargedAndCloseIsTerminal" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.001"/>
+  <testcase name="stickyRefusalStopsFurtherBoundedMaterializationAndDoesNotIncreaseBudget" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.0"/>
+  <testcase name="refusedTransitionCannotPromoteResetOrCreateAnotherTransition" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.0"/>
+  <testcase name="supplementaryUnicodeIsChargedInUtf16UnitsWithBackingAndAlignment" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.012"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+INSTRUMENTATION_STATUS: stream=P85a_BOARD,stress,tasks=1000,eager_events=0,history_complete=false,elapsed_ms=5167,art_used=16372440,native_heap=11404576,pss_kib=154232,fd=135,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P85a FAIL stress: java.lang.IllegalStateException: No actual accessibility content: Chronik laden
+	at org.pag.prototype.P85TaskHistoryProbe.showText(P85TaskHistoryProbe.kt:152)
+	at org.pag.prototype.P85TaskHistoryProbe.onStart(P85TaskHistoryProbe.kt:81)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+INSTRUMENTATION_CODE: 0

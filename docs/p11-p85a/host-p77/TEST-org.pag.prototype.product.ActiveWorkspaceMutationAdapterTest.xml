@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveWorkspaceMutationAdapterTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-22T12:11:53.211Z" hostname="iuzjhtgvfc" time="0.118">
+  <properties/>
+  <testcase name="rollbackStaysDirtyAndUnknownOrCleanupFailureIsTerminal" classname="org.pag.prototype.product.ActiveWorkspaceMutationAdapterTest" time="0.071"/>
+  <testcase name="scopeGenerationActionPermissionAndRevokeFenceLateResultsAndForeignTickets" classname="org.pag.prototype.product.ActiveWorkspaceMutationAdapterTest" time="0.008"/>
+  <testcase name="unpreparedActiveAdapterDeniesDocumentsAndTypedFinishWithoutCoreFallbackOrCleanChanges" classname="org.pag.prototype.product.ActiveWorkspaceMutationAdapterTest" time="0.008"/>
+  <testcase name="newReadOrEditorMutationFencesOldWriterResultWithoutMarkingAnyProjectionClean" classname="org.pag.prototype.product.ActiveWorkspaceMutationAdapterTest" time="0.002"/>
+  <testcase name="partialMultiPhaseFallbackNeverRestoresOldReadsEvenAfterNewReadyGeneration" classname="org.pag.prototype.product.ActiveWorkspaceMutationAdapterTest" time="0.007"/>
+  <testcase name="synchronousBeforeQueueInvalidatesPeopleCardsTasksAndCountsAndPendingBlocksReads" classname="org.pag.prototype.product.ActiveWorkspaceMutationAdapterTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

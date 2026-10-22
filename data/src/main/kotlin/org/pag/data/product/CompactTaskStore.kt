@@ -60,12 +60,13 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
 
     private fun validText(column: String, title: Boolean) = CompactSqlText.validText(column, title)
 
-    internal suspend fun preflight(state: CompactTaskState) {
+    internal suspend fun preflight(state: CompactTaskState, fullTaskRead:Boolean=false) {
         gate();checkInput(state.binding.actionId)
         if(context.generation!=state.binding.generation) reject(BoundedActiveStatus.ACCESS_REVOKED)
         query("PRAGMA encoding") { s -> if(!s.step() || s.getText(0)!="UTF-8" || s.step()) invalid() }
         val a=listOf(state.binding.actionId)
-        val active=scalar("SELECT COALESCE((SELECT CASE WHEN status='ACTIVE' THEN 1 WHEN status IN ('DRAFT','PREPARATION','COMPLETED','DELETION_PENDING') THEN 0 ELSE -1 END FROM actions WHERE id=?),0)",a)
+        val readable=if(fullTaskRead) "status IN ('PREPARATION','ACTIVE','COMPLETED')" else "status='ACTIVE'"
+        val active=scalar("SELECT COALESCE((SELECT CASE WHEN $readable THEN 1 WHEN status IN ('DRAFT','PREPARATION','COMPLETED','DELETION_PENDING') THEN 0 ELSE -1 END FROM actions WHERE id=?),0)",a)
         if(active<0) invalid()
         if(active==0L) reject(BoundedActiveStatus.ACCESS_REVOKED)
         // Scalar validation of all task rows, not payload fetching. Provenance may be huge:
@@ -217,10 +218,28 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         return finish(CompactTaskDetail(state,task?:invalid()),reservation)
     }
 
-    suspend fun events(state: CompactTaskState, taskId: String, after: CompactEventCursor?): CompactTaskResult.Value {
+    /** Direct entry reads ONE scalar anchor, never an OFFSET event payload list. The following
+     * materializer is the same admitted keyset reader, in this SAME authorized transaction.
+     * SQLite key sorting/temp allocation is still not a calibrated native-memory bound. */
+    suspend fun eventsAtPage(state:CompactTaskState,taskId:String,page:Long,fullTaskRead:Boolean=false):CompactTaskResult.Value {
+        if(page<1)reject(BoundedActiveStatus.ACCESS_REVOKED)
+        if(page==1L)return events(state,taskId,null,fullTaskRead)
+        checkInput(taskId);preflight(state,fullTaskRead)
+        val args=listOf(state.binding.actionId,taskId)
+        val offset=try{Math.multiplyExact(page-1,PAGE_SIZE.toLong())}catch(_:ArithmeticException){reject(BoundedActiveStatus.BUDGET_REFUSED)}
+        val total=scalar("SELECT COUNT(*) FROM task_events WHERE actionId=? AND taskId=?",args)
+        if(offset>=total)reject(BoundedActiveStatus.ACCESS_REVOKED)
+        val anchor=query("SELECT occurredAt,rowid FROM task_events WHERE actionId=? AND taskId=? ORDER BY occurredAt,rowid LIMIT 1 OFFSET ?",args+listOf(offset-1)) { s ->
+            if(!s.step())invalid()
+            CompactEventCursor(state,taskId,integer(s,0),integer(s,1)).also{if(s.step())invalid()}
+        }
+        return events(state,taskId,anchor,fullTaskRead)
+    }
+
+    suspend fun events(state: CompactTaskState, taskId: String, after: CompactEventCursor?, fullTaskRead:Boolean=false): CompactTaskResult.Value {
         checkInput(taskId)
         if(after!=null && (after.state!=state || after.taskId!=taskId)) reject(BoundedActiveStatus.ACCESS_REVOKED)
-        preflight(state)
+        preflight(state,fullTaskRead)
         val args=listOf(state.binding.actionId,taskId)
         if(scalar("SELECT COUNT(*) FROM tasks WHERE actionId=? AND id=?",args)!=1L) reject(BoundedActiveStatus.ACCESS_REVOKED)
         val checks="typeof(id)!='text' OR typeof(actionId)!='text' OR typeof(taskId)!='text' OR typeof(type)!='text' OR typeof(occurredAt)!='integer' OR type NOT IN ('CREATED','STARTED','COMPLETED','CANCELLED','REOPENED')"
@@ -241,7 +260,9 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         }
         if(rows.size.toLong()!=sized.first) invalid()
         rows.sortWith(compareBy<Pair<Long,TaskEvent>>{it.second.occurredAt}.thenBy{it.first})
-        val next=rows.lastOrNull()?.takeIf{rows.size==PAGE_SIZE}?.let { CompactEventCursor(state,taskId,it.second.occurredAt,it.first) }
+        val last=rows.lastOrNull()
+        val next=last?.takeIf { scalar("SELECT EXISTS(SELECT 1 FROM task_events WHERE actionId=? AND taskId=? AND (occurredAt,rowid)>(?,?))",
+            args+listOf(it.second.occurredAt,it.first))!=0L }?.let { CompactEventCursor(state,taskId,it.second.occurredAt,it.first) }
         return finish(CompactTaskEvents(state,taskId,total,rows.map{it.second},next),reservation)
     }
 

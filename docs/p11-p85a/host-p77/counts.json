@@ -1,0 +1,142 @@
+{
+  "data": [
+    {
+      "name": "org.pag.data.product.CompactTaskStoreTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "12.817"
+    }
+  ],
+  "app": [
+    {
+      "name": "org.pag.prototype.product.DocumentWorkspaceTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.237"
+    },
+    {
+      "name": "org.pag.prototype.product.CompletedProtocolWorkspaceTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.072"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceBudgetTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.11"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceTest",
+      "tests": "20",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.412"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveTasksTest",
+      "tests": "29",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "1.697"
+    },
+    {
+      "name": "org.pag.prototype.product.WorkspaceBatchTest",
+      "tests": "21",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.218"
+    },
+    {
+      "name": "org.pag.prototype.product.CoreWorkspaceMutationAdapterTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.03"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceValiditySessionTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.182"
+    },
+    {
+      "name": "org.pag.prototype.product.MemoryReportWorkspaceTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.133"
+    },
+    {
+      "name": "org.pag.prototype.product.PreparationWorkspaceTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.331"
+    },
+    {
+      "name": "org.pag.prototype.product.ExpenseWorkspaceTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.396"
+    },
+    {
+      "name": "org.pag.prototype.product.MaterialWorkspaceTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.165"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspacePublicationRaceTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.059"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceValidityTest",
+      "tests": "23",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.255"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceMutationAdapterTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.118"
+    },
+    {
+      "name": "org.pag.prototype.product.TaskModelTest",
+      "tests": "27",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.255"
+    }
+  ]
+}

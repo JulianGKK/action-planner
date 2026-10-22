@@ -1,0 +1,174 @@
+{
+  "data": [
+    {
+      "name": "org.pag.data.product.OutstandingCoreReadTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.199"
+    },
+    {
+      "name": "org.pag.data.product.TaskRulesTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.014"
+    },
+    {
+      "name": "org.pag.data.product.P83OverlapBudgetTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "7.899"
+    },
+    {
+      "name": "org.pag.data.product.CompactTaskStoreTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "13.997"
+    },
+    {
+      "name": "org.pag.data.product.TaskMutationSqliteTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "6.084"
+    }
+  ],
+  "app": [
+    {
+      "name": "org.pag.prototype.product.DocumentWorkspaceTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.12"
+    },
+    {
+      "name": "org.pag.prototype.product.CompletedProtocolWorkspaceTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.051"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceBudgetTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.032"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceTest",
+      "tests": "20",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.277"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveTasksTest",
+      "tests": "29",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.622"
+    },
+    {
+      "name": "org.pag.prototype.product.WorkspaceBatchTest",
+      "tests": "21",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.102"
+    },
+    {
+      "name": "org.pag.prototype.product.CoreWorkspaceMutationAdapterTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.018"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceValiditySessionTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.085"
+    },
+    {
+      "name": "org.pag.prototype.product.MemoryReportWorkspaceTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.092"
+    },
+    {
+      "name": "org.pag.prototype.product.PreparationWorkspaceTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.183"
+    },
+    {
+      "name": "org.pag.prototype.product.ExpenseWorkspaceTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.245"
+    },
+    {
+      "name": "org.pag.prototype.product.MaterialWorkspaceTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.108"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspacePublicationRaceTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.037"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceValidityTest",
+      "tests": "23",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.129"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceMutationAdapterTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.039"
+    },
+    {
+      "name": "org.pag.prototype.product.TaskModelTest",
+      "tests": "27",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "0.103"
+    }
+  ]
+}

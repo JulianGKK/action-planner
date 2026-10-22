@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.MemoryReportWorkspaceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-22T12:11:55.835Z" hostname="iuzjhtgvfc" time="0.133">
+  <properties/>
+  <testcase name="writeRefreshesOnlyServerSummaryAndCallbacksAreNotInteractions" classname="org.pag.prototype.product.MemoryReportWorkspaceTest" time="0.045"/>
+  <testcase name="crossAreaAsksDiscardAndLockClearsLatePublication" classname="org.pag.prototype.product.MemoryReportWorkspaceTest" time="0.006"/>
+  <testcase name="activeToCompletedClearsRamThenExplicitlyResumesPersistedDraft" classname="org.pag.prototype.product.MemoryReportWorkspaceTest" time="0.04"/>
+  <testcase name="deletionPendingDropsOpenReportAndLateCallbacks" classname="org.pag.prototype.product.MemoryReportWorkspaceTest" time="0.004"/>
+  <testcase name="atomicHubWaitsForP9SummaryAndReadsNoContent" classname="org.pag.prototype.product.MemoryReportWorkspaceTest" time="0.009"/>
+  <testcase name="refreshErrorRetainsCompleteSnapshot" classname="org.pag.prototype.product.MemoryReportWorkspaceTest" time="0.005"/>
+  <testcase name="noPreparationDraftDeletionPath" classname="org.pag.prototype.product.MemoryReportWorkspaceTest" time="0.006"/>
+  <testcase name="completedNormalHasZeroP9ReadsUntilTapAndOtherRulesStayClosed" classname="org.pag.prototype.product.MemoryReportWorkspaceTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

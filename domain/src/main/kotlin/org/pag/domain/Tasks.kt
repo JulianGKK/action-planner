@@ -13,7 +13,9 @@ data class Task(val id:String,val actionId:String,val title:String,val priority:
 }
 data class TaskEvent(val id:String,val actionId:String,val taskId:String,val type:TaskEventType,val occurredAt:Long)
 data class TaskTemplate(val key:String,val title:String) { fun input()=TaskInput(title,sourceTemplateKey=key) }
-data class TaskBoard(val actionId:String,val tasks:List<Task>,val events:List<TaskEvent>) {
+data class TaskBoard(val actionId:String,val tasks:List<Task>,val events:List<TaskEvent>,
+    /** False means history was not requested; an empty list is NOT an empty chronicle. */
+    val eventsComplete:Boolean=true) {
     val active get()=tasks.filter{TaskRules.active(it.status)}.sortedWith(TaskRules.order)
     val closed get()=tasks.filterNot{TaskRules.active(it.status)}.sortedByDescending{it.updatedAt}
     fun affectedCount(personId:String)=tasks.count{TaskRules.active(it.status) && it.affectedPersonId==personId}
@@ -45,6 +47,14 @@ object TaskRules {
 }
 interface TaskRepository {
     fun board(actionId:String,publish:(OperationsResult<TaskBoard>)->Unit)
+    /** One <=32-event page replaces the previous page. Cursor is metadata, never authority. */
+    fun history(expected:Task,after:CompactEventCursor?,publish:(CompactTaskResult)->Unit) {
+        publish(CompactTaskResult.Rejected(BoundedActiveStatus.STORAGE_FAILURE))
+    }
+    /** Explicit random entry; does not retain a position or authority across session revoke. */
+    fun historyPage(expected:Task,page:Long,publish:(CompactTaskResult)->Unit) {
+        publish(CompactTaskResult.Rejected(BoundedActiveStatus.STORAGE_FAILURE))
+    }
     fun create(actionId:String,input:TaskInput,publish:(OperationsResult<Task>)->Unit)
     fun edit(actionId:String,expected:Task,input:TaskInput,publish:(OperationsResult<Task>)->Unit)
     fun transition(actionId:String,expected:Task,status:TaskStatus,publish:(OperationsResult<Task>)->Unit)

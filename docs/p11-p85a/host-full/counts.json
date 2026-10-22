@@ -1,0 +1,37 @@
+{
+  "org.pag.data.product.OutstandingCoreReadTest": {
+    "tests": "10",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.042"
+  },
+  "org.pag.data.product.TaskRulesTest": {
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.005"
+  },
+  "org.pag.data.product.P83OverlapBudgetTest": {
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "2.664"
+  },
+  "org.pag.data.product.CompactTaskStoreTest": {
+    "tests": "22",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "3557.356"
+  },
+  "org.pag.data.product.TaskMutationSqliteTest": {
+    "tests": "13",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "2.464"
+  }
+}

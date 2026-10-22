@@ -1,0 +1,35 @@
+INSTRUMENTATION_STATUS: stream=P85a_BOARD,small,tasks=40,eager_events=0,history_complete=false,elapsed_ms=1474,art_used=6526440,native_heap=11415696,pss_kib=146810,fd=134,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85a_DETAIL_STATE,small,session=READY,form=false,selected=13aa0d16-0f25-4a0f-a9bd-75b01b9d2c46,area=TASKS,history=false,historyBusy=false,error=null
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85a_UI_BEFORE_HISTORY,small,P77 ISOLIERTER TEST – synthetischer Schlüssel und synthetische Testdaten; keine Produktanmeldung|Sperren|SCROLLABLE:android.widget.ScrollView|‹ Aktionen|Synthetic action|AKTIV|‹ Zum Lagebild|Aufgaben|‹ Zur Aufgabe|Aufgabe bearbeiten|Ä界🦋Synthetic task 17|Titel|Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · 20 / 120 Zeichen
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85a_PAGE,small,page=1,rows=1,total=1,seen=1,next=false,elapsed_ms=1272,art_used=11507608,native_heap=12240432,pss_kib=155398,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85a_EDITOR_SAVE,small,real_repository=true,refreshed=true,events_not_fetched=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85a_WRITER_FENCE,small,document=false,metadata_injection=true,late_payload=false,restart_after_confirmed_end=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85a_WRITER_FENCE,small,document=true,metadata_injection=true,late_payload=false,restart_after_confirmed_end=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85a_UNKNOWN,small,history_denied=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85a_LIFETIME,State(phase=COMPOSE_TRANSITION, retained=0, transition=8388608, localRetained=1501844, localTransition=5983568, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=FULL_VIEW_UNCONFIRMED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85a_REVOKE,small,history_cleared=true,session=LOCKED
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85a_CASE,small,ANDROID-GREEN,board_editor_history=true,complete_stress_traversal=false,direct_middle_end=false,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P85a PASS small: bounded full workspace/editor/history pages; not joint memory certification
+INSTRUMENTATION_CODE: -1

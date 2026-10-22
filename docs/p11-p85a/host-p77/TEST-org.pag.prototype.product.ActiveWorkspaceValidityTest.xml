@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveWorkspaceValidityTest" tests="23" skipped="0" failures="0" errors="0" timestamp="2026-10-22T12:11:54.099Z" hostname="iuzjhtgvfc" time="0.255">
+  <properties/>
+  <testcase name="reentrantWorkIsDeniedAndRevokeCannotBeUndoneByPublication" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.008"/>
+  <testcase name="wrongGenerationInBindingOrAuthorityCannotReuse" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.004"/>
+  <testcase name="lockBeforeCommitNotificationCannotMakeLocalStateCommitted" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.004"/>
+  <testcase name="crossThreadCallsFailInsteadOfRacingMetadata" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.005"/>
+  <testcase name="finishedNewMutationAtFinalGateStillFencesOldPatch" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.007"/>
+  <testcase name="revokeImmediatelyDiscardsReadAndMutationTickets" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.002"/>
+  <testcase name="correctScopeNeedsCompletedReadAndCentralHitPublication" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.003"/>
+  <testcase name="definiteRollbackStaysDirtyUntilAuthoritativeReload" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.003"/>
+  <testcase name="cleanupFailureAfterCommitOrRollbackIsTerminal" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.004"/>
+  <testcase name="partialCompletionIsDeniedAndConsumesItsTicket" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.02"/>
+  <testcase name="wrongActionPermissionStatusOrMissingBindingTerminatesOwner" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.016"/>
+  <testcase name="mutationFreezesCallerSetAndForeignTicketsNeverMatch" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.012"/>
+  <testcase name="commitAndCleanupDoNotImplicitlyPublishAndCallbacksAreOneShot" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.015"/>
+  <testcase name="commitBeforeLockButPublicationAfterLockDeniesSuccess" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.013"/>
+  <testcase name="newReadBetweenAdmissionAndFinalGateFencesOldResult" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.013"/>
+  <testcase name="failingPublicationIsTerminalAndCannotBeRetried" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.015"/>
+  <testcase name="newMutationFencesReadAndNewMutationFencesOldPatch" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.009"/>
+  <testcase name="readsCoalesceOnlyEqualDemandAndFreezeCallerSet" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.004"/>
+  <testcase name="authorityRechecksBetweenLocalAdmissionAndPublication" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.012"/>
+  <testcase name="newReloadFencesCommittedPatchAndDuplicateOldRead" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.013"/>
+  <testcase name="unknownIsTerminalEvenIfSameScopeAndStorageBecomeAvailableAgain" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.01"/>
+  <testcase name="pendingInvalidatesBeforeAnyWriteAndDeniesOverlappingWork" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.001"/>
+  <testcase name="permissionChangeInsideFinalPublicationGateDeniesCallback" classname="org.pag.prototype.product.ActiveWorkspaceValidityTest" time="0.012"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

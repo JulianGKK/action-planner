@@ -38,7 +38,7 @@ import java.time.format.FormatStyle
             if(model.deletable)FormOutlinedButton(model::delete,enabled=!model.busy){Text("Aufgabe löschen")}
         }
         Text("Chronik",style=MaterialTheme.typography.titleMedium)
-        board.events.filter{it.taskId==selected.id}.forEach{Text("${taskTime(it.occurredAt)} · ${eventLabel(it.type)}")}
+        TaskHistory(model)
         FormOutlinedButton(model::cancel,enabled=!model.busy){Text("Zurück zu Aufgaben")}
         return
     }
@@ -105,3 +105,36 @@ internal fun priorityLabel(p:TaskPriority)=when(p){TaskPriority.LOW->"Niedrig";T
 internal fun taskStatusLabel(s:TaskStatus)=when(s){TaskStatus.OPEN->"Offen";TaskStatus.IN_PROGRESS->"In Arbeit";TaskStatus.DONE->"Erledigt";TaskStatus.CANCELLED->"Entfällt"}
 internal fun eventLabel(t:TaskEventType)=when(t){TaskEventType.CREATED->"Erstellt";TaskEventType.STARTED->"In Arbeit";TaskEventType.COMPLETED->"Erledigt";TaskEventType.CANCELLED->"Entfällt";TaskEventType.REOPENED->"Wieder geöffnet"}
 internal fun taskTime(time:Long)=Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))
+
+/** Only the current bounded page is composed; replacing it does not accumulate history. */
+@Composable internal fun TaskHistory(model:TaskModel) {
+    when {
+        model.historyBusy->Text("Chronik wird geladen …")
+        model.historyError!=null->{
+            Text(when(model.historyError){
+                BoundedActiveStatus.BUDGET_REFUSED->"Chronikseite kann derzeit nicht geladen werden (Speichergrenze)."
+                BoundedActiveStatus.ACCESS_REVOKED->"Chronik ist nicht mehr aktuell. Bitte neu laden."
+                else->"Chronik konnte nicht geladen werden. Bitte erneut versuchen."
+            })
+            FormOutlinedButton({model.loadHistory(true)}){Text("Chronik neu laden")}
+        }
+        model.history==null->FormOutlinedButton({model.loadHistory(true)}){Text("Chronik laden")}
+        else->{
+            val page=model.history!!
+            if(page.total==0L)Text("Noch keine Ereignisse.")
+            else Text("Ereignisse ${model.historyOffset+1}–${model.historyOffset+page.events.size} von ${page.total}")
+            val lastPage=if(page.total==0L)1L else (page.total-1)/32+1
+            if(lastPage>1) {
+                var number by remember(page.state,page.taskId,model.historyOffset){mutableStateOf((model.historyOffset/32+1).toString())}
+                val chosen=number.toLongOrNull()?.takeIf{it in 1..lastPage}
+                FormTextField(number,{if(it.length<=19 && it.all{c->c in '0'..'9'})number=it},label={Text("Seite (1–$lastPage)")},singleLine=true,
+                    keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(keyboardType=androidx.compose.ui.text.input.KeyboardType.Number))
+                FormOutlinedButton({chosen?.let(model::loadHistoryPage)},enabled=chosen!=null){Text("Seite öffnen")}
+                FormTextButton({model.loadHistoryPage(lastPage)}){Text("Letzte Seite")}
+            }
+            page.events.forEach{Text("${taskTime(it.occurredAt)} · ${eventLabel(it.type)}")}
+            if(page.next!=null)FormOutlinedButton({model.loadHistory()}){Text("Weitere Ereignisse")}
+            FormTextButton({model.loadHistory(true)}){Text("Chronik von Anfang an")}
+        }
+    }
+}

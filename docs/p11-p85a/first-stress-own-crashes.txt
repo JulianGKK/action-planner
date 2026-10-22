@@ -1,0 +1,1 @@
+No own P77 AndroidRuntime fatal exception found in available log buffer.

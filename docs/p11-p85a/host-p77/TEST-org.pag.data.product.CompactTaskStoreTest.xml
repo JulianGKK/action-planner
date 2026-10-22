@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.CompactTaskStoreTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-22T12:12:22.079Z" hostname="iuzjhtgvfc" time="12.817">
+  <properties/>
+  <testcase name="directPageEntryReachesMiddleAndEndWithoutPrefixMaterialization" classname="org.pag.data.product.CompactTaskStoreTest" time="12.35"/>
+  <testcase name="directPageAnchorRevokeAndFailureNeverPublishOrPretendEmpty" classname="org.pag.data.product.CompactTaskStoreTest" time="0.451"/>
+  <system-out><![CDATA[P85a direct entry pages=4001,2001,1 stored=129000 selected=128001 maxPayload=32
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

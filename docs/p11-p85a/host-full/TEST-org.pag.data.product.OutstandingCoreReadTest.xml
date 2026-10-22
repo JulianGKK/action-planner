@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.OutstandingCoreReadTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-22T12:09:15.698Z" hostname="iuzjhtgvfc" time="0.042">
+  <properties/>
+  <testcase name="aPendingCandidateBlocksSecondAndThirdBeforeTicketsAndSqlWithoutReplacingAuthority" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.025"/>
+  <testcase name="fullViewFencePreservesOldChargesAndCannotMintAnEditorFallbackCore" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.001"/>
+  <testcase name="everyWriterSessionAndAuthorityRaceRevokesOnlyOriginalUndeliveredHandoff" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.004"/>
+  <testcase name="discardDrainsOnlyKnownHandoffAndLateDuplicateCannotRevokeNewOriginalTicket" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.001"/>
+  <testcase name="duplicateWorkerCannotAcknowledgeWhileOriginalWorkerStillMaterializes" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.003"/>
+  <testcase name="uncertainQueueAcceptanceCannotFreeReservationBeforeTheQueuedShellAcknowledges" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.004"/>
+  <testcase name="knownReaderFailureAndBudgetRefusalEndChargeButUnconfirmedCleanupStaysBooked" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.001"/>
+  <testcase name="anActuallyLostMainRemainsBookedEvenAfterCancellationWithoutQueueAcknowledgement" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.001"/>
+  <testcase name="vmClearAndComposeDisposalDoNotConfirmFrameRetirementOrNewGenerationBudget" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.0"/>
+  <testcase name="cancellationDuringMaterializationCannotRegrantBeforeWorkerScopeEnds" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

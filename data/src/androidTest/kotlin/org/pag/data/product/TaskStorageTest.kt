@@ -46,6 +46,7 @@ class TaskStorageTest {
     private fun rejected(result:OperationsResult<*>,reason:OperationsFailure){assertEquals(OperationsResult.Rejected(reason),result)}
     private fun create(i:ProductInventory,input:TaskInput=TaskInput(" EA contacter "),a:String="a")=value(write(i){it.create(a,input)})
     private fun board(i:ProductInventory,a:String="a")=value(use(i){d->d.withReadTransaction{TaskStore(d,context()){++time}.board(a)}})
+    private fun events(i:ProductInventory,a:String="a")=use(i){it.tasks().events(a).map{it.model()}}
     private fun role(i:ProductInventory,a:String="a")=use(i){d->d.withWriteTransaction{value(OperationsStore(d,context()){++time}.role(a,null,"Gesa-Support"))}}
     private fun advance(i:ProductInventory,from:ActionStatus=ActionStatus.PREPARATION)=use(i){it.advanceAction("a",from,context())}
     private fun repo(i:ProductInventory,main:Executor=direct):TaskRepository {
@@ -74,16 +75,16 @@ class TaskStorageTest {
         var task:Task?=null
         r.create("a",TaskInput("Synthetic writer proof")){task=value(it)}
         assertNull(task);assertTrue(completions.isEmpty());assertEquals(1L,uncached.mutationEpoch)
-        assertEquals(1,board(i).events.size) // committed in SQL, callback still queued
+        assertEquals(1,events(i).size) // committed in SQL, callback still queued
         val callback=pending.removeAt(0);callback.run();callback.run()
         assertNotNull(task);assertEquals(listOf(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)),completions)
         r.create("a",TaskInput("")){rejected(it,OperationsFailure.INVALID)}
         pending.removeAt(0).run()
         assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),completions.last())
         r.transition("a",task!!,TaskStatus.DONE){task=value(it)};pending.removeAt(0).run()
-        assertEquals(2,board(i).events.size);assertEquals(TaskStatus.DONE,task!!.status)
+        assertEquals(2,events(i).size);assertEquals(TaskStatus.DONE,task!!.status)
         r.transition("a",task!!,TaskStatus.DONE){rejected(it,OperationsFailure.INVALID)};pending.removeAt(0).run()
-        assertEquals(2,board(i).events.size);assertFalse(uncached.ramReuseEnabled)
+        assertEquals(2,events(i).size);assertFalse(uncached.ramReuseEnabled)
     }
     @Test fun integrationReopenAndSnapshotStaySeparate(){
         val i=fixture();val r=role(i);advance(i)
@@ -94,19 +95,19 @@ class TaskStorageTest {
         t=value(write(i){it.transition("a",t,TaskStatus.IN_PROGRESS)})
         t=value(write(i){it.transition("a",t,TaskStatus.DONE)});assertNotNull(t.completedAt);assertEquals(0,board(i).affectedCount("Motte"))
         t=value(write(i){it.transition("a",t,TaskStatus.OPEN)});assertNull(t.completedAt)
-        assertEquals(listOf(TaskEventType.CREATED,TaskEventType.STARTED,TaskEventType.COMPLETED,TaskEventType.REOPENED),board(i).events.map{it.type})
+        assertEquals(listOf(TaskEventType.CREATED,TaskEventType.STARTED,TaskEventType.COMPLETED,TaskEventType.REOPENED),events(i).map{it.type})
         use(i){assertEquals(before,it.operations().state("a","Motte"));assertEquals(3,it.operations().states("a").size)}
     }
     @Test fun editsAreSnapshotsAndStaleRetriesCannotDuplicateEvents(){
         val i=fixture();val t=create(i);val r=role(i)
         val edited=value(write(i){it.edit("a",t,TaskInput("Changed",TaskPriority.LOW,assigneeRoleId=r.id,affectedPersonId="Meise",dueAt=5000))})
-        assertEquals(1,board(i).events.size)
+        assertEquals(1,events(i).size)
         val done=value(write(i){it.transition("a",edited,TaskStatus.DONE)})
         rejected(write(i){it.transition("a",edited,TaskStatus.DONE)},OperationsFailure.STALE)
         rejected(write(i){it.transition("a",done,TaskStatus.DONE)},OperationsFailure.INVALID)
-        assertEquals(2,board(i).events.size)
+        assertEquals(2,events(i).size)
     }
-    @Test fun cancellationCanReopen(){val i=fixture();var t=create(i);t=value(write(i){it.transition("a",t,TaskStatus.CANCELLED)});assertNull(t.completedAt);t=value(write(i){it.transition("a",t,TaskStatus.OPEN)});assertEquals(TaskStatus.OPEN,t.status);assertEquals(listOf(TaskEventType.CREATED,TaskEventType.CANCELLED,TaskEventType.REOPENED),board(i).events.map{it.type})}
+    @Test fun cancellationCanReopen(){val i=fixture();var t=create(i);t=value(write(i){it.transition("a",t,TaskStatus.CANCELLED)});assertNull(t.completedAt);t=value(write(i){it.transition("a",t,TaskStatus.OPEN)});assertEquals(TaskStatus.OPEN,t.status);assertEquals(listOf(TaskEventType.CREATED,TaskEventType.CANCELLED,TaskEventType.REOPENED),events(i).map{it.type})}
     @Test fun statusPoliciesUsePersistedAction(){
         for(s in ActionStatus.entries){
             val i=fixture();val t=create(i)
@@ -127,11 +128,11 @@ class TaskStorageTest {
         val i=fixture();val r=repo(i);val a=create(i)
         var b:Task?=null;r.edit("a",a,a.input().copy(title="New writer")){b=value(it)}
         r.edit("a",a,a.input().copy(title="Old form")){rejected(it,OperationsFailure.STALE)}
-        assertEquals(b,board(i).tasks.single());assertEquals(1,board(i).events.size)
+        assertEquals(b,board(i).tasks.single());assertEquals(1,events(i).size)
         var c:Task?=null;r.transition("a",b!!,TaskStatus.IN_PROGRESS){c=value(it)}
         r.edit("a",b!!,b!!.input().copy(title="Old edit after transition")){rejected(it,OperationsFailure.STALE)}
         r.transition("a",b!!,TaskStatus.DONE){rejected(it,OperationsFailure.STALE)}
-        assertEquals(c,board(i).tasks.single());assertEquals(2,board(i).events.size)
+        assertEquals(c,board(i).tasks.single());assertEquals(2,events(i).size)
     }
     @Test fun crossActionAndExclusiveAssignment(){
         val i=fixture();val r=role(i,"b");val t=create(i)
@@ -142,7 +143,7 @@ class TaskStorageTest {
         rejected(write(i){it.create("a",TaskInput("x",assigneePersonId="Motte",assigneeRoleId=r.id))},OperationsFailure.INVALID)
         rejected(write(i){it.edit("b",t,t.input())},OperationsFailure.NOT_FOUND)
         rejected(write(i){it.transition("b",t,TaskStatus.DONE)},OperationsFailure.NOT_FOUND)
-        assertTrue(board(i,"b").tasks.isEmpty());assertTrue(board(i,"b").events.isEmpty())
+        assertTrue(board(i,"b").tasks.isEmpty());assertTrue(events(i,"b").isEmpty())
         for(row in listOf(t.copy(id="foreign-person",assigneePersonId="other"),t.copy(id="foreign-role",assigneeRoleId=r.id),t.copy(id="foreign-affected",affectedPersonId="other"))){
             var denied=false;try{use(i){d->d.withWriteTransaction{d.tasks().insert(row.row())}}}catch(_:Exception){denied=true};assertTrue(denied)
         }
@@ -164,10 +165,10 @@ class TaskStorageTest {
     @Test fun commitRevokeRollsBackCreationAndTransitionEvents(){
         val i=fixture();denyCommit=true
         try{create(i);fail("P5A-CREATE-MUST-ROLLBACK")}catch(_:StorageAccessRevoked){}
-        denyCommit=false;allowed=true;generation++;assertTrue(board(i).tasks.isEmpty());assertTrue(board(i).events.isEmpty())
+        denyCommit=false;allowed=true;generation++;assertTrue(board(i).tasks.isEmpty());assertTrue(events(i).isEmpty())
         val t=create(i);denyCommit=true
         try{write(i){it.transition("a",t,TaskStatus.DONE)};fail("P5A-TRANSITION-MUST-ROLLBACK")}catch(_:StorageAccessRevoked){}
-        denyCommit=false;allowed=true;generation++;assertEquals(t,board(i).tasks.single());assertEquals(1,board(i).events.size)
+        denyCommit=false;allowed=true;generation++;assertEquals(t,board(i).tasks.single());assertEquals(1,events(i).size)
     }
     @Test fun dbRejectsBothAssignmentsOnInsertAndUpdate(){
         val i=fixture();val r=role(i);val t=create(i)
@@ -185,15 +186,15 @@ class TaskStorageTest {
         var denied=false
         try{write(i){it.transition("a",t,TaskStatus.DONE)}}catch(_:Exception){denied=true};assertTrue(denied)
         denied=false;try{create(i)}catch(_:Exception){denied=true};assertTrue(denied)
-        assertEquals(t,board(i).tasks.single());assertEquals(1,board(i).events.size)
+        assertEquals(t,board(i).tasks.single());assertEquals(1,events(i).size)
         B2Native.open(i.database,key,context(AccessScope.MAINTENANCE)).use{it.execSQL("DROP TRIGGER p5a_test_event_failure")}
         value(write(i){it.transition("a",t,TaskStatus.DONE)})
-        assertEquals(2,board(i).events.size)
+        assertEquals(2,events(i).size)
     }
     @Test fun generationRevokeSuppressesPublication(){
         val i=fixture();val queued=mutableListOf<Runnable>();val r=repo(i,Executor{queued.add(it)});var published=0
         r.create("a",TaskInput("x")){published++};generation++;queued.forEach{it.run()};assertEquals(0,published)
-        assertEquals(1,board(i).tasks.size);assertEquals(1,board(i).events.size)
+        assertEquals(1,board(i).tasks.size);assertEquals(1,events(i).size)
         allowed=false;r.create("a",TaskInput("must not create")){published++};assertEquals(0,published)
     }
     @Test fun migrationFiveToSixPreservesAllExistingRowsAndCiphertexts(){
@@ -208,7 +209,7 @@ class TaskStorageTest {
             d.execSQL("DROP TABLE task_events");d.execSQL("DROP TABLE tasks")
             d.execSQL("UPDATE room_master_table SET identity_hash='${schemaFiveHash}' WHERE id=42");d.version=5;d.setTransactionSuccessful()
         }finally{d.endTransaction()}}
-        assertTrue(board(i).tasks.isEmpty());assertTrue(board(i).events.isEmpty())
+        assertTrue(board(i).tasks.isEmpty());assertTrue(events(i).isEmpty())
         use(i){d->assertEquals(before,d.operations().states("a"));assertEquals(r,d.operations().role("a",r.id)!!.model());assertEquals("Motte",d.persons().get("a","Motte")!!.pseudonym);assertTrue(leadership.envelope.contentEquals(d.leadership().get("a")!!.envelope));assertTrue(area.payload.contentEquals(d.leadership().area("a","Motte","IDENTITY")!!.payload));assertTrue(area.keyEnvelope.contentEquals(d.leadership().area("a","Motte","IDENTITY")!!.keyEnvelope))}
         B2Native.open(i.database,key,context(AccessScope.MAINTENANCE),true).use{assertEquals(11,it.version)}
     }

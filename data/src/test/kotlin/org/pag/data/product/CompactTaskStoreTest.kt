@@ -98,6 +98,92 @@ class CompactTaskStoreTest {
         tasks.count{TaskRules.active(it.status) && it.priority==TaskPriority.HIGH}.toLong(),tasks.count{it.status==TaskStatus.DONE}.toLong(),tasks.count{it.status==TaskStatus.CANCELLED}.toLong())
     private fun assertDenied(reason:BoundedActiveStatus,r:CompactTaskResult)=assertEquals(CompactTaskResult.Rejected(reason),r)
 
+    @Test fun concentrated129000StoredEventsRemainCompletelyTraversableWithoutAccumulation()=Harness(200,1000,6).use { h ->
+        h.exec("DELETE FROM task_events")
+        h.exec("UPDATE tasks SET status='OPEN',completedAt=NULL")
+        h.exec("INSERT INTO task_events SELECT id||'-created','active',id,'CREATED',0 FROM tasks")
+        h.exec("WITH RECURSIVE n(i) AS (VALUES(1) UNION ALL SELECT i+1 FROM n WHERE i<128000) INSERT INTO task_events SELECT 'stress-'||i,'active','task-0000',CASE WHEN i%2=1 THEN 'CANCELLED' ELSE 'REOPENED' END,(i+2)/3 FROM n")
+        var cursor:CompactEventCursor?=null;var seen=0L;var pages=0;var lastTime=Long.MIN_VALUE
+        do {
+            val page=h.value(h.read {it.events(h.current,"task-0000",cursor,true)}).payload as CompactTaskEvents
+            assertEquals(128001L,page.total);assertTrue(page.events.size in 1..32)
+            for(event in page.events) {
+                assertEquals(if(seen==0L)"task-0000-created" else "stress-$seen",event.id)
+                assertTrue(event.occurredAt>=lastTime);lastTime=event.occurredAt;seen++
+            }
+            cursor=page.next;pages++
+        } while(cursor!=null)
+        assertEquals(128001L,seen);assertEquals(4001,pages);assertEquals(0,h.db.openStatements)
+        println("P85a full concentrated traversal stored=129000 selected=128001 pages=$pages maxRows=32 noAccumulation=true")
+    }
+    @Test fun directPageEntryReachesMiddleAndEndWithoutPrefixMaterialization()=Harness(200,1000,6).use { h ->
+        h.exec("DELETE FROM task_events");h.exec("UPDATE tasks SET status='OPEN',completedAt=NULL")
+        h.exec("INSERT INTO task_events SELECT id||'-created','active',id,'CREATED',0 FROM tasks")
+        h.exec("WITH RECURSIVE n(i) AS (VALUES(1) UNION ALL SELECT i+1 FROM n WHERE i<128000) INSERT INTO task_events SELECT 'stress-'||i,'active','task-0000',CASE WHEN i%2=1 THEN 'CANCELLED' ELSE 'REOPENED' END,(i+2)/3 FROM n")
+        for((number,first,last) in listOf(Triple(4001L,"stress-128000","stress-128000"),Triple(2001L,"stress-64000","stress-64031"),Triple(1L,"task-0000-created","stress-31"))) {
+            val before=h.db.blobReads
+            val page=h.value(h.read {it.eventsAtPage(h.current,"task-0000",number,true)}).payload as CompactTaskEvents
+            assertEquals(128001L,page.total);assertEquals(first,page.events.first().id);assertEquals(last,page.events.last().id)
+            assertTrue(page.events.size<=32);assertEquals(page.events.size*4,h.db.blobReads-before)
+            if(number==4001L)assertNull(page.next) else assertNotNull(page.next)
+        }
+        val before=h.db.payloadStatements
+        assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.read {it.eventsAtPage(h.current,"task-0000",0,true)})
+        assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.read {it.eventsAtPage(h.current,"task-0000",4002,true)})
+        assertDenied(BoundedActiveStatus.BUDGET_REFUSED,h.read {it.eventsAtPage(h.current,"task-0000",Long.MAX_VALUE,true)})
+        assertEquals(before,h.db.payloadStatements);assertEquals(0,h.db.openStatements)
+        println("P85a direct entry pages=4001,2001,1 stored=129000 selected=128001 maxPayload=32")
+    }
+    @Test fun directPageAnchorRevokeAndFailureNeverPublishOrPretendEmpty()=Harness(history=64).use { h ->
+        h.db.beforePrepare={if(it.contains("LIMIT 1 OFFSET"))h.allowed=false}
+        assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.read {it.eventsAtPage(h.current,"task-0000",2,true)})
+        assertEquals(0,h.publications);assertEquals(0,h.db.payloadStatements)
+        h.allowed=true;h.db.beforePrepare={if(it.contains("LIMIT 1 OFFSET"))error("HOST_ANCHOR_FAILURE")}
+        assertDenied(BoundedActiveStatus.STORAGE_FAILURE,h.read {it.eventsAtPage(h.current,"task-0000",2,true)})
+        assertEquals(0,h.publications);assertEquals(0,h.db.openStatements)
+    }
+    @Test fun fullTaskBoardsNeverFetchActionHistoryEvenAt129000Events() {
+        for((people,tasks,events) in listOf(Triple(20,40,6),Triple(100,250,32),Triple(200,1000,129))) Harness(people,tasks,events).use { h ->
+            val queries=ArrayList<String>();h.db.beforePrepare={queries.add(it)}
+            val board=runBlocking { (TaskStore(HostTaskData(h.db),h.c){0}.board("active") as OperationsResult.Value).value }
+            assertEquals(tasks,board.tasks.size);assertFalse(board.eventsComplete);assertTrue(board.events.isEmpty())
+            assertFalse(queries.any{it.contains("task_events")})
+            assertEquals(h.expected.toSet(),board.tasks.toSet())
+            assertEquals(tasks.toLong()*events,runBlocking{h.db.usePrepared("SELECT COUNT(*) FROM task_events"){it.step();it.getLong(0)}})
+            println("P85a board persons=$people tasks=$tasks storedEvents=${tasks*events} historyFetched=false")
+            // Fully traverse a selected task, including tied timestamps and Unicode IDs/titles.
+            var next:CompactEventCursor?=null;val seen=ArrayList<TaskEvent>()
+            do {
+                val page=h.value(h.read { it.events(h.current,"task-0000",next,fullTaskRead=true) }).payload as CompactTaskEvents
+                assertEquals(events.toLong(),page.total);assertTrue(page.events.size<=32)
+                seen.addAll(page.events);next=page.next
+            } while(next!=null)
+            assertEquals(events,seen.size);assertEquals(events,seen.map{it.id}.toSet().size)
+            assertEquals((0 until events).map{"task-0000-e-$it"},seen.map{it.id})
+            assertEquals(seen.sortedBy{it.occurredAt},seen)
+            assertEquals(0,h.db.openStatements)
+        }
+    }
+    @Test fun fullHistorySupportsPreparationCompletedAndExactPageEndsButCompactStaysActiveOnly()=Harness(history=32).use { h ->
+        for(status in listOf("PREPARATION","ACTIVE","COMPLETED")) {
+            h.exec("UPDATE actions SET status='$status'")
+            val page=h.value(h.read { it.events(h.current,"task-0000",null,fullTaskRead=true) }).payload as CompactTaskEvents
+            assertEquals(32,page.events.size);assertNull(page.next)
+            if(status!="ACTIVE")assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.events("task-0000"))
+        }
+        h.exec("UPDATE actions SET status='DRAFT'")
+        assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.read {it.events(h.current,"task-0000",null,fullTaskRead=true)})
+    }
+    @Test fun fullHistoryRevokeFailureAndBudgetNeverReturnFalseEmpty()=Harness(history=64).use { h ->
+        h.observer={if(it==CompactTaskStore.Phase.ROW)h.allowed=false}
+        assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.read {it.events(h.current,"task-0000",null,true)})
+        h.allowed=true;h.observer={}
+        h.exec("UPDATE task_events SET id=printf('%.*c',2200000,'x') WHERE rowid=1")
+        assertDenied(BoundedActiveStatus.BUDGET_REFUSED,h.read {it.events(h.current,"task-0000",null,true)})
+        h.exec("UPDATE task_events SET type='BROKEN' WHERE rowid=1")
+        assertDenied(BoundedActiveStatus.INVALID_DATA,h.read {it.events(h.current,"task-0000",null,true)})
+        assertEquals(0,h.publications);assertEquals(0,h.db.openStatements)
+    }
     @Test fun realisticSizesCoverEveryTaskWithExactCountsFiltersAndLegacyPriorityOrder() {
         for((people,tasks,history) in listOf(Triple(20,40,12),Triple(100,250,40),Triple(200,1000,128))) Harness(people,tasks,history).use { h ->
             val global=counts(h.expected)

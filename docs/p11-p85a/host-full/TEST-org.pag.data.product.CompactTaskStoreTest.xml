@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.CompactTaskStoreTest" tests="22" skipped="0" failures="0" errors="0" timestamp="2026-10-22T11:09:57.674Z" hostname="iuzjhtgvfc" time="3557.356">
+  <properties/>
+  <testcase name="invalidTitlesOrUtf8OnLaterPagesInvalidateCountsBeforeAnyContent" classname="org.pag.data.product.CompactTaskStoreTest" time="6.865"/>
+  <testcase name="mutationsRevokeUnknownAndPublicationDenialAtEveryPhasePublishNoPartialPayload" classname="org.pag.data.product.CompactTaskStoreTest" time="2.193"/>
+  <testcase name="maximumUnicodeTitlesAndNulProvenanceArePreservedWithoutTruncation" classname="org.pag.data.product.CompactTaskStoreTest" time="0.293"/>
+  <testcase name="concentrated129000StoredEventsRemainCompletelyTraversableWithoutAccumulation" classname="org.pag.data.product.CompactTaskStoreTest" time="3502.603"/>
+  <testcase name="crossActionRelationsAndMutuallyExclusiveAssigneesFailClosed" classname="org.pag.data.product.CompactTaskStoreTest" time="0.395"/>
+  <testcase name="realisticSizesCoverEveryTaskWithExactCountsFiltersAndLegacyPriorityOrder" classname="org.pag.data.product.CompactTaskStoreTest" time="30.445"/>
+  <testcase name="affectedPersonFilterKeepsExactCountsAndCoverageAcrossSeveralPages" classname="org.pag.data.product.CompactTaskStoreTest" time="1.599"/>
+  <testcase name="unicodeAndNulIdsKeepExactUtf16TaskRulesOrderAcrossPageBoundaries" classname="org.pag.data.product.CompactTaskStoreTest" time="0.273"/>
+  <testcase name="fullHistorySupportsPreparationCompletedAndExactPageEndsButCompactStaysActiveOnly" classname="org.pag.data.product.CompactTaskStoreTest" time="0.179"/>
+  <testcase name="malformedTypesEnumsTitlesAndUtf8NeverPublishContent" classname="org.pag.data.product.CompactTaskStoreTest" time="0.786"/>
+  <testcase name="keysetStateQueryAndPermissionGenerationChangesRejectContinuation" classname="org.pag.data.product.CompactTaskStoreTest" time="0.336"/>
+  <testcase name="exactDetailBudgetBoundaryAndOneByteBeyondAreControlled" classname="org.pag.data.product.CompactTaskStoreTest" time="0.159"/>
+  <testcase name="oversizedPageTextsAndIdentifiersRefuseBeforePayloadAndExactBudgetNeverGrows" classname="org.pag.data.product.CompactTaskStoreTest" time="0.134"/>
+  <testcase name="selectedDetailIsCompleteAndLongHistoryHasExactTieOrderedCoverage" classname="org.pag.data.product.CompactTaskStoreTest" time="5.787"/>
+  <testcase name="historyCursorCannotCrossTaskStateOrActionAndInvalidEventsFailClosed" classname="org.pag.data.product.CompactTaskStoreTest" time="0.144"/>
+  <testcase name="fullTaskBoardsNeverFetchActionHistoryEvenAt129000Events" classname="org.pag.data.product.CompactTaskStoreTest" time="2.526"/>
+  <testcase name="summaryDoesNotQueryHistoryOrFetchTemplateAndOversizeDetailRefusesBeforeBlob" classname="org.pag.data.product.CompactTaskStoreTest" time="1.034"/>
+  <testcase name="interruptionsAndCleanupStorageErrorsRemainRejectedAndAreNotRetried" classname="org.pag.data.product.CompactTaskStoreTest" time="0.135"/>
+  <testcase name="nonActiveMissingAndWrongEncodingFailClosed" classname="org.pag.data.product.CompactTaskStoreTest" time="0.562"/>
+  <testcase name="exactPageMultiplesAndAllClosedCountsHaveExplicitTerminalPages" classname="org.pag.data.product.CompactTaskStoreTest" time="0.207"/>
+  <testcase name="interruptedPagesCannotResumeAfterActualMutationAndDetailsHistoryRevokeMidRead" classname="org.pag.data.product.CompactTaskStoreTest" time="0.473"/>
+  <testcase name="fullHistoryRevokeFailureAndBudgetNeverReturnFalseEmpty" classname="org.pag.data.product.CompactTaskStoreTest" time="0.214"/>
+  <system-out><![CDATA[P85a full concentrated traversal stored=129000 selected=128001 pages=4001 maxRows=32 noAccumulation=true
+COMPACT people=20 tasks=40 storedEvents=480 retainedMax=588284 transitionMax=2346224 first_total-median-ms=18.746864, admission-median-ms=15.392817, first_materialize_publish-median-ms=3.783005, detail-median-ms=15.049278, history_page-median-ms=16.880616, history_complete-median-ms=16.397883 charges-retained/transition={first_total=588284/2346224, detail=435460/1734928, history_page=519844/2072464}
+COMPACT people=100 tasks=250 storedEvents=10000 retainedMax=752852 transitionMax=3004496 first_total-median-ms=71.152239, admission-median-ms=66.203582, first_materialize_publish-median-ms=5.152494, following-median-ms=77.181369, detail-median-ms=65.424516, history_page-median-ms=65.986102, history_complete-median-ms=132.129651 charges-retained/transition={first_total=752852/3004496, following=750172/2993776, detail=435460/1734928, history_page=683324/2726384}
+COMPACT people=200 tasks=1000 storedEvents=128000 retainedMax=753592 transitionMax=3007456 first_total-median-ms=241.880697, admission-median-ms=236.953936, first_materialize_publish-median-ms=4.926761, following-median-ms=240.649221, detail-median-ms=232.075762, history_page-median-ms=238.020552, history_complete-median-ms=957.381312 charges-retained/transition={first_total=750532/2995216, following=753592/3007456, detail=435460/1734928, history_page=683324/2726384}
+COMPACT detail-boundary templateBytes=83179 retained=2098880 transition=8388608; nextByte=REFUSED
+P85a board persons=20 tasks=40 storedEvents=240 historyFetched=false
+P85a board persons=100 tasks=250 storedEvents=8000 historyFetched=false
+P85a board persons=200 tasks=1000 storedEvents=129000 historyFetched=false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

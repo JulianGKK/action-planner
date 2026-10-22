@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.DocumentWorkspaceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-22T12:11:54.801Z" hostname="iuzjhtgvfc" time="0.237">
+  <properties/>
+  <testcase name="atomicHubRetainsOldSnapshotOnRefreshAndNeverInventsZero" classname="org.pag.prototype.product.DocumentWorkspaceTest" time="0.02"/>
+  <testcase name="preparationSummaryOnlyAndDeliberateList" classname="org.pag.prototype.product.DocumentWorkspaceTest" time="0.009"/>
+  <testcase name="documentEntryAndExitInvalidateTheObservedScreenRoute" classname="org.pag.prototype.product.DocumentWorkspaceTest" time="0.114"/>
+  <testcase name="hubNinthCardIsCountOnlyAndBeforeDetails" classname="org.pag.prototype.product.DocumentWorkspaceTest" time="0.041"/>
+  <testcase name="lockAndNewActionDiscardListAndLateSummary" classname="org.pag.prototype.product.DocumentWorkspaceTest" time="0.011"/>
+  <testcase name="completedHasZeroDocumentReadsUntilDeliberateOpen" classname="org.pag.prototype.product.DocumentWorkspaceTest" time="0.01"/>
+  <testcase name="draftHasNoDocumentPath" classname="org.pag.prototype.product.DocumentWorkspaceTest" time="0.004"/>
+  <testcase name="leavingActionDiscardsPickerHandoffEvenWhenSameActionIsReopened" classname="org.pag.prototype.product.DocumentWorkspaceTest" time="0.022"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

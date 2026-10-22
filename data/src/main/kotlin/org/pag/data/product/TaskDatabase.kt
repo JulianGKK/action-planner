@@ -28,6 +28,7 @@ internal data class TaskEventRow(@PrimaryKey val id:String,val actionId:String,v
 @Dao internal interface TaskDao {
     @Query("SELECT * FROM tasks WHERE actionId=:actionId") suspend fun list(actionId:String):List<TaskRow>
     @Query("SELECT * FROM tasks WHERE actionId=:actionId AND id=:id") suspend fun get(actionId:String,id:String):TaskRow?
+    // Legacy full-history diagnostic/test read; product boards use explicit paged history.
     @Query("SELECT * FROM task_events WHERE actionId=:actionId ORDER BY occurredAt,rowid") suspend fun events(actionId:String):List<TaskEventRow>
     @Query("SELECT COUNT(*) FROM tasks WHERE actionId=:actionId AND assigneeRoleId=:roleId") suspend fun roleReferences(actionId:String,roleId:String):Int
     @Insert suspend fun insert(row:TaskRow)

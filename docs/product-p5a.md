@@ -39,6 +39,16 @@ angehängt; kein Bearbeitungs-/Löschpfad für einzelne Events. PREPARATION-Task
 entfernt ausdrücklich die zugehörigen Events per Cascade.
 
 Taskdetail zeigt eine kompakte deutschsprachige Chronik ohne Autoreninformationen.
+Seit §85a lädt Workspace-/Tasknavigation keine actionweite Eventliste. Die Chronik wird
+bewusst je Task in höchstens 32 Ereignissen angefordert, mit exakter Gesamtzahl und
+Keyset-Reihenfolge `(occurredAt,rowid)`. Weitere Seiten ersetzen die angezeigte Seite;
+„Chronik von Anfang an“ startet ausdrücklich neu. Eine Seitennummer und „Letzte Seite“
+ermöglichen den direkten Einstieg auch in lange Chroniken innerhalb der unveränderten
+Sessionfristen. Nur ein skalarer Sortieranker wird positionsbezogen gelesen; die Eventpayload
+verwendet weiterhin denselben 32er-Keyset-Reader. Nicht angefordert, Laden, Fehler und
+tatsächlich leere Historie bleiben getrennt. Lock/Navigation/Editorwechsel verwerfen die
+Seite; nach Writer-/Generationswechsel ist ein frischer Einstieg erforderlich. Events werden
+weder gelöscht noch gekürzt; Status/Zähler/Editor verwenden weiterhin vollständige Tasks.
 Titel-, Prioritäts-, Zuständigkeits-, affectedPerson- und Fälligkeitsänderungen
 werden nicht historisiert. Keine Kommentare, Änderungsgründe, Geräte-/Benutzer-/IP-
 oder Standortmetadaten. Die aktuelle Titelanzeige ist der heutige Snapshot.

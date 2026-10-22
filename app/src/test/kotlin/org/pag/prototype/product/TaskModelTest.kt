@@ -11,6 +11,12 @@ class TaskModelTest {
     private var onInteraction:()->Unit={}
     private var onLeaveSensitive:()->Unit={}
     private class Repo:TaskRepository {
+        var pageRequested:Long?=null
+        override fun historyPage(expected:Task,page:Long,publish:(CompactTaskResult)->Unit){historyCalls++;pageRequested=page;historyCallback=publish}
+        var historyCalls=0
+        var historyCallback:((CompactTaskResult)->Unit)?=null
+        var after:CompactEventCursor?=null
+        override fun history(expected:Task,after:CompactEventCursor?,publish:(CompactTaskResult)->Unit){historyCalls++;this.after=after;historyCallback=publish}
         var deferWrites=false;var pending:((OperationsResult<Task>)->Unit)?=null
         var writes=0;var expected:Task?=null;var input:TaskInput?=null;var deferred=false
         var callback:((OperationsResult<TaskBoard>)->Unit)?=null
@@ -23,6 +29,50 @@ class TaskModelTest {
     }
     private val repo=Repo()
     private val model=TaskModel(repo,{session},{action},{interactions++;onInteraction()},{onLeaveSensitive()})
+    private fun historyPage(count:Int=32,total:Long=65,next:Boolean=true):CompactTaskResult.Value {
+        val state=CompactTaskState(P3bFreeActiveCoreBinding("a",session.generation),0)
+        val page=CompactTaskEvents(state,"t",total,List(count){TaskEvent("event-$it","a","t",TaskEventType.CREATED,it.toLong())},
+            if(next)CompactEventCursor(state,"t",31,32) else null)
+        return CompactTaskResult.Value(page,BoundedTaskReservation(ActiveWorkspaceBudget.Units(),ActiveWorkspaceBudget.Units()),0,0)
+    }
+    @Test fun directHistoryPageReplacesPayloadAndUsesCorrectOrdinalWithoutRetainingPrefixes() {
+        model.refresh();model.open(repo.tasks.first());model.loadHistory()
+        repo.historyCallback!!(historyPage(total=128001))
+        model.loadHistoryPage(4001);assertEquals(4001L,repo.pageRequested);assertNull(model.history)
+        repo.historyCallback!!(historyPage(1,128001,false))
+        assertEquals(128000L,model.historyOffset);assertEquals(1,model.history!!.events.size)
+        model.loadHistoryPage(2001);repo.historyCallback!!(historyPage(32,128001,true))
+        assertEquals(64000L,model.historyOffset);assertEquals(32,model.history!!.events.size)
+        model.clear();assertNull(model.history)
+    }
+    @Test fun historyIsExplicitBoundedReplacementAndNeverNeededForEditor() {
+        model.refresh();model.open(repo.tasks.first());assertEquals(0,repo.historyCalls)
+        model.edit();assertEquals(0,repo.historyCalls);model.cancel()
+        model.loadHistory();assertTrue(model.historyBusy);model.loadHistory();assertEquals(1,repo.historyCalls)
+        repo.historyCallback!!(historyPage());assertEquals(32,model.history!!.events.size);assertEquals(0L,model.historyOffset)
+        model.loadHistory();assertNull(model.history);assertNotNull(repo.after)
+        repo.historyCallback!!(historyPage());assertEquals(32,model.history!!.events.size);assertEquals(32L,model.historyOffset)
+        model.loadHistory();repo.historyCallback!!(historyPage(1,next=false));assertEquals(1,model.history!!.events.size);assertEquals(64L,model.historyOffset)
+        model.loadHistory();assertEquals(3,repo.historyCalls)
+        model.edit();assertNull(model.history);assertTrue(model.form)
+    }
+    @Test fun historyRejectsLateDuplicateRevokeActionAndEditorCallbacks() {
+        for(kind in listOf("clear","lock","generation","action","editor")) {
+            session=SessionSnapshot(SessionState.READY,session.generation+1);action=action.copy(id="a")
+            model.clear();model.refresh();model.open(repo.tasks.first());model.loadHistory();val old=repo.historyCallback!!
+            val result=historyPage()
+            when(kind){"clear"->model.clear();"lock"->session=SessionSnapshot(SessionState.LOCKED,session.generation+1);"generation"->session=SessionSnapshot(SessionState.READY,session.generation+1);"action"->action=action.copy(id="b");else->model.edit()}
+            old(result);old(result);assertNull(model.history)
+        }
+    }
+    @Test fun historyFailureIsNotEmptyAndCanRestart() {
+        model.refresh();model.open(repo.tasks.first())
+        for(reason in listOf(BoundedActiveStatus.BUDGET_REFUSED,BoundedActiveStatus.ACCESS_REVOKED,BoundedActiveStatus.STORAGE_FAILURE)) {
+            model.loadHistory(true);repo.historyCallback!!(CompactTaskResult.Rejected(reason))
+            assertNull(model.history);assertFalse(model.historyBusy);assertEquals(reason,model.historyError)
+        }
+        model.loadHistory(true);repo.historyCallback!!(historyPage(0,0,false));assertEquals(0L,model.history!!.total);assertNull(model.historyError)
+    }
     @Test fun workspaceRefreshKeepsOriginalEditorExpectedAndNewerPersistedTask(){
         model.refresh();val a=repo.tasks.first();model.open(a);model.edit()
         model.change(model.input.copy(title="Old draft"))

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.MaterialWorkspaceTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-22T12:14:32.076Z" hostname="iuzjhtgvfc" time="0.108">
+  <properties/>
+  <testcase name="completedHasZeroMaterialReadsUntilExplicitTapAndNoWrites" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.016"/>
+  <testcase name="lockFromListFormEditAndConfirmationRejectsLateWriteAndReauthRestore" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.035"/>
+  <testcase name="materialDraftNeverCrossesLifecycleOrAutoOpensCompleted" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.006"/>
+  <testcase name="actionAndDeletionPendingProjectionRemoveMaterialContext" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.006"/>
+  <testcase name="completedMaterialAndProtocolDoNotOverlap" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.004"/>
+  <testcase name="successfulWriteReloadsRepositoryCountWithNoForeignMutationOrInteraction" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.006"/>
+  <testcase name="summaryRefreshIsAtomicAndErrorKeepsOldCountInsteadOfZero" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.003"/>
+  <testcase name="everyAreaSwitchDiscardsBoardDraftExpectedConfirmationAndLateReads" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.016"/>
+  <testcase name="missingPortAndForbiddenPhasesNeverExposeMaterialArea" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.003"/>
+  <testcase name="synchronousRevokingTapCannotOpenCompletedMaterial" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.003"/>
+  <testcase name="preparationOverviewCountsOnlyAndMaterialLoadsBoardSeparately" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.002"/>
+  <testcase name="activeHubWaitsForCountWithoutLoadingMaterialBoard" classname="org.pag.prototype.product.MaterialWorkspaceTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

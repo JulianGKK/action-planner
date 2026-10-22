@@ -1,0 +1,9 @@
+report,status,raw_result,reason,sha256
+direct-small-task_history-runner.txt,ANDROID-GREEN,PASS,scoped functional assertions,0eec8303892f1b6a8e2e3e53f57fc3915c51c57745928f8555879614492fbe46
+direct-stress-task_history-runner.txt,ANDROID-GREEN,PASS,scoped functional assertions,ec5f7544bdaade97527c4060b69ef75d28b7ab47e73bada63ccd6fa3a81b0ad8
+final-small-task_history-runner.txt,ANDROID-GREEN,PASS,scoped functional assertions,b7fc10923ddd5ac84125a0e5f41bcbee0d68ed41fa423e6711b9acc3389a96af
+first-small-task_history-runner.txt,ANDROID-GREEN,PASS,scoped functional assertions,f628d6b99d45af3d475d87cc27bcd0025afb8864b230fe962443ecd50b221425
+first-stress-task_history-runner.txt,HARNESS-ABBRUCH,FAIL,accessibility scroll/locator; same product APK later passes with real owned-window swipes,42c9883d021ee756911596437b356db549fe3494798cc1d9b713112849ddc7fc
+gestures-stress-task_history-runner.txt,HARNESS-ABBRUCH,FAIL,transient null accessibility root before swipe,7e3f0e269dbb42418327bb7f797045d1115d3013fb6c2be45a78cf8f98338c9f
+stable-stress-task_history-runner.txt,ANDROID-GREEN,PASS,scoped functional assertions,03c706bb31ff5de75e987d7da914481085a8b998670257881739e39c11724a30
+verified-stress-task_history-runner.txt,HARNESS-ABBRUCH,FAIL,accessibility scroll/locator; same product APK later passes with real owned-window swipes,f2087353e9f57476845531526bbe79490d0056e408b454e6b91480c0fb899b24

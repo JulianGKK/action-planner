@@ -75,7 +75,7 @@ internal fun activeTaskActions(status: TaskStatus): List<TaskStatus> = TaskStatu
             FormOutlinedButton(model::edit, enabled = !model.busy) { Text("Aufgabe bearbeiten") }
         }
         PreparationHeading("Chronik")
-        board.events.filter { it.taskId == selected.id }.forEach { Text("${eventLabel(it.type)} · ${taskTime(it.occurredAt)}") }
+        TaskHistory(model)
         return
     }
     val content = activeTaskContent(board, model.filter)
