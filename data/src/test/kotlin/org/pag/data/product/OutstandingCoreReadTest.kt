@@ -11,13 +11,14 @@ class OutstandingCoreReadTest {
     private class H {
         val worker=ArrayDeque<Runnable>();val main=ArrayDeque<Runnable>()
         val mutations=UncachedWorkspaceMutations()
-        var ready=true;var generation=1L;var reads=0;var callbacks=0
+        var ready=true;var generation=1L;var reads=0;var callbacks=0;var acquisitions=0
         var ticket:WorkspaceMutationInvalidation.ActiveReadTicket?=null
         var life:ActiveCoreLifetime?=null
         var failure=false;var uncertain=false;var refused=false
         var during:(()->Unit)?=null
         val access=object:StorageAccess {
             override fun acquire(scope:AccessScope):StorageContext? {
+                acquisitions++
                 if(!ready)return null
                 val g=generation
                 return object:StorageContext {
@@ -121,6 +122,74 @@ class OutstandingCoreReadTest {
         val h=H();h.pending();h.main.remove().run();h.life!!.close();h.loader.fullViewStarting()
         assertFalse(h.load());assertTrue(h.loader.outstandingState().fullViewUnconfirmed)
         assertFalse(h.loader.outstandingState().retirementConfirmed)
+    }
+    @Test fun disposedConsumerCanStillHoldRawValueAndCannotRegrantEvenWithoutComposeObservation() {
+        val h=H()
+        var escaped:ActiveCoreResult.Value?=null
+        var lifetime:ActiveCoreLifetime?=null
+        assertTrue(h.loader.loadOwned("a") { result,life ->
+            escaped=result as ActiveCoreResult.Value;lifetime=life
+            // Even an immediately rejected callback has received an ordinary strong reference.
+            life!!.close()
+        })
+        h.worker.remove().run();val main=h.main.remove();main.run()
+        repeat(3){lifetime!!.compositionDisposed();lifetime!!.close();h.loader.cancelPending();main.run()}
+        assertEquals("a",escaped!!.core.action.id)
+        assertFalse(lifetime!!.isCurrent());assertFalse(h.ticket!!.isLive())
+        assertFalse(h.loader.outstandingState().compositionObserved)
+        assertTrue(h.loader.outstandingState().compositionDisposed)
+        assertFalse(h.loader.outstandingState().retirementConfirmed)
+        assertFalse(h.loader.loadOwned("b"){_,_->fail("Escaped value must keep admission closed")})
+        assertEquals(1,h.acquisitions);assertEquals(1,h.reads)
+        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,h.loader.outstandingState().transition)
+    }
+    @Test fun disposeAloneDoesNotRevokeAuthorityAndRepeatedRevokeCannotRetireExposedValue() {
+        val h=H();h.pending();h.main.remove().run()
+        repeat(3){h.life!!.compositionObserved();h.life!!.compositionDisposed()}
+        assertTrue(h.life!!.isCurrent());assertTrue(h.ticket!!.isLive())
+        repeat(3){h.mutations.revokeActiveRead();h.life!!.close();h.life!!.compositionDisposed()}
+        assertFalse(h.life!!.isCurrent());assertFalse(h.load())
+        assertEquals(0L,h.mutations.mutationEpoch)
+        assertFalse(h.loader.outstandingState().retirementConfirmed)
+    }
+    @Test fun fullViewWithoutAnyCoreIsAnIndependentStickyFenceAcrossGenerationAndAction() {
+        val h=H()
+        repeat(3){h.loader.fullViewStarting();h.loader.cancelPending()}
+        val state=h.loader.outstandingState()
+        // This flag describes the absence of a core record, not global retirement/readmission.
+        assertTrue(state.retirementConfirmed);assertEquals(0L,state.transition)
+        assertTrue(state.fullViewUnconfirmed)
+        h.generation++
+        for(action in listOf("a","b"))assertFalse(h.loader.loadOwned(action){_,_->fail()})
+        assertEquals("FULL_VIEW_UNCONFIRMED",h.loader.outstandingState().refusal)
+        assertEquals(0,h.acquisitions);assertEquals(0,h.reads);assertTrue(h.worker.isEmpty())
+    }
+    @Test fun fullViewCancelsUnpublishedMainButItsAcknowledgementDoesNotClearFullViewFence() {
+        val h=H();h.pending();val main=h.main.remove()
+        h.loader.fullViewStarting();assertFalse(h.ticket!!.isLive());assertFalse(h.load())
+        repeat(3){main.run();h.loader.cancelPending()}
+        assertEquals(0,h.callbacks);assertTrue(h.loader.outstandingState().retirementConfirmed)
+        assertTrue(h.loader.outstandingState().fullViewUnconfirmed);assertFalse(h.load())
+        assertEquals(1,h.acquisitions);assertEquals(1,h.reads)
+    }
+    @Test fun canceledQueuedWorkerMustAcknowledgeAndLateDuplicateCannotRetireNewRead() {
+        val h=H();assertTrue(h.load());val old=h.worker.remove()
+        repeat(3){h.loader.cancelPending()}
+        assertFalse(h.load());assertFalse(h.loader.outstandingState().retirementConfirmed)
+        old.run();assertEquals(0,h.reads);assertEquals(0,h.callbacks)
+        assertTrue(h.loader.outstandingState().retirementConfirmed)
+        assertTrue(h.load());old.run()
+        assertFalse(h.loader.outstandingState().retirementConfirmed)
+        h.worker.remove().run();h.main.remove().run()
+        assertEquals(1,h.reads);assertEquals(1,h.callbacks);assertTrue(h.ticket!!.isLive())
+    }
+    @Test fun interruptedRevokedWorkerEndsWithoutLatePublication() {
+        val h=H();h.during={h.mutations.revokeActiveRead();throw InterruptedException("SYNTHETIC_WORKER_ABORT")}
+        assertTrue(h.load());h.worker.remove().run()
+        assertTrue(h.main.isEmpty());assertEquals(0,h.callbacks);assertFalse(h.ticket!!.isLive())
+        assertTrue(h.loader.outstandingState().retirementConfirmed)
+        h.during=null;assertTrue(h.load());h.worker.remove().run();h.main.remove().run()
+        assertEquals(1,h.callbacks)
     }
     @Test fun duplicateWorkerCannotAcknowledgeWhileOriginalWorkerStillMaterializes() {
         val h=H();val entered=java.util.concurrent.CountDownLatch(1);val release=java.util.concurrent.CountDownLatch(1)

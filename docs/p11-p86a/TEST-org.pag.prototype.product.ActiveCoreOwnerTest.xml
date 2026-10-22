@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveCoreOwnerTest" tests="18" skipped="0" failures="0" errors="0" timestamp="2026-10-22T15:13:12.314Z" hostname="iuzjhtgvfc" time="0.426">
+  <properties/>
+  <testcase name="fullViewReturnSurfacesAdmissionRefusalAndCannotReplayTheOldCore" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.29"/>
+  <testcase name="workerInvalidationDropsAuthorityBeforeOwnerNotificationAndLockClears" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.011"/>
+  <testcase name="oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.006"/>
+  <testcase name="inactiveForeignAndOverBudgetCandidatesNeverInstall" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.005"/>
+  <testcase name="actualProductRouterSelectsCompactRendererForEveryCompactActiveArea" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.018"/>
+  <testcase name="clearingSlotAndRepeatedDisposeCannotEraseAnAlreadyReturnedConsumerReference" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="actionSwitchBackFullViewAndOldCallbacksCannotRestoreSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="workerSessionObserverDropsSlotBeforeComposeDispatchAndOnClearedClosesLifetime" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.006"/>
+  <testcase name="fullActiveAndPreparationEntityListsKeepTheirExistingRoute" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.021"/>
+  <testcase name="hitPublicationHasNoEarlyNavigationAndLockDuringHitCannotRestoreSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="gapHostReuseHasNoPerHitPublicationAndReportsInteraction" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="duplicateCallbackCannotInstallSecondPayloadOrInvalidateTheConsumedSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="preparationAlsoAnnouncesFullViewBeforeAnyCompactRead" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="revokeImmediatelyAfterHitAndStatusChangeRemoveOriginalAuthority" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.004"/>
+  <testcase name="generationChangeRejectsOldPendingCallbackWithoutRevokingTheNewSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.004"/>
+  <testcase name="falseReturnAndRevokeDuringInstallLeaveNoRetention" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="revokedCompactCoreDoesNotFallBackToFullEntityList" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="compactCountsAndMoreAreExplicitAndLostCallbackHasNoSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.03"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

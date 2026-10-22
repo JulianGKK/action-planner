@@ -23,7 +23,9 @@ class ActiveCoreOwnerTest {
         val live=AtomicBoolean(true);var invalidator:(()->Unit)?=null
         var falseAfter=false;var duringInstall:(()->Unit)?=null
         var publications=0
-        var hits=0
+        var hits=0;var observations=0;var disposals=0
+        override fun compositionObserved(){observations++}
+        override fun compositionDisposed(){disposals++}
         override fun authorizeHit(actionId:String):Boolean {hits++;return publish {}}
         override fun isCurrent()=live.get()
         override fun publish(install:()->Unit):Boolean {
@@ -37,9 +39,11 @@ class ActiveCoreOwnerTest {
     }
     private class Port(override val reuseEnabled:Boolean):ActiveCoreLoadPort {
         val pending=mutableListOf<Pair<String,(ActiveCoreResult,ActiveCoreLifetime?)->Unit>>()
-        var reads=0
+        var reads=0;var fullViews=0;var refuseLoads=false
+        override fun fullViewStarting(){fullViews++}
         override fun loadOwned(actionId:String,callback:(ActiveCoreResult,ActiveCoreLifetime?)->Unit):Boolean {
-            reads++;pending.add(actionId to callback);return true
+            reads++;if(refuseLoads)return false
+            pending.add(actionId to callback);return true
         }
         fun deliver(value:ActiveCoreResult?=null,lifetime:Lifetime=Lifetime()):Lifetime {
             val (id,callback)=pending.removeAt(0);callback(value ?: core(id),lifetime);return lifetime
@@ -213,5 +217,43 @@ class ActiveCoreOwnerTest {
         callback(core(),life);assertSame(first,h.model.activeCore)
         val extra=Lifetime();callback(core(),extra)
         assertFalse(extra.live.get());assertSame(first,h.model.activeCore)
+    }
+    @Test fun clearingSlotAndRepeatedDisposeCannotEraseAnAlreadyReturnedConsumerReference() {
+        val h=H();val life=h.port.deliver();val escaped=h.model.activeCore!!
+        assertSame(life,h.model.observeActiveCoreComposition(escaped))
+        h.model.back()
+        repeat(3){life.compositionDisposed();life.close()}
+        assertNull(h.model.activeCore);assertFalse(life.isCurrent())
+        assertNull(h.model.observeActiveCoreComposition(escaped))
+        assertEquals("a",escaped.action.id) // Source-level counterexample, no GC/Compose claim.
+        assertEquals(1,life.observations);assertEquals(3,life.disposals)
+    }
+    @Test fun fullViewReturnSurfacesAdmissionRefusalAndCannotReplayTheOldCore() {
+        val h=H();val oldCallback=h.port.pending.first().second;val life=h.port.deliver()
+        h.model.useFullActiveView()
+        assertTrue(h.port.fullViews>0);assertNull(h.model.activeCore);assertFalse(life.isCurrent())
+        // Actual sticky gate is tested with the production loader in OutstandingCoreReadTest.
+        h.port.refuseLoads=true
+        h.model.activeArea(ActiveArea.HUB)
+        assertTrue(h.model.compactActiveMode);assertTrue(h.model.workspaceError)
+        assertFalse(h.model.personsLoading);assertNull(h.model.workspace);assertNull(h.model.activeCore)
+        oldCallback(core(),life)
+        assertNull(h.model.activeCore);assertTrue(h.model.workspaceError)
+    }
+    @Test fun preparationAlsoAnnouncesFullViewBeforeAnyCompactRead() {
+        val h=H(status=ActionStatus.PREPARATION)
+        assertEquals(0,h.port.reads);assertTrue(h.port.fullViews>0)
+        h.port.refuseLoads=true;h.repo.action=h.repo.action.copy(status=ActionStatus.ACTIVE)
+        h.model.detail("a")
+        assertEquals(1,h.port.reads);assertNull(h.model.activeCore);assertTrue(h.model.workspaceError)
+    }
+    @Test fun generationChangeRejectsOldPendingCallbackWithoutRevokingTheNewSlot() {
+        val h=H();val oldCallback=h.port.pending.first().second
+        h.session.change(SessionSnapshot(SessionState.READY,2));h.model.detail("a")
+        val stale=h.port.deliver();assertFalse(stale.isCurrent());assertNull(h.model.activeCore)
+        val current=h.port.deliver(core(generation=2));val value=h.model.activeCore
+        assertNotNull(value)
+        repeat(3){oldCallback(core(),stale);stale.close();stale.compositionDisposed()}
+        assertSame(value,h.model.activeCore);assertTrue(current.isCurrent())
     }
 }

@@ -12727,3 +12727,43 @@ Standardseiten bleiben etwa 5 s langsam. SQLite-Sortierung/Native-/Frame-/Fullvi
 P76/Produkt/P11probe unverändert installiert, eigene Fixtures leer, synthetische
 Diagnose-PNG im Zielcache entfernt. Regulärer WIP-Commit/Push; danach STOPP für Review.
 Kein Merge/Release.
+
+## §86a — ACTIVE-Core-Retirement geprüft: NO-GO für Readmission (#37)
+
+Basis `0d477bb6d66997429b4d22198bb8e31f38711361`. §85a/b funktional abgeschlossen;
+keine erneute History-/Performance-Serie. Vollständiger Referenzvertrag, konkrete
+Signalgrenzen und Rohbelege: [§86a Assessment](p11-p86a/assessment.md).
+
+Ein Owner, ein ursprüngliches Ticket/Lifetime, ein VM-Slot bleiben erhalten.
+Autoritäts-Revoke, atomare Zell-/Slot-Clears, tatsächliche Worker-/Main-Rückläufe
+und bekannte DB-/Key-Scope-Enden sind getrennt nachgewiesen. `activeCore` gibt
+gewöhnliche unveränderliche Payloadreferenzen an Compose heraus; Slot-Clear kann
+diese nicht zurückziehen. `compositionObserved` entsteht bereits im Composable-Body,
+Disposed ist nur ein Effect-Signal, keine Zählung aller Consumer. Es gibt keinen
+identitätsgebundenen Producer für das Ende sämtlicher Compose-/Render-/Native-Kopien.
+`callbackOwnsValue` muss deshalb auch ohne sichtbaren Frame dauerhaft Exposure buchen.
+
+Zusätzlich setzt jeder nicht kompakte `readWorkspace`-Pfad bei gebundenem Core-Port
+das permanente `fullView`-Gate, auch PREPARATION ohne vorherigen Core. Kein Endsignal
+oder Fullview-Versuchsvertrag erlaubt ein sicheres Reset. `retirementConfirmed=true`
+bedeutet nur „kein Core-Record“; Fullview kann unabhängig weiter blockieren.
+
+**Kein Produktfix:** vorhandene Signale reichen nicht für sichere Readmission.
+Kein Reset über Dispose/OnDraw/GC/WeakRefs, Session-/Actionwechsel oder neuen Loader.
+Minimaler funktionaler Teilvorschlag: ausschließlich nachweislich nicht exponierte,
+beendete Fullview-Abbrüche im bestehenden Owner identitätsgebunden quittieren;
+erfolgreich angezeigte Werte bleiben bis zum echten Consumer-/Render-Endnachweis
+gesperrt. Dieser Fullview-Vertrag ist noch nicht implementiert. Seine Grenzen und
+eine kleinere typisierte Refusal-Meldung sind im Detailbericht benannt.
+
+**Nachweise:** 60/60 gezielte Hosttests, 0 Fehler/Skips (Outstanding 16, Lifetime 12,
+Loader 14, VM-Owner 18), davon zehn neue Gegentests; Debug-Build offline erfolgreich.
+Lock, Action-/Generationwechsel, Fullview-Rückkehr/Refusal, spätes Main, Worker-Abbruch,
+mehrfaches Dispose/Revoke und Consumer-Escape abgedeckt. Data-Produzent und VM-Port
+getrennt getestet; kein Android-/Compose-/Native-Retirement behauptet. Ohne echten
+Produktfix keine Gerätefälle ausgeführt. Nur Tests/Dokumentation geändert.
+
+**NO-GO für #37/erneute Readmission; PASS nur für geprüfte Fail-closed-Regressionen.**
+`reuseEnabled=false`, `ramReuseEnabled=false`, 8+8 MiB und READY-/Writer-/Sessionregeln
+unverändert. WIP-Commit/Push und Issue-Update, danach STOPP zum unabhängigen Review.
+Kein Merge/Release.
