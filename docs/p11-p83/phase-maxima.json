@@ -1,0 +1,113 @@
+{
+  "old_composed": {
+    "strong_core_graphs": 1,
+    "art_used": 27470080,
+    "art_committed": 67108864,
+    "native_heap": 12135520,
+    "pss_kib": 164746,
+    "fd": 137,
+    "windows_live": 0,
+    "window_rows": 0
+  },
+  "reader_window_open": {
+    "strong_core_graphs": 1,
+    "art_used": 24402928,
+    "art_committed": 24701133,
+    "native_heap": 13343264,
+    "pss_kib": 168695,
+    "fd": 136,
+    "windows_live": 1,
+    "window_rows": 1
+  },
+  "candidate_worker_complete": {
+    "strong_core_graphs": 2,
+    "art_used": 23261480,
+    "art_committed": 24701133,
+    "native_heap": 11830672,
+    "pss_kib": 162493,
+    "fd": 135,
+    "windows_live": 0,
+    "window_rows": 0
+  },
+  "main_pending": {
+    "strong_core_graphs": 2,
+    "art_used": 22714848,
+    "art_committed": 24701133,
+    "native_heap": 11830864,
+    "pss_kib": 164693,
+    "fd": 135,
+    "windows_live": 0,
+    "window_rows": 0
+  },
+  "new_vm_old_compose": {
+    "strong_core_graphs": 2,
+    "art_used": 23626848,
+    "art_committed": 24701133,
+    "native_heap": 11831184,
+    "pss_kib": 164553,
+    "fd": 135,
+    "windows_live": 0,
+    "window_rows": 0
+  },
+  "new_composed": {
+    "strong_core_graphs": 1,
+    "art_used": 23724672,
+    "art_committed": 24688605,
+    "native_heap": 11775024,
+    "pss_kib": 174256,
+    "fd": 134,
+    "windows_live": 0,
+    "window_rows": 0
+  },
+  "full_begin": {
+    "art_used": 23741056,
+    "art_committed": 24688605,
+    "native_heap": 11775072,
+    "pss_kib": 164828,
+    "fd": 134
+  },
+  "full_workspace_editor": {
+    "art_used": 24115608,
+    "art_committed": 24688605,
+    "native_heap": 12196480,
+    "pss_kib": 163408,
+    "fd": 134,
+    "strong_core_graphs": 0,
+    "windows_live": 0,
+    "window_rows": 0
+  },
+  "editor_draw": {
+    "art_used": 8136384,
+    "art_committed": 11764848,
+    "native_heap": 11944608,
+    "pss_kib": 152188,
+    "fd": 135
+  },
+  "third_reader_second_pending": {
+    "strong_core_graphs": 2,
+    "art_used": 6548256,
+    "art_committed": 12033384,
+    "native_heap": 12375184,
+    "pss_kib": 145026,
+    "fd": 135,
+    "windows_live": 1,
+    "window_rows": 1
+  },
+  "third_candidate_second_pending": {
+    "strong_core_graphs": 3,
+    "art_used": 8609128,
+    "art_committed": 12033384,
+    "native_heap": 11298096,
+    "pss_kib": 146596,
+    "fd": 134,
+    "windows_live": 0,
+    "window_rows": 0
+  },
+  "full_pending_touch": {
+    "art_used": 17426080,
+    "art_committed": 17747263,
+    "native_heap": 44969680,
+    "pss_kib": 185524,
+    "fd": 140
+  }
+}

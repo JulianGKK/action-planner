@@ -15,6 +15,13 @@ class AppModeTest {
     }
     @Test fun compiledFlagMatchesSeparateApplicationId() {
         assertEquals(BuildConfig.APPLICATION_ID.endsWith(".demo"), BuildConfig.PAG_DEMO_ONLY)
-        assertEquals(if (BuildConfig.PAG_DEMO_ONLY) "org.pag.prototype.a.demo" else "org.pag.prototype.a", BuildConfig.APPLICATION_ID)
+        assertTrue(listOf(BuildConfig.PAG_DEMO_ONLY, BuildConfig.PAG_P76_PREVIEW, BuildConfig.PAG_P77_RUNTIME_E2E).count { it } <= 1)
+        val expected = when {
+            BuildConfig.PAG_DEMO_ONLY -> "org.pag.prototype.a.demo"
+            BuildConfig.PAG_P76_PREVIEW -> "org.pag.prototype.a.p76demo"
+            BuildConfig.PAG_P77_RUNTIME_E2E -> "org.pag.prototype.a.p77runtime"
+            else -> "org.pag.prototype.a"
+        }
+        assertEquals(expected, BuildConfig.APPLICATION_ID)
     }
 }

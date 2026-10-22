@@ -1,0 +1,8 @@
+{
+  "ANDROID-GREEN": 16,
+  "ANDROID-RED": 3,
+  "HARNESS-ABBRUCH": 1,
+  "total": 20,
+  "joint_acceptance": "BLOCKER",
+  "max_strong_core_graphs": 3
+}

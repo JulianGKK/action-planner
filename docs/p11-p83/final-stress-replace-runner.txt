@@ -1,0 +1,71 @@
+INSTRUMENTATION_STATUS: stream=P83_ADMISSION,stress,retained=1955232,transition=7797120,decision=ADMITTED,failure=none
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_OBJECTS,stress,dto_objects=85,distinct_strings=214,utf16_units=8761,lists=3,list_entries=70,people_cards=32,task_items=32,function_items=6,exact_heap_bytes=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_CLEANUP,first,statements=70,statements_closed=70,cursors=70,cursors_open=0,windows=70,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,lease_wiped=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_PHASE,stress,replace,old_composed,t_ns=1157820535596980,old_id=115998692,vm_id=115998692,candidate_id=115998692,compose_ids=115998692,queued_ids=,retained_charge=1955232,reader_retained=1955232,reader_transition=7797120,statements=70,statements_closed=70,cursors=0,cursors_open=0,windows=0,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=22640032,art_committed=23521725,native_heap=11932192,pss_kib=164343,fd=134,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_ROOT,old_composed,115998692,CompositionImpl.parent.compositionInvalidations.content[1].slotStorage.slots[205]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_PHASE,stress,replace,reader_window_open,t_ns=1157824799538645,old_id=115998692,vm_id=0,candidate_id=0,compose_ids=115998692,queued_ids=,retained_charge=1955232,reader_retained=1955232,reader_transition=7797120,statements=65,statements_closed=64,cursors=65,cursors_open=1,windows=65,windows_live=1,window_rows=1,room_closed=false,driver_closed=false,preflight_closed=true,keylease_live=true,art_used=18149672,art_committed=23521725,native_heap=13274960,pss_kib=157695,fd=135,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_ROOT,reader_window_open,115998692,CompositionImpl.slotStorage.slots[285].scope.owner.slotStorage.slots[205]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_PHASE,stress,replace,candidate_worker_complete,t_ns=1157825342762083,old_id=115998692,vm_id=0,candidate_id=128398529,compose_ids=115998692,queued_ids=,retained_charge=1955232,reader_retained=1955232,reader_transition=7797120,statements=70,statements_closed=70,cursors=70,cursors_open=0,windows=70,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=23261480,art_committed=23521725,native_heap=11762496,pss_kib=162493,fd=134,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_ROOT,candidate_worker_complete,115998692,CompositionImpl.slotStorage.slots[285].scope.owner.slotStorage.slots[205]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_PHASE,stress,replace,main_pending,t_ns=1157825384818853,old_id=115998692,vm_id=0,candidate_id=128398529,compose_ids=115998692,queued_ids=128398529,retained_charge=1955232,reader_retained=1955232,reader_transition=7797120,statements=70,statements_closed=70,cursors=70,cursors_open=0,windows=70,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=5476472,art_committed=11751544,native_heap=11416384,pss_kib=164693,fd=134,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_ROOT,main_pending,115998692,CompositionImpl.slotStorage.slots[285].scope.owner.slotStorage.slots[205]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_PHASE,stress,replace,new_vm_old_compose,t_ns=1157825423491406,old_id=115998692,vm_id=128398529,candidate_id=128398529,compose_ids=115998692,queued_ids=,retained_charge=1955232,reader_retained=1955232,reader_transition=7797120,statements=70,statements_closed=70,cursors=70,cursors_open=0,windows=70,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=6934664,art_committed=11751544,native_heap=11416704,pss_kib=146385,fd=134,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_ROOT,new_vm_old_compose,115998692,CompositionImpl.slotStorage.slots[285].scope.owner.slotStorage.slots[205]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_CLEANUP,second,statements=70,statements_closed=70,cursors=70,cursors_open=0,windows=70,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,lease_wiped=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_PHASE,stress,replace,new_composed,t_ns=1157825534692968,old_id=115998692,vm_id=128398529,candidate_id=128398529,compose_ids=128398529,queued_ids=,retained_charge=1955232,reader_retained=1955232,reader_transition=7797120,statements=70,statements_closed=70,cursors=0,cursors_open=0,windows=0,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=8897808,art_committed=11751544,native_heap=11775024,pss_kib=156202,fd=134,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_ROOT,new_composed,128398529,CompositionImpl.slotStorage.slots[285].scope.owner.slotStorage.slots[205]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_FULL_BEGIN,stress,t_ns=1157825556021978,art_used=8920896,art_committed=11751544,native_heap=11775072,pss_kib=156222,fd=134,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_ERROR,statements=70,statements_closed=70,cursors=0,cursors_open=0,windows=0,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P83 FAIL stress replace: java.lang.IllegalStateException: Full-view session denied: SessionSnapshot(state=LOCKED, generation=2, experiment=null, platformAuthorization=NOT_TESTED, keyOperation=NOT_TESTED, technicalId=B0-IDLE-EXPIRED, marker=null, keyProperties=NOT_TESTED)
+	at org.pag.prototype.P83MemoryOverlapProbe.onStart$fullView$lambda$7$0(P83MemoryOverlapProbe.kt:114)
+	at org.pag.prototype.P83MemoryOverlapProbe.$r8$lambda$HHfANse-uZqI0Mof-Bs4k2gLw5c(Unknown Source:0)
+	at org.pag.prototype.P83MemoryOverlapProbe$$ExternalSyntheticLambda38.invoke(D8$$SyntheticClass:0)
+	at org.pag.prototype.P83MemoryOverlapProbe.main$lambda$0(P83MemoryOverlapProbe.kt:31)
+	at org.pag.prototype.P83MemoryOverlapProbe$$ExternalSyntheticLambda36.run(D8$$SyntheticClass:0)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2353)
+	at android.os.Handler.handleCallback(Handler.java:942)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loopOnce(Looper.java:226)
+	at android.os.Looper.loop(Looper.java:313)
+	at android.app.ActivityThread.main(ActivityThread.java:8762)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:604)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1067)
+
+INSTRUMENTATION_CODE: 0

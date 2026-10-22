@@ -104,6 +104,9 @@ class ProductActiveCoreLoader internal constructor(
                             ProductActiveCoreLifetime(access,context,mutations,ticket,laneTicket,ownerThread,
                                 { latestLoad === loadIdentity }, observation?.let { observer -> { accepted:Boolean,elapsed:Long -> observer.hitAuthorized(accepted,elapsed) } } ?: {_,_->})
                             else null
+                        // A rejected read owns no retention lifetime. Retire exactly its original
+                        // ticket too (including budget refusal), without changing the writer epoch.
+                        if(lifetime==null) mutations.revokeActiveRead(ticket)
                         try { callback(result,lifetime) } catch(error:Exception) { lifetime?.close();throw error }
                     }
                 } catch (_: RejectedExecutionException) {

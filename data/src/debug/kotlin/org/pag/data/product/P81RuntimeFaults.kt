@@ -49,6 +49,7 @@ class P81RuntimeFaults {
         }
         fun release(){checkNotNull(executor.get()).execute(take())}
         fun isHeld()=held.get()!=null
+        fun heldTaskForObservation():Runnable?=held.get()
         fun take():Runnable=checkNotNull(held.getAndSet(null))
         fun discard(){armed.set(false);held.set(null)}
     }

@@ -55,11 +55,11 @@ class ProductActiveCoreReader internal constructor(app: Context, private val acc
                             testHooks?.transaction?.invoke(this)
                             ActiveCoreStore(this,context,::current,{ phase ->
                                 testHooks?.row?.invoke(phase); observe(phase)
-                            },measured).read(state,affectedPersonId)
+                            },measured,{ testHooks?.admission?.invoke(it) }).read(state,affectedPersonId)
                         }
                     }
                     .also { testHooks?.keyScopeEnd?.invoke() }
-                }
+                }.also { testHooks?.candidate?.invoke(it) }
             }
         } catch (failure: StorageAccessRevoked) { testHooks?.failure?.invoke(failure); ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED) }
         catch (failure: BoundedActiveRejected) {
@@ -120,5 +120,7 @@ internal class CoreReadTestHooks(
     val row: (ActiveCoreStore.Phase) -> Unit = {},
     val keyLease: (ByteArray) -> Unit = {},
     val keyScopeEnd: () -> Unit = {},
-    val failure: (Throwable) -> Unit = {}
+    val failure: (Throwable) -> Unit = {},
+    val admission: (CoreReadAdmission.Report) -> Unit = {},
+    val candidate: (ActiveCoreResult.Value) -> Unit = {}
 )

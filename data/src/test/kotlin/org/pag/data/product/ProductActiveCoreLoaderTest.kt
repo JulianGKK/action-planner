@@ -59,6 +59,25 @@ class ProductActiveCoreLoaderTest {
             assertNull(slot.get());assertFalse(life.isCurrent())
         }
     }
+    @Test fun budgetRefusalRetiresOriginalTicketWithoutEpochChangeOrRetry() {
+        val h=Harness();val w=QueueExecutor();val m=QueueExecutor()
+        var original:WorkspaceMutationInvalidation.ActiveReadTicket?=null
+        var reads=0;var deliveries=0
+        val epoch=h.mutations.mutationEpoch
+        val loader=h.loader(w,m){_,ticket,_->
+            original=ticket;reads++;ActiveCoreResult.Rejected(BoundedActiveStatus.BUDGET_REFUSED)
+        }
+        assertTrue(loader.loadOwned("action"){result,lifetime->
+            deliveries++;assertNull(lifetime)
+            assertEquals(ActiveCoreResult.Rejected(BoundedActiveStatus.BUDGET_REFUSED),result)
+            assertFalse(original!!.isLive())
+        })
+        w.take().run();assertTrue(original!!.isLive());m.take().run()
+        assertFalse(original!!.isLive());assertEquals(1,reads);assertEquals(1,deliveries)
+        assertEquals(epoch,h.mutations.mutationEpoch);assertTrue(w.queue.isEmpty());assertTrue(m.queue.isEmpty())
+        val next=h.mutations.beforeActiveRead("action",h.session.snapshot().generation)!!
+        h.mutations.revokeActiveRead(original!!);assertTrue(next.isLive())
+    }
     private class QueueExecutor : java.util.concurrent.Executor {
         val queue=mutableListOf<Runnable>();var reject=false
         override fun execute(command: Runnable) { if(reject) throw java.util.concurrent.RejectedExecutionException();queue.add(command) }

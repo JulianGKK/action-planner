@@ -1,0 +1,14 @@
+[
+  {
+    "package": "org.pag.prototype.a.p77runtime",
+    "sha256": "3cd880a491d18e0181a3ae165c4a113a8e9aa895a2c3eced9edb4693ddcabed4",
+    "source": "previous installed APK pulled before build-07 install; main-series build-06",
+    "runner": "org.pag.prototype.P83MemoryOverlapProbe"
+  },
+  {
+    "package": "org.pag.prototype.a.p77runtime.test",
+    "sha256": "8e65b59c274dd3bd9799261ba6b5b4ae9d9be00c210b7802b630e8d3324f1f53",
+    "source": "previous installed APK pulled before build-07 install; main-series build-06",
+    "runner": "org.pag.prototype.P83MemoryOverlapProbe"
+  }
+]

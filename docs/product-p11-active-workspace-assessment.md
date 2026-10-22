@@ -12424,3 +12424,126 @@ archiviert. Keine geschwächte Assertion und kein JUnit-Skip. Native gezielte Cl
 bei inzwischen ersetztem Ticket ist NICHT AUSGEFÜHRT; bestehende §81-Targeted-Revoke-
 Hostregressionen bleiben GREEN. 16 der 29 gültigen Androidfälle laufen mit dem finalen APK,
 13 mit dem vorangehenden strengen Stand vor zusätzlichem Denied-END-Cleanupfix.
+
+## §83 – Gemeinsame 8+8-MiB-Referenzprüfung: WIP, Abnahme BLOCKIERT
+
+Verbindliche Basis `bffe9951cff11bbca9f610cd2f92a72149716a82`, lokaler und entfernter
+Branch `p11-performance-optimization` zu Beginn identisch. Unabhängige §82-Reviews aus
+#32/#33/#34/#44 gelesen. Vollbericht, Referenzmatrix A–M, sämtliche Runner, Charges,
+Objektzählungen und Zeitpunkte: [§83 Ergebnisse](p11-p83/results.md),
+[Referenzinventar](p11-p83/reference-matrix.md), [Phasen](p11-p83/phases.csv),
+[Fallklassifikation](p11-p83/case-results.csv), [Maximal-Samples](p11-p83/phase-maxima.json).
+
+**Entscheidung: KEINE gemeinsame 8+8-MiB-Freigabe; #33/#34 bleiben BLOCKER.**
+8.388.608 Byte retained und 8.388.608 Byte transition bleiben unverändert. Keine neue
+Cachearchitektur, Ownerinstanz, Speicherregistry, Mutationsepoche, Keyowner, Dependency,
+Migration, UI oder Cipher-/Keyformatänderung. Produktreuse und ramReuseEnabled bleiben false.
+
+**IMPLEMENTIERT / HOSTGETESTET:** Bestehende Testhooks melden die reale gemeinsame
+CoreReadAdmission und beobachten den vollständigen Kandidaten erst nach Room-/DB-/Keyfinally.
+P77 verwendet dieselbe Runtime, READY-Session, Mutationport, Loader, Reader, Lifetime und
+ProductViewModel. Fixtures: 20/40, 100/250, 200/1000, 6/32/100 Funktionen, mehrbytekodiertes
+Unicode einschließlich Supplementary-Zeichen und unverkürzte lange Pseudonyme/Titel. Stress
+fügt zu 1.000 Task-Created-Events weitere 128.000 Cancel/Reopen-Events hinzu, also insgesamt
+129.000 gespeicherte Events. Auth bleibt paketgebundene synthetische Testautorität.
+
+Ein kleiner Produktfix ergänzt targeted revoke bei Rejected ohne Retention-Lifetime:
+Ein budgetabgewiesenes Ergebnis ließ zuvor das Originalticket leben. Die korrigierte
+ProductActiveCoreLoader-Grenze widerruft exakt dieses Ticket ohne Epochänderung, Ersatzread,
+Retry oder neue Lease. Hostregression prüft auch, dass späteres altes Cleanup ein neueres Ticket
+nicht zerstört; nativer 100-Rollen-Fall bestätigt BUDGET_REFUSED ohne Core und mit totem Ticket.
+Der vollständige P77-Hostlauf deckte außerdem den bislang auf reguläre/Demo-ID beschränkten
+AppModeTest auf. Jetzt werden exakte P76-/P77-IDs und gegenseitiger Flagausschluss geprüft;
+keine Assertion entfernt/abgeschwächt, kein Skip. Früher fehlgeschlagener Lauf bleibt archiviert.
+
+**ANDROID-GREEN – präzise Referenzbelege:** Der echte alte Core ist in der tatsächlichen
+WrappedComposition.original-Slotstruktur nachweisbar, während der zweite native Reader bei
+PEOPLE_ROW mit offenem CursorWindow, Room/Driver und Keylease angehalten wird. Danach leben
+alter Compose-Core und neuer Worker-Kandidat gleichzeitig; später hält der tatsächliche
+Loader-Main-Runnable den vollständigen Kandidaten. Bei Main-Übernahme ist der neue VM-Core
+installiert, während Compose noch den alten hält. IDs und starke Klassen-/Feldpfade sind
+archiviert. Wiederholtes altes Lifetime.close widerruft den neuen Slot nicht. Ein nachfolgender
+Compose-Lauf hält den neuen Core; daraus folgt keine vollständige alte Heap-/Framefreigabe.
+
+Eine zusätzliche 32-Rollen-Gegenprobe zeigt sogar DREI unterschiedliche vollständige Core-
+Graphen gleichzeitig: alter Compose-Core, zweiter Main-Pending-Kandidat und dritter Worker-
+Kandidat. Nur EIN VM-Slot verhindert diese Überlappung nicht. Summe der retained-Belegwerte:
+3 × 1.879.156 = 5.637.468 Byte, Engineering-Charges, KEINE exakten ART-Heapbytes.
+Bei drittem offenen Reader sind alter Compose-Core, zweiter Pending-Kandidat und reale native
+Ressourcen gleichzeitig beobachtet. Die Grenze der Gesamtzahl wartender/alter Graphen ist
+nicht belegt; latestLoad verwirft erst bei Main-Ausführung, nicht durch belegte physische
+Freigabe aller alten Runnable-Captures.
+
+**Charges / Gegenproben:** Repräsentative native R/T-Bytes: klein 1.501.784/5.983.328,
+mittel 1.655.572/6.598.480, groß 1.655.712/6.599.040, 32 Funktionen 1.879.216/7.493.056;
+100 Funktionen fordert 2.464.208/9.833.024 und wird VOR Corematerialisierung abgewiesen.
+Der Übergangswert im abgelehnten Fall ist eine angeforderte, NICHT zugelassene Charge.
+Stress-Core 1.955.232/7.797.120 wird zugelassen; keine pauschale 200/1000-Ablehnung.
+BUDGET_REFUSED setzt den sichtbarkeitsbestimmenden Modellfehler, liefert keine partielle
+Payload und widerruft das Originalticket; konkrete Fehlerpixel wurden nicht geprüft.
+
+Bestehende Hostgegenprobe: Zwei echte einzeln passende Teilprojektionen werden gemeinsam
+vor jedem Payloadfetch abgewiesen. Neue Charakterisierung hält zwei unabhängig zugelassene
+Readwerte: oldR 2.102.832 + newT 8.387.520 = 10.490.352, wenn der noch lebende alte Graph
+zusätzlich in transition zu decken ist. Native Drei-Graphen-Zuordnung: pendingR 1.879.156 +
+thirdT 7.492.816 = 9.371.972 transition, plus oldR 1.879.156 = 11.251.128 kombiniert.
+Diese konservativen Charge-Kollisionen sind KEIN gemessener physischer 16-MiB-Overflow.
+Sie zeigen die fehlende gemeinsame Entscheidung über noch lebende Verpflichtungen. Weder
+Doppeldeckung noch Freigabe durch GC-Vermutung ist damit gerechtfertigt.
+
+**Editor / volle Ansicht:** Vor Full-Workspace-Materialisierung entfernt der bestehende VM-
+Pfad den kompakten Slot. Kleine, mittlere, große und 32-Rollen-Boards sind vollständig auf
+bestehendem Pfad abrufbar; Taskeditor-Modellzustand ist GREEN. Der abschließende große
+Editorlauf hält das Formular über einen tatsächlichen OnDraw offen und kehrt zur Navigation
+zurück. Frühere Läufe mit Öffnen/Schließen im selben Maincallback sind ausdrücklich KEIN
+Editorframebeleg. Vollständige Personendetail-/Personeneditor- und alte Full-Compose-/Frame-
+Überlappung sind NICHT BEWIESEN. Fachliche Funktionen wurden nicht deaktiviert.
+
+**ANDROID-RED / Stress:** Früher Full-View-Timeout; präzisierter Wiederholungslauf zeigt
+LOCKED/B0-IDLE-EXPIRED nach unveränderter 30s-Idlefrist. Der getrennte korrigierte Lauf mit
+11 echten Touchpaaren im eigenen fokussierten P77-Fenster erhält die normale Interaktion,
+liefert die volle Historienansicht trotzdem nicht innerhalb 90s. Keine Fristverlängerung
+über RAM-Hits, keine 180s-Änderung, kein Weglassen der Historie. Stress-Fullview/-Editor und
+vollständige Historienabrufbarkeit bleiben RED/UNBEWIESEN. Ein früher Touchversuch scheitert
+vor dem ersten Touch am fehlenden Accessibility-Root und ist HARNESS-ABBRUCH, trotz rohem FAIL.
+
+**Messunsicherheit / Native:** Beim offenen Core-Reader ist mindestens ein tatsächlich
+gefülltes Window mit Pointer ungleich null beobachtet; nach jeweiligem Coreabschluss sind alle
+erfassten Statements/Cursor geschlossen, Windowpointer null, Preflight-/Room-/bekannter Driver-
+Abschluss und Nullsetzung der tatsächlich geliehenen Java-Keykopie bestätigt. Keine Aussage
+über sämtliche Nativekopien, Allocatorpuffer oder physische Wipes. Full-Workspace-Scopes sind
+nicht durch die Corehooks beobachtet; ein altes core-closed beweist NICHT full-closed.
+Während des interaktiven Stress-Fullreads: maximale Prozess-Samples NativeHeap 44.969.680 B,
+PSS 185.524 KiB, ART-used 17.426.080 B, FD 140; getrennte Zeitpunkte, NICHT addierbarer Peak.
+Objektzählung, Engineering-Charge und ART-/Native-/PSS-Werte bleiben getrennte Kategorien.
+Initiale Windowgröße ist kein hartes Limit (§74). Keine erzwungene GC und kein keyhaltiger
+Heapdump. Unbekannte Native-/Frame-/Backing-Kosten werden als BLOCKER geführt, niemals als 0
+oder als willkürlich angeblich sichere Reserve.
+
+**Gezielte Revoke-Fälle GREEN:** Worker-Lock im offenen Rowscope; tatsächliche CORE-/DOCUMENT-
+Repositoryadmission vor gehaltener Workerqueue; Actionwechsel; Lock/synthetische Reauth mit
+neuer Generation; UNKNOWN als ausdrücklich injizierte Completion-Metadaten; verlorener Main-
+Runnable explizit verworfen UND Session gelockt. Kein Beweis automatischer Lost-Main-Erkennung
+oder nativer UNKNOWN-Commitfehler. Keine späte/partielle Publication. DOCUMENT-Input wird vor
+Reserve/Quelle verworfen und ist kein erfolgreicher Importbeleg. Kein neuer Sessionmatrixbau.
+
+**Validierung:** 1.836 reguläre Hosttests (688 app + 1.144 data + 4 security; domain NO-SOURCE),
+0 Fehler/Skips. Komplette P77-App-Hostsuite 690 Ausführungen (688 geteilte + 2 spezifische),
+0 Fehler/Skips. Vollständiger geforderter Offline-Debug-/Release-/Androidtest-/Manifestlauf
+GREEN; P77 separat gebaut und Isolation geprüft. 20 echte Custom-Runner-Ausführungen:
+16 ANDROID-GREEN, 3 ANDROID-RED, 1 HARNESS-ABBRUCH; keine Null-JUnit-Zahl als PASS.
+GREEN bestätigt jeweils genannte Beobachtungen, NICHT gemeinsame 8+8-MiB-Abnahme.
+Rohreports/Artefakthashes/Manifeste/Charges bleiben vollständig archiviert.
+
+**Offene #33/#34-Blocker:** Gemeinsame Outstanding-Reservierung/Ruhestellung über Reader,
+Main, alte/neue Composegraphen und Fullview/Editor; Grenze wartender Kandidaten; belastbare
+Native-/Render-/Frame-/ART-Kalibrierung; vollständige Stresshistorie und Fullview-Cleanup.
+Kein zweites Register/Owner als Ausweg. #32 echte Native-Close-Faults, #39 sicherer
+Keyguard/DeviceCredential, #36 Editor-ABA und RED-4 bleiben eigenständige Gates.
+
+**Isolation / Abschluss:** RFCT1186YRJ/SM-M526BR; P77-IDs, Runner, Buildvariante, Manifest,
+installierter/neuer Signer vor Updates geprüft. Geschützte P76-Demo, reguläre App und P11probe
+bleiben installiert und in Version/Installations-/Updatezeit/Signatur unverändert. Abschließende
+rein lesende Inventur findet keine eigene Fixturewurzel. Keine Datenlöschung an Paketen,
+globale Bereinigung oder Credential-/Sperränderung. Produktreuse false; regulärer WIP-Commit/
+Push, kein Force-Push/Merge/Release. STOPP bis zum unabhängigen GitHub-Review.

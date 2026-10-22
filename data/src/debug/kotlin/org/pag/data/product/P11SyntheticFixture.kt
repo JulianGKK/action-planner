@@ -87,6 +87,25 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         }}
         owner.set(SessionDbKeyOwner.bind(c,key))
     }
+    /** Synthetic data only, before Runtime construction. No production writer bypass. */
+    internal fun seedMemoryAcceptance(profile:String) {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        val roles=when(profile){"roles32"->32;"roles100"->100;else->6}
+        val stress=profile=="stress"
+        ActionDatabaseAccess(wrapped).use(inventory.database,key,maintenance){db->db.withWriteTransaction {
+            suspend fun exec(sql:String,vararg args:String) { usePrepared(sql){s->args.forEachIndexed{sIndex,v->s.bindText(sIndex+1,v)};s.step()} }
+            repeat(roles){i->val name="Funktion Ä界🦋 $i"
+                db.operations().let { exec("INSERT INTO roles VALUES(?,?,?,?,?)","p83-r$i",activeId,name,OperationalRules.normalizedName(name),"1") }
+            }
+            // UTF8 byte lengths differ from UTF16 units. Preserve every requested character.
+            val personText=if(stress)"Ä界🦋".repeat(15) else "Ä界🦋"
+            val taskText=if(stress)"Ä界🦋".repeat(25) else "Ä界🦋"
+            exec("UPDATE persons SET pseudonym=?||pseudonym,pseudonymNormalized=?||pseudonymNormalized WHERE actionId=?",personText,PersonRules.normalized(personText),activeId)
+            exec("UPDATE tasks SET title=?||title WHERE actionId=?",taskText,activeId)
+            exec("UPDATE person_operational_states SET currentRoleId='p83-r0',operationalStatus='ON_SITE' WHERE actionId=?",activeId)
+            if(stress)exec("WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<128000) INSERT INTO task_events SELECT 'p83-e'||x,?,(SELECT id FROM tasks WHERE actionId=? ORDER BY id LIMIT 1),CASE WHEN x%2=1 THEN 'CANCELLED' ELSE 'REOPENED' END,x+100 FROM n",activeId,activeId)
+        }}
+    }
     private fun fail():Nothing=error("SYNTHETIC_STORAGE_FAILURE")
     val actions:ActionRepository=ProductActionRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
     val workspace:WorkspaceRepository=ProductWorkspaceRepository(wrapped,access,inventory,owner::get,worker,main,::fail)

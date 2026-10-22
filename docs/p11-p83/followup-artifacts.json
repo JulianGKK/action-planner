@@ -1,0 +1,14 @@
+[
+  {
+    "package": "org.pag.prototype.a.p77runtime",
+    "sha256": "3cd880a491d18e0181a3ae165c4a113a8e9aa895a2c3eced9edb4693ddcabed4",
+    "signer": "9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134",
+    "runner": "org.pag.prototype.P83MemoryOverlapProbe"
+  },
+  {
+    "package": "org.pag.prototype.a.p77runtime.test",
+    "sha256": "259ab82b0dd1acce20ab7276faa7bedd642bff2386f97b58bafff336573c8cc8",
+    "signer": "9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134",
+    "runner": "org.pag.prototype.P83MemoryOverlapProbe"
+  }
+]

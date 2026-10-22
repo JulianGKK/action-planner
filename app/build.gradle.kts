@@ -249,7 +249,7 @@ val verifyReleaseVariantSafety = tasks.register("verifyReleaseVariantSafety") {
             val dexText = dexEntries.joinToString("\n") { entry ->
                 zip.getInputStream(entry).use { String(it.readBytes(), Charsets.ISO_8859_1) }
             }
-            listOf("P77RuntimeLaunchProvider", "P77ProductRuntimeHarness", "P80ContentFrames", "P81RuntimeFaults", "P82CleanupFaults", "P11SyntheticFixture",
+            listOf("P77RuntimeLaunchProvider", "P77ProductRuntimeHarness", "P80ContentFrames", "P81RuntimeFaults", "P82CleanupFaults", "P83MemoryDiagnostics", "P11SyntheticFixture",
                 "P77 ISOLATED SYNTHETIC TEST KEY").forEach { forbidden ->
                 check(forbidden !in dexText) { "Release APK contains isolated P77/test-auth code: $forbidden" }
             }

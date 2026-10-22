@@ -1,0 +1,30 @@
+{
+  "app:testDebugUnitTest": {
+    "tests": 688,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "data:testDebugUnitTest": {
+    "tests": 1144,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "security:testDebugUnitTest": {
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "app:testP77runtimeUnitTest": {
+    "tests": 690,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "domain:test": {
+    "status": "NO-SOURCE",
+    "tests": 0
+  }
+}

@@ -22,7 +22,9 @@ class P77ProductRuntimeHarness private constructor(
     val observations: Observations,
     val mutations:UncachedWorkspaceMutations,
     val faults:P81RuntimeFaults,
-    val cleanupFaults:P82CleanupFaults
+    val cleanupFaults:P82CleanupFaults,
+    val memory:P83MemoryDiagnostics,
+    val memoryFixture:String
 ) : AutoCloseable {
     class Observations internal constructor(private val faults:P81RuntimeFaults) : ActiveCoreLoadObservation {
         val tickets = AtomicInteger()
@@ -41,6 +43,7 @@ class P77ProductRuntimeHarness private constructor(
     }
     val cleanupConfirmed=java.util.concurrent.atomic.AtomicBoolean(false)
     override fun close() {
+        memory.release()
         faults.clear()
         runtime.close()
         fixture.close()
@@ -58,16 +61,22 @@ class P77ProductRuntimeHarness private constructor(
                 P11FixtureRoot(parent.toPath(),stale.toPath()).close()
             }
             val base = File(parent, "p11-fixture-${UUID.randomUUID()}")
+            val profile=activity.intent.getStringExtra("p83Fixture") ?: "default"
+            check(profile in setOf("default","small","medium","large","roles32","roles100","stress"))
+            val people=when(profile){"small"->20;"medium"->100;else->200}
+            val tasks=when(profile){"small"->40;"medium"->250;else->1000}
             val fixture = P11SyntheticFixture(activity, worker, main,
-                taskCountPerAction = 1000, personCountPerAction = 200, baseDirectory = base)
+                taskCountPerAction = tasks, personCountPerAction = people, baseDirectory = base)
+            if(profile!="default")fixture.seedMemoryAcceptance(profile)
             return try {
                 val faults=P81RuntimeFaults()
                 val cleanupFaults=P82CleanupFaults()
+                val memory=P83MemoryDiagnostics()
                 val observations=Observations(faults)
                 val mutations=UncachedWorkspaceMutations()
                 val runtime = ProductRuntime(activity, faults.worker.wrap(worker), faults.main.wrap(main), mutations,
-                    fixture.runtimeAuthority(reuseEnabled = true,observations,faults::wrap).copy(coreReadHooks=cleanupFaults.hooks), foreground)
-                P77ProductRuntimeHarness(runtime, fixture,observations,mutations,faults,cleanupFaults)
+                    fixture.runtimeAuthority(reuseEnabled = true,observations,faults::wrap).copy(coreReadHooks=if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
+                P77ProductRuntimeHarness(runtime, fixture,observations,mutations,faults,cleanupFaults,memory,profile)
             } catch (error: Throwable) {
                 fixture.close()
                 throw error

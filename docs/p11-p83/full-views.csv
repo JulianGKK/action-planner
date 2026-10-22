@@ -1,0 +1,8 @@
+report,fixture,t_ns,tasks,events,persons,form,compact_slot,history_engineering_charge,art_used,art_committed,native_heap,pss_kib,fd,gc
+editor-large-replace-runner.txt,large,1158556913784720,1000,1000,200,true,false,685128,6948448,11764848,11522496,149088,134,3
+final-large-replace-runner.txt,large,1157772383007936,1000,1000,200,true,false,685128,9232128,14072349,11819472,148950,134,3
+final-medium-replace-runner.txt,medium,1157753852856641,250,250,100,true,false,171378,6711120,11591664,11520464,145319,134,3
+final-roles32-replace-runner.txt,roles32,1157791263241835,1000,1000,200,true,false,685128,24115608,24688605,12196480,163408,134,2
+final-small-replace-runner.txt,small,1157739235632949,40,40,20,true,false,27528,8312896,11817184,11898864,149437,132,3
+first-large-replace-runner.txt,large,,1000,1000,200,true,false,,,,,,,
+first-small-replace-runner.txt,small,,40,40,20,true,false,,,,,,,

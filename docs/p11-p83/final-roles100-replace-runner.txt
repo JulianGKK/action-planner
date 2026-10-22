@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P83_ADMISSION,roles100,retained=2464208,transition=9833024,decision=BUDGET_REFUSED,failure=BUDGET_REFUSED
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_REFUSAL,roles100,payload=false,visible_error=true,original_ticket_revoked=true,statements=65,statements_closed=65,cursors=65,cursors_open=0,windows=65,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,lease_wiped=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P83_CASE,roles100,replace,ANDROID-GREEN,fixture_cleanup=true,joint_budget_release=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P83 PASS roles100 replace; observations only; joint acceptance BLOCKED
+INSTRUMENTATION_CODE: -1
