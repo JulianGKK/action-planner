@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P82_CASE,success,GREEN,scenario=success,statements=70,closed=70,cursors=70,windows=70,window_ptrs_zero=true,preflight_closed=true,room_closed=true,driver_closed=true,lease_wiped=true,failure=none,vendor_error=none,fault_reached=true,suppressed=0,rows=33,readers=1,tickets=1,partial_core=false,fd_before=137,fd_after=131,native_before=11128688,native_after=11500064,pss_kib_before=181217,pss_kib_after=184445,gc_count=0,cycle_ns=1936280572,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P82 PASS success; actual Runtime/Room/SQLCipher/keyowner/VM; synthetic credentials; fault kind in report
+INSTRUMENTATION_CODE: -1

@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P82_CASE,driver_end,GREEN,scenario=driver_end,statements=70,rollbacks=0,closed=70,cursors=70,windows=70,window_ptrs_zero=true,preflight_closed=true,room_closed=true,driver_closed=true,lease_wiped=true,failure=IllegalStateException,vendor_error=none,fault_reached=true,suppressed=0,rows=33,readers=1,tickets=1,partial_core=false,fd_before=133,fd_after=137,native_before=11015056,native_after=11190288,pss_kib_before=178383,pss_kib_after=180990,gc_count=0,cycle_ns=1858240884,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P82 PASS driver_end; actual Runtime/Room/SQLCipher/keyowner/VM; synthetic credentials; fault kind in report
+INSTRUMENTATION_CODE: -1

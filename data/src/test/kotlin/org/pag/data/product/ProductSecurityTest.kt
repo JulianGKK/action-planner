@@ -21,6 +21,30 @@ class ProductSecurityTest {
         owner.invalidate()
         assertThrows(ProductStorageFailure::class.java) { owner.withDbKey(context) {} }
     }
+    @Test fun consumerFailureKeepsOriginalExceptionAndWipesBorrowedLease() {
+        val context=Context();val owner=SessionDbKeyOwner.bind(context,ByteArray(32){7})
+        val primary=IllegalStateException("synthetic-consumer")
+        var borrowed:ByteArray?=null
+        assertSame(primary,assertThrows(IllegalStateException::class.java) {
+            owner.withDbKey(context) { borrowed=it;throw primary }
+        })
+        assertTrue(borrowed!!.all { it==0.toByte() })
+        owner.invalidate()
+        var entered=false
+        assertThrows(ProductStorageFailure::class.java) {owner.withDbKey(context){entered=true}}
+        assertFalse(entered)
+    }
+    @Test fun revokedConsumerFailureStillWipesLeaseAndCannotReenter() {
+        val context=Context();val owner=SessionDbKeyOwner.bind(context,ByteArray(32){9})
+        var borrowed:ByteArray?=null
+        val primary=IllegalStateException("synthetic-cleanup-revoke")
+        assertSame(primary,assertThrows(IllegalStateException::class.java) {
+            owner.withDbKey(context){borrowed=it;owner.invalidate();context.allowed=false;throw primary}
+        })
+        assertTrue(borrowed!!.all {it==0.toByte()})
+        context.allowed=true
+        assertThrows(ProductStorageFailure::class.java){owner.withDbKey(context){fail("No new lease")}}
+    }
     @Test fun oldOwnerCannotReactivateForNewGeneration() {
         val owner = SessionDbKeyOwner.bind(Context(), ByteArray(32))
         assertThrows(ProductStorageFailure::class.java) { owner.withDbKey(Context(2)) {} }

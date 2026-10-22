@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P82_CASE,row_revoke,GREEN,scenario=row_revoke,statements=66,closed=66,cursors=66,windows=66,window_ptrs_zero=true,preflight_closed=true,room_closed=true,driver_closed=true,lease_wiped=true,failure=StorageAccessRevoked,vendor_error=none,fault_reached=true,suppressed=0,rows=1,readers=1,tickets=1,partial_core=false,fd_before=137,fd_after=131,native_before=11012208,native_after=11065456,pss_kib_before=178434,pss_kib_after=181810,gc_count=0,cycle_ns=1488394999,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P82 PASS row_revoke; actual Runtime/Room/SQLCipher/keyowner/VM; synthetic credentials; fault kind in report
+INSTRUMENTATION_CODE: -1

@@ -1,0 +1,6 @@
+INSTRUMENTATION_RESULT: result=P82 FAIL row_and_room_end: java.lang.IllegalStateException: Room cleanup masked original row failure
+	at org.pag.data.product.P82CleanupFaults.verify(P82CleanupFaults.kt:96)
+	at org.pag.prototype.P82RoomCleanupProbe.onStart(P82RoomCleanupProbe.kt:71)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+INSTRUMENTATION_CODE: 0

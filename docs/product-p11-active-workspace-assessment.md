@@ -12303,3 +12303,124 @@ ist eine separat koordinierte passive Keyguard-/Screen-off-Abnahme auf bekanntem
 isoliertem Profil mit vom Nutzer selbst bedienter Entsperrung, danach echte Recovery-/
 Upstream-Cleanupfaults und 8+8-MiB-Overlap. Keine Annahme von Benutzercredentials durch
 den Test. Kein cachefreier 1.0-Pfad, Merge oder Release. Stopp bis unabhängiger Review.
+
+## 82. Native Room / DB / Key Cleanup Fault Acceptance (#32)
+
+**Ausgangsbasis:** `f6208d3fab66e2540bcba3c16412345f92bc4cb2`, sauberer Branch
+`p11-performance-optimization`, lokaler und unabhängig abgefragter Remote-HEAD gleich.
+§81-Reviews #37/#39/#44 und letzter #32-Review gelesen. Keine neue Cache-, UI-, Session-
+oder Writerarchitektur. Reguläres Produkt-RAM-Reuse bleibt false.
+
+**IMPLEMENTIERT:** `ActionDatabaseAccess` verwendet für die bestehende Cleanup-Reihenfolge
+verschachtelte Standard-`use`-Scopes: Preflight-Nativeclose; nach Room-Arbeit lifecycle close,
+Roomclose, coroutine cancelAndJoin, Driverclose. Ein Arbeitsfehler bleibt primär; weitere
+unabhängige Cleanupversuche laufen und ihre Fehler werden suppressed. Der bisherige
+verschachtelte finally konnte den Arbeitsfehler überschreiben. Timinggrenzen bleiben erhalten.
+`B2Driver.close` versucht weiterhin jede Verbindung und nullsetzt seine Keykopie im finally,
+bewahrt nun aber den ersten und alle weiteren Closefehler. Die beiden Denied-Commit-
+Rollbackstellen verwenden jetzt ebenfalls den bestehenden `B2StatementCleanup` statt des
+bloßen Hersteller-close: reset vor close, Zugriffsverweigerung bleibt primär, ein etwaiger
+Rollback-/Cleanupfehler wird suppressed. Keine neue Rollbackfiktion und kein Retry.
+
+**IMPLEMENTIERT, isolierter Testanschluss:** Optionale interne, instanzlokale Core-/DB-/
+Statementhooks werden nur über die bereits vor Ressourceninitialisierung paket-/debug-
+geprüfte P77-Testautorität geliefert. Normaler Runtimekonstruktor und Credentialpfad bleiben
+unverändert, keine Reflection-Injektion in Session-/Keyowner. `P82CleanupFaults` liegt nur in
+`data/src/debug`; der Release-DEX-Guard schließt diese Klasse zusätzlich aus. Diagnose hält
+höchstens 512 Cursor-/Windowreferenzen, eine geliehene Keyarrayreferenz und einen Fehler;
+keine Core-/P3b-/Dokumentpayloads, keine Keywerte oder Rowinhalte in Reports. Readticket,
+Mutationport und ViewModel-Slot sind die echten ursprünglichen Produktinstanzen.
+
+**Lifetime:** Originalticket/READY-Kontext → echter SessionDbKeyOwner.withDbKey → geliehene
+ByteArray-Kopie → ActionDatabaseAccess → nativer Preflight → Room/SQLCipher/B2 → Room-
+Readtransaktion → usePrepared/Statement → Querycursor/Window → reset/close → Transaktions-
+ende → Room-/Connection-/Driverende → Keyscope-postcheck/finally-Wipe → Candidate → finale
+Ownerpublication → originale Lifetime/ein ViewModel-Slot. Ausführliche Unterscheidung von
+Javaobjekt, Bytearray, Nativehandle, Cursor, Window, Statement, DB, Ticket und Kandidat in
+[p11-p82/resource-lifetime.md](p11-p82/resource-lifetime.md).
+
+**ANDROID-GREEN, tatsächlicher Produktpfad:** 29 gezielt gestartete Custom-Runner-Fälle
+(13 korrigierte strenge Vorläufe, 14 finale Fälle, zwei weitere volle Erfolgszyklen), keine
+JUnit-Zählung als Ersatz. Synthetische Testcredentials, aber echter ProductRuntime,
+Maintenance, SessionCoordinator, Keyowner, ursprünglicher gemeinsamer Port/Ticket,
+ProductActiveCoreReader/ActiveCoreStore, Room/SQLCipher 4.19.1, Loader/Lifetime und VM.
+200 Personen/1000 Tasks; Erfolg liefert erste Seiten 32/200 und 32/1000 mit hasMore,
+einen tatsächlichen autorisierten Hit und danach Lock/Slotentzug. Pro Fall genau eine
+Readerausführung/ein Ticket und unveränderte Mutationsepoche. Kein partieller Core nach
+Fault, kein späterer Hit, ursprüngliches Ticket tot, alte Keylease nicht erneut ausgegeben.
+Kein Ersatzticket und kein produktives Gate geöffnet.
+
+Echte Nativefehler sind getrennt belegt: `SELECT abs(-9223372036854775808)` scheitert in
+SQLCipher.nativeExecuteForCursorWindow mit integer overflow; ungültiger Getterindex erreicht
+CursorWindow.nativeGetLong. Beide liegen innerhalb der tatsächlichen Room-Readtransaktion,
+nicht nur in einem direkten Cursorhelper. Rowloopfehler, reset-/close-Fehler NACH tatsächlicher
+nativer Freigabe, Room-/Driver-Endefehler und Fehler im Keyconsume-Scope sind ausdrücklich
+**injizierte** Exceptions. Rowlooprevoke, Revoke während Cleanup und Revoke am tatsächlichen
+Room-END verwenden die reale Runtime-Session. Finaler END-Revoke: 71 Statements geschlossen,
+ein beobachteter Rollback, 70 Cursor/Windows geschlossen/Pointer null, Fehler bleibt
+StorageAccessRevoked. Kombinierter Row-/Roomclosefehler bewahrt exakt das primäre Fehlerobjekt
+und suppressed Roomclosefehler; kombinierter reset-/close-Fehler bewahrt beide.
+
+Erfolg und beide Wiederholungen schließen je 70 beobachtete Statements/Cursor/Windows.
+Alle akzeptierten Fälle bestätigen Preflight-DB-Ende, Roomclose-Rückkehr, geschlossene bekannte
+Driver-Nativehandles, gelöschte Driver-Keykopie und tatsächliche finally-Nullsetzung der
+withDbKey-Leihkopie. Keine separate Diagnose-Rettung zählt als Produktcleanup. Diese
+Einzelbelege sind keine allgemeine Heap-/Lease-/Nativekopiengarantie. Native Preflight-
+PRAGMA-Windows sind nicht einzeln reflektiert; deren Cursor-use und DB-Ende bleiben von den
+beobachteten B2-Windowpointern getrennt. Kein Refill-PASS aus unabhängigen SQL-Batches;
+§74s dynamisches Windowwachstum und unzureichende startPosition-Prämisse bleiben maßgeblich.
+
+**HARNESS-ABBRUCH, vollständig erhalten:** 14 frühe, nicht akzeptierte Läufe (13 Erstläufe
+plus ein Diagnosefall), darunter drei rohe FAIL-Ergebnisse und elf unzureichende rohe PASS-
+Meldungen. Ein falscher SQLCipherStatement-Cast wies den tatsächlichen JournalModeStatement
+bei Roomjournal-Konfiguration ab; die generischen Rejectionchecks konnten danach falsche
+benannte Fault-PASS erzeugen. Korrigierter Observer berücksichtigt den bekannten
+Herstellerdelegate ausschließlich zur Diagnose, behält native Methoden unverändert und
+verlangt nun tatsächliche Fault-Erreichbarkeit. Kein früher PASS wird als Abnahme gezählt;
+kein Produkt-RED aus diesem Harnessfehler abgeleitet. 0 Produkt-ANDROID-RED in den akzeptierten
+Serien; alle Originalreports, Native-Stacks, Klassifikationen und Rohdaten unter
+[p11-p82](p11-p82/), reproduzierbar mit `python3 docs/p11-p82/summarize.py`.
+
+**HOSTGETESTET:** Zwei zusätzliche Keyowner-Faulttests prüfen ursprüngliche Exception,
+finally-Wipe und verweigerte neue Lease nach Revoke. Bestehende B2Cleanup-, Reader-, Lifetime-,
+Admission-, Runtime-, Writer-, Dokument- und VM-Tests unverändert. Reguläre Suite: 688 App +
+1141 Data + 4 Security = 1833; zusätzlich zwei P77-Framehosttests, insgesamt 1835,
+0 Testfehler/0 Testskips. Domain hat keine Testquellen. Frühe Kompilationsabbrüche bei der
+Harnessentwicklung bleiben in den Buildlogs dokumentiert und zählen nicht als Test-GREEN.
+
+**NICHT BEWIESEN / BLOCKER #32:** Keine echte Hardware-/Native-reset-Exception vor
+Cursorfreigabe, keine native close-/Connectionclose-Exception vor Release, kein realer
+Transaktionsende-I/O-Fault, kein Fehler in ByteArray.fill selbst. Post-close-Injektion ist
+kein solcher Nachweis. Bestehende B2-Fehlersanitisierung bleibt unverändert; rohe Vendorfehler
+werden nur im isolierten Diagnosepfad vor Mapping beobachtet, nicht als vollständige native
+Causekette im Produkt versprochen. Physische native Keykopien, jede interne Connection-/
+Windowreferenz und langfristige Allocatorfreiheit sind nicht vollständig beobachtbar.
+#32 bleibt teilabgenommen/offen; kein pauschales Cleanup-COMPLETE bei Exception.
+
+**Übergabe §83 / #33/#34:** Rohpunkte vor Read/nach terminalem Ergebnis für FD, NativeHeap,
+PSS und ART-GC sowie Statement-/Cursor-/Windowzahlen stehen in native-observations.csv.
+Die finalen 14 Fälle zeigen FD 131–137, NativeHeap vor 11006416–11158304/nach
+11068288–11534128 Byte, PSS vor 178261–181206/nach 179183–184536 KiB. Prozesswerte einschließlich
+Test-/Compose-/Allocatoranteilen, keine Leakfreiheitstoleranz, keine exakten Corekosten und
+keine Peaküberlappung. cycle_ns enthält Read, Checks, gegebenenfalls Hit und Lock, ist keine
+Content-OnDraw-Zeit. Wiederholungen sind getrennte vollständige Runtime-/Fixturezyklen,
+kein langer Same-Runtime-Soak. §83 muss alten Slot, neuen Kandidaten, Main-Runnable,
+Compose/Editor/Frames und native Buffer gemeinsam bewerten; 8 MiB retained/8 MiB transition
+unverändert. #39 echter sicherer Keyguard/DeviceCredential, #36 Editor-ABA und RED-4 bleiben
+BLOCKER. Keine Rootrekonstruktion, Joblöschung, P3b-/Dokumentretention, Migration oder Release.
+
+**Isolation:** RFCT1186YRJ/SM-M526BR, exakte P77-Target-/Test-ID, Runner, Manifest und neue/
+installierte Signatur vor jedem Update geprüft. Nur eigene P77-APKs aktualisiert.
+`org.pag.prototype.a.p76demo`, `org.pag.prototype.a`, `org.pag.perf.p11probe` bleiben installiert
+und in Version/Installations-/Updatezeit/Signatur unverändert. Keine Produktdaten-/Credential-
+oder Sperreinstellungen angefasst. Alle akzeptierten Läufe bestätigen Fixture-close;
+finale rein lesende Inventur findet keine eigene Fixturewurzel. Produktreuse bleibt false.
+Stopp bis zum unabhängigen GitHub-Review.
+
+**Abschlussvalidierung GREEN:** Vollständiger angeforderter Offline-Lauf einschließlich
+assembleRelease und verifyReleaseVariantSafety erfolgreich (9m12s); P77 separat mit
+verifyP77RuntimeIsolation, APK-Paar und zwei P77-Hosttests GREEN. Buildlogs/Hostzählung sind
+archiviert. Keine geschwächte Assertion und kein JUnit-Skip. Native gezielte Cleanupfailure
+bei inzwischen ersetztem Ticket ist NICHT AUSGEFÜHRT; bestehende §81-Targeted-Revoke-
+Hostregressionen bleiben GREEN. 16 der 29 gültigen Androidfälle laufen mit dem finalen APK,
+13 mit dem vorangehenden strengen Stand vor zusätzlichem Denied-END-Cleanupfix.

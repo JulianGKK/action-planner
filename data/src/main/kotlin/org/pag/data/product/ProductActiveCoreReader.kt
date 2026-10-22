@@ -8,10 +8,11 @@ import org.pag.domain.*
 /** Existing compact SQL/materialization path. The product loader below supplies a common
  * ticket and READY context, then performs final owner-thread publication separately.
  */
-class ProductActiveCoreReader(app: Context, private val access: StorageAccess,
+class ProductActiveCoreReader internal constructor(app: Context, private val access: StorageAccess,
     private val inventory: ProductInventory, private val owner: () -> SessionDbKeyOwner?,
-    private val currentState: (() -> CompactTaskState?)? = null, private val blocked: () -> Unit) : ActiveCoreReader {
-    private val database = ActionDatabaseAccess(app.applicationContext)
+    private val currentState: (() -> CompactTaskState?)? = null, private val blocked: () -> Unit,
+    private val testHooks: CoreReadTestHooks? = null) : ActiveCoreReader {
+    private val database = ActionDatabaseAccess(app.applicationContext,testHooks?.database ?: ActionPreflightHooks())
     override fun read(state: CompactTaskState, affectedPersonId: String?): ActiveCoreResult {
         val trustedState=currentState ?: return ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED)
         return activeCoreRead(state, access, trustedState, blocked) { c, current ->
@@ -48,19 +49,28 @@ class ProductActiveCoreReader(app: Context, private val access: StorageAccess,
                 requireOperations(context)
                 if(!current()) throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)
                 (owner() ?: throw ProductStorageFailure()).withDbKey(context) { key ->
+                    testHooks?.keyLease?.invoke(key)
                     database.use(inventory.database,key,context) { db ->
-                        db.withReadTransaction { ActiveCoreStore(this,context,::current,observe,measured).read(state,affectedPersonId) }
+                        db.withReadTransaction {
+                            testHooks?.transaction?.invoke(this)
+                            ActiveCoreStore(this,context,::current,{ phase ->
+                                testHooks?.row?.invoke(phase); observe(phase)
+                            },measured).read(state,affectedPersonId)
+                        }
                     }
+                    .also { testHooks?.keyScopeEnd?.invoke() }
                 }
             }
-        } catch (_: StorageAccessRevoked) { ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED) }
+        } catch (failure: StorageAccessRevoked) { testHooks?.failure?.invoke(failure); ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED) }
         catch (failure: BoundedActiveRejected) {
+            testHooks?.failure?.invoke(failure)
             if (!current()) ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED)
             else {
                 if(failure.status==BoundedActiveStatus.INVALID_DATA) blocked()
                 ActiveCoreResult.Rejected(failure.status)
             }
-        } catch (_: Exception) {
+        } catch (failure: Exception) {
+            testHooks?.failure?.invoke(failure)
             if (!current()) ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED)
             else { blocked(); ActiveCoreResult.Rejected(BoundedActiveStatus.STORAGE_FAILURE) }
         }
@@ -102,3 +112,13 @@ internal fun <R, V : R> boundedProjectionRead(state: CompactTaskState, access: S
         else { blocked(); denied(BoundedActiveStatus.STORAGE_FAILURE) }
     }
 }
+
+/** Guarded Runtime test composition only; no normal producer supplies these hooks. */
+internal class CoreReadTestHooks(
+    val database: ActionPreflightHooks = ActionPreflightHooks(),
+    val transaction: suspend (androidx.room3.PooledConnection) -> Unit = {},
+    val row: (ActiveCoreStore.Phase) -> Unit = {},
+    val keyLease: (ByteArray) -> Unit = {},
+    val keyScopeEnd: () -> Unit = {},
+    val failure: (Throwable) -> Unit = {}
+)

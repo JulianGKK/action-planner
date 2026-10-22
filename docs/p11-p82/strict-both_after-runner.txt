@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P82_CASE,both_after,GREEN,scenario=both_after,statements=1,closed=1,cursors=1,windows=1,window_ptrs_zero=true,preflight_closed=true,room_closed=true,driver_closed=true,lease_wiped=true,failure=IllegalStateException,vendor_error=none,fault_reached=true,suppressed=1,rows=0,readers=1,tickets=1,partial_core=false,fd_before=137,fd_after=131,native_before=10995136,native_after=11086176,pss_kib_before=178503,pss_kib_after=179323,gc_count=0,cycle_ns=1274158541,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P82 PASS both_after; actual Runtime/Room/SQLCipher/keyowner/VM; synthetic credentials; fault kind in report
+INSTRUMENTATION_CODE: -1

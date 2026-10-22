@@ -14,9 +14,15 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Unlike SQLCipherDriver.open(), this NEVER supplies a CREATE flag.
  * One owner; no public driver, DAO or statement leaves :data.
  */
+/** Internal, instance-scoped diagnostic seam. Only guarded test composition supplies hooks. */
+internal class B2ResourceHooks(
+    val statement: (SQLiteStatement) -> SQLiteStatement = { it },
+    val closed: (Boolean) -> Unit = {}
+)
+
 internal class B2Driver(private val file: File, key: ByteArray,
     private val context: StorageContext, private val hooks: B2Hooks,
-    private val timing:B2OpenTiming?=null) : SQLiteDriver, AutoCloseable {
+    private val timing:B2OpenTiming?=null, private val resources:B2ResourceHooks?=null) : SQLiteDriver, AutoCloseable {
     private val bytes = key.copyOf()
     private val connections = CopyOnWriteArrayList<SQLiteConnection>()
     private val nativeConnections = CopyOnWriteArrayList<net.zetetic.database.sqlcipher.SQLiteDatabase>()
@@ -42,11 +48,11 @@ internal class B2Driver(private val file: File, key: ByteArray,
                     catch (failure: B2Exception) {
                         // Revocation can precede statement preparation, not only step().
                         // The denied commit must never leave a transaction holding the connection.
-                        if (commit) delegate.prepare("ROLLBACK TRANSACTION").use { it.step() }
+                        if (commit) rollbackDeniedCommit(delegate, failure)
                         throw failure
                     }
                 }
-                val statement = delegate.prepare(sql)
+                val statement = delegate.prepare(sql).let { resources?.statement?.invoke(it) ?: it }
                 val cleanup = B2StatementCleanup(statement)
                 object : SQLiteStatement by statement {
                     override fun close() = cleanup.close()
@@ -59,7 +65,7 @@ internal class B2Driver(private val file: File, key: ByteArray,
                             } catch (failure: B2Exception) {
                                 // Room's passthrough pool does not rollback if END itself fails.
                                 // Finish cleanup on this same connection; never execute the denied commit.
-                                if (commit) delegate.prepare("ROLLBACK TRANSACTION").use { it.step() }
+                                if (commit) rollbackDeniedCommit(delegate, failure)
                                 throw failure
                             }
                         }
@@ -74,14 +80,28 @@ internal class B2Driver(private val file: File, key: ByteArray,
         connections.add(connection)
         connection
     }
+    /** A denied END still needs the vendor cursor reset, including on rollback failure.
+     * Preserve the access-denial primary; cleanup is not another application transaction.
+     */
+    private fun rollbackDeniedCommit(connection: SQLiteConnection, primary: B2Exception) {
+        try {
+            val statement=connection.prepare("ROLLBACK TRANSACTION").let { resources?.statement?.invoke(it) ?: it }
+            val cleanup=B2StatementCleanup(statement)
+            AutoCloseable { cleanup.close() }.use { statement.step() }
+        } catch (cleanup: Throwable) {
+            if(cleanup !== primary)primary.addSuppressed(cleanup)
+        }
+    }
     override fun close() {
         if (closing.compareAndSet(false, true)) {
             // Connection close must be possible even after revocation.
             var failure: Throwable? = null
             try { connections.forEach { connection ->
-                try { connection.close() } catch (error: Throwable) { if (failure == null) failure = error }
+                try { connection.close() } catch (error: Throwable) { if (failure == null) failure = error else if (failure !== error) failure.addSuppressed(error) }
             } } finally { connections.clear(); bytes.fill(0) }
-            if (failure != null) throw B2Exception(B2Failure.BLOCKED)
+            // Keep the original connection failure and every later close failure.
+            failure?.let { throw it }
+            resources?.closed?.invoke(resourcesClosed())
         }
     }
     fun resourcesClosed() = closed && nativeConnections.none { it.isOpen } && bytes.all { it == 0.toByte() }

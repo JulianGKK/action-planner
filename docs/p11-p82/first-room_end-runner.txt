@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P82_CASE,room_end,GREEN,scenario=room_end,statements=2,closed=2,cursors=2,windows=2,window_ptrs_zero=true,room_closed=true,driver_closed=true,lease_wiped=true,failure=B2Exception,suppressed=1,rows=0,readers=1,tickets=1,partial_core=false,fd_before=133,fd_after=131,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P82 PASS room_end; actual Runtime/Room/SQLCipher/keyowner/VM; synthetic credentials; fault kind in report
+INSTRUMENTATION_CODE: -1

@@ -1,0 +1,6 @@
+INSTRUMENTATION_RESULT: result=P82 FAIL success: java.lang.IllegalStateException: Timed out: real materialized core
+	at org.pag.prototype.P82RoomCleanupProbe.waitFor(P82RoomCleanupProbe.kt:27)
+	at org.pag.prototype.P82RoomCleanupProbe.onStart(P82RoomCleanupProbe.kt:50)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+INSTRUMENTATION_CODE: 0

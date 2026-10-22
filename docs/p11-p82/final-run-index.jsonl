@@ -1,0 +1,14 @@
+{"run": "final", "case": "success", "result": "ANDROID-GREEN", "elapsed_s": 9.243}
+{"run": "final", "case": "native_step", "result": "ANDROID-GREEN", "elapsed_s": 8.439}
+{"run": "final", "case": "native_getter", "result": "ANDROID-GREEN", "elapsed_s": 8.504}
+{"run": "final", "case": "row_failure", "result": "ANDROID-GREEN", "elapsed_s": 8.697}
+{"run": "final", "case": "row_revoke", "result": "ANDROID-GREEN", "elapsed_s": 8.68}
+{"run": "final", "case": "reset_after", "result": "ANDROID-GREEN", "elapsed_s": 8.479}
+{"run": "final", "case": "close_after", "result": "ANDROID-GREEN", "elapsed_s": 8.488}
+{"run": "final", "case": "both_after", "result": "ANDROID-GREEN", "elapsed_s": 8.504}
+{"run": "final", "case": "row_and_room_end", "result": "ANDROID-GREEN", "elapsed_s": 8.718}
+{"run": "final", "case": "room_end", "result": "ANDROID-GREEN", "elapsed_s": 9.097}
+{"run": "final", "case": "driver_end", "result": "ANDROID-GREEN", "elapsed_s": 9.072}
+{"run": "final", "case": "key_end", "result": "ANDROID-GREEN", "elapsed_s": 9.041}
+{"run": "final", "case": "cleanup_revoke", "result": "ANDROID-GREEN", "elapsed_s": 9.093}
+{"run": "final", "case": "commit_revoke", "result": "ANDROID-GREEN", "elapsed_s": 9.074}

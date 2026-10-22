@@ -1,0 +1,13 @@
+{"run": "first", "case": "success", "result": "ANDROID-RED", "elapsed_s": 97.182}
+{"run": "first", "case": "native_step", "result": "ANDROID-GREEN", "elapsed_s": 8.425}
+{"run": "first", "case": "native_getter", "result": "ANDROID-GREEN", "elapsed_s": 8.424}
+{"run": "first", "case": "row_failure", "result": "ANDROID-GREEN", "elapsed_s": 8.418}
+{"run": "first", "case": "row_revoke", "result": "ANDROID-GREEN", "elapsed_s": 8.414}
+{"run": "first", "case": "reset_after", "result": "ANDROID-GREEN", "elapsed_s": 8.372}
+{"run": "first", "case": "close_after", "result": "ANDROID-GREEN", "elapsed_s": 8.459}
+{"run": "first", "case": "both_after", "result": "ANDROID-GREEN", "elapsed_s": 8.46}
+{"run": "first", "case": "row_and_room_end", "result": "ANDROID-RED", "elapsed_s": 8.353}
+{"run": "first", "case": "room_end", "result": "ANDROID-GREEN", "elapsed_s": 8.446}
+{"run": "first", "case": "driver_end", "result": "ANDROID-GREEN", "elapsed_s": 8.406}
+{"run": "first", "case": "key_end", "result": "ANDROID-GREEN", "elapsed_s": 8.41}
+{"run": "first", "case": "cleanup_revoke", "result": "ANDROID-GREEN", "elapsed_s": 8.47}

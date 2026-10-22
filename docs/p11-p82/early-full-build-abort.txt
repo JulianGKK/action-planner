@@ -1,0 +1,329 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :verifyArchitecture
+> Task :app:preBuild
+> Task :app:preDebugBuild
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin UP-TO-DATE
+> Task :data:compileDebugKotlin UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :security:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :security:extractDeepLinksDebug UP-TO-DATE
+> Task :security:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :security:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:preDebugUnitTestBuild
+> Task :app:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :app:testDebugUnitTest
+> Task :data:preDebugUnitTestBuild
+> Task :data:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :data:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :data:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :data:testDebugUnitTest
+> Task :security:preDebugUnitTestBuild
+> Task :security:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :security:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :security:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :security:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :security:testDebugUnitTest UP-TO-DATE
+> Task :domain:compileTestKotlin NO-SOURCE
+> Task :domain:compileTestJava NO-SOURCE
+> Task :domain:processTestResources NO-SOURCE
+> Task :domain:testClasses
+> Task :domain:test NO-SOURCE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :data:generateDebugAssets UP-TO-DATE
+> Task :data:mergeDebugAssets UP-TO-DATE
+> Task :security:generateDebugAssets UP-TO-DATE
+> Task :security:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :security:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :data:bundleLibRuntimeToDirDebug
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :data:configureNdkBuildDebug[arm64-v8a]
+> Task :data:buildNdkBuildDebug[arm64-v8a]
+> Task :data:configureNdkBuildDebug[armeabi-v7a]
+> Task :data:buildNdkBuildDebug[armeabi-v7a]
+> Task :data:configureNdkBuildDebug[x86]
+> Task :data:buildNdkBuildDebug[x86]
+> Task :data:configureNdkBuildDebug[x86_64]
+> Task :data:buildNdkBuildDebug[x86_64]
+> Task :data:mergeDebugJniLibFolders UP-TO-DATE
+> Task :data:mergeDebugNativeLibs UP-TO-DATE
+> Task :data:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :security:mergeDebugJniLibFolders UP-TO-DATE
+> Task :security:mergeDebugNativeLibs NO-SOURCE
+> Task :security:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:preparePrototypeDebugKeystore UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:preReleaseBuild
+> Task :app:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :data:preReleaseBuild
+> Task :data:configureNdkBuildRelease[arm64-v8a]
+> Task :data:buildNdkBuildRelease[arm64-v8a]
+> Task :data:configureNdkBuildRelease[armeabi-v7a]
+> Task :data:buildNdkBuildRelease[armeabi-v7a]
+> Task :data:configureNdkBuildRelease[x86]
+> Task :data:buildNdkBuildRelease[x86]
+> Task :data:configureNdkBuildRelease[x86_64]
+> Task :app:mergeLibDexDebug
+> Task :data:buildNdkBuildRelease[x86_64]
+> Task :data:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :data:mergeReleaseNativeLibs UP-TO-DATE
+> Task :data:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :security:preReleaseBuild
+> Task :security:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :security:mergeReleaseNativeLibs NO-SOURCE
+> Task :security:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeReleaseNativeLibs UP-TO-DATE
+> Task :app:stripReleaseDebugSymbols UP-TO-DATE
+> Task :app:extractReleaseNativeSymbolTables UP-TO-DATE
+> Task :app:mergeReleaseNativeDebugMetadata UP-TO-DATE
+> Task :data:generateReleaseResources UP-TO-DATE
+> Task :data:packageReleaseResources UP-TO-DATE
+> Task :data:processReleaseNavigationResources UP-TO-DATE
+> Task :data:parseReleaseLocalResources UP-TO-DATE
+> Task :data:generateReleaseRFile UP-TO-DATE
+> Task :security:generateReleaseResources UP-TO-DATE
+> Task :security:packageReleaseResources UP-TO-DATE
+> Task :security:processReleaseNavigationResources UP-TO-DATE
+> Task :security:parseReleaseLocalResources UP-TO-DATE
+> Task :security:generateReleaseRFile UP-TO-DATE
+> Task :security:compileReleaseKotlin UP-TO-DATE
+> Task :security:javaPreCompileRelease UP-TO-DATE
+> Task :security:compileReleaseJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :data:javaPreCompileRelease UP-TO-DATE
+> Task :security:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :app:checkReleaseDuplicateClasses UP-TO-DATE
+> Task :app:generateReleaseBuildConfig UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :app:packageReleaseResources UP-TO-DATE
+> Task :app:processReleaseNavigationResources UP-TO-DATE
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+> Task :app:generateReleaseRFile UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :data:writeReleaseAarMetadata UP-TO-DATE
+> Task :security:writeReleaseAarMetadata UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:compileReleaseNavigationResources UP-TO-DATE
+> Task :app:mergeReleaseResources UP-TO-DATE
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :data:extractDeepLinksRelease UP-TO-DATE
+> Task :data:processReleaseManifest UP-TO-DATE
+> Task :security:extractDeepLinksRelease UP-TO-DATE
+> Task :security:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseMainManifest UP-TO-DATE
+> Task :app:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+> Task :data:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :data:compileReleaseLibraryResources UP-TO-DATE
+> Task :security:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :security:compileReleaseLibraryResources UP-TO-DATE
+> Task :app:processReleaseResources UP-TO-DATE
+> Task :app:desugarReleaseFileDependencies UP-TO-DATE
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexRelease UP-TO-DATE
+> Task :data:prepareReleaseArtProfile UP-TO-DATE
+> Task :security:prepareReleaseArtProfile UP-TO-DATE
+> Task :app:mergeReleaseArtProfile UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :data:generateReleaseAssets UP-TO-DATE
+> Task :data:mergeReleaseAssets UP-TO-DATE
+> Task :security:generateReleaseAssets UP-TO-DATE
+> Task :security:mergeReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets UP-TO-DATE
+> Task :app:compressReleaseAssets UP-TO-DATE
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :data:extractProguardFiles UP-TO-DATE
+> Task :security:processReleaseJavaRes UP-TO-DATE
+> Task :security:createFullJarRelease UP-TO-DATE
+> Task :security:extractProguardFiles UP-TO-DATE
+> Task :security:generateReleaseLintModel UP-TO-DATE
+> Task :security:prepareLintJarForPublish UP-TO-DATE
+> Task :data:prepareLintJarForPublish UP-TO-DATE
+> Task :data:checkReleaseAarMetadata UP-TO-DATE
+> Task :data:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :security:checkReleaseAarMetadata UP-TO-DATE
+> Task :security:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :security:extractReleaseAnnotations UP-TO-DATE
+> Task :security:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :security:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :security:mergeReleaseJavaResource UP-TO-DATE
+> Task :security:syncReleaseLibJars UP-TO-DATE
+> Task :security:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :security:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :data:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :security:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :security:generateReleaseLintVitalModel UP-TO-DATE
+> Task :app:optimizeReleaseResources UP-TO-DATE
+> Task :app:collectReleaseDependencies UP-TO-DATE
+> Task :app:sdkReleaseDependencyData UP-TO-DATE
+> Task :app:writeReleaseAppMetadata UP-TO-DATE
+> Task :app:writeReleaseSigningConfigVersions UP-TO-DATE
+> Task :data:preDebugAndroidTestBuild
+> Task :data:generateDebugAndroidTestResources UP-TO-DATE
+> Task :data:packageDebugAndroidTestResources UP-TO-DATE
+> Task :data:processDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :data:parseDebugAndroidTestLocalResources UP-TO-DATE
+> Task :data:generateDebugAndroidTestRFile UP-TO-DATE
+> Task :data:kspDebugAndroidTestKotlin
+> Task :app:preDebugAndroidTestBuild SKIPPED
+
+> Task :app:mergeDebugAndroidTestManifest
+/home/julian-tio-valenzuela/Projekte/action-planner/app/build/intermediates/tmp/manifest/androidTest/debug/tempFile2ProcessTestManifest7440839084646204507.xml:10:5-16:40 Warning:
+	instrumentation@android:name was tagged at tempFile2ProcessTestManifest7440839084646204507.xml:10 to replace other declarations but no other declaration present
+
+> Task :app:processDebugAndroidTestManifest
+> Task :app:generateDebugAndroidTestBuildConfig
+> Task :app:generateDebugAndroidTestResources UP-TO-DATE
+> Task :app:packageDebugAndroidTestResources UP-TO-DATE
+> Task :app:processDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :app:parseDebugAndroidTestLocalResources UP-TO-DATE
+> Task :app:generateDebugAndroidTestRFile UP-TO-DATE
+> Task :app:verifyPrototypeManifest
+> Task :app:preDemoBuild
+> Task :app:createDemoCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDemo UP-TO-DATE
+> Task :app:processDemoMainManifest UP-TO-DATE
+> Task :app:processDemoManifest UP-TO-DATE
+> Task :app:verifyDemoManifest
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+
+> Task :app:compileDebugAndroidTestKotlin
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt:40:48 Unresolved reference 'diagnostic'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt:55:115 Unresolved reference 'diagnostic' on receiver of type 'P82CleanupFaults'.
+
+> Task :app:compileDebugAndroidTestKotlin FAILED
+> Task :data:kspReleaseKotlin
+
+> Task :data:compileDebugAndroidTestKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ActionLifecycleStorageTest.kt:166:45 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:58:163 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Role'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:62:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Role'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:62:159 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Role'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:67:94 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Person'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:102:44 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Person'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:112:38 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Person'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/DocumentPdfStorageTest.kt:66:63 The corresponding parameter in the supertype 'DocumentPdfInput' is named 'count'. This may cause problems when calling this function with named arguments.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/MaterialStorageTest.kt:90:34 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MaterialItem'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/MaterialStorageTest.kt:90:94 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MaterialItem'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/MaterialStorageTest.kt:91:27 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MaterialItem'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/P74WindowGrowthTest.kt:43:59 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/P74WindowGrowthTest.kt:44:54 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/P74WindowGrowthTest.kt:49:54 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/P74WindowGrowthTest.kt:50:65 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/P74WindowGrowthTest.kt:53:51 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/PersonStorageTest.kt:81:82 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Person'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/PersonStorageTest.kt:82:44 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Person'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ProtocolStorageTest.kt:94:64 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProtocolEntryDetail'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ProtocolStorageTest.kt:100:30 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProtocolSaved'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ProtocolStorageTest.kt:101:26 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProtocolEntryDetail'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ProtocolStorageTest.kt:101:79 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProtocolEntryDetail'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ProtocolStorageTest.kt:102:39 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProtocolEntryDetail'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:84:79 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Task'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:85:30 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Task'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:132:21 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Task'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:132:25 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Task'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:133:27 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Task'.
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugAndroidTestKotlin' (registered by plugin 'com.android.internal.application').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Kotlin compiler: UNRESOLVED_REFERENCE
+       Kotlin compiler error
+         Unresolved reference 'diagnostic'.
+         Location: /home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt line 40
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 5m 49s
+230 actionable tasks: 32 executed, 198 up-to-date

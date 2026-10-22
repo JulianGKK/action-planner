@@ -118,7 +118,7 @@ class ProductRuntime private constructor(activity: Activity, private val worker:
      * This is a transient candidate path only; ProductViewModel retention/RAM hits remain off.
      */
     private val activeCoreReader = ProductActiveCoreReader(activity.applicationContext,session,inventory,
-        {owner.get()},blocked=session::storageFailure)
+        {owner.get()},blocked=session::storageFailure,testHooks=testAuthority?.coreReadHooks)
     val activeCore = ProductActiveCoreLoader(testAuthority?.coreAccess?.invoke(session) ?: session,workspaceMutations,worker,main,activeCoreReader::readForTicket,
         reuseEnabled = testAuthority?.reuseEnabled == true, observation = testAuthority?.observation)
 }
@@ -134,7 +134,8 @@ internal data class ProductRuntimeTestAuthority(
     val envelopeValid: () -> Boolean,
     val reuseEnabled: Boolean = false,
     val observation: ActiveCoreLoadObservation? = null,
-    val coreAccess: ((StorageAccess) -> StorageAccess)? = null
+    val coreAccess: ((StorageAccess) -> StorageAccess)? = null,
+    val coreReadHooks: CoreReadTestHooks? = null
 )
 
 /** Runs as a secondary-constructor argument, before the primary constructor initializes resources. */

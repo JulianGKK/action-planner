@@ -1,0 +1,203 @@
+Compiled from "SQLCipherConnection.java"
+public class net.zetetic.database.sqlcipher.driver.SQLCipherConnection implements androidx.sqlite.SQLiteConnection {
+  private final net.zetetic.database.sqlcipher.SQLiteDatabase database;
+
+  public net.zetetic.database.sqlcipher.driver.SQLCipherConnection(net.zetetic.database.sqlcipher.SQLiteDatabase);
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: aload_1
+       6: putfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+       9: return
+
+  public androidx.sqlite.SQLiteStatement prepare(java.lang.String);
+    Code:
+       0: aload_1
+       1: invokevirtual #13                 // Method java/lang/String.trim:()Ljava/lang/String;
+       4: astore_2
+       5: aload_2
+       6: invokestatic  #19                 // Method statementPrefix:(Ljava/lang/String;)Ljava/lang/String;
+       9: astore_3
+      10: aload_3
+      11: ifnull        46
+      14: aload_3
+      15: aload_2
+      16: invokestatic  #23                 // Method isJournalModeSet:(Ljava/lang/String;Ljava/lang/String;)Z
+      19: ifeq          46
+      22: new           #27                 // class net/zetetic/database/sqlcipher/driver/JournalModeStatement
+      25: dup
+      26: aload_0
+      27: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+      30: new           #29                 // class net/zetetic/database/sqlcipher/driver/SQLCipherStatement
+      33: dup
+      34: aload_0
+      35: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+      38: aload_1
+      39: invokespecial #31                 // Method net/zetetic/database/sqlcipher/driver/SQLCipherStatement."<init>":(Lnet/zetetic/database/sqlcipher/SQLiteDatabase;Ljava/lang/String;)V
+      42: invokespecial #34                 // Method net/zetetic/database/sqlcipher/driver/JournalModeStatement."<init>":(Lnet/zetetic/database/sqlcipher/SQLiteDatabase;Landroidx/sqlite/SQLiteStatement;)V
+      45: areturn
+      46: new           #29                 // class net/zetetic/database/sqlcipher/driver/SQLCipherStatement
+      49: dup
+      50: aload_0
+      51: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+      54: aload_1
+      55: invokespecial #31                 // Method net/zetetic/database/sqlcipher/driver/SQLCipherStatement."<init>":(Lnet/zetetic/database/sqlcipher/SQLiteDatabase;Ljava/lang/String;)V
+      58: areturn
+
+  public boolean inTransaction();
+    Code:
+       0: aload_0
+       1: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+       4: invokevirtual #37                 // Method net/zetetic/database/sqlcipher/SQLiteDatabase.inTransaction:()Z
+       7: ireturn
+
+  public void changePassword(byte[]);
+    Code:
+       0: aload_0
+       1: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+       4: aload_1
+       5: invokevirtual #43                 // Method net/zetetic/database/sqlcipher/SQLiteDatabase.changePassword:([B)V
+       8: return
+
+  public void close();
+    Code:
+       0: aload_0
+       1: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+       4: invokevirtual #47                 // Method net/zetetic/database/sqlcipher/SQLiteDatabase.close:()V
+       7: return
+
+  static boolean isJournalModeSet(java.lang.String, java.lang.String);
+    Code:
+       0: ldc           #50                 // String PRA
+       2: aload_0
+       3: invokevirtual #52                 // Method java/lang/String.equalsIgnoreCase:(Ljava/lang/String;)Z
+       6: ifne          11
+       9: iconst_0
+      10: ireturn
+      11: aload_1
+      12: invokevirtual #56                 // Method java/lang/String.toLowerCase:()Ljava/lang/String;
+      15: astore_2
+      16: aload_2
+      17: ldc           #59                 // String journal_mode
+      19: invokevirtual #61                 // Method java/lang/String.indexOf:(Ljava/lang/String;)I
+      22: istore_3
+      23: iload_3
+      24: iflt          41
+      27: aload_2
+      28: bipush        61
+      30: iload_3
+      31: invokevirtual #65                 // Method java/lang/String.indexOf:(II)I
+      34: iflt          41
+      37: iconst_1
+      38: goto          42
+      41: iconst_0
+      42: ireturn
+
+  static java.lang.String statementPrefix(java.lang.String);
+    Code:
+       0: aload_0
+       1: invokevirtual #68                 // Method java/lang/String.length:()I
+       4: iconst_2
+       5: isub
+       6: istore_1
+       7: iload_1
+       8: ifge          13
+      11: aconst_null
+      12: areturn
+      13: iconst_0
+      14: istore_2
+      15: iload_2
+      16: iflt          150
+      19: iload_2
+      20: iload_1
+      21: if_icmpge     150
+      24: aload_0
+      25: iload_2
+      26: invokevirtual #72                 // Method java/lang/String.charAt:(I)C
+      29: istore_3
+      30: iload_3
+      31: bipush        32
+      33: if_icmpgt     42
+      36: iinc          2, 1
+      39: goto          147
+      42: iload_3
+      43: bipush        45
+      45: if_icmpne     85
+      48: aload_0
+      49: iload_2
+      50: iconst_1
+      51: iadd
+      52: invokevirtual #72                 // Method java/lang/String.charAt:(I)C
+      55: bipush        45
+      57: if_icmpeq     63
+      60: goto          150
+      63: aload_0
+      64: bipush        10
+      66: iload_2
+      67: iconst_2
+      68: iadd
+      69: invokevirtual #65                 // Method java/lang/String.indexOf:(II)I
+      72: istore_2
+      73: iload_2
+      74: ifge          79
+      77: aconst_null
+      78: areturn
+      79: iinc          2, 1
+      82: goto          147
+      85: iload_3
+      86: bipush        47
+      88: if_icmpne     150
+      91: aload_0
+      92: iload_2
+      93: iconst_1
+      94: iadd
+      95: invokevirtual #72                 // Method java/lang/String.charAt:(I)C
+      98: bipush        42
+     100: if_icmpeq     106
+     103: goto          150
+     106: iinc          2, 1
+     109: aload_0
+     110: bipush        42
+     112: iload_2
+     113: iconst_1
+     114: iadd
+     115: invokevirtual #65                 // Method java/lang/String.indexOf:(II)I
+     118: istore_2
+     119: iload_2
+     120: ifge          125
+     123: aconst_null
+     124: areturn
+     125: iload_2
+     126: iconst_1
+     127: iadd
+     128: iload_1
+     129: if_icmpge     144
+     132: aload_0
+     133: iload_2
+     134: iconst_1
+     135: iadd
+     136: invokevirtual #72                 // Method java/lang/String.charAt:(I)C
+     139: bipush        47
+     141: if_icmpne     109
+     144: iinc          2, 2
+     147: goto          15
+     150: iload_2
+     151: iflt          162
+     154: iload_2
+     155: aload_0
+     156: invokevirtual #68                 // Method java/lang/String.length:()I
+     159: if_icmplt     164
+     162: aconst_null
+     163: areturn
+     164: aload_0
+     165: iload_2
+     166: iload_2
+     167: iconst_3
+     168: iadd
+     169: aload_0
+     170: invokevirtual #68                 // Method java/lang/String.length:()I
+     173: invokestatic  #76                 // Method java/lang/Math.min:(II)I
+     176: invokevirtual #81                 // Method java/lang/String.substring:(II)Ljava/lang/String;
+     179: areturn
+}

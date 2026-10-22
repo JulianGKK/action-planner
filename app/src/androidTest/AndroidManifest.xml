@@ -36,4 +36,5 @@
     <instrumentation android:name="org.pag.prototype.P76DemoPreviewProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P77RuntimeE2EProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P81ActiveRevokeProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P82RoomCleanupProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

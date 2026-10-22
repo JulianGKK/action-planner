@@ -21,7 +21,8 @@ class P77ProductRuntimeHarness private constructor(
     private val fixture: P11SyntheticFixture,
     val observations: Observations,
     val mutations:UncachedWorkspaceMutations,
-    val faults:P81RuntimeFaults
+    val faults:P81RuntimeFaults,
+    val cleanupFaults:P82CleanupFaults
 ) : AutoCloseable {
     class Observations internal constructor(private val faults:P81RuntimeFaults) : ActiveCoreLoadObservation {
         val tickets = AtomicInteger()
@@ -61,11 +62,12 @@ class P77ProductRuntimeHarness private constructor(
                 taskCountPerAction = 1000, personCountPerAction = 200, baseDirectory = base)
             return try {
                 val faults=P81RuntimeFaults()
+                val cleanupFaults=P82CleanupFaults()
                 val observations=Observations(faults)
                 val mutations=UncachedWorkspaceMutations()
                 val runtime = ProductRuntime(activity, faults.worker.wrap(worker), faults.main.wrap(main), mutations,
-                    fixture.runtimeAuthority(reuseEnabled = true,observations,faults::wrap), foreground)
-                P77ProductRuntimeHarness(runtime, fixture,observations,mutations,faults)
+                    fixture.runtimeAuthority(reuseEnabled = true,observations,faults::wrap).copy(coreReadHooks=cleanupFaults.hooks), foreground)
+                P77ProductRuntimeHarness(runtime, fixture,observations,mutations,faults,cleanupFaults)
             } catch (error: Throwable) {
                 fixture.close()
                 throw error
