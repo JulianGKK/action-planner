@@ -13,7 +13,8 @@ internal class ProductActiveCoreLifetime(
     private val laneTicket: Long,
     private val owner: Thread,
     private val loadCurrent: () -> Boolean,
-    private val hitObservation: (Boolean,Long) -> Unit = {_,_->}
+    private val hitObservation: (Boolean,Long) -> Unit = {_,_->},
+    private val memory:OutstandingCoreRead.Read?=null
 ) : ActiveCoreLifetime {
     private val closed=AtomicBoolean(false)
     private val listener=AtomicReference<(() -> Unit)?>(null)
@@ -62,10 +63,13 @@ internal class ProductActiveCoreLifetime(
         if(closed.get() || !ticket.isLive()) listener.getAndSet(null)?.invoke()
         return Subscription { listener.compareAndSet(invalidate,null) }
     }
+    override fun compositionObserved(){memory?.compositionObserved()}
+    override fun compositionDisposed(){memory?.compositionDisposed()}
     override fun close() {
         if(closed.compareAndSet(false,true)) {
             mutations.revokeActiveRead(ticket)
             listener.getAndSet(null)?.let { runCatching(it) }
+            memory?.revoke()
         }
         registration.getAndSet(null)?.cancel()
     }

@@ -10,7 +10,8 @@ import org.pag.domain.*
 internal class ActiveCoreStore(private val sql: PooledConnection, private val context: StorageContext,
     private val current: () -> Boolean, private val observe: (Phase) -> Unit = {},
     private val measured: (Metric, Long) -> Unit = { _, _ -> },
-    private val report: (CoreReadAdmission.Report) -> Unit = {}) {
+    private val report: (CoreReadAdmission.Report) -> Unit = {},
+    private val outstanding: ((ActiveCoreReservation,Long,Long)->Unit)? = null) {
     enum class Phase { METADATA, ADMITTED, PEOPLE_ROW, TASK_ROW, COMPLETE }
     enum class Metric { METADATA, ADMISSION, MATERIALIZATION }
     private fun gate() {
@@ -33,6 +34,7 @@ internal class ActiveCoreStore(private val sql: PooledConnection, private val co
         val admissionStart = System.nanoTime()
         val admission = try { CoreReadAdmission.admit(listOf(people, tasks), envelope, report) }
             finally { measured(Metric.ADMISSION, System.nanoTime() - admissionStart) }
+        outstanding?.invoke(admission.reservation,admission.retained,admission.transition)
         observe(Phase.ADMITTED); gate()
         val materializationStart = System.nanoTime()
         val personPayload = people.materialize(admission)

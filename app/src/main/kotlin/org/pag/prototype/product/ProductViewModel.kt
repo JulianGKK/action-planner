@@ -33,7 +33,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         activeCorePort=port;ownerDispatch=dispatch
     }
     private fun dropCoreAuthority() { coreSlot.getAndSet(null)?.close() }
-    private fun clearActiveCore() { coreLoad=null;dropCoreAuthority();coreSignal++ }
+    private fun clearActiveCore() { coreLoad=null;activeCorePort?.cancelPending();dropCoreAuthority();coreSignal++ }
     val compactActiveMode get() = activeCorePort!=null && !fullActiveView && selected?.status==ActionStatus.ACTIVE &&
         activeArea in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS) &&
         selectedPerson==null && !personForm && !tasks.form && tasks.selected==null && operations.screen==OperationsScreen.OVERVIEW
@@ -48,9 +48,15 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         }
         return core
     }
+    /** Return only the ORIGINAL metadata lifetime. No payload/authority registry. */
+    fun observeActiveCoreComposition(core:ActiveCorePayload):ActiveCoreLifetime? {
+        val slot=coreSlot.get()?.takeIf{it.value.core===core} ?: return null
+        slot.lifetime.compositionObserved()
+        return slot.lifetime
+    }
     fun useFullActiveView() {
         if(!activeNavigationEnabled)return
-        clearActiveCore();fullActiveView=true;readWorkspace()
+        clearActiveCore();activeCorePort?.fullViewStarting();fullActiveView=true;readWorkspace()
     }
     private fun loadActiveCore() {
         val port=activeCorePort ?: return
@@ -378,7 +384,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private fun readWorkspace(expectedAction:Action?=null,onOpeningRejected:(()->Unit)?=null) {
         val action = selected?.takeIf { personsVisible } ?: return
         if(compactActiveMode) {loadActiveCore();return}
-        if(activeCorePort!=null)clearActiveCore()
+        if(activeCorePort!=null){clearActiveCore();activeCorePort?.fullViewStarting()}
         val generation = snapshot.generation
         val request = ++workspaceRequest
         val previous = workspace

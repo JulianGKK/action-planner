@@ -1,0 +1,13 @@
+{"series": "final", "fixture": "roles32", "case": "multi_pending", "status": "ANDROID-GREEN", "seconds": 11.479}
+{"series": "final", "fixture": "large", "case": "normal_editor", "status": "ANDROID-GREEN", "seconds": 16.495}
+{"series": "final", "fixture": "large", "case": "pending_discard", "status": "ANDROID-GREEN", "seconds": 13.562}
+{"series": "final", "fixture": "large", "case": "pending_generation", "status": "ANDROID-GREEN", "seconds": 17.346}
+{"series": "final", "fixture": "large", "case": "pending_lost", "status": "ANDROID-GREEN", "seconds": 10.974}
+{"series": "final", "fixture": "roles100", "case": "budget", "status": "ANDROID-RED", "seconds": 98.429}
+{"series": "final", "fixture": "large", "case": "worker_revoke", "status": "ANDROID-GREEN", "seconds": 10.284}
+{"series": "final", "fixture": "large", "case": "core_writer", "status": "ANDROID-GREEN", "seconds": 12.38}
+{"series": "final", "fixture": "large", "case": "document_writer", "status": "ANDROID-GREEN", "seconds": 11.156}
+{"series": "final", "fixture": "large", "case": "generation", "status": "ANDROID-GREEN", "seconds": 13.705}
+{"series": "final", "fixture": "large", "case": "action", "status": "ANDROID-GREEN", "seconds": 11.149}
+{"series": "final", "fixture": "large", "case": "blocked", "status": "ANDROID-GREEN", "seconds": 11.169}
+{"series": "final", "fixture": "large", "case": "unknown", "status": "ANDROID-GREEN", "seconds": 11.127}

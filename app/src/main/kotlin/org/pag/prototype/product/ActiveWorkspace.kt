@@ -3,6 +3,7 @@ package org.pag.prototype.product
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
@@ -99,6 +100,10 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
     if(model.compactActiveMode) {
         val core=model.activeCore
         if(core==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
+        val lifetime=model.observeActiveCoreComposition(core)
+        DisposableEffect(lifetime) {
+            onDispose {lifetime?.compositionDisposed()}
+        }
         key(model.activeArea) {
             CompactActiveContent(core,model.activeArea,model.activeNavigationEnabled,model::activeArea,contentFrames)
         }

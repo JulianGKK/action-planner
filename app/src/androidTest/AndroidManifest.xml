@@ -38,4 +38,5 @@
     <instrumentation android:name="org.pag.prototype.P81ActiveRevokeProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P82RoomCleanupProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P83MemoryOverlapProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P84OutstandingCoreProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

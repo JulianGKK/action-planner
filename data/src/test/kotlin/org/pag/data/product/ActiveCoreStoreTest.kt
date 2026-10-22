@@ -86,7 +86,8 @@ class ActiveCoreStoreTest {
                 if (statement.startsWith("SELECT rowid,")) assertTrue("No payload before JOINT admission",ActiveCoreStore.Phase.ADMITTED in phases)
             }
         }
-        fun read(person: String? = null, connection: PooledConnection = db): ActiveCoreResult {
+        fun read(person: String? = null, connection: PooledConnection = db,
+            outstanding:((ActiveCoreReservation,Long,Long)->Unit)?=null): ActiveCoreResult {
             phases.clear();metrics.clear();queries.clear();admission=null
             val start = System.nanoTime()
             val result = activeCoreRead(requested, object : StorageAccess {
@@ -102,7 +103,7 @@ class ActiveCoreStoreTest {
                                 if(it==ActiveCoreStore.Phase.METADATA || it==ActiveCoreStore.Phase.ADMITTED)
                                     assertEquals(0,db.blobReads - blobsAtStart)
                                 phase(it)
-                            }, { metric,nanos -> metrics[metric]=nanos }, { admission=it }).read(requested,person)
+                            }, { metric,nanos -> metrics[metric]=nanos }, { admission=it },outstanding).read(requested,person)
                         } finally {
                             db.execute("ROLLBACK");handleOpen=false
                             assertEquals(0,db.openStatements);afterDatabaseCleanup()

@@ -1,0 +1,38 @@
+INSTRUMENTATION_STATUS: stream=P84_PHASE,large,action,reader_window_open,t_ns=1164922293381771,vm_id=0,compose_ids=,queued_ids=,state=State(phase=WORKER_MATERIALIZING, retained=1655712, transition=8388608, localRetained=1655712, localTransition=6599040, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED),statements=65,statements_closed=64,cursors=65,cursors_open=1,windows=65,windows_live=1,window_rows=1,room_closed=false,driver_closed=false,preflight_closed=true,keylease_live=true,art_used=47402608,native_heap=12333616,pss_kib=182442,fd=137,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_PHASE,large,action,candidate_worker_complete,t_ns=1164922832430781,vm_id=0,compose_ids=,queued_ids=,state=State(phase=WORKER_MATERIALIZING, retained=1655712, transition=8388608, localRetained=1655712, localTransition=6599040, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED),statements=70,statements_closed=70,cursors=70,cursors_open=0,windows=70,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=13981048,native_heap=11002000,pss_kib=150454,fd=135,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_PHASE,large,action,main_pending,t_ns=1164922884705990,vm_id=0,compose_ids=,queued_ids=60752123,state=State(phase=MAIN_PENDING, retained=1655712, transition=8388608, localRetained=1655712, localTransition=6599040, pendingCandidates=1, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED),statements=70,statements_closed=70,cursors=70,cursors_open=0,windows=70,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=15373688,native_heap=11002096,pss_kib=151835,fd=135,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_PHASE,large,action,pending_refusal_second_and_third,t_ns=1164922913929323,vm_id=0,compose_ids=,queued_ids=60752123,state=State(phase=MAIN_PENDING, retained=1655712, transition=8388608, localRetained=1655712, localTransition=6599040, pendingCandidates=1, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=OUTSTANDING_READ, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED),statements=70,statements_closed=70,cursors=70,cursors_open=0,windows=70,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=16782712,native_heap=11002560,pss_kib=153215,fd=135,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_CLEANUP,first,statements=70,statements_closed=70,cursors=70,cursors_open=0,windows=70,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,lease_wiped=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_PHASE,large,action,old_composed,t_ns=1164923039134167,vm_id=60752123,compose_ids=60752123,queued_ids=,state=State(phase=RETAINED, retained=1655712, transition=8388608, localRetained=1655712, localTransition=6599040, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=OUTSTANDING_READ, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED),statements=70,statements_closed=70,cursors=0,cursors_open=0,windows=0,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=15302400,native_heap=11050912,pss_kib=152441,fd=134,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_ROOT,old_composed,60752123,CompositionImpl.slotStorage.slots[285].scope.owner.slotStorage.slots[146]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_PHASE,large,action,new_composed,t_ns=1164923134832083,vm_id=60752123,compose_ids=60752123,queued_ids=,state=State(phase=RETAINED, retained=1655712, transition=8388608, localRetained=1655712, localTransition=6599040, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=OUTSTANDING_READ, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED),statements=70,statements_closed=70,cursors=0,cursors_open=0,windows=0,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=16580352,native_heap=11052080,pss_kib=153428,fd=134,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_ROOT,new_composed,60752123,CompositionImpl.parent.compositionInvalidations.content[1].slotStorage.slots[146]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_PHASE,large,action,revoked_or_denied_no_new_candidate,t_ns=1164923185114010,vm_id=0,compose_ids=,queued_ids=,state=State(phase=COMPOSE_TRANSITION, retained=0, transition=8388608, localRetained=1655712, localTransition=6599040, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=FULL_VIEW_UNCONFIRMED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED),statements=70,statements_closed=70,cursors=0,cursors_open=0,windows=0,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=17153792,native_heap=11148688,pss_kib=154056,fd=134,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_CONTRACT,large,action,reads=1,tickets=1,hits=16,max_pending_candidates=1,full_transition_reservation=8388608,State(phase=COMPOSE_TRANSITION, retained=0, transition=8388608, localRetained=1655712, localTransition=6599040, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=FULL_VIEW_UNCONFIRMED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_CASE,large,action,ANDROID-GREEN,joint_memory_certification=false,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P84 PASS large action; production backpressure; frame/native certification BLOCKED
+INSTRUMENTATION_CODE: -1

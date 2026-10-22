@@ -45,11 +45,18 @@ interface ActiveCoreLifetime {
     fun publish(install: () -> Unit): Boolean
     /** One consumer; invalidation may run synchronously on a foreign session thread. */
     fun onInvalidated(invalidate: () -> Unit): Subscription
+    /** Presentation evidence only. Disposal is NOT permission or physical frame retirement. */
+    fun compositionObserved() {}
+    fun compositionDisposed() {}
     fun close()
 }
 
 interface ActiveCoreLoadPort {
     /** Runtime default is false. A UI switch cannot grant reuse. */
     val reuseEnabled: Boolean get() = false
+    /** Cancels only the pending handoff, never frees a published Compose graph by assumption. */
+    fun cancelPending() {}
+    /** Unknown full-projection costs fence later compact reads; full functionality stays separate. */
+    fun fullViewStarting() {}
     fun loadOwned(actionId: String, callback: (ActiveCoreResult, ActiveCoreLifetime?) -> Unit): Boolean
 }

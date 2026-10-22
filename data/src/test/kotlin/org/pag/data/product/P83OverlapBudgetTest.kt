@@ -44,4 +44,55 @@ class P83OverlapBudgetTest {
             }
         }
     }
+    @Test fun productLoaderRefusesOldComposePlusNewReadBeforeAnyNewSqlMaterialization() = ActiveCoreStoreTest.H(200,1000).use { h ->
+        val baseline=h.read() as ActiveCoreResult.Value
+        val padding=(ActiveWorkspaceBudget.LIMIT_BYTES-baseline.transitionCharge-1024)/80
+        h.exec("UPDATE actions SET description=description||printf('%0${padding}d',0)")
+        val worker=java.util.ArrayDeque<Runnable>();val main=java.util.ArrayDeque<Runnable>()
+        val mutations=UncachedWorkspaceMutations();var reads=0
+        val loader=ProductActiveCoreLoader(object:StorageAccess{override fun acquire(scope:AccessScope)=h.context},
+            mutations,{worker.add(it)},{main.add(it)}){_,_,_,memory->
+                reads++;h.read(outstanding=memory::admit)
+            }
+        var lifetime:ActiveCoreLifetime?=null;var old:ActiveCoreResult.Value?=null
+        assertTrue(loader.loadOwned("a"){value,life->old=value as ActiveCoreResult.Value;lifetime=life})
+        worker.remove().run();main.remove().run()
+        assertEquals(2102832,old!!.retainedCharge);assertEquals(8387520,old!!.transitionCharge)
+        lifetime!!.compositionObserved();lifetime!!.close();lifetime!!.compositionDisposed()
+        val before=h.db.payloadStatements;val epoch=mutations.mutationEpoch
+        repeat(2){assertFalse(loader.loadOwned("a"){_,_->fail("Unbudgeted delivery")})}
+        assertEquals(1,reads);assertEquals(before,h.db.payloadStatements);assertEquals(epoch,mutations.mutationEpoch)
+        assertTrue(worker.isEmpty());assertTrue(main.isEmpty())
+        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,loader.outstandingState().transition)
+        assertFalse(loader.outstandingState().retirementConfirmed)
+        println("P84 PRODUCT-REFUSAL oldR=${old!!.retainedCharge} plannedNewT=${old!!.transitionCharge} sum=10490352 readCount=$reads beforeNewSQL=true")
+    }
+
+    @Test fun normalNativeShaped2001000PlanPassesProductAdmissionAgainAfterUnpublishedRetirement() = ActiveCoreStoreTest.H(200,1000).use {h->
+        val worker=java.util.ArrayDeque<Runnable>();val main=java.util.ArrayDeque<Runnable>()
+        val mutations=UncachedWorkspaceMutations();var reads=0;var delivered=0
+        val loader=ProductActiveCoreLoader(object:StorageAccess{override fun acquire(scope:AccessScope)=h.context},
+            mutations,{worker.add(it)},{main.add(it)}){_,_,_,memory->reads++;h.read(outstanding=memory::admit)}
+        assertTrue(loader.loadOwned("a"){_,_->fail("Old canceled result")})
+        worker.remove().run();val obsolete=main.remove()
+        assertEquals(1,loader.outstandingState().pendingCandidates)
+        assertFalse(loader.loadOwned("a"){_,_->fail()})
+        loader.cancelPending()
+        assertFalse(loader.outstandingState().retirementConfirmed)
+        assertFalse(loader.loadOwned("a"){_,_->fail("Before Main acknowledgement")})
+        obsolete.run() // Drained shell acknowledged; no result/callback can escape.
+        assertTrue(loader.outstandingState().retirementConfirmed)
+        assertEquals(0,loader.outstandingState().pendingCandidates)
+        assertTrue(loader.loadOwned("a"){value,life->
+            assertTrue(value is ActiveCoreResult.Value);assertNotNull(life);delivered++
+        })
+        obsolete.run();obsolete.run();assertEquals(0,delivered)
+        worker.remove().run();main.remove().run()
+        assertEquals(2,reads);assertEquals(1,delivered)
+        assertTrue(loader.outstandingState().localRetained in 1..ActiveWorkspaceBudget.LIMIT_BYTES)
+        assertTrue(loader.outstandingState().localTransition in 1..ActiveWorkspaceBudget.LIMIT_BYTES)
+        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,loader.outstandingState().transition)
+        assertEquals(0L,mutations.mutationEpoch)
+    }
+
 }

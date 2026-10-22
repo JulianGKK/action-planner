@@ -12,115 +12,108 @@ internal interface ActiveCoreLoadObservation {
     fun hitAuthorized(accepted: Boolean, elapsedNanos:Long)
 }
 
-/** One-shot product bridge: owner-thread admission, existing worker reader, owner-thread
- * ticket/session/lane check and central publication. It hands off a transient result only;
- * it is not a snapshot owner and never enables RAM reuse.
- */
+/** One loader, one outstanding memory lifetime, one original readticket. The pending runnable
+ * captures only the single handoff cell, never a separate immutable payload capture. */
 class ProductActiveCoreLoader internal constructor(
     private val access: StorageAccess,
     private val mutations: WorkspaceMutationInvalidation,
     private val worker: Executor,
     private val main: Executor,
-    private val readCandidate: (StorageContext, WorkspaceMutationInvalidation.ActiveReadTicket, Long) -> ActiveCoreResult
+    private val readCandidate: (StorageContext, WorkspaceMutationInvalidation.ActiveReadTicket, Long, OutstandingCoreRead.Read) -> ActiveCoreResult
 ) : ActiveCoreLoadPort {
-    private var reuseForIsolatedTest = false
-    private var observation: ActiveCoreLoadObservation? = null
-    override val reuseEnabled: Boolean get() = reuseForIsolatedTest
+    private var reuseForIsolatedTest=false
+    private var observation:ActiveCoreLoadObservation?=null
+    override val reuseEnabled get()=reuseForIsolatedTest
     internal constructor(access:StorageAccess,mutations:WorkspaceMutationInvalidation,worker:Executor,main:Executor,
-        readCandidate:(StorageContext,WorkspaceMutationInvalidation.ActiveReadTicket,Long)->ActiveCoreResult,
-        reuseEnabled:Boolean,observation:ActiveCoreLoadObservation?) : this(access,mutations,worker,main,readCandidate) {
-        this.reuseForIsolatedTest=reuseEnabled
-        this.observation=observation
+        readCandidate:(StorageContext,WorkspaceMutationInvalidation.ActiveReadTicket,Long,OutstandingCoreRead.Read)->ActiveCoreResult,
+        reuseEnabled:Boolean,observation:ActiveCoreLoadObservation?):this(access,mutations,worker,main,readCandidate) {
+        reuseForIsolatedTest=reuseEnabled;this.observation=observation
     }
     private val ownerThread=Thread.currentThread()
-    private var latestLoad: Any? = null
-
-    /** Returns false before any worker/DB work when READY or common read admission is absent.
-     * A true return means queued, not successful. The callback receives only an ephemeral,
-     * freshly revalidated candidate; callers must not treat it as retained cache authority.
-     */
-    fun load(actionId: String, callback: (ActiveCoreResult) -> Unit): Boolean {
-        return loadOwned(actionId) { result,lifetime -> try { callback(result) } finally { lifetime?.close() } }
+    private val outstanding=OutstandingCoreRead()
+    private var latestLoad:Any?=null
+    private var lifetime:ProductActiveCoreLifetime?=null
+    internal fun outstandingState()=outstanding.state()
+    override fun cancelPending() {
+        check(Thread.currentThread()===ownerThread)
+        if(outstanding.state().phase !in setOf(OutstandingCoreRead.Phase.RETAINED,OutstandingCoreRead.Phase.COMPOSE_TRANSITION))lifetime?.close()
     }
-    override fun loadOwned(actionId: String, callback: (ActiveCoreResult, ActiveCoreLifetime?) -> Unit): Boolean {
-        check(Thread.currentThread() === ownerThread) { "ACTIVE core admission is owner-thread-only" }
-        if(actionId.isBlank()) return false
-        val context=access.acquire(AccessScope.READY) ?: return false
-        if(context.scope!=AccessScope.READY || context.generation<0 || !context.check(AccessPoint.OPERATION)) return false
-        val ticket=mutations.beforeActiveRead(actionId,context.generation) ?: return false
+    override fun fullViewStarting() {
+        check(Thread.currentThread()===ownerThread)
+        cancelPending();outstanding.fullViewStarting()
+    }
+    fun close(){outstanding.close();lifetime?.close()}
+    fun load(actionId:String,callback:(ActiveCoreResult)->Unit):Boolean =
+        loadOwned(actionId){result,life->try{callback(result)}finally{life?.close()}}
+
+    override fun loadOwned(actionId:String,callback:(ActiveCoreResult,ActiveCoreLifetime?)->Unit):Boolean {
+        check(Thread.currentThread()===ownerThread){"ACTIVE core admission is owner-thread-only"}
+        if(actionId.isBlank())return false
+        // Backpressure BEFORE READY/ticket/namespace/key/worker admission. It cannot cancel
+        // another read, change an epoch or mint fallback authority just because it is busy.
+        val memory=outstanding.begin() ?: return false
+        val context=access.acquire(AccessScope.READY)
+        if(context==null || context.scope!=AccessScope.READY || context.generation<0 || !context.check(AccessPoint.OPERATION)) {
+            memory.noWorker();return false
+        }
+        val ticket=mutations.beforeActiveRead(actionId,context.generation)
+        if(ticket==null){memory.noWorker();return false}
         observation?.ticketIssued(ticket)
-        if(ticket.actionId!=actionId || ticket.generation!=context.generation || ticket.mutationEpoch<0L) {
-            mutations.revokeActiveRead();return false
+        if(ticket.actionId!=actionId || ticket.generation!=context.generation || ticket.mutationEpoch<0L ||
+            !context.check(AccessPoint.STEP) || !ticket.isLive()) {
+            mutations.revokeActiveRead(ticket);memory.noWorker();return false
         }
-        // Closes the acquire -> admission race: expiry may have happened before this ticket existed.
-        if(!context.check(AccessPoint.STEP) || !ticket.isLive()) {
-            mutations.revokeActiveRead();return false
-        }
-        val loadIdentity=Any()
-        latestLoad=loadIdentity
-        val laneTicket=DocumentNamespaceLane.ticket()
-        val started=AtomicBoolean(false)
+        val identity=Any();latestLoad=identity
+        val lane=DocumentNamespaceLane.ticket()
+        // Exactly ONE subscription on the original readticket, from admission to retirement.
+        val life=ProductActiveCoreLifetime(access,context,mutations,ticket,lane,ownerThread,
+            {latestLoad===identity},observation?.let{observer->{ok:Boolean,ns:Long->observer.hitAuthorized(ok,ns)}} ?: {_,_->},memory)
+        lifetime=life
         val delivered=AtomicBoolean(false)
-        try {
-            worker.execute {
-                if(!started.compareAndSet(false,true)) return@execute
-                if(!ticket.isLive() || !context.check(AccessPoint.STEP)) return@execute
-                observation?.readerStarted()
-                val result=try { readCandidate(context,ticket,laneTicket) }
-                    catch (_: Exception) { ActiveCoreResult.Rejected(BoundedActiveStatus.STORAGE_FAILURE) }
-                if(!ticket.isLive() || !context.check(AccessPoint.STEP) || !DocumentNamespaceLane.isCurrent(laneTicket)) return@execute
+        val work=memory.queueWorker(Runnable work@{
+                if(!memory.startWorker())return@work
                 try {
-                    main.execute {
-                        if(!delivered.compareAndSet(false,true)) return@execute
-                        if(Thread.currentThread() !== ownerThread) {
-                            mutations.revokeActiveRead()
-                            return@execute
-                        }
-                        if(latestLoad !== loadIdentity) return@execute
-                        fun current(): Boolean = latestLoad === loadIdentity && context.scope==AccessScope.READY &&
-                            context.generation==ticket.generation && ticket.actionId==actionId && ticket.isLive() &&
-                            mutations.isCurrentActiveRead(ticket) && context.check(AccessPoint.PUBLICATION) &&
-                            DocumentNamespaceLane.isCurrent(laneTicket)
-                        if(!current()) return@execute
-                        if(result is ActiveCoreResult.Value) {
-                            val core=result.core
-                            if(core.state.binding.actionId!=actionId || core.state.binding.generation!=ticket.generation ||
-                                core.state.mutationEpoch!=ticket.mutationEpoch || core.action.id!=actionId ||
-                                core.action.status!=ActionStatus.ACTIVE) {
-                                mutations.revokeActiveRead()
-                                return@execute
-                            }
-                        }
-                        // The callback is intentionally side-effect-free with respect to product state.
-                        // Capture only a local bit inside the central gate so callback-then-false
-                        // implementations cannot leave a retained/public result behind.
-                        var entered=false
-                        val accepted=runCatching { context.publish { if(current()) entered=true } }.getOrDefault(false)
-                        if(!accepted || !entered || !current()) {
-                            mutations.revokeActiveRead()
-                            return@execute
-                        }
-                        val lifetime=if(result is ActiveCoreResult.Value)
-                            ProductActiveCoreLifetime(access,context,mutations,ticket,laneTicket,ownerThread,
-                                { latestLoad === loadIdentity }, observation?.let { observer -> { accepted:Boolean,elapsed:Long -> observer.hitAuthorized(accepted,elapsed) } } ?: {_,_->})
-                            else null
-                        // A rejected read owns no retention lifetime. Retire exactly its original
-                        // ticket too (including budget refusal), without changing the writer epoch.
-                        if(lifetime==null) mutations.revokeActiveRead(ticket)
-                        try { callback(result,lifetime) } catch(error:Exception) { lifetime?.close();throw error }
+                    if(!ticket.isLive() || !context.check(AccessPoint.STEP)){life.close();return@work}
+                    observation?.readerStarted()
+                    try {memory.candidate(readCandidate(context,ticket,lane,memory))}
+                    catch(_:Exception){memory.candidate(ActiveCoreResult.Rejected(BoundedActiveStatus.STORAGE_FAILURE))}
+                    if(!ticket.isLive() || !context.check(AccessPoint.STEP) || !DocumentNamespaceLane.isCurrent(lane)) {
+                        life.close();return@work
                     }
-                } catch (_: RejectedExecutionException) {
-                    // This only revokes the outstanding ticket. No worker-side owner/epoch reset.
-                    mutations.revokeActiveRead()
-                } catch (_: Exception) {
-                    mutations.revokeActiveRead()
-                }
-            }
-        } catch (_: RejectedExecutionException) {
-            mutations.revokeActiveRead();latestLoad=null;return false
-        } catch (_: Exception) {
-            mutations.revokeActiveRead();latestLoad=null;return false
-        }
+                    val handoff=memory.queueMain(Runnable deliver@{
+                            if(!delivered.compareAndSet(false,true))return@deliver
+                            if(Thread.currentThread()!==ownerThread){life.close();return@deliver}
+                            val result=memory.takeForMain() ?: return@deliver
+                            try {
+                                fun current()=latestLoad===identity && ticket.isLive() &&
+                                    mutations.isCurrentActiveRead(ticket) && context.scope==AccessScope.READY &&
+                                    context.generation==ticket.generation && context.check(AccessPoint.PUBLICATION) &&
+                                    DocumentNamespaceLane.isCurrent(lane)
+                                if(!current()){life.close();return@deliver}
+                                if(result is ActiveCoreResult.Value &&
+                                    (result.core.state.binding.actionId!=actionId || result.core.state.binding.generation!=ticket.generation ||
+                                    result.core.state.mutationEpoch!=ticket.mutationEpoch || result.core.action.id!=actionId || result.core.action.status!=ActionStatus.ACTIVE)) {
+                                    life.close();return@deliver
+                                }
+                                var entered=false
+                                val accepted=runCatching{context.publish{if(current())entered=true}}.getOrDefault(false)
+                                if(!accepted || !entered || !current()){life.close();return@deliver}
+                                if(result is ActiveCoreResult.Value) {
+                                    if(!memory.callbackOwnsValue()){life.close();return@deliver}
+                                    try{callback(result,life)}catch(error:Exception){life.close();throw error}
+                                } else {
+                                    life.close();callback(result,null)
+                                }
+                            } finally {memory.mainFinished()}
+                        })
+                    if(handoff!=null)try{main.execute(handoff)}
+                        catch(_:RejectedExecutionException){life.close();memory.mainRejected()}
+                        catch(_:Exception){life.close()} // Queue acceptance uncertain: no acknowledgement.
+                } catch(_:Exception){life.close()}
+            }) ?: run{life.close();return false}
+        try{worker.execute(work)}
+        catch(_:RejectedExecutionException){life.close();memory.noWorker();return false}
+        catch(_:Exception){life.close();return false} // Could have queued: keep reservation until shell acknowledges.
         return true
     }
 }

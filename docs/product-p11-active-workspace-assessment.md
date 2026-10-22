@@ -12547,3 +12547,80 @@ bleiben installiert und in Version/Installations-/Updatezeit/Signatur unverände
 rein lesende Inventur findet keine eigene Fixturewurzel. Keine Datenlöschung an Paketen,
 globale Bereinigung oder Credential-/Sperränderung. Produktreuse false; regulärer WIP-Commit/
 Push, kein Force-Push/Merge/Release. STOPP bis zum unabhängigen GitHub-Review.
+
+
+## §84 — Outstanding ACTIVE-Lifetime und Transition-Admission (WIP)
+
+Basis `17d883fbf9493495a444540ed0a21a2daade9b4f`, lokal und remote bestätigt;
+unabhängige §83-Reviews #33/#34/#44 gelesen. [Vertrag/Phasenmatrix](p11-p84/lifetime-contract.md),
+[Ergebnisse und Grenzen](p11-p84/results.md), [Rohfallbilanz](p11-p84/case-results.csv),
+[korrelierte Phasen](p11-p84/phases.csv).
+
+**IMPLEMENTIERT:** Der vorhandene ProductActiveCoreLoader besitzt genau eine ausstehende
+Read-Lifetime. Vor READY/Ticket/Worker/Keylease wird das bestehende Transitionkontingent
+8.388.608 B exklusiv gebucht. Die lokale CoreReadAdmission bleibt; der echte Room-Store
+muss zusätzlich vor beiden Materialisierern die genaue Reservation an diese Lifetime
+übergeben. Keine zweite Registry, Cacheauthority, Mutationsepoche oder Keyownerinstanz.
+Ein fertiger Main-Kandidat verhindert zweite und dritte Materialisierung bereits vorher.
+Clearbare Worker-/Main-/Payloadzellen und einmalige Dispatch-Acknowledgements verhindern
+Payloadretention in alten Runnable-Captures sowie zu frühe Freigabe bei doppeltem Callback.
+Unbekannte Queueannahme oder verlorener Main bleiben gebucht. Targeted Revoke verwendet
+das Originalticket; spätes altes Cleanup kann keinen neueren Read freigeben/widerrufen.
+
+VM-Clear und Compose-Dispose sind kein Frame-Retirement. Sobald ein Core an einen Consumer
+geliefert wurde, bleibt dessen Transition konservativ gesperrt, auch nach Generationwechsel.
+Nur unexponierte Kandidaten mit bestätigten Worker-/Main-/DB-/Key-Enden können freigegeben
+werden. Scoped Cleanupfehler bleiben FAILED_OR_UNCONFIRMED; bekannte geschlossene Handles
+allein ersetzen keinen erfolgreichen Cleanupvertrag. FullviewStarting sperrt weitere kompakte
+Reads; Fullviewkosten bleiben ausdrücklich UNBEKANNT und sind keine Nullcharge.
+
+**HOSTGETESTET:** 1.849 reguläre Tests (688 App, 1.157 Data, 4 Security), keine Fehler/Skips;
+Domain NO-SOURCE. P77-App separat 690 Ausführungen einschließlich der gemeinsamen Tests.
+Vollständiger vorgeschriebener Offline-Debug-/Release-/Androidtest-/Manifestlauf und separate
+P77-Isolation erfolgreich. Der erhaltene P83OverlapBudgetTest ruft jetzt zusätzlich den echten
+Produkt-Admissionpfad auf: oldR 2.102.832 + newT 8.387.520 = 10.490.352 B wird VOR neuem SQL/
+Materialisierung verweigert. Normaler 200/1000-Read und zweiter Read nach bestätigtem Ende
+eines unpublizierten Kandidaten bestehen. Pending/Lost/Duplicate/Concurrent Dispatch,
+Workerrevoke, CORE-/DOCUMENT-Fence, UNKNOWN, READY-/Actionwechsel, BLOCKED und Budgetfälle
+sind abgesichert. Keine Freigabe aufgrund GC-Vermutung und keine Ersatzautorität.
+
+**ANDROID-GREEN (begrenzt):** 19 von 20 expliziten Custom-Runner-Ausführungen auf Samsung
+RFCT1186YRJ/SM-M526BR; 0 neue ANDROID-RED, 1 HARNESS-ABBRUCH. Der rohe erste Budgetlauf
+hielt seinen Fehler-Main unabsichtlich bis Timeout zurück; unverändert archiviert, danach
+mit explizitem Main-Ack erfolgreich wiederholt. Keine 0-JUnit-Zahl als PASS. roles32/
+multi_pending fordert zweite UND dritte Reads sowie spätere Navigation tatsächlich an:
+maximal ein wartender Kandidat, kein neuer SQL-/Ticketpfad bei verweigerter Admission.
+Alte tatsächliche Composewurzel bleibt sichtbar und gebucht; Dispose gibt sie nicht frei.
+Native Worker-Revoke-/Writer-/Sessionfälle, verlorener Main und bestätigtes unpubliziertes
+Retirement mit echtem zweitem SQLCipher-Read bestehen. Wrapper-Cleanupfault aus §82 bleibt
+korrekt unbestätigt; kein echter vendor-native Closefehler oder Diagnose-Rettung behauptet.
+
+Normal 200 Personen / 1000 Tasks / 6 Rollen: initialer Read, 16 autorisierte Hits ohne neue
+SQL-Reads und normaler Taskeditor mit OnDraw bestehen. Native lokale Charges etwa
+R 1.655.732–1.655.772 / T 6.599.120–6.599.280 B, ausschließliches gebuchtes T 8.388.608 B.
+roles32 maximal R 1.879.216 / lokales T 7.493.056 B. Beobachtete Graphwurzeln maximal eins,
+kein vollständiger ART-Zensus. Live Window im Rowloop, danach bekannte Cursor/Windowpointer/
+Room-/Driverenden und geliehene genullte Keykopie beobachtet. Rohprozessmaxima ART 48.762.528 B,
+NativeHeap 12.363.552 B, PSS 185.337 KiB, FD 138 sind zeitlich verschieden und nicht additiv.
+Keine Rückrechnung unbekannter Native-/Framekosten aus PSS.
+
+**NICHT BEWIESEN / BLOCKER:** Ganze 8+8-MiB-Abnahme bleibt NO-GO. Exklusive T-Buchung ist eine
+Engineering-Sperre, keine kalibrierte physische Native-/Frame-Reserve. Nach Consumerexposition
+fehlt weiterhin ein belastbarer Ruhestellungsnachweis: erneute Fresh-Materialisierung nach
+angezeigtem Core (auch regulär bei reuse=false) sowie Fullviewrückkehr werden konservativ
+verweigert. Initial-/Hit-Kapazität ist kein erfolgreicher normaler Fresh-Ersetzungsnachweis.
+Nötig sind verifizierbare Consumer-/Presentationenden und begrenzte kalibrierte Native-/Frame-
+Reserven innerhalb desselben Owners. Alte/neue Activity-/Runtime-Renderreferenzen und volle
+Workspacekosten bleiben offen. Keine zweite Cachearchitektur/Budgeterhöhung als Ausweg.
+
+**ANDROID-RED aus §83 bleibt:** 129.000 gespeicherte Events innerhalb 90s trotz 11 realer
+Touchpaare nicht verfügbar. Ursache: eager Full-Workspace → TaskBoard → komplette actionweite
+Eventliste/-map vor UI. Nicht gekürzt, nicht verworfen, keine Sessionfrist erhöht; unmittelbarer
+separater §85-P0 für paginierte History-/Detailanbindung. #32 Native-Cleanup, #36 Editor-ABA,
+#39 sichere Credentialautorisierung und RED-4 bleiben eigene Releasegates.
+
+Alle drei geschützten Installationen einschließlich P76-Demo nach letztem Update unverändert
+und installiert; eigene Fixtureinventur leer. Nur isolierte P77-Pakete aktualisiert, IDs/
+Runner/Manifeste/Signaturen/Variante geprüft. reuseEnabled=false und ramReuseEnabled=false;
+30s idle/180s absolut unverändert. Regulärer WIP-Commit/Push, kein Merge/Release/Force-Push.
+Danach STOPP bis zum unabhängigen GitHub-Review.

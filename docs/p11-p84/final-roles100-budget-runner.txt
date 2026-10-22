@@ -1,0 +1,9 @@
+INSTRUMENTATION_STATUS: stream=P84_STATE_ON_FAILURE,State(phase=REVOKED, retained=0, transition=8388608, localRetained=0, localTransition=0, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P84 FAIL roles100 budget: java.lang.IllegalStateException: P84 timeout budget refusal cleanup
+	at org.pag.prototype.P84OutstandingCoreProbe.waitFor(P84OutstandingCoreProbe.kt:34)
+	at org.pag.prototype.P84OutstandingCoreProbe.onStart(P84OutstandingCoreProbe.kt:61)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+INSTRUMENTATION_CODE: 0

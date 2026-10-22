@@ -47,7 +47,8 @@ class ProductActiveCoreLifetimeTest {
         lateinit var ticket:WorkspaceMutationInvalidation.ActiveReadTicket
         lateinit var life:ActiveCoreLifetime
         val slot=AtomicReference<ActiveCoreResult?>()
-        val loader=ProductActiveCoreLoader(access,port,{it.run()},{it.run()}) {_,t,_->
+        val loader=ProductActiveCoreLoader(access,port,{it.run()},{it.run()}) {_,t,_,memory->
+            memory.admit(ActiveCoreReservation(ActiveWorkspaceBudget.Units(),ActiveWorkspaceBudget.Units()),0,0)
             reads++;ticket=t
             val state=CompactTaskState(P3bFreeActiveCoreBinding(t.actionId,t.generation),t.mutationEpoch)
             val counts=CompactTaskCounts(0,0,0,0,0)
@@ -148,12 +149,17 @@ class ProductActiveCoreLifetimeTest {
         assertEquals(SessionState.LOCKED,h.session.snapshot().state);assertEquals(0L,h.port.mutationEpoch)
     }
     @Test fun successfulHitFollowedByRevokeCloseOrNewLoadCannotRestoreSlot() {
-        for(mode in 0..3) {
+        for(mode in 0..2) {
             val h=H();assertTrue(h.life.authorizeHit("a"))
-            when(mode){0->h.session.lock();1->h.life.close();2->h.session.storageFailure()
-                3->h.loader.load("b") {}}
+            when(mode){0->h.session.lock();1->h.life.close();2->h.session.storageFailure()}
             assertNull(h.slot.get());assertFalse(h.life.authorizeHit("a"))
         }
+    }
+    @Test fun backpressureDoesNotReplaceRetainedTicketOrDestroyAnAuthorizedHit() {
+        val h=H();val original=h.ticket;val value=h.slot.get()
+        assertFalse(h.loader.load("b"){fail("Outstanding result must not be replaced")})
+        assertSame(value,h.slot.get());assertTrue(original.isLive());assertTrue(h.life.authorizeHit("a"))
+        assertEquals(1,h.reads);assertEquals(0L,h.port.mutationEpoch)
     }
     @Test fun wrongThreadDoesNotAcquireOrMutateOwnerAndDefaultLifetimeDenies() {
         val h=H();val acquisitions=h.acquisitions;val failed=AtomicReference<Throwable?>()

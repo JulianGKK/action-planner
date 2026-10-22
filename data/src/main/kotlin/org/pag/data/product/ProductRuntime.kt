@@ -88,7 +88,7 @@ class ProductRuntime private constructor(activity: Activity, private val worker:
     }
     fun authenticationForegroundAvailable() { (authentication as? ProductCredentialAuthentication)?.foregroundAvailable() }
     fun close() { session.lock(); keyLifetime.cancel(); leadershipLifetime.cancel(); leadership.revoke();
-        workspaceMutations.revokeActiveRead(); owner.getAndSet(null)?.invalidate() }
+        workspaceMutations.revokeActiveRead(); activeCore.close(); owner.getAndSet(null)?.invalidate() }
     val actions: ActionRepository = ProductActionRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, workspaceMutations, session::storageFailure)
     val workspace:WorkspaceRepository=ProductWorkspaceRepository(activity.applicationContext,session,inventory,
@@ -119,7 +119,7 @@ class ProductRuntime private constructor(activity: Activity, private val worker:
      */
     private val activeCoreReader = ProductActiveCoreReader(activity.applicationContext,session,inventory,
         {owner.get()},blocked=session::storageFailure,testHooks=testAuthority?.coreReadHooks)
-    val activeCore = ProductActiveCoreLoader(testAuthority?.coreAccess?.invoke(session) ?: session,workspaceMutations,worker,main,activeCoreReader::readForTicket,
+    val activeCore = ProductActiveCoreLoader(testAuthority?.coreAccess?.invoke(session) ?: session,workspaceMutations,worker,main,{c,t,l,m->activeCoreReader.readForTicket(c,t,l,outstanding=m)},
         reuseEnabled = testAuthority?.reuseEnabled == true, observation = testAuthority?.observation)
 }
 

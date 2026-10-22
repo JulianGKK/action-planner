@@ -101,7 +101,10 @@ class ProductActiveCoreLoaderTest {
             session.observe { if(it.state==SessionState.LOCKED || it.state==SessionState.BLOCKED) mutations.revokeActiveRead() }
         }
         fun loader(worker:QueueExecutor,main:QueueExecutor,read:(StorageContext,WorkspaceMutationInvalidation.ActiveReadTicket,Long)->ActiveCoreResult)=
-            ProductActiveCoreLoader(session,mutations,worker,main,read)
+            ProductActiveCoreLoader(session,mutations,worker,main){c,t,l,m->
+                m.admit(ActiveCoreReservation(ActiveWorkspaceBudget.Units(),ActiveWorkspaceBudget.Units()),0,0)
+                read(c,t,l)
+            }
     }
     private fun value(ticket:WorkspaceMutationInvalidation.ActiveReadTicket,status:ActionStatus=ActionStatus.ACTIVE):ActiveCoreResult {
         val state=CompactTaskState(P3bFreeActiveCoreBinding(ticket.actionId,ticket.generation),ticket.mutationEpoch)
@@ -156,7 +159,7 @@ class ProductActiveCoreLoaderTest {
         val unprepared=object:WorkspaceMutationInvalidation {
             override fun beforeTaskQueue(actionId:String,generation:Long):WorkspaceMutationInvalidation.Pending?=null
         }
-        assertFalse(ProductActiveCoreLoader(h2.session,unprepared,w2,m2){_,t,_->value(t)}.load("action"){})
+        assertFalse(ProductActiveCoreLoader(h2.session,unprepared,w2,m2){_,t,_,memory->memory.admit(ActiveCoreReservation(ActiveWorkspaceBudget.Units(),ActiveWorkspaceBudget.Units()),0,0);value(t)}.load("action"){})
         assertTrue(w2.queue.isEmpty())
     }
 
@@ -214,7 +217,7 @@ class ProductActiveCoreLoaderTest {
         }
         val access=object:StorageAccess { override fun acquire(scope:AccessScope)=context }
         val w=QueueExecutor();val m=QueueExecutor();val received=AtomicInteger()
-        val falsePublish=ProductActiveCoreLoader(access,port,w,m){_,ticket,_->returnedTicket=ticket;value(ticket)}
+        val falsePublish=ProductActiveCoreLoader(access,port,w,m){_,ticket,_,memory->memory.admit(ActiveCoreReservation(ActiveWorkspaceBudget.Units(),ActiveWorkspaceBudget.Units()),0,0);returnedTicket=ticket;value(ticket)}
         assertTrue(falsePublish.load("action"){received.incrementAndGet()});w.take().run();m.take().run()
         assertEquals(0,received.get());assertFalse(returnedTicket!!.isLive())
     }

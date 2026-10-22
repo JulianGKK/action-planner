@@ -80,7 +80,7 @@ internal class ActionPreflightHooks(
 internal class ActionDatabaseAccess(private val app: Context,
     private val preflight: ActionPreflightHooks = ActionPreflightHooks()) {
     fun <T> use(file: File, key: ByteArray, context: StorageContext, creates: Boolean = false,
-        work: suspend (ActionDatabase) -> T): T {
+        cleanupConfirmed:(Boolean)->Unit = {}, work: suspend (ActionDatabase) -> T): T {
         if (!context.check(AccessPoint.OPERATION)) throw StorageAccessRevoked()
         if (creates && context.scope != AccessScope.MAINTENANCE) throw ProductStorageFailure()
         var phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
@@ -140,13 +140,18 @@ internal class ActionDatabaseAccess(private val app: Context,
         // Standard use() preserves the work failure and suppresses each independent cleanup
         // failure. Inner scopes close first, including after revoke and coroutine failure.
         var cleaning=0L
+        var roomEnded=false
+        var coroutinesEnded=false
         AutoCloseable {
-            try { driver.close() } finally { preflight.measured(ActionDatabasePhase.CLEANUP,cleaning) }
+            try {
+                driver.close()
+                cleanupConfirmed(roomEnded && coroutinesEnded && driver.resourcesClosed())
+            } finally { preflight.measured(ActionDatabasePhase.CLEANUP,cleaning) }
         }.use {
-            AutoCloseable { runBlocking { parent.cancelAndJoin() } }.use {
+            AutoCloseable { runBlocking { parent.cancelAndJoin() };coroutinesEnded=true }.use {
                 AutoCloseable {
                     cleaning=if(preflight.timing!=null)System.nanoTime() else 0L
-                    lifecycle.beginClose(); room?.close(); preflight.roomClosed()
+                    lifecycle.beginClose(); room?.close();roomEnded=true; preflight.roomClosed()
                 }.use {
                     phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
                     room = Room.databaseBuilder(app, ActionDatabase::class.java, file.path).setDriver(driver)

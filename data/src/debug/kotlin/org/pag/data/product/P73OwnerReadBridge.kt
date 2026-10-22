@@ -8,4 +8,7 @@ import org.pag.domain.*
 fun p73OwnerReadBridge(access:StorageAccess,mutations:WorkspaceMutationInvalidation,
     worker:Executor,main:Executor,
     candidate:(WorkspaceMutationInvalidation.ActiveReadTicket)->ActiveCoreResult):ActiveCoreLoadPort =
-    ProductActiveCoreLoader(access,mutations,worker,main) { _,ticket,_ -> candidate(ticket) }
+    ProductActiveCoreLoader(access,mutations,worker,main) { _,ticket,_,memory ->
+        // This older owner probe is a synthetic DTO producer, not native admission evidence.
+        candidate(ticket).also{if(it is org.pag.domain.ActiveCoreResult.Value)memory.admit(it.reservation,it.retainedCharge,it.transitionCharge)}
+    }

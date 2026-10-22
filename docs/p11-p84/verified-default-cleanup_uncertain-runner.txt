@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P84_SCOPED_FAULT,wrapper_row_plus_post_room_close,scenario=row_and_room_end,statements=66,rollbacks=1,closed=66,cursors=66,windows=66,window_ptrs_zero=true,preflight_closed=true,room_closed=true,driver_closed=true,lease_wiped=true,failure=IllegalStateException,vendor_error=none,fault_reached=true,suppressed=1,rows=1,State(phase=FAILED_OR_UNCONFIRMED, retained=0, transition=8388608, localRetained=1559068, localTransition=6212464, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_CASE,default,cleanup_uncertain,ANDROID-GREEN,joint_memory_certification=false,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P84 PASS default cleanup_uncertain; uncertain cleanup stays reserved
+INSTRUMENTATION_CODE: -1

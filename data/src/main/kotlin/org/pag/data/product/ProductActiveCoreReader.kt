@@ -36,6 +36,7 @@ class ProductActiveCoreReader internal constructor(app: Context, private val acc
     internal fun readForTicket(context: StorageContext,
         ticket: WorkspaceMutationInvalidation.ActiveReadTicket, laneTicket: Long,
         affectedPersonId: String? = null,
+        outstanding: OutstandingCoreRead.Read? = null,
         observe: (ActiveCoreStore.Phase) -> Unit = {},
         measured: (ActiveCoreStore.Metric, Long) -> Unit = { _, _ -> }): ActiveCoreResult {
         val state=CompactTaskState(P3bFreeActiveCoreBinding(ticket.actionId,ticket.generation),ticket.mutationEpoch)
@@ -48,21 +49,28 @@ class ProductActiveCoreReader internal constructor(app: Context, private val acc
             DocumentNamespaceLane.exclusive(laneTicket) {
                 requireOperations(context)
                 if(!current()) throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)
-                (owner() ?: throw ProductStorageFailure()).withDbKey(context) { key ->
+                outstanding?.keyStarting()
+                (try { (owner() ?: throw ProductStorageFailure()).withDbKey(context) { key ->
                     testHooks?.keyLease?.invoke(key)
-                    database.use(inventory.database,key,context) { db ->
+                    outstanding?.storageStarting()
+                    database.use(inventory.database,key,context, cleanupConfirmed={outstanding?.storageEnded(it)}) { db ->
                         db.withReadTransaction {
                             testHooks?.transaction?.invoke(this)
                             ActiveCoreStore(this,context,::current,{ phase ->
                                 testHooks?.row?.invoke(phase); observe(phase)
-                            },measured,{ testHooks?.admission?.invoke(it) }).read(state,affectedPersonId)
+                            },measured,{ testHooks?.admission?.invoke(it) },outstanding?.let{it::admit}).read(state,affectedPersonId)
                         }
                     }
                     .also { testHooks?.keyScopeEnd?.invoke() }
-                }.also { testHooks?.candidate?.invoke(it) }
+                }} finally { outstanding?.keyEnded() })
+                .also { testHooks?.candidate?.invoke(it) }
             }
-        } catch (failure: StorageAccessRevoked) { testHooks?.failure?.invoke(failure); ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED) }
+        } catch (failure: StorageAccessRevoked) {
+            if(failure.suppressed.isNotEmpty())outstanding?.cleanupUnconfirmed()
+            testHooks?.failure?.invoke(failure); ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED)
+        }
         catch (failure: BoundedActiveRejected) {
+            if(failure.suppressed.isNotEmpty())outstanding?.cleanupUnconfirmed()
             testHooks?.failure?.invoke(failure)
             if (!current()) ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED)
             else {
@@ -70,6 +78,9 @@ class ProductActiveCoreReader internal constructor(app: Context, private val acc
                 ActiveCoreResult.Rejected(failure.status)
             }
         } catch (failure: Exception) {
+            // Sanitized upstream exceptions cannot certify that statement/cursor cleanup
+            // completed. Known DB close alone must not release the transition reservation.
+            outstanding?.cleanupUnconfirmed()
             testHooks?.failure?.invoke(failure)
             if (!current()) ActiveCoreResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED)
             else { blocked(); ActiveCoreResult.Rejected(BoundedActiveStatus.STORAGE_FAILURE) }

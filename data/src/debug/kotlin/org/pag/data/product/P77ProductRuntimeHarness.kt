@@ -41,6 +41,7 @@ class P77ProductRuntimeHarness private constructor(
         fun originalTicketLive()=originalTicket.get()?.isLive()==true
         fun hasSingleOriginalTicket() = tickets.get()==1 && originalTicket.get()?.isLive()==true
     }
+    fun outstandingState()=runtime.activeCore.outstandingState().toString()
     val cleanupConfirmed=java.util.concurrent.atomic.AtomicBoolean(false)
     override fun close() {
         memory.release()

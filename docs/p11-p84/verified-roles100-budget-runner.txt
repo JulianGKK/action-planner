@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P84_PHASE,roles100,budget,budget_main_pending,t_ns=1165624417277753,vm_id=0,compose_ids=,queued_ids=,state=State(phase=MAIN_PENDING, retained=0, transition=8388608, localRetained=0, localTransition=0, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED),statements=65,statements_closed=65,cursors=65,cursors_open=0,windows=65,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,art_used=47384832,native_heap=10895088,pss_kib=185012,fd=136,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_BUDGET_REFUSED,roles100,requested_retained=2464188,requested_transition=9832944,before_materialization=true,statements=65,statements_closed=65,cursors=65,cursors_open=0,windows=65,windows_live=0,window_rows=0,room_closed=true,driver_closed=true,preflight_closed=true,keylease_live=false,lease_wiped=true,State(phase=RETIRED, retained=0, transition=0, localRetained=0, localTransition=0, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=true, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P84_CASE,roles100,budget,ANDROID-GREEN,joint_memory_certification=false,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P84 PASS roles100 budget; production backpressure; frame/native certification BLOCKED
+INSTRUMENTATION_CODE: -1

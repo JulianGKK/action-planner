@@ -1,0 +1,8 @@
+{
+  "ANDROID-GREEN": 19,
+  "ANDROID-RED": 0,
+  "HARNESS-ABBRUCH": 1,
+  "total": 20,
+  "max_observed_pending_candidates": 1,
+  "joint_memory_certification": "BLOCKER"
+}

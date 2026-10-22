@@ -45,7 +45,7 @@ class P83MemoryOverlapProbe:Instrumentation() {
      * Stops at models, observers and weak refs; never follows session/key/DB state.
      * Records class/field paths, never field values, row strings, key material or paths.
      */
-    private fun cores(root:Any?):Map<Int,String> {
+    internal fun cores(root:Any?):Map<Int,String> {
         val found=linkedMapOf<Int,String>();val seen=IdentityHashMap<Any,Boolean>()
         val queue=ArrayDeque<Pair<Any,String>>()
         if(root!=null)queue.add(root to root.javaClass.simpleName)
@@ -54,9 +54,10 @@ class P83MemoryOverlapProbe:Instrumentation() {
             if(seen.put(o,true)!=null)continue
             check(seen.size<150000){"Diagnostic traversal cap reached"}
             if(o is ActiveCorePayload){found[System.identityHashCode(o)]=path;continue}
+            if(o is AtomicReference<*>){o.get()?.let{queue.add(it to "$path.value")};continue}
             if(o is Array<*>){o.forEachIndexed{i,v->if(v!=null)queue.add(v to "$path[$i]")};continue}
             val n=o.javaClass.name
-            if(!(n.startsWith("androidx.compose.runtime.") || n.startsWith("org.pag.data.product.ProductActiveCoreLoader$") || o is ActiveCoreResult.Value))continue
+            if(!(n.startsWith("androidx.compose.runtime.") || n.startsWith("org.pag.data.product.ProductActiveCoreLoader$") || n.startsWith("org.pag.data.product.OutstandingCoreRead") || o is ActiveCoreResult.Value))continue
             var c:Class<*>?=o.javaClass
             while(c!=null && c!=Any::class.java){
                 c.declaredFields.filter{!Modifier.isStatic(it.modifiers) && !it.type.isPrimitive}.forEach {f->
@@ -66,7 +67,7 @@ class P83MemoryOverlapProbe:Instrumentation() {
         }
         return found
     }
-    private fun composeRoots(a:Activity):Map<Int,String> {
+    internal fun composeRoots(a:Activity):Map<Int,String> {
         val result=linkedMapOf<Int,String>()
         val tag=a.resources.getIdentifier("wrapped_composition_tag","id",a.packageName)
         check(tag!=0){"Missing actual Compose root tag"}

@@ -1,0 +1,23 @@
+{
+  "org.pag.prototype.a.p76demo": [
+    "versionCode=2 minSdk=30 targetSdk=37",
+    "versionName=0.1.0-alpha.2-p76demo",
+    "lastUpdateTime=2026-10-21 16:59:59",
+    "signatures=PackageSignatures{6f3a7ba version:2, signatures:[224d2aa7], past signatures:[]}",
+    "firstInstallTime=2026-10-21 16:58:40"
+  ],
+  "org.pag.prototype.a": [
+    "versionCode=2 minSdk=30 targetSdk=37",
+    "versionName=0.1.0-alpha.2",
+    "lastUpdateTime=2026-10-21 10:39:49",
+    "signatures=PackageSignatures{3af64e version:2, signatures:[224d2aa7], past signatures:[]}",
+    "firstInstallTime=2026-10-09 10:47:25"
+  ],
+  "org.pag.perf.p11probe": [
+    "versionCode=2 minSdk=30 targetSdk=37",
+    "versionName=0.1.0-alpha.2",
+    "lastUpdateTime=2026-10-19 16:17:35",
+    "signatures=PackageSignatures{87071b6 version:2, signatures:[224d2aa7], past signatures:[]}",
+    "firstInstallTime=2026-10-19 16:17:35"
+  ]
+}

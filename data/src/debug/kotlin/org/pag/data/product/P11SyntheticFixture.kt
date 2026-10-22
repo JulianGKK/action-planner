@@ -225,7 +225,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         check(app.packageName=="org.pag.data.unlockprobe")
         val mutations=UncachedWorkspaceMutations()
         val reader=ProductActiveCoreReader(wrapped,access,inventory,owner::get,blocked=::fail)
-        return ProductActiveCoreLoader(access,mutations,worker,main,readCandidate={ c,t,l -> reader.readForTicket(c,t,l) })
+        return ProductActiveCoreLoader(access,mutations,worker,main,readCandidate={ c,t,l,m -> reader.readForTicket(c,t,l,outstanding=m) })
     }
     /** The test authority is fed into the real ProductRuntime only by the isolated P77 debug factory.
      * SessionCoordinator, Maintenance, key owner, Room and core reader remain ProductRuntime's.
@@ -263,8 +263,8 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         val c=requireNotNull(session.acquire(AccessScope.READY))
         owner.getAndSet(SessionDbKeyOwner.bind(c,key))?.invalidate()
         val reader=ProductActiveCoreReader(wrapped,session,inventory,owner::get,blocked=blocked)
-        return ProductActiveCoreLoader(session,mutations,worker,main,readCandidate={ context,ticket,lane ->
-            reader.readForTicket(context,ticket,lane,observe=observe,measured=measured)
+        return ProductActiveCoreLoader(session,mutations,worker,main,readCandidate={ context,ticket,lane,memory ->
+            reader.readForTicket(context,ticket,lane,outstanding=memory,observe=observe,measured=measured)
         })
     }
     internal fun <T> nativeDriverProbe(work:(org.pag.data.prototype.b2.B2Driver)->T):T {

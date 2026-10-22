@@ -1,0 +1,6 @@
+{"series": "verified", "fixture": "roles100", "case": "budget", "status": "ANDROID-GREEN", "seconds": 10.329}
+{"series": "verified", "fixture": "default", "case": "cleanup_uncertain", "status": "ANDROID-GREEN", "seconds": 8.627}
+{"series": "verified", "fixture": "large", "case": "worker_revoke", "status": "ANDROID-GREEN", "seconds": 10.279}
+{"series": "verified", "fixture": "large", "case": "core_writer", "status": "ANDROID-GREEN", "seconds": 12.394}
+{"series": "verified", "fixture": "large", "case": "document_writer", "status": "ANDROID-GREEN", "seconds": 11.14}
+{"series": "verified", "fixture": "roles32", "case": "multi_pending", "status": "ANDROID-GREEN", "seconds": 11.385}
