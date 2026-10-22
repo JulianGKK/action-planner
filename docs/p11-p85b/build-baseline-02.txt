@@ -1,0 +1,315 @@
+
+> Configure project :
+cache module-artifact.bin (/home/julian-tio-valenzuela/Projekte/action-planner/.prototype-cache/gradle/caches/modules-2/metadata-2.107/module-artifact.bin) is corrupt. Discarding.
+cache module-metadata.bin (/home/julian-tio-valenzuela/Projekte/action-planner/.prototype-cache/gradle/caches/modules-2/metadata-2.107/module-metadata.bin) is corrupt. Discarding.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+A problem occurred configuring root project 'PaG-Prototype-A'.
+> Could not resolve all artifacts for configuration 'classpath'.
+   > Could not resolve org.jetbrains.kotlin:kotlin-stdlib:2.3.21.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A'
+      > No cached version of org.jetbrains.kotlin:kotlin-stdlib:2.3.21 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-stdlib:2.3.21 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-stdlib:2.3.21 available for offline mode.
+   > Could not resolve com.android.tools.build:gradle-settings-api:9.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.build:gradle-settings-api:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:gradle-settings-api:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:gradle-settings-api:9.4.1 available for offline mode.
+   > Could not resolve com.android.tools:sdk-common:32.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools:sdk-common:32.4.1 available for offline mode.
+      > No cached version of com.android.tools:sdk-common:32.4.1 available for offline mode.
+      > No cached version of com.android.tools:sdk-common:32.4.1 available for offline mode.
+   > Could not resolve com.android.tools:sdklib:32.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools:sdklib:32.4.1 available for offline mode.
+      > No cached version of com.android.tools:sdklib:32.4.1 available for offline mode.
+      > No cached version of com.android.tools:sdklib:32.4.1 available for offline mode.
+   > Could not resolve com.android.tools:repository:32.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools:repository:32.4.1 available for offline mode.
+      > No cached version of com.android.tools:repository:32.4.1 available for offline mode.
+      > No cached version of com.android.tools:repository:32.4.1 available for offline mode.
+   > Could not resolve com.android.tools.ddms:ddmlib:32.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.ddms:ddmlib:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.ddms:ddmlib:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.ddms:ddmlib:32.4.1 available for offline mode.
+   > Could not resolve com.android.tools.build:aapt2-proto:9.4.1-15978811.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.build:aapt2-proto:9.4.1-15978811 available for offline mode.
+      > No cached version of com.android.tools.build:aapt2-proto:9.4.1-15978811 available for offline mode.
+      > No cached version of com.android.tools.build:aapt2-proto:9.4.1-15978811 available for offline mode.
+   > Could not resolve com.android.tools.build:aaptcompiler:9.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.build:aaptcompiler:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:aaptcompiler:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:aaptcompiler:9.4.1 available for offline mode.
+   > Could not resolve com.android.tools.analytics-library:crash:32.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.analytics-library:crash:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.analytics-library:crash:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.analytics-library:crash:32.4.1 available for offline mode.
+   > Could not resolve com.android.tools.analytics-library:shared:32.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.analytics-library:shared:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.analytics-library:shared:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.analytics-library:shared:32.4.1 available for offline mode.
+   > Could not resolve com.android.tools.lint:lint-model:32.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.lint:lint-model:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.lint:lint-model:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.lint:lint-model:32.4.1 available for offline mode.
+   > Could not resolve com.android.tools.lint:lint-typedef-remover:32.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.lint:lint-typedef-remover:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.lint:lint-typedef-remover:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.lint:lint-typedef-remover:32.4.1 available for offline mode.
+   > Could not resolve androidx.databinding:databinding-compiler-common:9.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of androidx.databinding:databinding-compiler-common:9.4.1 available for offline mode.
+      > No cached version of androidx.databinding:databinding-compiler-common:9.4.1 available for offline mode.
+      > No cached version of androidx.databinding:databinding-compiler-common:9.4.1 available for offline mode.
+   > Could not resolve androidx.databinding:databinding-common:9.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of androidx.databinding:databinding-common:9.4.1 available for offline mode.
+      > No cached version of androidx.databinding:databinding-common:9.4.1 available for offline mode.
+      > No cached version of androidx.databinding:databinding-common:9.4.1 available for offline mode.
+   > Could not resolve com.android.databinding:baseLibrary:9.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.databinding:baseLibrary:9.4.1 available for offline mode.
+      > No cached version of com.android.databinding:baseLibrary:9.4.1 available for offline mode.
+      > No cached version of com.android.databinding:baseLibrary:9.4.1 available for offline mode.
+   > Could not resolve com.android.tools.build:builder-test-api:9.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.build:builder-test-api:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:builder-test-api:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:builder-test-api:9.4.1 available for offline mode.
+   > Could not resolve com.android.tools.layoutlib:layoutlib-api:32.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.layoutlib:layoutlib-api:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.layoutlib:layoutlib-api:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.layoutlib:layoutlib-api:32.4.1 available for offline mode.
+   > Could not resolve com.android.tools.utp:gradle-work-action-api:32.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.utp:gradle-work-action-api:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.utp:gradle-work-action-api:32.4.1 available for offline mode.
+      > No cached version of com.android.tools.utp:gradle-work-action-api:32.4.1 available for offline mode.
+   > Could not resolve org.apache.httpcomponents:httpmime:4.5.6.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of org.apache.httpcomponents:httpmime:4.5.6 available for offline mode.
+      > No cached version of org.apache.httpcomponents:httpmime:4.5.6 available for offline mode.
+      > No cached version of org.apache.httpcomponents:httpmime:4.5.6 available for offline mode.
+   > Could not resolve commons-io:commons-io:2.16.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of commons-io:commons-io:2.16.1 available for offline mode.
+      > No cached version of commons-io:commons-io:2.16.1 available for offline mode.
+      > No cached version of commons-io:commons-io:2.16.1 available for offline mode.
+   > Could not resolve org.ow2.asm:asm:9.9.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of org.ow2.asm:asm:9.9 available for offline mode.
+      > No cached version of org.ow2.asm:asm:9.9 available for offline mode.
+      > No cached version of org.ow2.asm:asm:9.9 available for offline mode.
+   > Could not resolve org.ow2.asm:asm-analysis:9.9.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of org.ow2.asm:asm-analysis:9.9 available for offline mode.
+      > No cached version of org.ow2.asm:asm-analysis:9.9 available for offline mode.
+      > No cached version of org.ow2.asm:asm-analysis:9.9 available for offline mode.
+   > Could not resolve org.ow2.asm:asm-commons:9.9.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of org.ow2.asm:asm-commons:9.9 available for offline mode.
+      > No cached version of org.ow2.asm:asm-commons:9.9 available for offline mode.
+      > No cached version of org.ow2.asm:asm-commons:9.9 available for offline mode.
+   > Could not resolve org.ow2.asm:asm-util:9.9.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of org.ow2.asm:asm-util:9.9 available for offline mode.
+      > No cached version of org.ow2.asm:asm-util:9.9 available for offline mode.
+      > No cached version of org.ow2.asm:asm-util:9.9 available for offline mode.
+   > Could not resolve org.glassfish.jaxb:jaxb-runtime:2.3.2.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of org.glassfish.jaxb:jaxb-runtime:2.3.2 available for offline mode.
+      > No cached version of org.glassfish.jaxb:jaxb-runtime:2.3.2 available for offline mode.
+      > No cached version of org.glassfish.jaxb:jaxb-runtime:2.3.2 available for offline mode.
+   > Could not resolve net.sf.jopt-simple:jopt-simple:4.9.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of net.sf.jopt-simple:jopt-simple:4.9 available for offline mode.
+      > No cached version of net.sf.jopt-simple:jopt-simple:4.9 available for offline mode.
+      > No cached version of net.sf.jopt-simple:jopt-simple:4.9 available for offline mode.
+   > Could not resolve com.android.tools.build:bundletool:1.18.3.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.build:bundletool:1.18.3 available for offline mode.
+      > No cached version of com.android.tools.build:bundletool:1.18.3 available for offline mode.
+      > No cached version of com.android.tools.build:bundletool:1.18.3 available for offline mode.
+   > Could not resolve com.android.tools.build.jetifier:jetifier-core:1.0.0-beta10.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.build.jetifier:jetifier-core:1.0.0-beta10 available for offline mode.
+      > No cached version of com.android.tools.build.jetifier:jetifier-core:1.0.0-beta10 available for offline mode.
+      > No cached version of com.android.tools.build.jetifier:jetifier-core:1.0.0-beta10 available for offline mode.
+   > Could not resolve com.android.tools.build.jetifier:jetifier-processor:1.0.0-beta10.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.build.jetifier:jetifier-processor:1.0.0-beta10 available for offline mode.
+      > No cached version of com.android.tools.build.jetifier:jetifier-processor:1.0.0-beta10 available for offline mode.
+      > No cached version of com.android.tools.build.jetifier:jetifier-processor:1.0.0-beta10 available for offline mode.
+   > Could not resolve com.squareup:javapoet:1.13.0.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.squareup:javapoet:1.13.0 available for offline mode.
+      > No cached version of com.squareup:javapoet:1.13.0 available for offline mode.
+      > No cached version of com.squareup:javapoet:1.13.0 available for offline mode.
+   > Could not resolve com.google.protobuf:protobuf-java:3.25.5.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.google.protobuf:protobuf-java:3.25.5 available for offline mode.
+      > No cached version of com.google.protobuf:protobuf-java:3.25.5 available for offline mode.
+      > No cached version of com.google.protobuf:protobuf-java:3.25.5 available for offline mode.
+   > Could not resolve com.google.protobuf:protobuf-java-util:3.25.5.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.google.protobuf:protobuf-java-util:3.25.5 available for offline mode.
+      > No cached version of com.google.protobuf:protobuf-java-util:3.25.5 available for offline mode.
+      > No cached version of com.google.protobuf:protobuf-java-util:3.25.5 available for offline mode.
+   > Could not resolve com.google.code.gson:gson:2.11.0.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.google.code.gson:gson:2.11.0 available for offline mode.
+      > No cached version of com.google.code.gson:gson:2.11.0 available for offline mode.
+      > No cached version of com.google.code.gson:gson:2.11.0 available for offline mode.
+   > Could not resolve com.google.crypto.tink:tink:1.7.0.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.google.crypto.tink:tink:1.7.0 available for offline mode.
+      > No cached version of com.google.crypto.tink:tink:1.7.0 available for offline mode.
+      > No cached version of com.google.crypto.tink:tink:1.7.0 available for offline mode.
+   > Could not resolve org.tensorflow:tensorflow-lite-metadata:0.2.0.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of org.tensorflow:tensorflow-lite-metadata:0.2.0 available for offline mode.
+      > No cached version of org.tensorflow:tensorflow-lite-metadata:0.2.0 available for offline mode.
+      > No cached version of org.tensorflow:tensorflow-lite-metadata:0.2.0 available for offline mode.
+   > Could not resolve com.android.tools.build:builder:9.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.build:builder:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:builder:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:builder:9.4.1 available for offline mode.
+   > Could not resolve com.android.tools.build:builder-model:9.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.build:builder-model:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:builder-model:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:builder-model:9.4.1 available for offline mode.
+   > Could not resolve com.android.tools.build:gradle-api:9.4.1.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.android.application:com.android.application.gradle.plugin:9.4.1 > com.android.tools.build:gradle:9.4.1
+      > No cached version of com.android.tools.build:gradle-api:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:gradle-api:9.4.1 available for offline mode.
+      > No cached version of com.android.tools.build:gradle-api:9.4.1 available for offline mode.
+   > Could not resolve org.jetbrains.kotlin:kotlin-gradle-plugins-bom:2.4.20.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.4.20 > org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:2.4.20 > org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.4.20
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugins-bom:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugins-bom:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugins-bom:2.4.20 available for offline mode.
+   > Could not resolve org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.4.20.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.4.20 > org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:2.4.20 > org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.4.20
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.4.20 available for offline mode.
+   > Could not resolve org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.4.20.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.4.20 > org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20
+      > No cached version of org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.4.20 available for offline mode.
+   > Could not resolve org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.4.20.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.4.20 > org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.4.20 available for offline mode.
+   > Could not resolve org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.4.20.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.4.20 > org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.4.20 available for offline mode.
+   > Could not resolve org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.4.20.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.4.20 > org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20
+      > No cached version of org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.4.20 available for offline mode.
+   > Could not resolve org.jetbrains.kotlin:kotlin-build-statistics:2.4.20.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.4.20 > org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20
+      > No cached version of org.jetbrains.kotlin:kotlin-build-statistics:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-build-statistics:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-build-statistics:2.4.20 available for offline mode.
+   > Could not resolve org.jetbrains.kotlin:kotlin-util-klib-metadata:2.4.20.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.4.20 > org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20
+      > No cached version of org.jetbrains.kotlin:kotlin-util-klib-metadata:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-util-klib-metadata:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-util-klib-metadata:2.4.20 available for offline mode.
+   > Could not resolve org.jetbrains.kotlin:kotlin-compiler-runner:2.4.20.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.4.20 > org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20
+      > No cached version of org.jetbrains.kotlin:kotlin-compiler-runner:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-compiler-runner:2.4.20 available for offline mode.
+      > No cached version of org.jetbrains.kotlin:kotlin-compiler-runner:2.4.20 available for offline mode.
+   > Could not resolve com.google.devtools.ksp:symbol-processing-api:2.3.12.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.3.12 > com.google.devtools.ksp:symbol-processing-gradle-plugin:2.3.12
+      > No cached version of com.google.devtools.ksp:symbol-processing-api:2.3.12 available for offline mode.
+      > No cached version of com.google.devtools.ksp:symbol-processing-api:2.3.12 available for offline mode.
+      > No cached version of com.google.devtools.ksp:symbol-processing-api:2.3.12 available for offline mode.
+   > Could not resolve com.google.devtools.ksp:symbol-processing-common-deps:2.3.12.
+     Required by:
+         buildscript of root project 'PaG-Prototype-A' > com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.3.12 > com.google.devtools.ksp:symbol-processing-gradle-plugin:2.3.12
+      > No cached version of com.google.devtools.ksp:symbol-processing-common-deps:2.3.12 available for offline mode.
+      > No cached version of com.google.devtools.ksp:symbol-processing-common-deps:2.3.12 available for offline mode.
+      > No cached version of com.google.devtools.ksp:symbol-processing-common-deps:2.3.12 available for offline mode.
+> There are 3 more failures with identical causes.
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 2s

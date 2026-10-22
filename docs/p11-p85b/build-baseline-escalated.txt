@@ -1,0 +1,56 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :verifyArchitecture
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:mergeP77runtimeNativeDebugMetadata NO-SOURCE
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:processP77runtimeNavigationResources' (registered by plugin 'com.android.internal.application').
+> Could not resolve all files for configuration ':app:p77runtimeRuntimeClasspath'.
+   > Could not resolve androidx.camera:camera-core:1.6.2.
+     Required by:
+         project ':app'
+      > No cached version of androidx.camera:camera-core:1.6.2 available for offline mode.
+      > No cached version of androidx.camera:camera-core:1.6.2 available for offline mode.
+   > Could not resolve androidx.camera:camera-camera2:1.6.2.
+     Required by:
+         project ':app'
+      > No cached version of androidx.camera:camera-camera2:1.6.2 available for offline mode.
+      > No cached version of androidx.camera:camera-camera2:1.6.2 available for offline mode.
+   > Could not resolve androidx.camera:camera-lifecycle:1.6.2.
+     Required by:
+         project ':app'
+      > No cached version of androidx.camera:camera-lifecycle:1.6.2 available for offline mode.
+      > No cached version of androidx.camera:camera-lifecycle:1.6.2 available for offline mode.
+   > Could not resolve androidx.camera:camera-view:1.6.2.
+     Required by:
+         project ':app'
+      > No cached version of androidx.camera:camera-view:1.6.2 available for offline mode.
+      > No cached version of androidx.camera:camera-view:1.6.2 available for offline mode.
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1m
+9 actionable tasks: 2 executed, 7 up-to-date

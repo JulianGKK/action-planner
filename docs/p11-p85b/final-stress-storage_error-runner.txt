@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P85b_COUNTERS,open=1000,in_progress=0,closed=0,eager_events=0,events_complete=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85b_STORAGE_ERROR,statement_fault_injection=true,native_close_fault=false,blocked_pixels=true,no_payload=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85b_CASE,stress,storage_error,ANDROID-GREEN,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P85b PASS stress storage_error
+INSTRUMENTATION_CODE: -1

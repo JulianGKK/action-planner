@@ -1,0 +1,8 @@
+{
+  "app/build.gradle.kts": "d44bc1b0332ab878e2ceb3f3440ed73107a8b80255a2747080a74fa9a92482b3",
+  "app/src/androidTest/AndroidManifest.xml": "47edccec51cedcb62fa7bd22c66ee5c84051ac5df703c7bf140cde3c83d35ff5",
+  "app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt": "c72a4f22d3076b11eda2da6ee2e72eb2d0e7de2c7a18876cd11c28c94ea9fe20",
+  "data/src/debug/kotlin/org/pag/data/product/P85PagingDiagnostics.kt": "11ab2ea0d765bf5869a235fa93cd736b26fcf45ca8ef7445379858e5034665d3",
+  "data/src/main/kotlin/org/pag/data/product/CompactTaskStore.kt": "39aa9cbc371fefb9c18fa1b087db8d874b253e729bc887f259af0a0a3286dc7b",
+  "data/src/test/kotlin/org/pag/data/product/CompactTaskStoreTest.kt": "3f69c8e58604b0ef7bcfd25d6bd736f3dac2883863d45d7a07e430109e0e44bc"
+}

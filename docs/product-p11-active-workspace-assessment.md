@@ -12669,3 +12669,61 @@ CursorWindow-/Allocatorfreigabe aus FD/PSS. #45 bleibt für unabhängiges Review
 Restabnahme offen; #32/#36/#39 und RED-4 bleiben eigene Gates. P76/Produkt/P11probe geschützt,
 nur isolierte P77-Pakete nach Signatur-/Manifest-/Runner-/Variantenprüfung aktualisiert.
 Kein Merge oder Release; regulärer WIP-Commit/Push und unabhängige Remoteprüfung.
+
+
+## §85b — Taskhistorie: Paging-Latenz und Android-Restabnahme (#45, WIP)
+
+Basis `4593333685fa45354354e745d874f9741545e14d` auf
+`p11-performance-optimization`; unabhängiger §85a-Review berücksichtigt.
+[Ursache, Messwerte, Rohberichte und Grenzen](p11-p85b/assessment.md).
+
+**Kleiner Fix:** Direkteinstiege führen Task-Preflight und COUNT einmal innerhalb
+derselben Lesetransaktion aus; der private gemeinsame Materialisierer verwendet deren
+lokales Ergebnis. Alle unterschiedlichen Task-/Event-/Cursorprüfungen, Metadaten-
+Sizing/Admission, READY/Originalticket/Epoche/Generation, DB-/Keycleanup und zentrale
+Publication bleiben erhalten. Keine transaktionsübergreifende Wiederverwendung,
+Schema-/Index-/Crypto-/Dependency-/Designänderung. §84-Lifetime, Speicherbudgets,
+Sessionfristen und Produkt-RAM-Gates bleiben unverändert.
+
+**Gemessene Ursache:** DB-Öffnungen samt vollständigen Integritätsprüfungen rund 2,65 s;
+Task-Preflight rund 0,71 s; Eventprüfung 0,32 s; COUNT 0,12 s. Direkteinstieg wiederholte
+Task-Preflight und COUNT unnötig. SQLCipher-EXPLAIN zeigt verwendeten action/task-Index,
+aber temporäre ORDER-BY-Bäume für Anker und die drei begrenzten Seitenauswahlen.
+OFFSET-Anker Mitte/Ende etwa 0,30 s. Index-/Migrationsarbeit ausdrücklich gestoppt;
+Sortier-/Temp-/CursorWindow-Speicher bleibt unkalibriert.
+
+**Vorher/Nachher, je drei Wiederholungen, Median:** Modellübergabe erste/zweite Seite
+4.909/4.884 → 4.948/4.955 ms (kein Gewinn behauptet); Mitte/Ende
+6.064/6.078 → 5.324/5.336 ms, etwa 0,74 s bzw. 12,2 % schneller. Lesetransaktion
+Mitte/Ende 3.404/3.393 → 2.637/2.621 ms. OnDraw separat Mitte/Ende
+6.099/6.071 → 5.351/5.320 ms. Frühere §85a-Direktwerte enthielten zusätzliche
+Locator-/Scrollarbeit und sind kein vergleichbarer SQL-Benchmark. Kein p95.
+
+**Host/Build:** 52 betroffene Hosttests (25 CompactTaskStore, 27 TaskModel), keine
+Fehler/Skips; Debug-/P77-/Test-APK-/Isolation-/Release-Safety-Builds offline erfolgreich.
+Neue vollständige Referenzordnung über mehrere Seiten, Zeitstempelgleichstände und
+PREPARATION/ACTIVE/COMPLETED; unveränderte Stress-Direkteinstiege sowie Budget-/Revoke-/
+Fehlerfälle. Historischen 4.001-Seiten-Hostlauf nicht wiederholt; Keyset-SQL und
+Reihenfolge unverändert, §85a-Vollbeleg bleibt historisch. Keine 4.001-Seiten-Android-Serie
+und keine historische P11-Suite wiederholt.
+
+**ANDROID-GREEN:** beide Messserien sowie vier finale Stressfälle (Touch/IME,
+Editor/Lock, Writer-Fences/UNKNOWN, Statementfehler), insgesamt 6 GREEN. Physische
+Zifferntastatur-/Button-/Wisch-Eingaben: Seiten 1/2/Mitte/Ende, Next, letzte Seite,
+Leerwert/0/4002/Zahlenüberlauf, Editor öffnen/abbrechen/speichern, Rückkehr und Lock
+bei gehaltenem Main. Reihenfolge/IDs, Gesamtzahl 128.001 und maximal 32 sichtbare
+Events bestätigt. Tap→OnDraw einzeln etwa 4,9–5,4 s, getrennt von SQL und
+Locator-/Scrollzeit. CORE/DOCUMENT/UNKNOWN sind ausdrückliche Metadateninjektionen;
+Statementfehler ist Wrapperinjektion mit sichtbarem BLOCKED, kein echter Native-Closefault.
+
+Fünf rohe FAILs bleiben als HARNESS-ABBRUCH archiviert: vier veraltete Accessibility-
+Koordinaten, durch eigene synthetische Ansichtsaufnahme belegt; einmal nicht verfügbare
+UiAutomation-API. Unterstütztes Node.refresh behebt den Locator; identisches Produkt-APK
+besteht die finalen Touchfälle. Keine Sicherheits-/Produkt-UI-Änderung zur Testanpassung.
+
+**PASS für #45 im beauftragten §85b-Scope; Schließung erst nach unabhängigem Review.**
+Standardseiten bleiben etwa 5 s langsam. SQLite-Sortierung/Native-/Frame-/Fullviewkosten,
+§84-8+8-MiB-Abnahme, #32/#33/#36/#39 und RED-4 bleiben eigene NO-GO-Gates.
+P76/Produkt/P11probe unverändert installiert, eigene Fixtures leer, synthetische
+Diagnose-PNG im Zielcache entfernt. Regulärer WIP-Commit/Push; danach STOPP für Review.
+Kein Merge/Release.

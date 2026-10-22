@@ -1,0 +1,13 @@
+INSTRUMENTATION_STATUS: stream=P85b_TOUCH,page=1,rows=32,total=128001,ondraw_ns=9195679371,physical_tap=true,exact_order=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85b_TOUCH,page=2,rows=32,total=128001,ondraw_ns=11390407131,physical_tap=true,exact_order=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P85b FAIL stress touch: java.lang.IllegalStateException: P85b timeout numeric IME
+	at org.pag.prototype.P85bTaskHistoryProbe.waitFor(P85bTaskHistoryProbe.kt:33)
+	at org.pag.prototype.P85bTaskHistoryProbe.pageInput(P85bTaskHistoryProbe.kt:198)
+	at org.pag.prototype.P85bTaskHistoryProbe.onStart(P85bTaskHistoryProbe.kt:93)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+INSTRUMENTATION_CODE: 0

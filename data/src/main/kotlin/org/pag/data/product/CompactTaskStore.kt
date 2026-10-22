@@ -233,18 +233,27 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
             if(!s.step())invalid()
             CompactEventCursor(state,taskId,integer(s,0),integer(s,1)).also{if(s.step())invalid()}
         }
-        return events(state,taskId,anchor,fullTaskRead)
+        // The anchor and page share this read transaction. Reuse only its validated
+        // preflight/count; all event/cursor checks and payload admission still follow.
+        return eventsAfterPreflight(state,taskId,anchor,total)
     }
 
     suspend fun events(state: CompactTaskState, taskId: String, after: CompactEventCursor?, fullTaskRead:Boolean=false): CompactTaskResult.Value {
         checkInput(taskId)
         if(after!=null && (after.state!=state || after.taskId!=taskId)) reject(BoundedActiveStatus.ACCESS_REVOKED)
         preflight(state,fullTaskRead)
+        return eventsAfterPreflight(state,taskId,after)
+    }
+
+    /** Private to the two entry points above: no preflight result survives a request. */
+    private suspend fun eventsAfterPreflight(state:CompactTaskState,taskId:String,after:CompactEventCursor?,
+        knownTotal:Long?=null):CompactTaskResult.Value {
+        gate()
         val args=listOf(state.binding.actionId,taskId)
         if(scalar("SELECT COUNT(*) FROM tasks WHERE actionId=? AND id=?",args)!=1L) reject(BoundedActiveStatus.ACCESS_REVOKED)
         val checks="typeof(id)!='text' OR typeof(actionId)!='text' OR typeof(taskId)!='text' OR typeof(type)!='text' OR typeof(occurredAt)!='integer' OR type NOT IN ('CREATED','STARTED','COMPLETED','CANCELLED','REOPENED')"
         if(scalar("SELECT EXISTS(SELECT 1 FROM task_events WHERE actionId=? AND taskId=? AND ($checks))",args)!=0L) invalid()
-        val total=scalar("SELECT COUNT(*) FROM task_events WHERE actionId=? AND taskId=?",args)
+        val total=knownTotal?:scalar("SELECT COUNT(*) FROM task_events WHERE actionId=? AND taskId=?",args)
         if(after!=null && scalar("SELECT COUNT(*) FROM task_events WHERE actionId=? AND taskId=? AND occurredAt=? AND rowid=?",
             args+listOf(after.occurredAt,after.rowId))!=1L) reject(BoundedActiveStatus.ACCESS_REVOKED)
         val seek=if(after==null) "" else " AND (occurredAt,rowid)>(?,?)"

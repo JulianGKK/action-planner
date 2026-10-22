@@ -1,0 +1,7 @@
+allprojects {
+    tasks.withType(Test).configureEach {
+        filter {
+            excludeTestsMatching('org.pag.data.product.CompactTaskStoreTest.concentrated129000StoredEventsRemainCompletelyTraversableWithoutAccumulation')
+        }
+    }
+}

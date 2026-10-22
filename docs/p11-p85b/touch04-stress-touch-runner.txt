@@ -1,0 +1,21 @@
+INSTRUMENTATION_STATUS: stream=P85b_COUNTERS,open=1000,in_progress=0,closed=0,eager_events=0,events_complete=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85b_TOUCH,page=1,rows=32,total=128001,ondraw_ns=13475388536,physical_tap=true,exact_order=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85b_TOUCH,page=2,rows=32,total=128001,ondraw_ns=16948746868,physical_tap=true,exact_order=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85b_FIELD,bounds=Rect(63, 450 - 798, 616),focused=false,visible=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P85b_FIELD_AFTER,bounds=Rect(63, 450 - 798, 616),focused=false,enabled=true,session=READY,ime_insets=false,window_types=[3, 3, 1]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P85b FAIL stress touch: java.lang.IllegalStateException: Numeric IME not exposed
+	at org.pag.prototype.P85bTaskHistoryProbe.pageInput(P85bTaskHistoryProbe.kt:216)
+	at org.pag.prototype.P85bTaskHistoryProbe.onStart(P85bTaskHistoryProbe.kt:93)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+INSTRUMENTATION_CODE: 0

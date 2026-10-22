@@ -1,0 +1,1634 @@
+{
+  "before": {
+    "1": {
+      "samples": [
+        {
+          "repetition": 0,
+          "delivery_ms": 4992.827654,
+          "ondraw_ms": 4948.382758,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.854948,
+            "NATIVE_PRE_KEY": 0.497864,
+            "NATIVE_POST_KEY": 0.402969,
+            "NATIVE_OPEN": 581.053437,
+            "VERSION": 0.164844,
+            "CIPHER_INTEGRITY": 335.871146,
+            "SQLITE_INTEGRITY": 913.101354,
+            "FOREIGN_KEYS": 211.915104,
+            "NATIVE_CLOSE": 0.872187,
+            "ROOM_BUILDER": 0.847291,
+            "ROOM_PRE_KEY": 0.802396,
+            "ROOM_POST_KEY": 0.579792,
+            "ROOM_NATIVE_OPEN": 584.402604,
+            "ROOM_OPEN_SCHEMA": 598.398698,
+            "QUERY_TRANSACTION": 2170.314114,
+            "CLEANUP": 1.837239
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 8.267655999999999,
+            "task_preflight_and_existence": 712.613334,
+            "event_validation": 324.004635,
+            "event_count": 114.824114,
+            "page_selection_and_sizing": 546.895209,
+            "page_selection_and_fetch": 439.765312,
+            "continuation_exists": 1.797135
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.702239,
+            "task_preflight_and_existence": 696.823387,
+            "event_validation": 322.083802,
+            "event_count": 113.153907,
+            "page_selection_and_sizing": 542.7363009999999,
+            "page_selection_and_fetch": 274.186564,
+            "continuation_exists": 0.275156
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 1,
+          "delivery_ms": 4908.80453,
+          "ondraw_ms": 4876.505102,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.684531,
+            "NATIVE_PRE_KEY": 0.284948,
+            "NATIVE_POST_KEY": 0.906875,
+            "NATIVE_OPEN": 579.450938,
+            "VERSION": 0.164114,
+            "CIPHER_INTEGRITY": 337.825052,
+            "SQLITE_INTEGRITY": 912.335156,
+            "FOREIGN_KEYS": 211.467968,
+            "NATIVE_CLOSE": 0.692187,
+            "ROOM_BUILDER": 0.565469,
+            "ROOM_PRE_KEY": 0.907396,
+            "ROOM_POST_KEY": 0.746302,
+            "ROOM_NATIVE_OPEN": 585.346354,
+            "ROOM_OPEN_SCHEMA": 599.136146,
+            "QUERY_TRANSACTION": 2173.057915,
+            "CLEANUP": 1.601563
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 10.372185,
+            "task_preflight_and_existence": 708.7159359999999,
+            "event_validation": 327.307396,
+            "event_count": 116.032448,
+            "page_selection_and_sizing": 552.027344,
+            "page_selection_and_fetch": 444.085469,
+            "continuation_exists": 2.127708
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 2.123855,
+            "task_preflight_and_existence": 694.787761,
+            "event_validation": 325.342239,
+            "event_count": 114.359479,
+            "page_selection_and_sizing": 546.785938,
+            "page_selection_and_fetch": 274.670572,
+            "continuation_exists": 0.414532
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 2,
+          "delivery_ms": 4810.149217,
+          "ondraw_ms": 4849.27453,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.743281,
+            "NATIVE_PRE_KEY": 0.324948,
+            "NATIVE_POST_KEY": 0.283697,
+            "NATIVE_OPEN": 578.862813,
+            "VERSION": 0.195313,
+            "CIPHER_INTEGRITY": 329.681718,
+            "SQLITE_INTEGRITY": 912.825208,
+            "FOREIGN_KEYS": 211.729948,
+            "NATIVE_CLOSE": 0.74302,
+            "ROOM_BUILDER": 0.561562,
+            "ROOM_PRE_KEY": 0.706094,
+            "ROOM_POST_KEY": 0.747864,
+            "ROOM_NATIVE_OPEN": 586.995417,
+            "ROOM_OPEN_SCHEMA": 599.170833,
+            "QUERY_TRANSACTION": 2152.499114,
+            "CLEANUP": 2.179896
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 7.901562,
+            "task_preflight_and_existence": 714.5744239999999,
+            "event_validation": 324.07302,
+            "event_count": 114.339062,
+            "page_selection_and_sizing": 546.454793,
+            "page_selection_and_fetch": 431.573489,
+            "continuation_exists": 1.882396
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.8232300000000001,
+            "task_preflight_and_existence": 698.79906,
+            "event_validation": 322.496042,
+            "event_count": 112.700886,
+            "page_selection_and_sizing": 542.314896,
+            "page_selection_and_fetch": 272.673697,
+            "continuation_exists": 0.412656
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        }
+      ],
+      "median": {
+        "delivery_ms": 4908.80453,
+        "ondraw_ms": 4876.505102,
+        "database_ms": {
+          "INVENTORY": 0.743281,
+          "NATIVE_PRE_KEY": 0.324948,
+          "NATIVE_POST_KEY": 0.402969,
+          "NATIVE_OPEN": 579.450938,
+          "VERSION": 0.164844,
+          "CIPHER_INTEGRITY": 335.871146,
+          "SQLITE_INTEGRITY": 912.825208,
+          "FOREIGN_KEYS": 211.729948,
+          "NATIVE_CLOSE": 0.74302,
+          "ROOM_BUILDER": 0.565469,
+          "ROOM_PRE_KEY": 0.802396,
+          "ROOM_POST_KEY": 0.746302,
+          "ROOM_NATIVE_OPEN": 585.346354,
+          "ROOM_OPEN_SCHEMA": 599.136146,
+          "QUERY_TRANSACTION": 2170.314114,
+          "CLEANUP": 1.837239
+        },
+        "sql_ms": {
+          "room_schema_and_expected_snapshot": 8.267655999999999,
+          "task_preflight_and_existence": 712.613334,
+          "event_validation": 324.07302,
+          "event_count": 114.824114,
+          "page_selection_and_sizing": 546.895209,
+          "page_selection_and_fetch": 439.765312,
+          "continuation_exists": 1.882396
+        }
+      }
+    },
+    "2": {
+      "samples": [
+        {
+          "repetition": 0,
+          "delivery_ms": 4814.546196,
+          "ondraw_ms": 4859.218644,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.912917,
+            "NATIVE_PRE_KEY": 0.436145,
+            "NATIVE_POST_KEY": 0.410781,
+            "NATIVE_OPEN": 581.801459,
+            "VERSION": 0.162917,
+            "CIPHER_INTEGRITY": 334.09,
+            "SQLITE_INTEGRITY": 913.294062,
+            "FOREIGN_KEYS": 211.125625,
+            "NATIVE_CLOSE": 0.650677,
+            "ROOM_BUILDER": 0.583906,
+            "ROOM_PRE_KEY": 0.293334,
+            "ROOM_POST_KEY": 0.294844,
+            "ROOM_NATIVE_OPEN": 579.673072,
+            "ROOM_OPEN_SCHEMA": 593.497031,
+            "QUERY_TRANSACTION": 2158.049634,
+            "CLEANUP": 1.504583
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 10.383647,
+            "task_preflight_and_existence": 702.981511,
+            "event_validation": 323.795468,
+            "event_count": 115.081094,
+            "cursor_validation": 1.698749,
+            "page_selection_and_sizing": 555.2107289999999,
+            "page_selection_and_fetch": 434.719687,
+            "continuation_exists": 1.939791
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 2.2613529999999997,
+            "task_preflight_and_existence": 689.619114,
+            "event_validation": 322.098906,
+            "event_count": 113.421614,
+            "cursor_validation": 0.264583,
+            "page_selection_and_sizing": 550.6580730000001,
+            "page_selection_and_fetch": 273.836668,
+            "continuation_exists": 0.468802
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 1,
+          "delivery_ms": 4888.07281,
+          "ondraw_ms": 4857.396196,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.758541,
+            "NATIVE_PRE_KEY": 0.296927,
+            "NATIVE_POST_KEY": 0.335312,
+            "NATIVE_OPEN": 580.891146,
+            "VERSION": 0.174375,
+            "CIPHER_INTEGRITY": 338.819271,
+            "SQLITE_INTEGRITY": 914.297187,
+            "FOREIGN_KEYS": 211.681406,
+            "NATIVE_CLOSE": 0.724791,
+            "ROOM_BUILDER": 0.552865,
+            "ROOM_PRE_KEY": 0.371614,
+            "ROOM_POST_KEY": 0.344687,
+            "ROOM_NATIVE_OPEN": 584.445208,
+            "ROOM_OPEN_SCHEMA": 595.890729,
+            "QUERY_TRANSACTION": 2161.941093,
+            "CLEANUP": 1.299063
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 7.875156999999999,
+            "task_preflight_and_existence": 709.860313,
+            "event_validation": 320.638906,
+            "event_count": 113.560989,
+            "cursor_validation": 1.869063,
+            "page_selection_and_sizing": 554.173593,
+            "page_selection_and_fetch": 440.742551,
+            "continuation_exists": 1.91651
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.7235409999999998,
+            "task_preflight_and_existence": 693.2343209999999,
+            "event_validation": 319.030781,
+            "event_count": 111.952499,
+            "cursor_validation": 0.431615,
+            "page_selection_and_sizing": 549.988802,
+            "page_selection_and_fetch": 275.338902,
+            "continuation_exists": 0.42151
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 2,
+          "delivery_ms": 4884.126822,
+          "ondraw_ms": 4856.059842,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.703073,
+            "NATIVE_PRE_KEY": 0.346406,
+            "NATIVE_POST_KEY": 0.297761,
+            "NATIVE_OPEN": 579.126354,
+            "VERSION": 0.208907,
+            "CIPHER_INTEGRITY": 332.454115,
+            "SQLITE_INTEGRITY": 911.295885,
+            "FOREIGN_KEYS": 212.375469,
+            "NATIVE_CLOSE": 0.768854,
+            "ROOM_BUILDER": 0.547188,
+            "ROOM_PRE_KEY": 0.725833,
+            "ROOM_POST_KEY": 0.846198,
+            "ROOM_NATIVE_OPEN": 584.945312,
+            "ROOM_OPEN_SCHEMA": 596.465365,
+            "QUERY_TRANSACTION": 2163.399426,
+            "CLEANUP": 1.310625
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 7.6747440000000005,
+            "task_preflight_and_existence": 712.215834,
+            "event_validation": 322.330104,
+            "event_count": 114.548125,
+            "cursor_validation": 1.841094,
+            "page_selection_and_sizing": 555.589479,
+            "page_selection_and_fetch": 434.110312,
+            "continuation_exists": 1.83125
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.7316160000000003,
+            "task_preflight_and_existence": 698.11432,
+            "event_validation": 320.732917,
+            "event_count": 112.746354,
+            "cursor_validation": 0.422083,
+            "page_selection_and_sizing": 550.650625,
+            "page_selection_and_fetch": 275.460674,
+            "continuation_exists": 0.393854
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        }
+      ],
+      "median": {
+        "delivery_ms": 4884.126822,
+        "ondraw_ms": 4857.396196,
+        "database_ms": {
+          "INVENTORY": 0.758541,
+          "NATIVE_PRE_KEY": 0.346406,
+          "NATIVE_POST_KEY": 0.335312,
+          "NATIVE_OPEN": 580.891146,
+          "VERSION": 0.174375,
+          "CIPHER_INTEGRITY": 334.09,
+          "SQLITE_INTEGRITY": 913.294062,
+          "FOREIGN_KEYS": 211.681406,
+          "NATIVE_CLOSE": 0.724791,
+          "ROOM_BUILDER": 0.552865,
+          "ROOM_PRE_KEY": 0.371614,
+          "ROOM_POST_KEY": 0.344687,
+          "ROOM_NATIVE_OPEN": 584.445208,
+          "ROOM_OPEN_SCHEMA": 595.890729,
+          "QUERY_TRANSACTION": 2161.941093,
+          "CLEANUP": 1.310625
+        },
+        "sql_ms": {
+          "room_schema_and_expected_snapshot": 7.875156999999999,
+          "task_preflight_and_existence": 709.860313,
+          "event_validation": 322.330104,
+          "event_count": 114.548125,
+          "cursor_validation": 1.841094,
+          "page_selection_and_sizing": 555.2107289999999,
+          "page_selection_and_fetch": 434.719687,
+          "continuation_exists": 1.91651
+        }
+      }
+    },
+    "2001": {
+      "samples": [
+        {
+          "repetition": 0,
+          "delivery_ms": 6060.008748,
+          "ondraw_ms": 6105.393071,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.639479,
+            "NATIVE_PRE_KEY": 0.320468,
+            "NATIVE_POST_KEY": 0.325104,
+            "NATIVE_OPEN": 579.953281,
+            "VERSION": 0.204688,
+            "CIPHER_INTEGRITY": 337.428333,
+            "SQLITE_INTEGRITY": 911.601614,
+            "FOREIGN_KEYS": 212.673854,
+            "NATIVE_CLOSE": 0.659115,
+            "ROOM_BUILDER": 0.601458,
+            "ROOM_PRE_KEY": 0.725625,
+            "ROOM_POST_KEY": 0.753803,
+            "ROOM_NATIVE_OPEN": 583.518489,
+            "ROOM_OPEN_SCHEMA": 595.75052,
+            "QUERY_TRANSACTION": 3406.529947,
+            "CLEANUP": 1.24823
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 8.012970000000001,
+            "task_preflight_and_existence": 1411.2018719999999,
+            "event_count": 232.33072900000002,
+            "offset_anchor": 289.769062,
+            "event_validation": 324.735677,
+            "cursor_validation": 1.783646,
+            "page_selection_and_sizing": 549.1483330000001,
+            "page_selection_and_fetch": 430.69151,
+            "continuation_exists": 137.30198
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.763906,
+            "task_preflight_and_existence": 1387.720208,
+            "event_count": 229.15098899999998,
+            "offset_anchor": 287.909583,
+            "event_validation": 323.003802,
+            "cursor_validation": 0.350521,
+            "page_selection_and_sizing": 543.624322,
+            "page_selection_and_fetch": 272.620574,
+            "continuation_exists": 135.602917
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 14,
+            "event_count": 2,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 1,
+          "delivery_ms": 6064.298539,
+          "ondraw_ms": 6098.650362,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.553594,
+            "NATIVE_PRE_KEY": 0.272916,
+            "NATIVE_POST_KEY": 0.281979,
+            "NATIVE_OPEN": 579.146458,
+            "VERSION": 0.145677,
+            "CIPHER_INTEGRITY": 336.803906,
+            "SQLITE_INTEGRITY": 912.942239,
+            "FOREIGN_KEYS": 211.239948,
+            "NATIVE_CLOSE": 0.715781,
+            "ROOM_BUILDER": 0.571302,
+            "ROOM_PRE_KEY": 0.866302,
+            "ROOM_POST_KEY": 0.946459,
+            "ROOM_NATIVE_OPEN": 585.431041,
+            "ROOM_OPEN_SCHEMA": 601.363072,
+            "QUERY_TRANSACTION": 3404.251197,
+            "CLEANUP": 1.39026
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 11.026926,
+            "task_preflight_and_existence": 1412.618488,
+            "event_count": 230.211459,
+            "offset_anchor": 290.357188,
+            "event_validation": 321.846302,
+            "cursor_validation": 1.755208,
+            "page_selection_and_sizing": 548.2906780000001,
+            "page_selection_and_fetch": 434.19651,
+            "continuation_exists": 136.050938
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.939425,
+            "task_preflight_and_existence": 1386.5110929999998,
+            "event_count": 226.727394,
+            "offset_anchor": 288.007812,
+            "event_validation": 320.195313,
+            "cursor_validation": 0.343385,
+            "page_selection_and_sizing": 544.1539580000001,
+            "page_selection_and_fetch": 274.220469,
+            "continuation_exists": 134.23474
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 14,
+            "event_count": 2,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 2,
+          "delivery_ms": 6112.769268,
+          "ondraw_ms": 6084.541716,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.567865,
+            "NATIVE_PRE_KEY": 0.265417,
+            "NATIVE_POST_KEY": 0.255,
+            "NATIVE_OPEN": 578.919322,
+            "VERSION": 0.180625,
+            "CIPHER_INTEGRITY": 332.591875,
+            "SQLITE_INTEGRITY": 915.135625,
+            "FOREIGN_KEYS": 211.006354,
+            "NATIVE_CLOSE": 0.773385,
+            "ROOM_BUILDER": 0.55698,
+            "ROOM_PRE_KEY": 0.451198,
+            "ROOM_POST_KEY": 0.360365,
+            "ROOM_NATIVE_OPEN": 584.087709,
+            "ROOM_OPEN_SCHEMA": 595.100104,
+            "QUERY_TRANSACTION": 3396.737499,
+            "CLEANUP": 1.54
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 9.632293,
+            "task_preflight_and_existence": 1408.632915,
+            "event_count": 230.853282,
+            "offset_anchor": 287.690782,
+            "event_validation": 322.290052,
+            "cursor_validation": 1.768906,
+            "page_selection_and_sizing": 547.8595310000001,
+            "page_selection_and_fetch": 431.092604,
+            "continuation_exists": 136.148281
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.860833,
+            "task_preflight_and_existence": 1386.0597400000001,
+            "event_count": 226.793022,
+            "offset_anchor": 285.818854,
+            "event_validation": 320.657447,
+            "cursor_validation": 0.337396,
+            "page_selection_and_sizing": 543.429999,
+            "page_selection_and_fetch": 273.546201,
+            "continuation_exists": 134.502084
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 14,
+            "event_count": 2,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        }
+      ],
+      "median": {
+        "delivery_ms": 6064.298539,
+        "ondraw_ms": 6098.650362,
+        "database_ms": {
+          "INVENTORY": 0.567865,
+          "NATIVE_PRE_KEY": 0.272916,
+          "NATIVE_POST_KEY": 0.281979,
+          "NATIVE_OPEN": 579.146458,
+          "VERSION": 0.180625,
+          "CIPHER_INTEGRITY": 336.803906,
+          "SQLITE_INTEGRITY": 912.942239,
+          "FOREIGN_KEYS": 211.239948,
+          "NATIVE_CLOSE": 0.715781,
+          "ROOM_BUILDER": 0.571302,
+          "ROOM_PRE_KEY": 0.725625,
+          "ROOM_POST_KEY": 0.753803,
+          "ROOM_NATIVE_OPEN": 584.087709,
+          "ROOM_OPEN_SCHEMA": 595.75052,
+          "QUERY_TRANSACTION": 3404.251197,
+          "CLEANUP": 1.39026
+        },
+        "sql_ms": {
+          "room_schema_and_expected_snapshot": 9.632293,
+          "task_preflight_and_existence": 1411.2018719999999,
+          "event_count": 230.853282,
+          "offset_anchor": 289.769062,
+          "event_validation": 322.290052,
+          "cursor_validation": 1.768906,
+          "page_selection_and_sizing": 548.2906780000001,
+          "page_selection_and_fetch": 431.092604,
+          "continuation_exists": 136.148281
+        }
+      }
+    },
+    "4001": {
+      "samples": [
+        {
+          "repetition": 0,
+          "delivery_ms": 6078.041352,
+          "ondraw_ms": 6061.402759,
+          "rows": 1,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.590209,
+            "NATIVE_PRE_KEY": 0.302396,
+            "NATIVE_POST_KEY": 0.270052,
+            "NATIVE_OPEN": 579.675365,
+            "VERSION": 0.197239,
+            "CIPHER_INTEGRITY": 324.488229,
+            "SQLITE_INTEGRITY": 912.439479,
+            "FOREIGN_KEYS": 211.802448,
+            "NATIVE_CLOSE": 0.700886,
+            "ROOM_BUILDER": 0.565833,
+            "ROOM_PRE_KEY": 0.728594,
+            "ROOM_POST_KEY": 0.729167,
+            "ROOM_NATIVE_OPEN": 584.038229,
+            "ROOM_OPEN_SCHEMA": 597.409218,
+            "QUERY_TRANSACTION": 3386.483696,
+            "CLEANUP": 2.859219
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 8.483072,
+            "task_preflight_and_existence": 1411.0531250000001,
+            "event_count": 229.645365,
+            "offset_anchor": 302.954375,
+            "event_validation": 321.981302,
+            "cursor_validation": 1.829948,
+            "page_selection_and_sizing": 542.614374,
+            "page_selection_and_fetch": 275.974167,
+            "continuation_exists": 270.832084
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.8082310000000001,
+            "task_preflight_and_existence": 1387.697396,
+            "event_count": 226.448072,
+            "offset_anchor": 300.685573,
+            "event_validation": 320.305677,
+            "cursor_validation": 0.34724,
+            "page_selection_and_sizing": 538.188854,
+            "page_selection_and_fetch": 269.998021,
+            "continuation_exists": 269.200103
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 14,
+            "event_count": 2,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 1,
+          "delivery_ms": 6061.402498,
+          "ondraw_ms": 6080.253227,
+          "rows": 1,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.722969,
+            "NATIVE_PRE_KEY": 0.283333,
+            "NATIVE_POST_KEY": 0.269062,
+            "NATIVE_OPEN": 579.292187,
+            "VERSION": 0.219688,
+            "CIPHER_INTEGRITY": 331.658021,
+            "SQLITE_INTEGRITY": 913.972239,
+            "FOREIGN_KEYS": 211.241302,
+            "NATIVE_CLOSE": 1.033282,
+            "ROOM_BUILDER": 0.735416,
+            "ROOM_PRE_KEY": 0.530469,
+            "ROOM_POST_KEY": 0.470521,
+            "ROOM_NATIVE_OPEN": 581.501198,
+            "ROOM_OPEN_SCHEMA": 594.40401,
+            "QUERY_TRANSACTION": 3408.183592,
+            "CLEANUP": 1.979063
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 11.135676,
+            "task_preflight_and_existence": 1415.720469,
+            "event_count": 232.301302,
+            "offset_anchor": 304.314271,
+            "event_validation": 325.861406,
+            "cursor_validation": 2.314271,
+            "page_selection_and_sizing": 543.432187,
+            "page_selection_and_fetch": 278.788021,
+            "continuation_exists": 273.864687
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 2.0589030000000004,
+            "task_preflight_and_existence": 1392.357812,
+            "event_count": 229.041406,
+            "offset_anchor": 302.425833,
+            "event_validation": 324.227552,
+            "cursor_validation": 0.348802,
+            "page_selection_and_sizing": 539.351666,
+            "page_selection_and_fetch": 272.118906,
+            "continuation_exists": 272.025209
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 14,
+            "event_count": 2,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 2,
+          "delivery_ms": 6085.565623,
+          "ondraw_ms": 6070.974633,
+          "rows": 1,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.745573,
+            "NATIVE_PRE_KEY": 0.339166,
+            "NATIVE_POST_KEY": 0.310938,
+            "NATIVE_OPEN": 579.453802,
+            "VERSION": 0.163229,
+            "CIPHER_INTEGRITY": 332.76599,
+            "SQLITE_INTEGRITY": 910.971302,
+            "FOREIGN_KEYS": 211.318437,
+            "NATIVE_CLOSE": 0.74974,
+            "ROOM_BUILDER": 0.561823,
+            "ROOM_PRE_KEY": 0.850886,
+            "ROOM_POST_KEY": 0.863802,
+            "ROOM_NATIVE_OPEN": 583.200624,
+            "ROOM_OPEN_SCHEMA": 596.786093,
+            "QUERY_TRANSACTION": 3393.377551,
+            "CLEANUP": 2.867656
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 8.625678,
+            "task_preflight_and_existence": 1413.6729670000002,
+            "event_count": 231.69442600000002,
+            "offset_anchor": 301.919167,
+            "event_validation": 324.204791,
+            "cursor_validation": 1.783333,
+            "page_selection_and_sizing": 543.080573,
+            "page_selection_and_fetch": 275.655156,
+            "continuation_exists": 271.352344
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.9603629999999996,
+            "task_preflight_and_existence": 1388.6503679999998,
+            "event_count": 227.83052,
+            "offset_anchor": 300.102396,
+            "event_validation": 322.594062,
+            "cursor_validation": 0.358646,
+            "page_selection_and_sizing": 537.828332,
+            "page_selection_and_fetch": 269.737187,
+            "continuation_exists": 269.616562
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 14,
+            "event_count": 2,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        }
+      ],
+      "median": {
+        "delivery_ms": 6078.041352,
+        "ondraw_ms": 6070.974633,
+        "database_ms": {
+          "INVENTORY": 0.722969,
+          "NATIVE_PRE_KEY": 0.302396,
+          "NATIVE_POST_KEY": 0.270052,
+          "NATIVE_OPEN": 579.453802,
+          "VERSION": 0.197239,
+          "CIPHER_INTEGRITY": 331.658021,
+          "SQLITE_INTEGRITY": 912.439479,
+          "FOREIGN_KEYS": 211.318437,
+          "NATIVE_CLOSE": 0.74974,
+          "ROOM_BUILDER": 0.565833,
+          "ROOM_PRE_KEY": 0.728594,
+          "ROOM_POST_KEY": 0.729167,
+          "ROOM_NATIVE_OPEN": 583.200624,
+          "ROOM_OPEN_SCHEMA": 596.786093,
+          "QUERY_TRANSACTION": 3393.377551,
+          "CLEANUP": 2.859219
+        },
+        "sql_ms": {
+          "room_schema_and_expected_snapshot": 8.625678,
+          "task_preflight_and_existence": 1413.6729670000002,
+          "event_count": 231.69442600000002,
+          "offset_anchor": 302.954375,
+          "event_validation": 324.204791,
+          "cursor_validation": 1.829948,
+          "page_selection_and_sizing": 543.080573,
+          "page_selection_and_fetch": 275.974167,
+          "continuation_exists": 271.352344
+        }
+      }
+    }
+  },
+  "after": {
+    "1": {
+      "samples": [
+        {
+          "repetition": 0,
+          "delivery_ms": 5035.002238,
+          "ondraw_ms": 4992.164009,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.648021,
+            "NATIVE_PRE_KEY": 0.403906,
+            "NATIVE_POST_KEY": 0.320573,
+            "NATIVE_OPEN": 578.667291,
+            "VERSION": 0.157865,
+            "CIPHER_INTEGRITY": 346.984948,
+            "SQLITE_INTEGRITY": 926.274635,
+            "FOREIGN_KEYS": 211.036511,
+            "NATIVE_CLOSE": 0.635989,
+            "ROOM_BUILDER": 0.561615,
+            "ROOM_PRE_KEY": 0.717083,
+            "ROOM_POST_KEY": 0.802396,
+            "ROOM_NATIVE_OPEN": 585.686353,
+            "ROOM_OPEN_SCHEMA": 600.548854,
+            "QUERY_TRANSACTION": 2207.138749,
+            "CLEANUP": 1.275677
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 8.312135000000001,
+            "task_preflight_and_existence": 717.097966,
+            "event_validation": 329.560781,
+            "event_count": 123.746354,
+            "page_selection_and_sizing": 564.6232809999999,
+            "page_selection_and_fetch": 440.373906,
+            "continuation_exists": 1.781667
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.729844,
+            "task_preflight_and_existence": 703.02302,
+            "event_validation": 327.969843,
+            "event_count": 122.010729,
+            "page_selection_and_sizing": 560.439843,
+            "page_selection_and_fetch": 280.829635,
+            "continuation_exists": 0.245729
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 1,
+          "delivery_ms": 4948.313852,
+          "ondraw_ms": 4914.44781,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.814479,
+            "NATIVE_PRE_KEY": 0.873594,
+            "NATIVE_POST_KEY": 0.462343,
+            "NATIVE_OPEN": 579.659792,
+            "VERSION": 0.171355,
+            "CIPHER_INTEGRITY": 337.669219,
+            "SQLITE_INTEGRITY": 926.905521,
+            "FOREIGN_KEYS": 211.008177,
+            "NATIVE_CLOSE": 0.740052,
+            "ROOM_BUILDER": 0.574584,
+            "ROOM_PRE_KEY": 0.737135,
+            "ROOM_POST_KEY": 0.764323,
+            "ROOM_NATIVE_OPEN": 584.365417,
+            "ROOM_OPEN_SCHEMA": 595.763958,
+            "QUERY_TRANSACTION": 2195.703957,
+            "CLEANUP": 1.724584
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 8.216563,
+            "task_preflight_and_existence": 714.387708,
+            "event_validation": 329.999688,
+            "event_count": 123.257239,
+            "page_selection_and_sizing": 563.063594,
+            "page_selection_and_fetch": 443.560624,
+            "continuation_exists": 1.865104
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.7582809999999998,
+            "task_preflight_and_existence": 697.511981,
+            "event_validation": 328.382864,
+            "event_count": 121.60125,
+            "page_selection_and_sizing": 558.901512,
+            "page_selection_and_fetch": 280.154011,
+            "continuation_exists": 0.402031
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 2,
+          "delivery_ms": 4863.842134,
+          "ondraw_ms": 4905.63078,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.746093,
+            "NATIVE_PRE_KEY": 0.627865,
+            "NATIVE_POST_KEY": 0.294062,
+            "NATIVE_OPEN": 578.543229,
+            "VERSION": 0.154062,
+            "CIPHER_INTEGRITY": 340.154271,
+            "SQLITE_INTEGRITY": 926.897031,
+            "FOREIGN_KEYS": 211.420469,
+            "NATIVE_CLOSE": 0.760313,
+            "ROOM_BUILDER": 0.553073,
+            "ROOM_PRE_KEY": 0.366666,
+            "ROOM_POST_KEY": 0.338698,
+            "ROOM_NATIVE_OPEN": 583.607865,
+            "ROOM_OPEN_SCHEMA": 594.79651,
+            "QUERY_TRANSACTION": 2193.64427,
+            "CLEANUP": 1.422552
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 9.401252000000001,
+            "task_preflight_and_existence": 716.929008,
+            "event_validation": 330.126302,
+            "event_count": 123.294583,
+            "page_selection_and_sizing": 562.656979,
+            "page_selection_and_fetch": 436.685052,
+            "continuation_exists": 1.79224
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.7067190000000003,
+            "task_preflight_and_existence": 699.505205,
+            "event_validation": 328.582239,
+            "event_count": 121.699636,
+            "page_selection_and_sizing": 558.56125,
+            "page_selection_and_fetch": 280.411614,
+            "continuation_exists": 0.350364
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        }
+      ],
+      "median": {
+        "delivery_ms": 4948.313852,
+        "ondraw_ms": 4914.44781,
+        "database_ms": {
+          "INVENTORY": 0.746093,
+          "NATIVE_PRE_KEY": 0.627865,
+          "NATIVE_POST_KEY": 0.320573,
+          "NATIVE_OPEN": 578.667291,
+          "VERSION": 0.157865,
+          "CIPHER_INTEGRITY": 340.154271,
+          "SQLITE_INTEGRITY": 926.897031,
+          "FOREIGN_KEYS": 211.036511,
+          "NATIVE_CLOSE": 0.740052,
+          "ROOM_BUILDER": 0.561615,
+          "ROOM_PRE_KEY": 0.717083,
+          "ROOM_POST_KEY": 0.764323,
+          "ROOM_NATIVE_OPEN": 584.365417,
+          "ROOM_OPEN_SCHEMA": 595.763958,
+          "QUERY_TRANSACTION": 2195.703957,
+          "CLEANUP": 1.422552
+        },
+        "sql_ms": {
+          "room_schema_and_expected_snapshot": 8.312135000000001,
+          "task_preflight_and_existence": 716.929008,
+          "event_validation": 329.999688,
+          "event_count": 123.294583,
+          "page_selection_and_sizing": 563.063594,
+          "page_selection_and_fetch": 440.373906,
+          "continuation_exists": 1.79224
+        }
+      }
+    },
+    "2": {
+      "samples": [
+        {
+          "repetition": 0,
+          "delivery_ms": 4967.37255,
+          "ondraw_ms": 4932.881613,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.720989,
+            "NATIVE_PRE_KEY": 0.344635,
+            "NATIVE_POST_KEY": 0.31198,
+            "NATIVE_OPEN": 580.88177,
+            "VERSION": 0.149635,
+            "CIPHER_INTEGRITY": 344.842448,
+            "SQLITE_INTEGRITY": 926.013802,
+            "FOREIGN_KEYS": 210.604063,
+            "NATIVE_CLOSE": 0.646771,
+            "ROOM_BUILDER": 0.653646,
+            "ROOM_PRE_KEY": 0.714011,
+            "ROOM_POST_KEY": 0.732656,
+            "ROOM_NATIVE_OPEN": 582.287656,
+            "ROOM_OPEN_SCHEMA": 594.344531,
+            "QUERY_TRANSACTION": 2212.215416,
+            "CLEANUP": 3.090573
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 8.280054999999999,
+            "task_preflight_and_existence": 717.8575000000001,
+            "event_validation": 328.892188,
+            "event_count": 124.359114,
+            "cursor_validation": 1.690625,
+            "page_selection_and_sizing": 569.908958,
+            "page_selection_and_fetch": 444.845519,
+            "continuation_exists": 2.317657
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.9492209999999999,
+            "task_preflight_and_existence": 700.573491,
+            "event_validation": 327.276042,
+            "event_count": 121.827864,
+            "cursor_validation": 0.258332,
+            "page_selection_and_sizing": 565.3299480000001,
+            "page_selection_and_fetch": 283.65042,
+            "continuation_exists": 0.45651
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 1,
+          "delivery_ms": 4938.204061,
+          "ondraw_ms": 4908.380936,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 1.102865,
+            "NATIVE_PRE_KEY": 0.569739,
+            "NATIVE_POST_KEY": 0.453906,
+            "NATIVE_OPEN": 582.851926,
+            "VERSION": 0.164844,
+            "CIPHER_INTEGRITY": 336.301927,
+            "SQLITE_INTEGRITY": 925.718021,
+            "FOREIGN_KEYS": 211.242032,
+            "NATIVE_CLOSE": 0.709115,
+            "ROOM_BUILDER": 0.564375,
+            "ROOM_PRE_KEY": 0.700573,
+            "ROOM_POST_KEY": 0.81526,
+            "ROOM_NATIVE_OPEN": 584.643594,
+            "ROOM_OPEN_SCHEMA": 596.967083,
+            "QUERY_TRANSACTION": 2206.680833,
+            "CLEANUP": 1.251094
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 7.859322999999999,
+            "task_preflight_and_existence": 716.572813,
+            "event_validation": 331.863073,
+            "event_count": 123.432708,
+            "cursor_validation": 1.800937,
+            "page_selection_and_sizing": 567.750573,
+            "page_selection_and_fetch": 441.467188,
+            "continuation_exists": 1.855677
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.736718,
+            "task_preflight_and_existence": 701.0409880000001,
+            "event_validation": 330.264479,
+            "event_count": 121.810885,
+            "cursor_validation": 0.389272,
+            "page_selection_and_sizing": 563.625,
+            "page_selection_and_fetch": 282.803281,
+            "continuation_exists": 0.455312
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 2,
+          "delivery_ms": 4955.467914,
+          "ondraw_ms": 4927.354841,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.575312,
+            "NATIVE_PRE_KEY": 0.291719,
+            "NATIVE_POST_KEY": 0.259062,
+            "NATIVE_OPEN": 578.034479,
+            "VERSION": 0.154375,
+            "CIPHER_INTEGRITY": 339.165781,
+            "SQLITE_INTEGRITY": 926.482916,
+            "FOREIGN_KEYS": 210.956146,
+            "NATIVE_CLOSE": 0.763021,
+            "ROOM_BUILDER": 0.552083,
+            "ROOM_PRE_KEY": 1.053438,
+            "ROOM_POST_KEY": 0.83948,
+            "ROOM_NATIVE_OPEN": 585.617916,
+            "ROOM_OPEN_SCHEMA": 601.039062,
+            "QUERY_TRANSACTION": 2212.92177,
+            "CLEANUP": 2.960261
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 14.784687,
+            "task_preflight_and_existence": 714.146616,
+            "event_validation": 331.480104,
+            "event_count": 123.33901,
+            "cursor_validation": 1.784948,
+            "page_selection_and_sizing": 568.6909370000001,
+            "page_selection_and_fetch": 445.980052,
+            "continuation_exists": 2.223907
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 2.484272,
+            "task_preflight_and_existence": 700.2749500000001,
+            "event_validation": 329.896199,
+            "event_count": 121.780781,
+            "cursor_validation": 0.342501,
+            "page_selection_and_sizing": 564.501615,
+            "page_selection_and_fetch": 283.450466,
+            "continuation_exists": 0.564062
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_validation": 1,
+            "event_count": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        }
+      ],
+      "median": {
+        "delivery_ms": 4955.467914,
+        "ondraw_ms": 4927.354841,
+        "database_ms": {
+          "INVENTORY": 0.720989,
+          "NATIVE_PRE_KEY": 0.344635,
+          "NATIVE_POST_KEY": 0.31198,
+          "NATIVE_OPEN": 580.88177,
+          "VERSION": 0.154375,
+          "CIPHER_INTEGRITY": 339.165781,
+          "SQLITE_INTEGRITY": 926.013802,
+          "FOREIGN_KEYS": 210.956146,
+          "NATIVE_CLOSE": 0.709115,
+          "ROOM_BUILDER": 0.564375,
+          "ROOM_PRE_KEY": 0.714011,
+          "ROOM_POST_KEY": 0.81526,
+          "ROOM_NATIVE_OPEN": 584.643594,
+          "ROOM_OPEN_SCHEMA": 596.967083,
+          "QUERY_TRANSACTION": 2212.215416,
+          "CLEANUP": 2.960261
+        },
+        "sql_ms": {
+          "room_schema_and_expected_snapshot": 8.280054999999999,
+          "task_preflight_and_existence": 716.572813,
+          "event_validation": 331.480104,
+          "event_count": 123.432708,
+          "cursor_validation": 1.784948,
+          "page_selection_and_sizing": 568.6909370000001,
+          "page_selection_and_fetch": 444.845519,
+          "continuation_exists": 2.223907
+        }
+      }
+    },
+    "2001": {
+      "samples": [
+        {
+          "repetition": 0,
+          "delivery_ms": 5324.198384,
+          "ondraw_ms": 5366.502863,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.535989,
+            "NATIVE_PRE_KEY": 0.281459,
+            "NATIVE_POST_KEY": 0.256146,
+            "NATIVE_OPEN": 578.004635,
+            "VERSION": 0.146771,
+            "CIPHER_INTEGRITY": 348.151719,
+            "SQLITE_INTEGRITY": 925.560677,
+            "FOREIGN_KEYS": 210.702604,
+            "NATIVE_CLOSE": 0.654844,
+            "ROOM_BUILDER": 0.575937,
+            "ROOM_PRE_KEY": 0.548958,
+            "ROOM_POST_KEY": 0.806041,
+            "ROOM_NATIVE_OPEN": 590.534531,
+            "ROOM_OPEN_SCHEMA": 602.28026,
+            "QUERY_TRANSACTION": 2636.536457,
+            "CLEANUP": 1.472708
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 8.497449,
+            "task_preflight_and_existence": 713.094792,
+            "event_count": 123.490052,
+            "offset_anchor": 294.148281,
+            "event_validation": 330.569167,
+            "cursor_validation": 2.650677,
+            "page_selection_and_sizing": 565.631198,
+            "page_selection_and_fetch": 443.815052,
+            "continuation_exists": 142.16875
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 2.3904710000000002,
+            "task_preflight_and_existence": 700.1544269999999,
+            "event_count": 121.814532,
+            "offset_anchor": 292.273229,
+            "event_validation": 328.936458,
+            "cursor_validation": 0.286823,
+            "page_selection_and_sizing": 560.164115,
+            "page_selection_and_fetch": 279.867603,
+            "continuation_exists": 139.818021
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_count": 1,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 1,
+          "delivery_ms": 5297.518279,
+          "ondraw_ms": 5322.303227,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.618646,
+            "NATIVE_PRE_KEY": 0.308281,
+            "NATIVE_POST_KEY": 0.297656,
+            "NATIVE_OPEN": 580.556875,
+            "VERSION": 0.23974,
+            "CIPHER_INTEGRITY": 339.092239,
+            "SQLITE_INTEGRITY": 925.880208,
+            "FOREIGN_KEYS": 211.226406,
+            "NATIVE_CLOSE": 0.691459,
+            "ROOM_BUILDER": 0.569375,
+            "ROOM_PRE_KEY": 0.345364,
+            "ROOM_POST_KEY": 0.430208,
+            "ROOM_NATIVE_OPEN": 579.790208,
+            "ROOM_OPEN_SCHEMA": 591.980729,
+            "QUERY_TRANSACTION": 2633.591666,
+            "CLEANUP": 1.803282
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 8.783908,
+            "task_preflight_and_existence": 713.631041,
+            "event_count": 123.779584,
+            "offset_anchor": 295.751354,
+            "event_validation": 331.087604,
+            "cursor_validation": 1.732136,
+            "page_selection_and_sizing": 564.514948,
+            "page_selection_and_fetch": 439.636719,
+            "continuation_exists": 141.235886
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.884376,
+            "task_preflight_and_existence": 698.807135,
+            "event_count": 122.184218,
+            "offset_anchor": 293.761614,
+            "event_validation": 329.448333,
+            "cursor_validation": 0.287656,
+            "page_selection_and_sizing": 560.3665619999999,
+            "page_selection_and_fetch": 280.410834,
+            "continuation_exists": 139.08651
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_count": 1,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 2,
+          "delivery_ms": 5378.716144,
+          "ondraw_ms": 5351.481352,
+          "rows": 32,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.795573,
+            "NATIVE_PRE_KEY": 0.343281,
+            "NATIVE_POST_KEY": 0.326042,
+            "NATIVE_OPEN": 579.333645,
+            "VERSION": 0.163281,
+            "CIPHER_INTEGRITY": 341.715,
+            "SQLITE_INTEGRITY": 926.667396,
+            "FOREIGN_KEYS": 210.977917,
+            "NATIVE_CLOSE": 0.754584,
+            "ROOM_BUILDER": 0.604375,
+            "ROOM_PRE_KEY": 0.714688,
+            "ROOM_POST_KEY": 0.80375,
+            "ROOM_NATIVE_OPEN": 586.904479,
+            "ROOM_OPEN_SCHEMA": 601.437239,
+            "QUERY_TRANSACTION": 2637.644687,
+            "CLEANUP": 2.66151
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 11.650573999999999,
+            "task_preflight_and_existence": 713.100521,
+            "event_count": 123.143177,
+            "offset_anchor": 295.092604,
+            "event_validation": 329.102864,
+            "cursor_validation": 2.340052,
+            "page_selection_and_sizing": 565.877031,
+            "page_selection_and_fetch": 444.334322,
+            "continuation_exists": 140.359218
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 2.574062,
+            "task_preflight_and_existence": 700.0648980000001,
+            "event_count": 121.536459,
+            "offset_anchor": 293.279062,
+            "event_validation": 327.363645,
+            "cursor_validation": 0.357604,
+            "page_selection_and_sizing": 560.315155,
+            "page_selection_and_fetch": 282.109219,
+            "continuation_exists": 138.440885
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_count": 1,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        }
+      ],
+      "median": {
+        "delivery_ms": 5324.198384,
+        "ondraw_ms": 5351.481352,
+        "database_ms": {
+          "INVENTORY": 0.618646,
+          "NATIVE_PRE_KEY": 0.308281,
+          "NATIVE_POST_KEY": 0.297656,
+          "NATIVE_OPEN": 579.333645,
+          "VERSION": 0.163281,
+          "CIPHER_INTEGRITY": 341.715,
+          "SQLITE_INTEGRITY": 925.880208,
+          "FOREIGN_KEYS": 210.977917,
+          "NATIVE_CLOSE": 0.691459,
+          "ROOM_BUILDER": 0.575937,
+          "ROOM_PRE_KEY": 0.548958,
+          "ROOM_POST_KEY": 0.80375,
+          "ROOM_NATIVE_OPEN": 586.904479,
+          "ROOM_OPEN_SCHEMA": 601.437239,
+          "QUERY_TRANSACTION": 2636.536457,
+          "CLEANUP": 1.803282
+        },
+        "sql_ms": {
+          "room_schema_and_expected_snapshot": 8.783908,
+          "task_preflight_and_existence": 713.100521,
+          "event_count": 123.490052,
+          "offset_anchor": 295.092604,
+          "event_validation": 330.569167,
+          "cursor_validation": 2.340052,
+          "page_selection_and_sizing": 565.631198,
+          "page_selection_and_fetch": 443.815052,
+          "continuation_exists": 141.235886
+        }
+      }
+    },
+    "4001": {
+      "samples": [
+        {
+          "repetition": 0,
+          "delivery_ms": 5335.749633,
+          "ondraw_ms": 5319.35354,
+          "rows": 1,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.805469,
+            "NATIVE_PRE_KEY": 0.29125,
+            "NATIVE_POST_KEY": 0.261354,
+            "NATIVE_OPEN": 579.259635,
+            "VERSION": 0.146666,
+            "CIPHER_INTEGRITY": 336.098802,
+            "SQLITE_INTEGRITY": 926.842448,
+            "FOREIGN_KEYS": 210.985,
+            "NATIVE_CLOSE": 0.71177,
+            "ROOM_BUILDER": 0.552396,
+            "ROOM_PRE_KEY": 0.702812,
+            "ROOM_POST_KEY": 0.965937,
+            "ROOM_NATIVE_OPEN": 587.207395,
+            "ROOM_OPEN_SCHEMA": 599.253542,
+            "QUERY_TRANSACTION": 2620.788176,
+            "CLEANUP": 1.271562
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 7.730622000000001,
+            "task_preflight_and_existence": 711.404636,
+            "event_count": 124.289167,
+            "offset_anchor": 311.838698,
+            "event_validation": 328.826094,
+            "cursor_validation": 1.561042,
+            "page_selection_and_sizing": 558.678229,
+            "page_selection_and_fetch": 284.08901,
+            "continuation_exists": 278.582917
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.809946,
+            "task_preflight_and_existence": 697.29276,
+            "event_count": 121.79776,
+            "offset_anchor": 308.555572,
+            "event_validation": 327.208698,
+            "cursor_validation": 0.156458,
+            "page_selection_and_sizing": 554.4101559999999,
+            "page_selection_and_fetch": 278.439843,
+            "continuation_exists": 276.963645
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_count": 1,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 1,
+          "delivery_ms": 5348.196248,
+          "ondraw_ms": 5331.589581,
+          "rows": 1,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.608021,
+            "NATIVE_PRE_KEY": 0.273125,
+            "NATIVE_POST_KEY": 0.275781,
+            "NATIVE_OPEN": 578.238958,
+            "VERSION": 0.150729,
+            "CIPHER_INTEGRITY": 345.253698,
+            "SQLITE_INTEGRITY": 927.61927,
+            "FOREIGN_KEYS": 210.836407,
+            "NATIVE_CLOSE": 0.829896,
+            "ROOM_BUILDER": 0.621875,
+            "ROOM_PRE_KEY": 0.762292,
+            "ROOM_POST_KEY": 0.800677,
+            "ROOM_NATIVE_OPEN": 582.115781,
+            "ROOM_OPEN_SCHEMA": 594.460468,
+            "QUERY_TRANSACTION": 2620.610676,
+            "CLEANUP": 1.353333
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 7.802968,
+            "task_preflight_and_existence": 712.163696,
+            "event_count": 123.329219,
+            "offset_anchor": 310.190729,
+            "event_validation": 330.371822,
+            "cursor_validation": 1.589375,
+            "page_selection_and_sizing": 557.260416,
+            "page_selection_and_fetch": 283.862135,
+            "continuation_exists": 279.26401
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.736927,
+            "task_preflight_and_existence": 698.6907269999999,
+            "event_count": 121.459896,
+            "offset_anchor": 308.265885,
+            "event_validation": 328.702031,
+            "cursor_validation": 0.157397,
+            "page_selection_and_sizing": 553.154896,
+            "page_selection_and_fetch": 277.939844,
+            "continuation_exists": 277.616458
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_count": 1,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        },
+        {
+          "repetition": 2,
+          "delivery_ms": 5289.012081,
+          "ondraw_ms": 5319.77281,
+          "rows": 1,
+          "total": 128001,
+          "database_ms": {
+            "INVENTORY": 0.833646,
+            "NATIVE_PRE_KEY": 0.344479,
+            "NATIVE_POST_KEY": 0.286406,
+            "NATIVE_OPEN": 578.481562,
+            "VERSION": 0.156146,
+            "CIPHER_INTEGRITY": 342.864687,
+            "SQLITE_INTEGRITY": 925.561771,
+            "FOREIGN_KEYS": 210.996406,
+            "NATIVE_CLOSE": 0.781355,
+            "ROOM_BUILDER": 0.573333,
+            "ROOM_PRE_KEY": 0.793594,
+            "ROOM_POST_KEY": 0.806719,
+            "ROOM_NATIVE_OPEN": 585.233177,
+            "ROOM_OPEN_SCHEMA": 597.420938,
+            "QUERY_TRANSACTION": 2617.022238,
+            "CLEANUP": 1.80151
+          },
+          "sql_ms": {
+            "room_schema_and_expected_snapshot": 8.063176,
+            "task_preflight_and_existence": 713.413281,
+            "event_count": 122.82375,
+            "offset_anchor": 308.781562,
+            "event_validation": 328.699688,
+            "cursor_validation": 1.571875,
+            "page_selection_and_sizing": 560.149531,
+            "page_selection_and_fetch": 282.835469,
+            "continuation_exists": 279.009687
+          },
+          "sql_step_ms": {
+            "room_schema_and_expected_snapshot": 1.733545,
+            "task_preflight_and_existence": 700.0669240000001,
+            "event_count": 121.216041,
+            "offset_anchor": 306.923437,
+            "event_validation": 327.113593,
+            "cursor_validation": 0.156406,
+            "page_selection_and_sizing": 555.4779699999999,
+            "page_selection_and_fetch": 277.187083,
+            "continuation_exists": 277.266406
+          },
+          "sql_counts": {
+            "room_schema_and_expected_snapshot": 16,
+            "task_preflight_and_existence": 8,
+            "event_count": 1,
+            "offset_anchor": 1,
+            "event_validation": 1,
+            "cursor_validation": 1,
+            "page_selection_and_sizing": 2,
+            "page_selection_and_fetch": 1,
+            "continuation_exists": 1
+          }
+        }
+      ],
+      "median": {
+        "delivery_ms": 5335.749633,
+        "ondraw_ms": 5319.77281,
+        "database_ms": {
+          "INVENTORY": 0.805469,
+          "NATIVE_PRE_KEY": 0.29125,
+          "NATIVE_POST_KEY": 0.275781,
+          "NATIVE_OPEN": 578.481562,
+          "VERSION": 0.150729,
+          "CIPHER_INTEGRITY": 342.864687,
+          "SQLITE_INTEGRITY": 926.842448,
+          "FOREIGN_KEYS": 210.985,
+          "NATIVE_CLOSE": 0.781355,
+          "ROOM_BUILDER": 0.573333,
+          "ROOM_PRE_KEY": 0.762292,
+          "ROOM_POST_KEY": 0.806719,
+          "ROOM_NATIVE_OPEN": 585.233177,
+          "ROOM_OPEN_SCHEMA": 597.420938,
+          "QUERY_TRANSACTION": 2620.610676,
+          "CLEANUP": 1.353333
+        },
+        "sql_ms": {
+          "room_schema_and_expected_snapshot": 7.802968,
+          "task_preflight_and_existence": 712.163696,
+          "event_count": 123.329219,
+          "offset_anchor": 310.190729,
+          "event_validation": 328.826094,
+          "cursor_validation": 1.571875,
+          "page_selection_and_sizing": 558.678229,
+          "page_selection_and_fetch": 283.862135,
+          "continuation_exists": 279.009687
+        }
+      }
+    }
+  }
+}

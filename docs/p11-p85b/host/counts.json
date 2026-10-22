@@ -1,0 +1,16 @@
+[
+  {
+    "name": "org.pag.data.product.CompactTaskStoreTest",
+    "tests": "25",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  },
+  {
+    "name": "org.pag.prototype.product.TaskModelTest",
+    "tests": "27",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0"
+  }
+]

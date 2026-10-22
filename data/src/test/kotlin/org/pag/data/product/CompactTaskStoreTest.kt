@@ -134,6 +134,42 @@ class CompactTaskStoreTest {
         assertEquals(before,h.db.payloadStatements);assertEquals(0,h.db.openStatements)
         println("P85a direct entry pages=4001,2001,1 stored=129000 selected=128001 maxPayload=32")
     }
+    @Test fun directAndSequentialHistoryMatchEveryTieOrderedRowWithOneTransactionPreflight()=Harness(history=97).use { h ->
+        // Nonmonotonic insertion times and ties: the reference order is SQLite's full
+        // occurredAt/rowid order, independent of either paging entry point.
+        h.exec("UPDATE task_events SET occurredAt=(rowid*37)%11 WHERE taskId='task-0000'")
+        val reference=runBlocking { h.db.usePrepared("SELECT id FROM task_events WHERE actionId='active' AND taskId='task-0000' ORDER BY occurredAt,rowid") { s ->
+            buildList { while(s.step())add(s.getText(0)) }
+        } }
+        for(status in listOf("PREPARATION","ACTIVE","COMPLETED")) {
+            h.exec("UPDATE actions SET status='$status'")
+            var cursor:CompactEventCursor?=null
+            for(number in 1L..4L) {
+                val sequential=h.value(h.read { it.events(h.current,"task-0000",cursor,true) }).payload as CompactTaskEvents
+                val queries=ArrayList<String>();h.db.beforePrepare={queries.add(it)}
+                val direct=h.value(h.read { it.eventsAtPage(h.current,"task-0000",number,true) }).payload as CompactTaskEvents
+                h.db.beforePrepare={}
+                assertEquals(sequential,direct)
+                assertEquals(reference.drop(((number-1)*32).toInt()).take(32),direct.events.map{it.id})
+                assertEquals(97L,direct.total);assertTrue(direct.events.size<=32)
+                assertEquals(1,queries.count{it=="PRAGMA encoding"})
+                assertEquals(1,queries.count{it=="SELECT COUNT(*) FROM task_events WHERE actionId=? AND taskId=?"})
+                cursor=sequential.next
+            }
+            assertNull(cursor)
+        }
+    }
+
+    @Test fun directPageStillChecksOffPageInvalidEventsAndRevokeAfterAnchor()=Harness(history=97).use { h ->
+        h.exec("UPDATE task_events SET type='BROKEN' WHERE id='task-0000-e-96'")
+        assertDenied(BoundedActiveStatus.INVALID_DATA,h.read{it.eventsAtPage(h.current,"task-0000",2,true)})
+        assertEquals(0,h.db.blobReads);assertEquals(0,h.publications)
+        h.exec("UPDATE task_events SET type='REOPENED' WHERE id='task-0000-e-96'")
+        h.db.beforePrepare={if(it=="SELECT COUNT(*) FROM tasks WHERE actionId=? AND id=?")h.allowed=false}
+        assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.read{it.eventsAtPage(h.current,"task-0000",2,true)})
+        assertEquals(0,h.db.blobReads);assertEquals(0,h.publications)
+    }
+
     @Test fun directPageAnchorRevokeAndFailureNeverPublishOrPretendEmpty()=Harness(history=64).use { h ->
         h.db.beforePrepare={if(it.contains("LIMIT 1 OFFSET"))h.allowed=false}
         assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.read {it.eventsAtPage(h.current,"task-0000",2,true)})
