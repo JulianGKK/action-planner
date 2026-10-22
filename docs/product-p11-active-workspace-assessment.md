@@ -12000,3 +12000,131 @@ unverändert. #32 Room-/Key-/DB-Cleanup-Faults, #33/#34 gemeinsame
 8+8-MiB-Referenzüberlappung, #39 echte OS-Keyguard-/Lifecycle-/Revoke-Races,
 #36 Editor-/ABA und RED-4 bleiben offen. Der Renderer- und Routingfix behebt
 den sichtbaren §78-Fehler, hebt diese Freigabeblocker nicht auf.
+
+## §80 – Accurate ACTIVE Content-OnDraw and targeted performance optimization
+
+**Basis / Review:** `1ca4d06b6678cd2710fce358e684012fca204d4c`, Branch
+`p11-performance-optimization`, sauberer Arbeitsbaum und identischer Remote-HEAD vor
+Arbeitsbeginn. §79-Reviews in #37/#38 gelesen. Der funktionale Routerfix bleibt erhalten.
+Die alten §79-Mediane/p95 (PERSONS 199,533/215,981 ms, FUNCTIONS 150,137/233,114 ms,
+TASKS 283,152/425,068 ms, HUB 185,910/289,312 ms) gehören ausschließlich zur alten
+Navigation→Accessibility-Polling/Scroll→erzwungener Decor-Draw-Definition. Sie sind
+keine isolierten Renderzeiten und werden nicht als neue Messwerte übernommen.
+
+**IMPLEMENTIERT – ereignisgebundener Messpunkt:** Der vorhandene Produktpfad
+`ProductScreen → ActiveWorkspace → CompactActiveContent` erhält einen optionalen,
+payloadfreien Observer. Nur der isolierte P77-Launchprovider installiert den Collector
+`P80ContentFrames`; normale Produktbuilds installieren keinen. Der Release-DEX-Guard
+verlangt zusätzlich dessen Abwesenheit. Kein neuer Authentifizierungspfad, kein
+Snapshotowner, keine Mutationsepoche, kein Ticket-/Pendingregister. Ein einzelner
+bounded Metadatenauftrag bindet monoton steigende Navigations-ID und ACTIVE-Area.
+Start ist auf Main unmittelbar vor dem echten `model.activeArea(area)`-Aufruf;
+der vorhandene echte `authorizeHit` läuft unverändert darin.
+
+Der pro Area gekeyte Compose-Teilbaum erfasst die aktuelle Messidentität einmalig
+in `remember`. Er meldet Composition-Eintritt, erfolgreichen `SideEffect`-Commit,
+angehängtes nichtleeres Layout, Draw-Beginn und Rückkehr von `drawContent`. Ein alter
+Teilbaum kann keine neue Messidentität aufnehmen; ein beliebiger Decor-Draw oder
+nur ein Compose-Commit gilt nicht als Content-Frame. Ohne korrekte Ereignisfolge
+innerhalb fünf Sekunden schlägt der Runner fehl. Vor Verbrauch der Messung und
+Contentprüfung ist keine nächste Navigation erlaubt. Der Collector hält nur eine
+Metadatenanforderung, keine Payload, Callbackquelle, Schlüssel oder DB-Ressource.
+
+**Messdefinition / NICHT BEWIESEN:** Der Endpunkt ist der ausgeführte Compose-
+Content-Draw bzw. dessen Displaylist-Aufzeichnung, keine bestätigte GPU-Präsentation,
+SurfaceFlinger-Übernahme oder physische Pixel-/Displayausgabe. Recomposition-Zeit
+ist hier Subtree-Eintritt→Commit; Commit→Layout-Ende enthält Scheduling, kein exakt
+profilierter Layout-Beginn. Die Ereignisse sind keine Security- oder Retentionautorität.
+Kein Touch-to-Content- oder DeviceCredential-p95-PASS wird daraus abgeleitet.
+
+**ANDROID-GREEN – Content und Timing getrennt:** Kein Accessibility-IPC, `sleep`,
+`ACTION_SHOW_ON_SCREEN` oder `invalidate()` liegt zwischen Messbeginn und Content-
+Draw. Scrollaktionen, Node-Refresh und künstlicher Decor-Draw wurden aus dem Runner
+entfernt. Erst nach Abschluss des zugehörigen Draws erfolgt die strenge sichtbare
+Semantics-/Viewportprüfung. Initial wird HUB geprüft, danach vor der nächsten
+Navigation immer der gerade gezeichnete Zielinhalt. Bei falschem Content, falscher
+Area oder abweichender ursprünglicher Payloadinstanz scheitert der Test; es gibt
+keinen Ersatzwert. Die Sichtprüfung verlangt nach wie vor PERSONS 32/200, alle
+Statuscounts und ersten Pseudonym-Eintrag; TASKS 32/1000, Statuscounts und ersten
+Aufgabentitel; FUNCTIONS korrekte Nullcounts und expliziten Leerzustand; HUB 200
+und die drei Navigationskarten. Genau eine Bereichsüberschrift, `hasMore=true` bei
+Personen/Aufgaben. Keine Behauptung, dass 32 Einträge gleichzeitig im Viewport sind.
+Die Fixture belegt hier eine leere, keine nichtleere Funktionsliste.
+
+**Finaler echter P77-Lauf:** Samsung SM-M526BR `RFCT1186YRJ`, zuvor ausdrücklich
+als isoliert autorisiert. Reale Kette Runtime→Room/SQLCipher→CoreReader→Lifetime→
+ViewModel→Produkt-Compose; synthetisch authentifizierte Testsession. **1 vollständiger
+Core-Readeraufruf, 1 originales Ticket, 80/80 autorisierte Hits, 0 zusätzliche
+Core-Reads/Tickets**, gleiche Payloadinstanz. Der unveränderte `authorizeHit` führt
+pro Hit frischen zentralen READY-Acquire und Publication aus und enthält keinen
+SQL-Read. Die Zähler erfassen Readeraufrufe, nicht einzelne SQL-Statements des
+initialen mehrstufigen Reads. Keine neue Keylease oder Budgetadmission für Hits.
+
+Zusätzlich bestätigt der finale Runner die echte unveränderte **30-s-Idle-Grenze**:
+Ohne künstliches `interaction()` wartet er bis 30,1 Sekunden nach Rückkehr des
+letzten normalen `detail`-Interaktionsaufrufs, verlangt `B0-IDLE-EXPIRED` / LOCKED
+und keinen gültigen ViewModel-Core mehr. Ein anschließender expliziter Lock bleibt
+idempotent. Das ist eine reale Sessionprüfung unter P77-Testautorität, kein
+OS-Keyguard- oder vollständiger Lifecycle-/Racebeweis. Sessionfristen bleiben gleich.
+
+**Neue Werte – finaler Lauf, Navigation→korrekter Compose-Content-Draw-Ende:**
+
+| Area | n | Median ms | p95 nearest-rank ms | Minimum ms | Maximum ms | Fehlversuche |
+|---|---:|---:|---:|---:|---:|---:|
+| PERSONS | 20 | 53,736 | 75,718 | 38,238 | 104,105 | 0 |
+| FUNCTIONS | 20 | 28,243 | 44,666 | 23,011 | 49,255 | 0 |
+| TASKS | 20 | 45,081 | 63,294 | 37,448 | 67,050 | 0 |
+| HUB | 20 | 48,624 | 64,459 | 41,579 | 65,200 | 0 |
+
+Alle vier Mediane/p95 liegen für diese Messdefinition unter 100 ms. Kein
+Warmupwert oder Ausreißer wurde entfernt; der erste PERSONS-Wert 104,105 ms bleibt
+enthalten. **Keine Produkt-Renderoptimierung erforderlich/nachgewiesen:** Der neue
+Messlauf belegt keinen >150-ms-Engpass. Deshalb keine spekulative Entfernung des
+Subtree-Keyings, Reduktion der UI oder Sicherheitsprüfungen. Die alte Messung ist
+methodisch anders; eine Differenz ihrer Mediane ist kein exaktes Profilingdelta.
+
+Die getrennte Semantics-Verifikation außerhalb der Messung hatte Median/p95 in ms:
+PERSONS 158,901/193,279; FUNCTIONS 122,919/128,169; TASKS 156,514/396,069;
+HUB 137,191/156,688. Sie dominierte einen erheblichen Teil des bisherigen Harness-
+Aufwands. Alle Navigations-/authorizeHit-, Composition-/Commit-, Layout-/Draw- und
+Semantics-Rohwerte sowie n/Median/p95/Minimum/Maximum/Fehler stehen in
+[`frames.csv`](p11-p80/frames.csv) und [`summary.csv`](p11-p80/summary.csv).
+Der vollständige finale [Custom-Runnerreport](p11-p80/p77-runtime-compose-runner-final.txt)
+und der erste separate [explorative GREEN-Lauf](p11-p80/p77-runtime-compose-runner-01.txt)
+bleiben erhalten; keine Mischung beider Schemata. [Rechenprogramm und Methodik](p11-p80/README.md)
+erlauben erneute Auswertung. 20 Werte/Area sind explorativ, kein Release-Tail-
+Konfidenznachweis. Semantics-Allokationen/GC zwischen Übergängen können spätere
+Messungen beeinflussen; es wird kein vollständig beobachterfreier Benchmark behauptet.
+
+**HOSTGETESTET / Builds:** 1.826 reguläre Hosttests (app 688, data 1.134,
+security 4; domain NO-SOURCE), jeweils 0 Fehler/Skips, plus 2 P77-Collector-
+Hosttests: fremde Area, Draw ohne Commit/Layout, alter Trace bei neuer Navigation,
+überlappende Anforderung und fremder/unfertiger Verbrauch. Bestehende Router-/Owner-/
+ViewModel-Assertions bleiben erhalten. Vollständiger Offline-Host-, Debug-/Release-
+Build, Androidtest-Kompilation, Manifest- und Release-Sicherheitscheck GREEN.
+P77-Build/Isolation separat mit `-PpagTestBuildType=p77runtime` GREEN, da die
+AGP-Standard-Debug-Testkonfiguration das P77-Androidtest-Manifesttask nicht erzeugt.
+Zwei explizite Custom-Runnerläufe GREEN (je 80 Hits); keine JUnit-Nullausführung als
+Beleg. In §80 kein Android-RED und kein Testskip. [Validierungsbilanz](p11-p80/validation.txt).
+
+**Paket-/Installationsschutz:** Vor beiden Updates IDs/Runner/Manifest/Variante und
+Signatur geprüft, eigene installierte P77-Target-/Runner-APKs zum Signaturvergleich
+gezogen. SHA-256-Signer bei alten und neuen APKs identisch:
+`9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134`.
+Nur `org.pag.prototype.a.p77runtime` und dessen `.test` aktualisiert.
+`org.pag.prototype.a.p76demo`, `org.pag.prototype.a`, `org.pag.perf.p11probe`
+bleiben installiert, Installations-/Updatezeiten, Versionen und Signaturmetadaten
+vor/nach unverändert. Keine Datenlöschung/Deinstallation dieser Pakete.
+
+**NICHT BEWIESEN / BLOCKER / Gate:** Produkt-`reuseEnabled=false` und
+`ramReuseEnabled=false` bleiben bestehen. Keine zweite Cacheengine, keine
+P3b-/Dokumentpayloads, keine zusätzliche 8+8-MiB-Freigabe. Die finalen Samples
+(FD 138→136, PSS 183.948→152.802 KiB, NativeHeap 11.469.552→9.738.336 Byte,
+ART-GC 0→10) sind Prozessbeobachtungen vor Hits/nach Idle-Lock, kein Beweis
+exakter Retention, Leasefreiheit oder vollständiger Heap-/Frame-Löschung.
+#32 native Room-/DB-/Keycleanup-Faults, #33/#34 gemeinsame Compose-/Editor-/Native-/
+Frame-Überlappung, #39 echte Keyguard-/Lifecycle-/Revoke-Races, #36 Editor-/ABA
+und RED-4 Recovery bleiben eigenständig offen und fail-closed.
+Nächste Freigabe benötigt diese unabhängigen Sicherheitsabnahmen und anschließend
+echten Touch-to-Content-Nachweis unter regulärer DeviceCredential-Autorität.
+Kein Merge, Release oder allgemeines Produkt-RAM-GO; Stopp bis unabhängiger Review.

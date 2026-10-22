@@ -5,6 +5,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -62,7 +66,7 @@ internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: Task
 }
 internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >= 600f && fontScale <= 1.3f) 2 else 1
 
-@Composable internal fun ActiveWorkspace(model: ProductViewModel, renderContent:Boolean=true) {
+@Composable internal fun ActiveWorkspace(model: ProductViewModel, renderContent:Boolean=true, contentFrames:CompactContentFrameObserver?=null) {
     ActionWorkspaceHeader(model)
     if (model.activeArea != ActiveArea.HUB || model.operations.screen != OperationsScreen.OVERVIEW ||
         model.selectedPerson != null || model.tasks.form || model.tasks.selected != null) {
@@ -96,7 +100,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
         val core=model.activeCore
         if(core==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
         key(model.activeArea) {
-            CompactActiveContent(core,model.activeArea,model.activeNavigationEnabled,model::activeArea)
+            CompactActiveContent(core,model.activeArea,model.activeNavigationEnabled,model::activeArea,contentFrames)
         }
         FormOutlinedButton(model::useFullActiveView,enabled=model.activeNavigationEnabled) { Text("Alle anzeigen und bearbeiten") }
         if(model.activeArea==ActiveArea.HUB && model.documentsAvailable)
@@ -148,32 +152,44 @@ internal fun activeCompactHubCards(core:ActiveCorePayload):List<HubCard> = listO
     HubCard(ActiveArea.TASKS,listOf("${core.tasks.overall.open} offen","${core.tasks.overall.inProgress} in Arbeit"))
 )
 
-@Composable private fun CompactActiveContent(core:ActiveCorePayload,area:ActiveArea,enabled:Boolean,onOpen:(ActiveArea)->Unit) {
-    PreparationHeading(area.label)
-    when(area) {
-        ActiveArea.HUB -> {
-            ActiveHubGrid(activeCompactHubCards(core),enabled,onOpen=onOpen)
-            listOf(ActiveArea.PROTOCOL,ActiveArea.MATERIAL,ActiveArea.COSTS,ActiveArea.MEMORY_REPORTS,ActiveArea.DETAILS).forEach { next ->
-                FormOutlinedButton({onOpen(next)},enabled=enabled) {Text(next.label)}
+@Composable private fun CompactActiveContent(core:ActiveCorePayload,area:ActiveArea,enabled:Boolean,onOpen:(ActiveArea)->Unit, observer:CompactContentFrameObserver?=null) {
+    // Capture once for this area subtree. An old subtree cannot acquire a later navigation ID.
+    val trace=remember(observer,area) { observer?.capture(area)?.also { it.composing(System.nanoTime()) } }
+    if(trace!=null) SideEffect { trace.committed(System.nanoTime()) }
+    val frameModifier=if(trace==null) Modifier else Modifier
+        .onGloballyPositioned { if(it.isAttached && it.size.width>0 && it.size.height>0) trace.laidOut(System.nanoTime()) }
+        .drawWithContent {
+            trace.drawStarted(System.nanoTime())
+            drawContent()
+            trace.drawn(System.nanoTime())
+        }
+    Column(frameModifier,verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        PreparationHeading(area.label)
+        when(area) {
+            ActiveArea.HUB -> {
+                ActiveHubGrid(activeCompactHubCards(core),enabled,onOpen=onOpen)
+                listOf(ActiveArea.PROTOCOL,ActiveArea.MATERIAL,ActiveArea.COSTS,ActiveArea.MEMORY_REPORTS,ActiveArea.DETAILS).forEach { next ->
+                    FormOutlinedButton({onOpen(next)},enabled=enabled) {Text(next.label)}
+                }
             }
+            ActiveArea.PERSONS -> {
+                Text(compactPageLabel(core.people.items.size,core.people.overall.total,core.people.hasMore))
+                OperationalStatus.entries.forEach { status -> Text("${operationalLabel(status)}: ${core.people.overall.count(status)}") }
+                core.people.items.forEach { person -> Text(person.pseudonym) }
+            }
+            ActiveArea.FUNCTIONS -> {
+                Text("${core.functions.onSiteCount} Personen vor Ort · ${core.functions.withoutFunction} ohne Funktion")
+                if (core.functions.items.isEmpty()) Text("Noch keine aktuellen Funktionen")
+                core.functions.items.forEach { function -> Text("${function.role.name}: ${function.onSiteCount} vor Ort") }
+            }
+            ActiveArea.TASKS -> {
+                val counts=core.tasks.overall
+                Text("${counts.open} offen · ${counts.inProgress} in Arbeit · ${counts.done} abgeschlossen · ${counts.cancelled} abgebrochen")
+                Text(compactPageLabel(core.tasks.items.size,counts.open+counts.inProgress,core.tasks.hasMore))
+                core.tasks.items.forEach { task -> Text(task.title) }
+            }
+            else -> Unit
         }
-        ActiveArea.PERSONS -> {
-            Text(compactPageLabel(core.people.items.size,core.people.overall.total,core.people.hasMore))
-            OperationalStatus.entries.forEach { status -> Text("${operationalLabel(status)}: ${core.people.overall.count(status)}") }
-            core.people.items.forEach { person -> Text(person.pseudonym) }
-        }
-        ActiveArea.FUNCTIONS -> {
-            Text("${core.functions.onSiteCount} Personen vor Ort · ${core.functions.withoutFunction} ohne Funktion")
-            if (core.functions.items.isEmpty()) Text("Noch keine aktuellen Funktionen")
-            core.functions.items.forEach { function -> Text("${function.role.name}: ${function.onSiteCount} vor Ort") }
-        }
-        ActiveArea.TASKS -> {
-            val counts=core.tasks.overall
-            Text("${counts.open} offen · ${counts.inProgress} in Arbeit · ${counts.done} abgeschlossen · ${counts.cancelled} abgebrochen")
-            Text(compactPageLabel(core.tasks.items.size,counts.open+counts.inProgress,core.tasks.hasMore))
-            core.tasks.items.forEach { task -> Text(task.title) }
-        }
-        else -> Unit
     }
 }
 

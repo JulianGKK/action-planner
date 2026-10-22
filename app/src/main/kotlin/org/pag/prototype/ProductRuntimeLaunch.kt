@@ -13,5 +13,6 @@ data class ProductRuntimeLaunch(
     val runtime: ProductRuntime,
     val close: () -> Unit = { runtime.close() },
     val testAuthorityBanner: Boolean = false,
-    val testHandle: Any? = null
+    val testHandle: Any? = null,
+    val contentFrames: org.pag.prototype.product.CompactContentFrameObserver? = null
 )

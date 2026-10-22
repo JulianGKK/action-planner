@@ -6,16 +6,11 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.os.Debug
 import android.graphics.Rect
-import android.view.View
-import android.view.ViewTreeObserver
 import org.pag.data.product.P77ProductRuntimeHarness
 import org.pag.domain.SessionState
 import org.pag.prototype.product.ActiveArea
 import org.pag.prototype.product.ProductViewModel
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import java.io.File
 
@@ -56,7 +51,11 @@ class P77RuntimeE2EProbe : Instrumentation() {
                 "Synthetic unlock ended in ${runtime.session.snapshot().state}/${runtime.session.snapshot().technicalId}; inventory=${runtime.inventory.state()}"
             }
             await("action list") { model.actions.any { it.id == "p11-active" } }
-            runOnMainSync { model.detail("p11-active") }
+            var lastOrdinaryInteractionReturnedAt=0L
+            runOnMainSync {
+                model.detail("p11-active")
+                lastOrdinaryInteractionReturnedAt=SystemClock.uptimeMillis()
+            }
             await("ACTIVE core publication") {
                 var present = false
                 runOnMainSync { present = model.activeCore != null }
@@ -73,21 +72,37 @@ class P77RuntimeE2EProbe : Instrumentation() {
             check(harness.observations.tickets.get() == 1)
             check(harness.observations.reads.get() == 1)
             check(harness.observations.hasSingleOriginalTicket())
+            val frames=field(activity,"contentFrames") as org.pag.prototype.product.CompactNavigationFrames
+            // Baseline content is verified before any timed navigation.
+            awaitVisibleArea(activity,model,originalCore,ActiveArea.HUB)
             val memoryBefore=memorySample()
             val idleBefore = requireNotNull(runtime.session.remainingAbsoluteMillis())
             val rows = mutableListOf<String>()
             val sequence = listOf(ActiveArea.PERSONS, ActiveArea.FUNCTIONS, ActiveArea.TASKS, ActiveArea.HUB)
             repeat(20) { for (area in sequence) {
                 val navigationState = AtomicReference<String>()
-                val started = SystemClock.elapsedRealtimeNanos()
+                val sample = AtomicReference<org.pag.prototype.product.CompactNavigationSample>()
                 runOnMainSync {
+                    sample.set(frames.begin(area))
                     model.activeArea(area)
+                    sample.get().navigationReturned=System.nanoTime()
                     check(model.activeCore === original.get())
                     navigationState.set("area=${model.activeArea},enabled=${model.activeNavigationEnabled},selected=${model.selected?.id},status=${model.selected?.status},session=${model.snapshot.state},generation=${model.snapshot.generation}")
                 }
                 check(navigationState.get().startsWith("area=$area,")) { "Compact navigation did not select $area: ${navigationState.get()}" }
+                // No accessibility calls, sleeps, scroll actions or invalidations until this
+                // area's committed, laid-out subtree has actually executed drawContent.
+                val frame=sample.get()
+                frame.await()
+                val verifyStart=System.nanoTime()
                 val visible = awaitVisibleArea(activity, model, originalCore, area)
-                val elapsed = drawVerifiedContent(activity, started)
+                val verifyEnd=System.nanoTime()
+                runOnMainSync {
+                    check(model.activeArea==area && model.activeCore===originalCore)
+                    frames.consume(frame)
+                }
+                rows += "P80_FRAME,${frame.id},$area,${frame.start},${frame.navigationReturned},${frame.compositionStart},${frame.commit},${frame.layout},${frame.drawStart},${frame.drawEnd},${verifyEnd-verifyStart}"
+                val elapsed = frame.drawEnd-frame.start
                 rows += "P77_COMPOSE,$area,${visible.joinToString("|")}"
                 rows += "P77_DRAW,$area,$elapsed"
             } }
@@ -102,14 +117,31 @@ class P77RuntimeE2EProbe : Instrumentation() {
             runOnMainSync { slotRetained = model.activeCore === original.get() }
             check(slotRetained)
 
-            // Real SessionCoordinator lock must synchronously invalidate the original owner.
+            // Confirm the actual 30s idle boundary, without interaction calls or deadline
+            // reflection. snapshot/checkExpiry may enforce expiry but cannot renew it.
+            val idleChecked=java.util.concurrent.CountDownLatch(1)
+            val idleFailure=AtomicReference<Throwable?>()
+            runOnMainSync {
+                android.os.Handler(android.os.Looper.getMainLooper()).postAtTime({
+                    try {
+                        runtime.session.checkExpiry()
+                        check(runtime.session.snapshot().state==SessionState.LOCKED)
+                        check(runtime.session.snapshot().technicalId=="B0-IDLE-EXPIRED")
+                        check(model.activeCore==null)
+                    } catch(error:Throwable) {idleFailure.set(error)}
+                    finally {idleChecked.countDown()}
+                },lastOrdinaryInteractionReturnedAt+30_100L)
+            }
+            check(idleChecked.await(35,TimeUnit.SECONDS)) {"Idle boundary check was lost"}
+            idleFailure.get()?.let {throw it}
+            // Explicit lock remains idempotent after automatic lock.
             runOnMainSync { model.lock() }
             check(runtime.session.snapshot().state == SessionState.LOCKED)
             runOnMainSync { check(model.activeCore == null) }
             val memoryAfter=memorySample()
             val payload = requireNotNull(original.get())
             val report = buildString {
-                append("P77_RESULT,synthetic_test_authority=true,product_runtime=true,reader_invocations=1,tickets=1,hit_attempts=80,accepted_hits=80,retained_payload_same=true,idle_extended=false,lock_revoked=true\n")
+                append("P77_RESULT,synthetic_test_authority=true,product_runtime=true,reader_invocations=1,tickets=1,hit_attempts=80,accepted_hits=80,retained_payload_same=true,idle_extended=false,idle_expiry_confirmed=true,lock_revoked=true\n")
                 rows.forEach { append(it).append('\n') }
                 harness.observations.hitNanos.forEachIndexed { index,nanos -> append("P77_HIT,${index+1},$nanos\n") }
                 append(memoryBefore).append('\n').append(memoryAfter).append('\n')
@@ -224,9 +256,6 @@ class P77RuntimeE2EProbe : Instrumentation() {
             fun find(node:android.view.accessibility.AccessibilityNodeInfo):Boolean {
                 val matches = node.text?.toString()?.contains(search) == true ||
                     node.contentDescription?.toString()?.contains(search) == true
-                if (matches && !node.isVisibleToUser) node.performAction(
-                    android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.id)
-                if (matches) node.refresh()
                 val bounds=Rect().also(node::getBoundsInScreen)
                 val visible=matches && node.isVisibleToUser && Rect.intersects(viewport,bounds)
                 if(visible)return true
@@ -245,28 +274,4 @@ class P77RuntimeE2EProbe : Instrumentation() {
     }
     private var runtimePhase=0
 
-    /** Measures navigation start through a real draw scheduled only after the expected compact
-     * accessibility content is present. This avoids counting an unrelated decor invalidation. */
-    private fun drawVerifiedContent(activity: MainActivity, navigationStartedNanos: Long): Long {
-        val view = activity.window.decorView
-        val done = CountDownLatch(1)
-        val once = AtomicBoolean(false)
-        val elapsed = AtomicLong()
-        lateinit var listener: ViewTreeObserver.OnDrawListener
-        runOnMainSync {
-            listener = ViewTreeObserver.OnDrawListener {
-                if (once.compareAndSet(false, true)) {
-                    elapsed.set(SystemClock.elapsedRealtimeNanos() - navigationStartedNanos)
-                    done.countDown()
-                    view.post { if (view.viewTreeObserver.isAlive) view.viewTreeObserver.removeOnDrawListener(listener) }
-                }
-            }
-            view.viewTreeObserver.addOnDrawListener(listener)
-            // Content has already been checked against the core payload by awaitVisibleArea.
-            view.invalidate()
-        }
-        check(done.await(10, TimeUnit.SECONDS)) { "No draw after verified compact content" }
-        runOnMainSync { if (view.viewTreeObserver.isAlive) view.viewTreeObserver.removeOnDrawListener(listener) }
-        return elapsed.get()
-    }
 }

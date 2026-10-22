@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
     // Opaque test diagnostics only; the main source set has no reference to P77 classes.
     private var p77Harness: Any? = null
     private var testAuthorityBanner = false
+    private var contentFrames: org.pag.prototype.product.CompactContentFrameObserver? = null
     private lateinit var model: ProductViewModel
     private val worker by lazy { Executors.newSingleThreadExecutor() }
     private val handler by lazy { Handler(Looper.getMainLooper()) }
@@ -104,6 +105,7 @@ class MainActivity : ComponentActivity() {
             runtime = launch.runtime
             runtimeClose = launch.close
             p77Harness = launch.testHandle
+            contentFrames = launch.contentFrames
             testAuthorityBanner = launch.testAuthorityBanner
         } else {
             runtime = ProductRuntime(this, worker, mainExecutor, foreground = foregroundCheck)
@@ -167,7 +169,7 @@ class MainActivity : ComponentActivity() {
         val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenOff, filter, Context.RECEIVER_NOT_EXPORTED)
         else registerReceiver(screenOff, filter)
-        setContent { ProductScreen(model, testAuthorityBanner = testAuthorityBanner) }
+        setContent { ProductScreen(model, testAuthorityBanner = testAuthorityBanner, contentFrames = contentFrames) }
     }
     override fun onResume() {
         super.onResume(); resumed = true
@@ -212,6 +214,7 @@ class MainActivity : ComponentActivity() {
             handler.removeCallbacks(expiry)
             runtimeClose?.invoke() ?: runtime.close()
             p77Harness = null
+            contentFrames = null
             runtimeClose = null
             worker.shutdownNow(); unregisterReceiver(screenOff)
         }

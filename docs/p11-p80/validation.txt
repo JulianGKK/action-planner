@@ -1,0 +1,44 @@
+org.pag.prototype.a.p76demo UNCHANGED
+versionCode=2 minSdk=30 targetSdk=37
+versionName=0.1.0-alpha.2-p76demo
+lastUpdateTime=2026-10-21 16:59:59
+signatures=PackageSignatures{6f3a7ba version:2, signatures:[224d2aa7], past signatures:[]}
+firstInstallTime=2026-10-21 16:58:40
+
+org.pag.prototype.a UNCHANGED
+versionCode=2 minSdk=30 targetSdk=37
+versionName=0.1.0-alpha.2
+lastUpdateTime=2026-10-21 10:39:49
+signatures=PackageSignatures{3af64e version:2, signatures:[224d2aa7], past signatures:[]}
+firstInstallTime=2026-10-09 10:47:25
+
+org.pag.perf.p11probe UNCHANGED
+versionCode=2 minSdk=30 targetSdk=37
+versionName=0.1.0-alpha.2
+lastUpdateTime=2026-10-19 16:17:35
+signatures=PackageSignatures{87071b6 version:2, signatures:[224d2aa7], past signatures:[]}
+firstInstallTime=2026-10-19 16:17:35
+
+p80-targeted.log: BUILD SUCCESSFUL in 5s
+
+p80-full-offline.log: BUILD SUCCESSFUL in 21s
+
+p80-final-p77-build.log: BUILD SUCCESSFUL in 1s
+
+app:testDebugUnitTest {'tests': 688, 'failures': 0, 'errors': 0, 'skipped': 0}
+
+data:testDebugUnitTest {'tests': 1134, 'failures': 0, 'errors': 0, 'skipped': 0}
+
+security:testDebugUnitTest {'tests': 4, 'failures': 0, 'errors': 0, 'skipped': 0}
+
+domain:test {'tests': 0, 'failures': 0, 'errors': 0, 'skipped': 0}
+
+app:testP77runtimeUnitTest {'tests': 2, 'failures': 0, 'errors': 0, 'skipped': 0}
+
+Final custom Android runner: P77 PASS, 80/80 hits, original ticket=1, core reader invocations=1; real idle expiry and slot revoke asserted. Two targeted custom-runner executions GREEN; no JUnit count used as Android PASS.
+
+Device: Samsung SM-M526BR / RFCT1186YRJ, previously explicitly authorized isolated test device.
+
+Updated only org.pag.prototype.a.p77runtime and org.pag.prototype.a.p77runtime.test. Existing target/runner APKs pulled and their signer compared before update. Both existing and new signer SHA256: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134
+
+P77 build variant and target/runner manifests checked; runner org.pag.prototype.P77RuntimeE2EProbe targets org.pag.prototype.a.p77runtime. No protected package installed/updated/removed/cleared.

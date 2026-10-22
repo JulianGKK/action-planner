@@ -21,7 +21,7 @@ import java.util.Locale
 
 internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>{null}
 
-@Composable fun ProductScreen(model: ProductViewModel, testAuthorityBanner: Boolean = false) {
+@Composable fun ProductScreen(model: ProductViewModel, testAuthorityBanner: Boolean = false, contentFrames: CompactContentFrameObserver? = null) {
     val observation=LocalProductObservation.current
     SideEffect { observation?.invoke("COMPOSITION") }
     MaterialTheme {
@@ -81,7 +81,7 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                                         model.detailLoading -> PagLoadingState()
                                         model.selected?.status == ActionStatus.DRAFT -> DraftWorkspace(model)
                                         model.selected?.status == ActionStatus.PREPARATION -> PreparationWorkspace(model)
-                                        model.selected?.status == ActionStatus.ACTIVE -> ActiveWorkspace(model)
+                                        model.selected?.status == ActionStatus.ACTIVE -> ActiveWorkspace(model, contentFrames = contentFrames)
                                         model.completedMemoryReportsOpen -> CompletedMemoryReportWorkspace(model)
                                         model.completedProtocolOpen -> CompletedProtocolWorkspace(model)
                                         model.completedMaterialOpen -> CompletedMaterialWorkspace(model)
