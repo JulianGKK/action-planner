@@ -152,7 +152,7 @@ class P83MemoryOverlapProbe:Instrumentation() {
                         lists=1,listCapacity=board.events.size.toLong(),references=board.events.size.toLong())
                     val historyCharge=ActiveWorkspaceBudget.estimateUnits(historyUnits).second
                     emit("P83_FULL,$profile,t_ns=${SystemClock.elapsedRealtimeNanos()},tasks=${board.tasks.size},events=${board.events.size},persons=${workspace.persons.size},form=${model.tasks.form},compact_slot=false,history_engineering_charge=$historyCharge,${memory()}")
-                    if(profile=="stress")check(board.events.size==129000){"Complete stress history missing"}
+                    if(profile=="stress")check(board.events.size==5000){"Complete stress history missing"}
                 }
                 check(editorDraw.await(5,TimeUnit.SECONDS)){"No actual editor frame"}
                 main {

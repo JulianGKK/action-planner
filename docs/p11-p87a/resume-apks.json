@@ -1,0 +1,12 @@
+[
+  {
+    "package": "org.pag.prototype.a.p77runtime",
+    "sha256": "4b2db4ba57e4f7ef5a0ce632af9cc63c08c299631b8335b9a79e846c732e54ed",
+    "signer": "9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134"
+  },
+  {
+    "package": "org.pag.prototype.a.p77runtime.test",
+    "sha256": "d4b30017ec4e5c8412cbf893b4ce4dafe81118038c3ebded7eaf4cb939358e15",
+    "signer": "9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134"
+  }
+]

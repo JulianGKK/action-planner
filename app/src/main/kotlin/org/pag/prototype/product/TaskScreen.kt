@@ -14,16 +14,19 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
+internal fun taskFailureMessage(reason:OperationsFailure):String = when(reason) {
+    OperationsFailure.TASK_EVENT_LIMIT_REACHED -> "Die Grenze von 5.000 Aufgabenereignissen je Aktion ist erreicht. Neue Aufgaben und Statuswechsel sind nicht möglich. Bestehende Aufgaben können weiter gelesen und bearbeitet werden."
+    OperationsFailure.INVALID->"Bitte Titel (1–120 Zeichen), Zuständigkeit und Fälligkeit prüfen."
+    OperationsFailure.STALE->"Die Aufgabe wurde inzwischen geändert. Dein Entwurf bleibt erhalten; bitte bewusst neu laden."
+    OperationsFailure.NOT_ALLOWED->"Im aktuellen Aktionsstatus ist diese Änderung nicht möglich."
+    else->"Die Aufgabe oder Zuordnung ist in dieser Aktion nicht verfügbar."
+}
+
 @Composable internal fun TaskSection(model:TaskModel,people:OperationalBoard) {
     val board=model.board?:return
     if (people.status == ActionStatus.ACTIVE) { ActiveTaskSection(model, people, board); return }
     Text("Aufgaben",Modifier.semantics { heading() },style=MaterialTheme.typography.titleLarge)
-    model.error?.let{Text(when(it){
-        OperationsFailure.INVALID->"Bitte Titel (1–120 Zeichen), Zuständigkeit und Fälligkeit prüfen."
-        OperationsFailure.STALE->"Die Aufgabe wurde inzwischen geändert. Dein Entwurf bleibt erhalten; bitte bewusst neu laden."
-        OperationsFailure.NOT_ALLOWED->"Im aktuellen Aktionsstatus ist diese Änderung nicht möglich."
-        else->"Die Aufgabe oder Zuordnung ist in dieser Aktion nicht verfügbar."
-    })}
+    model.error?.let{Text(taskFailureMessage(it))}
     if(model.form){TaskForm(model,people);return}
     val selected=model.selected
     if(selected!=null){

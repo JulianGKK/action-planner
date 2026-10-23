@@ -21,6 +21,10 @@ data class TaskBoard(val actionId:String,val tasks:List<Task>,val events:List<Ta
     fun affectedCount(personId:String)=tasks.count{TaskRules.active(it.status) && it.affectedPersonId==personId}
 }
 object TaskRules {
+    /** Stored CREATED/STARTED/COMPLETED/CANCELLED/REOPENED, across all tasks of one action.
+     * Legacy excess remains readable; this limits new events, never trims history.
+     */
+    const val MAX_TASK_EVENTS_PER_ACTION = 5_000L
     fun valid(input:TaskInput)=input.title.trim().let{it.isNotEmpty() && Character.codePointCount(it,0,it.length)<=120} &&
         (input.assigneePersonId==null || input.assigneeRoleId==null)
     fun mayRead(status:ActionStatus)=status in setOf(ActionStatus.PREPARATION,ActionStatus.ACTIVE,ActionStatus.COMPLETED)

@@ -21,8 +21,7 @@ class TaskMutationSqliteTest {
         fun take()=jobs.removeFirst()
         fun drain(){while(jobs.isNotEmpty()) take().run()}
     }
-    private class H : AutoCloseable {
-        val db=SqliteHostConnection()
+    private class H(val db:SqliteHostConnection=SqliteHostConnection(),initialize:Boolean=true) : AutoCloseable {
         val worker=Queue();val main=Queue();val mutations=UncachedWorkspaceMutations()
         var generation=1L;var allowed=true;var blocks=0;var publications=0
         var beforePublish:()->Unit={}
@@ -63,14 +62,17 @@ class TaskMutationSqliteTest {
         val dao=HostTaskData(db){afterEvent()}
         var time=10L
         var clock:()->Long={++time}
-        init { exec("INSERT INTO actions VALUES('a','Synthetic','Synthetic action',1,2,0,'ACTIVE','SENSITIVE',NULL)")
+        init { if(initialize)exec("INSERT INTO actions VALUES('a','Synthetic','Synthetic action',1,2,0,'ACTIVE','SENSITIVE',NULL)")
             worker.before={assertTrue(mutations.mutationEpoch>0);assertFalse(mutations.ramReuseEnabled)}
         }
         fun exec(sql:String)=runBlocking{db.execute(sql)}
         fun count(table:String)=runBlocking{db.usePrepared("SELECT COUNT(*) FROM $table"){assertTrue(it.step());it.getLong(0)}}
         fun task(id:String)=runBlocking{dao.tasks.get("a",id)!!.model()}
         fun <T> submit(publish:(OperationsResult<T>)->Unit, work:suspend(TaskStore)->OperationsResult<T>) {
-            runner.submit("a",publish) { c,p ->
+            submitFor("a",publish,work)
+        }
+        fun <T> submitFor(actionId:String,publish:(OperationsResult<T>)->Unit, work:suspend(TaskStore)->OperationsResult<T>) {
+            runner.submit(actionId,publish) { c,p ->
                 lease=true;handle=true
                 try {runBlocking {
                     try {
@@ -114,6 +116,135 @@ class TaskMutationSqliteTest {
         override fun close(){if(active){exec("ROLLBACK");active=false};assertFalse(handle);assertFalse(lease);assertEquals(0,db.openStatements);db.close()}
     }
     private class Rollback(val result:Any?):RuntimeException()
+
+    private fun H.fillEvents(task:Task,total:Int) {
+        val extra=total-1
+        if(extra>0)exec("WITH RECURSIVE n(i) AS (VALUES(1) UNION ALL SELECT i+1 FROM n WHERE i<$extra) INSERT INTO task_events SELECT 'limit-'||i,'a','${task.id}',CASE WHEN $extra%2=1 AND i<=3 THEN CASE i WHEN 1 THEN 'STARTED' WHEN 2 THEN 'COMPLETED' ELSE 'REOPENED' END ELSE CASE (i-$extra%2*3)%2 WHEN 1 THEN 'CANCELLED' ELSE 'REOPENED' END END,i+100 FROM n")
+        assertEquals(total.toLong(),count("task_events"))
+    }
+    private fun H.write(work:suspend(TaskStore)->OperationsResult<Task>):OperationsResult<Task> {
+        var result:OperationsResult<Task>?=null
+        submit<Task>({result=it},work);worker.drain();main.drain();return checkNotNull(result)
+    }
+    @Test fun exact4999AllowsOneMoreBut5000And5001RejectCreateAndAllEventTransitions() {
+        H().use { h ->
+            val old=h.create();h.fillEvents(old,4999)
+            assertTrue(h.write{it.create("a",TaskInput("Last slot"))} is OperationsResult.Value)
+            assertEquals(5000L,h.count("task_events"));assertEquals(2L,h.count("tasks"))
+            assertEquals(OperationsResult.Rejected(OperationsFailure.TASK_EVENT_LIMIT_REACHED),h.write{it.transition("a",old,TaskStatus.DONE)})
+            assertEquals(old,h.task(old.id));assertEquals(0,h.blocks)
+        }
+        for(total in listOf(5000,5001)) H().use { h ->
+            val task=h.create();h.fillEvents(task,total)
+            val denied=OperationsResult.Rejected(OperationsFailure.TASK_EVENT_LIMIT_REACHED)
+            assertEquals(denied,h.write{it.create("a",TaskInput("No slot"))})
+            for(target in listOf(TaskStatus.IN_PROGRESS,TaskStatus.DONE,TaskStatus.CANCELLED))
+                assertEquals(denied,h.write{it.transition("a",task,target)})
+            h.exec("UPDATE tasks SET status='DONE',completedAt=9")
+            val done=h.task(task.id)
+            assertEquals(denied,h.write{it.transition("a",done,TaskStatus.OPEN)})
+            assertEquals(done,h.task(task.id));assertEquals(1L,h.count("tasks"));assertEquals(total.toLong(),h.count("task_events"))
+            assertEquals(0,h.blocks);assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),h.reports.last())
+        }
+    }
+    @Test fun eventlessEditAndLegacyHistoryRemainCompleteAndActionCountsAreIndependent()=H().use { h ->
+        val task=h.create();h.fillEvents(task,5001)
+        val edited=(h.write{it.edit("a",task,task.input().copy(title="Still editable",priority=TaskPriority.HIGH))} as OperationsResult.Value).value
+        assertEquals("Still editable",h.task(task.id).title);assertEquals(5001L,h.count("task_events"))
+        assertEquals(5001,runBlocking{h.dao.tasks.events("a")}.size)
+        val c=h.access.acquire(AccessScope.READY)!!
+        val state=CompactTaskState(P3bFreeActiveCoreBinding("a",1),h.mutations.mutationEpoch)
+        runBlocking {
+            val reader=CompactTaskStore(h.db,c,{true})
+            val first=reader.eventsAtPage(state,task.id,1,true).payload as CompactTaskEvents
+            val last=reader.eventsAtPage(state,task.id,157,true).payload as CompactTaskEvents
+            assertEquals(5001L,first.total);assertEquals(32,first.events.size)
+            assertEquals(5001L,last.total);assertEquals(9,last.events.size);assertNull(last.next)
+        }
+        assertEquals(edited,h.task(task.id))
+        h.exec("INSERT INTO actions VALUES('b','Synthetic','Synthetic',1,2,0,'ACTIVE','SENSITIVE',NULL)")
+        var result:OperationsResult<Task>?=null
+        h.submitFor<Task>("b",{result=it}){it.create("b",TaskInput("Independent action"))}
+        h.worker.drain();h.main.drain();assertTrue(result is OperationsResult.Value)
+        assertEquals(5001L,runBlocking{h.dao.tasks.eventCount("a")});assertEquals(1L,runBlocking{h.dao.tasks.eventCount("b")})
+        assertEquals(0,h.blocks)
+    }
+    @Test fun overlappingQueueWritesCannotTakeTheLastSlotTwiceAndRetrySeesExactCount()=H().use { h ->
+        val task=h.create();h.fillEvents(task,4999)
+        var first:OperationsResult<Task>?=null;var second:OperationsResult<Task>?=null
+        h.submit<Task>({first=it}){it.create("a",TaskInput("First"))}
+        h.submit<Task>({second=it}){it.transition("a",task,TaskStatus.DONE)}
+        h.worker.drain();h.main.drain()
+        assertTrue(first is OperationsResult.Value);assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),second)
+        assertEquals(OperationsResult.Rejected(OperationsFailure.TASK_EVENT_LIMIT_REACHED),h.write{it.transition("a",task,TaskStatus.DONE)})
+        assertEquals(task,h.task(task.id));assertEquals(5000L,h.count("task_events"));assertEquals(0,h.blocks)
+    }
+    @Test fun twoRealSqliteConnectionsSerializeCountAndDependentWritesAtTheLastSlot() {
+        val parent=java.io.File("build/tmp/task-event-limit").apply{mkdirs()}
+        val directory=java.nio.file.Files.createTempDirectory(parent.toPath(),"contention-").toFile()
+        val file=java.io.File(directory,"synthetic.db")
+        val pool=java.util.concurrent.Executors.newFixedThreadPool(2)
+        try {
+            H(SqliteHostConnection(sharedTestFile=file)).use { first ->
+                val task=first.create();first.fillEvents(task,4999)
+                H(SqliteHostConnection(sharedTestFile=file),initialize=false).use { second ->
+                    val start=java.util.concurrent.CountDownLatch(1)
+                    val jobs=listOf(first,second).mapIndexed { i,h ->
+                        val c=h.access.acquire(AccessScope.READY)!!
+                        pool.submit<OperationsResult<Task>> {
+                            check(start.await(5,java.util.concurrent.TimeUnit.SECONDS))
+                            runBlocking { confirmedTaskTransaction(h.tx(c),c,TaskWriteProgress()) {
+                                val store=TaskStore(h.dao,c){20}
+                                if(i==0)store.create("a",TaskInput("Contending create"))
+                                else store.transition("a",task,TaskStatus.DONE)
+                            } }
+                        }
+                    }
+                    start.countDown()
+                    val results=jobs.map{it.get(15,java.util.concurrent.TimeUnit.SECONDS)}
+                    assertEquals(1,results.count{it is OperationsResult.Value})
+                    assertEquals(1,results.count{it==OperationsResult.Rejected(OperationsFailure.TASK_EVENT_LIMIT_REACHED)})
+                    assertEquals(5000L,first.count("task_events"));assertEquals(5000L,second.count("task_events"))
+                    if(results[0] is OperationsResult.Value) {
+                        assertEquals(2L,first.count("tasks"));assertEquals(task,first.task(task.id))
+                    } else {assertEquals(1L,first.count("tasks"));assertEquals(TaskStatus.DONE,first.task(task.id).status)}
+                }
+            }
+        } finally {pool.shutdownNow();directory.walkBottomUp().forEach{check(it.delete())}}
+    }
+
+    @Test fun lastSlotEventFailureRollsBackDependentTaskAndNeverReportsSuccess()=H().use { h ->
+        val task=h.create();h.fillEvents(task,4999)
+        h.exec("CREATE TRIGGER synthetic_event_failure BEFORE INSERT ON task_events BEGIN SELECT RAISE(ABORT,'SYNTHETIC_EVENT_FAILURE'); END")
+        h.submit<Task>({fail("Failure must not publish success")}){it.transition("a",task,TaskStatus.DONE)}
+        h.worker.drain();h.main.drain()
+        assertEquals(task,h.task(task.id));assertEquals(4999L,h.count("task_events"))
+        assertEquals(WorkspaceWriteOutcome.UNKNOWN,h.reports.last().outcome);assertEquals(1,h.blocks)
+    }
+    @Test fun capacityCheckDoesNotBypassCasRevokeOrCommitAndCleanupFences() {
+        H().use { h ->
+            val task=h.create();h.fillEvents(task,5000)
+            var counts=0;h.db.beforePrepare={if(it.startsWith("SELECT COUNT(*) FROM task_events"))counts++}
+            assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.write{it.transition("a",task.copy(title="Stale"),TaskStatus.DONE)})
+            assertEquals(0,counts)
+        }
+        for(at in listOf("count","commit")) H().use { h ->
+            val task=h.create();h.fillEvents(task,4999)
+            if(at=="count")h.db.beforePrepare={if(it.startsWith("SELECT COUNT(*) FROM task_events"))h.allowed=false}
+            else h.beforeEnd={h.allowed=false}
+            h.submit<Task>({fail("Revoked must not publish")}){it.transition("a",task,TaskStatus.DONE)}
+            h.worker.drain();h.main.drain();h.db.beforePrepare={}
+            assertEquals(task,h.task(task.id));assertEquals(4999L,h.count("task_events"))
+            assertEquals(WorkspaceWriteOutcome.UNKNOWN,h.reports.last().outcome)
+        }
+        H().use { h ->
+            val task=h.create();h.fillEvents(task,5000);h.dbCleanup={error("SYNTHETIC_CLEANUP_FAILURE")}
+            h.submit<Task>({fail("Unconfirmed cleanup must not publish ordinary limit")}){it.create("a",TaskInput("At capacity"))}
+            h.worker.drain();h.main.drain()
+            assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED),h.reports.last())
+            assertEquals(1,h.blocks);assertEquals(5000L,h.count("task_events"))
+        }
+    }
 
     @Test fun beforeQueuePendingCommitAndCleanupAreDistinctAndCallbackDoesNotCreateEvidence()=H().use { h ->
         var calls=0

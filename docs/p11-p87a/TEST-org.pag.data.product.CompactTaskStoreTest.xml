@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.CompactTaskStoreTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-23T13:13:54.782Z" hostname="iuzjhtgvfc" time="4.622">
+  <properties/>
+  <testcase name="selectedDetailIsCompleteAndLongHistoryHasExactTieOrderedCoverage" classname="org.pag.data.product.CompactTaskStoreTest" time="0.8"/>
+  <testcase name="fullTaskBoardsNeverFetchActionHistoryThrough5000Events" classname="org.pag.data.product.CompactTaskStoreTest" time="1.599"/>
+  <testcase name="directPageEntryReachesMiddleAndEndWithoutPrefixMaterialization" classname="org.pag.data.product.CompactTaskStoreTest" time="2.221"/>
+  <system-out><![CDATA[P85a board persons=20 tasks=40 storedEvents=240 historyFetched=false
+P85a board persons=100 tasks=250 storedEvents=5000 historyFetched=false
+P85a board persons=200 tasks=1000 storedEvents=5000 historyFetched=false
+P85a direct entry pages=126,63,1 stored=5000 selected=4001 maxPayload=32
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

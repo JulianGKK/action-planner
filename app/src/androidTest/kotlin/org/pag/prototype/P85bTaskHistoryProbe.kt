@@ -57,7 +57,7 @@ class P85bTaskHistoryProbe:Instrumentation() {
             if(scenario=="timings") {
                 diagnostic.explain=true
                 repeat(3){rep ->
-                    for(number in listOf(1L,2L,2001L,4001L)) {
+                    for(number in listOf(1L,2L,63L,126L)) {
                         val drawn=CountDownLatch(1);val drawNanos=java.util.concurrent.atomic.AtomicLong()
                         val start=System.nanoTime()
                         lateinit var listener:android.view.ViewTreeObserver.OnDrawListener
@@ -72,7 +72,7 @@ class P85bTaskHistoryProbe:Instrumentation() {
                         waitFor("page $number"){main{!model.tasks.historyBusy}}
                         val delivered=System.nanoTime()-start
                         val page=main{check(model.tasks.historyError==null){"page error ${model.tasks.historyError}"};checkNotNull(model.tasks.history)}
-                        check(page.total==128001L && page.events.size==if(number==4001L)1 else 32)
+                        check(page.total==4001L && page.events.size==if(number==126L)1 else 32)
                         val offset=(number-1)*32
                         check(main{model.tasks.historyOffset}==offset)
                         page.events.forEachIndexed{i,e ->
@@ -104,8 +104,8 @@ class P85bTaskHistoryProbe:Instrumentation() {
                     check(main{model.tasks.history===prior && !model.tasks.historyBusy && model.tasks.historyError==null})
                     emit("P85b_INVALID,value=$value,disabled=true,page_unchanged=true")
                 }
-                pageDraw(model,4001){tap("Letzte Seite")}
-                pageInput("2001");pageDraw(model,2001){tap("Seite öffnen")}
+                pageDraw(model,126){tap("Letzte Seite")}
+                pageInput("63");pageDraw(model,63){tap("Seite öffnen")}
                 pageInput("1");pageDraw(model,1){tap("Seite öffnen")}
                 pageInput("2");pageDraw(model,2){tap("Seite öffnen")}
             } else if(scenario=="editor_lock") {
@@ -198,7 +198,7 @@ class P85bTaskHistoryProbe:Instrumentation() {
         waitForIdleSync()
     }
     private fun pageInput(value:String) {
-        showText("Seite (1–4001)")
+        showText("Seite (1–126)")
         waitForIdleSync();Thread.sleep(700)
         val input=checkNotNull(ownNode{it.isEditable}){"No page input"}
         val bounds=android.graphics.Rect()
@@ -245,7 +245,7 @@ class P85bTaskHistoryProbe:Instrumentation() {
         check(drawn.await(8,TimeUnit.SECONDS))
         main{a.window.decorView.viewTreeObserver.removeOnDrawListener(listener)}
         val p=main{checkNotNull(model.tasks.history)};val offset=(number-1)*32
-        check(p.total==128001L && p.events.size==if(number==4001L)1 else 32)
+        check(p.total==4001L && p.events.size==if(number==126L)1 else 32)
         check(main{model.tasks.historyOffset}==offset)
         p.events.forEachIndexed{i,e->val n=offset+i;if(n==0L)check(e.type==TaskEventType.CREATED)else check(e.id=="p83-e$n" && e.occurredAt==n+100)}
         showText("Ereignisse ${offset+1}–${offset+p.events.size} von ${p.total}")

@@ -350,6 +350,13 @@ Erledigt/Entfällt → Wieder öffnen (Offen). completedAt nur bei Erledigt.
 TaskEvents enthalten ausschließlich Erstellt, In Arbeit, Erledigt, Entfällt,
 Wieder geöffnet. Keine Änderungs-, Personenstatus-, Orts- oder allgemeine Audit-Historie.
 
+Je Aktion dürfen höchstens **5.000 TaskEvents** gespeichert werden (§87a/#47).
+Task-Anlage und Statuswechsel benötigen jeweils ein Ereignis; bei erreichter Grenze
+werden beide zusammen atomar abgelehnt. Bestehende Aufgaben bleiben lesbar und,
+sofern der Aktionsstatus es erlaubt, ohne neues Ereignis bearbeitbar. Altbestände
+über der Grenze bleiben vollständig erhalten und paginierbar; keine automatische
+Löschung oder Kürzung. Jede Historyseite enthält weiterhin höchstens 32 Ereignisse.
+
 ## FR-032 — Aufgaben als Teil des Lagebilds
 
 PREPARATION erlaubt Erstellen/Bearbeiten/Löschen und bewusste statische Vorlagenauswahl.

@@ -30,6 +30,7 @@ internal data class TaskEventRow(@PrimaryKey val id:String,val actionId:String,v
     @Query("SELECT * FROM tasks WHERE actionId=:actionId AND id=:id") suspend fun get(actionId:String,id:String):TaskRow?
     // Legacy full-history diagnostic/test read; product boards use explicit paged history.
     @Query("SELECT * FROM task_events WHERE actionId=:actionId ORDER BY occurredAt,rowid") suspend fun events(actionId:String):List<TaskEventRow>
+    @Query("SELECT COUNT(*) FROM task_events WHERE actionId=:actionId") suspend fun eventCount(actionId:String):Long
     @Query("SELECT COUNT(*) FROM tasks WHERE actionId=:actionId AND assigneeRoleId=:roleId") suspend fun roleReferences(actionId:String,roleId:String):Int
     @Insert suspend fun insert(row:TaskRow)
     @Update suspend fun update(row:TaskRow):Int

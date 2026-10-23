@@ -11,6 +11,7 @@ class TaskModelTest {
     private var onInteraction:()->Unit={}
     private var onLeaveSensitive:()->Unit={}
     private class Repo:TaskRepository {
+        var eventRejection:OperationsFailure?=null
         var pageRequested:Long?=null
         override fun historyPage(expected:Task,page:Long,publish:(CompactTaskResult)->Unit){historyCalls++;pageRequested=page;historyCallback=publish}
         var historyCalls=0
@@ -22,13 +23,33 @@ class TaskModelTest {
         var callback:((OperationsResult<TaskBoard>)->Unit)?=null
         var tasks=listOf(Task("t","a","EA kontaktieren",TaskPriority.HIGH,TaskStatus.OPEN,null,"r","motte",null,null,1,1,null))
         override fun board(actionId:String,publish:(OperationsResult<TaskBoard>)->Unit){if(deferred)callback=publish else publish(OperationsResult.Value(TaskBoard(actionId,tasks,emptyList())))}
-        override fun create(actionId:String,input:TaskInput,publish:(OperationsResult<Task>)->Unit){writes++;this.input=input;val t=tasks.first().copy(id="new",title=input.title,affectedPersonId=input.affectedPersonId);tasks=tasks+t;publish(OperationsResult.Value(t))}
+        override fun create(actionId:String,input:TaskInput,publish:(OperationsResult<Task>)->Unit){writes++;eventRejection?.let{publish(OperationsResult.Rejected(it));return};this.input=input;val t=tasks.first().copy(id="new",title=input.title,affectedPersonId=input.affectedPersonId);tasks=tasks+t;publish(OperationsResult.Value(t))}
         override fun edit(actionId:String,expected:Task,input:TaskInput,publish:(OperationsResult<Task>)->Unit){writes++;this.expected=expected;this.input=input;if(deferWrites){pending=publish;return};if(tasks.singleOrNull{it.id==expected.id}!=expected)publish(OperationsResult.Rejected(OperationsFailure.STALE)) else {val t=expected.copy(title=input.title,priority=input.priority,assigneePersonId=input.assigneePersonId,assigneeRoleId=input.assigneeRoleId,affectedPersonId=input.affectedPersonId,dueAt=input.dueAt);tasks=tasks.map{if(it.id==t.id)t else it};publish(OperationsResult.Value(t))}}
-        override fun transition(actionId:String,expected:Task,status:TaskStatus,publish:(OperationsResult<Task>)->Unit){writes++;val t=TaskRules.transition(expected,status,5)!!;tasks=tasks.map{if(it.id==t.id)t else it};publish(OperationsResult.Value(t))}
+        override fun transition(actionId:String,expected:Task,status:TaskStatus,publish:(OperationsResult<Task>)->Unit){writes++;eventRejection?.let{publish(OperationsResult.Rejected(it));return};val t=TaskRules.transition(expected,status,5)!!;tasks=tasks.map{if(it.id==t.id)t else it};publish(OperationsResult.Value(t))}
         override fun delete(actionId:String,expected:Task,publish:(OperationsResult<Unit>)->Unit){writes++;tasks=tasks.filterNot{it.id==expected.id};publish(OperationsResult.Value(Unit))}
     }
     private val repo=Repo()
     private val model=TaskModel(repo,{session},{action},{interactions++;onInteraction()},{onLeaveSensitive()})
+    @Test fun limitRejectionKeepsDraftAndSelectionWithoutSuccessFeedbackInBothActionPhases() {
+        for(status in listOf(ActionStatus.PREPARATION,ActionStatus.ACTIVE)) {
+            action=action.copy(status=status)
+            val r=Repo();r.eventRejection=OperationsFailure.TASK_EVENT_LIMIT_REACHED
+            val messages=ArrayList<String>()
+            val m=TaskModel(r,{session},{action},{},{},feedback={messages.add(it)})
+            m.refresh();m.add();m.change(TaskInput("Uncommitted draft"));m.save()
+            assertTrue(m.form);assertEquals("Uncommitted draft",m.input.title)
+            assertEquals(OperationsFailure.TASK_EVENT_LIMIT_REACHED,m.error);assertFalse(m.busy);assertTrue(messages.isEmpty())
+            m.cancel();val task=r.tasks.first();m.open(task);m.transition(TaskStatus.DONE)
+            assertEquals(task,m.selected);assertEquals(OperationsFailure.TASK_EVENT_LIMIT_REACHED,m.error)
+            assertFalse(m.busy);assertTrue(messages.isEmpty())
+            // The same reached limit does not block a task edit without an event.
+            m.edit();m.change(task.input().copy(title="Edited without event"));m.save()
+            assertFalse(m.form);assertNull(m.error);assertEquals(listOf("Aufgabe gespeichert"),messages)
+            assertEquals("Edited without event",r.tasks.first().title)
+        }
+        assertTrue(taskFailureMessage(OperationsFailure.TASK_EVENT_LIMIT_REACHED).contains("5.000"))
+        assertTrue(taskFailureMessage(OperationsFailure.TASK_EVENT_LIMIT_REACHED).contains("Statuswechsel"))
+    }
     private fun historyPage(count:Int=32,total:Long=65,next:Boolean=true):CompactTaskResult.Value {
         val state=CompactTaskState(P3bFreeActiveCoreBinding("a",session.generation),0)
         val page=CompactTaskEvents(state,"t",total,List(count){TaskEvent("event-$it","a","t",TaskEventType.CREATED,it.toLong())},

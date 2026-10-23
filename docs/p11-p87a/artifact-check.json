@@ -1,0 +1,32 @@
+{
+  "host_tests": {
+    "tests": 58,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "unchanged": [
+    "data/schemas",
+    "security",
+    "domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt",
+    "domain/src/main/kotlin/org/pag/domain/WorkspaceMutationInvalidation.kt",
+    "data/src/main/kotlin/org/pag/data/product/WorkspaceWriteBoundary.kt",
+    "data/src/main/kotlin/org/pag/data/product/TaskMutationBoundary.kt",
+    "data/src/main/kotlin/org/pag/data/product/ProductRuntime.kt",
+    "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLifetime.kt",
+    "domain/src/main/kotlin/org/pag/domain/Actions.kt",
+    "data/src/main/kotlin/org/pag/data/SessionCoordinator.kt",
+    "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt",
+    "app/src/main/AndroidManifest.xml",
+    "app/build.gradle.kts",
+    "data/build.gradle.kts"
+  ],
+  "release_forbidden_absent": [
+    "P87TaskEventLimitProbe",
+    "P87TaskEventDiagnostics",
+    "p87-4999",
+    "p87-5001",
+    "P86FullWorkspaceActivity"
+  ],
+  "release_sha256": "dd7696dd0d64cc23507305ce0f5ab1b5c8501d3e47498962681aac5f2f0f7864"
+}

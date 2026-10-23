@@ -12794,3 +12794,22 @@ Produktquellen, Compactpfad, Reuse-/Session-/Permission-/Writer-/UNKNOWN-Gates,
 8+8 MiB, Schema und Crypto unverändert. Keine Produktentscheidung, kein
 Produktfallback, Merge oder Release. WIP sichern/pushen, #37/#44 aktualisieren,
 anschließend **STOPP für unabhängigen Review**.
+
+
+## §87a — Produktgrenze: 5.000 TaskEvents je Aktion (#47), WIP
+
+[Implementierung, gezielte Tests und Rohbelege](p11-p87a/assessment.md).
+Task-Anlage und jeder gültige Statuswechsel prüfen den exakten actionbezogenen
+Event-COUNT innerhalb der bestehenden bestätigten IMMEDIATE-Schreibtransaktion.
+Bei >=5.000 werden Event und abhängiger Task-Write mit fachlichem
+`TASK_EVENT_LIMIT_REACHED` abgelehnt; beide Taskansichten zeigen dieselbe Meldung.
+Keine automatische Löschung/Kürzung, kein reguläres BLOCKED und kein falscher
+Speichererfolg. Eventlose Edits bleiben möglich; Altbestand >5.000 bleibt lesbar
+und mit unverändert <=32 Events je Historyseite erreichbar.
+
+58 gezielte Hosttests und zwei Androidfälle (4.999→5.000 und 5.001-Altbestand,
+je PREPARATION/ACTIVE) bestanden; P77-/Runner-/Releasebuild PASS. Reguläre große
+Fixtures <=5.000; historischer 129k-Sonderfall nicht wiederholt, Rohbelege erhalten.
+Budget-/Owner-/Session-/Schema-/Crypto-/Writer-UNKNOWN-Verträge unverändert.
+#47 bleibt für unabhängigen Review offen; keine Lösung der übrigen P11-Blocker.
+WIP sichern/pushen und danach **STOPP zum unabhängigen Review**, kein Merge/Release.

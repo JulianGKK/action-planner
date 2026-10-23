@@ -63,9 +63,9 @@ class P77ProductRuntimeHarness private constructor(
             }
             val base = File(parent, "p11-fixture-${UUID.randomUUID()}")
             val profile=activity.intent.getStringExtra("p83Fixture") ?: "default"
-            check(profile in setOf("default","small","medium","large","roles32","roles100","stress","p86-small","p86-stress32","p86-stress100"))
-            val people=when(profile){"small","p86-small"->20;"medium"->100;else->200}
-            val tasks=when(profile){"small","p86-small"->40;"medium"->250;else->1000}
+            check(profile in setOf("default","small","medium","large","roles32","roles100","stress","p86-small","p86-stress32","p86-stress100","p87-4999","p87-5000","p87-5001"))
+            val people=when(profile){"small","p86-small","p87-4999","p87-5000","p87-5001"->20;"medium"->100;else->200}
+            val tasks=when(profile){"small","p86-small","p87-4999","p87-5000","p87-5001"->40;"medium"->250;else->1000}
             val fixture = P11SyntheticFixture(activity, worker, main,
                 taskCountPerAction = tasks, personCountPerAction = people, baseDirectory = base)
             if(profile!="default")fixture.seedMemoryAcceptance(profile)

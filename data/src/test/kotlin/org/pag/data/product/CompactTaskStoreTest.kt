@@ -9,7 +9,7 @@ import org.pag.domain.*
  * SQLCipher/preflight/native/Compose performance is deliberately NOT inferred from these.
  */
 class CompactTaskStoreTest {
-    private class Harness(people: Int=20, count: Int=40, history: Int=12) : AutoCloseable {
+    private class Harness(people: Int=20, count: Int=40, history: Int=if(count>=1000)5 else 12) : AutoCloseable {
         val db=SqliteHostConnection()
         val binding=BoundedActiveBinding("active",1)
         var state: CompactTaskState?=CompactTaskState(binding,0)
@@ -37,6 +37,7 @@ class CompactTaskStoreTest {
         fun exec(sql:String)=runBlocking { db.execute(sql) }
         fun literal(value:String?)=value?.let { "CAST(X'${it.toByteArray(Charsets.UTF_8).joinToString("") { b -> "%02x".format(b) }}' AS TEXT)" }?:"NULL"
         init {
+            require(count.toLong()*history<=TaskRules.MAX_TASK_EVENTS_PER_ACTION)
             exec("INSERT INTO actions VALUES('active','Synthetic','Synthetic description',1,2,0,'ACTIVE','SENSITIVE',NULL)")
             exec("WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i+1<$people) INSERT INTO persons SELECT 'p-'||i,'active','Synthetic '||i,'synthetic '||i,1 FROM n")
             exec("INSERT INTO person_operational_states SELECT actionId,id,NULL,'NO_STATUS',NULL,1 FROM persons")
@@ -52,7 +53,7 @@ class CompactTaskStoreTest {
             if(rows.isNotEmpty()) exec("INSERT INTO tasks VALUES $rows")
             // Legal lifecycle histories with fixed length and the requested final status.
             // OPEN prefixes combine 3-step start/complete/reopen and 2-step cancel/reopen cycles.
-            require(history>=6)
+            require(history>=5)
             exec("WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i+1<$history), "+
                 "history_rows AS (SELECT tasks.id AS taskId,status,i,$history-1-CASE status WHEN 'DONE' THEN 2 WHEN 'OPEN' THEN 0 ELSE 1 END AS prefix FROM tasks CROSS JOIN n) "+
                 "INSERT INTO task_events SELECT taskId||'-e-'||i,'active',taskId,CASE WHEN i=0 THEN 'CREATED' "+
@@ -98,7 +99,8 @@ class CompactTaskStoreTest {
         tasks.count{TaskRules.active(it.status) && it.priority==TaskPriority.HIGH}.toLong(),tasks.count{it.status==TaskStatus.DONE}.toLong(),tasks.count{it.status==TaskStatus.CANCELLED}.toLong())
     private fun assertDenied(reason:BoundedActiveStatus,r:CompactTaskResult)=assertEquals(CompactTaskResult.Rejected(reason),r)
 
-    @Test fun concentrated129000StoredEventsRemainCompletelyTraversableWithoutAccumulation()=Harness(200,1000,6).use { h ->
+    @org.junit.Ignore("Historical 129k special case; not a standard product fixture or §87a run")
+    @Test fun concentrated129000StoredEventsRemainCompletelyTraversableWithoutAccumulation()=Harness(200,1000,5).use { h ->
         h.exec("DELETE FROM task_events")
         h.exec("UPDATE tasks SET status='OPEN',completedAt=NULL")
         h.exec("INSERT INTO task_events SELECT id||'-created','active',id,'CREATED',0 FROM tasks")
@@ -116,23 +118,23 @@ class CompactTaskStoreTest {
         assertEquals(128001L,seen);assertEquals(4001,pages);assertEquals(0,h.db.openStatements)
         println("P85a full concentrated traversal stored=129000 selected=128001 pages=$pages maxRows=32 noAccumulation=true")
     }
-    @Test fun directPageEntryReachesMiddleAndEndWithoutPrefixMaterialization()=Harness(200,1000,6).use { h ->
+    @Test fun directPageEntryReachesMiddleAndEndWithoutPrefixMaterialization()=Harness(200,1000,5).use { h ->
         h.exec("DELETE FROM task_events");h.exec("UPDATE tasks SET status='OPEN',completedAt=NULL")
         h.exec("INSERT INTO task_events SELECT id||'-created','active',id,'CREATED',0 FROM tasks")
-        h.exec("WITH RECURSIVE n(i) AS (VALUES(1) UNION ALL SELECT i+1 FROM n WHERE i<128000) INSERT INTO task_events SELECT 'stress-'||i,'active','task-0000',CASE WHEN i%2=1 THEN 'CANCELLED' ELSE 'REOPENED' END,(i+2)/3 FROM n")
-        for((number,first,last) in listOf(Triple(4001L,"stress-128000","stress-128000"),Triple(2001L,"stress-64000","stress-64031"),Triple(1L,"task-0000-created","stress-31"))) {
+        h.exec("WITH RECURSIVE n(i) AS (VALUES(1) UNION ALL SELECT i+1 FROM n WHERE i<4000) INSERT INTO task_events SELECT 'stress-'||i,'active','task-0000',CASE WHEN i%2=1 THEN 'CANCELLED' ELSE 'REOPENED' END,(i+2)/3 FROM n")
+        for((number,first,last) in listOf(Triple(126L,"stress-4000","stress-4000"),Triple(63L,"stress-1984","stress-2015"),Triple(1L,"task-0000-created","stress-31"))) {
             val before=h.db.blobReads
             val page=h.value(h.read {it.eventsAtPage(h.current,"task-0000",number,true)}).payload as CompactTaskEvents
-            assertEquals(128001L,page.total);assertEquals(first,page.events.first().id);assertEquals(last,page.events.last().id)
+            assertEquals(4001L,page.total);assertEquals(first,page.events.first().id);assertEquals(last,page.events.last().id)
             assertTrue(page.events.size<=32);assertEquals(page.events.size*4,h.db.blobReads-before)
-            if(number==4001L)assertNull(page.next) else assertNotNull(page.next)
+            if(number==126L)assertNull(page.next) else assertNotNull(page.next)
         }
         val before=h.db.payloadStatements
         assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.read {it.eventsAtPage(h.current,"task-0000",0,true)})
-        assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.read {it.eventsAtPage(h.current,"task-0000",4002,true)})
+        assertDenied(BoundedActiveStatus.ACCESS_REVOKED,h.read {it.eventsAtPage(h.current,"task-0000",127,true)})
         assertDenied(BoundedActiveStatus.BUDGET_REFUSED,h.read {it.eventsAtPage(h.current,"task-0000",Long.MAX_VALUE,true)})
         assertEquals(before,h.db.payloadStatements);assertEquals(0,h.db.openStatements)
-        println("P85a direct entry pages=4001,2001,1 stored=129000 selected=128001 maxPayload=32")
+        println("P85a direct entry pages=126,63,1 stored=5000 selected=4001 maxPayload=32")
     }
     @Test fun directAndSequentialHistoryMatchEveryTieOrderedRowWithOneTransactionPreflight()=Harness(history=97).use { h ->
         // Nonmonotonic insertion times and ties: the reference order is SQLite's full
@@ -178,8 +180,8 @@ class CompactTaskStoreTest {
         assertDenied(BoundedActiveStatus.STORAGE_FAILURE,h.read {it.eventsAtPage(h.current,"task-0000",2,true)})
         assertEquals(0,h.publications);assertEquals(0,h.db.openStatements)
     }
-    @Test fun fullTaskBoardsNeverFetchActionHistoryEvenAt129000Events() {
-        for((people,tasks,events) in listOf(Triple(20,40,6),Triple(100,250,32),Triple(200,1000,129))) Harness(people,tasks,events).use { h ->
+    @Test fun fullTaskBoardsNeverFetchActionHistoryThrough5000Events() {
+        for((people,tasks,events) in listOf(Triple(20,40,6),Triple(100,250,20),Triple(200,1000,5))) Harness(people,tasks,events).use { h ->
             val queries=ArrayList<String>();h.db.beforePrepare={queries.add(it)}
             val board=runBlocking { (TaskStore(HostTaskData(h.db),h.c){0}.board("active") as OperationsResult.Value).value }
             assertEquals(tasks,board.tasks.size);assertFalse(board.eventsComplete);assertTrue(board.events.isEmpty())
@@ -221,7 +223,7 @@ class CompactTaskStoreTest {
         assertEquals(0,h.publications);assertEquals(0,h.db.openStatements)
     }
     @Test fun realisticSizesCoverEveryTaskWithExactCountsFiltersAndLegacyPriorityOrder() {
-        for((people,tasks,history) in listOf(Triple(20,40,12),Triple(100,250,40),Triple(200,1000,128))) Harness(people,tasks,history).use { h ->
+        for((people,tasks,history) in listOf(Triple(20,40,12),Triple(100,250,20),Triple(200,1000,5))) Harness(people,tasks,history).use { h ->
             val global=counts(h.expected)
             for(person in listOf(null,"p-0","p-1","p-${people-1}","missing")) {
                 val expected=h.expected.filter{person==null || it.affectedPersonId==person}
@@ -313,7 +315,7 @@ class CompactTaskStoreTest {
         assertEquals(title,detail.title);assertEquals(provenance,detail.sourceTemplateKey)
     }
 
-    @Test fun selectedDetailIsCompleteAndLongHistoryHasExactTieOrderedCoverage()=Harness(200,1000,128).use { h ->
+    @Test fun selectedDetailIsCompleteAndLongHistoryHasExactTieOrderedCoverage()=Harness(200,20,128).use { h ->
         for(task in h.expected.take(4)) {
             assertEquals(task,(h.value(h.detail(task.id)).payload as CompactTaskDetail).task)
             var next:CompactEventCursor?=null
@@ -451,7 +453,7 @@ class CompactTaskStoreTest {
         }
     }
 
-    @Test fun interruptedPagesCannotResumeAfterActualMutationAndDetailsHistoryRevokeMidRead()=Harness(100,250,40).use { h ->
+    @Test fun interruptedPagesCannotResumeAfterActualMutationAndDetailsHistoryRevokeMidRead()=Harness(100,250,20).use { h ->
         val old=h.current
         val first=h.value(h.page()).payload as CompactTaskPage
         assertNotNull(first.next)

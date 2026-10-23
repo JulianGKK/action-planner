@@ -17,7 +17,7 @@ import kotlin.coroutines.suspendCoroutine
  * not actual Android SQLCipher, Room-close, key-lease or native-memory proof.
  */
 class ActiveCoreStoreTest {
-    internal class H(val people: Int = 20, val taskCount: Int = 40, val history: Int = 12,
+    internal class H(val people: Int = 20, val taskCount: Int = 40, val history: Int = if(taskCount>=1000)5 else 12,
         val roleCount: Int = 6) : AutoCloseable {
         val db = SqliteHostConnection()
         val requested = CompactTaskState(P3bFreeActiveCoreBinding("a",1),0)
@@ -54,6 +54,7 @@ class ActiveCoreStoreTest {
         }
         fun exec(sql: String) = runBlocking { db.execute(sql) }
         init {
+            require(history>=5 && taskCount.toLong()*history<=TaskRules.MAX_TASK_EVENTS_PER_ACTION)
             exec("INSERT INTO actions VALUES('a','Synthetic action','Synthetic description',1,2,0,'ACTIVE','SENSITIVE',NULL)")
             exec("WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i+1<$roleCount) INSERT INTO roles SELECT 'r'||i,'a','Synthetic role '||i,'synthetic role '||i,i FROM n")
             exec("WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i+1<$people) INSERT INTO persons SELECT 'p'||i,'a','Synthetic person '||i,'synthetic person '||i,i FROM n")
@@ -193,7 +194,7 @@ class ActiveCoreStoreTest {
     }
 
     @Test fun realisticCombinedSizesAndMedianP95HaveNoPreAdmissionPayloadOrEventPrefetch() {
-        for((people,tasks,events) in listOf(Triple(20,40,12),Triple(100,250,40),Triple(200,1000,128))) H(people,tasks,events).use { h ->
+        for((people,tasks,events) in listOf(Triple(20,40,12),Triple(100,250,20),Triple(200,1000,5))) H(people,tasks,events).use { h ->
             val (p,t)=h.metadata()
             val expectedR=cost(p.retained)+cost(t.retained)+cost(ActiveCoreStore.envelope.retained)
             val expectedT=cost(p.transition)+cost(t.transition)+cost(ActiveCoreStore.envelope.transition)

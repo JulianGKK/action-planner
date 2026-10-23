@@ -89,7 +89,7 @@ class P85TaskHistoryProbe:Instrumentation() {
                 waitFor("history page"){main{!model.tasks.historyBusy}}
                 val page=main{check(model.tasks.historyError==null){"History failure ${model.tasks.historyError}"};checkNotNull(model.tasks.history)}
                 check(page.events.size<=32)
-                check(page.total==if(fixture=="stress")128001L else 1L)
+                check(page.total==if(fixture=="stress")4001L else 1L)
                 page.events.forEach{check(seen.add(it.id));check(it.occurredAt>=lastTime);lastTime=it.occurredAt}
                 count+=page.events.size;pages++;oldCursor=page.next
                 emit("P85a_PAGE,$fixture,page=$pages,rows=${page.events.size},total=${page.total},seen=$count,next=${page.next!=null},elapsed_ms=${SystemClock.elapsedRealtime()-start},${raw()}")
@@ -98,14 +98,14 @@ class P85TaskHistoryProbe:Instrumentation() {
                 if(pages==2 && fixture=="stress")break
             } while(page.next!=null)
             check(main{model.tasks.history!!.events.size}<=32)
-            if(fixture=="stress") for(number in listOf(4001L,2001L)) {
+            if(fixture=="stress") for(number in listOf(126L,63L)) {
                 val start=SystemClock.elapsedRealtime()
                 main{model.tasks.loadHistoryPage(number)}
                 waitFor("direct history page $number"){main{!model.tasks.historyBusy}}
                 val page=main{check(model.tasks.historyError==null);checkNotNull(model.tasks.history)}
-                check(page.total==128001L && page.events.size==if(number==4001L)1 else 32)
+                check(page.total==4001L && page.events.size==if(number==126L)1 else 32)
                 check(main{model.tasks.historyOffset}==(number-1)*32)
-                if(number==4001L)check(page.next==null)
+                if(number==126L)check(page.next==null)
                 val offset=(number-1)*32
                 showText("Ereignisse ${offset+1}–${offset+page.events.size} von ${page.total}")
                 emit("P85a_DIRECT,$fixture,page=$number,rows=${page.events.size},offset=$offset,total=${page.total},elapsed_ms=${SystemClock.elapsedRealtime()-start},${raw()}")

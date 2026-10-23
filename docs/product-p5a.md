@@ -38,6 +38,20 @@ und doppelte Lifecycle-Events nach Retry. Ereignisse werden im Repository nur
 angehängt; kein Bearbeitungs-/Löschpfad für einzelne Events. PREPARATION-Tasklöschung
 entfernt ausdrücklich die zugehörigen Events per Cascade.
 
+**Produktgrenze §87a/#47:** `TaskRules.MAX_TASK_EVENTS_PER_ACTION = 5_000` zählt
+alle gespeicherten CREATED, STARTED, COMPLETED, CANCELLED und REOPENED derselben
+Aktion, über alle Tasks. Jede neue Eventquelle prüft den exakten actionbezogenen
+COUNT innerhalb derselben bestätigten IMMEDIATE-Schreibtransaktion, vor dem
+abhängigen Task-Write. Bei COUNT >=5.000 werden Task-Anlage bzw. Statuswechsel
+und Event zusammen mit `TASK_EVENT_LIMIT_REACHED` abgelehnt. Das ist eine reguläre
+fachliche Ablehnung, kein STORAGE_FAILURE/BLOCKED und kein Speichererfolg.
+Bei 4.999 bleibt genau ein Eventplatz. Titel/Priorität/Zuständigkeit/Fälligkeit
+ändern erzeugt keinen Event und bleibt bei sonst erfüllten Regeln erlaubt.
+Altbestände >5.000 bleiben unverändert lesbar/paginierbar; neue Events sind dort
+ebenfalls gesperrt. Keine automatische Rotation, Kürzung oder Löschung. Die
+bewusste PREPARATION-Tasklöschung mit bestehender Cascade-Regel bleibt unverändert;
+die Grenze betrifft aktuell gespeicherte Events, keinen lebenslangen Zähler.
+
 Taskdetail zeigt eine kompakte deutschsprachige Chronik ohne Autoreninformationen.
 Seit §85a lädt Workspace-/Tasknavigation keine actionweite Eventliste. Die Chronik wird
 bewusst je Task in höchstens 32 Ereignissen angefordert, mit exakter Gesamtzahl und

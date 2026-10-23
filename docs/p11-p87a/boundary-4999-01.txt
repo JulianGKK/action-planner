@@ -1,0 +1,41 @@
+INSTRUMENTATION_STATUS: stream=P87_LAST_SLOT,action=p11-preparation,4999_to_5000=true,task_status_persisted=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_HISTORY,action=p11-preparation,total=4961,last_page=156,max_page_rows=32,no_truncation=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_UI,phase=PREPARATION,operation=transition,limit_visible=true,READY=true,false_success=false,task_unchanged=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_UI,phase=PREPARATION,operation=create,limit_visible=true,READY=true,false_success=false,draft_retained=true,no_task_inserted=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_HISTORY,action=p11-preparation,total=4961,last_page=156,max_page_rows=32,no_truncation=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_EDIT,phase=PREPARATION,real_commit=true,event_count_unchanged=5000,counts=[4999, 5000, 5000, 5000]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_LAST_SLOT,action=p11-active,4999_to_5000=true,task_status_persisted=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_HISTORY,action=p11-active,total=4961,last_page=156,max_page_rows=32,no_truncation=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_UI,phase=ACTIVE,operation=transition,limit_visible=true,READY=true,false_success=false,task_unchanged=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_UI,phase=ACTIVE,operation=create,limit_visible=true,READY=true,false_success=false,draft_retained=true,no_task_inserted=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_HISTORY,action=p11-active,total=4961,last_page=156,max_page_rows=32,no_truncation=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_EDIT,phase=ACTIVE,real_commit=true,event_count_unchanged=5000,counts=[4999, 5000, 5000, 5000]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P87_CASE,total=4999,ANDROID_PASS,prep_and_active=true,cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P87 PASS 4999
+INSTRUMENTATION_CODE: -1

@@ -108,7 +108,7 @@ class P86FullWorkspaceProbe:Instrumentation() {
         measure("page_$number",{!model.tasks.historyBusy && model.tasks.history!=null && model.tasks.historyOffset==(number-1)*32},trigger)
         main {
             val p=checkNotNull(model.tasks.history);check(p.events.size<=32)
-            check(p.total==128001L);p.events.forEachIndexed{i,e->val n=(number-1)*32+i;if(n==0L)check(e.type==TaskEventType.CREATED)else check(e.id=="p83-e$n" && e.occurredAt==n+100)}
+            check(p.total==4001L);p.events.forEachIndexed{i,e->val n=(number-1)*32+i;if(n==0L)check(e.type==TaskEventType.CREATED)else check(e.id=="p83-e$n" && e.occurredAt==n+100)}
             census("page_$number",model.workspace,p,model.tasks.selected)
             emit("P86_PAGE,number=$number,total=${p.total},rows=${p.events.size},order=true")
         }
@@ -156,8 +156,8 @@ class P86FullWorkspaceProbe:Instrumentation() {
             val taskTitle=main{model.workspace!!.tasks!!.tasks.minBy{it.id}.title}
             measure("task_detail",{model.tasks.selected!=null}){tap(taskTitle)}
             if(fixture!="p86-small") {
-                page(1){tap("Chronik laden")};page(2){tap("Weitere Ereignisse")};page(4001){tap("Letzte Seite")}
-                pageInput("2001");page(2001){tap("Seite öffnen")}
+                page(1){tap("Chronik laden")};page(2){tap("Weitere Ereignisse")};page(126){tap("Letzte Seite")}
+                pageInput("63");page(63){tap("Seite öffnen")}
             }
             measure("editor",{model.tasks.form}){tap("Aufgabe bearbeiten")}
             workspaceCensus("editor")
@@ -237,7 +237,7 @@ class P86FullWorkspaceProbe:Instrumentation() {
         waitForIdleSync()
     }
     private fun pageInput(value:String) {
-        showText("Seite (1–4001)")
+        showText("Seite (1–126)")
         waitForIdleSync();Thread.sleep(700)
         val input=checkNotNull(ownNode{it.isEditable}){"No page input"}
         val bounds=android.graphics.Rect()

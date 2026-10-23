@@ -27,6 +27,7 @@ internal class HostTaskData(private val sql: SqliteHostConnection, private val a
         return query("SELECT changes()"){it.step();it.getLong(0).toInt()}
     }
     override val tasks=object:TaskDao {
+        override suspend fun eventCount(actionId:String)=query("SELECT COUNT(*) FROM task_events WHERE actionId=?",listOf(actionId)){check(it.step());it.getLong(0)}
         override suspend fun list(actionId:String)=query("SELECT $fields FROM tasks WHERE actionId=?",listOf(actionId)) { s ->buildList{while(s.step())add(row(s))} }
         override suspend fun get(actionId:String,id:String)=query("SELECT $fields FROM tasks WHERE actionId=? AND id=?",listOf(actionId,id)){if(it.step())row(it)else null}
         override suspend fun events(actionId:String)=query("SELECT id,actionId,taskId,type,occurredAt FROM task_events WHERE actionId=? ORDER BY occurredAt,rowid",listOf(actionId)) { s ->buildList{while(s.step())add(TaskEventRow(s.getText(0),s.getText(1),s.getText(2),s.getText(3),s.getLong(4)))} }

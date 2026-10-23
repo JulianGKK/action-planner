@@ -1,4 +1,6 @@
-"""Host-only real SQLite, in memory, schema 11 from the repository. No product data/files.
+"""Host-only real SQLite, schema 11 from the repository. No product data/files.
+
+In memory by default; the contention test explicitly shares its own synthetic file.
 
 Line protocol used by SqliteHostConnection; no repository/DAO responses are mocked.
 Python is test infrastructure only, never shipped to Android.
@@ -8,17 +10,20 @@ import json
 import sqlite3
 import sys
 
-db = sqlite3.connect(":memory:", isolation_level=None)
+db = sqlite3.connect(sys.argv[3] if len(sys.argv) > 3 else ":memory:", isolation_level=None)
 if len(sys.argv) > 2:
     if sys.argv[2] not in ("UTF-8", "UTF-16le"):
         raise ValueError("Unsupported test encoding")
     db.execute("PRAGMA encoding='" + sys.argv[2] + "'")
 db.execute("PRAGMA foreign_keys=ON")
-with open(sys.argv[1], encoding="utf-8") as schema:
-    for entity in json.load(schema)["database"]["entities"]:
-        db.execute(entity["createSql"].replace("${TABLE_NAME}", entity["tableName"]))
-        for index in entity.get("indices", []):
-            db.execute(index["createSql"].replace("${TABLE_NAME}", entity["tableName"]))
+# Only the dedicated contention test opts into a shared synthetic file. Open its
+# second connection after the first has initialized schema; no production DB access.
+if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='tasks'").fetchone():
+    with open(sys.argv[1], encoding="utf-8") as schema:
+        for entity in json.load(schema)["database"]["entities"]:
+            db.execute(entity["createSql"].replace("${TABLE_NAME}", entity["tableName"]))
+            for index in entity.get("indices", []):
+                db.execute(index["createSql"].replace("${TABLE_NAME}", entity["tableName"]))
 statements = {}
 
 

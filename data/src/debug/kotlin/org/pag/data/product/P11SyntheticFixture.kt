@@ -15,7 +15,7 @@ import org.pag.domain.*
  * Task count is explicit for bounded tests; existing benchmark/manual callers keep default 100.
  */
 class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, main:Executor=Executor{it.run()},
-    taskCountPerAction:Int=100, personCountPerAction:Int=20, baseDirectory:File?=null):AutoCloseable {
+    private val taskCountPerAction:Int=100, personCountPerAction:Int=20, baseDirectory:File?=null):AutoCloseable {
     private val app=context.applicationContext.also {
         require(taskCountPerAction>=0)
         require(personCountPerAction in 0..200)
@@ -105,9 +105,19 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
             exec("UPDATE persons SET pseudonym=?||pseudonym,pseudonymNormalized=?||pseudonymNormalized WHERE actionId=?",personText,PersonRules.normalized(personText),activeId)
             exec("UPDATE tasks SET title=?||title WHERE actionId=?",taskText,activeId)
             exec("UPDATE person_operational_states SET currentRoleId='p83-r0',operationalStatus='ON_SITE' WHERE actionId=?",activeId)
-            if(stress)exec("WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<128000) INSERT INTO task_events SELECT 'p83-e'||x,?,(SELECT id FROM tasks WHERE actionId=? ORDER BY id LIMIT 1),CASE WHEN x%2=1 THEN 'CANCELLED' ELSE 'REOPENED' END,x+100 FROM n",activeId,activeId)
+            if(stress)exec("WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<4000) INSERT INTO task_events SELECT 'p83-e'||x,?,(SELECT id FROM tasks WHERE actionId=? ORDER BY id LIMIT 1),CASE WHEN x%2=1 THEN 'CANCELLED' ELSE 'REOPENED' END,x+100 FROM n",activeId,activeId)
+            // Explicit small boundary/legacy fixtures, never the normal stress profile.
+            if(profile.startsWith("p87-")) {
+                val total=profile.removePrefix("p87-").toInt()
+                check(total in 4999..5001)
+                for(id in listOf(preparationId,activeId)) {
+                    val extra=total-taskCountPerAction
+                    val type="CASE WHEN $extra%2=1 AND x<=3 THEN CASE x WHEN 1 THEN 'STARTED' WHEN 2 THEN 'COMPLETED' ELSE 'REOPENED' END ELSE CASE (x-$extra%2*3)%2 WHEN 1 THEN 'CANCELLED' ELSE 'REOPENED' END END"
+                    exec("WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<$extra) INSERT INTO task_events SELECT ?||'-limit-'||x,?,(SELECT id FROM tasks WHERE actionId=? ORDER BY id LIMIT 1),$type,x+100 FROM n",id,id,id)
+                }
+            }
             if(stress)usePrepared("SELECT COUNT(*) FROM task_events WHERE actionId=?") { s ->
-                s.bindText(1,activeId);check(s.step() && s.getLong(0)==129000L && !s.step())
+                s.bindText(1,activeId);check(s.step() && s.getLong(0)==TaskRules.MAX_TASK_EVENTS_PER_ACTION && !s.step())
             }
         }}
     }

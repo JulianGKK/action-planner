@@ -34,7 +34,7 @@ class CompactPeopleStoreTest {
         PersonOperationalState("a","p$i","r${i%roles}",OperationalStatus.ON_SITE,null,1))
 
     @Test fun allRealisticSizesHaveCompletePagingDetailsAndSeparateMedianP95() {
-        for((people,tasks,history) in listOf(Triple(20,40,12),Triple(100,250,40),Triple(200,1000,128))) ActiveCoreStoreTest.H(people,tasks,history).use { h ->
+        for((people,tasks,history) in listOf(Triple(20,40,12),Triple(100,250,20),Triple(200,1000,5))) ActiveCoreStoreTest.H(people,tasks,history).use { h ->
             val core=h.read() as ActiveCoreResult.Value
             assertEquals(people.toLong(),core.core.people.overall.total)
             assertEquals(tasks.toLong(),core.core.tasks.overall.total)
@@ -85,7 +85,7 @@ class CompactPeopleStoreTest {
     }
 
     @Test fun twoHundredMembersOfOneFunctionAndManyFunctionsHaveExactBoundedGroups() {
-        for(roles in listOf(6,32,100)) ActiveCoreStoreTest.H(200,1000,128,roles).use { h ->
+        for(roles in listOf(6,32,100)) ActiveCoreStoreTest.H(200,1000,5,roles).use { h ->
             h.exec("UPDATE person_operational_states SET currentRoleId='r0'")
             val read=h.read()
             if(roles==100) {
@@ -107,7 +107,7 @@ class CompactPeopleStoreTest {
         }
     }
 
-    @Test fun allStatusesWithoutFunctionUnusedRolesAndPlannedRolesRemainDistinct()=ActiveCoreStoreTest.H(200,1000,128).use { h ->
+    @Test fun allStatusesWithoutFunctionUnusedRolesAndPlannedRolesRemainDistinct()=ActiveCoreStoreTest.H(200,1000,5).use { h ->
         h.exec("UPDATE person_operational_states SET operationalStatus=CASE (SELECT createdAt%8 FROM persons WHERE id=personId) "+
             "WHEN 0 THEN 'NO_STATUS' WHEN 1 THEN 'ON_SITE' WHEN 2 THEN 'IDENTITY_CHECK' WHEN 3 THEN 'IN_CUSTODY' "+
             "WHEN 4 THEN 'NOT_REACHABLE' WHEN 5 THEN 'RELEASED' WHEN 6 THEN 'LEFT' ELSE 'UNCLEAR' END")
@@ -163,7 +163,7 @@ class CompactPeopleStoreTest {
         assertEquals(replay,page(h.peopleRead(after=cursor))) // retries are explicit reads, never cached pages
     }
 
-    @Test fun selectedEditorLoadsAllPlannedRolesAcrossBatchesWithoutOtherPeopleGraphs()=ActiveCoreStoreTest.H(200,1000,128,100).use { h ->
+    @Test fun selectedEditorLoadsAllPlannedRolesAcrossBatchesWithoutOtherPeopleGraphs()=ActiveCoreStoreTest.H(200,1000,5,100).use { h ->
         h.exec("INSERT OR IGNORE INTO person_planned_roles SELECT 'a','p0',id FROM roles")
         val d=detail(h.peopleRead(detail="p0"))
         assertEquals((0 until 100).map{"r$it"}.toSet(),d.plan.roleIds)
@@ -176,7 +176,7 @@ class CompactPeopleStoreTest {
     }
 
     @Test fun invalidReferencesAndUnknownRevokeMutationsNeverReturnOldPagesOrDetails() {
-        for(change in listOf("mutation","action","generation","unknown","revoke")) ActiveCoreStoreTest.H(200,1000,128).use { h ->
+        for(change in listOf("mutation","action","generation","unknown","revoke")) ActiveCoreStoreTest.H(200,1000,5).use { h ->
             val cursor=page(h.peopleRead()).next!!
             when(change) {
                 "mutation"->h.authority.set(h.requested.copy(mutationEpoch=1))

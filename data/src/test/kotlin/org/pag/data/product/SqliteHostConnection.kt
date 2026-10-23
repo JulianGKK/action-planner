@@ -5,12 +5,15 @@ import androidx.sqlite.SQLiteStatement
 import java.io.File
 import java.util.Base64
 
-/** Real SQLite via Python stdlib in a separate in-memory host process, not an Android driver proof. */
-internal class SqliteHostConnection(encoding: String = "UTF-8") : PooledConnection, AutoCloseable {
+/** Real SQLite via Python stdlib in a separate host process (normally in memory).
+ * An explicit synthetic shared file supports the two-connection contention test.
+ * Not an Android driver proof.
+ */
+internal class SqliteHostConnection(encoding: String = "UTF-8", sharedTestFile: File? = null) : PooledConnection, AutoCloseable {
     private val script = checkNotNull(javaClass.getResourceAsStream("/bounded_active_sqlite.py"))
         .bufferedReader().use { it.readText() }
     private val process = ProcessBuilder("python3", "-u", "-c", script,
-        File("schemas/org.pag.data.product.ActionDatabase/11.json").absolutePath, encoding).start()
+        File("schemas/org.pag.data.product.ActionDatabase/11.json").absolutePath, encoding, sharedTestFile?.absolutePath ?: ":memory:").start()
     private val input = process.inputStream.bufferedReader()
     private val output = process.outputStream.bufferedWriter()
     private var sequence = 0

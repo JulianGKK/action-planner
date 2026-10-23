@@ -138,15 +138,23 @@ internal class TaskStore(private val data:TaskStoreData,private val c:StorageCon
         if(i.assigneeRoleId!=null && !step{data.roleExists(a,i.assigneeRoleId!!)})return false
         return true
     }
-    private suspend fun event(t:Task,type:TaskEventType) {step{data.tasks.event(TaskEventRow(UUID.randomUUID().toString(),t.actionId,t.id,type.name,t.updatedAt))}}
+    /** Called only inside the existing confirmed IMMEDIATE writer transaction: the action
+     * count, dependent task write and mandatory event share the same serialized commit.
+     */
+    private suspend fun withEvent(t:Task,type:TaskEventType,write:suspend()->Unit):OperationsResult<Task> {
+        if(step{data.tasks.eventCount(t.actionId)}>=TaskRules.MAX_TASK_EVENTS_PER_ACTION)
+            return denied(OperationsFailure.TASK_EVENT_LIMIT_REACHED)
+        write()
+        step{data.tasks.event(TaskEventRow(UUID.randomUUID().toString(),t.actionId,t.id,type.name,t.updatedAt))}
+        return OperationsResult.Value(t)
+    }
     suspend fun create(a:String,i:TaskInput):OperationsResult<Task> {
         val s=status(a)?:return denied(OperationsFailure.NOT_FOUND)
         if(!TaskRules.mayWrite(s))return denied(OperationsFailure.NOT_ALLOWED)
         if(!TaskRules.valid(i))return denied(OperationsFailure.INVALID)
         if(!validReferences(a,i))return denied(OperationsFailure.NOT_FOUND)
         val time=now();val t=Task(UUID.randomUUID().toString(),a,i.title.trim(),i.priority,TaskStatus.OPEN,i.assigneePersonId,i.assigneeRoleId,i.affectedPersonId,i.dueAt,i.sourceTemplateKey,time,time,null)
-        step{data.tasks.insert(t.row())};event(t,TaskEventType.CREATED)
-        return OperationsResult.Value(t)
+        return withEvent(t,TaskEventType.CREATED){step{data.tasks.insert(t.row())}}
     }
     private suspend fun existing(a:String,t:Task):OperationsResult<Task> {
         val s=status(a)?:return denied(OperationsFailure.NOT_FOUND)
@@ -167,8 +175,7 @@ internal class TaskStore(private val data:TaskStoreData,private val c:StorageCon
         val found=existing(a,t);if(found is OperationsResult.Rejected)return found
         val type=TaskRules.event(t.status,to)?:return denied(OperationsFailure.INVALID)
         val updated=TaskRules.transition(t,to,now())?:return denied(OperationsFailure.INVALID)
-        if(step{data.tasks.update(updated.row())}!=1)throw ProductStorageFailure()
-        event(updated,type);return OperationsResult.Value(updated)
+        return withEvent(updated,type){if(step{data.tasks.update(updated.row())}!=1)throw ProductStorageFailure()}
     }
     suspend fun delete(a:String,t:Task):OperationsResult<Unit> {
         val found=existing(a,t);if(found is OperationsResult.Rejected)return found
