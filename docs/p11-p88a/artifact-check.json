@@ -1,0 +1,25 @@
+{
+  "host_tests": {
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "unchanged": [
+    "app/src/main",
+    "data/src/main",
+    "domain",
+    "security",
+    "data/schemas",
+    "app/build.gradle.kts",
+    "data/build.gradle.kts",
+    "settings.gradle.kts",
+    "build.gradle.kts"
+  ],
+  "cached_p87_release_sha256": "dd7696dd0d64cc23507305ce0f5ab1b5c8501d3e47498962681aac5f2f0f7864",
+  "release_forbidden_absent": [
+    "P88StatementDiagnostics",
+    "P88StatementLifetimeProbe",
+    "P86FullWorkspaceActivity"
+  ]
+}

@@ -12813,3 +12813,25 @@ Fixtures <=5.000; historischer 129k-Sonderfall nicht wiederholt, Rohbelege erhal
 Budget-/Owner-/Session-/Schema-/Crypto-/Writer-UNKNOWN-Verträge unverändert.
 #47 bleibt für unabhängigen Review offen; keine Lösung der übrigen P11-Blocker.
 WIP sichern/pushen und danach **STOPP zum unabhängigen Review**, kein Merge/Release.
+
+
+## §88a — SQLCipher-Statement-/Cursor-Enden: vorhandener Resetabschluss bestätigt
+
+[Assessment, Bytecode und native Rohbelege](p11-p88a/assessment.md), Basis `8f63044`.
+Vendor-SQLCipher 4.19.1 `close()` lässt den geöffneten Cursor/Window im kontrollierten
+Gegenfall offen; `reset()` schließt beide. Der Projektpfad verwendet bereits seit
+§72 `B2StatementCleanup` mit reset vor close. Kein weiterer fehlender Abschluss
+reproduziert, deshalb **kein neuer Produktfix** und keine Driveränderung.
+
+Drei finale P77-Szenarien mit normaler 5.000-Event-Fixture bestanden: acht echte
+Historyreads (1/Keyset-2/Mitte/Ende), kontrollierter Row-Revoke und echter
+SQL-Overflow. Paging: 276/276 Statement-/Cursor-/Window-Enden, 9 Room-/Driverenden;
+Revoke: 18/18, Fehler: 19 Cursor/18 Windows. Geliehene Java-Keykopie in allen
+kontrollierten Scopes null, keine suppressed Cleanupfehler und keine beobachtete
+Vendor-reset-/close-Exception. 6 gezielte Hosttests und P77-/Runnerbuild PASS.
+
+FD-/ART-/Native-/PSS-Werte bleiben Prozesssamples, keine Obergrenzen oder
+Freigabebeweise. Keine globale native Key-/Allocator-/Frame-Wipegarantie und keine
+8+8-MiB-Abnahme. Produktquellen, Gates, Schema/Crypto/Owner/Reuse unverändert.
+#32 bleibt für Review/Restumfang offen; WIP sichern/pushen, Issue aktualisieren,
+danach **STOPP zum unabhängigen Review**, kein Merge/Release.

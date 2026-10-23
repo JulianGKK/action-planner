@@ -1,0 +1,5 @@
+{
+  "app/src/androidTest/AndroidManifest.xml": "8e04e492495c4d652d700fafaa5787e37cf7241fd0219feb4774ee8f8444323e",
+  "app/src/androidTest/kotlin/org/pag/prototype/P88StatementLifetimeProbe.kt": "37f23a5e20e2d4614c5451a04b281a0d5e7a8ce9c70cdb59ff7eb3537e49d3db",
+  "data/src/debug/kotlin/org/pag/data/product/P88StatementDiagnostics.kt": "b46b258c50bda798f8a5661406de94e8da4415bea071fc56ff4bfda623079393"
+}

@@ -1,0 +1,3 @@
+ro.build.version.release=13
+ro.build.version.sdk=33
+ro.product.cpu.abi=arm64-v8a

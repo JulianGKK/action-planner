@@ -1,0 +1,738 @@
+Compiled from "SQLCipherStatement.java"
+public class net.zetetic.database.sqlcipher.driver.SQLCipherStatement implements androidx.sqlite.SQLiteStatement {
+  private final net.zetetic.database.sqlcipher.SQLiteDatabase database;
+
+  private final java.lang.String sql;
+
+  private final java.util.Map<java.lang.Integer, java.lang.Object> bindings;
+
+  private android.database.Cursor cursor;
+
+  private boolean stepped;
+
+  private boolean closed;
+
+  public net.zetetic.database.sqlcipher.driver.SQLCipherStatement(net.zetetic.database.sqlcipher.SQLiteDatabase, java.lang.String);
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: new           #7                  // class java/util/LinkedHashMap
+       8: dup
+       9: invokespecial #9                  // Method java/util/LinkedHashMap."<init>":()V
+      12: putfield      #10                 // Field bindings:Ljava/util/Map;
+      15: aload_0
+      16: aload_1
+      17: putfield      #16                 // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+      20: aload_0
+      21: aload_2
+      22: putfield      #20                 // Field sql:Ljava/lang/String;
+      25: return
+
+  public void bindBlob(int, byte[]);
+    Code:
+       0: aload_0
+       1: getfield      #10                 // Field bindings:Ljava/util/Map;
+       4: iload_1
+       5: invokestatic  #24                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       8: aload_2
+       9: invokeinterface #30,  3           // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+      14: pop
+      15: return
+
+  public void bindDouble(int, double);
+    Code:
+       0: aload_0
+       1: getfield      #10                 // Field bindings:Ljava/util/Map;
+       4: iload_1
+       5: invokestatic  #24                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       8: dload_2
+       9: invokestatic  #36                 // Method java/lang/Double.valueOf:(D)Ljava/lang/Double;
+      12: invokeinterface #30,  3           // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+      17: pop
+      18: return
+
+  public void bindLong(int, long);
+    Code:
+       0: aload_0
+       1: getfield      #10                 // Field bindings:Ljava/util/Map;
+       4: iload_1
+       5: invokestatic  #24                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       8: lload_2
+       9: invokestatic  #41                 // Method java/lang/Long.valueOf:(J)Ljava/lang/Long;
+      12: invokeinterface #30,  3           // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+      17: pop
+      18: return
+
+  public void bindText(int, java.lang.String);
+    Code:
+       0: aload_0
+       1: getfield      #10                 // Field bindings:Ljava/util/Map;
+       4: iload_1
+       5: invokestatic  #24                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       8: aload_2
+       9: invokeinterface #30,  3           // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+      14: pop
+      15: return
+
+  public void bindNull(int);
+    Code:
+       0: aload_0
+       1: getfield      #10                 // Field bindings:Ljava/util/Map;
+       4: iload_1
+       5: invokestatic  #24                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+       8: aconst_null
+       9: invokeinterface #30,  3           // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+      14: pop
+      15: return
+
+  public byte[] getBlob(int);
+    Code:
+       0: aload_0
+       1: invokevirtual #46                 // Method requireCursor:()Landroid/database/Cursor;
+       4: iload_1
+       5: invokeinterface #50,  2           // InterfaceMethod android/database/Cursor.getBlob:(I)[B
+      10: areturn
+
+  public double getDouble(int);
+    Code:
+       0: aload_0
+       1: invokevirtual #46                 // Method requireCursor:()Landroid/database/Cursor;
+       4: iload_1
+       5: invokeinterface #56,  2           // InterfaceMethod android/database/Cursor.getDouble:(I)D
+      10: dreturn
+
+  public long getLong(int);
+    Code:
+       0: aload_0
+       1: invokevirtual #46                 // Method requireCursor:()Landroid/database/Cursor;
+       4: iload_1
+       5: invokeinterface #60,  2           // InterfaceMethod android/database/Cursor.getLong:(I)J
+      10: lreturn
+
+  public java.lang.String getText(int);
+    Code:
+       0: aload_0
+       1: invokevirtual #46                 // Method requireCursor:()Landroid/database/Cursor;
+       4: iload_1
+       5: invokeinterface #64,  2           // InterfaceMethod android/database/Cursor.getString:(I)Ljava/lang/String;
+      10: areturn
+
+  public boolean isNull(int);
+    Code:
+       0: aload_0
+       1: invokevirtual #46                 // Method requireCursor:()Landroid/database/Cursor;
+       4: iload_1
+       5: invokeinterface #68,  2           // InterfaceMethod android/database/Cursor.isNull:(I)Z
+      10: ireturn
+
+  public int getColumnCount();
+    Code:
+       0: aload_0
+       1: getfield      #72                 // Field cursor:Landroid/database/Cursor;
+       4: ifnonnull     11
+       7: aload_0
+       8: invokevirtual #76                 // Method createCursor:()V
+      11: aload_0
+      12: getfield      #72                 // Field cursor:Landroid/database/Cursor;
+      15: invokeinterface #79,  1           // InterfaceMethod android/database/Cursor.getColumnCount:()I
+      20: ireturn
+
+  public java.lang.String getColumnName(int);
+    Code:
+       0: aload_0
+       1: getfield      #72                 // Field cursor:Landroid/database/Cursor;
+       4: ifnonnull     11
+       7: aload_0
+       8: invokevirtual #76                 // Method createCursor:()V
+      11: aload_0
+      12: getfield      #72                 // Field cursor:Landroid/database/Cursor;
+      15: iload_1
+      16: invokeinterface #83,  2           // InterfaceMethod android/database/Cursor.getColumnName:(I)Ljava/lang/String;
+      21: areturn
+
+  public int getColumnType(int);
+    Code:
+       0: aload_0
+       1: invokevirtual #46                 // Method requireCursor:()Landroid/database/Cursor;
+       4: iload_1
+       5: invokeinterface #86,  2           // InterfaceMethod android/database/Cursor.getType:(I)I
+      10: invokestatic  #90                 // Method toSqliteDataType:(I)I
+      13: ireturn
+
+  private static int toSqliteDataType(int);
+    Code:
+       0: iload_0
+       1: tableswitch   { // 0 to 4
+                     0: 36
+                     1: 38
+                     2: 40
+                     3: 42
+                     4: 44
+               default: 46
+          }
+      36: iconst_5
+      37: ireturn
+      38: iconst_1
+      39: ireturn
+      40: iconst_2
+      41: ireturn
+      42: iconst_3
+      43: ireturn
+      44: iconst_4
+      45: ireturn
+      46: new           #95                 // class android/database/SQLException
+      49: dup
+      50: new           #97                 // class java/lang/StringBuilder
+      53: dup
+      54: invokespecial #99                 // Method java/lang/StringBuilder."<init>":()V
+      57: ldc           #100                // String unknown cursor field type
+      59: invokevirtual #102                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      62: iload_0
+      63: invokevirtual #106                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+      66: invokevirtual #109                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+      69: invokespecial #113                // Method android/database/SQLException."<init>":(Ljava/lang/String;)V
+      72: athrow
+
+  public boolean step();
+    Code:
+       0: aload_0
+       1: getfield      #116                // Field closed:Z
+       4: ifeq          17
+       7: new           #95                 // class android/database/SQLException
+      10: dup
+      11: ldc           #120                // String statement is closed
+      13: invokespecial #113                // Method android/database/SQLException."<init>":(Ljava/lang/String;)V
+      16: athrow
+      17: aload_0
+      18: getfield      #72                 // Field cursor:Landroid/database/Cursor;
+      21: ifnonnull     124
+      24: iconst_0
+      25: istore_1
+      26: aload_0
+      27: getfield      #10                 // Field bindings:Ljava/util/Map;
+      30: invokeinterface #122,  1          // InterfaceMethod java/util/Map.keySet:()Ljava/util/Set;
+      35: invokeinterface #126,  1          // InterfaceMethod java/util/Set.iterator:()Ljava/util/Iterator;
+      40: astore_2
+      41: aload_2
+      42: invokeinterface #132,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+      47: ifeq          72
+      50: aload_2
+      51: invokeinterface #138,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+      56: checkcast     #25                 // class java/lang/Integer
+      59: invokevirtual #142                // Method java/lang/Integer.intValue:()I
+      62: istore_3
+      63: iload_1
+      64: iload_3
+      65: invokestatic  #145                // Method java/lang/Math.max:(II)I
+      68: istore_1
+      69: goto          41
+      72: iload_1
+      73: anewarray     #2                  // class java/lang/Object
+      76: astore_2
+      77: iconst_1
+      78: istore_3
+      79: iload_3
+      80: iload_1
+      81: if_icmpgt     108
+      84: aload_2
+      85: iload_3
+      86: iconst_1
+      87: isub
+      88: aload_0
+      89: getfield      #10                 // Field bindings:Ljava/util/Map;
+      92: iload_3
+      93: invokestatic  #24                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+      96: invokeinterface #151,  2          // InterfaceMethod java/util/Map.get:(Ljava/lang/Object;)Ljava/lang/Object;
+     101: aastore
+     102: iinc          3, 1
+     105: goto          79
+     108: aload_0
+     109: aload_0
+     110: getfield      #16                 // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+     113: aload_0
+     114: getfield      #20                 // Field sql:Ljava/lang/String;
+     117: aload_2
+     118: invokevirtual #155                // Method net/zetetic/database/sqlcipher/SQLiteDatabase.rawQuery:(Ljava/lang/String;[Ljava/lang/Object;)Landroid/database/Cursor;
+     121: putfield      #72                 // Field cursor:Landroid/database/Cursor;
+     124: aload_0
+     125: aload_0
+     126: getfield      #72                 // Field cursor:Landroid/database/Cursor;
+     129: invokeinterface #161,  1          // InterfaceMethod android/database/Cursor.moveToNext:()Z
+     134: putfield      #164                // Field stepped:Z
+     137: aload_0
+     138: getfield      #164                // Field stepped:Z
+     141: ireturn
+
+  public void reset();
+    Code:
+       0: aload_0
+       1: getfield      #72                 // Field cursor:Landroid/database/Cursor;
+       4: ifnull        21
+       7: aload_0
+       8: getfield      #72                 // Field cursor:Landroid/database/Cursor;
+      11: invokeinterface #167,  1          // InterfaceMethod android/database/Cursor.close:()V
+      16: aload_0
+      17: aconst_null
+      18: putfield      #72                 // Field cursor:Landroid/database/Cursor;
+      21: aload_0
+      22: iconst_0
+      23: putfield      #164                // Field stepped:Z
+      26: return
+
+  public void clearBindings();
+    Code:
+       0: aload_0
+       1: getfield      #10                 // Field bindings:Ljava/util/Map;
+       4: invokeinterface #170,  1          // InterfaceMethod java/util/Map.clear:()V
+       9: return
+
+  public void close();
+    Code:
+       0: aload_0
+       1: iconst_1
+       2: putfield      #116                // Field closed:Z
+       5: return
+
+  private void createCursor();
+    Code:
+       0: iconst_0
+       1: istore_1
+       2: aload_0
+       3: getfield      #10                 // Field bindings:Ljava/util/Map;
+       6: invokeinterface #122,  1          // InterfaceMethod java/util/Map.keySet:()Ljava/util/Set;
+      11: invokeinterface #126,  1          // InterfaceMethod java/util/Set.iterator:()Ljava/util/Iterator;
+      16: astore_2
+      17: aload_2
+      18: invokeinterface #132,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+      23: ifeq          48
+      26: aload_2
+      27: invokeinterface #138,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+      32: checkcast     #25                 // class java/lang/Integer
+      35: invokevirtual #142                // Method java/lang/Integer.intValue:()I
+      38: istore_3
+      39: iload_1
+      40: iload_3
+      41: invokestatic  #145                // Method java/lang/Math.max:(II)I
+      44: istore_1
+      45: goto          17
+      48: iload_1
+      49: anewarray     #2                  // class java/lang/Object
+      52: astore_2
+      53: iconst_1
+      54: istore_3
+      55: iload_3
+      56: iload_1
+      57: if_icmpgt     84
+      60: aload_2
+      61: iload_3
+      62: iconst_1
+      63: isub
+      64: aload_0
+      65: getfield      #10                 // Field bindings:Ljava/util/Map;
+      68: iload_3
+      69: invokestatic  #24                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+      72: invokeinterface #151,  2          // InterfaceMethod java/util/Map.get:(Ljava/lang/Object;)Ljava/lang/Object;
+      77: aastore
+      78: iinc          3, 1
+      81: goto          55
+      84: aload_0
+      85: aload_0
+      86: getfield      #16                 // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+      89: aload_0
+      90: getfield      #20                 // Field sql:Ljava/lang/String;
+      93: aload_2
+      94: invokevirtual #155                // Method net/zetetic/database/sqlcipher/SQLiteDatabase.rawQuery:(Ljava/lang/String;[Ljava/lang/Object;)Landroid/database/Cursor;
+      97: putfield      #72                 // Field cursor:Landroid/database/Cursor;
+     100: return
+
+  private android.database.Cursor requireCursor();
+    Code:
+       0: aload_0
+       1: getfield      #164                // Field stepped:Z
+       4: ifeq          14
+       7: aload_0
+       8: getfield      #72                 // Field cursor:Landroid/database/Cursor;
+      11: ifnonnull     24
+      14: new           #173                // class java/lang/IllegalStateException
+      17: dup
+      18: ldc           #175                // String step() must be called before reading column values
+      20: invokespecial #177                // Method java/lang/IllegalStateException."<init>":(Ljava/lang/String;)V
+      23: athrow
+      24: aload_0
+      25: getfield      #72                 // Field cursor:Landroid/database/Cursor;
+      28: areturn
+}
+Compiled from "SQLCipherConnection.java"
+public class net.zetetic.database.sqlcipher.driver.SQLCipherConnection implements androidx.sqlite.SQLiteConnection {
+  private final net.zetetic.database.sqlcipher.SQLiteDatabase database;
+
+  public net.zetetic.database.sqlcipher.driver.SQLCipherConnection(net.zetetic.database.sqlcipher.SQLiteDatabase);
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: aload_1
+       6: putfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+       9: return
+
+  public androidx.sqlite.SQLiteStatement prepare(java.lang.String);
+    Code:
+       0: aload_1
+       1: invokevirtual #13                 // Method java/lang/String.trim:()Ljava/lang/String;
+       4: astore_2
+       5: aload_2
+       6: invokestatic  #19                 // Method statementPrefix:(Ljava/lang/String;)Ljava/lang/String;
+       9: astore_3
+      10: aload_3
+      11: ifnull        46
+      14: aload_3
+      15: aload_2
+      16: invokestatic  #23                 // Method isJournalModeSet:(Ljava/lang/String;Ljava/lang/String;)Z
+      19: ifeq          46
+      22: new           #27                 // class net/zetetic/database/sqlcipher/driver/JournalModeStatement
+      25: dup
+      26: aload_0
+      27: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+      30: new           #29                 // class net/zetetic/database/sqlcipher/driver/SQLCipherStatement
+      33: dup
+      34: aload_0
+      35: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+      38: aload_1
+      39: invokespecial #31                 // Method net/zetetic/database/sqlcipher/driver/SQLCipherStatement."<init>":(Lnet/zetetic/database/sqlcipher/SQLiteDatabase;Ljava/lang/String;)V
+      42: invokespecial #34                 // Method net/zetetic/database/sqlcipher/driver/JournalModeStatement."<init>":(Lnet/zetetic/database/sqlcipher/SQLiteDatabase;Landroidx/sqlite/SQLiteStatement;)V
+      45: areturn
+      46: new           #29                 // class net/zetetic/database/sqlcipher/driver/SQLCipherStatement
+      49: dup
+      50: aload_0
+      51: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+      54: aload_1
+      55: invokespecial #31                 // Method net/zetetic/database/sqlcipher/driver/SQLCipherStatement."<init>":(Lnet/zetetic/database/sqlcipher/SQLiteDatabase;Ljava/lang/String;)V
+      58: areturn
+
+  public boolean inTransaction();
+    Code:
+       0: aload_0
+       1: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+       4: invokevirtual #37                 // Method net/zetetic/database/sqlcipher/SQLiteDatabase.inTransaction:()Z
+       7: ireturn
+
+  public void changePassword(byte[]);
+    Code:
+       0: aload_0
+       1: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+       4: aload_1
+       5: invokevirtual #43                 // Method net/zetetic/database/sqlcipher/SQLiteDatabase.changePassword:([B)V
+       8: return
+
+  public void close();
+    Code:
+       0: aload_0
+       1: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+       4: invokevirtual #47                 // Method net/zetetic/database/sqlcipher/SQLiteDatabase.close:()V
+       7: return
+
+  static boolean isJournalModeSet(java.lang.String, java.lang.String);
+    Code:
+       0: ldc           #50                 // String PRA
+       2: aload_0
+       3: invokevirtual #52                 // Method java/lang/String.equalsIgnoreCase:(Ljava/lang/String;)Z
+       6: ifne          11
+       9: iconst_0
+      10: ireturn
+      11: aload_1
+      12: invokevirtual #56                 // Method java/lang/String.toLowerCase:()Ljava/lang/String;
+      15: astore_2
+      16: aload_2
+      17: ldc           #59                 // String journal_mode
+      19: invokevirtual #61                 // Method java/lang/String.indexOf:(Ljava/lang/String;)I
+      22: istore_3
+      23: iload_3
+      24: iflt          41
+      27: aload_2
+      28: bipush        61
+      30: iload_3
+      31: invokevirtual #65                 // Method java/lang/String.indexOf:(II)I
+      34: iflt          41
+      37: iconst_1
+      38: goto          42
+      41: iconst_0
+      42: ireturn
+
+  static java.lang.String statementPrefix(java.lang.String);
+    Code:
+       0: aload_0
+       1: invokevirtual #68                 // Method java/lang/String.length:()I
+       4: iconst_2
+       5: isub
+       6: istore_1
+       7: iload_1
+       8: ifge          13
+      11: aconst_null
+      12: areturn
+      13: iconst_0
+      14: istore_2
+      15: iload_2
+      16: iflt          150
+      19: iload_2
+      20: iload_1
+      21: if_icmpge     150
+      24: aload_0
+      25: iload_2
+      26: invokevirtual #72                 // Method java/lang/String.charAt:(I)C
+      29: istore_3
+      30: iload_3
+      31: bipush        32
+      33: if_icmpgt     42
+      36: iinc          2, 1
+      39: goto          147
+      42: iload_3
+      43: bipush        45
+      45: if_icmpne     85
+      48: aload_0
+      49: iload_2
+      50: iconst_1
+      51: iadd
+      52: invokevirtual #72                 // Method java/lang/String.charAt:(I)C
+      55: bipush        45
+      57: if_icmpeq     63
+      60: goto          150
+      63: aload_0
+      64: bipush        10
+      66: iload_2
+      67: iconst_2
+      68: iadd
+      69: invokevirtual #65                 // Method java/lang/String.indexOf:(II)I
+      72: istore_2
+      73: iload_2
+      74: ifge          79
+      77: aconst_null
+      78: areturn
+      79: iinc          2, 1
+      82: goto          147
+      85: iload_3
+      86: bipush        47
+      88: if_icmpne     150
+      91: aload_0
+      92: iload_2
+      93: iconst_1
+      94: iadd
+      95: invokevirtual #72                 // Method java/lang/String.charAt:(I)C
+      98: bipush        42
+     100: if_icmpeq     106
+     103: goto          150
+     106: iinc          2, 1
+     109: aload_0
+     110: bipush        42
+     112: iload_2
+     113: iconst_1
+     114: iadd
+     115: invokevirtual #65                 // Method java/lang/String.indexOf:(II)I
+     118: istore_2
+     119: iload_2
+     120: ifge          125
+     123: aconst_null
+     124: areturn
+     125: iload_2
+     126: iconst_1
+     127: iadd
+     128: iload_1
+     129: if_icmpge     144
+     132: aload_0
+     133: iload_2
+     134: iconst_1
+     135: iadd
+     136: invokevirtual #72                 // Method java/lang/String.charAt:(I)C
+     139: bipush        47
+     141: if_icmpne     109
+     144: iinc          2, 2
+     147: goto          15
+     150: iload_2
+     151: iflt          162
+     154: iload_2
+     155: aload_0
+     156: invokevirtual #68                 // Method java/lang/String.length:()I
+     159: if_icmplt     164
+     162: aconst_null
+     163: areturn
+     164: aload_0
+     165: iload_2
+     166: iload_2
+     167: iconst_3
+     168: iadd
+     169: aload_0
+     170: invokevirtual #68                 // Method java/lang/String.length:()I
+     173: invokestatic  #76                 // Method java/lang/Math.min:(II)I
+     176: invokevirtual #81                 // Method java/lang/String.substring:(II)Ljava/lang/String;
+     179: areturn
+}
+Compiled from "JournalModeStatement.java"
+class net.zetetic.database.sqlcipher.driver.JournalModeStatement implements androidx.sqlite.SQLiteStatement {
+  private final net.zetetic.database.sqlcipher.SQLiteDatabase database;
+
+  private final androidx.sqlite.SQLiteStatement delegate;
+
+  net.zetetic.database.sqlcipher.driver.JournalModeStatement(net.zetetic.database.sqlcipher.SQLiteDatabase, androidx.sqlite.SQLiteStatement);
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: aload_1
+       6: putfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+       9: aload_0
+      10: aload_2
+      11: putfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+      14: return
+
+  public boolean step();
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: invokeinterface #17,  1           // InterfaceMethod androidx/sqlite/SQLiteStatement.step:()Z
+       9: istore_1
+      10: ldc           #23                 // String wal
+      12: aload_0
+      13: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+      16: iconst_0
+      17: invokeinterface #25,  2           // InterfaceMethod androidx/sqlite/SQLiteStatement.getText:(I)Ljava/lang/String;
+      22: invokevirtual #29                 // Method java/lang/String.equalsIgnoreCase:(Ljava/lang/String;)Z
+      25: ifeq          39
+      28: aload_0
+      29: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+      32: invokevirtual #35                 // Method net/zetetic/database/sqlcipher/SQLiteDatabase.enableWriteAheadLogging:()Z
+      35: pop
+      36: goto          46
+      39: aload_0
+      40: getfield      #7                  // Field database:Lnet/zetetic/database/sqlcipher/SQLiteDatabase;
+      43: invokevirtual #40                 // Method net/zetetic/database/sqlcipher/SQLiteDatabase.disableWriteAheadLogging:()V
+      46: iload_1
+      47: ireturn
+
+  public void bindBlob(int, byte[]);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: aload_2
+       6: invokeinterface #43,  3           // InterfaceMethod androidx/sqlite/SQLiteStatement.bindBlob:(I[B)V
+      11: return
+
+  public void bindDouble(int, double);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: dload_2
+       6: invokeinterface #47,  4           // InterfaceMethod androidx/sqlite/SQLiteStatement.bindDouble:(ID)V
+      11: return
+
+  public void bindLong(int, long);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: lload_2
+       6: invokeinterface #51,  4           // InterfaceMethod androidx/sqlite/SQLiteStatement.bindLong:(IJ)V
+      11: return
+
+  public void bindText(int, java.lang.String);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: aload_2
+       6: invokeinterface #55,  3           // InterfaceMethod androidx/sqlite/SQLiteStatement.bindText:(ILjava/lang/String;)V
+      11: return
+
+  public void bindNull(int);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: invokeinterface #59,  2           // InterfaceMethod androidx/sqlite/SQLiteStatement.bindNull:(I)V
+      10: return
+
+  public byte[] getBlob(int);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: invokeinterface #63,  2           // InterfaceMethod androidx/sqlite/SQLiteStatement.getBlob:(I)[B
+      10: areturn
+
+  public double getDouble(int);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: invokeinterface #67,  2           // InterfaceMethod androidx/sqlite/SQLiteStatement.getDouble:(I)D
+      10: dreturn
+
+  public long getLong(int);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: invokeinterface #71,  2           // InterfaceMethod androidx/sqlite/SQLiteStatement.getLong:(I)J
+      10: lreturn
+
+  public java.lang.String getText(int);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: invokeinterface #25,  2           // InterfaceMethod androidx/sqlite/SQLiteStatement.getText:(I)Ljava/lang/String;
+      10: areturn
+
+  public boolean isNull(int);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: invokeinterface #75,  2           // InterfaceMethod androidx/sqlite/SQLiteStatement.isNull:(I)Z
+      10: ireturn
+
+  public int getColumnCount();
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: invokeinterface #79,  1           // InterfaceMethod androidx/sqlite/SQLiteStatement.getColumnCount:()I
+       9: ireturn
+
+  public java.lang.String getColumnName(int);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: invokeinterface #83,  2           // InterfaceMethod androidx/sqlite/SQLiteStatement.getColumnName:(I)Ljava/lang/String;
+      10: areturn
+
+  public int getColumnType(int);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: iload_1
+       5: invokeinterface #86,  2           // InterfaceMethod androidx/sqlite/SQLiteStatement.getColumnType:(I)I
+      10: ireturn
+
+  public void reset();
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: invokeinterface #90,  1           // InterfaceMethod androidx/sqlite/SQLiteStatement.reset:()V
+       9: return
+
+  public void clearBindings();
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: invokeinterface #93,  1           // InterfaceMethod androidx/sqlite/SQLiteStatement.clearBindings:()V
+       9: return
+
+  public void close();
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field delegate:Landroidx/sqlite/SQLiteStatement;
+       4: invokeinterface #96,  1           // InterfaceMethod androidx/sqlite/SQLiteStatement.close:()V
+       9: return
+}

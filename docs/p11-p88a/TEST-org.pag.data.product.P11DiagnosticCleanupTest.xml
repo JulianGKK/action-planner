@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P11DiagnosticCleanupTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-23T13:43:27.577Z" hostname="iuzjhtgvfc" time="0.036">
+  <properties/>
+  <testcase name="cleanupFailureAfterSuccessfulWorkIsNotSuccess" classname="org.pag.data.product.P11DiagnosticCleanupTest" time="0.012"/>
+  <testcase name="diagnosticFailureSurvivesBothCleanupFailures" classname="org.pag.data.product.P11DiagnosticCleanupTest" time="0.015"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

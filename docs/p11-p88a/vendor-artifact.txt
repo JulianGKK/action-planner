@@ -1,0 +1,4 @@
+coordinate=net.zetetic:sqlcipher-android:4.19.1@aar
+sha256=43fc10cae8f1f1059f0933e8942a1eb328989d13426378597cd4add1b34a34fd
+room_coordinate=androidx.room3:room3-runtime-android:3.0.3
+room_sha256=5771ff62b70e3de1826ff12eee2c31e9d773b59d7b8464ad8d506048f0bbb31b

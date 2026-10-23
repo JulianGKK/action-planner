@@ -1,0 +1,265 @@
+{
+  "paging-02": {
+    "process_samples": [
+      {
+        "label": "before_owned_scope",
+        "art_used": "48236816",
+        "native_heap": "10996800",
+        "pss_kib": "182883",
+        "fd": "136",
+        "gc": "0",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "after_owned_scope",
+        "art_used": "48384304",
+        "native_heap": "10982896",
+        "pss_kib": "183345",
+        "fd": "136",
+        "gc": "0",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "round_0_page_1",
+        "art_used": "18202832",
+        "native_heap": "12006464",
+        "pss_kib": "158494",
+        "fd": "135",
+        "gc": "1",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "round_0_page_2",
+        "art_used": "19595472",
+        "native_heap": "12158480",
+        "pss_kib": "160289",
+        "fd": "135",
+        "gc": "1",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "round_0_page_63",
+        "art_used": "20938960",
+        "native_heap": "12316544",
+        "pss_kib": "162027",
+        "fd": "135",
+        "gc": "1",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "round_0_page_126",
+        "art_used": "21881040",
+        "native_heap": "12336800",
+        "pss_kib": "163123",
+        "fd": "133",
+        "gc": "1",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "round_1_page_1",
+        "art_used": "22929616",
+        "native_heap": "12381824",
+        "pss_kib": "164201",
+        "fd": "137",
+        "gc": "1",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "round_1_page_2",
+        "art_used": "24617168",
+        "native_heap": "12652208",
+        "pss_kib": "166156",
+        "fd": "133",
+        "gc": "1",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "round_1_page_63",
+        "art_used": "16164624",
+        "native_heap": "11814000",
+        "pss_kib": "158646",
+        "fd": "133",
+        "gc": "2",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "round_1_page_126",
+        "art_used": "17106704",
+        "native_heap": "11606912",
+        "pss_kib": "163114",
+        "fd": "133",
+        "gc": "2",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "before_finish",
+        "art_used": "17172240",
+        "native_heap": "11398560",
+        "pss_kib": "161915",
+        "fd": "132",
+        "gc": "2",
+        "upper_bound": "UNKNOWN"
+      }
+    ],
+    "owned_keyscope": {
+      "scope": "paging",
+      "row_opened": "true",
+      "borrowed_java_key_zero": "true",
+      "expected_failure": "none",
+      "suppressed_failures": "0",
+      "new_lease_after_revoke_denied": "not_applicable"
+    },
+    "vendor_controls": [
+      {
+        "mode": "close_only",
+        "statement_closed": "true",
+        "cursor_open": "true",
+        "window_live": "true"
+      },
+      {
+        "mode": "reset_then_close",
+        "statement_closed": "true",
+        "cursor_open": "false",
+        "window_live": "false"
+      }
+    ],
+    "resources": {
+      "prepared": "276",
+      "reset_returns": "276",
+      "statement_closed": "276",
+      "cursor_observed": "276",
+      "cursor_closed": "276",
+      "window_observed": "276",
+      "window_nonzero_seen": "276",
+      "window_zero": "276",
+      "vendor_reset_exceptions": "0",
+      "vendor_close_exceptions": "0",
+      "vendor_step_exceptions": "0",
+      "preflight_ends": "9",
+      "room_ends": "9",
+      "driver_ends": "9",
+      "room_return_with_live_statements": "0",
+      "driver_failures": "0",
+      "gc_release_proof": "false",
+      "native_wipe_proof": "false"
+    }
+  },
+  "revoke-01": {
+    "process_samples": [
+      {
+        "label": "before_owned_scope",
+        "art_used": "48236816",
+        "native_heap": "10931568",
+        "pss_kib": "185712",
+        "fd": "136",
+        "gc": "0",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "after_owned_scope",
+        "art_used": "12988728",
+        "native_heap": "10860368",
+        "pss_kib": "158313",
+        "fd": "131",
+        "gc": "1",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "before_finish",
+        "art_used": "13021496",
+        "native_heap": "10858240",
+        "pss_kib": "152025",
+        "fd": "134",
+        "gc": "1",
+        "upper_bound": "UNKNOWN"
+      }
+    ],
+    "owned_keyscope": {
+      "scope": "revoke",
+      "row_opened": "true",
+      "borrowed_java_key_zero": "true",
+      "expected_failure": "org.pag.data.prototype.b2.StorageAccessRevoked",
+      "suppressed_failures": "0",
+      "new_lease_after_revoke_denied": "true"
+    },
+    "resources": {
+      "prepared": "18",
+      "reset_returns": "18",
+      "statement_closed": "18",
+      "cursor_observed": "18",
+      "cursor_closed": "18",
+      "window_observed": "18",
+      "window_nonzero_seen": "18",
+      "window_zero": "18",
+      "vendor_reset_exceptions": "0",
+      "vendor_close_exceptions": "0",
+      "vendor_step_exceptions": "0",
+      "preflight_ends": "1",
+      "room_ends": "1",
+      "driver_ends": "1",
+      "room_return_with_live_statements": "0",
+      "driver_failures": "0",
+      "gc_release_proof": "false",
+      "native_wipe_proof": "false"
+    }
+  },
+  "statement-error-01": {
+    "process_samples": [
+      {
+        "label": "before_owned_scope",
+        "art_used": "48254640",
+        "native_heap": "11006064",
+        "pss_kib": "182739",
+        "fd": "134",
+        "gc": "0",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "after_owned_scope",
+        "art_used": "48402128",
+        "native_heap": "10991376",
+        "pss_kib": "183337",
+        "fd": "136",
+        "gc": "0",
+        "upper_bound": "UNKNOWN"
+      },
+      {
+        "label": "before_finish",
+        "art_used": "48434896",
+        "native_heap": "10991424",
+        "pss_kib": "183365",
+        "fd": "136",
+        "gc": "0",
+        "upper_bound": "UNKNOWN"
+      }
+    ],
+    "owned_keyscope": {
+      "scope": "statement_error",
+      "row_opened": "true",
+      "borrowed_java_key_zero": "true",
+      "expected_failure": "org.pag.data.prototype.b2.B2Exception",
+      "suppressed_failures": "0",
+      "new_lease_after_revoke_denied": "not_applicable"
+    },
+    "resources": {
+      "prepared": "19",
+      "reset_returns": "19",
+      "statement_closed": "19",
+      "cursor_observed": "19",
+      "cursor_closed": "19",
+      "window_observed": "18",
+      "window_nonzero_seen": "18",
+      "window_zero": "18",
+      "vendor_reset_exceptions": "0",
+      "vendor_close_exceptions": "0",
+      "vendor_step_exceptions": "1",
+      "preflight_ends": "1",
+      "room_ends": "1",
+      "driver_ends": "1",
+      "room_return_with_live_statements": "0",
+      "driver_failures": "0",
+      "gc_release_proof": "false",
+      "native_wipe_proof": "false"
+    }
+  }
+}

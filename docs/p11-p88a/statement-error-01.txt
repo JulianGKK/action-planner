@@ -1,0 +1,53 @@
+INSTRUMENTATION_STATUS: stream=P88_SAMPLE,statement_error,before_owned_scope,art_used=48254640,native_heap=11006064,pss_kib=182739,fd=134,gc=0,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_SCOPE,statement_error,scope=statement_error,row_opened=true,borrowed_java_key_zero=true,expected_failure=org.pag.data.prototype.b2.B2Exception,suppressed_failures=0,new_lease_after_revoke_denied=not_applicable
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_RESOURCES,statement_error,owned_scope,prepared=19,reset_returns=19,statement_closed=19,cursor_observed=19,cursor_closed=19,window_observed=18,window_nonzero_seen=18,window_zero=18,vendor_reset_exceptions=0,vendor_close_exceptions=0,vendor_step_exceptions=1,preflight_ends=1,room_ends=1,driver_ends=1,room_return_with_live_statements=0,driver_failures=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_SAMPLE,statement_error,after_owned_scope,art_used=48402128,native_heap=10991376,pss_kib=183337,fd=136,gc=0,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_TRACE,statement_error,RESET_RETURN,cursor_closed=true,window_zero=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_TRACE,statement_error,RESET_RETURN,cursor_closed=true,window_zero=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_TRACE,statement_error,RESET_RETURN,cursor_closed=true,window_zero=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_TRACE,statement_error,RESET_RETURN,cursor_closed=true,window_zero=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_TRACE,statement_error,RESET_RETURN,cursor_closed=true,window_zero=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_TRACE,statement_error,RESET_RETURN,cursor_closed=true,window_zero=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_TRACE,statement_error,RESET_RETURN,cursor_closed=true,window_zero=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_TRACE,statement_error,RESET_RETURN,cursor_closed=true,window_zero=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_TRACE,statement_error,ROOM_CLOSE_RETURN,live_statements=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_TRACE,statement_error,DRIVER_CLOSE_RETURN,resources_closed=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_FINAL,statement_error,prepared=19,reset_returns=19,statement_closed=19,cursor_observed=19,cursor_closed=19,window_observed=18,window_nonzero_seen=18,window_zero=18,vendor_reset_exceptions=0,vendor_close_exceptions=0,vendor_step_exceptions=1,preflight_ends=1,room_ends=1,driver_ends=1,room_return_with_live_statements=0,driver_failures=0,gc_release_proof=false,native_wipe_proof=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_SAMPLE,statement_error,before_finish,art_used=48434896,native_heap=10991424,pss_kib=183365,fd=136,gc=0,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P88_CASE,statement_error,ANDROID_PASS,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P88 PASS statement_error
+INSTRUMENTATION_CODE: -1
