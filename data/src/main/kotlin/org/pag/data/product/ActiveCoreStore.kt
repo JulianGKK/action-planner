@@ -58,7 +58,9 @@ internal class ActiveCoreStore(private val sql: PooledConnection, private val co
         // itself belongs only to CompactPeopleStore's units, never the compact task units.
         // Includes bounded lifetime, revoke-listener and ViewModel slot metadata for §70.
         internal val envelope = ActiveCoreReservation(
-            ActiveWorkspaceBudget.Units(objects = 24, lists = 2, listCapacity = 4, references = 64),
-            ActiveWorkspaceBudget.Units(objects = 48, lists = 4, listCapacity = 16, references = 128))
+            CoreReadAdmission.add(ActiveWorkspaceBudget.Units(objects = 24, lists = 2, listCapacity = 4, references = 64),
+                CompactPersonsPresentationBudget.reservation.retained),
+            CoreReadAdmission.add(ActiveWorkspaceBudget.Units(objects = 48, lists = 4, listCapacity = 16, references = 128),
+                CompactPersonsPresentationBudget.reservation.transition))
     }
 }

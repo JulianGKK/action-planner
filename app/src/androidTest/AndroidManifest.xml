@@ -44,4 +44,5 @@
     <instrumentation android:name="org.pag.prototype.P86FullWorkspaceProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P87TaskEventLimitProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P88StatementLifetimeProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P92PersonsPresentationProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

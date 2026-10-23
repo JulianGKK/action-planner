@@ -20,9 +20,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private val ownerThread=Thread.currentThread()
     private var ownerDispatch: (() -> Unit) -> Unit = { work -> check(Thread.currentThread() === ownerThread);work() }
     private var activeCorePort:ActiveCoreLoadPort?=null
-    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any) {
+    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any, val persons:CompactPersonsPresentation) {
         var subscription:Subscription?=null
-        fun close() { subscription?.cancel();lifetime.close() }
+        fun close() { persons.invalidate();subscription?.cancel();lifetime.close() }
     }
     private val coreSlot=AtomicReference<CoreSlot?>(null)
     private var coreLoad:Any?=null
@@ -47,6 +47,49 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             return null
         }
         return core
+    }
+    /** One pre-admitted metadata handle per slot, never a second page/payload root. */
+    internal val compactPersonsPresentation:CompactPersonsPresentation? get() {
+        coreSignal
+        if(Thread.currentThread() !== ownerThread || activeArea!=ActiveArea.PERSONS || !compactActiveMode)return null
+        val slot=coreSlot.get() ?: return null
+        if(!compactPersonsCurrent(slot)) {dropCompactPersons(slot);return null}
+        return slot.persons
+    }
+    private fun dropCompactPersons(slot:CoreSlot) {
+        if(coreSlot.compareAndSet(slot,null))slot.close() // No outstanding-read retirement.
+    }
+    private fun compactPersonsCurrent(slot:CoreSlot):Boolean {
+        val current=session.snapshot()
+        val core=slot.value.core
+        return coreSlot.get()===slot && activeArea==ActiveArea.PERSONS && compactActiveMode && activeNavigationEnabled &&
+            snapshot.state==SessionState.READY && current.state==SessionState.READY &&
+            snapshot.generation==core.state.binding.generation && current.generation==core.state.binding.generation &&
+            selected?.id==core.state.binding.actionId && selected?.status==ActionStatus.ACTIVE && slot.lifetime.isCurrent()
+    }
+    private inline fun <T> resolveCompactPersons(identity:Any,crossinline read:(ActiveCorePeoplePage)->T):T? {
+        if(Thread.currentThread() !== ownerThread)return null
+        val slot=coreSlot.get()?.takeIf {it.identity===identity} ?: return null
+        if(!compactPersonsCurrent(slot) || !slot.lifetime.authorizeHit(slot.value.core.state.binding.actionId)) {
+            dropCompactPersons(slot);return null
+        }
+        var value:T?=null
+        val accepted=slot.lifetime.publish { if(compactPersonsCurrent(slot))value=read(slot.value.core.people) }
+        if(!accepted || !compactPersonsCurrent(slot)) {dropCompactPersons(slot);return null}
+        return value
+    }
+    internal fun compactPersonsShown(identity:Any):Int? = resolveCompactPersons(identity){it.items.size}
+    internal fun compactPersonsTotal(identity:Any):Long? = resolveCompactPersons(identity){it.overall.total}
+    internal fun compactPersonsHasMore(identity:Any):Boolean? = resolveCompactPersons(identity){it.hasMore}
+    internal fun compactPersonsCount(identity:Any,status:OperationalStatus):Long? = resolveCompactPersons(identity){it.overall.count(status)}
+    internal fun compactPersonPseudonym(identity:Any,index:Int):String? {
+        if(index !in 0 until 32)return null
+        return resolveCompactPersons(identity){it.items.getOrNull(index)?.pseudonym}
+    }
+    internal fun compactPersonsComposition(identity:Any,observed:Boolean) {
+        if(Thread.currentThread() !== ownerThread)return
+        val slot=coreSlot.get()?.takeIf {it.identity===identity} ?: return
+        if(observed)slot.lifetime.compositionObserved() else slot.lifetime.compositionDisposed()
     }
     /** Return only the ORIGINAL metadata lifetime. No payload/authority registry. */
     fun observeActiveCoreComposition(core:ActiveCorePayload):ActiveCoreLifetime? {
@@ -86,10 +129,11 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 lifetime.close();personsLoading=false;workspaceError=true;return@loadOwned
             }
             val slotIdentity=Any()
-            val slot=CoreSlot(result,lifetime,slotIdentity)
+            val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity))
             slot.subscription=lifetime.onInvalidated {
                 val held=coreSlot.get()
                 if(held?.identity === slotIdentity && coreSlot.compareAndSet(held,null)) {
+                    held.persons.invalidate()
                     // No Compose mutation on a session worker; authority/reference already gone.
                     runCatching { ownerDispatch { coreSignal++ } }
                 }

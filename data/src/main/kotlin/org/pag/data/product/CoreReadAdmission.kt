@@ -77,7 +77,7 @@ internal class CoreReadAdmission private constructor(val reservation: ActiveCore
             }
         }
 
-        private fun add(a: ActiveWorkspaceBudget.Units, b: ActiveWorkspaceBudget.Units) = ActiveWorkspaceBudget.Units(
+        internal fun add(a: ActiveWorkspaceBudget.Units, b: ActiveWorkspaceBudget.Units) = ActiveWorkspaceBudget.Units(
             objects = Math.addExact(a.objects,b.objects), strings = Math.addExact(a.strings,b.strings),
             utf16Units = Math.addExact(a.utf16Units,b.utf16Units), arrays = Math.addExact(a.arrays,b.arrays),
             arrayPayloadBytes = Math.addExact(a.arrayPayloadBytes,b.arrayPayloadBytes),

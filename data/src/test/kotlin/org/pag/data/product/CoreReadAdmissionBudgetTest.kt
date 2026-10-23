@@ -59,6 +59,22 @@ class CoreReadAdmissionBudgetTest {
         }
     }
 
+    @Test fun personsPresentationOverheadSharesExactLimitsBeforeMaterialization() = runBlocking {
+        val extra=CompactPersonsPresentationBudget.reservation
+        val extraR=ActiveWorkspaceBudget.estimateUnits(extra.retained).second
+        val extraT=ActiveWorkspaceBudget.estimateUnits(extra.transition).second
+        assertEquals(152L,extraR);assertEquals(61088L,extraT)
+        var work=0
+        val fitting=plan(r-extraR,t-extraT){work++}
+        val receipt=CoreReadAdmission.admit(listOf(fitting),extra)
+        assertEquals(r,receipt.retained);assertEquals(t,receipt.transition)
+        fitting.materialize(receipt);assertEquals(1,work)
+        val overflowing=plan(r-extraR+1,t-extraT){work++}
+        try {CoreReadAdmission.admit(listOf(overflowing),extra);fail("No free presentation handle")}
+        catch(rejected:BoundedActiveRejected){assertEquals(BoundedActiveStatus.BUDGET_REFUSED,rejected.status)}
+        assertEquals(1,work)
+    }
+
     @Test fun overflowCannotAuthorizeMaterialization() {
         val overflowing=PreparedCoreRead(ActiveCoreReservation(
             ActiveWorkspaceBudget.Units(),ActiveWorkspaceBudget.Units(references=Long.MAX_VALUE))) {fail("No work")}

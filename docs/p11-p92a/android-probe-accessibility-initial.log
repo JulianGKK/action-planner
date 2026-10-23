@@ -1,0 +1,21 @@
+P92_OWNER_BEFORE_UI,session=READY,area=PERSONS,shown=32
+P92_UI_ROOT,package=org.pag.prototype.a.p77runtime,children=3
+P92_UI_NODE,visible=true,text=P77 ISOLIERTER TEST – synthetischer Schlüssel und synthetische Testdaten; keine Produktanmeldung
+P92_UI_NODE,visible=true,text=Sperren
+P92_UI_NODE,visible=true,text=‹ Aktionen
+P92_UI_NODE,visible=true,text=Synthetic action
+P92_UI_NODE,visible=true,text=AKTIV
+P92_UI_NODE,visible=true,text=‹ Zum Lagebild
+P92_UI_NODE,visible=true,text=Personen
+P92_UI_NODE,visible=true,text=32 von 200 angezeigt · weitere Einträge verfügbar
+P92_UI_NODE,visible=true,text=Keine Lageangabe: 0
+P92_UI_NODE,visible=true,text=Vor Ort: 200
+P92_UI_NODE,visible=true,text=Identitätsfeststellung: 0
+P92_UI_NODE,visible=true,text=In Gewahrsam: 0
+P92_UI_NODE,visible=true,text=Nicht erreichbar: 0
+P92_UI_NODE,visible=true,text=Wieder frei: 0
+P92_UI_NODE,visible=true,text=Nicht mehr vor Ort: 0
+P92_UI_NODE,visible=true,text=Unklar: 0
+P92_FAIL,IllegalStateException,P92 text not visible after bounded scroll
+INSTRUMENTATION_RESULT: result=P92 FAIL
+INSTRUMENTATION_CODE: 0

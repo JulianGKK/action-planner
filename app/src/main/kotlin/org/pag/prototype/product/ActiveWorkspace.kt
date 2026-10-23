@@ -98,14 +98,20 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
     }
     if(!renderContent)return
     if(model.compactActiveMode) {
-        val core=model.activeCore
-        if(core==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
-        val lifetime=model.observeActiveCoreComposition(core)
-        DisposableEffect(lifetime) {
-            onDispose {lifetime?.compositionDisposed()}
-        }
-        key(model.activeArea) {
-            CompactActiveContent(core,model.activeArea,model.activeNavigationEnabled,model::activeArea,contentFrames)
+        if(model.activeArea==ActiveArea.PERSONS) {
+            val persons=model.compactPersonsPresentation
+            if(persons==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
+            persons.compositionObserved()
+            DisposableEffect(persons) { onDispose {persons.compositionDisposed()} }
+            key(model.activeArea) { CompactActiveContent(persons,contentFrames) }
+        } else {
+            val core=model.activeCore
+            if(core==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
+            val lifetime=model.observeActiveCoreComposition(core)
+            DisposableEffect(lifetime) { onDispose {lifetime?.compositionDisposed()} }
+            key(model.activeArea) {
+                CompactActiveContent(core,model.activeArea,model.activeNavigationEnabled,model::activeArea,contentFrames)
+            }
         }
         FormOutlinedButton(model::useFullActiveView,enabled=model.activeNavigationEnabled) { Text("Alle anzeigen und bearbeiten") }
         if(model.activeArea==ActiveArea.HUB && model.documentsAvailable)
@@ -158,16 +164,7 @@ internal fun activeCompactHubCards(core:ActiveCorePayload):List<HubCard> = listO
 )
 
 @Composable private fun CompactActiveContent(core:ActiveCorePayload,area:ActiveArea,enabled:Boolean,onOpen:(ActiveArea)->Unit, observer:CompactContentFrameObserver?=null) {
-    // Capture once for this area subtree. An old subtree cannot acquire a later navigation ID.
-    val trace=remember(observer,area) { observer?.capture(area)?.also { it.composing(System.nanoTime()) } }
-    if(trace!=null) SideEffect { trace.committed(System.nanoTime()) }
-    val frameModifier=if(trace==null) Modifier else Modifier
-        .onGloballyPositioned { if(it.isAttached && it.size.width>0 && it.size.height>0) trace.laidOut(System.nanoTime()) }
-        .drawWithContent {
-            trace.drawStarted(System.nanoTime())
-            drawContent()
-            trace.drawn(System.nanoTime())
-        }
+    val frameModifier=compactFrameModifier(area,observer)
     Column(frameModifier,verticalArrangement=Arrangement.spacedBy(16.dp)) {
         PreparationHeading(area.label)
         when(area) {
@@ -176,11 +173,6 @@ internal fun activeCompactHubCards(core:ActiveCorePayload):List<HubCard> = listO
                 listOf(ActiveArea.PROTOCOL,ActiveArea.MATERIAL,ActiveArea.COSTS,ActiveArea.MEMORY_REPORTS,ActiveArea.DETAILS).forEach { next ->
                     FormOutlinedButton({onOpen(next)},enabled=enabled) {Text(next.label)}
                 }
-            }
-            ActiveArea.PERSONS -> {
-                Text(compactPageLabel(core.people.items.size,core.people.overall.total,core.people.hasMore))
-                OperationalStatus.entries.forEach { status -> Text("${operationalLabel(status)}: ${core.people.overall.count(status)}") }
-                core.people.items.forEach { person -> Text(person.pseudonym) }
             }
             ActiveArea.FUNCTIONS -> {
                 Text("${core.functions.onSiteCount} Personen vor Ort · ${core.functions.withoutFunction} ohne Funktion")
@@ -196,6 +188,35 @@ internal fun activeCompactHubCards(core:ActiveCorePayload):List<HubCard> = listO
             else -> Unit
         }
     }
+}
+
+/** PERSONS receives only an identity handle; no full core/page/list can enter this subtree. */
+@Composable private fun CompactActiveContent(persons:CompactPersonsPresentation,observer:CompactContentFrameObserver?=null) {
+    val shown=persons.shown() ?: return
+    val total=persons.total() ?: return
+    val more=persons.hasMore() ?: return
+    Column(compactFrameModifier(ActiveArea.PERSONS,observer),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        PreparationHeading(ActiveArea.PERSONS.label)
+        Text(compactPageLabel(shown,total,more))
+        OperationalStatus.entries.forEach { status ->
+            val count=persons.count(status) ?: return@forEach
+            Text("${operationalLabel(status)}: $count")
+        }
+        repeat(shown) { index -> persons.pseudonym(index)?.let { Text(it) } }
+    }
+}
+
+@Composable private fun compactFrameModifier(area:ActiveArea,observer:CompactContentFrameObserver?):Modifier {
+    // Capture once for this area subtree. An old subtree cannot acquire a later navigation ID.
+    val trace=remember(observer,area) { observer?.capture(area)?.also { it.composing(System.nanoTime()) } }
+    if(trace!=null) SideEffect { trace.committed(System.nanoTime()) }
+    return if(trace==null) Modifier else Modifier
+        .onGloballyPositioned { if(it.isAttached && it.size.width>0 && it.size.height>0) trace.laidOut(System.nanoTime()) }
+        .drawWithContent {
+            trace.drawStarted(System.nanoTime())
+            drawContent()
+            trace.drawn(System.nanoTime())
+        }
 }
 
 /** Shared stateless hub presentation; no session, repository or demo capability. */

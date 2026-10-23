@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.OutstandingCoreReadTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-10-23T18:17:45.081Z" hostname="iuzjhtgvfc" time="0.152">
+  <properties/>
+  <testcase name="disposedConsumerCanStillHoldRawValueAndCannotRegrantEvenWithoutComposeObservation" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.095"/>
+  <testcase name="aPendingCandidateBlocksSecondAndThirdBeforeTicketsAndSqlWithoutReplacingAuthority" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.002"/>
+  <testcase name="fullViewFencePreservesOldChargesAndCannotMintAnEditorFallbackCore" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.001"/>
+  <testcase name="everyWriterSessionAndAuthorityRaceRevokesOnlyOriginalUndeliveredHandoff" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.011"/>
+  <testcase name="discardDrainsOnlyKnownHandoffAndLateDuplicateCannotRevokeNewOriginalTicket" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.003"/>
+  <testcase name="duplicateWorkerCannotAcknowledgeWhileOriginalWorkerStillMaterializes" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.005"/>
+  <testcase name="uncertainQueueAcceptanceCannotFreeReservationBeforeTheQueuedShellAcknowledges" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.009"/>
+  <testcase name="fullViewCancelsUnpublishedMainButItsAcknowledgementDoesNotClearFullViewFence" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.002"/>
+  <testcase name="knownReaderFailureAndBudgetRefusalEndChargeButUnconfirmedCleanupStaysBooked" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.002"/>
+  <testcase name="anActuallyLostMainRemainsBookedEvenAfterCancellationWithoutQueueAcknowledgement" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.002"/>
+  <testcase name="vmClearAndComposeDisposalDoNotConfirmFrameRetirementOrNewGenerationBudget" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.001"/>
+  <testcase name="fullViewWithoutAnyCoreIsAnIndependentStickyFenceAcrossGenerationAndAction" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.002"/>
+  <testcase name="cancellationDuringMaterializationCannotRegrantBeforeWorkerScopeEnds" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.004"/>
+  <testcase name="canceledQueuedWorkerMustAcknowledgeAndLateDuplicateCannotRetireNewRead" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.002"/>
+  <testcase name="interruptedRevokedWorkerEndsWithoutLatePublication" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.003"/>
+  <testcase name="disposeAloneDoesNotRevokeAuthorityAndRepeatedRevokeCannotRetireExposedValue" classname="org.pag.data.product.OutstandingCoreReadTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

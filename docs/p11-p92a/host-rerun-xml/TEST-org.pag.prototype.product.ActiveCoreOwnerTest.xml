@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveCoreOwnerTest" tests="23" skipped="0" failures="0" errors="0" timestamp="2026-10-23T18:30:32.081Z" hostname="iuzjhtgvfc" time="0.567">
+  <properties/>
+  <testcase name="fullViewReturnSurfacesAdmissionRefusalAndCannotReplayTheOldCore" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.339"/>
+  <testcase name="workerInvalidationDropsAuthorityBeforeOwnerNotificationAndLockClears" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.014"/>
+  <testcase name="oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.009"/>
+  <testcase name="inactiveForeignAndOverBudgetCandidatesNeverInstall" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.007"/>
+  <testcase name="actualProductRouterSelectsCompactRendererForEveryCompactActiveArea" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.022"/>
+  <testcase name="personsAccessDeniesAuthorityRaceForeignThreadAndCannotFollowReplacementSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.035"/>
+  <testcase name="clearingSlotAndRepeatedDisposeCannotEraseAnAlreadyReturnedConsumerReference" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="actionSwitchBackFullViewAndOldCallbacksCannotRestoreSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="workerSessionObserverDropsSlotBeforeComposeDispatchAndOnClearedClosesLifetime" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.006"/>
+  <testcase name="oldPersonsAccessCannotResolveAfterLockRevokeGenerationActionOrStatusChange" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.016"/>
+  <testcase name="fullActiveAndPreparationEntityListsKeepTheirExistingRoute" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.019"/>
+  <testcase name="hitPublicationHasNoEarlyNavigationAndLockDuringHitCannotRestoreSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.004"/>
+  <testcase name="gapHostReuseHasNoPerHitPublicationAndReportsInteraction" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="duplicateCallbackCannotInstallSecondPayloadOrInvalidateTheConsumedSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="oversizedPersonsPageNeverCreatesPresentationHandle" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="preparationAlsoAnnouncesFullViewBeforeAnyCompactRead" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="revokeImmediatelyAfterHitAndStatusChangeRemoveOriginalAuthority" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.006"/>
+  <testcase name="generationChangeRejectsOldPendingCallbackWithoutRevokingTheNewSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="personsPresentationIsOneIdentityOnlyHandleWithBoundedCorrectScalars" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.013"/>
+  <testcase name="falseReturnAndRevokeDuringInstallLeaveNoRetention" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.004"/>
+  <testcase name="revokedCompactCoreDoesNotFallBackToFullEntityList" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="compactCountsAndMoreAreExplicitAndLostCallbackHasNoSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.033"/>
+  <testcase name="correctlyChargedCandidateUsesRetainedEightAndTransitionSixteenLimits" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,12 @@
+public static final java.lang.String compactPageLabel(int, long, boolean);
+    Code:
+       0: iload_0
+       1: lload_1
+       2: iload_3
+       3: ifeq          12
+       6: ldc_w         #1407               // String  · weitere Einträge verfügbar
+       9: goto          15
+      12: ldc_w         #875                // String
+      15: invokedynamic #1412,  0           // InvokeDynamic #37:makeConcatWithConstants:(IJLjava/lang/String;)Ljava/lang/String;
+      20: areturn
+

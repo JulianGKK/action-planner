@@ -21,13 +21,13 @@ class ActiveCoreOwnerTest {
     }
     private class Lifetime:ActiveCoreLifetime {
         val live=AtomicBoolean(true);var invalidator:(()->Unit)?=null
-        var falseAfter=false;var duringInstall:(()->Unit)?=null
+        var current=true;var falseAfter=false;var duringInstall:(()->Unit)?=null
         var publications=0
         var hits=0;var observations=0;var disposals=0
         override fun compositionObserved(){observations++}
         override fun compositionDisposed(){disposals++}
         override fun authorizeHit(actionId:String):Boolean {hits++;return publish {}}
-        override fun isCurrent()=live.get()
+        override fun isCurrent()=live.get() && current
         override fun publish(install:()->Unit):Boolean {
             publications++
             if(!live.get())return false
@@ -78,6 +78,70 @@ class ActiveCoreOwnerTest {
                 ActiveCoreReservation(ActiveWorkspaceBudget.Units(),ActiveWorkspaceBudget.Units()),0,0)
         }
     }
+    private fun personsFixture(size:Int=32):ActiveCoreResult.Value {
+        val value=core()
+        val items=(0 until size).map { CompactPersonCard("p$it","Synthetic Ä界🦋 $it",it.toLong(),
+            OperationalStatus.ON_SITE,null,null,null,1,0) }
+        return value.copy(core=value.core.copy(people=value.core.people.copy(
+            overall=CompactPeopleCounts(0,200,0,0,0,0,0,0),items=items)))
+    }
+    private fun personsOwner():Triple<H,Lifetime,CompactPersonsPresentation> {
+        val h=H() // Gate off: switch BEFORE the first pending candidate is exposed.
+        h.model.activeArea(ActiveArea.PERSONS)
+        h.port.deliver() // Obsolete Main callback cannot install the cancelled Hub candidate.
+        assertNull(h.model.activeCore)
+        val life=h.port.deliver(personsFixture())
+        return Triple(h,life,checkNotNull(h.model.compactPersonsPresentation))
+    }
+    @Test fun personsPresentationIsOneIdentityOnlyHandleWithBoundedCorrectScalars() {
+        val (h,life,view)=personsOwner();val reads=h.port.reads;val interactions=h.session.interactions
+        assertSame(view,h.model.compactPersonsPresentation)
+        assertEquals(32,view.shown());assertEquals(200L,view.total());assertEquals(true,view.hasMore())
+        assertEquals(200L,view.count(OperationalStatus.ON_SITE))
+        repeat(32){assertEquals("Synthetic Ä界🦋 $it",view.pseudonym(it))}
+        assertNull(view.pseudonym(-1));assertNull(view.pseudonym(32));assertNull(view.pseudonym(Int.MAX_VALUE))
+        assertEquals(reads,h.port.reads);assertEquals(interactions,h.session.interactions)
+        val fields=view.javaClass.declaredFields.filterNot {java.lang.reflect.Modifier.isStatic(it.modifiers)}
+        assertTrue(life.hits>=36);assertEquals(2,fields.size)
+        assertTrue(fields.all {it.type==Any::class.java || it.type==ProductViewModel::class.java})
+        view.compositionObserved();view.compositionDisposed();assertEquals(1,life.observations);assertEquals(1,life.disposals)
+        assertEquals("Synthetic Ä界🦋 0",view.pseudonym(0)) // Dispose is no authorization/retirement signal.
+    }
+    @Test fun oldPersonsAccessCannotResolveAfterLockRevokeGenerationActionOrStatusChange() {
+        for(reason in listOf("lock","revoke","generation","action","status","context","fresh-session")) {
+            val (h,life,view)=personsOwner()
+            when(reason) {
+                "lock"->h.model.lock()
+                "revoke"->life.close()
+                "context"->{life.current=false}
+                "generation"->h.session.change(SessionSnapshot(SessionState.READY,2))
+                "action"->{h.repo.action=h.repo.action.copy(id="other");h.model.detail("other")}
+                "status"->{h.repo.action=h.repo.action.copy(status=ActionStatus.COMPLETED);h.model.detail("a")}
+                else->h.session.state=SessionSnapshot(SessionState.LOCKED,2) // No cached observer update.
+            }
+            val reads=h.port.reads
+            repeat(3){assertNull(reason,view.pseudonym(0));assertNull(view.shown());assertNull(view.total());assertNull(view.hasMore());assertNull(view.count(OperationalStatus.ON_SITE))}
+            assertEquals(reads,h.port.reads)
+            life.current=true;h.session.state=SessionSnapshot(SessionState.READY,1)
+            assertNull("A denied handle must not revive",view.pseudonym(0))
+        }
+    }
+    @Test fun personsAccessDeniesAuthorityRaceForeignThreadAndCannotFollowReplacementSlot() {
+        val (h,life,view)=personsOwner();val hits=life.hits
+        val t=Thread{assertNull(view.pseudonym(0))};t.start();t.join(3000);assertFalse(t.isAlive);assertEquals(hits,life.hits)
+        life.duringInstall={life.close()};assertNull(view.pseudonym(0));assertNull(h.model.compactPersonsPresentation)
+        h.model.activeArea(ActiveArea.PERSONS);h.port.deliver(personsFixture())
+        val next=checkNotNull(h.model.compactPersonsPresentation)
+        assertNotSame(view,next);assertNull(view.pseudonym(0));assertEquals("Synthetic Ä界🦋 0",next.pseudonym(0))
+        val ownerField=view.javaClass.getDeclaredField("owner").also{it.isAccessible=true}
+        assertNull(ownerField.get(view)) // Old metadata handle no longer roots the VM either.
+    }
+    @Test fun oversizedPersonsPageNeverCreatesPresentationHandle() {
+        val h=H();h.model.activeArea(ActiveArea.PERSONS);h.port.deliver()
+        val life=h.port.deliver(personsFixture(33))
+        assertNull(h.model.compactPersonsPresentation);assertFalse(life.live.get())
+    }
+
     @Test fun oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse() {
         val h=H(true);h.port.deliver();val first=h.model.activeCore
         assertNotNull(first);assertNull(h.model.workspace)

@@ -1,0 +1,2 @@
+2c678c604dc2a7528ca276ef6fd8510587fc50490d9a1878cc7fce840ba914e6  app/build/outputs/apk/p77runtime/app-p77runtime.apk
+bcc69153ced9af7895fdc9db201d0b3f72c7702ded9f7a45a8475f8b8db462c1  app/build/outputs/apk/androidTest/p77runtime/app-p77runtime-androidTest.apk
