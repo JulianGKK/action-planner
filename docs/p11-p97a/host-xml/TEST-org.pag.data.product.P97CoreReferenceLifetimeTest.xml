@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P97CoreReferenceLifetimeTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-23T20:30:00.141Z" hostname="iuzjhtgvfc" time="0.049">
+  <properties/>
+  <testcase name="fullViewFenceDoesNotTurnExposedCoreOrUnintegratedEditorDataIntoAReleaseProof" classname="org.pag.data.product.P97CoreReferenceLifetimeTest" time="0.043"/>
+  <testcase name="discardedMainAcknowledgesOnlyItsOwnReadAndLateDuplicateCannotRetireNewRead" classname="org.pag.data.product.P97CoreReferenceLifetimeTest" time="0.001"/>
+  <testcase name="cancelledBeforeMaterializationNeedsActualWorkerShellAcknowledgement" classname="org.pag.data.product.P97CoreReferenceLifetimeTest" time="0.0"/>
+  <testcase name="publishedMainResultLocalOutlivesRevocationAndExposedReadStaysBlockedAfterReturn" classname="org.pag.data.product.P97CoreReferenceLifetimeTest" time="0.001"/>
+  <testcase name="cancelledMaterializedWorkerLocalBlocksEvenWithAllCellsEmpty" classname="org.pag.data.product.P97CoreReferenceLifetimeTest" time="0.001"/>
+  <testcase name="materializedCandidateHasOneCellAndCannotEndBeforeMainAcknowledgement" classname="org.pag.data.product.P97CoreReferenceLifetimeTest" time="0.0"/>
+  <testcase name="retiredShellCanReachFutureCandidateThroughReadOuterOwnerButCannotDeliverIt" classname="org.pag.data.product.P97CoreReferenceLifetimeTest" time="0.001"/>
+  <testcase name="explicitLegitimateTestAliasSurvivesEmptyCellsClosedLifetimeAndAcknowledgedHandoffs" classname="org.pag.data.product.P97CoreReferenceLifetimeTest" time="0.0"/>
+  <system-out><![CDATA[P97 fullview core-release BLOCKED; fullview/form/editor payload OUT_OF_SCOPE; fence unchanged
+P97 discarded-main CONFIRMED original identity only; duplicate-old-shell cannot retire new-read
+P97 before-materialization CONFIRMED only-after-worker-ack; original-payload-created=false
+P97 main-local BLOCKED during-callback; CONFIRMED cell/scoped-return/registration ends; exposure retirement BLOCKED
+P97 worker-local BLOCKED until-producer-return-and-worker-ack; then CONFIRMED named-chain
+P97 candidate BLOCKED while-main-pending; cleared-cells-not-enough; CONFIRMED after-discard-ack
+P97 retired-shell original-chain CONFIRMED; future-root isolation BLOCKED Read->outer.current backlink; no authority bypass
+P97 explicit-test-reference BLOCKED while-test-alias-held; dropping-it is no production-end-receipt
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

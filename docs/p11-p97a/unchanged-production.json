@@ -1,0 +1,56 @@
+[
+  {
+    "file": "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLoader.kt",
+    "base_blob": "31520fb1abe2b5099b9cd96c12aabe44c44b2e0f",
+    "current_blob": "31520fb1abe2b5099b9cd96c12aabe44c44b2e0f",
+    "unchanged": true
+  },
+  {
+    "file": "data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt",
+    "base_blob": "dbdd6a6d1b6170d4a08e2b6994d7ef5bbb4e0265",
+    "current_blob": "dbdd6a6d1b6170d4a08e2b6994d7ef5bbb4e0265",
+    "unchanged": true
+  },
+  {
+    "file": "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLifetime.kt",
+    "base_blob": "efc4dd98c4c95da30ce43ed0ef0db87ef22f70f4",
+    "current_blob": "efc4dd98c4c95da30ce43ed0ef0db87ef22f70f4",
+    "unchanged": true
+  },
+  {
+    "file": "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreReader.kt",
+    "base_blob": "ad4a1163e7232ea1cc3c0efede917691ea78f699",
+    "current_blob": "ad4a1163e7232ea1cc3c0efede917691ea78f699",
+    "unchanged": true
+  },
+  {
+    "file": "data/src/main/kotlin/org/pag/data/SessionCoordinator.kt",
+    "base_blob": "8958dda4813f64f75e083e1347faea181573f570",
+    "current_blob": "8958dda4813f64f75e083e1347faea181573f570",
+    "unchanged": true
+  },
+  {
+    "file": "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt",
+    "base_blob": "6a33242e177dbf2886a8c729cdec18faac5a2059",
+    "current_blob": "6a33242e177dbf2886a8c729cdec18faac5a2059",
+    "unchanged": true
+  },
+  {
+    "file": "domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt",
+    "base_blob": "e4a2e2da40496bd71b46da39d2f83458e88e29e8",
+    "current_blob": "e4a2e2da40496bd71b46da39d2f83458e88e29e8",
+    "unchanged": true
+  },
+  {
+    "file": "domain/src/main/kotlin/org/pag/domain/CompactPresentationBudget.kt",
+    "base_blob": "cb50b82b894f65faf3b6f05ee03d6826deff098f",
+    "current_blob": "cb50b82b894f65faf3b6f05ee03d6826deff098f",
+    "unchanged": true
+  },
+  {
+    "file": "data/src/main/kotlin/org/pag/data/product/CoreReadAdmission.kt",
+    "base_blob": "44e8f4b8deb849ddb531f5de8bcb13926fe63154",
+    "current_blob": "44e8f4b8deb849ddb531f5de8bcb13926fe63154",
+    "unchanged": true
+  }
+]

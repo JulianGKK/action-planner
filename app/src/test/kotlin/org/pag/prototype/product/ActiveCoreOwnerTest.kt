@@ -22,6 +22,7 @@ class ActiveCoreOwnerTest {
     private class Lifetime:ActiveCoreLifetime {
         val live=AtomicBoolean(true);var invalidator:(()->Unit)?=null
         var current=true;var falseAfter=false;var duringInstall:(()->Unit)?=null
+        var duringPublication:((()->Unit)->Unit)?=null
         var publications=0
         var hits=0;var observations=0;var disposals=0
         override fun compositionObserved(){observations++}
@@ -31,7 +32,7 @@ class ActiveCoreOwnerTest {
         override fun publish(install:()->Unit):Boolean {
             publications++
             if(!live.get())return false
-            install();duringInstall?.invoke()
+            install();duringPublication?.invoke(install);duringInstall?.invoke()
             return !falseAfter && live.get()
         }
         override fun onInvalidated(invalidate:()->Unit):Subscription {invalidator=invalidate;if(!live.get())invalidate();return Subscription{invalidator=null}}
@@ -402,6 +403,39 @@ class ActiveCoreOwnerTest {
         val next=checkNotNull(h.model.compactFunctionsPresentation)
         assertNotSame(view,next);assertNull(view.name(0));assertEquals(32,next.size());assertNotNull(next.line(31))
         next.compositionObserved();next.compositionDisposed();assertNotNull(next.name(0))
+    }
+
+    private fun referenceField(o:Any,name:String):Any?=o.javaClass.getDeclaredField(name).let{it.isAccessible=true;it.get(o)}
+    @Test fun p97OriginalFourHandleLinksEndButRunningScalarClosureStillHoldsOriginalSlot() {
+        val (h,life,view)=functionsOwner()
+        var testSlotReference:Any?=(referenceField(h.model,"coreSlot") as java.util.concurrent.atomic.AtomicReference<*>).get()
+        val handles=listOf("hub","persons","tasks","functions").map{referenceField(testSlotReference!!,it)!!}
+        assertTrue(handles.all{referenceField(it,"owner")===h.model})
+        var witnessed=false
+        life.duringPublication={install->
+            val captures=install.javaClass.declaredFields.filterNot{java.lang.reflect.Modifier.isStatic(it.modifiers)}.map{it.isAccessible=true;it.get(install)}
+            if(captures.any{it===testSlotReference}) {
+                witnessed=true;life.close()
+                assertNull((referenceField(h.model,"coreSlot") as java.util.concurrent.atomic.AtomicReference<*>).get())
+                assertTrue(handles.all{referenceField(it,"owner")==null})
+                assertTrue(captures.any{it===testSlotReference}) // Actual production install parameter still holds the slot in the running publisher/resolver scope.
+            }
+        }
+        assertNull(view.line(0));assertTrue(witnessed);assertNull(life.invalidator)
+        life.duringPublication=null;testSlotReference=null // Explicit TEST inspection alias, never a product owner.
+        assertNull(view.line(1))
+        println("P97 VM fields/4 handle links CONFIRMED after-revoke; scalar-local BLOCKED until-call-return; no global retirement receipt")
+    }
+    @Test fun p97SlotReplacementAndFullviewKeepExplicitOldTestReferenceUnconfirmed() {
+        val h=H();val callback=h.port.pending.first().second;val oldLife=h.port.deliver()
+        var testSlotReference:Any?=(referenceField(h.model,"coreSlot") as java.util.concurrent.atomic.AtomicReference<*>).get()
+        val oldIdentity=presentedIdentity(h.model)
+        h.model.detail("a");h.port.deliver();val nextIdentity=presentedIdentity(h.model)
+        assertNotSame(oldIdentity,nextIdentity);repeat(2){callback(core(),oldLife)};assertSame(nextIdentity,presentedIdentity(h.model))
+        assertNotNull(referenceField(testSlotReference!!,"value")) // Explicit TEST holder pins original slot/value.
+        h.model.useFullActiveView();assertNull(presentedIdentity(h.model));assertTrue(h.port.fullViews>0)
+        assertNotNull(referenceField(testSlotReference!!,"value"));testSlotReference=null
+        println("P97 old-slot TEST reference BLOCKED while-held; fake-port replacement is not production readmission; fullview/form OUT_OF_SCOPE")
     }
 
     @Test fun oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse() {
