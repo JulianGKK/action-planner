@@ -1,0 +1,116 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:processResources NO-SOURCE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:preDebugUnitTestBuild
+> Task :data:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeRFile UP-TO-DATE
+> Task :app:javaPreCompileP77runtime UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :security:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkP77runtimeAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeResources UP-TO-DATE
+> Task :app:createP77runtimeCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksP77runtime UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :security:extractDeepLinksDebug UP-TO-DATE
+> Task :security:processDebugManifest UP-TO-DATE
+> Task :app:processP77runtimeMainManifest UP-TO-DATE
+> Task :app:processP77runtimeManifest UP-TO-DATE
+> Task :app:processP77runtimeManifestForPackage UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :security:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processP77runtimeResources UP-TO-DATE
+> Task :app:preP77runtimeUnitTestBuild
+> Task :app:javaPreCompileP77runtimeUnitTest UP-TO-DATE
+> Task :domain:compileKotlin
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar
+> Task :data:kspDebugKotlin
+> Task :data:compileDebugKotlin
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :data:bundleLibRuntimeToJarDebug
+> Task :data:bundleLibCompileToJarDebug
+> Task :data:kspDebugUnitTestKotlin
+
+> Task :app:compileP77runtimeKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:288:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:304:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:320:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:336:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:503:75 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:511:76 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+
+> Task :app:compileP77runtimeJavaWithJavac UP-TO-DATE
+> Task :app:processP77runtimeJavaRes UP-TO-DATE
+> Task :app:bundleP77runtimeClassesToRuntimeJar
+> Task :app:bundleP77runtimeClassesToCompileJar
+
+> Task :data:compileDebugUnitTestKotlin
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/CoreReadAdmissionBudgetTest.kt:13:26 Unresolved reference 'ActiveCoreReservation'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/CoreReadAdmissionBudgetTest.kt:26:30 Unresolved reference 'BoundedActiveStatus'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/CoreReadAdmissionBudgetTest.kt:37:25 Cannot infer type for type parameter 'T'. Specify it explicitly.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/CoreReadAdmissionBudgetTest.kt:38:13 Unresolved reference 'ActiveCoreReservation'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/CoreReadAdmissionBudgetTest.kt:39:13 Unresolved reference 'ActiveCoreReservation'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/CoreReadAdmissionBudgetTest.kt:41:64 Unresolved reference 'BoundedActiveStatus'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/CoreReadAdmissionBudgetTest.kt:46:11 Unresolved reference 'ActiveCoreReservation'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/CoreReadAdmissionBudgetTest.kt:50:49 Unresolved reference 'BoundedActiveStatus'.
+
+> Task :data:compileDebugUnitTestKotlin FAILED
+> Task :app:compileP77runtimeUnitTestKotlin
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':data:compileDebugUnitTestKotlin' (registered by plugin 'com.android.internal.library').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Kotlin compiler: UNRESOLVED_REFERENCE
+       Kotlin compiler error
+         Unresolved reference 'ActiveCoreReservation'.
+         Location: /home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/CoreReadAdmissionBudgetTest.kt line 13
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1m 28s
+62 actionable tasks: 13 executed, 49 up-to-date

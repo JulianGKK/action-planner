@@ -1,6 +1,9 @@
 package org.pag.domain
 
 /**
+ * Hard accounting limits apply only to app-owner-controlled data/intermediates.
+ * Android/Compose/text/render/IME/accessibility/native resources require separate assessment;
+ * they are neither free nor proven released by closing this ledger.
  * Accounting foundation, no payload and no storage/session authorization. One ledger
  * per future scope, confined to its owner thread. Charges are engineering allowances, NOT
  * certified ART deep sizes or an App/Native/OOM bound. DTO/capacity calibration is still needed.
@@ -55,7 +58,7 @@ class ActiveWorkspaceBudget {
         return Representation().also { retained = Allocation(it) }
     }
 
-    /** At most one transition, independently limited to 8 MiB. No third graph allowance. */
+    /** At most one transition, independently limited to 16 MiB. No third graph allowance. */
     fun beginTransition(): Representation? {
         owner()
         if (closed || retained?.sealed != true || transition != null) return null
@@ -75,7 +78,8 @@ class ActiveWorkspaceBudget {
         if (allocation.decision != Decision.ADMITTED) return allocation.decision // sticky, no retry loop
         val next = try { Math.addExact(allocation.chargedBytes, estimate.second) }
             catch (_: ArithmeticException) { null }
-        if (estimate.first == Decision.BUDGET_REFUSED || next == null || next > LIMIT_BYTES) {
+        val limit = if (allocation === retained) RETAINED_LIMIT_BYTES else TRANSITION_LIMIT_BYTES
+        if (estimate.first == Decision.BUDGET_REFUSED || next == null || next > limit) {
             allocation.decision = Decision.BUDGET_REFUSED
         } else {
             allocation.chargedBytes = next
@@ -94,12 +98,14 @@ class ActiveWorkspaceBudget {
 
     /**
      * Accounting only. Caller must drop ALL old payload/form/builder references before the next
-     * transition can start. Does not publish, authorize, or physically wipe anything.
+     * transition can start. A sealed transition above the retained limit is rejected without
+     * changing either booking. Does not publish, authorize, or physically wipe anything.
      */
     fun promote(value: Representation): Boolean {
         owner()
         val allocation = transition ?: return false
-        if (closed || allocation.ticket !== value || !allocation.sealed || allocation.decision != Decision.ADMITTED) return false
+        if (closed || allocation.ticket !== value || !allocation.sealed || allocation.decision != Decision.ADMITTED ||
+            allocation.chargedBytes > RETAINED_LIMIT_BYTES) return false
         retained = allocation; transition = null
         return true
     }
@@ -108,9 +114,10 @@ class ActiveWorkspaceBudget {
     fun close() { owner(); closed = true; retained = null; transition = null }
 
     companion object {
-        const val LIMIT_BYTES = 8L * 1024 * 1024
+        const val RETAINED_LIMIT_BYTES = 8L * 1024 * 1024
+        const val TRANSITION_LIMIT_BYTES = 16L * 1024 * 1024
 
-        /** Pure engineering cost/validation, including values above LIMIT_BYTES.
+        /** Pure engineering cost/validation, including values above either slot limit.
          * ADMITTED here means structurally representable cost, NOT scope admission:
          * only admit()/seal() on ONE ledger can authorize materialization. No ledger created.
          */

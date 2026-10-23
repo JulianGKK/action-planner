@@ -190,17 +190,16 @@ class BoundedTaskStoreTest {
         h.exec("INSERT INTO task_events VALUES('e2','a','t1','CREATED',1)")
         assertEquals(listOf("e1","e2"),(h.read() as BoundedTaskResult.Value).board.events.map{it.id})
     }
-    @Test fun exactBudgetAndNextByteRefusalBeforeAnotherPayloadQuery() = H().use { h ->
+    @Test fun lastRepresentableBudgetAndNextByteRefusalBeforeAnotherPayloadQuery() = H().use { h ->
         h.seed(1,2)
         // Adding ASCII bytes to a nullable template costs 80 transition bytes each.
         h.exec("UPDATE tasks SET sourceTemplateKey='x'")
         val first=h.read() as BoundedTaskResult.Value
-        val remaining=ActiveWorkspaceBudget.LIMIT_BYTES-first.transitionCharge
-        assertEquals(0L, remaining % 80)
+        val remaining=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES-first.transitionCharge
         val pad=remaining/80
         h.exec("UPDATE tasks SET sourceTemplateKey=sourceTemplateKey||printf('%0${pad}d',0)")
         val near=h.read() as BoundedTaskResult.Value
-        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,near.transitionCharge)
+        assertEquals(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES-remaining%80,near.transitionCharge)
         val queries=h.db.payloadStatements
         h.exec("UPDATE tasks SET sourceTemplateKey=sourceTemplateKey||'x'")
         rejected(BoundedActiveStatus.BUDGET_REFUSED,h.read());assertEquals(queries,h.db.payloadStatements)

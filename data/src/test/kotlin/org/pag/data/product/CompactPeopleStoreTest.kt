@@ -38,8 +38,8 @@ class CompactPeopleStoreTest {
             val core=h.read() as ActiveCoreResult.Value
             assertEquals(people.toLong(),core.core.people.overall.total)
             assertEquals(tasks.toLong(),core.core.tasks.overall.total)
-            assertTrue(core.retainedCharge<=ActiveWorkspaceBudget.LIMIT_BYTES)
-            assertTrue(core.transitionCharge<=ActiveWorkspaceBudget.LIMIT_BYTES)
+            assertTrue(core.retainedCharge<=ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
+            assertTrue(core.transitionCharge<=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)
             val cards=pages(h)
             assertEquals((0 until people).map{"p$it"},cards.map{it.id})
             assertEquals(people,core.core.functions.items.sumOf{it.onSiteCount}.toInt())
@@ -88,12 +88,6 @@ class CompactPeopleStoreTest {
         for(roles in listOf(6,32,100)) ActiveCoreStoreTest.H(200,1000,5,roles).use { h ->
             h.exec("UPDATE person_operational_states SET currentRoleId='r0'")
             val read=h.read()
-            if(roles==100) {
-                assertEquals(ActiveCoreResult.Rejected(BoundedActiveStatus.BUDGET_REFUSED),read)
-                assertEquals(0,h.db.blobReads)
-                println("PEOPLE_CATALOG roles=$roles retained=${h.admission!!.retained} transition=${h.admission!!.transition} refused-before-payload")
-                return@use
-            }
             val core=read as ActiveCoreResult.Value
             println("PEOPLE_CATALOG roles=$roles retained=${core.retainedCharge} transition=${core.transitionCharge} admitted")
             assertEquals(roles,core.core.functions.items.size)

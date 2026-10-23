@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.BoundedTaskFixturePreconditionTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-23T17:54:25.323Z" hostname="iuzjhtgvfc" time="1.302">
+  <properties/>
+  <testcase name="publicationDenialIsAfterCompleteReadAndCleanupAndRevokePreventsFurtherReads" classname="org.pag.data.product.BoundedTaskFixturePreconditionTest" time="0.302"/>
+  <testcase name="oversizedTemplateAloneTurnsAdmittedFixtureIntoPrePayloadRefusal" classname="org.pag.data.product.BoundedTaskFixturePreconditionTest" time="0.283"/>
+  <testcase name="oversizedTemplateRemainsDomainValidWithoutChangingRules" classname="org.pag.data.product.BoundedTaskFixturePreconditionTest" time="0.003"/>
+  <testcase name="hundredTaskFixtureExceedsHistoricalEightButFitsNewTransitionBudget" classname="org.pag.data.product.BoundedTaskFixturePreconditionTest" time="0.492"/>
+  <testcase name="fortyTasksAndFullHistoryAreAdmittedAcrossMultipleBatchesBeforeAndAfterTransition" classname="org.pag.data.product.BoundedTaskFixturePreconditionTest" time="0.22"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

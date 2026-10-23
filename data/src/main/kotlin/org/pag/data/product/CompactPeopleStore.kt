@@ -60,7 +60,7 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
             if(!s.step()) invalid()
             val n=number(s,0)
             if(n !in 0..65536) fail(BoundedActiveStatus.BUDGET_REFUSED)
-            texts.indices.forEach { if(number(s,it+1)>ActiveWorkspaceBudget.LIMIT_BYTES) fail(BoundedActiveStatus.BUDGET_REFUSED) }
+            texts.indices.forEach { if(number(s,it+1)>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES) fail(BoundedActiveStatus.BUDGET_REFUSED) }
             if(s.step()) invalid(); n
         }
         val bytes=scalar("SELECT COALESCE(SUM(${texts.joinToString("+") { "COALESCE(length(CAST($it AS BLOB)),0)" }}),0) FROM $table WHERE $where",args)
@@ -79,7 +79,7 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
     }
     private suspend fun fetch(part: Selection,accept: (List<String?>,List<Long?>)->Unit) {
         var last: Long?=null;var rows=0L;var bytes=0L
-        val fields=part.texts.flatMap { listOf("length(CAST($it AS BLOB))","CASE WHEN length(CAST($it AS BLOB))<=${ActiveWorkspaceBudget.LIMIT_BYTES} THEN CAST($it AS BLOB) ELSE NULL END") }+part.numbers
+        val fields=part.texts.flatMap { listOf("length(CAST($it AS BLOB))","CASE WHEN length(CAST($it AS BLOB))<=${ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES} THEN CAST($it AS BLOB) ELSE NULL END") }+part.numbers
         do {
             var batch=0
             query("SELECT rowid,${fields.joinToString()} FROM ${part.table} WHERE (${part.where}) AND (? IS NULL OR rowid>?) ORDER BY rowid LIMIT 32",part.args+listOf(last,last)) { s ->
@@ -90,7 +90,7 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
                     val t=part.texts.indices.map { i ->
                         val col=1+i*2
                         if(s.isNull(col)) {if(!s.isNull(col+1)) invalid();null} else {
-                            val n=number(s,col);if(n !in 0..ActiveWorkspaceBudget.LIMIT_BYTES || s.isNull(col+1)) invalid()
+                            val n=number(s,col);if(n !in 0..ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || s.isNull(col+1)) invalid()
                             bytes=Math.addExact(bytes,n);if(bytes>part.bytes) invalid()
                             gate();val b=s.getBlob(col+1);if(b.size.toLong()!=n) invalid()
                             try { Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)

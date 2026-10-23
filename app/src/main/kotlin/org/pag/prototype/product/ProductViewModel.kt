@@ -82,7 +82,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 core.people.items.size>32 || core.tasks.items.size>32 ||
                 ActiveWorkspaceBudget.estimateUnits(result.reservation.retained).let { it.first!=ActiveWorkspaceBudget.Decision.ADMITTED || it.second!=result.retainedCharge } ||
                 ActiveWorkspaceBudget.estimateUnits(result.reservation.transition).let { it.first!=ActiveWorkspaceBudget.Decision.ADMITTED || it.second!=result.transitionCharge } ||
-                result.retainedCharge !in 0..ActiveWorkspaceBudget.LIMIT_BYTES || result.transitionCharge !in 0..ActiveWorkspaceBudget.LIMIT_BYTES) {
+                result.retainedCharge !in 0..ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || result.transitionCharge !in 0..ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES) {
                 lifetime.close();personsLoading=false;workspaceError=true;return@loadOwned
             }
             val slotIdentity=Any()

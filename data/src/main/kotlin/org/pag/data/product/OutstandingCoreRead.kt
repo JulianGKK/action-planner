@@ -7,8 +7,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 /** The existing loader's single outstanding ownership record. Metadata + one pending handoff,
  * never a cache, session authority or a second budget. No ledger ticket crosses suspension.
  *
- * Reserve the ENTIRE existing transition envelope until the known ownership chain ends.
+ * Reserve the ENTIRE 16 MiB app-controlled transition envelope until the known ownership chain ends.
  * The unused part of a local reader receipt is held, not granted again to another reader.
+ * Scope changes grant no retirement or reload permission for exposed app-controlled values.
  * Native/frame calibration remains unconfirmed: this is an exclusion fence, not certification.
  */
 internal class OutstandingCoreRead {
@@ -36,7 +37,7 @@ internal class OutstandingCoreRead {
     @Synchronized fun state():State {
         val r=current
         return State(r?.phase ?: last,if(r?.retainedReserved==true)r.retained else 0,
-            if(r!=null)ActiveWorkspaceBudget.LIMIT_BYTES else 0,r?.retained ?: 0,r?.transition ?: 0,
+            if(r!=null)ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES else 0,r?.retained ?: 0,r?.transition ?: 0,
             if(r?.payload?.get() is ActiveCoreResult.Value || (r?.deliveringValue==true && !r.published))1 else 0,r?.observed==true,r?.disposed==true,
             r==null,refusal,fullView)
     }
@@ -94,7 +95,7 @@ internal class OutstandingCoreRead {
             val r=ActiveWorkspaceBudget.estimateUnits(reservation.retained)
             val t=ActiveWorkspaceBudget.estimateUnits(reservation.transition)
             if(r.first!=ActiveWorkspaceBudget.Decision.ADMITTED || t.first!=ActiveWorkspaceBudget.Decision.ADMITTED ||
-                r.second!=retained || t.second!=transition || retained !in 0..ActiveWorkspaceBudget.LIMIT_BYTES || transition !in 0..ActiveWorkspaceBudget.LIMIT_BYTES) {
+                r.second!=retained || t.second!=transition || retained !in 0..ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || transition !in 0..ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES) {
                 phase=Phase.DENIED;throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
             }
             // There cannot be another retained/transition obligation: begin() kept the sole

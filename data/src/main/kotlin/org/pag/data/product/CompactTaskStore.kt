@@ -282,7 +282,7 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
             if(!s.step()) invalid()
             val n=integer(s,0)
             if(n !in 0..PAGE_SIZE.toLong()) invalid()
-            fields.indices.forEach { if(integer(s,it+1)>ActiveWorkspaceBudget.LIMIT_BYTES) reject(BoundedActiveStatus.BUDGET_REFUSED) }
+            fields.indices.forEach { if(integer(s,it+1)>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES) reject(BoundedActiveStatus.BUDGET_REFUSED) }
             if(s.step()) invalid()
             n
         }
@@ -291,7 +291,7 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         return count to bytes
     }
     private suspend fun fetch(table: String, where: String, args: List<Any?>, texts: List<String>, numbers: List<String>, expected: Pair<Long,Long>, accept: (List<String?>,List<Long?>,Long)->Unit) {
-        val fields=texts.flatMap { listOf("length(CAST($it AS BLOB))","CASE WHEN length(CAST($it AS BLOB))<=${ActiveWorkspaceBudget.LIMIT_BYTES} THEN CAST($it AS BLOB) ELSE NULL END") }
+        val fields=texts.flatMap { listOf("length(CAST($it AS BLOB))","CASE WHEN length(CAST($it AS BLOB))<=${ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES} THEN CAST($it AS BLOB) ELSE NULL END") }
         query("SELECT rowid,${(fields+numbers).joinToString()} FROM $table WHERE $where",args) { s ->
             var rows=0
             var actualBytes=0L
@@ -302,7 +302,7 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
                     val at=1+i*2
                     if(s.isNull(at)) { if(!s.isNull(at+1)) invalid();null } else {
                         val length=integer(s,at)
-                        if(length !in 0..ActiveWorkspaceBudget.LIMIT_BYTES || s.isNull(at+1)) invalid()
+                        if(length !in 0..ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || s.isNull(at+1)) invalid()
                         actualBytes=Math.addExact(actualBytes,length)
                         if(actualBytes>expected.second) invalid()
                         gate()

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.CompactTaskStoreTest" tests="26" skipped="1" failures="0" errors="0" timestamp="2026-10-23T17:55:09.337Z" hostname="iuzjhtgvfc" time="54.785">
+  <properties/>
+  <testcase name="invalidTitlesOrUtf8OnLaterPagesInvalidateCountsBeforeAnyContent" classname="org.pag.data.product.CompactTaskStoreTest" time="3.944"/>
+  <testcase name="mutationsRevokeUnknownAndPublicationDenialAtEveryPhasePublishNoPartialPayload" classname="org.pag.data.product.CompactTaskStoreTest" time="2.017"/>
+  <testcase name="maximumUnicodeTitlesAndNulProvenanceArePreservedWithoutTruncation" classname="org.pag.data.product.CompactTaskStoreTest" time="0.214"/>
+  <testcase name="concentrated129000StoredEventsRemainCompletelyTraversableWithoutAccumulation" classname="org.pag.data.product.CompactTaskStoreTest" time="0.001">
+    <skipped/>
+  </testcase>
+  <testcase name="crossActionRelationsAndMutuallyExclusiveAssigneesFailClosed" classname="org.pag.data.product.CompactTaskStoreTest" time="0.526"/>
+  <testcase name="realisticSizesCoverEveryTaskWithExactCountsFiltersAndLegacyPriorityOrder" classname="org.pag.data.product.CompactTaskStoreTest" time="34.983"/>
+  <testcase name="affectedPersonFilterKeepsExactCountsAndCoverageAcrossSeveralPages" classname="org.pag.data.product.CompactTaskStoreTest" time="2.086"/>
+  <testcase name="unicodeAndNulIdsKeepExactUtf16TaskRulesOrderAcrossPageBoundaries" classname="org.pag.data.product.CompactTaskStoreTest" time="0.303"/>
+  <testcase name="fullHistorySupportsPreparationCompletedAndExactPageEndsButCompactStaysActiveOnly" classname="org.pag.data.product.CompactTaskStoreTest" time="0.2"/>
+  <testcase name="malformedTypesEnumsTitlesAndUtf8NeverPublishContent" classname="org.pag.data.product.CompactTaskStoreTest" time="1.019"/>
+  <testcase name="keysetStateQueryAndPermissionGenerationChangesRejectContinuation" classname="org.pag.data.product.CompactTaskStoreTest" time="0.482"/>
+  <testcase name="exactDetailBudgetBoundaryAndOneByteBeyondAreControlled" classname="org.pag.data.product.CompactTaskStoreTest" time="0.217"/>
+  <testcase name="directAndSequentialHistoryMatchEveryTieOrderedRowWithOneTransactionPreflight" classname="org.pag.data.product.CompactTaskStoreTest" time="0.848"/>
+  <testcase name="oversizedPageTextsAndIdentifiersRefuseBeforePayloadAndExactBudgetNeverGrows" classname="org.pag.data.product.CompactTaskStoreTest" time="0.17"/>
+  <testcase name="selectedDetailIsCompleteAndLongHistoryHasExactTieOrderedCoverage" classname="org.pag.data.product.CompactTaskStoreTest" time="0.448"/>
+  <testcase name="fullTaskBoardsNeverFetchActionHistoryThrough5000Events" classname="org.pag.data.product.CompactTaskStoreTest" time="1.337"/>
+  <testcase name="historyCursorCannotCrossTaskStateOrActionAndInvalidEventsFailClosed" classname="org.pag.data.product.CompactTaskStoreTest" time="0.193"/>
+  <testcase name="summaryDoesNotQueryHistoryOrFetchTemplateAndOversizeDetailRefusesBeforeBlob" classname="org.pag.data.product.CompactTaskStoreTest" time="1.272"/>
+  <testcase name="interruptionsAndCleanupStorageErrorsRemainRejectedAndAreNotRetried" classname="org.pag.data.product.CompactTaskStoreTest" time="0.179"/>
+  <testcase name="nonActiveMissingAndWrongEncodingFailClosed" classname="org.pag.data.product.CompactTaskStoreTest" time="0.739"/>
+  <testcase name="exactPageMultiplesAndAllClosedCountsHaveExplicitTerminalPages" classname="org.pag.data.product.CompactTaskStoreTest" time="0.256"/>
+  <testcase name="directPageStillChecksOffPageInvalidEventsAndRevokeAfterAnchor" classname="org.pag.data.product.CompactTaskStoreTest" time="0.187"/>
+  <testcase name="directPageEntryReachesMiddleAndEndWithoutPrefixMaterialization" classname="org.pag.data.product.CompactTaskStoreTest" time="2.149"/>
+  <testcase name="interruptedPagesCannotResumeAfterActualMutationAndDetailsHistoryRevokeMidRead" classname="org.pag.data.product.CompactTaskStoreTest" time="0.584"/>
+  <testcase name="fullHistoryRevokeFailureAndBudgetNeverReturnFalseEmpty" classname="org.pag.data.product.CompactTaskStoreTest" time="0.242"/>
+  <testcase name="directPageAnchorRevokeAndFailureNeverPublishOrPretendEmpty" classname="org.pag.data.product.CompactTaskStoreTest" time="0.183"/>
+  <system-out><![CDATA[COMPACT people=20 tasks=40 storedEvents=480 retainedMax=588284 transitionMax=2346224 first_total-median-ms=25.592334, admission-median-ms=21.499628, first_materialize_publish-median-ms=5.176654, detail-median-ms=21.311258, history_page-median-ms=25.752995, history_complete-median-ms=25.22679 charges-retained/transition={first_total=588284/2346224, detail=435460/1734928, history_page=519844/2072464}
+COMPACT people=100 tasks=250 storedEvents=5000 retainedMax=752852 transitionMax=3004496 first_total-median-ms=99.812819, admission-median-ms=93.470394, first_materialize_publish-median-ms=6.090494, following-median-ms=101.285602, detail-median-ms=93.13503, history_page-median-ms=96.699451, history_complete-median-ms=97.135207 charges-retained/transition={first_total=752852/3004496, following=750172/2993776, detail=435460/1734928, history_page=585236/2334032}
+COMPACT people=200 tasks=1000 storedEvents=5000 retainedMax=753592 transitionMax=3007456 first_total-median-ms=345.460961, admission-median-ms=336.683131, first_materialize_publish-median-ms=6.813639, following-median-ms=363.262688, detail-median-ms=349.390217, history_page-median-ms=333.160271, history_complete-median-ms=336.34265 charges-retained/transition={first_total=750532/2995216, following=753592/3007456, detail=435460/1734928, history_page=462756/1844112}
+COMPACT detail-boundary templateBytes=188036 retained=4196020 transition=16777168; nextByte=REFUSED
+P85a board persons=20 tasks=40 storedEvents=240 historyFetched=false
+P85a board persons=100 tasks=250 storedEvents=5000 historyFetched=false
+P85a board persons=200 tasks=1000 storedEvents=5000 historyFetched=false
+P85a direct entry pages=126,63,1 stored=5000 selected=4001 maxPayload=32
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

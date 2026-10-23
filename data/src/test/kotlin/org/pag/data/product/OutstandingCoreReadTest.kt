@@ -54,7 +54,7 @@ class OutstandingCoreReadTest {
         val task=h.main.remove();task.run();task.run()
         assertEquals(1,h.callbacks);assertEquals(0,h.loader.outstandingState().pendingCandidates)
         assertEquals(12800L,h.loader.outstandingState().retained)
-        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,h.loader.outstandingState().transition)
+        assertEquals(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES,h.loader.outstandingState().transition)
     }
     @Test fun discardDrainsOnlyKnownHandoffAndLateDuplicateCannotRevokeNewOriginalTicket() {
         val h=H();h.pending();val old=h.ticket!!;val task=h.main.remove()
@@ -70,7 +70,7 @@ class OutstandingCoreReadTest {
         assertFalse(h.load());assertEquals(1,h.loader.outstandingState().pendingCandidates)
         h.loader.cancelPending();assertFalse(h.loader.outstandingState().retirementConfirmed)
         assertEquals(0,h.loader.outstandingState().pendingCandidates)
-        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,h.loader.outstandingState().transition)
+        assertEquals(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES,h.loader.outstandingState().transition)
         assertFalse(h.load())
     }
     @Test fun cancellationDuringMaterializationCannotRegrantBeforeWorkerScopeEnds() {
@@ -104,7 +104,7 @@ class OutstandingCoreReadTest {
             assertEquals(mode!="uncertain",h.loader.outstandingState().retirementConfirmed)
             if(mode=="uncertain"){
                 assertEquals(OutstandingCoreRead.Phase.FAILED_OR_UNCONFIRMED,h.loader.outstandingState().phase)
-                assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,h.loader.outstandingState().transition);assertFalse(h.load())
+                assertEquals(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES,h.loader.outstandingState().transition);assertFalse(h.load())
             } else {assertEquals(0L,h.loader.outstandingState().transition);assertTrue(h.load())}
         }
     }
@@ -116,7 +116,7 @@ class OutstandingCoreReadTest {
         val state=h.loader.outstandingState()
         assertTrue(state.compositionObserved && state.compositionDisposed)
         assertFalse(state.retirementConfirmed);assertEquals(OutstandingCoreRead.Phase.COMPOSE_TRANSITION,state.phase)
-        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,state.transition)
+        assertEquals(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES,state.transition)
     }
     @Test fun fullViewFencePreservesOldChargesAndCannotMintAnEditorFallbackCore() {
         val h=H();h.pending();h.main.remove().run();h.life!!.close();h.loader.fullViewStarting()
@@ -141,7 +141,7 @@ class OutstandingCoreReadTest {
         assertFalse(h.loader.outstandingState().retirementConfirmed)
         assertFalse(h.loader.loadOwned("b"){_,_->fail("Escaped value must keep admission closed")})
         assertEquals(1,h.acquisitions);assertEquals(1,h.reads)
-        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,h.loader.outstandingState().transition)
+        assertEquals(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES,h.loader.outstandingState().transition)
     }
     @Test fun disposeAloneDoesNotRevokeAuthorityAndRepeatedRevokeCannotRetireExposedValue() {
         val h=H();h.pending();h.main.remove().run()
@@ -215,7 +215,7 @@ class OutstandingCoreReadTest {
             val queued=loader.loadOwned("a"){_,_->fail("Canceled unknown queue must not deliver")}
             assertEquals(!workerQueue,queued)
             assertFalse(loader.outstandingState().retirementConfirmed)
-            assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES,loader.outstandingState().transition)
+            assertEquals(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES,loader.outstandingState().transition)
             assertFalse(loader.loadOwned("a"){_,_->fail()})
             queue.remove().run();assertTrue(loader.outstandingState().retirementConfirmed)
             assertEquals(0L,h.mutations.mutationEpoch)

@@ -237,7 +237,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
                     phase("normal_editor_draw")
                     main{activity.window.decorView.viewTreeObserver.removeOnDrawListener(listener);model.tasks.cancel();model.tasks.backToTasks();model.activeArea(ActiveArea.HUB);check(model.activeCore==null)}
                 }
-                emit("P84_CONTRACT,$fixture,$scenario,reads=${h.observations.reads.get()},tickets=${h.observations.tickets.get()},hits=${h.observations.hitAccepted.get()},max_pending_candidates=1,full_transition_reservation=8388608,${state()}")
+                emit("P84_CONTRACT,$fixture,$scenario,reads=${h.observations.reads.get()},tickets=${h.observations.tickets.get()},hits=${h.observations.hitAccepted.get()},max_pending_candidates=1,full_transition_reservation=${org.pag.domain.ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES},${state()}")
             }
             }
             main{model.lock();activity.finish()};waitFor("own fixture cleanup"){h.cleanupConfirmed.get()}

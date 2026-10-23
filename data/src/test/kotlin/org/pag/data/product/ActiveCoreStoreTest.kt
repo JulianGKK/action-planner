@@ -184,7 +184,7 @@ class ActiveCoreStoreTest {
         assertEquals(counts(filtered),v.core.tasks.filtered)
         assertEquals(filtered.filter{TaskRules.active(it.status)}.sortedWith(TaskRules.order).take(32).map{it.id},v.core.tasks.items.map{it.id})
         assertTrue(v.core.tasks.items.size<=32)
-        assertTrue(v.retainedCharge<=ActiveWorkspaceBudget.LIMIT_BYTES);assertTrue(v.transitionCharge<=ActiveWorkspaceBudget.LIMIT_BYTES)
+        assertTrue(v.retainedCharge<=ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES);assertTrue(v.transitionCharge<=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)
         assertEquals(cost(v.reservation.retained),v.retainedCharge);assertEquals(cost(v.reservation.transition),v.transitionCharge)
         assertEquals(1,h.queries.count { it.startsWith("SELECT rowid,") && it.contains(" FROM actions ") })
         assertFalse(h.queries.any { it.contains("task_events") })
@@ -198,7 +198,7 @@ class ActiveCoreStoreTest {
             val (p,t)=h.metadata()
             val expectedR=cost(p.retained)+cost(t.retained)+cost(ActiveCoreStore.envelope.retained)
             val expectedT=cost(p.transition)+cost(t.transition)+cost(ActiveCoreStore.envelope.transition)
-            val admitted=expectedR<=ActiveWorkspaceBudget.LIMIT_BYTES && expectedT<=ActiveWorkspaceBudget.LIMIT_BYTES
+            val admitted=expectedR<=ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES && expectedT<=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES
             val samples=linkedMapOf<String,MutableList<Long>>()
             repeat(22) { sample ->
                 val result=h.read()
@@ -237,16 +237,16 @@ class ActiveCoreStoreTest {
 
     @Test fun twoIndividuallyFittingRealProjectionsAreJointlyRefusedBeforeAnyPayload()=H(35,250).use { h ->
         val (before,tasks)=h.metadata()
-        val target=ActiveWorkspaceBudget.LIMIT_BYTES-cost(tasks.transition)/2
+        val target=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES-cost(tasks.transition)/2
         val padding=(target-cost(before.transition))/80
         h.exec("UPDATE actions SET description=description||printf('%0${padding}d',0)")
         val (p,t)=h.metadata()
         for(part in listOf(p,t)) {
-            assertTrue(cost(part.retained)<=ActiveWorkspaceBudget.LIMIT_BYTES)
-            assertTrue(cost(part.transition)<=ActiveWorkspaceBudget.LIMIT_BYTES)
+            assertTrue(cost(part.retained)<=ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
+            assertTrue(cost(part.transition)<=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)
         }
         denied(BoundedActiveStatus.BUDGET_REFUSED,h.read())
-        assertTrue(h.admission!!.transition>ActiveWorkspaceBudget.LIMIT_BYTES)
+        assertTrue(h.admission!!.transition>ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)
         assertEquals(0,h.db.blobReads);assertEquals(0,h.db.payloadStatements);assertEquals(0,h.blocked)
         println("CORE separate-fit joint-refusal retained=${h.admission!!.retained} transition=${h.admission!!.transition}")
     }
@@ -263,11 +263,11 @@ class ActiveCoreStoreTest {
 
     @Test fun lastRepresentableCombinedByteBoundaryRefusesBeforeEitherMaterializer()=H().use { h ->
         val baseline=h.read() as ActiveCoreResult.Value
-        val difference=ActiveWorkspaceBudget.LIMIT_BYTES-baseline.transitionCharge
+        val difference=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES-baseline.transitionCharge
         val padding=difference/80
         h.exec("UPDATE actions SET description=description||printf('%0${padding}d',0)")
         val exact=h.read() as ActiveCoreResult.Value
-        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES-difference%80,exact.transitionCharge)
+        assertEquals(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES-difference%80,exact.transitionCharge)
         assertEquals(baseline.retainedCharge+padding*20,exact.retainedCharge)
         assertEquals(baseline.core.action.description.length+padding.toInt(),exact.core.action.description.length)
         val blobs=h.db.blobReads;val payloads=h.db.payloadStatements

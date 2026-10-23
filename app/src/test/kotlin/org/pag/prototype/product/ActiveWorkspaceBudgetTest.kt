@@ -6,7 +6,7 @@ import org.pag.domain.ActiveWorkspaceBudget
 import org.pag.domain.ActiveWorkspaceBudget.*
 
 class ActiveWorkspaceBudgetTest {
-    private val limit = ActiveWorkspaceBudget.LIMIT_BYTES
+    private val limit = ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES
 
     @Test fun exactEightMiBBoundaryIsAdmittedButNextAllocationIsRefused() {
         val budget = ActiveWorkspaceBudget(); val graph = budget.beginRetained()!!
@@ -21,6 +21,24 @@ class ActiveWorkspaceBudgetTest {
         assertEquals(Decision.BUDGET_REFUSED, budget.admit(graph, Units(arrays = 1, arrayPayloadBytes = limit - 70)))
         assertEquals(0L, budget.accounting(graph)!!.chargedBytes); assertFalse(budget.seal(graph))
         assertNull(budget.beginTransition()); assertNull(budget.beginRetained())
+    }
+
+    @Test fun transitionSixteenMiBBoundariesAndOversizedPromotionPreserveOldAccounting() {
+        assertEquals(8388608L, ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
+        assertEquals(16777216L, ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)
+        for (charge in listOf(limit+1, ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES, ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES+1)) {
+            val budget=ActiveWorkspaceBudget();val old=budget.beginRetained()!!
+            assertEquals(Decision.ADMITTED,budget.admit(old,Units(arrays=1,arrayPayloadBytes=limit-71)))
+            assertTrue(budget.seal(old));val before=budget.accounting(old)
+            val next=budget.beginTransition()!!
+            val fits=charge<=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES
+            assertEquals(if(fits) Decision.ADMITTED else Decision.BUDGET_REFUSED,
+                budget.admit(next,Units(arrays=1,arrayPayloadBytes=charge-71)))
+            assertEquals(fits,budget.seal(next));val transitionBefore=budget.accounting(next)
+            assertFalse(budget.promote(next));assertEquals(before,budget.accounting(old))
+            assertEquals(transitionBefore,budget.accounting(next));assertNull(budget.beginTransition())
+            if(fits) assertEquals(limit+charge,budget.accounting(old)!!.chargedBytes+budget.accounting(next)!!.chargedBytes)
+        }
     }
 
     @Test fun multiplicationAndAdditionOverflowNeverWrapToSmallCharge() {
@@ -111,7 +129,7 @@ class ActiveWorkspaceBudgetTest {
             if (budget.admit(graph, shape) == Decision.ADMITTED) fetched++
         }
         assertEquals(1, fetched); assertEquals(128L, budget.accounting(graph)!!.chargedBytes)
-        assertFalse(budget.seal(graph)); assertEquals(8L * 1024 * 1024, ActiveWorkspaceBudget.LIMIT_BYTES)
+        assertFalse(budget.seal(graph)); assertEquals(8L * 1024 * 1024, ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
     }
 
     @Test fun sealedOrForeignRepresentationCannotBeChargedAndCloseIsTerminal() {

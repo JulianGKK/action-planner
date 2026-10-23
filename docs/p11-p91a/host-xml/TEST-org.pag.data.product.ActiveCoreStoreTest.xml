@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.ActiveCoreStoreTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-23T17:53:59.551Z" hostname="iuzjhtgvfc" time="18.567">
+  <properties/>
+  <testcase name="metadataAndMaterializationCanResumeOnDifferentThreadsWithoutLedgerTickets" classname="org.pag.data.product.ActiveCoreStoreTest" time="0.852"/>
+  <testcase name="lastRepresentableCombinedByteBoundaryRefusesBeforeEitherMaterializer" classname="org.pag.data.product.ActiveCoreStoreTest" time="0.468"/>
+  <testcase name="oversizedAggregateAndSingleTextsRefuseWithoutPayloadOrCorruptionSignal" classname="org.pag.data.product.ActiveCoreStoreTest" time="0.756"/>
+  <testcase name="sqlFailuresAndBothCleanupFailuresAreNotRetriedOrPublished" classname="org.pag.data.product.ActiveCoreStoreTest" time="1.067"/>
+  <testcase name="accountingRejectsUnrelatedReuseNegativeCancellationAndOverflowPlans" classname="org.pag.data.product.ActiveCoreStoreTest" time="0.005"/>
+  <testcase name="twoIndividuallyFittingRealProjectionsAreJointlyRefusedBeforeAnyPayload" classname="org.pag.data.product.ActiveCoreStoreTest" time="0.368"/>
+  <testcase name="realisticCombinedSizesAndMedianP95HaveNoPreAdmissionPayloadOrEventPrefetch" classname="org.pag.data.product.ActiveCoreStoreTest" time="6.162"/>
+  <testcase name="preparationAloneNeverMaterializesAndAccountingHasNoDuplicateAction" classname="org.pag.data.product.ActiveCoreStoreTest" time="0.206"/>
+  <testcase name="invalidRelationsTypesOrPartialMaterializationNeverPublishEmptyOrContent" classname="org.pag.data.product.ActiveCoreStoreTest" time="0.715"/>
+  <testcase name="filteredCountsUseWholeTaskSetAndPeopleRolesAreComplete" classname="org.pag.data.product.ActiveCoreStoreTest" time="0.494"/>
+  <testcase name="initialUnknownOrRevokedAuthorityDoesNoReadAndLatePublicationCannotEscape" classname="org.pag.data.product.ActiveCoreStoreTest" time="1.401"/>
+  <testcase name="everyStateLossAtEveryPhaseDeniesWholeCoreAndClosesStatements" classname="org.pag.data.product.ActiveCoreStoreTest" time="6.061"/>
+  <system-out><![CDATA[CORE exact-boundary paddingBytes=144881 retained=4200256 transition=16777216; nextByte=REFUSED
+CORE separate-fit joint-refusal retained=4570832 transition=18259520
+CORE people=20 roles=6 tasks=40 events=480 admitted=true peopleRows=27 peopleFields=209 peopleUtf8Bytes=1893 peopleR=718460 peopleT=2864624 taskR=580304 taskT=2314304 jointR=1302636 jointT=5186736 METADATA-ms-median/p95=27.2588805/40.117745, ADMISSION-ms-median/p95=0.1364475/0.181601, MATERIALIZATION-ms-median/p95=12.1025595/19.610687, TOTAL_WITH_CLEANUP_PUBLICATION-ms-median/p95=40.4935825/60.896844
+CORE people=100 roles=6 tasks=250 events=5000 admitted=true peopleRows=39 peopleFields=317 peopleUtf8Bytes=2889 peopleR=861548 peopleT=3436976 taskR=739152 taskT=2949696 jointR=1604572 jointT=6394480 METADATA-ms-median/p95=49.366798/56.020126, ADMISSION-ms-median/p95=0.134317/0.167372, MATERIALIZATION-ms-median/p95=22.7509075/28.373978, TOTAL_WITH_CLEANUP_PUBLICATION-ms-median/p95=73.770338/81.828565
+CORE people=200 roles=6 tasks=1000 events=5000 admitted=true peopleRows=39 peopleFields=317 peopleUtf8Bytes=2889 peopleR=861548 peopleT=3436976 taskR=739612 taskT=2951536 jointR=1605032 jointT=6396320 METADATA-ms-median/p95=88.8529775/100.238761, ADMISSION-ms-median/p95=0.1328475/0.175431, MATERIALIZATION-ms-median/p95=24.4847155/27.120742, TOTAL_WITH_CLEANUP_PUBLICATION-ms-median/p95=114.430006/123.275426
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

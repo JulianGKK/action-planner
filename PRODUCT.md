@@ -17,6 +17,11 @@ Verbindliches UX-Zielbild für den schrittweisen Umbau: [UX-Philosophie](docs/ux
 und [UX-Roadmap](docs/ux-roadmap.md). UX0 ist eine Dokumentationsspezifikation;
 bestehende fachliche, Security- und Privacy-Verträge bleiben unverändert.
 
+Die ausdrücklich beschlossene P11-Budgetgrenze ist **8 MiB Retained + 16 MiB Transition**
+für vollständig app-kontrollierte Daten/Zwischenstände; Framework-/Native-Ressourcen
+werden separat beurteilt. Dies aktiviert weder RAM-Reuse noch schnelle Navigation
+([§91a: Umfang und technische Grenzen](docs/p11-p91a/assessment.md)).
+
 Der **PaG Aktionsplaner** ist eine lokal betriebene Android-Anwendung zur organisatorischen Durchführung zeitlich begrenzter Aktionen.
 
 Die Anwendung soll insbesondere die organisatorische Arbeit vor, während und nach einer Aktion unterstützen:

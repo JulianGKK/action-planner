@@ -70,8 +70,8 @@ class BoundedActiveStoreTest {
         assertEquals(OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r1", "a", "synthetic role 1", 1)),
             listOf(OperationalPerson(Person("p1", "a", "synthetic 1", 1), PersonRolePlan(setOf("r1"), "r1"),
                 PersonOperationalState("a", "p1", "r1", OperationalStatus.ON_SITE, null, 0)))), result.operations)
-        assertTrue(result.retainedCharge <= ActiveWorkspaceBudget.LIMIT_BYTES)
-        assertTrue(result.transitionCharge <= ActiveWorkspaceBudget.LIMIT_BYTES)
+        assertTrue(result.retainedCharge <= ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
+        assertTrue(result.transitionCharge <= ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)
         assertTrue(h.phases.indexOf(BoundedActiveStore.Phase.ADMITTED) < h.phases.indexOf(BoundedActiveStore.Phase.TEXT))
         assertEquals(1, h.db.textReads) // Only fixed PRAGMA encoding, never payload getText().
     }
@@ -180,15 +180,14 @@ class BoundedActiveStoreTest {
         assertEquals("\u039F\u03A3", value.operations.roles.single().name)
     }
 
-    @Test fun exactReaderBudgetAndNextByteAreCheckedBeforeMaterializing() = H().use { h ->
-        h.seed(0, 3) // This cardinality makes the fixed charge congruent with 8MiB mod 80.
+    @Test fun lastRepresentableReaderBudgetAndNextByteAreCheckedBeforeMaterializing() = H().use { h ->
+        h.seed(0, 3)
         val first = h.read() as BoundedActiveResult.Value
-        val difference = ActiveWorkspaceBudget.LIMIT_BYTES - first.transitionCharge
-        assertEquals(0L, difference % 80)
+        val difference = ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES - first.transitionCharge
         val padding = difference / 80
         h.exec("UPDATE actions SET description=description||printf('%0${padding}d',0)")
         val exact = h.read() as BoundedActiveResult.Value
-        assertEquals(ActiveWorkspaceBudget.LIMIT_BYTES, exact.transitionCharge)
+        assertEquals(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES-difference%80, exact.transitionCharge)
         val blobs = h.db.blobReads; val statements = h.db.payloadStatements
         h.exec("UPDATE actions SET description=description||'x'")
         rejected(BoundedActiveStatus.BUDGET_REFUSED, h.read()); assertEquals(blobs, h.db.blobReads)

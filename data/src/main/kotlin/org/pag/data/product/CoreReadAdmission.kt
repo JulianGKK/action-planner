@@ -16,8 +16,12 @@ internal class PreparedCoreRead<T>(val reservation: ActiveCoreReservation, priva
     }
 }
 
-/** Synchronous, one owner thread from construction through seal/close. Result contains only
- * immutable units/costs and at most two transaction-local plan identities; NO ledger tickets.
+/** Synchronous, one owner thread from construction through seal/close.
+ * Aggregate app-controlled retained (8 MiB) and transition (16 MiB) units before work;
+ * old/new graphs, builders, handoffs and forms receive no independent free allowance.
+ * Framework/native resources are assessed separately, never assumed free or retired.
+ * This receipt alone does not prove those owner allocations are integrated with presentation.
+ * Immutable units/costs and at most two transaction-local plan identities; NO ledger tickets.
  */
 internal class CoreReadAdmission private constructor(val reservation: ActiveCoreReservation,
     val retained: Long, val transition: Long, private val parts: List<PreparedCoreRead<*>>) {

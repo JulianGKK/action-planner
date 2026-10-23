@@ -9,7 +9,7 @@ import org.pag.domain.*
  * UUID values differ, lengths do not. No Android execution or product correction.
  */
 class BoundedTaskFixturePreconditionTest {
-    @Test fun existingHundredTaskFixtureAlreadyExceedsTransitionBudget() = runBlocking {
+    @Test fun hundredTaskFixtureExceedsHistoricalEightButFitsNewTransitionBudget() = runBlocking {
         for (transitioned in listOf(false, true)) SqliteHostConnection().use { db ->
             db.execute("INSERT INTO actions VALUES('p11-active','Synthetic action','Synthetic benchmark',1,2,0,'ACTIVE','SENSITIVE',NULL)")
             repeat(100) { i ->
@@ -42,7 +42,8 @@ class BoundedTaskFixturePreconditionTest {
             assertEquals(if(transitioned)16346L else 16250L,bytes)
             val charge=rows*20608+fields*2272+bytes*80+3072 // Current documented engineering weights.
             assertEquals(if(transitioned)8447616L else 8410240L,charge)
-            assertTrue(charge>ActiveWorkspaceBudget.LIMIT_BYTES)
+            assertTrue(charge>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
+            assertTrue(charge<=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)
             val c = object : StorageContext {
                 override val scope = AccessScope.READY
                 override val generation = 1L
@@ -59,8 +60,9 @@ class BoundedTaskFixturePreconditionTest {
                     finally { db.execute("ROLLBACK") }
                 }
             }
-            assertEquals(BoundedTaskResult.Rejected(BoundedActiveStatus.BUDGET_REFUSED),result)
-            assertEquals(0,db.payloadStatements);assertEquals(0,db.blobReads);assertEquals(0,db.openStatements)
+            assertTrue(result is BoundedTaskResult.Value)
+            assertEquals(charge,(result as BoundedTaskResult.Value).transitionCharge)
+            assertTrue(db.payloadStatements>0);assertEquals(0,db.openStatements)
             assertEquals(0,blocks) // Test precondition, not storage corruption.
         }
     }

@@ -245,8 +245,8 @@ class CompactTaskStoreTest {
             repeat(6) { sample ->
                 fun record(name:String,work:()->CompactTaskResult):CompactTaskResult.Value {
                     val v=h.value(work())
-                    assertTrue(v.retainedCharge<=ActiveWorkspaceBudget.LIMIT_BYTES)
-                    assertTrue(v.transitionCharge<=ActiveWorkspaceBudget.LIMIT_BYTES)
+                    assertTrue(v.retainedCharge<=ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
+                    assertTrue(v.transitionCharge<=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)
                     if(sample>0) samples.getOrPut(name){ArrayList()}.add(h.elapsed)
                     retained=maxOf(retained,v.retainedCharge);transition=maxOf(transition,v.transitionCharge)
                     charges[name]="${v.retainedCharge}/${v.transitionCharge}"
@@ -361,7 +361,7 @@ class CompactTaskStoreTest {
     @Test fun exactDetailBudgetBoundaryAndOneByteBeyondAreControlled()=Harness().use { h ->
         h.exec("UPDATE tasks SET sourceTemplateKey='' WHERE id='task-0000'")
         val base=h.value(h.detail("task-0000"))
-        val capacity=(ActiveWorkspaceBudget.LIMIT_BYTES-base.transitionCharge)/80
+        val capacity=(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES-base.transitionCharge)/80
         h.exec("UPDATE tasks SET sourceTemplateKey=replace(printf('%0${capacity}d',0),'0','x') WHERE id='task-0000'")
         val edge=h.value(h.detail("task-0000"))
         assertEquals(base.transitionCharge+capacity*80,edge.transitionCharge)
@@ -416,7 +416,7 @@ class CompactTaskStoreTest {
         h.exec("UPDATE tasks SET title='Synthetic',affectedPersonId=NULL")
         h.exec("INSERT INTO tasks VALUES(replace(printf('%0257d',0),'0','x'),'active','Synthetic','NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
         assertDenied(BoundedActiveStatus.BUDGET_REFUSED,h.page());assertEquals(blobs,h.db.blobReads)
-        assertEquals(8388608L,ActiveWorkspaceBudget.LIMIT_BYTES)
+        assertEquals(8388608L,ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
     }
 
     @Test fun keysetStateQueryAndPermissionGenerationChangesRejectContinuation()=Harness(100,250).use { h ->

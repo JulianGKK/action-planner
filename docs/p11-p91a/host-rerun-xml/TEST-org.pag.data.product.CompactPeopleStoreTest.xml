@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.CompactPeopleStoreTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-23T17:56:33.175Z" hostname="iuzjhtgvfc" time="5.339">
+  <properties/>
+  <testcase name="twoHundredMembersOfOneFunctionAndManyFunctionsHaveExactBoundedGroups" classname="org.pag.data.product.CompactPeopleStoreTest" time="5.331"/>
+  <system-out><![CDATA[PEOPLE_CATALOG roles=6 retained=1605032 transition=6396320 admitted
+PEOPLE_CATALOG roles=32 retained=1817856 transition=7247616 admitted
+PEOPLE_CATALOG roles=100 retained=2374468 transition=9474064 admitted
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

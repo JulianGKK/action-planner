@@ -73,9 +73,9 @@ internal class BoundedActiveStore(private val sql: PooledConnection, private val
         validateRelations(actionId)
         val rows = checked { heads.fold(0L) { a, b -> Math.addExact(a, b.rows) } }
         // Lower bound prevents both huge result counts and unsafe subsequent SQL SUMs.
-        if (rows > ActiveWorkspaceBudget.LIMIT_BYTES / 128) reject(BoundedActiveStatus.BUDGET_REFUSED)
+        if (rows > ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES / 128) reject(BoundedActiveStatus.BUDGET_REFUSED)
         heads.forEach { h ->
-            if (h.maximum.any { it > ActiveWorkspaceBudget.LIMIT_BYTES }) reject(BoundedActiveStatus.BUDGET_REFUSED)
+            if (h.maximum.any { it > ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES }) reject(BoundedActiveStatus.BUDGET_REFUSED)
         }
         val sizes = heads.map { h -> totals(h, actionId) }
         val byteCount = checked { sizes.fold(0L) { a, s -> s.bytes.fold(a, Math::addExact) } }

@@ -133,10 +133,27 @@ class ActiveCoreOwnerTest {
     }
     @Test fun inactiveForeignAndOverBudgetCandidatesNeverInstall() {
         for(status in listOf(ActionStatus.PREPARATION,ActionStatus.COMPLETED)) {val h=H(status=status);assertEquals(0,h.port.reads);assertNull(h.model.activeCore)}
-        for(value in listOf(core("other"),core(generation=2),core(status=ActionStatus.COMPLETED),core().copy(retainedCharge=ActiveWorkspaceBudget.LIMIT_BYTES+1))) {
+        for(value in listOf(core("other"),core(generation=2),core(status=ActionStatus.COMPLETED),core().copy(retainedCharge=ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES+1),core().copy(transitionCharge=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES+1))) {
             val h=H();val life=h.port.deliver(value);assertNull(h.model.activeCore);assertFalse(life.live.get())
         }
     }
+    @Test fun correctlyChargedCandidateUsesRetainedEightAndTransitionSixteenLimits() {
+        val r=ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES
+        val t=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES
+        fun units(bytes:Long)=ActiveWorkspaceBudget.Units(arrays=1,arrayPayloadBytes=bytes-71)
+        for((retained,transition) in listOf(r to t,(r+1) to t,r to (t+1))) {
+            val h=H()
+            val value=core().copy(reservation=ActiveCoreReservation(units(retained),units(transition)),
+                retainedCharge=retained,transitionCharge=transition)
+            val life=h.port.deliver(value)
+            if(retained==r && transition==t) {
+                assertNotNull(h.model.activeCore);assertTrue(life.live.get())
+            } else {
+                assertNull(h.model.activeCore);assertFalse(life.live.get())
+            }
+        }
+    }
+
     @Test fun falseReturnAndRevokeDuringInstallLeaveNoRetention() {
         val h=H();val falseLife=Lifetime().also{it.falseAfter=true};h.port.deliver(lifetime=falseLife)
         assertNull(h.model.activeCore);assertFalse(falseLife.live.get())

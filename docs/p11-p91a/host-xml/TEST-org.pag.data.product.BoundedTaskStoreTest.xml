@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.BoundedTaskStoreTest" tests="25" skipped="0" failures="0" errors="0" timestamp="2026-10-23T17:54:26.640Z" hostname="iuzjhtgvfc" time="8.078">
+  <properties/>
+  <testcase name="latePublicationAfterCleanupIsDenied" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.385"/>
+  <testcase name="sqlFailureAndInvalidEncodingAreNotBudgetPressure" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.23"/>
+  <testcase name="manyTasksAndEventsTraverseAllKeysetBatchesWithoutTruncation" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.165"/>
+  <testcase name="countAndMaximumGuardPrecedeSqlSums" classname="org.pag.data.product.BoundedTaskStoreTest" time="1.599"/>
+  <testcase name="emptyCompleteBoardIsAllowed" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.122"/>
+  <testcase name="supplementaryUnicodeAndNulRemainComplete" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.124"/>
+  <testcase name="smallBoardPreservesAllFieldsAndDomainProjections" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.123"/>
+  <testcase name="realSqlSumOverflowCannotWrapIntoSmallAdmission" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.111"/>
+  <testcase name="cleanupFailureOverridesSuccessAndBudgetRefusal" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.287"/>
+  <testcase name="foreignMissingAndNonActiveDeniedBeforePayload" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.347"/>
+  <testcase name="reservationReplaysInSharedLedgerAndCannotAddTwoFreeBudgets" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.123"/>
+  <testcase name="foreignRowsAreNeitherChargedNorLoaded" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.132"/>
+  <testcase name="invalidEnumsTypesCompletionAndExclusiveAssigneeAreInvalidData" classname="org.pag.data.product.BoundedTaskStoreTest" time="1.09"/>
+  <testcase name="extremeRowidsAreNotSkippedOrOverflowed" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.128"/>
+  <testcase name="budgetLongOverflowAndNegativeUnitsRemainDistinct" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.001"/>
+  <testcase name="lastRepresentableBudgetAndNextByteRefusalBeforeAnotherPayloadQuery" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.159"/>
+  <testcase name="realLegacyDaoSqlHasIdenticalTaskContentAndEventOrder" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.179"/>
+  <testcase name="brokenTaskAndEventReferencesFailBeforeAdmission" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.603"/>
+  <testcase name="revokeAtEveryBoundaryClosesStatementsAndReturnsNoPayload" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.614"/>
+  <testcase name="manyTasksOrEventsRefusedBeforeAnyPayloadQuery" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.309"/>
+  <testcase name="crossActionReferenceIsInvalidEvenWithExistingId" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.119"/>
+  <testcase name="generationAndActionBindingChangesDuringReadDenyPayload" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.48"/>
+  <testcase name="duplicateIdentityRejectedBySchemaButRepeatedEventTypesAndTimesPreserved" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.126"/>
+  <testcase name="largeSingleValuesAndNulSuffixDeniedBeforeMaterializing" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.39"/>
+  <testcase name="exceptionDuringMaterializationClosesStatementAndDeniesPublication" classname="org.pag.data.product.BoundedTaskStoreTest" time="0.126"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
