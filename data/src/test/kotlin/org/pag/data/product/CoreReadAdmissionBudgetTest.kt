@@ -59,15 +59,15 @@ class CoreReadAdmissionBudgetTest {
         }
     }
 
-    @Test fun threePresentationHandlesAndHubMetadataShareOneScratchAtExactLimits() = runBlocking {
+    @Test fun fourPresentationHandlesAndHubMetadataShareOneScratchAtExactLimits() = runBlocking {
         val extra=CompactPresentationBudget.reservation
         val extraR=ActiveWorkspaceBudget.estimateUnits(extra.retained).second
         val extraT=ActiveWorkspaceBudget.estimateUnits(extra.transition).second
-        assertEquals(2440L,extraR);assertEquals(63528L,extraT)
+        assertEquals(2592L,extraR);assertEquals(63680L,extraT)
         val handle=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.handle).second
         val hub=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.hub).second
         val shared=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.sharedTransition).second
-        assertEquals(152L,handle);assertEquals(2136L,hub);assertEquals(handle*2+hub,extraR);assertEquals(handle*2+hub+shared,extraT)
+        assertEquals(152L,handle);assertEquals(2136L,hub);assertEquals(handle*3+hub,extraR);assertEquals(handle*3+hub+shared,extraT)
         var work=0
         val fitting=plan(r-extraR,t-extraT){work++}
         val receipt=CoreReadAdmission.admit(listOf(fitting),extra)
@@ -79,6 +79,28 @@ class CoreReadAdmissionBudgetTest {
             catch(rejected:BoundedActiveRejected){assertEquals(BoundedActiveStatus.BUDGET_REFUSED,rejected.status)}
         }
         assertEquals(1,work)
+    }
+
+    @Test fun variableFunctionsFormattingIsJointlyAdmittedAtBothLimitsAndOverflowNeverWraps() = runBlocking {
+        val dynamic=CompactPresentationBudget.functionsFormatting(100,35000)
+        assertEquals(100*3028L+35000*32L,ActiveWorkspaceBudget.estimateUnits(dynamic).second)
+        val fixed=CompactPresentationBudget.reservation
+        val extra=ActiveCoreReservation(fixed.retained,CoreReadAdmission.add(fixed.transition,dynamic))
+        val er=ActiveWorkspaceBudget.estimateUnits(extra.retained).second
+        val et=ActiveWorkspaceBudget.estimateUnits(extra.transition).second
+        var work=0
+        val fitting=plan(r-er,t-et){work++}
+        val receipt=CoreReadAdmission.admit(listOf(fitting),extra)
+        assertEquals(r,receipt.retained);assertEquals(t,receipt.transition);fitting.materialize(receipt)
+        for((retained,transition) in listOf((r-er+1) to (t-et),(r-er) to (t-et+1))) {
+            try {CoreReadAdmission.admit(listOf(plan(retained,transition){work++}),extra);fail("No free catalogue formatting")}
+            catch(rejected:BoundedActiveRejected){assertEquals(BoundedActiveStatus.BUDGET_REFUSED,rejected.status)}
+        }
+        assertEquals(1,work)
+        for((rows,bytes) in listOf(Long.MAX_VALUE to 0L,0L to Long.MAX_VALUE)) {
+            try{CompactPresentationBudget.functionsFormatting(rows,bytes);fail("Checked overflow required")}
+            catch(expected:ArithmeticException){}
+        }
     }
 
     @Test fun overflowCannotAuthorizeMaterialization() {

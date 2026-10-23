@@ -168,7 +168,12 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
         val people=pagePlan(state,CompactPeopleQuery.All,null)
         val roles=size("roles","actionId=?",args,listOf("id","actionId","name","normalizedName"),listOf("createdAt","(SELECT COUNT(*) FROM person_operational_states s WHERE s.actionId=roles.actionId AND s.currentRoleId=roles.id AND s.operationalStatus='ON_SITE')"))
         val without=scalar("SELECT COUNT(*) FROM person_operational_states WHERE actionId=? AND operationalStatus='ON_SITE' AND currentRoleId IS NULL",args)
-        return PreparedCoreRead(reserve(listOf(action,people.selection,roles))) {
+        val base=reserve(listOf(action,people.selection,roles))
+        val reservation=try {
+            base.copy(transition=CoreReadAdmission.add(base.transition,
+                CompactPresentationBudget.functionsFormatting(roles.rows,roles.bytes)))
+        } catch(_:ArithmeticException){fail(BoundedActiveStatus.BUDGET_REFUSED)}
+        return PreparedCoreRead(reservation) {
             observe(Phase.ADMITTED);gate()
             var a: Action?=null
             fetch(action){t,n->a=ActionRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),n[0]?:invalid(),n[1]?:invalid(),n[2]?:invalid(),t[3]?:invalid(),t[4]?:invalid(),n[3]).model()}

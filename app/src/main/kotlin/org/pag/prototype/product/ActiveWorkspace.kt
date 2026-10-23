@@ -116,14 +116,12 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             tasks.compositionObserved()
             DisposableEffect(tasks) { onDispose {tasks.compositionDisposed()} }
             key(model.activeArea) { CompactActiveContent(tasks,contentFrames) }
-        } else {
-            val core=model.activeCore
-            if(core==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
-            val lifetime=model.observeActiveCoreComposition(core)
-            DisposableEffect(lifetime) { onDispose {lifetime?.compositionDisposed()} }
-            key(model.activeArea) {
-                CompactActiveContent(core,model.activeArea,model.activeNavigationEnabled,model::activeArea,contentFrames)
-            }
+        } else if(model.activeArea==ActiveArea.FUNCTIONS) {
+            val functions=model.compactFunctionsPresentation
+            if(functions==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
+            functions.compositionObserved()
+            DisposableEffect(functions) { onDispose {functions.compositionDisposed()} }
+            key(model.activeArea) { CompactActiveContent(functions,contentFrames) }
         }
         FormOutlinedButton(model::useFullActiveView,enabled=model.activeNavigationEnabled) { Text("Alle anzeigen und bearbeiten") }
         if(model.activeArea==ActiveArea.HUB && model.documentsAvailable)
@@ -169,18 +167,17 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
 internal fun compactPageLabel(shown:Int,total:Long,hasMore:Boolean):String =
     "$shown von $total angezeigt" + if(hasMore) " · weitere Einträge verfügbar" else ""
 
-@Composable private fun CompactActiveContent(core:ActiveCorePayload,area:ActiveArea,enabled:Boolean,onOpen:(ActiveArea)->Unit, observer:CompactContentFrameObserver?=null) {
-    val frameModifier=compactFrameModifier(area,observer)
-    Column(frameModifier,verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        PreparationHeading(area.label)
-        when(area) {
-            ActiveArea.FUNCTIONS -> {
-                Text("${core.functions.onSiteCount} Personen vor Ort · ${core.functions.withoutFunction} ohne Funktion")
-                if (core.functions.items.isEmpty()) Text("Noch keine aktuellen Funktionen")
-                core.functions.items.forEach { function -> Text("${function.role.name}: ${function.onSiteCount} vor Ort") }
-            }
-            else -> Unit
-        }
+/** Complete pre-admitted catalogue, index access only. No list/core loan or new paging. */
+@Composable private fun CompactActiveContent(functions:CompactFunctionsPresentation,observer:CompactContentFrameObserver?=null) {
+    val size=functions.size() ?: return
+    val onSite=functions.onSite() ?: return
+    val without=functions.withoutFunction() ?: return
+    Column(compactFrameModifier(ActiveArea.FUNCTIONS,observer),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        PreparationHeading(ActiveArea.FUNCTIONS.label)
+        Text("$onSite Personen vor Ort · $without ohne Funktion")
+        if(size==0)Text("Noch keine aktuellen Funktionen")
+        // Independent publications, not an atomic whole-frame snapshot.
+        repeat(size){index->functions.line(index)?.let{Text(it)}}
     }
 }
 

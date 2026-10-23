@@ -20,9 +20,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private val ownerThread=Thread.currentThread()
     private var ownerDispatch: (() -> Unit) -> Unit = { work -> check(Thread.currentThread() === ownerThread);work() }
     private var activeCorePort:ActiveCoreLoadPort?=null
-    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any, val persons:CompactPersonsPresentation, val tasks:CompactTasksPresentation, val hub:CompactHubPresentation) {
+    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any, val persons:CompactPersonsPresentation, val tasks:CompactTasksPresentation, val hub:CompactHubPresentation, val functions:CompactFunctionsPresentation) {
         var subscription:Subscription?=null
-        fun close() { persons.invalidate();tasks.invalidate();hub.invalidate();subscription?.cancel();lifetime.close() }
+        fun close() { persons.invalidate();tasks.invalidate();hub.invalidate();functions.invalidate();subscription?.cancel();lifetime.close() }
     }
     private val coreSlot=AtomicReference<CoreSlot?>(null)
     private var coreLoad:Any?=null
@@ -52,6 +52,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     internal val compactPersonsPresentation:CompactPersonsPresentation? get() = presentationSlot(ActiveArea.PERSONS)?.persons
     internal val compactTasksPresentation:CompactTasksPresentation? get() = presentationSlot(ActiveArea.TASKS)?.tasks
     internal val compactHubPresentation:CompactHubPresentation? get() = presentationSlot(ActiveArea.HUB)?.hub
+    internal val compactFunctionsPresentation:CompactFunctionsPresentation? get() = presentationSlot(ActiveArea.FUNCTIONS)?.functions
     private fun presentationSlot(area:ActiveArea):CoreSlot? {
         coreSignal
         if(Thread.currentThread() !== ownerThread || activeArea!=area || !compactActiveMode)return null
@@ -114,6 +115,14 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         // Authorization returns before navigation; no repository work inside publication.
         if(compactHubCurrent(identity)==true)activeArea(area)
     }
+    internal fun compactFunctionsSize(identity:Any):Int?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){it.functions.items.size}
+    internal fun compactFunctionsOnSite(identity:Any):Long?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){it.functions.onSiteCount}
+    internal fun compactFunctionsWithout(identity:Any):Long?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){it.functions.withoutFunction}
+    internal fun compactFunctionName(identity:Any,index:Int):String?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){it.functions.items.getOrNull(index)?.role?.name}
+    internal fun compactFunctionCount(identity:Any,index:Int):Long?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){it.functions.items.getOrNull(index)?.onSiteCount}
+    internal fun compactFunctionLine(identity:Any,index:Int):String?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){
+        it.functions.items.getOrNull(index)?.let{function->"${function.role.name}: ${function.onSiteCount} vor Ort"}
+    }
     internal fun compactPresentationComposition(identity:Any,observed:Boolean) {
         if(Thread.currentThread() !== ownerThread)return
         val slot=coreSlot.get()?.takeIf {it.identity===identity} ?: return
@@ -157,11 +166,11 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 lifetime.close();personsLoading=false;workspaceError=true;return@loadOwned
             }
             val slotIdentity=Any()
-            val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity),CompactTasksPresentation(this,slotIdentity),CompactHubPresentation(this,slotIdentity))
+            val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity),CompactTasksPresentation(this,slotIdentity),CompactHubPresentation(this,slotIdentity),CompactFunctionsPresentation(this,slotIdentity,core.functions.items.size))
             slot.subscription=lifetime.onInvalidated {
                 val held=coreSlot.get()
                 if(held?.identity === slotIdentity && coreSlot.compareAndSet(held,null)) {
-                    held.persons.invalidate();held.tasks.invalidate();held.hub.invalidate()
+                    held.persons.invalidate();held.tasks.invalidate();held.hub.invalidate();held.functions.invalidate()
                     // No Compose mutation on a session worker; authority/reference already gone.
                     runCatching { ownerDispatch { coreSignal++ } }
                 }

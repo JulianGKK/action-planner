@@ -1,8 +1,9 @@
 package org.pag.domain
 
-/** Disjoint metadata for three handles plus ONE shared owner-thread scalar/formatting scratch.
+/** Disjoint metadata for four handles plus ONE shared owner-thread scalar/formatting scratch.
  * PERSONS (nine lines), TASKS (two lines) and HUB (six summaries/three labels) are mutually exclusive routes; neither caches
- * values. Final formatted lines <=128 UTF16 units; reserve concatenation/number strings,
+ * values. FUNCTIONS headers share scratch; variable full-catalogue row formatting is
+ * charged separately from existing SQL metadata via functionsFormatting(). Fixed formatted lines <=128 UTF16 units; reserve concatenation/number strings,
  * builder growth buffers <=256 units, closures/boxes/references, not only final strings.
  * Pseudonyms/titles alias the already charged core. Framework copies are assessed separately.
  */
@@ -15,9 +16,24 @@ object CompactPresentationBudget {
     // No resolved summaries in cards and no chunked/second card list. Both handle shapes
     // count in retained AND construction transition; common scratch counts only once.
     val hub = ActiveWorkspaceBudget.Units(objects=13, lists=1, listCapacity=3, references=40)
-    // Three disjoint handles; all constructions also count in transition.
+    // Four disjoint handles; all constructions also count in transition.
     // Common formatting/resolution scratch is charged once, not once per route.
     val reservation = ActiveCoreReservation(
-        ActiveWorkspaceBudget.Units(objects=15, lists=1, listCapacity=3, references=46),
-        sharedTransition.copy(objects=47, lists=1, listCapacity=3, references=174))
+        ActiveWorkspaceBudget.Units(objects=16, lists=1, listCapacity=3, references=49),
+        sharedTransition.copy(objects=48, lists=1, listCapacity=3, references=177))
+    /** Additional FUNCTIONS row formatting, disjoint from shared fixed/header scratch.
+     * Existing role metadata bytes (all text fields) conservatively bound UTF16 name units.
+     * One complete catalogue pass; name + ': ' + Long + ' vor Ort' uses <=nameUnits+32 per row.
+     * Charge output/intermediate strings and geometrically grown builder buffers. No list copy.
+     * Checked arithmetic, before payload/handle/format allocation. Not a physical ART bound.
+     */
+    fun functionsFormatting(rows:Long,roleUtf8Bytes:Long):ActiveWorkspaceBudget.Units {
+        require(rows>=0 && roleUtf8Bytes>=0)
+        val units=Math.addExact(roleUtf8Bytes,Math.multiplyExact(rows,32))
+        return ActiveWorkspaceBudget.Units(objects=Math.multiplyExact(rows,8),
+            strings=Math.multiplyExact(rows,4),utf16Units=Math.multiplyExact(units,4),
+            arrays=Math.multiplyExact(rows,8),arrayPayloadBytes=Math.multiplyExact(units,16),
+            references=Math.multiplyExact(rows,16))
+    }
+
 }

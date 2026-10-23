@@ -306,6 +306,85 @@ class ActiveCoreOwnerTest {
         next.navigation(ActiveArea.PERSONS)!!();assertEquals(reads,h.port.reads)
     }
 
+    private fun functionsFixture(size:Int,repetitions:Int=15):ActiveCoreResult.Value {
+        val value=core()
+        val items=(0 until size).map{CompactFunction(Role("r$it","a","Ä界🦋".repeat(repetitions)+" function $it",it.toLong()),(it%7).toLong())}
+        val sum=items.sumOf{it.onSiteCount}+7
+        return value.copy(core=value.core.copy(functions=CompactFunctions(items,7,sum,items.count{it.onSiteCount>0}.toLong())))
+    }
+    private fun functionsOwner(size:Int=6,repetitions:Int=15):Triple<H,Lifetime,CompactFunctionsPresentation> {
+        val h=H();h.model.activeArea(ActiveArea.FUNCTIONS);h.port.deliver()
+        val life=h.port.deliver(functionsFixture(size,repetitions))
+        return Triple(h,life,checkNotNull(h.model.compactFunctionsPresentation))
+    }
+    @Test fun functionsExposeCompleteSixThirtyTwoAndHundredCataloguesWithExactUnicodeNamesAndCounts() {
+        for(size in listOf(0,6,32,100)) {
+            val repetitions=if(size==32)80 else 15
+            val (h,life,view)=functionsOwner(size,repetitions);val reads=h.port.reads;val interactions=h.session.interactions
+            assertSame(view,h.model.compactFunctionsPresentation);assertEquals(size,view.size());assertEquals(7L,view.withoutFunction())
+            assertEquals((0 until size).sumOf{(it%7).toLong()}+7,view.onSite())
+            val names=HashSet<String>()
+            repeat(size){index->val name="Ä界🦋".repeat(repetitions)+" function $index"
+                assertEquals(name,view.name(index));assertEquals((index%7).toLong(),view.count(index))
+                assertEquals("$name: ${index%7} vor Ort",view.line(index));assertTrue(names.add(view.name(index)!!))}
+            assertEquals(size,names.size);val hits=life.hits
+            for(index in listOf(-1,size,size+1,Int.MIN_VALUE,Int.MAX_VALUE)) {
+                assertNull(view.name(index));assertNull(view.count(index));assertNull(view.line(index))}
+            assertEquals(hits,life.hits);assertEquals(reads,h.port.reads);assertEquals(interactions,h.session.interactions)
+            val fields=view.javaClass.declaredFields.filterNot{java.lang.reflect.Modifier.isStatic(it.modifiers)}
+            assertEquals(3,fields.size);assertTrue(fields.all{it.type==Any::class.java || it.type==ProductViewModel::class.java || it.type==Int::class.javaPrimitiveType})
+        }
+        val renderers=Class.forName("org.pag.prototype.product.ActiveWorkspaceKt").declaredMethods.filter{it.name=="CompactActiveContent"}
+        assertEquals(4,renderers.size);assertTrue(renderers.none{it.parameterTypes.contains(ActiveCorePayload::class.java)})
+    }
+    @Test fun functionsOldHandlesDenyLockRevokeGenerationActionAndContextWithoutNewRead() {
+        for(reason in listOf("lock","revoke","generation","action","status","context","fresh-session")) {
+            val (h,life,view)=functionsOwner()
+            when(reason) {
+                "lock"->h.model.lock();"revoke"->life.close();"context"->{life.current=false}
+                "generation"->h.session.change(SessionSnapshot(SessionState.READY,2))
+                "action"->{h.repo.action=h.repo.action.copy(id="other");h.model.detail("other")}
+                "status"->{h.repo.action=h.repo.action.copy(status=ActionStatus.COMPLETED);h.model.detail("a")}
+                else->h.session.state=SessionSnapshot(SessionState.LOCKED,2)
+            }
+            val reads=h.port.reads
+            assertNull(view.name(0));assertNull(view.count(0));assertNull(view.line(0));assertNull(view.size());assertNull(view.onSite());assertNull(view.withoutFunction())
+            life.current=true;h.session.state=SessionSnapshot(SessionState.READY,1)
+            assertNull(view.name(0));assertEquals(reads,h.port.reads)
+        }
+    }
+    @Test fun revokeBetweenFunctionLookupsLeavesPriorTextButDeniesLaterNamesCountsAndLines() {
+        val (h,life,view)=functionsOwner();val first=view.line(0);assertNotNull(first)
+        life.close();assertNull(view.line(1));assertNull(view.name(0));assertNull(view.count(0))
+        assertEquals("Ä界🦋".repeat(15)+" function 0: 0 vor Ort",first)
+        assertNull(view.javaClass.getDeclaredField("owner").also{it.isAccessible=true}.get(view))
+        assertNull(h.model.compactFunctionsPresentation)
+    }
+    @Test fun functionWriterPendingUnknownAndLateMainCannotRestoreOldCatalogue() {
+        val h=H();h.model.activeArea(ActiveArea.FUNCTIONS);h.port.deliver()
+        val callback=h.port.pending.single().second;val life=h.port.deliver(functionsFixture(32))
+        val view=checkNotNull(h.model.compactFunctionsPresentation)
+        val mutations=UncachedWorkspaceMutations();val ticket=checkNotNull(mutations.beforeActiveRead("a",1))
+        ticket.onInvalidated{life.close()};assertNotNull(view.line(0));val reads=h.port.reads
+        val pending=checkNotNull(mutations.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.OPERATIONS,"a"),1))
+        assertNull(view.name(1));assertNull(view.size())
+        assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.UNKNOWN,WorkspaceWriteCleanup.COMPLETE)))
+        repeat(2){callback(functionsFixture(100),life)}
+        assertNull(view.line(2));assertNull(h.model.compactFunctionsPresentation);assertEquals(reads,h.port.reads)
+    }
+    @Test fun functionsDenyForeignThreadForeignIdentityPublicationRaceAndReplacement() {
+        val (h,life,view)=functionsOwner();val hits=life.hits
+        val result=java.util.concurrent.atomic.AtomicReference<String?>("not denied")
+        val t=Thread{result.set(view.line(0))};t.start();t.join(3000);assertFalse(t.isAlive)
+        assertNull(result.get());assertEquals(hits,life.hits)
+        val invalid=Any();assertNull(h.model.compactFunctionName(invalid,0));assertNotNull(view.name(0))
+        life.duringInstall={life.close()};assertNull(view.line(0))
+        h.model.activeArea(ActiveArea.FUNCTIONS);h.port.deliver(functionsFixture(32))
+        val next=checkNotNull(h.model.compactFunctionsPresentation)
+        assertNotSame(view,next);assertNull(view.name(0));assertEquals(32,next.size());assertNotNull(next.line(31))
+        next.compositionObserved();next.compositionDisposed();assertNotNull(next.name(0))
+    }
+
     @Test fun oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse() {
         val h=H(true);h.port.deliver();val first=h.model.activeCore
         assertNotNull(first);assertNull(h.model.workspace)

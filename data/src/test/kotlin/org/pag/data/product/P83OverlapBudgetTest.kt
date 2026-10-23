@@ -38,6 +38,24 @@ class P83OverlapBudgetTest {
             }
         }
     }
+    @Test fun functionsCompleteLongUnicodeCataloguesSixThirtyTwoAndHundredAreReaderCharacterizationOnly() {
+        for((roles,repetitions) in listOf(6 to 15,32 to 15,100 to 15,6 to 80))ActiveCoreStoreTest.H(200,1000,5,roleCount=roles).use {h->
+            val prefix="Ä界🦋".repeat(repetitions);val normalized="ä界🦋".repeat(repetitions)
+            h.exec("UPDATE roles SET name='$prefix'||id,normalizedName='$normalized'||id")
+            val value=h.read() as ActiveCoreResult.Value
+            val functions=value.core.functions
+            assertEquals(roles,functions.items.size);assertEquals(roles,functions.items.map{it.role.id}.toSet().size)
+            for(function in functions.items) {
+                assertEquals(prefix+function.role.id,function.role.name)
+                val index=function.role.id.removePrefix("r").toInt()
+                val expected=(0 until 200).count{it%roles==index}.toLong()
+                assertEquals(expected,function.onSiteCount)
+            }
+            assertEquals(200L,functions.onSiteCount);assertEquals(0L,functions.withoutFunction)
+            println("P95 FUNCTIONS-READER roles=$roles namePrefixUtf16=${prefix.length} people=200 tasks=1000 events=5000 R=${value.retainedCharge} T=${value.transitionCharge} complete=true productRelease=NOT_GRANTED")
+        }
+    }
+
     @Test fun productLoaderRefusesOldComposePlusNewReadBeforeAnyNewSqlMaterialization() = ActiveCoreStoreTest.H(200,1000).use { h ->
         val baseline=h.read() as ActiveCoreResult.Value
         val padding=(ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES-baseline.transitionCharge-1024)/80

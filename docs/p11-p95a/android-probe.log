@@ -1,0 +1,28 @@
+P95_OWNER_BEFORE_UI,session=READY,area=FUNCTIONS,functions=6
+P95_UI_ROOT,package=org.pag.prototype.a.p77runtime,children=3
+P95_UI_NODE,visible=true,text=P77 ISOLIERTER TEST – synthetischer Schlüssel und synthetische Testdaten; keine Produktanmeldung
+P95_UI_NODE,visible=true,text=Sperren
+P95_UI_NODE,visible=true,text=‹ Aktionen
+P95_UI_NODE,visible=true,text=Synthetic action
+P95_UI_NODE,visible=true,text=AKTIV
+P95_UI_NODE,visible=true,text=‹ Zum Lagebild
+P95_UI_NODE,visible=true,text=Funktionen
+P95_UI_NODE,visible=true,text=200 Personen vor Ort · 0 ohne Funktion
+P95_UI_NODE,visible=true,text=Funktion Ä界🦋 0: 200 vor Ort
+P95_UI_NODE,visible=true,text=Funktion Ä界🦋 1: 0 vor Ort
+P95_UI_NODE,visible=true,text=Funktion Ä界🦋 2: 0 vor Ort
+P95_UI_NODE,visible=true,text=Funktion Ä界🦋 3: 0 vor Ort
+P95_UI_NODE,visible=true,text=Funktion Ä界🦋 4: 0 vor Ort
+P95_UI_NODE,visible=true,text=Funktion Ä界🦋 5: 0 vor Ort
+P95_UI_NODE,visible=true,text=Alle anzeigen und bearbeiten
+P95_VISIBLE_FUNCTION,index=0,onSite=200,exactName=true
+P95_VISIBLE_FUNCTION,index=1,onSite=0,exactName=true
+P95_VISIBLE_FUNCTION,index=2,onSite=0,exactName=true
+P95_VISIBLE_FUNCTION,index=3,onSite=0,exactName=true
+P95_VISIBLE_FUNCTION,index=4,onSite=0,exactName=true
+P95_VISIBLE_FUNCTION,index=5,onSite=0,exactName=true
+P95_UI,people=200,tasks=1000,storedEvents=5000,functions=6,withoutFunction=0,onSite=200,visibleFunctions=EXACT,reuse=false,ramReuse=false
+P95_FENCES,writerPending=DENIED,UNKNOWN=DENIED,lateMain=DENIED,lock=DENIED,newCoreReads=0,secondAdmission=DENIED,retirement=UNCONFIRMED,unknownInjection=protocol_metadata_only,scalarBeforeRevoke=RETURNED,scalarAfterRevoke=DENIED,atomicFrame=NOT_CLAIMED
+P95_CASE,ANDROID-PASS,fixtureCleanup=true,physicalWipe=NOT_CLAIMED,frameworkNativeBounds=NOT_CLAIMED
+INSTRUMENTATION_RESULT: result=P95 PASS
+INSTRUMENTATION_CODE: -1
