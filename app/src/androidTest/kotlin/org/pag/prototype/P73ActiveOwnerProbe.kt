@@ -109,9 +109,9 @@ class P73ActiveOwnerProbe:Instrumentation() {
                     if(mode=="late_main")runOnMainSync{session.lock();session.authenticate(Experiment.PER_OPERATION)}
                     runOnMainSync {while(delivery.isNotEmpty())delivery.remove().run()}
                     if(mode in setOf("late_main","false_after_callback","worker_install")) {
-                        runOnMainSync{verify(model.activeCore==null,"Late/false result retained")}
+                        runOnMainSync{verify(coreOwnerIdentity(model)==null,"Late/false result retained")}
                     } else {
-                        runOnMainSync{verify(model.activeCore!=null,"Core was not installed")}
+                        runOnMainSync{verify(coreOwnerIdentity(model)!=null,"Core was not installed")}
                         if(mode=="worker_idle") {
                             val c=session.acquire(AccessScope.READY)!!;time.set(30000)
                             val t=Thread {try {
@@ -133,12 +133,12 @@ class P73ActiveOwnerProbe:Instrumentation() {
                                 "unknown"->{val p=mutations.beforeDocumentQueue("a",session.snapshot().generation)!!;check(p.finishDocument(DocumentWriteCompletion(DocumentWriteOutcome.UNKNOWN,WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED)))}
                             }
                         }
-                        runOnMainSync{verify(model.activeCore==null,"Core remains authorized");verify(lifetime?.isCurrent()==false,"Lifetime remains current")}
+                        runOnMainSync{verify(coreOwnerIdentity(model)==null,"Core remains authorized");verify(lifetime?.isCurrent()==false,"Lifetime remains current")}
                     }
                     val draw=CountDownLatch(1)
                     lateinit var listener:android.view.ViewTreeObserver.OnDrawListener
                     runOnMainSync {
-                        listener=android.view.ViewTreeObserver.OnDrawListener{if(model.activeCore==null)draw.countDown()}
+                        listener=android.view.ViewTreeObserver.OnDrawListener{if(coreOwnerIdentity(model)==null)draw.countDown()}
                         activity.window.decorView.viewTreeObserver.addOnDrawListener(listener)
                         activity.window.decorView.invalidate()
                     }

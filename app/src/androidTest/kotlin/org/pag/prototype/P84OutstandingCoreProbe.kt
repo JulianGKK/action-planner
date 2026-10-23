@@ -16,6 +16,9 @@ import java.util.concurrent.atomic.AtomicReference
 /** Actual product admission, original Runtime/Room/SQLCipher/keyowner/VM. Synthetic P77 auth.
  * The unchanged §83 reports remain the historical three-graph RED characterization.
  */
+// §96a: historical raw-graph diagnostic only. Local private-field inspection below
+// preserves old core-id/census oracles without a product borrowing API. Old Compose-root
+// and fixed hit-count assumptions are not current §92–96 UI acceptance tests.
 class P84OutstandingCoreProbe:Instrumentation() {
     private var scenario="multi_pending"
     private var fixture="roles32"
@@ -49,7 +52,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
             fun state()=h.outstandingState()
             fun phase(name:String)=main {
                 val rs=roots.composeRoots(activity);val qs=roots.cores(h.faults.main.heldTaskForObservation())
-                emit("P84_PHASE,$fixture,$scenario,$name,t_ns=${SystemClock.elapsedRealtimeNanos()},vm_id=${model.activeCore?.let{System.identityHashCode(it)} ?: 0},compose_ids=${rs.keys.joinToString("|")},queued_ids=${qs.keys.joinToString("|")},state=${state()},${probe.nativeState()},${raw()}")
+                emit("P84_PHASE,$fixture,$scenario,$name,t_ns=${SystemClock.elapsedRealtimeNanos()},vm_id=${coreOwnerPayloadIdForHistoricalCensus(model)},compose_ids=${rs.keys.joinToString("|")},queued_ids=${qs.keys.joinToString("|")},state=${state()},${probe.nativeState()},${raw()}")
                 rs.forEach{(id,path)->emit("P84_ROOT,$name,$id,$path")}
             }
             waitFor("focused LOCKED"){main{activity.hasWindowFocus() && runtime.session.snapshot().state==SessionState.LOCKED}}
@@ -62,7 +65,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
                 waitFor("uncertain cleanup fence"){state().contains("FAILED_OR_UNCONFIRMED") && !h.observations.originalTicketLive()}
                 emit("P84_SCOPED_FAULT,wrapper_row_plus_post_room_close,${h.cleanupFaults.verify()},${state()}")
                 main {
-                    check(model.activeCore==null)
+                    check(coreOwnerIdentity(model)==null)
                     check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Unconfirmed cleanup cannot retry")})
                     check(h.observations.reads.get()==1 && h.observations.tickets.get()==1 && h.mutations.mutationEpoch==0L)
                     model.lock();activity.finish()
@@ -80,7 +83,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
                 main{h.faults.main.take().run()}
                 waitFor("budget refusal cleanup"){main{model.workspaceError && state().contains("retirementConfirmed=true")}}
                 check(probe.decision=="BUDGET_REFUSED" && probe.candidate.get()==null && probe.rowReached.count==1L)
-                main{check(model.activeCore==null);check(!h.observations.originalTicketLive());check(h.observations.reads.get()==1 && h.observations.tickets.get()==1)}
+                main{check(coreOwnerIdentity(model)==null);check(!h.observations.originalTicketLive());check(h.observations.reads.get()==1 && h.observations.tickets.get()==1)}
                 emit("P84_BUDGET_REFUSED,$fixture,requested_retained=${probe.retained},requested_transition=${probe.transition},before_materialization=true,${probe.finish()},${state()}")
             } else {
             check(probe.rowReached.await(20,TimeUnit.SECONDS)){"Native row not reached: ${probe.failure}"}
@@ -91,7 +94,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
                 probe.release()
                 waitFor("worker cleanup"){probe.failure!="none" && state().contains("retirementConfirmed=true")}
                 emit("P84_CLEANUP,worker_revoke,${probe.finish()}")
-                main{check(model.activeCore==null);check(!h.observations.originalTicketLive())}
+                main{check(coreOwnerIdentity(model)==null);check(!h.observations.originalTicketLive())}
                 phase("retired_revoked_worker")
             } else {
                 probe.rowRelease.countDown()
@@ -117,7 +120,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
                         check(!state().contains("retirementConfirmed=true"))
                         check(state().contains("pendingCandidates=0"))
                         repeat(2){check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("No unacknowledged replacement")})}
-                        check(model.activeCore==null)
+                        check(coreOwnerIdentity(model)==null)
                     }
                     phase("lost_main_no_retirement_ack")
                     main{model.lock();activity.finish()};waitFor("fixture cleanup"){h.cleanupConfirmed.get()}
@@ -146,18 +149,18 @@ class P84OutstandingCoreProbe:Instrumentation() {
                     probe.begin(true)
                     main{h.faults.holdNextCoreMain.set(true);model.detail("p11-active")}
                     check(probe.rowReached.await(20,TimeUnit.SECONDS));phase("second_reader_after_retirement")
-                    main{obsolete.run();obsolete.run();check(model.activeCore==null)}
+                    main{obsolete.run();obsolete.run();check(coreOwnerIdentity(model)==null)}
                     probe.rowRelease.countDown();check(probe.candidateReached.await(20,TimeUnit.SECONDS))
                     probe.candidateRelease.countDown();waitFor("second pending"){h.faults.main.isHeld() && state().contains("pendingCandidates=1")}
-                    main{h.faults.main.take().run();check(model.activeCore!=null);oldLife.close();check(model.activeCore!=null)}
+                    main{h.faults.main.take().run();check(coreOwnerIdentity(model)!=null);oldLife.close();check(coreOwnerIdentity(model)!=null)}
                     emit("P84_CLEANUP,second,${probe.finish()}")
                     check(h.observations.reads.get()==2 && h.observations.tickets.get()==2)
                 } else {
                     val task=h.faults.main.take()
-                    main{task.run();task.run();check(model.activeCore!=null)}
+                    main{task.run();task.run();check(coreOwnerIdentity(model)!=null)}
                     check(h.observations.reads.get()==1 && h.observations.tickets.get()==1)
                 }
-                val coreId=main{System.identityHashCode(checkNotNull(model.activeCore))}
+                val coreId=main{coreOwnerPayloadIdForHistoricalCensus(model)}
                 waitFor("actual Compose core root"){main{coreId in roots.composeRoots(activity)}}
                 phase("old_composed")
                 main {
@@ -165,7 +168,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
                     repeat(4){for(area in listOf(ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS,ActiveArea.HUB))model.activeArea(area)}
                     check(h.observations.reads.get()==reads && h.observations.tickets.get()==tickets)
                     check(h.observations.hitAccepted.get()==16)
-                    check(model.activeCore?.people?.overall?.total==200L && model.activeCore?.tasks?.overall?.total==1000L)
+                    check(model.compactHubPresentation?.value(0,0)==200L && model.compactHubPresentation?.value(2,0)==1000L)
                 }
                 phase("new_composed")
                 val generation=runtime.session.snapshot().generation
@@ -176,7 +179,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
                         h.faults.falseAfterCallback.set(true);h.faults.holdNextCoreMain.set(true)
                         val reads=h.observations.reads.get();val tickets=h.observations.tickets.get()
                         model.activeArea(ActiveArea.TASKS)
-                        check(model.activeCore==null && model.workspaceError)
+                        check(coreOwnerIdentity(model)==null && model.workspaceError)
                         check(coreId in roots.composeRoots(activity))
                         phase("transition_refusal_second")
                         model.activeArea(ActiveArea.HUB) // The THIRD navigation is not skipped.
@@ -211,7 +214,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
                     else->error("Unknown P84 case")
                 }
                 main {
-                    check(model.activeCore==null)
+                    check(coreOwnerIdentity(model)==null)
                     check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("No replacement authority")})
                     check(state().contains("pendingCandidates=0"))
                     check(!state().contains("retirementConfirmed=true"))
@@ -227,7 +230,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
                     val draw=CountDownLatch(1)
                     lateinit var listener:android.view.ViewTreeObserver.OnDrawListener
                     main {
-                        check(model.activeCore==null)
+                        check(coreOwnerIdentity(model)==null)
                         listener=android.view.ViewTreeObserver.OnDrawListener{if(model.tasks.form)draw.countDown()}
                         activity.window.decorView.viewTreeObserver.addOnDrawListener(listener)
                         model.tasks.open(checkNotNull(model.workspace?.tasks?.tasks?.firstOrNull()));model.tasks.edit()
@@ -235,7 +238,7 @@ class P84OutstandingCoreProbe:Instrumentation() {
                     }
                     check(draw.await(5,TimeUnit.SECONDS))
                     phase("normal_editor_draw")
-                    main{activity.window.decorView.viewTreeObserver.removeOnDrawListener(listener);model.tasks.cancel();model.tasks.backToTasks();model.activeArea(ActiveArea.HUB);check(model.activeCore==null)}
+                    main{activity.window.decorView.viewTreeObserver.removeOnDrawListener(listener);model.tasks.cancel();model.tasks.backToTasks();model.activeArea(ActiveArea.HUB);check(coreOwnerIdentity(model)==null)}
                 }
                 emit("P84_CONTRACT,$fixture,$scenario,reads=${h.observations.reads.get()},tickets=${h.observations.tickets.get()},hits=${h.observations.hitAccepted.get()},max_pending_candidates=1,full_transition_reservation=${org.pag.domain.ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES},${state()}")
             }

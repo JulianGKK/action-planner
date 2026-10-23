@@ -52,13 +52,14 @@ class P82RoomCleanupProbe: Instrumentation() {
             val originalEpoch=main{harness.mutations.mutationEpoch}
             main{model.detail("p11-active")}
             if(scenario=="success") {
-                waitFor("real materialized core"){if(harness.cleanupFaults.finished())error(harness.cleanupFaults.diagnostic());main{model.activeCore!=null}}
+                waitFor("real materialized core"){if(harness.cleanupFaults.finished())error(harness.cleanupFaults.diagnostic());main{coreOwnerIdentity(model)!=null}}
                 main {
-                    val core=checkNotNull(model.activeCore)
-                    check(core.people.overall.total==200L && core.tasks.overall.total==1000L)
-                    check(core.people.items.size==32 && core.tasks.items.size==32)
-                    check(core.people.hasMore && core.tasks.hasMore)
-                    model.activeArea(ActiveArea.PERSONS);check(model.activeCore===core)
+                    val core=checkNotNull(coreOwnerIdentity(model))
+                    check(model.compactHubPresentation?.value(0,0)==200L && model.compactHubPresentation?.value(2,0)==1000L)
+                    model.activeArea(ActiveArea.PERSONS);check(coreOwnerIdentity(model)===core)
+                    check(model.compactPersonsPresentation?.shown()==32 && model.compactPersonsPresentation?.hasMore()==true)
+                    model.activeArea(ActiveArea.TASKS);check(coreOwnerIdentity(model)===core)
+                    check(model.compactTasksPresentation?.shown()==32 && model.compactTasksPresentation?.hasMore()==true)
                     check(harness.observations.hitAccepted.get()==1)
                     model.lock()
                 }
@@ -67,10 +68,10 @@ class P82RoomCleanupProbe: Instrumentation() {
                 // DB/key finally finishes before the reader can report failure or lock-result.
                 waitFor("worker cleanup completion"){harness.cleanupFaults.finished()}
                 main {
-                    check(model.activeCore==null)
+                    check(coreOwnerIdentity(model)==null)
                     val hits=harness.observations.hitAccepted.get()
                     model.activeArea(ActiveArea.PERSONS)
-                    check(harness.observations.hitAccepted.get()==hits && model.activeCore==null)
+                    check(harness.observations.hitAccepted.get()==hits && coreOwnerIdentity(model)==null)
                 }
             }
             val native=harness.cleanupFaults.nativeDiagnostic()
@@ -84,7 +85,7 @@ class P82RoomCleanupProbe: Instrumentation() {
                 check(harness.observations.tickets.get()==1 && harness.observations.reads.get()==1)
                 check(harness.mutations.mutationEpoch==originalEpoch)
                 check(!harness.mutations.ramReuseEnabled)
-                check(model.activeCore==null)
+                check(coreOwnerIdentity(model)==null)
             }
             val afterFd=java.io.File("/proc/self/fd").list()?.size
             val elapsed=SystemClock.elapsedRealtimeNanos()-started

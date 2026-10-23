@@ -49,7 +49,7 @@ class P85bTaskHistoryProbe:Instrumentation() {
             main{model.unlock()};waitFor("READY"){runtime.session.snapshot().state==SessionState.READY}
             waitFor("actions"){main{model.actions.any{it.id=="p11-active"}}}
             main{model.detail("p11-active")}
-            waitFor("compact attempt"){main{model.activeCore!=null || model.workspaceError}}
+            waitFor("compact attempt"){main{coreOwnerIdentity(model)!=null || model.workspaceError}}
             main{model.activeArea(ActiveArea.TASKS);model.useFullActiveView()}
             waitFor("workspace"){main{!model.workspaceRefreshing && model.workspace?.tasks!=null}}
             val task=main{val b=checkNotNull(model.workspace?.tasks);check(b.tasks.size==if(fixture=="stress")1000 else 40);check(b.events.isEmpty() && !b.eventsComplete);check(b.tasks.all{it.status==TaskStatus.OPEN});check(b.active.size==b.tasks.size && b.closed.isEmpty());emit("P85b_COUNTERS,open=${b.active.size},in_progress=0,closed=0,eager_events=0,events_complete=false");b.tasks.minBy{it.id}.also{model.tasks.open(it)}}

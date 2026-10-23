@@ -51,7 +51,7 @@ class P74RuntimeLifecycleProbe:Instrumentation() {
             fun denied(a:MainActivity) { runOnMainSync {
                 check(runtime(a).session.snapshot().state==SessionState.LOCKED)
                 check(!runtime(a).activeCore.loadOwned("synthetic-unavailable") { _,_->error("Read without READY") })
-                check(model(a).activeCore==null)
+                check(coreOwnerIdentity(model(a))==null)
                 check(!runtime(a).activeCore.reuseEnabled)
             };cases++ }
             denied(original)
@@ -70,7 +70,7 @@ class P74RuntimeLifecycleProbe:Instrumentation() {
             runOnMainSync {
                 val view=current!!.window.decorView
                 val listener=object:android.view.ViewTreeObserver.OnDrawListener {
-                    override fun onDraw(){check(model(current!!).activeCore==null);draw.countDown();view.post{view.viewTreeObserver.removeOnDrawListener(this)}}
+                    override fun onDraw(){check(coreOwnerIdentity(model(current!!))==null);draw.countDown();view.post{view.viewTreeObserver.removeOnDrawListener(this)}}
                 }
                 view.viewTreeObserver.addOnDrawListener(listener);view.invalidate()
             }

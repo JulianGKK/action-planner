@@ -51,7 +51,7 @@ class P85TaskHistoryProbe:Instrumentation() {
             main{model.unlock()};waitFor("READY"){runtime.session.snapshot().state==SessionState.READY}
             waitFor("actions"){main{model.actions.any{it.id=="p11-active"}}}
             main{model.detail("p11-active")}
-            waitFor("compact attempt"){main{model.activeCore!=null || model.workspaceError}}
+            waitFor("compact attempt"){main{coreOwnerIdentity(model)!=null || model.workspaceError}}
             val began=SystemClock.elapsedRealtime()
             main{model.activeArea(ActiveArea.TASKS);model.useFullActiveView()}
             waitFor("bounded full workspace"){main{
@@ -148,7 +148,7 @@ class P85TaskHistoryProbe:Instrumentation() {
             }
             emit("P85a_UNKNOWN,$fixture,history_denied=true")
             main {
-                check(model.activeCore==null)
+                check(coreOwnerIdentity(model)==null)
                 check(handle.outstandingState().contains("fullViewUnconfirmed=true"))
                 emit("P85a_LIFETIME,${handle.outstandingState()}")
                 model.lock();check(model.tasks.history==null && model.tasks.selected==null)

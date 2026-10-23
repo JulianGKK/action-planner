@@ -1,0 +1,38 @@
+[
+  {
+    "file": "domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt",
+    "base_git_blob": "e4a2e2da40496bd71b46da39d2f83458e88e29e8",
+    "current_git_blob": "e4a2e2da40496bd71b46da39d2f83458e88e29e8",
+    "unchanged": true
+  },
+  {
+    "file": "domain/src/main/kotlin/org/pag/domain/CompactPresentationBudget.kt",
+    "base_git_blob": "cb50b82b894f65faf3b6f05ee03d6826deff098f",
+    "current_git_blob": "cb50b82b894f65faf3b6f05ee03d6826deff098f",
+    "unchanged": true
+  },
+  {
+    "file": "data/src/main/kotlin/org/pag/data/product/CoreReadAdmission.kt",
+    "base_git_blob": "44e8f4b8deb849ddb531f5de8bcb13926fe63154",
+    "current_git_blob": "44e8f4b8deb849ddb531f5de8bcb13926fe63154",
+    "unchanged": true
+  },
+  {
+    "file": "data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt",
+    "base_git_blob": "dbdd6a6d1b6170d4a08e2b6994d7ef5bbb4e0265",
+    "current_git_blob": "dbdd6a6d1b6170d4a08e2b6994d7ef5bbb4e0265",
+    "unchanged": true
+  },
+  {
+    "file": "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLoader.kt",
+    "base_git_blob": "31520fb1abe2b5099b9cd96c12aabe44c44b2e0f",
+    "current_git_blob": "31520fb1abe2b5099b9cd96c12aabe44c44b2e0f",
+    "unchanged": true
+  },
+  {
+    "file": "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLifetime.kt",
+    "base_git_blob": "efc4dd98c4c95da30ce43ed0ef0db87ef22f70f4",
+    "current_git_blob": "efc4dd98c4c95da30ce43ed0ef0db87ef22f70f4",
+    "unchanged": true
+  }
+]

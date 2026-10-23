@@ -138,7 +138,7 @@ class P93TasksPresentationProbe:Instrumentation() {
                 check(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.UNKNOWN,WorkspaceWriteCleanup.COMPLETE)))
                 check(view.title(0)==null)
                 late.run();late.run()
-                check(model.compactTasksPresentation==null && model.activeCore==null)
+                check(model.compactTasksPresentation==null && coreOwnerIdentity(model)==null)
                 view.compositionDisposed()
                 check(!harness.runtime.activeCore.loadOwned("p11-active"){_,_->error("Exposed core cannot reload")})
                 check(harness.observations.reads.get()==reads)

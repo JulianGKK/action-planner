@@ -37,16 +37,16 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     val compactActiveMode get() = activeCorePort!=null && !fullActiveView && selected?.status==ActionStatus.ACTIVE &&
         activeArea in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS) &&
         selectedPerson==null && !personForm && !tasks.form && tasks.selected==null && operations.screen==OperationsScreen.OVERVIEW
-    val activeCore:ActiveCorePayload? get() {
-        coreSignal // Compose observation; foreign revocation clears the atomic reference first.
-        val slot=coreSlot.get() ?: return null
+    /** Internal original-slot validation only; never lends a payload to a caller. */
+    private fun currentCoreSlot(slot:CoreSlot):Boolean {
+        if(coreSlot.get() !== slot)return false
         val core=slot.value.core
         if(snapshot.state!=SessionState.READY || selected?.status!=ActionStatus.ACTIVE || selected?.id!=core.action.id ||
             snapshot.generation!=core.state.binding.generation || !slot.lifetime.isCurrent()) {
             if(coreSlot.compareAndSet(slot,null))slot.close()
-            return null
+            return false
         }
-        return core
+        return true
     }
     /** Pre-admitted metadata handles, never second page/payload roots. */
     internal val compactPersonsPresentation:CompactPersonsPresentation? get() = presentationSlot(ActiveArea.PERSONS)?.persons
@@ -127,12 +127,6 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if(Thread.currentThread() !== ownerThread)return
         val slot=coreSlot.get()?.takeIf {it.identity===identity} ?: return
         if(observed)slot.lifetime.compositionObserved() else slot.lifetime.compositionDisposed()
-    }
-    /** Return only the ORIGINAL metadata lifetime. No payload/authority registry. */
-    fun observeActiveCoreComposition(core:ActiveCorePayload):ActiveCoreLifetime? {
-        val slot=coreSlot.get()?.takeIf{it.value.core===core} ?: return null
-        slot.lifetime.compositionObserved()
-        return slot.lifetime
     }
     fun useFullActiveView() {
         if(!activeNavigationEnabled)return
@@ -315,9 +309,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val reuse=if(candidate!=null) {
             // Validate the original slot around the fresh central gate. Never renew idle
             // for an attempted hit, including a denial that falls back to a fresh read.
-            val admitted=activeCore===candidate.value.core && candidate.lifetime.authorizeHit(action.id)
+            val admitted=currentCoreSlot(candidate) && candidate.lifetime.authorizeHit(action.id)
             val valid=admitted && currentNavigation() && coreSlot.get()===candidate &&
-                activeCore===candidate.value.core
+                currentCoreSlot(candidate)
             if(!valid) {if(coreSlot.compareAndSet(candidate,null))candidate.close()}
             valid
         } else {
@@ -333,7 +327,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         activeArea = area
         if(retained!=null)fullActiveView=true
         confirming = null; changeError = null
-        if(reuse && coreSlot.get()===candidate && activeCore===candidate?.value?.core) {personsLoading=false;return}
+        if(reuse && coreSlot.get()===candidate && candidate!=null && currentCoreSlot(candidate)) {personsLoading=false;return}
         // A person-task tap already has both boards. Keep that valid snapshot so
         // its synchronous form opening needs no interaction from a load callback.
         if (area == ActiveArea.TASKS && retained?.actionId == action.id && retained.generation == before.generation &&

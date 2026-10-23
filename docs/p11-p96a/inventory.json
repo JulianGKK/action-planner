@@ -1,0 +1,754 @@
+{
+  "base": "40014aae1ececac97ec6256351883be60eb41384",
+  "note": "Line inventory; runtime.activeCore is the existing loader, not the removed VM getter.",
+  "groups": {
+    "android_test_or_runtime_loader_calls": [
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt",
+        "line": 52,
+        "code": "waitFor(\"compact attempt\"){main{model.activeCore!=null || model.workspaceError}}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt",
+        "line": 54,
+        "code": "waitFor(\"compact attempt\"){main{model.activeCore!=null || model.workspaceError}}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt",
+        "line": 151,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 91,
+        "code": "if((field(x,\"model\") as ProductViewModel).activeCore==null)events.add(\"replacement_invalid_core_draw\")"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 104,
+        "code": "waitFor(\"real core\",90){onMain{model.activeCore!=null}}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 105,
+        "code": "val core=onMain{checkNotNull(model.activeCore)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 110,
+        "code": "main {model.activeArea(ActiveArea.PERSONS);check(model.activeCore===core)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 120,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 181,
+        "code": "main {check(model.activeCore===core);model.activeArea(ActiveArea.FUNCTIONS);check(model.activeCore===core)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 186,
+        "code": "main{model.activeArea(ActiveArea.HUB);check(model.activeCore===core)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 190,
+        "code": "waitFor(\"touch PERSONS\"){onMain{model.activeArea==ActiveArea.PERSONS && model.activeCore===core} && \"Synthetic 0\" in texts()}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 205,
+        "code": "check(runtime.session.snapshot().generation!=generation);main{check(model.activeCore==null)}}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 258,
+        "code": "main{check((field(activity!!,\"model\") as ProductViewModel).activeCore==null)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 280,
+        "code": "main {check(model.activeCore==null)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 285,
+        "code": "check(rawSlotEmpty());check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt",
+        "line": 306,
+        "code": "main {check(model.activeCore==null)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P73ActiveOwnerProbe.kt",
+        "line": 112,
+        "code": "runOnMainSync{verify(model.activeCore==null,\"Late/false result retained\")}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P73ActiveOwnerProbe.kt",
+        "line": 114,
+        "code": "runOnMainSync{verify(model.activeCore!=null,\"Core was not installed\")}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P73ActiveOwnerProbe.kt",
+        "line": 136,
+        "code": "runOnMainSync{verify(model.activeCore==null,\"Core remains authorized\");verify(lifetime?.isCurrent()==false,\"Lifetime remains current\")}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P73ActiveOwnerProbe.kt",
+        "line": 141,
+        "code": "listener=android.view.ViewTreeObserver.OnDrawListener{if(model.activeCore==null)draw.countDown()}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P88StatementLifetimeProbe.kt",
+        "line": 48,
+        "code": "check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 111,
+        "code": "waitFor(\"first read\"){main{model.activeCore!=null || model.workspaceError}}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 113,
+        "code": "main{emit(\"P83_FULL_BEGIN,$profile,t_ns=${SystemClock.elapsedRealtimeNanos()},${memory()}\");model.useFullActiveView();check(model.activeCore==null)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 143,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 160,
+        "code": "check(model.tasks.form && model.workspace!=null && model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 168,
+        "code": "main{check(model.activeCore==null && model.workspaceError);check(!harness.observations.originalTicketLive())}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 175,
+        "code": "val oldId=main{val c=checkNotNull(model.activeCore);check(c.people.overall.total==when(profile){\"small\"->20L;\"medium\"->100L;else->200L});check(c.tasks.overall.total==when(profile){\"small\"->40L;\"medium\"->250L;else->1000L});emit(\"P83_OBJECTS,$profile,${census(c)}\");System.identityHashCode(c)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 181,
+        "code": "val vm=model.activeCore?.let{System.identityHashCode(it)} ?: 0"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 199,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 220,
+        "code": "check(System.identityHashCode(checkNotNull(model.activeCore))==newId)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 224,
+        "code": "check(System.identityHashCode(checkNotNull(model.activeCore))==newId){\"Old cleanup revoked newer ticket\"}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 260,
+        "code": "if(scenario !in setOf(\"replace\",\"history_touch\"))check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 272,
+        "code": "main{check(model.activeCore==null);check(!harness.observations.originalTicketLive());if(scenario==\"generation\"){model.unlock()}}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt",
+        "line": 275,
+        "code": "main{model.lock();check(model.activeCore==null);check(!harness.mutations.ramReuseEnabled)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt",
+        "line": 94,
+        "code": "check(field(model,\"activeCorePort\")==null && model.activeCore==null && !model.compactActiveMode)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt",
+        "line": 123,
+        "code": "check(!h.runtime.activeCore.reuseEnabled && !h.mutations.ramReuseEnabled)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt",
+        "line": 92,
+        "code": "check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt",
+        "line": 94,
+        "code": "model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt",
+        "line": 130,
+        "code": "check(model.compactHubPresentation==null && model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt",
+        "line": 132,
+        "code": "check(!harness.runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"Exposed core cannot reload\")})"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt",
+        "line": 55,
+        "code": "waitFor(\"real materialized core\"){if(harness.cleanupFaults.finished())error(harness.cleanupFaults.diagnostic());main{model.activeCore!=null}}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt",
+        "line": 57,
+        "code": "val core=checkNotNull(model.activeCore)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt",
+        "line": 61,
+        "code": "model.activeArea(ActiveArea.PERSONS);check(model.activeCore===core)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt",
+        "line": 70,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt",
+        "line": 73,
+        "code": "check(harness.observations.hitAccepted.get()==hits && model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt",
+        "line": 87,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt",
+        "line": 36,
+        "code": "check(runtime.activeCore.reuseEnabled)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt",
+        "line": 61,
+        "code": "runOnMainSync { present = model.activeCore != null }"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt",
+        "line": 66,
+        "code": "runOnMainSync { original.set(model.activeCore) }"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt",
+        "line": 89,
+        "code": "check(model.activeCore === original.get())"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt",
+        "line": 101,
+        "code": "check(model.activeArea==area && model.activeCore===originalCore)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt",
+        "line": 117,
+        "code": "runOnMainSync { slotRetained = model.activeCore === original.get() }"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt",
+        "line": 130,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt",
+        "line": 140,
+        "code": "runOnMainSync { check(model.activeCore == null) }"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt",
+        "line": 190,
+        "code": "viewState=\"selected=${model.selected?.status},core=${model.activeCore!=null},workspace=${model.workspace!=null},ops=${model.operations.screen},selectedPerson=${model.selectedPerson!=null},taskForm=${model.tasks.form},selectedTask=${model.tasks.selected!=null},personsLoading=${model.personsLoading},error=${model.workspaceError}\""
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt",
+        "line": 89,
+        "code": "check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt",
+        "line": 91,
+        "code": "model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt",
+        "line": 141,
+        "code": "check(model.compactTasksPresentation==null && model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt",
+        "line": 143,
+        "code": "check(!harness.runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"Exposed core cannot reload\")})"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt",
+        "line": 89,
+        "code": "check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt",
+        "line": 91,
+        "code": "model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt",
+        "line": 132,
+        "code": "check(model.compactPersonsPresentation==null && model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt",
+        "line": 134,
+        "code": "check(!harness.runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"Exposed core cannot reload\")})"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt",
+        "line": 89,
+        "code": "check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt",
+        "line": 91,
+        "code": "model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt",
+        "line": 141,
+        "code": "check(model.compactFunctionsPresentation==null && model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt",
+        "line": 143,
+        "code": "check(!harness.runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"Exposed core cannot reload\")})"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt",
+        "line": 53,
+        "code": "check(!runtime(a).activeCore.loadOwned(\"synthetic-unavailable\") { _,_->error(\"Read without READY\") })"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt",
+        "line": 54,
+        "code": "check(model(a).activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt",
+        "line": 55,
+        "code": "check(!runtime(a).activeCore.reuseEnabled)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt",
+        "line": 73,
+        "code": "override fun onDraw(){check(model(current!!).activeCore==null);draw.countDown();view.post{view.viewTreeObserver.removeOnDrawListener(this)}}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 52,
+        "code": "emit(\"P84_PHASE,$fixture,$scenario,$name,t_ns=${SystemClock.elapsedRealtimeNanos()},vm_id=${model.activeCore?.let{System.identityHashCode(it)} ?: 0},compose_ids=${rs.keys.joinToString(\"|\")},queued_ids=${qs.keys.joinToString(\"|\")},state=${state()},${probe.nativeState()},${raw()}\")"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 65,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 66,
+        "code": "check(!runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"Unconfirmed cleanup cannot retry\")})"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 83,
+        "code": "main{check(model.activeCore==null);check(!h.observations.originalTicketLive());check(h.observations.reads.get()==1 && h.observations.tickets.get()==1)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 94,
+        "code": "main{check(model.activeCore==null);check(!h.observations.originalTicketLive())}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 106,
+        "code": "repeat(2){check(!runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"Unbudgeted candidate callback\")})}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 115,
+        "code": "check(!runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"Lost Main cannot release charge\")})"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 116,
+        "code": "runtime.activeCore.cancelPending()"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 119,
+        "code": "repeat(2){check(!runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"No unacknowledged replacement\")})}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 120,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 130,
+        "code": "val oldLife=field(runtime.activeCore,\"lifetime\") as ActiveCoreLifetime"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 132,
+        "code": "runtime.activeCore.cancelPending()"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 135,
+        "code": "check(!runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"Before Main acknowledgement\")})"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 149,
+        "code": "main{obsolete.run();obsolete.run();check(model.activeCore==null)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 152,
+        "code": "main{h.faults.main.take().run();check(model.activeCore!=null);oldLife.close();check(model.activeCore!=null)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 157,
+        "code": "main{task.run();task.run();check(model.activeCore!=null)}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 160,
+        "code": "val coreId=main{System.identityHashCode(checkNotNull(model.activeCore))}"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 168,
+        "code": "check(model.activeCore?.people?.overall?.total==200L && model.activeCore?.tasks?.overall?.total==1000L)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 179,
+        "code": "check(model.activeCore==null && model.workspaceError)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 183,
+        "code": "check(!runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"Unbudgeted third result\")})"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 214,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 215,
+        "code": "check(!runtime.activeCore.loadOwned(\"p11-active\"){_,_->error(\"No replacement authority\")})"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 230,
+        "code": "check(model.activeCore==null)"
+      },
+      {
+        "file": "app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt",
+        "line": 238,
+        "code": "main{activity.window.decorView.viewTreeObserver.removeOnDrawListener(listener);model.tasks.cancel();model.tasks.backToTasks();model.activeArea(ActiveArea.HUB);check(model.activeCore==null)}"
+      }
+    ],
+    "product_runtime_loader_wiring_not_vm_borrow": [
+      {
+        "file": "app/src/main/kotlin/org/pag/prototype/MainActivity.kt",
+        "line": 118,
+        "code": "model.bindActiveCore(runtime.activeCore) { work -> mainExecutor.execute(work) }"
+      }
+    ],
+    "host_test_calls": [
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 92,
+        "code": "assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 153,
+        "code": "assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 389,
+        "code": "val h=H(true);h.port.deliver();val first=h.model.activeCore"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 392,
+        "code": "h.model.activeArea(area);assertSame(first,h.model.activeCore);assertNull(h.model.workspace)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 396,
+        "code": "assertEquals(2,product.port.reads);assertNull(product.model.activeCore);assertFalse(old.live.get())"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 402,
+        "code": "val core=h.model.activeCore"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 404,
+        "code": "h.model.activeArea(area);assertSame(core,h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 410,
+        "code": "assertNull(h.model.activeCore);assertFalse(life.live.get())"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 423,
+        "code": "assertNull(h.model.activeCore);assertFalse(life.live.get())"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 430,
+        "code": "assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 431,
+        "code": "h.dispatch.toList().forEach{it()};assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 438,
+        "code": "assertNull(changed.model.activeCore);assertFalse(old.live.get())"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 442,
+        "code": "for(status in listOf(ActionStatus.PREPARATION,ActionStatus.COMPLETED)) {val h=H(status=status);assertEquals(0,h.port.reads);assertNull(h.model.activeCore)}"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 444,
+        "code": "val h=H();val life=h.port.deliver(value);assertNull(h.model.activeCore);assertFalse(life.live.get())"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 457,
+        "code": "assertNotNull(h.model.activeCore);assertTrue(life.live.get())"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 459,
+        "code": "assertNull(h.model.activeCore);assertFalse(life.live.get())"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 466,
+        "code": "assertNull(h.model.activeCore);assertFalse(falseLife.live.get())"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 468,
+        "code": "assertNull(raced.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 471,
+        "code": "val h=H(true);val life=h.port.deliver();assertNotNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 473,
+        "code": "assertNull(h.model.activeCore);assertEquals(1,h.dispatch.size)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 474,
+        "code": "h.dispatch.removeAt(0).invoke();assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 475,
+        "code": "val locked=H();locked.port.deliver();locked.session.lock();assertNull(locked.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 476,
+        "code": "val blocked=H();blocked.port.deliver();blocked.session.change(SessionSnapshot(SessionState.BLOCKED,2));assertNull(blocked.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 480,
+        "code": "val oldLife=h.port.deliver();assertFalse(oldLife.live.get());assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 481,
+        "code": "h.port.deliver();assertEquals(\"b\",h.model.activeCore!!.action.id)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 482,
+        "code": "h.model.back();assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 483,
+        "code": "val full=H();full.port.deliver();full.model.useFullActiveView();assertNull(full.model.activeCore);assertFalse(full.model.compactActiveMode)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 486,
+        "code": "val h=H();assertNull(h.model.activeCore);h.port.deliver()"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 487,
+        "code": "val value=h.model.activeCore!!"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 499,
+        "code": "assertNotNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 510,
+        "code": "assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 531,
+        "code": "assertNull(failure.get());assertFalse(life.live.get());assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 536,
+        "code": "assertFalse(held.live.get());assertNull(cleared.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 540,
+        "code": "val life=h.port.deliver();val first=h.model.activeCore"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 541,
+        "code": "callback(core(),life);assertSame(first,h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 543,
+        "code": "assertFalse(extra.live.get());assertSame(first,h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 546,
+        "code": "val h=H();val life=h.port.deliver();val escaped=h.model.activeCore!!"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 547,
+        "code": "assertSame(life,h.model.observeActiveCoreComposition(escaped))"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 550,
+        "code": "assertNull(h.model.activeCore);assertFalse(life.isCurrent())"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 551,
+        "code": "assertNull(h.model.observeActiveCoreComposition(escaped))"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 558,
+        "code": "assertTrue(h.port.fullViews>0);assertNull(h.model.activeCore);assertFalse(life.isCurrent())"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 563,
+        "code": "assertFalse(h.model.personsLoading);assertNull(h.model.workspace);assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 565,
+        "code": "assertNull(h.model.activeCore);assertTrue(h.model.workspaceError)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 572,
+        "code": "assertEquals(1,h.port.reads);assertNull(h.model.activeCore);assertTrue(h.model.workspaceError)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 577,
+        "code": "val stale=h.port.deliver();assertFalse(stale.isCurrent());assertNull(h.model.activeCore)"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 578,
+        "code": "val current=h.port.deliver(core(generation=2));val value=h.model.activeCore"
+      },
+      {
+        "file": "app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt",
+        "line": 581,
+        "code": "assertSame(value,h.model.activeCore);assertTrue(current.isCurrent())"
+      }
+    ],
+    "product_vm_declarations_or_internal_checks": [
+      {
+        "file": "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt",
+        "line": 40,
+        "code": "val activeCore:ActiveCorePayload? get() {"
+      },
+      {
+        "file": "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt",
+        "line": 132,
+        "code": "fun observeActiveCoreComposition(core:ActiveCorePayload):ActiveCoreLifetime? {"
+      },
+      {
+        "file": "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt",
+        "line": 318,
+        "code": "val admitted=activeCore===candidate.value.core && candidate.lifetime.authorizeHit(action.id)"
+      },
+      {
+        "file": "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt",
+        "line": 320,
+        "code": "activeCore===candidate.value.core"
+      },
+      {
+        "file": "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt",
+        "line": 336,
+        "code": "if(reuse && coreSlot.get()===candidate && activeCore===candidate?.value?.core) {personsLoading=false;return}"
+      }
+    ]
+  }
+}

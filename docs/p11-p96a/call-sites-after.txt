@@ -1,0 +1,33 @@
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:94:        assertFalse(methods.any{it.name=="getActiveCore" || it.name=="observeActiveCoreComposition"})
+app/src/androidTest/kotlin/org/pag/prototype/P88StatementLifetimeProbe.kt:48:            check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P96CoreSurfaceProbe.kt:89:            check(ProductViewModel::class.java.methods.none{it.name=="getActiveCore" || it.name=="observeActiveCoreComposition"})
+app/src/androidTest/kotlin/org/pag/prototype/P96CoreSurfaceProbe.kt:102:                check(!h.runtime.activeCore.reuseEnabled && !h.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P96CoreSurfaceProbe.kt:104:                    model.bindActiveCore(h.runtime.activeCore){a.runOnUiThread(it)}
+app/src/androidTest/kotlin/org/pag/prototype/P96CoreSurfaceProbe.kt:140:                    check(!h.runtime.activeCore.loadOwned("p11-active"){_,_->error("Exposed core cannot readmit")})
+app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:89:            check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:91:                model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}
+app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:143:                check(!harness.runtime.activeCore.loadOwned("p11-active"){_,_->error("Exposed core cannot reload")})
+app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:92:            check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:94:                model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}
+app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:132:                check(!harness.runtime.activeCore.loadOwned("p11-active"){_,_->error("Exposed core cannot reload")})
+app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:123:            check(!h.runtime.activeCore.reuseEnabled && !h.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:89:            check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:91:                model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}
+app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:143:                check(!harness.runtime.activeCore.loadOwned("p11-active"){_,_->error("Exposed core cannot reload")})
+app/src/main/kotlin/org/pag/prototype/MainActivity.kt:118:        model.bindActiveCore(runtime.activeCore) { work -> mainExecutor.execute(work) }
+app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:36:            check(runtime.activeCore.reuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:69:                    check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Unconfirmed cleanup cannot retry")})
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:109:                    repeat(2){check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Unbudgeted candidate callback")})}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:118:                        check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Lost Main cannot release charge")})
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:119:                        runtime.activeCore.cancelPending()
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:122:                        repeat(2){check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("No unacknowledged replacement")})}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:133:                    val oldLife=field(runtime.activeCore,"lifetime") as ActiveCoreLifetime
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:135:                        runtime.activeCore.cancelPending()
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:138:                        check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Before Main acknowledgement")})
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:186:                        check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Unbudgeted third result")})
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:218:                    check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("No replacement authority")})
+app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt:53:                check(!runtime(a).activeCore.loadOwned("synthetic-unavailable") { _,_->error("Read without READY") })
+app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt:55:                check(!runtime(a).activeCore.reuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:89:            check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:91:                model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}
+app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:134:                check(!harness.runtime.activeCore.loadOwned("p11-active"){_,_->error("Exposed core cannot reload")})

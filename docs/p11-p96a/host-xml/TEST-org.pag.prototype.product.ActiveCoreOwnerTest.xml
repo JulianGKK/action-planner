@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveCoreOwnerTest" tests="39" skipped="0" failures="0" errors="0" timestamp="2026-10-23T20:06:33.475Z" hostname="iuzjhtgvfc" time="0.163">
+  <properties/>
+  <testcase name="fullViewReturnSurfacesAdmissionRefusalAndCannotReplayTheOldCore" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.075"/>
+  <testcase name="revokeBetweenFunctionLookupsLeavesPriorTextButDeniesLaterNamesCountsAndLines" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.014"/>
+  <testcase name="workerInvalidationDropsAuthorityBeforeOwnerNotificationAndLockClears" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="productViewModelHasNoCoreBorrowOrCoreObservationSurface" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="hubHasExactlyThreeMetadataCardsCorrectScalarsAndOriginalNavigation" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.009"/>
+  <testcase name="inactiveForeignAndOverBudgetCandidatesNeverInstall" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="actualProductRouterSelectsCompactRendererForEveryCompactActiveArea" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.004"/>
+  <testcase name="functionWriterPendingUnknownAndLateMainCannotRestoreOldCatalogue" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.005"/>
+  <testcase name="tasksHandleResolvesOnlyThirtyTwoUnicodeTitlesAndExactExistingCounters" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="hubOldIdentityCannotFollowReplacementAndPublicationRaceDeniesValuesAndCallbacks" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="personsAccessDeniesAuthorityRaceForeignThreadAndCannotFollowReplacementSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="revokeBetweenHubScalarsDoesNotRecallEarlierValueAndDeniesFurtherResolutions" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.0"/>
+  <testcase name="actionSwitchBackFullViewAndOldCallbacksCannotRestoreSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="workerSessionObserverDropsSlotBeforeComposeDispatchAndOnClearedClosesLifetime" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="oldHubHandleAndCallbacksDenySessionActionGenerationLockAndRevoke" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="oldPersonsAccessCannotResolveAfterLockRevokeGenerationActionOrStatusChange" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="fullActiveAndPreparationEntityListsKeepTheirExistingRoute" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="clearingSlotAndRepeatedDisposeCannotEraseAnAlreadyHeldProducerOrConsumerReference" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.0"/>
+  <testcase name="hubWriterPendingUnknownLateMainAndForeignThreadCannotResolveOrNavigate" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="functionsExposeCompleteSixThirtyTwoAndHundredCataloguesWithExactUnicodeNamesAndCounts" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.01"/>
+  <testcase name="revokeBetweenTaskScalarsPreservesAlreadyReturnedTextButDeniesEveryLaterLookup" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.0"/>
+  <testcase name="hitPublicationHasNoEarlyNavigationAndLockDuringHitCannotRestoreSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="taskWriterPendingUnknownAndLateMainCannotRestoreOldHandleOrResolveSql" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="functionsDenyForeignThreadForeignIdentityPublicationRaceAndReplacement" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="gapHostReuseHasNoPerHitPublicationAndReportsInteraction" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="duplicateCallbackCannotInstallSecondPayloadOrInvalidateTheConsumedSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.0"/>
+  <testcase name="oversizedPersonsPageNeverCreatesPresentationHandle" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.0"/>
+  <testcase name="preparationAlsoAnnouncesFullViewBeforeAnyCompactRead" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="revokeImmediatelyAfterHitAndStatusChangeRemoveOriginalAuthority" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="generationChangeRejectsOldPendingCallbackWithoutRevokingTheNewSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="personsPresentationIsOneIdentityOnlyHandleWithBoundedCorrectScalars" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="functionsOldHandlesDenyLockRevokeGenerationActionAndContextWithoutNewRead" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="falseReturnAndRevokeDuringInstallLeaveNoRetention" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="oldTasksHandlesDenyLockRevokeGenerationActionStatusAndContextWithoutNewRead" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="revokedCompactCoreDoesNotFallBackToFullEntityList" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.0"/>
+  <testcase name="compactCountsAndMoreAreExplicitAndLostCallbackHasNoSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="taskHandleRejectsForeignThreadPublicationRaceReplacementAndOversizedPage" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="correctlyChargedCandidateUsesRetainedEightAndTransitionSixteenLimits" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

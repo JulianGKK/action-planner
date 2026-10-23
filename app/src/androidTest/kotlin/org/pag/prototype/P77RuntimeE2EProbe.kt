@@ -58,13 +58,22 @@ class P77RuntimeE2EProbe : Instrumentation() {
             }
             await("ACTIVE core publication") {
                 var present = false
-                runOnMainSync { present = model.activeCore != null }
+                runOnMainSync { present = coreOwnerIdentity(model) != null }
                 present
             }
 
             val original = AtomicReference<Any?>()
-            runOnMainSync { original.set(model.activeCore) }
+            // Historical escaped-root census: explicit test-only private inspection, no VM API.
+            // This deliberately retains a producer alias and is NOT current product UI evidence.
+            runOnMainSync {
+                val slotField=ProductViewModel::class.java.getDeclaredField("coreSlot").also{it.isAccessible=true}
+                val slot=checkNotNull((slotField.get(model) as AtomicReference<*>).get())
+                val valueField=slot.javaClass.getDeclaredField("value").also{it.isAccessible=true}
+                original.set((valueField.get(slot) as org.pag.domain.ActiveCoreResult.Value).core)
+            }
             val originalCore=checkNotNull(original.get()) as org.pag.domain.ActiveCorePayload
+            val originalIdentity=AtomicReference<Any?>()
+            runOnMainSync {originalIdentity.set(coreOwnerIdentity(model))}
             check(originalCore.action.id=="p11-active" && originalCore.action.status==org.pag.domain.ActionStatus.ACTIVE)
             check(originalCore.people.overall.total==200L && originalCore.tasks.overall.total==1000L)
             check(originalCore.people.items.size==32 && originalCore.tasks.items.size==32)
@@ -86,7 +95,7 @@ class P77RuntimeE2EProbe : Instrumentation() {
                     sample.set(frames.begin(area))
                     model.activeArea(area)
                     sample.get().navigationReturned=System.nanoTime()
-                    check(model.activeCore === original.get())
+                    check(coreOwnerIdentity(model) === originalIdentity.get())
                     navigationState.set("area=${model.activeArea},enabled=${model.activeNavigationEnabled},selected=${model.selected?.id},status=${model.selected?.status},session=${model.snapshot.state},generation=${model.snapshot.generation}")
                 }
                 check(navigationState.get().startsWith("area=$area,")) { "Compact navigation did not select $area: ${navigationState.get()}" }
@@ -98,7 +107,7 @@ class P77RuntimeE2EProbe : Instrumentation() {
                 val visible = awaitVisibleArea(activity, model, originalCore, area)
                 val verifyEnd=System.nanoTime()
                 runOnMainSync {
-                    check(model.activeArea==area && model.activeCore===originalCore)
+                    check(model.activeArea==area && coreOwnerIdentity(model)===originalIdentity.get())
                     frames.consume(frame)
                 }
                 rows += "P80_FRAME,${frame.id},$area,${frame.start},${frame.navigationReturned},${frame.compositionStart},${frame.commit},${frame.layout},${frame.drawStart},${frame.drawEnd},${verifyEnd-verifyStart}"
@@ -114,7 +123,7 @@ class P77RuntimeE2EProbe : Instrumentation() {
             check(harness.observations.hitAccepted.get() == 80)
             check(runtime.session.snapshot().state == SessionState.READY)
             var slotRetained=false
-            runOnMainSync { slotRetained = model.activeCore === original.get() }
+            runOnMainSync { slotRetained = coreOwnerIdentity(model) === originalIdentity.get() }
             check(slotRetained)
 
             // Confirm the actual 30s idle boundary, without interaction calls or deadline
@@ -127,7 +136,7 @@ class P77RuntimeE2EProbe : Instrumentation() {
                         runtime.session.checkExpiry()
                         check(runtime.session.snapshot().state==SessionState.LOCKED)
                         check(runtime.session.snapshot().technicalId=="B0-IDLE-EXPIRED")
-                        check(model.activeCore==null)
+                        check(coreOwnerIdentity(model)==null)
                     } catch(error:Throwable) {idleFailure.set(error)}
                     finally {idleChecked.countDown()}
                 },lastOrdinaryInteractionReturnedAt+30_100L)
@@ -137,7 +146,7 @@ class P77RuntimeE2EProbe : Instrumentation() {
             // Explicit lock remains idempotent after automatic lock.
             runOnMainSync { model.lock() }
             check(runtime.session.snapshot().state == SessionState.LOCKED)
-            runOnMainSync { check(model.activeCore == null) }
+            runOnMainSync { check(coreOwnerIdentity(model) == null) }
             val memoryAfter=memorySample()
             val payload = requireNotNull(original.get())
             val report = buildString {
@@ -187,7 +196,7 @@ class P77RuntimeE2EProbe : Instrumentation() {
             runOnMainSync {
                 currentArea = model.activeArea
                 compact = model.compactActiveMode
-                viewState="selected=${model.selected?.status},core=${model.activeCore!=null},workspace=${model.workspace!=null},ops=${model.operations.screen},selectedPerson=${model.selectedPerson!=null},taskForm=${model.tasks.form},selectedTask=${model.tasks.selected!=null},personsLoading=${model.personsLoading},error=${model.workspaceError}"
+                viewState="selected=${model.selected?.status},core=${coreOwnerIdentity(model)!=null},workspace=${model.workspace!=null},ops=${model.operations.screen},selectedPerson=${model.selectedPerson!=null},taskForm=${model.tasks.form},selectedTask=${model.tasks.selected!=null},personsLoading=${model.personsLoading},error=${model.workspaceError}"
             }
             if (currentArea != area || !compact) return@await false
             expected = when (area) {

@@ -91,7 +91,7 @@ class P86FullWorkspaceProbe:Instrumentation() {
         emit("P86_CENSUS,$label,objects=$objects,strings=$strings,utf16=$units,collections=$lists,entries=$entries,partial_engineering_bytes=$estimate,upper_bound=UNKNOWN")
     }
     private fun workspaceCensus(label:String)=main {
-        check(field(model,"activeCorePort")==null && model.activeCore==null && !model.compactActiveMode)
+        check(field(model,"activeCorePort")==null && coreOwnerIdentity(model)==null && !model.compactActiveMode)
         val w=checkNotNull(model.workspace)
         check(w.tasks?.events?.isEmpty()!=false && w.tasks?.eventsComplete!=true)
         emit("P86_WORKSPACE,$label,persons=${w.operations?.persons?.size},roles=${w.operations?.roles?.size},tasks=${w.tasks?.tasks?.size},eager_events=${w.tasks?.events?.size},core_reads=${h.observations.reads.get()}")

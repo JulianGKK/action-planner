@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.ProductActiveCoreLifetimeTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-23T19:28:00.890Z" hostname="iuzjhtgvfc" time="0.022">
+  <properties/>
+  <testcase name="eachHitAcquiresFreshReadyPublishesAndKeepsExactReadPayloadBudgetAndEpoch" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.01"/>
+  <testcase name="wrongThreadDoesNotAcquireOrMutateOwnerAndDefaultLifetimeDenies" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.001"/>
+  <testcase name="backpressureDoesNotReplaceRetainedTicketOrDestroyAnAuthorizedHit" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.001"/>
+  <testcase name="coreDocumentAndUnknownBeforeOrInsidePublicationRevokeOriginalSlot" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.003"/>
+  <testcase name="foreignActionAndPortOrReplacementTicketNeverAuthorizeOldData" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.0"/>
+  <testcase name="lockDuringPublishAndWorkerRevokeAfterCallbackCannotAuthorizeHit" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.001"/>
+  <testcase name="namespaceFenceBeforeOrAfterPublicationDeniesWithoutWaitingOnIo" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.001"/>
+  <testcase name="repeatedHitsDoNotRenewThirtySecondIdleAndWorkerTimeoutIsSynchronous" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.0"/>
+  <testcase name="oldLifetimeCloseCannotRevokeNewRead" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.001"/>
+  <testcase name="falseAfterCallbackNoCallbackMissingReadyGenerationAndScopeAreTerminal" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.001"/>
+  <testcase name="successfulHitFollowedByRevokeCloseOrNewLoadCannotRestoreSlot" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.001"/>
+  <testcase name="explicitLifetimeCloseMustRevokeOriginalReadTicket" classname="org.pag.data.product.ProductActiveCoreLifetimeTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

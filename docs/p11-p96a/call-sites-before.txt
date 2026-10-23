@@ -1,0 +1,148 @@
+app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:52:            waitFor("compact attempt"){main{model.activeCore!=null || model.workspaceError}}
+app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt:54:            waitFor("compact attempt"){main{model.activeCore!=null || model.workspaceError}}
+app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt:151:                check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:91:                        if((field(x,"model") as ProductViewModel).activeCore==null)events.add("replacement_invalid_core_draw")
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:104:            waitFor("real core",90){onMain{model.activeCore!=null}}
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:105:            val core=onMain{checkNotNull(model.activeCore)}
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:110:            main {model.activeArea(ActiveArea.PERSONS);check(model.activeCore===core)}
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:120:                check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:181:                    main {check(model.activeCore===core);model.activeArea(ActiveArea.FUNCTIONS);check(model.activeCore===core)}
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:186:                    main{model.activeArea(ActiveArea.HUB);check(model.activeCore===core)}
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:190:                    waitFor("touch PERSONS"){onMain{model.activeArea==ActiveArea.PERSONS && model.activeCore===core} && "Synthetic 0" in texts()}
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:205:                    check(runtime.session.snapshot().generation!=generation);main{check(model.activeCore==null)}}
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:258:                    main{check((field(activity!!,"model") as ProductViewModel).activeCore==null)}
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:280:                    main {check(model.activeCore==null)}
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:285:                    check(rawSlotEmpty());check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:306:                main {check(model.activeCore==null)}
+app/src/androidTest/kotlin/org/pag/prototype/P73ActiveOwnerProbe.kt:112:                        runOnMainSync{verify(model.activeCore==null,"Late/false result retained")}
+app/src/androidTest/kotlin/org/pag/prototype/P73ActiveOwnerProbe.kt:114:                        runOnMainSync{verify(model.activeCore!=null,"Core was not installed")}
+app/src/androidTest/kotlin/org/pag/prototype/P73ActiveOwnerProbe.kt:136:                        runOnMainSync{verify(model.activeCore==null,"Core remains authorized");verify(lifetime?.isCurrent()==false,"Lifetime remains current")}
+app/src/androidTest/kotlin/org/pag/prototype/P73ActiveOwnerProbe.kt:141:                        listener=android.view.ViewTreeObserver.OnDrawListener{if(model.activeCore==null)draw.countDown()}
+app/src/main/kotlin/org/pag/prototype/MainActivity.kt:118:        model.bindActiveCore(runtime.activeCore) { work -> mainExecutor.execute(work) }
+app/src/androidTest/kotlin/org/pag/prototype/P88StatementLifetimeProbe.kt:48:            check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:111:            waitFor("first read"){main{model.activeCore!=null || model.workspaceError}}
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:113:                main{emit("P83_FULL_BEGIN,$profile,t_ns=${SystemClock.elapsedRealtimeNanos()},${memory()}");model.useFullActiveView();check(model.activeCore==null)}
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:143:                    check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:160:                    check(model.tasks.form && model.workspace!=null && model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:168:                main{check(model.activeCore==null && model.workspaceError);check(!harness.observations.originalTicketLive())}
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:175:                val oldId=main{val c=checkNotNull(model.activeCore);check(c.people.overall.total==when(profile){"small"->20L;"medium"->100L;else->200L});check(c.tasks.overall.total==when(profile){"small"->40L;"medium"->250L;else->1000L});emit("P83_OBJECTS,$profile,${census(c)}");System.identityHashCode(c)}
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:181:                    val vm=model.activeCore?.let{System.identityHashCode(it)} ?: 0
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:199:                    check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:220:                                check(System.identityHashCode(checkNotNull(model.activeCore))==newId)
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:224:                                check(System.identityHashCode(checkNotNull(model.activeCore))==newId){"Old cleanup revoked newer ticket"}
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:260:                        if(scenario !in setOf("replace","history_touch"))check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:272:                    main{check(model.activeCore==null);check(!harness.observations.originalTicketLive());if(scenario=="generation"){model.unlock()}}
+app/src/androidTest/kotlin/org/pag/prototype/P83MemoryOverlapProbe.kt:275:                main{model.lock();check(model.activeCore==null);check(!harness.mutations.ramReuseEnabled)}
+app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:94:        check(field(model,"activeCorePort")==null && model.activeCore==null && !model.compactActiveMode)
+app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:123:            check(!h.runtime.activeCore.reuseEnabled && !h.mutations.ramReuseEnabled)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:92:        assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:153:        assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:389:        val h=H(true);h.port.deliver();val first=h.model.activeCore
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:392:            h.model.activeArea(area);assertSame(first,h.model.activeCore);assertNull(h.model.workspace)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:396:        assertEquals(2,product.port.reads);assertNull(product.model.activeCore);assertFalse(old.live.get())
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:402:        val core=h.model.activeCore
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:404:            h.model.activeArea(area);assertSame(core,h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:410:        assertNull(h.model.activeCore);assertFalse(life.live.get())
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:423:        assertNull(h.model.activeCore);assertFalse(life.live.get())
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:430:        assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:431:        h.dispatch.toList().forEach{it()};assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:438:        assertNull(changed.model.activeCore);assertFalse(old.live.get())
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:442:        for(status in listOf(ActionStatus.PREPARATION,ActionStatus.COMPLETED)) {val h=H(status=status);assertEquals(0,h.port.reads);assertNull(h.model.activeCore)}
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:444:            val h=H();val life=h.port.deliver(value);assertNull(h.model.activeCore);assertFalse(life.live.get())
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:457:                assertNotNull(h.model.activeCore);assertTrue(life.live.get())
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:459:                assertNull(h.model.activeCore);assertFalse(life.live.get())
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:466:        assertNull(h.model.activeCore);assertFalse(falseLife.live.get())
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:468:        assertNull(raced.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:471:        val h=H(true);val life=h.port.deliver();assertNotNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:473:        assertNull(h.model.activeCore);assertEquals(1,h.dispatch.size)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:474:        h.dispatch.removeAt(0).invoke();assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:475:        val locked=H();locked.port.deliver();locked.session.lock();assertNull(locked.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:476:        val blocked=H();blocked.port.deliver();blocked.session.change(SessionSnapshot(SessionState.BLOCKED,2));assertNull(blocked.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:480:        val oldLife=h.port.deliver();assertFalse(oldLife.live.get());assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:481:        h.port.deliver();assertEquals("b",h.model.activeCore!!.action.id)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:482:        h.model.back();assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:483:        val full=H();full.port.deliver();full.model.useFullActiveView();assertNull(full.model.activeCore);assertFalse(full.model.compactActiveMode)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:486:        val h=H();assertNull(h.model.activeCore);h.port.deliver()
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:487:        val value=h.model.activeCore!!
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:499:            assertNotNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:510:        assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:531:        assertNull(failure.get());assertFalse(life.live.get());assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:536:        assertFalse(held.live.get());assertNull(cleared.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:540:        val life=h.port.deliver();val first=h.model.activeCore
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:541:        callback(core(),life);assertSame(first,h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:543:        assertFalse(extra.live.get());assertSame(first,h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:546:        val h=H();val life=h.port.deliver();val escaped=h.model.activeCore!!
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:547:        assertSame(life,h.model.observeActiveCoreComposition(escaped))
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:550:        assertNull(h.model.activeCore);assertFalse(life.isCurrent())
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:551:        assertNull(h.model.observeActiveCoreComposition(escaped))
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:558:        assertTrue(h.port.fullViews>0);assertNull(h.model.activeCore);assertFalse(life.isCurrent())
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:563:        assertFalse(h.model.personsLoading);assertNull(h.model.workspace);assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:565:        assertNull(h.model.activeCore);assertTrue(h.model.workspaceError)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:572:        assertEquals(1,h.port.reads);assertNull(h.model.activeCore);assertTrue(h.model.workspaceError)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:577:        val stale=h.port.deliver();assertFalse(stale.isCurrent());assertNull(h.model.activeCore)
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:578:        val current=h.port.deliver(core(generation=2));val value=h.model.activeCore
+app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:581:        assertSame(value,h.model.activeCore);assertTrue(current.isCurrent())
+app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:40:    val activeCore:ActiveCorePayload? get() {
+app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:132:    fun observeActiveCoreComposition(core:ActiveCorePayload):ActiveCoreLifetime? {
+app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:318:            val admitted=activeCore===candidate.value.core && candidate.lifetime.authorizeHit(action.id)
+app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:320:                activeCore===candidate.value.core
+app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:336:        if(reuse && coreSlot.get()===candidate && activeCore===candidate?.value?.core) {personsLoading=false;return}
+app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:92:            check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:94:                model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}
+app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:130:                check(model.compactHubPresentation==null && model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:132:                check(!harness.runtime.activeCore.loadOwned("p11-active"){_,_->error("Exposed core cannot reload")})
+app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt:55:                waitFor("real materialized core"){if(harness.cleanupFaults.finished())error(harness.cleanupFaults.diagnostic());main{model.activeCore!=null}}
+app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt:57:                    val core=checkNotNull(model.activeCore)
+app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt:61:                    model.activeArea(ActiveArea.PERSONS);check(model.activeCore===core)
+app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt:70:                    check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt:73:                    check(harness.observations.hitAccepted.get()==hits && model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P82RoomCleanupProbe.kt:87:                check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:36:            check(runtime.activeCore.reuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:61:                runOnMainSync { present = model.activeCore != null }
+app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:66:            runOnMainSync { original.set(model.activeCore) }
+app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:89:                    check(model.activeCore === original.get())
+app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:101:                    check(model.activeArea==area && model.activeCore===originalCore)
+app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:117:            runOnMainSync { slotRetained = model.activeCore === original.get() }
+app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:130:                        check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:140:            runOnMainSync { check(model.activeCore == null) }
+app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:190:                viewState="selected=${model.selected?.status},core=${model.activeCore!=null},workspace=${model.workspace!=null},ops=${model.operations.screen},selectedPerson=${model.selectedPerson!=null},taskForm=${model.tasks.form},selectedTask=${model.tasks.selected!=null},personsLoading=${model.personsLoading},error=${model.workspaceError}"
+app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:89:            check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:91:                model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}
+app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:141:                check(model.compactTasksPresentation==null && model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:143:                check(!harness.runtime.activeCore.loadOwned("p11-active"){_,_->error("Exposed core cannot reload")})
+app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:89:            check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:91:                model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}
+app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:132:                check(model.compactPersonsPresentation==null && model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:134:                check(!harness.runtime.activeCore.loadOwned("p11-active"){_,_->error("Exposed core cannot reload")})
+app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:89:            check(!harness.runtime.activeCore.reuseEnabled && !harness.mutations.ramReuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:91:                model.bindActiveCore(harness.runtime.activeCore){a.runOnUiThread(it)}
+app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:141:                check(model.compactFunctionsPresentation==null && model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:143:                check(!harness.runtime.activeCore.loadOwned("p11-active"){_,_->error("Exposed core cannot reload")})
+app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt:53:                check(!runtime(a).activeCore.loadOwned("synthetic-unavailable") { _,_->error("Read without READY") })
+app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt:54:                check(model(a).activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt:55:                check(!runtime(a).activeCore.reuseEnabled)
+app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt:73:                    override fun onDraw(){check(model(current!!).activeCore==null);draw.countDown();view.post{view.viewTreeObserver.removeOnDrawListener(this)}}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:52:                emit("P84_PHASE,$fixture,$scenario,$name,t_ns=${SystemClock.elapsedRealtimeNanos()},vm_id=${model.activeCore?.let{System.identityHashCode(it)} ?: 0},compose_ids=${rs.keys.joinToString("|")},queued_ids=${qs.keys.joinToString("|")},state=${state()},${probe.nativeState()},${raw()}")
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:65:                    check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:66:                    check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Unconfirmed cleanup cannot retry")})
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:83:                main{check(model.activeCore==null);check(!h.observations.originalTicketLive());check(h.observations.reads.get()==1 && h.observations.tickets.get()==1)}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:94:                main{check(model.activeCore==null);check(!h.observations.originalTicketLive())}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:106:                    repeat(2){check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Unbudgeted candidate callback")})}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:115:                        check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Lost Main cannot release charge")})
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:116:                        runtime.activeCore.cancelPending()
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:119:                        repeat(2){check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("No unacknowledged replacement")})}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:120:                        check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:130:                    val oldLife=field(runtime.activeCore,"lifetime") as ActiveCoreLifetime
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:132:                        runtime.activeCore.cancelPending()
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:135:                        check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Before Main acknowledgement")})
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:149:                    main{obsolete.run();obsolete.run();check(model.activeCore==null)}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:152:                    main{h.faults.main.take().run();check(model.activeCore!=null);oldLife.close();check(model.activeCore!=null)}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:157:                    main{task.run();task.run();check(model.activeCore!=null)}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:160:                val coreId=main{System.identityHashCode(checkNotNull(model.activeCore))}
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:168:                    check(model.activeCore?.people?.overall?.total==200L && model.activeCore?.tasks?.overall?.total==1000L)
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:179:                        check(model.activeCore==null && model.workspaceError)
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:183:                        check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("Unbudgeted third result")})
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:214:                    check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:215:                    check(!runtime.activeCore.loadOwned("p11-active"){_,_->error("No replacement authority")})
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:230:                        check(model.activeCore==null)
+app/src/androidTest/kotlin/org/pag/prototype/P84OutstandingCoreProbe.kt:238:                    main{activity.window.decorView.viewTreeObserver.removeOnDrawListener(listener);model.tasks.cancel();model.tasks.backToTasks();model.activeArea(ActiveArea.HUB);check(model.activeCore==null)}

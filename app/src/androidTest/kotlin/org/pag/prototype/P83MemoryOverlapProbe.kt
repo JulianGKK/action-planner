@@ -21,6 +21,9 @@ import java.util.concurrent.atomic.AtomicReference
  * Slot traversal and counters are diagnostics; neither grants admission nor exact heap bytes.
  * Main is briefly parked to keep the already composed subtree while a real worker proceeds.
  */
+// §96a: historical raw-graph diagnostic only. Local private-field inspection below
+// preserves old core-id/census oracles without a product borrowing API. Old Compose-root
+// and fixed hit-count assumptions are not current §92–96 UI acceptance tests.
 class P83MemoryOverlapProbe:Instrumentation() {
     private var profile="large"
     private var scenario="replace"
@@ -108,9 +111,9 @@ class P83MemoryOverlapProbe:Instrumentation() {
             waitFor("actions"){main{model.actions.any{it.id=="p11-active"}}}
             probe.begin(false)
             main{model.detail("p11-active")}
-            waitFor("first read"){main{model.activeCore!=null || model.workspaceError}}
+            waitFor("first read"){main{coreOwnerIdentity(model)!=null || model.workspaceError}}
             fun fullView() {
-                main{emit("P83_FULL_BEGIN,$profile,t_ns=${SystemClock.elapsedRealtimeNanos()},${memory()}");model.useFullActiveView();check(model.activeCore==null)}
+                main{emit("P83_FULL_BEGIN,$profile,t_ns=${SystemClock.elapsedRealtimeNanos()},${memory()}");model.useFullActiveView();check(coreOwnerIdentity(model)==null)}
                 var lastTouch=SystemClock.elapsedRealtime()
                 var touches=0
                 waitFor("full workspace"){
@@ -140,7 +143,7 @@ class P83MemoryOverlapProbe:Instrumentation() {
                 main {
                     editorObserver=android.view.ViewTreeObserver.OnDrawListener {if(model.tasks.form)editorDraw.countDown()}
                     activity.window.decorView.viewTreeObserver.addOnDrawListener(editorObserver)
-                    check(model.activeCore==null)
+                    check(coreOwnerIdentity(model)==null)
                     val workspace=checkNotNull(model.workspace)
                     val board=checkNotNull(workspace.tasks)
                     val task=checkNotNull(board.tasks.firstOrNull())
@@ -157,7 +160,7 @@ class P83MemoryOverlapProbe:Instrumentation() {
                 check(editorDraw.await(5,TimeUnit.SECONDS)){"No actual editor frame"}
                 main {
                     activity.window.decorView.viewTreeObserver.removeOnDrawListener(editorObserver)
-                    check(model.tasks.form && model.workspace!=null && model.activeCore==null)
+                    check(model.tasks.form && model.workspace!=null && coreOwnerIdentity(model)==null)
                     emit("P83_EDITOR_DRAW,$profile,t_ns=${SystemClock.elapsedRealtimeNanos()},form=true,compact_slot=false,${memory()}")
                     model.tasks.cancel();model.tasks.backToTasks();model.activeArea(ActiveArea.HUB)
                 }
@@ -165,20 +168,24 @@ class P83MemoryOverlapProbe:Instrumentation() {
             val firstR=probe.retained;val firstT=probe.transition
             emit("P83_ADMISSION,$profile,retained=$firstR,transition=$firstT,decision=${probe.decision},failure=${probe.failure}")
             if(probe.decision=="BUDGET_REFUSED") {
-                main{check(model.activeCore==null && model.workspaceError);check(!harness.observations.originalTicketLive())}
+                main{check(coreOwnerIdentity(model)==null && model.workspaceError);check(!harness.observations.originalTicketLive())}
                 check(probe.candidate.get()==null)
                 emit("P83_REFUSAL,$profile,payload=false,visible_error=true,original_ticket_revoked=true,${probe.finish()}")
                 if(profile=="stress")fullView()
                 main{model.lock()}
             } else {
                 check(probe.decision=="ADMITTED")
-                val oldId=main{val c=checkNotNull(model.activeCore);check(c.people.overall.total==when(profile){"small"->20L;"medium"->100L;else->200L});check(c.tasks.overall.total==when(profile){"small"->40L;"medium"->250L;else->1000L});emit("P83_OBJECTS,$profile,${census(c)}");System.identityHashCode(c)}
+                val oldId=main{
+                    // Explicit local historical census, not a borrowing helper/API.
+                    val slot=checkNotNull((field(model,"coreSlot") as AtomicReference<*>).get())
+                    val c=(field(slot,"value") as ActiveCoreResult.Value).core
+                    check(c.people.overall.total==when(profile){"small"->20L;"medium"->100L;else->200L});check(c.tasks.overall.total==when(profile){"small"->40L;"medium"->250L;else->1000L});emit("P83_OBJECTS,$profile,${census(c)}");System.identityHashCode(c)}
                 emit("P83_CLEANUP,first,${probe.finish()}")
                 main{model.activeArea(ActiveArea.PERSONS)}
                 waitFor("actual old Compose payload"){main{oldId in composeRoots(activity)}}
                 fun phase(name:String) {
                     val roots=composeRoots(activity);val queued=cores(harness.faults.main.heldTaskForObservation())
-                    val vm=model.activeCore?.let{System.identityHashCode(it)} ?: 0
+                    val vm=coreOwnerPayloadIdForHistoricalCensus(model)
                     val candidate=probe.candidate.get()?.let{System.identityHashCode(it)} ?: 0
                     emit("P83_PHASE,$profile,$scenario,$name,t_ns=${SystemClock.elapsedRealtimeNanos()},old_id=$oldId,vm_id=$vm,candidate_id=$candidate,compose_ids=${roots.keys.joinToString("|")},queued_ids=${queued.keys.joinToString("|")},retained_charge=$firstR,reader_retained=${probe.retained},reader_transition=${probe.transition},${probe.nativeState()},${memory()}")
                     roots.forEach{(id,path)->emit("P83_ROOT,$name,$id,$path")}
@@ -196,7 +203,7 @@ class P83MemoryOverlapProbe:Instrumentation() {
                     model.activeArea(ActiveArea.TASKS)
                     check(probe.rowReached.await(20,TimeUnit.SECONDS)){"No filled row window"}
                     check(oldId in composeRoots(activity)){"Old Compose root missing during native read"}
-                    check(model.activeCore==null)
+                    check(coreOwnerIdentity(model)==null)
                     phase("reader_window_open")
                     if(scenario=="worker_lock") {
                         val done=CountDownLatch(1)
@@ -217,11 +224,11 @@ class P83MemoryOverlapProbe:Instrumentation() {
                         when(scenario) {
                             "replace","history_touch" -> {
                                 harness.faults.main.take().run()
-                                check(System.identityHashCode(checkNotNull(model.activeCore))==newId)
+                                check(coreOwnerPayloadIdForHistoricalCensus(model)==newId)
                                 check(oldId in composeRoots(activity))
                                 phase("new_vm_old_compose")
                                 oldLifetime.close()
-                                check(System.identityHashCode(checkNotNull(model.activeCore))==newId){"Old cleanup revoked newer ticket"}
+                                check(coreOwnerPayloadIdForHistoricalCensus(model)==newId){"Old cleanup revoked newer ticket"}
                             }
                             "core_writer" -> {
                                 harness.faults.worker.holdNext()
@@ -257,7 +264,7 @@ class P83MemoryOverlapProbe:Instrumentation() {
                             else -> error("Unsupported scenario")
                         }
                         if(scenario !in setOf("replace","history_touch","lost_main"))harness.faults.main.take().run()
-                        if(scenario !in setOf("replace","history_touch"))check(model.activeCore==null)
+                        if(scenario !in setOf("replace","history_touch"))check(coreOwnerIdentity(model)==null)
                     }
                 }
                 // Worker observation is emitted only after the original finallys, no rescue.
@@ -269,10 +276,10 @@ class P83MemoryOverlapProbe:Instrumentation() {
                     main{phase("new_composed")}
                     fullView()
                 } else {
-                    main{check(model.activeCore==null);check(!harness.observations.originalTicketLive());if(scenario=="generation"){model.unlock()}}
+                    main{check(coreOwnerIdentity(model)==null);check(!harness.observations.originalTicketLive());if(scenario=="generation"){model.unlock()}}
                     if(scenario=="generation")waitFor("new generation"){runtime.session.snapshot().state==SessionState.READY && runtime.session.snapshot().generation!=generation}
                 }
-                main{model.lock();check(model.activeCore==null);check(!harness.mutations.ramReuseEnabled)}
+                main{model.lock();check(coreOwnerIdentity(model)==null);check(!harness.mutations.ramReuseEnabled)}
                 emit("P83_CONTRACT,$profile,$scenario,reads=${harness.observations.reads.get()},tickets=${harness.observations.tickets.get()},initial_epoch=$epoch,final_epoch=${main{harness.mutations.mutationEpoch}},joint_acceptance=NOT_PROVEN,native_allocator=UNKNOWN,frame_retention=UNKNOWN")
             }
             main{activity.finish()};waitFor("fixture cleanup"){harness.cleanupConfirmed.get()}

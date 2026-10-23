@@ -88,7 +88,7 @@ class P81ActiveRevokeProbe:Instrumentation() {
                 override fun onActivityDestroyed(x:Activity){if(x===a)events.add("onDestroy")}
                 override fun onActivityCreated(x:Activity,b:Bundle?){if(x is MainActivity && x!==a) {
                     x.window.decorView.viewTreeObserver.addOnDrawListener {
-                        if((field(x,"model") as ProductViewModel).activeCore==null)events.add("replacement_invalid_core_draw")
+                        if(coreOwnerIdentity(field(x,"model") as ProductViewModel)==null)events.add("replacement_invalid_core_draw")
                     }
                 }}
                 override fun onActivitySaveInstanceState(x:Activity,b:Bundle){}
@@ -101,13 +101,13 @@ class P81ActiveRevokeProbe:Instrumentation() {
             waitFor("action list"){onMain{model.actions.any{it.id=="p11-active"}}}
             var interactionReturned=0L
             main {model.detail("p11-active");interactionReturned=SystemClock.elapsedRealtime()}
-            waitFor("real core",90){onMain{model.activeCore!=null}}
-            val core=onMain{checkNotNull(model.activeCore)}
+            waitFor("real core",90){onMain{coreOwnerIdentity(model)!=null}}
+            val core=onMain{checkNotNull(coreOwnerIdentity(model))}
             val slot=onMain{(field(model,"coreSlot") as AtomicReference<*>).get()!!}
             val lifetime=field(slot,"lifetime") as ActiveCoreLifetime
-            check(core.people.overall.total==200L && core.tasks.overall.total==1000L)
+            check(onMain{model.compactHubPresentation?.value(0,0)==200L && model.compactHubPresentation?.value(2,0)==1000L})
             check(harness.observations.reads.get()==1 && harness.observations.hasSingleOriginalTicket())
-            main {model.activeArea(ActiveArea.PERSONS);check(model.activeCore===core)}
+            main {model.activeArea(ActiveArea.PERSONS);check(coreOwnerIdentity(model)===core)}
             waitFor("real compact PERSONS"){texts().let{"Synthetic 0" in it && "32 von 200 angezeigt · weitere Einträge verfügbar" in it}}
             check(harness.observations.hitAccepted.get()==1)
             val generation=runtime.session.snapshot().generation
@@ -117,8 +117,8 @@ class P81ActiveRevokeProbe:Instrumentation() {
                 check(!harness.observations.originalTicketLive()) {"Original readticket still live"}
                 check(!lifetime.isCurrent()) {"Original lifetime still current"}
                 check(rawSlotEmpty()) {"Atomic slot not synchronously cleared"}
-                check(model.activeCore==null)
-                check(!lifetime.authorizeHit(core.action.id)) {"Old lifetime authorized a hit"}
+                check(coreOwnerIdentity(model)==null)
+                check(!lifetime.authorizeHit("p11-active")) {"Old lifetime authorized a hit"}
             }}
             val frame=CountDownLatch(1)
             val invalidated=AtomicBoolean(false)
@@ -130,11 +130,11 @@ class P81ActiveRevokeProbe:Instrumentation() {
                 a.window.decorView.viewTreeObserver.addOnDrawListener(draw)
             }
             fun coreWrite() {
-                runtime.tasks.create(core.action.id,TaskInput("Synthetic revoke task")) {
+                runtime.tasks.create("p11-active",TaskInput("Synthetic revoke task")) {
                     check(it is OperationsResult.Value);events.add("core_write_callback")
                 }
             }
-            fun documentWrite()=runtime.documents.importDocument(core.action.id,"",DocumentFormat.TEXT,
+            fun documentWrite()=runtime.documents.importDocument("p11-active","",DocumentFormat.TEXT,
                 DocumentSource{error("Invalid pre-reserve input must not open source")}) {
                     check(it==DocumentResult.Rejected(DocumentFailure.INVALID));events.add("document_rejected_before_reserve")
                 }
@@ -178,16 +178,16 @@ class P81ActiveRevokeProbe:Instrumentation() {
                     val touched=SystemClock.elapsedRealtime();events.add("real_touch")
                     waitUntil(interactionReturned+30_100)
                     check(runtime.session.snapshot().state==SessionState.READY){"Legitimate Android touch did not renew idle"}
-                    main {check(model.activeCore===core);model.activeArea(ActiveArea.FUNCTIONS);check(model.activeCore===core)}
+                    main {check(coreOwnerIdentity(model)===core);model.activeArea(ActiveArea.FUNCTIONS);check(coreOwnerIdentity(model)===core)}
                     waitUntil(touched+30_200);runtime.session.checkExpiry()
                     check(runtime.session.snapshot().technicalId=="B0-IDLE-EXPIRED")
                 }
                 "touch_navigation" -> {
-                    main{model.activeArea(ActiveArea.HUB);check(model.activeCore===core)}
+                    main{model.activeArea(ActiveArea.HUB);check(coreOwnerIdentity(model)===core)}
                     waitFor("hub touch card"){"Personen öffnen" in texts()}
                     val before=harness.observations.hitAccepted.get()
                     touch("Personen öffnen")
-                    waitFor("touch PERSONS"){onMain{model.activeArea==ActiveArea.PERSONS && model.activeCore===core} && "Synthetic 0" in texts()}
+                    waitFor("touch PERSONS"){onMain{model.activeArea==ActiveArea.PERSONS && coreOwnerIdentity(model)===core} && "Synthetic 0" in texts()}
                     check(harness.observations.hitAccepted.get()==before+1)
                     check(harness.observations.reads.get()==1 && harness.observations.tickets.get()==1)
                     events.add("real_navigation_touch_authorized_hit");main{model.lock()}
@@ -202,29 +202,29 @@ class P81ActiveRevokeProbe:Instrumentation() {
                     harness.faults.worker.release();waitFor("writer result"){events.contains("core_write_callback")}
                 }
                 "reauth" -> {main{model.lock()};revoked();main{model.unlock()};waitFor("reauth READY",90){runtime.session.snapshot().state==SessionState.READY}
-                    check(runtime.session.snapshot().generation!=generation);main{check(model.activeCore==null)}}
+                    check(runtime.session.snapshot().generation!=generation);main{check(coreOwnerIdentity(model)==null)}}
                 "action_change" -> main {model.detail("p11-completed")}
                 "status_vm" -> {
                     main{model.requestAdvance();model.confirmAdvance()}
                     waitFor("ViewModel COMPLETED after real writer",90){onMain{model.selected?.status==ActionStatus.COMPLETED && !model.saving}}
                     events.add("product_vm_completed_after_committed_status_write")
                 }
-                "status_change" -> {main{runtime.actions.advanceActionStatus(core.action.id,ActionStatus.ACTIVE){check(it is ActionChangeResult.Applied);events.add("status_committed")}}
+                "status_change" -> {main{runtime.actions.advanceActionStatus("p11-active",ActionStatus.ACTIVE){check(it is ActionChangeResult.Applied);events.add("status_committed")}}
                     waitFor("actual status commit"){events.contains("status_committed")}}
                 "unknown","cleanup_uncertain" -> main {
-                    val pending=checkNotNull(harness.mutations.beforeDocumentQueue(core.action.id,generation))
+                    val pending=checkNotNull(harness.mutations.beforeDocumentQueue("p11-active",generation))
                     check(pending.finishDocument(DocumentWriteCompletion(if(scenario=="unknown")DocumentWriteOutcome.UNKNOWN else DocumentWriteOutcome.NOT_EXECUTED,
                         if(scenario=="unknown")WorkspaceWriteCleanup.COMPLETE else WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED)))
-                    check(harness.mutations.beforeTaskQueue(core.action.id,generation)==null)
-                    check(harness.mutations.beforeActiveRead(core.action.id,generation)==null)
+                    check(harness.mutations.beforeTaskQueue("p11-active",generation)==null)
+                    check(harness.mutations.beforeActiveRead("p11-active",generation)==null)
                     events.add("injected_metadata_completion_not_native_cleanup_fault")
                 }
                 "core_writer","document_writer" -> {
                     main {harness.faults.worker.holdNext();if(scenario=="core_writer")coreWrite() else documentWrite()
                         check(harness.faults.worker.isHeld());check(rawSlotEmpty());check(!harness.observations.originalTicketLive())
                         check(harness.mutations.mutationEpoch==epoch+1)
-                        check(harness.mutations.beforeActiveRead(core.action.id,generation)==null)
-                        check(harness.mutations.beforeTaskQueue(core.action.id,generation)==null)}
+                        check(harness.mutations.beforeActiveRead("p11-active",generation)==null)
+                        check(harness.mutations.beforeTaskQueue("p11-active",generation)==null)}
                     harness.faults.worker.release()
                     waitFor("writer result"){events.contains(if(scenario=="core_writer")"core_write_callback" else "document_rejected_before_reserve")}
                 }
@@ -255,12 +255,12 @@ class P81ActiveRevokeProbe:Instrumentation() {
                 "recreate" -> {
                     main{a.recreate()};waitFor("replacement Activity",90){replacement.get()!=null}
                     activity=replacement.get();revoked()
-                    main{check((field(activity!!,"model") as ProductViewModel).activeCore==null)}
+                    main{check(coreOwnerIdentity(field(activity!!,"model") as ProductViewModel)==null)}
                     waitFor("replacement draw and content removal"){events.contains("replacement_invalid_core_draw") && "Synthetic 0" !in texts()}
                     events.add("new_runtime_locked_no_old_slot")
                 }
                 "lost_main","late_generation","late_action","worker_install" -> {
-                    main {harness.faults.holdNextCoreMain.set(true);model.detail(core.action.id)}
+                    main {harness.faults.holdNextCoreMain.set(true);model.detail("p11-active")}
                     waitFor("held real core main",90){harness.faults.main.isHeld()}
                     if(scenario=="worker_install") {
                         // First publication is loader receipt, second is VM install. Both use the real context.
@@ -277,12 +277,12 @@ class P81ActiveRevokeProbe:Instrumentation() {
                         if(scenario=="lost_main")harness.faults.main.discard()
                         else {val task=harness.faults.main.take();main{task.run();task.run()}}
                     }
-                    main {check(model.activeCore==null)}
+                    main {check(coreOwnerIdentity(model)==null)}
                 }
                 "callback_false" -> main {
                     harness.faults.callbackEntered.set(false);harness.faults.falseAfterCallback.set(true)
-                    check(!lifetime.authorizeHit(core.action.id));check(harness.faults.callbackEntered.get())
-                    check(rawSlotEmpty());check(model.activeCore==null)
+                    check(!lifetime.authorizeHit("p11-active"));check(harness.faults.callbackEntered.get())
+                    check(rawSlotEmpty());check(coreOwnerIdentity(model)==null)
                     events.add("injected_false_after_real_central_callback")
                 }
                 "writer_during_hit" -> {
@@ -303,7 +303,7 @@ class P81ActiveRevokeProbe:Instrumentation() {
                         "32 von 200 angezeigt · weitere Einträge verfügbar" !in visible
                     else "Synthetic 0" !in visible
                 }
-                main {check(model.activeCore==null)}
+                main {check(coreOwnerIdentity(model)==null)}
             }
             main {if(a.window.decorView.viewTreeObserver.isAlive)a.window.decorView.viewTreeObserver.removeOnDrawListener(draw)}
             check(!harness.observations.originalTicketLive())

@@ -39,14 +39,16 @@ class ActiveCoreOwnerTest {
     }
     private class Port(override val reuseEnabled:Boolean):ActiveCoreLoadPort {
         val pending=mutableListOf<Pair<String,(ActiveCoreResult,ActiveCoreLifetime?)->Unit>>()
-        var reads=0;var fullViews=0;var refuseLoads=false
+        var reads=0;var fullViews=0;var refuseLoads=false;var lastDeliveredActionId:String?=null
         override fun fullViewStarting(){fullViews++}
         override fun loadOwned(actionId:String,callback:(ActiveCoreResult,ActiveCoreLifetime?)->Unit):Boolean {
             reads++;if(refuseLoads)return false
             pending.add(actionId to callback);return true
         }
         fun deliver(value:ActiveCoreResult?=null,lifetime:Lifetime=Lifetime()):Lifetime {
-            val (id,callback)=pending.removeAt(0);callback(value ?: core(id),lifetime);return lifetime
+            val (id,callback)=pending.removeAt(0);val result=value ?: core(id)
+            lastDeliveredActionId=(result as? ActiveCoreResult.Value)?.core?.action?.id
+            callback(result,lifetime);return lifetime
         }
     }
     private class Repo(var action:Action):ActionRepository {
@@ -78,6 +80,23 @@ class ActiveCoreOwnerTest {
                 ActiveCoreReservation(ActiveWorkspaceBudget.Units(),ActiveWorkspaceBudget.Units()),0,0)
         }
     }
+    /** Tests observe only the current route's handle token, never CoreSlot/value/payload. */
+    private fun presentedIdentity(model:ProductViewModel):Any? {
+        val handle:Any?=when(model.activeArea) {
+            ActiveArea.HUB->model.compactHubPresentation;ActiveArea.PERSONS->model.compactPersonsPresentation
+            ActiveArea.TASKS->model.compactTasksPresentation;ActiveArea.FUNCTIONS->model.compactFunctionsPresentation
+            else->null
+        }
+        return handle?.javaClass?.getDeclaredField("identity")?.let{it.isAccessible=true;it.get(handle)}
+    }
+    @Test fun productViewModelHasNoCoreBorrowOrCoreObservationSurface() {
+        val methods=ProductViewModel::class.java.methods
+        assertFalse(methods.any{it.name=="getActiveCore" || it.name=="observeActiveCoreComposition"})
+        val roots=setOf(ActiveCorePayload::class.java,ActiveCorePeoplePage::class.java,
+            ActiveCoreTaskPage::class.java,CompactFunctions::class.java)
+        assertTrue(methods.filterNot{it.isSynthetic}.none{it.returnType in roots || it.parameterTypes.any{p->p in roots}})
+        assertTrue(ProductViewModel::class.java.fields.none{it.type in roots})
+    }
     private fun personsFixture(size:Int=32):ActiveCoreResult.Value {
         val value=core()
         val items=(0 until size).map { CompactPersonCard("p$it","Synthetic Ä界🦋 $it",it.toLong(),
@@ -89,7 +108,7 @@ class ActiveCoreOwnerTest {
         val h=H() // Gate off: switch BEFORE the first pending candidate is exposed.
         h.model.activeArea(ActiveArea.PERSONS)
         h.port.deliver() // Obsolete Main callback cannot install the cancelled Hub candidate.
-        assertNull(h.model.activeCore)
+        assertNull(presentedIdentity(h.model))
         val life=h.port.deliver(personsFixture())
         return Triple(h,life,checkNotNull(h.model.compactPersonsPresentation))
     }
@@ -150,7 +169,7 @@ class ActiveCoreOwnerTest {
     }
     private fun tasksOwner():Triple<H,Lifetime,CompactTasksPresentation> {
         val h=H();h.model.activeArea(ActiveArea.TASKS);h.port.deliver()
-        assertNull(h.model.activeCore)
+        assertNull(presentedIdentity(h.model))
         val life=h.port.deliver(tasksFixture())
         return Triple(h,life,checkNotNull(h.model.compactTasksPresentation))
     }
@@ -386,28 +405,28 @@ class ActiveCoreOwnerTest {
     }
 
     @Test fun oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse() {
-        val h=H(true);h.port.deliver();val first=h.model.activeCore
+        val h=H(true);h.port.deliver();val first=presentedIdentity(h.model)
         assertNotNull(first);assertNull(h.model.workspace)
         for(area in listOf(ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS,ActiveArea.HUB)) {
-            h.model.activeArea(area);assertSame(first,h.model.activeCore);assertNull(h.model.workspace)
+            h.model.activeArea(area);assertSame(first,presentedIdentity(h.model));assertNull(h.model.workspace)
         }
         assertEquals(1,h.port.reads)
         val product=H();val old=product.port.deliver();product.model.activeArea(ActiveArea.PERSONS)
-        assertEquals(2,product.port.reads);assertNull(product.model.activeCore);assertFalse(old.live.get())
+        assertEquals(2,product.port.reads);assertNull(presentedIdentity(product.model));assertFalse(old.live.get())
     }
     /** §74 gap retained by name, now the positive §75 contract. Runtime proof is in data. */
     @Test fun gapHostReuseHasNoPerHitPublicationAndReportsInteraction() {
         val h=H(true);val life=h.port.deliver()
         val before=h.session.interactions;val publications=life.publications
-        val core=h.model.activeCore
+        val core=presentedIdentity(h.model)
         for(area in listOf(ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS,ActiveArea.HUB)) {
-            h.model.activeArea(area);assertSame(core,h.model.activeCore)
+            h.model.activeArea(area);assertSame(core,presentedIdentity(h.model))
         }
         assertEquals(publications+4,life.publications);assertEquals(4,life.hits)
         assertEquals(before,h.session.interactions);assertEquals(1,h.port.reads)
         life.falseAfter=true
         h.model.activeArea(ActiveArea.TASKS)
-        assertNull(h.model.activeCore);assertFalse(life.live.get())
+        assertNull(presentedIdentity(h.model));assertFalse(life.live.get())
         assertEquals(publications+5,life.publications)
         assertEquals(before,h.session.interactions)
         assertEquals(2,h.port.reads) // Safe fresh load, no reuse or interaction on denial.
@@ -420,28 +439,28 @@ class ActiveCoreOwnerTest {
             h.session.lock()
         }
         h.model.activeArea(ActiveArea.TASKS)
-        assertNull(h.model.activeCore);assertFalse(life.live.get())
+        assertNull(presentedIdentity(h.model));assertFalse(life.live.get())
         assertEquals(interactions,h.session.interactions);assertEquals(1,h.port.reads)
         assertNotEquals(ActiveArea.TASKS,h.model.activeArea)
     }
     @Test fun revokeImmediatelyAfterHitAndStatusChangeRemoveOriginalAuthority() {
         val h=H(true);val life=h.port.deliver();h.model.activeArea(ActiveArea.PERSONS)
         val t=Thread{life.close()};t.start();t.join(3000);assertFalse(t.isAlive)
-        assertNull(h.model.activeCore)
-        h.dispatch.toList().forEach{it()};assertNull(h.model.activeCore)
+        assertNull(presentedIdentity(h.model))
+        h.dispatch.toList().forEach{it()};assertNull(presentedIdentity(h.model))
         val before=h.session.interactions
         h.model.activeArea(ActiveArea.TASKS)
         assertEquals(before,h.session.interactions);assertEquals(2,h.port.reads)
         val changed=H(true);val old=changed.port.deliver()
         changed.repo.action=changed.repo.action.copy(status=ActionStatus.COMPLETED,completedAt=1)
         changed.model.detail("a");changed.model.activeArea(ActiveArea.TASKS)
-        assertNull(changed.model.activeCore);assertFalse(old.live.get())
+        assertNull(presentedIdentity(changed.model));assertFalse(old.live.get())
         assertEquals(0,old.hits)
     }
     @Test fun inactiveForeignAndOverBudgetCandidatesNeverInstall() {
-        for(status in listOf(ActionStatus.PREPARATION,ActionStatus.COMPLETED)) {val h=H(status=status);assertEquals(0,h.port.reads);assertNull(h.model.activeCore)}
+        for(status in listOf(ActionStatus.PREPARATION,ActionStatus.COMPLETED)) {val h=H(status=status);assertEquals(0,h.port.reads);assertNull(presentedIdentity(h.model))}
         for(value in listOf(core("other"),core(generation=2),core(status=ActionStatus.COMPLETED),core().copy(retainedCharge=ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES+1),core().copy(transitionCharge=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES+1))) {
-            val h=H();val life=h.port.deliver(value);assertNull(h.model.activeCore);assertFalse(life.live.get())
+            val h=H();val life=h.port.deliver(value);assertNull(presentedIdentity(h.model));assertFalse(life.live.get())
         }
     }
     @Test fun correctlyChargedCandidateUsesRetainedEightAndTransitionSixteenLimits() {
@@ -454,41 +473,47 @@ class ActiveCoreOwnerTest {
                 retainedCharge=retained,transitionCharge=transition)
             val life=h.port.deliver(value)
             if(retained==r && transition==t) {
-                assertNotNull(h.model.activeCore);assertTrue(life.live.get())
+                assertNotNull(presentedIdentity(h.model));assertTrue(life.live.get())
             } else {
-                assertNull(h.model.activeCore);assertFalse(life.live.get())
+                assertNull(presentedIdentity(h.model));assertFalse(life.live.get())
             }
         }
     }
 
     @Test fun falseReturnAndRevokeDuringInstallLeaveNoRetention() {
         val h=H();val falseLife=Lifetime().also{it.falseAfter=true};h.port.deliver(lifetime=falseLife)
-        assertNull(h.model.activeCore);assertFalse(falseLife.live.get())
+        assertNull(presentedIdentity(h.model));assertFalse(falseLife.live.get())
         val raced=H();val life=Lifetime();life.duringInstall={life.close()};raced.port.deliver(lifetime=life)
-        assertNull(raced.model.activeCore)
+        assertNull(presentedIdentity(raced.model))
     }
     @Test fun workerInvalidationDropsAuthorityBeforeOwnerNotificationAndLockClears() {
-        val h=H(true);val life=h.port.deliver();assertNotNull(h.model.activeCore)
+        val h=H(true);val life=h.port.deliver();assertNotNull(presentedIdentity(h.model))
         val worker=Thread{life.close()};worker.start();worker.join()
-        assertNull(h.model.activeCore);assertEquals(1,h.dispatch.size)
-        h.dispatch.removeAt(0).invoke();assertNull(h.model.activeCore)
-        val locked=H();locked.port.deliver();locked.session.lock();assertNull(locked.model.activeCore)
-        val blocked=H();blocked.port.deliver();blocked.session.change(SessionSnapshot(SessionState.BLOCKED,2));assertNull(blocked.model.activeCore)
+        assertNull(presentedIdentity(h.model));assertEquals(1,h.dispatch.size)
+        h.dispatch.removeAt(0).invoke();assertNull(presentedIdentity(h.model))
+        val locked=H();locked.port.deliver();locked.session.lock();assertNull(presentedIdentity(locked.model))
+        val blocked=H();blocked.port.deliver();blocked.session.change(SessionSnapshot(SessionState.BLOCKED,2));assertNull(presentedIdentity(blocked.model))
     }
     @Test fun actionSwitchBackFullViewAndOldCallbacksCannotRestoreSlot() {
         val h=H();h.repo.action=h.repo.action.copy(id="b");h.model.detail("b")
-        val oldLife=h.port.deliver();assertFalse(oldLife.live.get());assertNull(h.model.activeCore)
-        h.port.deliver();assertEquals("b",h.model.activeCore!!.action.id)
-        h.model.back();assertNull(h.model.activeCore)
-        val full=H();full.port.deliver();full.model.useFullActiveView();assertNull(full.model.activeCore);assertFalse(full.model.compactActiveMode)
+        val oldLife=h.port.deliver();assertFalse(oldLife.live.get());assertNull(presentedIdentity(h.model))
+        h.port.deliver();assertEquals("b",h.model.selected?.id);assertNotNull(presentedIdentity(h.model));assertEquals("b",h.port.lastDeliveredActionId)
+        h.model.back();assertNull(presentedIdentity(h.model))
+        val full=H();full.port.deliver();full.model.useFullActiveView();assertNull(presentedIdentity(full.model));assertFalse(full.model.compactActiveMode)
     }
     @Test fun compactCountsAndMoreAreExplicitAndLostCallbackHasNoSlot() {
-        val h=H();assertNull(h.model.activeCore);h.port.deliver()
-        val value=h.model.activeCore!!
-        assertEquals(100L,value.people.overall.total);assertTrue(value.people.hasMore)
-        assertEquals(40L,value.tasks.overall.open);assertTrue(value.tasks.hasMore)
+        val h=H(true);assertNull(presentedIdentity(h.model));h.port.deliver()
+        val identity=checkNotNull(presentedIdentity(h.model))
+        assertEquals(100L,h.model.compactHubPresentation!!.value(0,0))
+        h.model.activeArea(ActiveArea.PERSONS)
+        val people=checkNotNull(h.model.compactPersonsPresentation)
+        assertEquals(100L,people.total());assertEquals(true,people.hasMore())
+        h.model.activeArea(ActiveArea.TASKS)
+        val tasks=checkNotNull(h.model.compactTasksPresentation)
+        assertEquals(40L,tasks.count(TaskStatus.OPEN));assertEquals(true,tasks.hasMore())
+        assertSame(identity,presentedIdentity(h.model))
         assertEquals("32 von 100 angezeigt · weitere Einträge verfügbar",compactPageLabel(32,100,true))
-        assertEquals("100 insgesamt",compactHubSummary(0,0,h.model.compactHubPresentation!!.value(0,0)!!))
+        assertEquals("100 insgesamt",compactHubSummary(0,0,100))
     }
     @Test fun actualProductRouterSelectsCompactRendererForEveryCompactActiveArea() {
         val h=H(true);h.port.deliver()
@@ -496,7 +521,7 @@ class ActiveCoreOwnerTest {
         assertNull(h.model.workspace)
         for(area in listOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS)) {
             h.model.activeArea(area)
-            assertNotNull(h.model.activeCore)
+            assertNotNull(presentedIdentity(h.model))
             assertEquals(area,activeWorkspaceShownArea(h.model))
             assertFalse("$area must stay on ActiveWorkspace/CompactActiveContent",productEntityListRoute(h.model))
         }
@@ -507,7 +532,7 @@ class ActiveCoreOwnerTest {
         assertFalse(productEntityListRoute(h.model))
         lifetime.close()
         assertTrue(h.model.compactActiveMode)
-        assertNull(h.model.activeCore)
+        assertNull(presentedIdentity(h.model))
         assertNull(h.model.workspace)
         assertFalse("Missing compact payload must render loading/error, never the full list",productEntityListRoute(h.model))
     }
@@ -528,56 +553,57 @@ class ActiveCoreOwnerTest {
         val failure=java.util.concurrent.atomic.AtomicReference<Throwable?>()
         val thread=Thread{try{h.session.lock()}catch(error:Throwable){failure.set(error)}}
         thread.start();thread.join()
-        assertNull(failure.get());assertFalse(life.live.get());assertNull(h.model.activeCore)
+        assertNull(failure.get());assertFalse(life.live.get());assertNull(presentedIdentity(h.model))
         assertEquals(SessionState.READY,h.model.snapshot.state)
         h.dispatch.toList().forEach{it()};assertEquals(SessionState.LOCKED,h.model.snapshot.state)
         val cleared=H();val held=cleared.port.deliver()
         val store=androidx.lifecycle.ViewModelStore();store.put("core",cleared.model);store.clear()
-        assertFalse(held.live.get());assertNull(cleared.model.activeCore)
+        assertFalse(held.live.get());assertNull(presentedIdentity(cleared.model))
     }
     @Test fun duplicateCallbackCannotInstallSecondPayloadOrInvalidateTheConsumedSlot() {
         val h=H();val callback=h.port.pending.first().second
-        val life=h.port.deliver();val first=h.model.activeCore
-        callback(core(),life);assertSame(first,h.model.activeCore)
+        val life=h.port.deliver();val first=presentedIdentity(h.model)
+        callback(core(),life);assertSame(first,presentedIdentity(h.model))
         val extra=Lifetime();callback(core(),extra)
-        assertFalse(extra.live.get());assertSame(first,h.model.activeCore)
+        assertFalse(extra.live.get());assertSame(first,presentedIdentity(h.model))
     }
-    @Test fun clearingSlotAndRepeatedDisposeCannotEraseAnAlreadyReturnedConsumerReference() {
-        val h=H();val life=h.port.deliver();val escaped=h.model.activeCore!!
-        assertSame(life,h.model.observeActiveCoreComposition(escaped))
-        h.model.back()
+    @Test fun clearingSlotAndRepeatedDisposeCannotEraseAnAlreadyHeldProducerOrConsumerReference() {
+        val h=H();val candidate=core() // Producer-owned test input, NOT an output borrowed from VM.
+        val life=h.port.deliver(candidate);val handle=checkNotNull(h.model.compactHubPresentation)
+        val escaped=compactHubSummary(0,0,handle.value(0,0)!!)
+        handle.compositionObserved();h.model.back()
         repeat(3){life.compositionDisposed();life.close()}
-        assertNull(h.model.activeCore);assertFalse(life.isCurrent())
-        assertNull(h.model.observeActiveCoreComposition(escaped))
-        assertEquals("a",escaped.action.id) // Source-level counterexample, no GC/Compose claim.
+        assertNull(presentedIdentity(h.model));assertFalse(life.isCurrent());assertNull(handle.value(0,0))
+        handle.compositionObserved();assertEquals("a",candidate.core.action.id)
+        assertEquals("100 insgesamt",escaped) // API removal is no physical wipe/end proof.
         assertEquals(1,life.observations);assertEquals(3,life.disposals)
     }
     @Test fun fullViewReturnSurfacesAdmissionRefusalAndCannotReplayTheOldCore() {
         val h=H();val oldCallback=h.port.pending.first().second;val life=h.port.deliver()
         h.model.useFullActiveView()
-        assertTrue(h.port.fullViews>0);assertNull(h.model.activeCore);assertFalse(life.isCurrent())
+        assertTrue(h.port.fullViews>0);assertNull(presentedIdentity(h.model));assertFalse(life.isCurrent())
         // Actual sticky gate is tested with the production loader in OutstandingCoreReadTest.
         h.port.refuseLoads=true
         h.model.activeArea(ActiveArea.HUB)
         assertTrue(h.model.compactActiveMode);assertTrue(h.model.workspaceError)
-        assertFalse(h.model.personsLoading);assertNull(h.model.workspace);assertNull(h.model.activeCore)
+        assertFalse(h.model.personsLoading);assertNull(h.model.workspace);assertNull(presentedIdentity(h.model))
         oldCallback(core(),life)
-        assertNull(h.model.activeCore);assertTrue(h.model.workspaceError)
+        assertNull(presentedIdentity(h.model));assertTrue(h.model.workspaceError)
     }
     @Test fun preparationAlsoAnnouncesFullViewBeforeAnyCompactRead() {
         val h=H(status=ActionStatus.PREPARATION)
         assertEquals(0,h.port.reads);assertTrue(h.port.fullViews>0)
         h.port.refuseLoads=true;h.repo.action=h.repo.action.copy(status=ActionStatus.ACTIVE)
         h.model.detail("a")
-        assertEquals(1,h.port.reads);assertNull(h.model.activeCore);assertTrue(h.model.workspaceError)
+        assertEquals(1,h.port.reads);assertNull(presentedIdentity(h.model));assertTrue(h.model.workspaceError)
     }
     @Test fun generationChangeRejectsOldPendingCallbackWithoutRevokingTheNewSlot() {
         val h=H();val oldCallback=h.port.pending.first().second
         h.session.change(SessionSnapshot(SessionState.READY,2));h.model.detail("a")
-        val stale=h.port.deliver();assertFalse(stale.isCurrent());assertNull(h.model.activeCore)
-        val current=h.port.deliver(core(generation=2));val value=h.model.activeCore
+        val stale=h.port.deliver();assertFalse(stale.isCurrent());assertNull(presentedIdentity(h.model))
+        val current=h.port.deliver(core(generation=2));val value=presentedIdentity(h.model)
         assertNotNull(value)
         repeat(3){oldCallback(core(),stale);stale.close();stale.compositionDisposed()}
-        assertSame(value,h.model.activeCore);assertTrue(current.isCurrent())
+        assertSame(value,presentedIdentity(h.model));assertTrue(current.isCurrent())
     }
 }
