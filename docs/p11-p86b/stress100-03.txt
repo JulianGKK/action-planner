@@ -1,0 +1,1958 @@
+INSTRUMENTATION_STATUS: stream=P86_BASELINE,p86-stress100,art_used=43485072,art_committed=67108864,native_heap=10148880,pss_kib=156789,fd=117,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=43501504,art_committed=67108864,native_heap=10158000,pss_kib=156876,fd=117,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=43698112,art_committed=67108864,native_heap=10216320,pss_kib=167354,fd=121,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=43747264,art_committed=67108864,native_heap=10214864,pss_kib=167591,fd=121,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=44255296,art_committed=67108864,native_heap=10476112,pss_kib=178733,fd=131,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=44304448,art_committed=67108864,native_heap=10710208,pss_kib=178929,fd=134,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=44304448,art_committed=67108864,native_heap=13118656,pss_kib=179184,fd=134,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=44320832,art_committed=67108864,native_heap=13122480,pss_kib=179195,fd=134,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=44337216,art_committed=67108864,native_heap=10486688,pss_kib=179223,fd=135,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=44468288,art_committed=67108864,native_heap=10487952,pss_kib=179339,fd=134,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=44484672,art_committed=44484672,native_heap=10701824,pss_kib=179363,fd=134,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=44484672,art_committed=44484672,native_heap=13122112,pss_kib=179391,fd=134,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=11997312,art_committed=23896317,native_heap=13090032,pss_kib=148073,fd=131,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=12030080,art_committed=23896317,native_heap=10450032,pss_kib=148105,fd=132,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=12308656,art_committed=23896317,native_heap=10533360,pss_kib=148411,fd=131,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=12341568,art_committed=23896317,native_heap=10947632,pss_kib=151737,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=12374336,art_committed=23896317,native_heap=13576624,pss_kib=151765,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=12390720,art_committed=23896317,native_heap=13576480,pss_kib=151777,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=12439872,art_committed=23896317,native_heap=10936832,pss_kib=151817,fd=140,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=12472640,art_committed=23896317,native_heap=10938160,pss_kib=151829,fd=140,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,unlock,tap_to_ondraw_ns=8124812861,poll_delivery_ns=8140172340,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,unlock,statements=15,closed=15,rows=10,cursor_checks=14,cursor_failures=0,preflight_closed=1,room_closed=1,driver_closed=1,close_failures=0,db_phase_sum_ns=3259681772
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=12697976,art_committed=23896317,native_heap=10952912,pss_kib=152184,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=12910968,art_committed=23896317,native_heap=10956448,pss_kib=152152,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=12943736,art_committed=23896317,native_heap=10958320,pss_kib=152336,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=13223672,art_committed=23896317,native_heap=11070160,pss_kib=152700,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=13272824,art_committed=23896317,native_heap=11292384,pss_kib=152807,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=13289208,art_committed=23896317,native_heap=13711088,pss_kib=152861,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=13289208,art_committed=23896317,native_heap=13717456,pss_kib=152917,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=13338360,art_committed=23896317,native_heap=11080496,pss_kib=152961,fd=140,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=13485816,art_committed=23896317,native_heap=13653440,pss_kib=153179,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=13698808,art_committed=23896317,native_heap=13715568,pss_kib=153434,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=13928184,art_committed=23896317,native_heap=14179360,pss_kib=154059,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=14059256,art_committed=23896317,native_heap=14185248,pss_kib=154244,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=14223096,art_committed=23896317,native_heap=14192816,pss_kib=154420,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=14969160,art_committed=23896317,native_heap=11044656,pss_kib=154201,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,open_active,tap_to_ondraw_ns=5451631925,poll_delivery_ns=5528769685,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,open_active,statements=52,closed=52,rows=1532,cursor_checks=50,cursor_failures=0,preflight_closed=2,room_closed=2,driver_closed=2,close_failures=0,db_phase_sum_ns=9197624165
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,initial,persons=200,roles=100,tasks=1000,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,initial,person_max=73,role_max=63,task_max=118
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,initial,objects=1909,strings=4503,utf16=199760,collections=6,entries=1500,partial_engineering_bytes=1375873,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=16603944,art_committed=23896317,native_heap=11486512,pss_kib=159308,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=16775552,art_committed=23896317,native_heap=11495840,pss_kib=159363,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=16923008,art_committed=23896317,native_heap=11495456,pss_kib=159719,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=17332608,art_committed=23896317,native_heap=11575328,pss_kib=160314,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=17348992,art_committed=23896317,native_heap=11790416,pss_kib=160446,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=17398144,art_committed=23896317,native_heap=14212976,pss_kib=159426,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=17398144,art_committed=23896317,native_heap=14216800,pss_kib=159434,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=17463680,art_committed=23896317,native_heap=11583600,pss_kib=159594,fd=140,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=17529216,art_committed=23896317,native_heap=14002176,pss_kib=159775,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=17791360,art_committed=23896317,native_heap=14212112,pss_kib=159975,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=17987968,art_committed=23896317,native_heap=14663600,pss_kib=160539,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=18135424,art_committed=23896317,native_heap=14667328,pss_kib=160739,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=18299264,art_committed=23896317,native_heap=14672896,pss_kib=160889,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,nav_PERSONS,tap_to_ondraw_ns=5303776925,poll_delivery_ns=5263632082,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_PERSONS,statements=77,closed=77,rows=3042,cursor_checks=74,cursor_failures=0,preflight_closed=3,room_closed=3,driver_closed=3,close_failures=0,db_phase_sum_ns=15036060101
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,persons_0,persons=200,roles=100,tasks=1000,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,persons_0,person_max=73,role_max=63,task_max=118
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,persons_0,objects=1904,strings=4503,utf16=199760,collections=6,entries=1500,partial_engineering_bytes=1375233,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=20492216,art_committed=23896317,native_heap=12070784,pss_kib=162901,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=20672424,art_committed=23896317,native_heap=12074640,pss_kib=162965,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=20754344,art_committed=23896317,native_heap=12077840,pss_kib=163251,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=21098408,art_committed=23896317,native_heap=12079296,pss_kib=163671,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=21133744,art_committed=23896317,native_heap=12307984,pss_kib=163747,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=21133744,art_committed=23896317,native_heap=14710272,pss_kib=164535,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=21166512,art_committed=23896317,native_heap=14717888,pss_kib=164563,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=21215664,art_committed=23896317,native_heap=12082688,pss_kib=164667,fd=140,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=21363120,art_committed=23896317,native_heap=14650640,pss_kib=164883,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=21576112,art_committed=23896317,native_heap=14710816,pss_kib=164963,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=21772720,art_committed=23896317,native_heap=15164864,pss_kib=165742,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=21936560,art_committed=23896317,native_heap=15173008,pss_kib=165906,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=22100400,art_committed=23896317,native_heap=15178752,pss_kib=166074,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,hub,tap_to_ondraw_ns=5222646352,poll_delivery_ns=5276802342,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=114,closed=114,rows=4564,cursor_checks=110,cursor_failures=0,preflight_closed=4,room_closed=4,driver_closed=4,close_failures=0,db_phase_sum_ns=20788873016
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=22921800,art_committed=23896317,native_heap=12191152,pss_kib=165979,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=23183944,art_committed=23896317,native_heap=12201296,pss_kib=166127,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=23315016,art_committed=23896317,native_heap=12201120,pss_kib=166392,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=14117728,art_committed=23896317,native_heap=12162144,pss_kib=157755,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=14183264,art_committed=23896317,native_heap=12383936,pss_kib=157827,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=14199648,art_committed=23896317,native_heap=14800400,pss_kib=158543,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=14199648,art_committed=23896317,native_heap=14802144,pss_kib=158575,fd=139,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=14232416,art_committed=23896317,native_heap=12161200,pss_kib=158655,fd=140,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=14379872,art_committed=23896317,native_heap=14724784,pss_kib=158831,fd=139,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=14674784,art_committed=23896317,native_heap=12061712,pss_kib=157263,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,nav_FUNCTIONS,tap_to_ondraw_ns=3374953280,poll_delivery_ns=3354151093,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_FUNCTIONS,statements=137,closed=137,rows=5073,cursor_checks=132,cursor_failures=0,preflight_closed=5,room_closed=5,driver_closed=5,close_failures=0,db_phase_sum_ns=24704126502
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,functions_0,persons=200,roles=100,tasks=null,eager_events=null,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,functions_0,person_max=73,role_max=63,task_max=null
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,functions_0,objects=903,strings=1503,utf16=35870,collections=4,entries=500,partial_engineering_bytes=370289,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=15570072,art_committed=23896317,native_heap=14327424,pss_kib=236145,fd=137,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=15956880,art_committed=23896317,native_heap=14401616,pss_kib=236389,fd=137,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=16448400,art_committed=23896317,native_heap=14338288,pss_kib=233908,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=16464784,art_committed=23896317,native_heap=14338448,pss_kib=233900,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=17120144,art_committed=23896317,native_heap=14353424,pss_kib=234459,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=17152912,art_committed=23896317,native_heap=14354256,pss_kib=234515,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=17775504,art_committed=23896317,native_heap=14417696,pss_kib=235051,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=17824656,art_committed=23896317,native_heap=14366608,pss_kib=235138,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=18176912,art_committed=23896317,native_heap=14371536,pss_kib=235338,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=18480016,art_committed=23896317,native_heap=14376768,pss_kib=235808,fd=137,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=18496400,art_committed=23896317,native_heap=14377360,pss_kib=235824,fd=137,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=19118992,art_committed=23896317,native_heap=14545024,pss_kib=236510,fd=137,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=19151760,art_committed=23896317,native_heap=14706032,pss_kib=236750,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=19659664,art_committed=23896317,native_heap=14772048,pss_kib=237224,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=19676048,art_committed=23896317,native_heap=14957296,pss_kib=237456,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=20151184,art_committed=23896317,native_heap=14723008,pss_kib=166816,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=20183952,art_committed=23896317,native_heap=15030256,pss_kib=167324,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=20216720,art_committed=23896317,native_heap=14956000,pss_kib=167403,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=20675472,art_committed=23896317,native_heap=15113264,pss_kib=167931,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=20708240,art_committed=23896317,native_heap=15206320,pss_kib=168073,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=21166992,art_committed=23896317,native_heap=15297840,pss_kib=168517,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=21199760,art_committed=23896317,native_heap=15458640,pss_kib=168834,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=21674896,art_committed=23896317,native_heap=15492576,pss_kib=169210,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=21740432,art_committed=23896317,native_heap=15908832,pss_kib=167392,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=21994384,art_committed=23896317,native_heap=15911888,pss_kib=167597,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=22231952,art_committed=23896317,native_heap=16097760,pss_kib=168009,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=22264720,art_committed=23896317,native_heap=16161280,pss_kib=168129,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=22707088,art_committed=23896317,native_heap=16281264,pss_kib=168641,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=22756240,art_committed=23896317,native_heap=16411312,pss_kib=168853,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=23198608,art_committed=23896317,native_heap=16477312,pss_kib=169285,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=23264144,art_committed=23896317,native_heap=16661632,pss_kib=169529,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=23706512,art_committed=23896317,native_heap=16669632,pss_kib=169873,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=23755664,art_committed=23896317,native_heap=16880960,pss_kib=170213,fd=137,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=5655056,art_committed=11913744,native_heap=16228896,pss_kib=153621,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=6179344,art_committed=11913744,native_heap=16385968,pss_kib=154149,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=6212112,art_committed=11913744,native_heap=16479808,pss_kib=154294,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=6687248,art_committed=11913744,native_heap=16992864,pss_kib=155407,fd=135,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=6720016,art_committed=11913744,native_heap=17115568,pss_kib=155588,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=7211536,art_committed=11913744,native_heap=17184800,pss_kib=155966,fd=135,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=7244304,art_committed=11913744,native_heap=17369040,pss_kib=156246,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=7719440,art_committed=11913744,native_heap=17375808,pss_kib=156589,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=7752208,art_committed=11913744,native_heap=17590688,pss_kib=156821,fd=135,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=7784976,art_committed=11913744,native_heap=17621744,pss_kib=156941,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=8260112,art_committed=11913744,native_heap=17894400,pss_kib=157407,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=8276496,art_committed=11913744,native_heap=17870384,pss_kib=157557,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=8751632,art_committed=11913744,native_heap=17965216,pss_kib=158001,fd=135,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=8784400,art_committed=11913744,native_heap=18120208,pss_kib=158197,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=9292304,art_committed=11913744,native_heap=18152144,pss_kib=158629,fd=135,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=9341456,art_committed=11913744,native_heap=18268768,pss_kib=158817,fd=135,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=9357840,art_committed=11913744,native_heap=18270240,pss_kib=158857,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=9644560,art_committed=11913744,native_heap=18273968,pss_kib=159093,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,roles100_expand,tap_to_ondraw_ns=46458333,poll_delivery_ns=176491406,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,roles100_expand,statements=137,closed=137,rows=5073,cursor_checks=132,cursor_failures=0,preflight_closed=5,room_closed=5,driver_closed=5,close_failures=0,db_phase_sum_ns=24704126502
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_expand,art_used=11192848,art_committed=11913744,native_heap=19715408,pss_kib=188398,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_collapse,art_used=11202920,art_committed=11913744,native_heap=19715552,pss_kib=188418,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_collapse,art_used=11506024,art_committed=11913744,native_heap=19720992,pss_kib=188474,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,roles100_collapse,art_used=11522408,art_committed=11913744,native_heap=19720992,pss_kib=188614,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,roles100_collapse,tap_to_ondraw_ns=27467865,poll_delivery_ns=77350885,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,roles100_collapse,statements=137,closed=137,rows=5073,cursor_checks=132,cursor_failures=0,preflight_closed=5,room_closed=5,driver_closed=5,close_failures=0,db_phase_sum_ns=24704126502
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6571992,art_committed=11913744,native_heap=19024544,pss_kib=184720,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7063512,art_committed=11913744,native_heap=19030832,pss_kib=184932,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7145432,art_committed=11913744,native_heap=19035648,pss_kib=185184,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7161816,art_committed=11913744,native_heap=19032960,pss_kib=185212,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7653336,art_committed=11913744,native_heap=19039136,pss_kib=185556,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7702488,art_committed=11913744,native_heap=19043328,pss_kib=185586,fd=135,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8144856,art_committed=11913744,native_heap=19049536,pss_kib=185968,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8210392,art_committed=11913744,native_heap=19048992,pss_kib=186024,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8619992,art_committed=11913744,native_heap=19056736,pss_kib=186420,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8685528,art_committed=11913744,native_heap=19059216,pss_kib=186472,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8718296,art_committed=11913744,native_heap=19056272,pss_kib=186492,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9177048,art_committed=11913744,native_heap=19064496,pss_kib=186853,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9209816,art_committed=11913744,native_heap=19064432,pss_kib=186889,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9668568,art_committed=11913744,native_heap=19070576,pss_kib=187261,fd=137,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9717720,art_committed=11913744,native_heap=19071376,pss_kib=187297,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10192856,art_committed=11913744,native_heap=19078144,pss_kib=187661,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10209240,art_committed=11913744,native_heap=19078960,pss_kib=187709,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10635224,art_committed=11913744,native_heap=19084448,pss_kib=187709,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10856408,art_committed=11913744,native_heap=19089680,pss_kib=188193,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10905560,art_committed=11913744,native_heap=19088880,pss_kib=188233,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11347928,art_committed=11913744,native_heap=19095008,pss_kib=188659,fd=135,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11397080,art_committed=11913744,native_heap=19097552,pss_kib=188692,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=5682216,art_committed=11924520,native_heap=18985136,pss_kib=158064,fd=135,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=5747752,art_committed=11924520,native_heap=18986784,pss_kib=158124,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6222888,art_committed=11924520,native_heap=18994576,pss_kib=158464,fd=132,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6255656,art_committed=11924520,native_heap=18994928,pss_kib=158532,fd=135,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6288424,art_committed=11924520,native_heap=18996528,pss_kib=158556,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6779944,art_committed=11924520,native_heap=19002128,pss_kib=158928,fd=135,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6812712,art_committed=11924520,native_heap=19003472,pss_kib=158960,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7287848,art_committed=11924520,native_heap=19008512,pss_kib=159332,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7304232,art_committed=11924520,native_heap=19010912,pss_kib=159380,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7779368,art_committed=11924520,native_heap=19015488,pss_kib=159780,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7812136,art_committed=11924520,native_heap=19017760,pss_kib=159828,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8254504,art_committed=11924520,native_heap=19021920,pss_kib=160160,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8320040,art_committed=11924520,native_heap=19024896,pss_kib=160222,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8320040,art_committed=11924520,native_heap=19024896,pss_kib=160238,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8811560,art_committed=11924520,native_heap=19031648,pss_kib=160626,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8827944,art_committed=11924520,native_heap=19033504,pss_kib=160650,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9352232,art_committed=11924520,native_heap=19045072,pss_kib=161050,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9385000,art_committed=11924520,native_heap=19046384,pss_kib=161086,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9597992,art_committed=11924520,native_heap=19052736,pss_kib=161306,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9630760,art_committed=11924520,native_heap=19055504,pss_kib=161306,fd=135,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10007592,art_committed=11924520,native_heap=12680224,pss_kib=162426,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10040360,art_committed=11924520,native_heap=12908976,pss_kib=162454,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10056744,art_committed=11924520,native_heap=15317424,pss_kib=164306,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10073128,art_committed=11924520,native_heap=15131520,pss_kib=162218,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10105896,art_committed=11924520,native_heap=12683552,pss_kib=162222,fd=140,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10286120,art_committed=11924520,native_heap=15251232,pss_kib=158758,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10564648,art_committed=11924520,native_heap=15753168,pss_kib=159270,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10744872,art_committed=11924520,native_heap=15756528,pss_kib=159438,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10892328,art_committed=11924520,native_heap=15757776,pss_kib=159594,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11187240,art_committed=11924520,native_heap=13710912,pss_kib=159774,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,hub,tap_to_ondraw_ns=5102560206,poll_delivery_ns=5167086769,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=174,closed=174,rows=6595,cursor_checks=168,cursor_failures=0,preflight_closed=6,room_closed=6,driver_closed=6,close_failures=0,db_phase_sum_ns=30360315616
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=11782584,art_committed=11924520,native_heap=12430864,pss_kib=161826,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7053984,art_committed=11924520,native_heap=12327392,pss_kib=157962,fd=137,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7103136,art_committed=11924520,native_heap=12328256,pss_kib=158096,fd=137,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7627424,art_committed=11924520,native_heap=12286112,pss_kib=157032,fd=138,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7643808,art_committed=11924520,native_heap=12497280,pss_kib=157068,fd=138,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7676576,art_committed=11924520,native_heap=14918992,pss_kib=158308,fd=138,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7709344,art_committed=11924520,native_heap=14920192,pss_kib=158324,fd=138,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7742112,art_committed=11924520,native_heap=12285520,pss_kib=157120,fd=140,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7873184,art_committed=11924520,native_heap=14846880,pss_kib=157336,fd=139,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8135328,art_committed=11924520,native_heap=12803248,pss_kib=157424,fd=139,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8299168,art_committed=11924520,native_heap=15352224,pss_kib=158004,fd=139,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8479392,art_committed=11924520,native_heap=15355344,pss_kib=158172,fd=139,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8643232,art_committed=11924520,native_heap=15358880,pss_kib=158340,fd=139,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,nav_TASKS,tap_to_ondraw_ns=5119024060,poll_delivery_ns=5159159737,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_TASKS,statements=199,closed=199,rows=8105,cursor_checks=192,cursor_failures=0,preflight_closed=7,room_closed=7,driver_closed=7,close_failures=0,db_phase_sum_ns=36002936811
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,tasks_0,persons=200,roles=100,tasks=1000,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,tasks_0,person_max=73,role_max=63,task_max=118
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,tasks_0,objects=1904,strings=4503,utf16=199760,collections=6,entries=1500,partial_engineering_bytes=1375233,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10567024,art_committed=11924520,native_heap=12440688,pss_kib=159128,fd=137,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10829152,art_committed=11924520,native_heap=12447904,pss_kib=159268,fd=137,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10845536,art_committed=11924520,native_heap=12447904,pss_kib=159412,fd=137,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11271520,art_committed=11924520,native_heap=12496448,pss_kib=159859,fd=138,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11287904,art_committed=11924520,native_heap=12723200,pss_kib=159885,fd=138,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11337056,art_committed=11924520,native_heap=15127152,pss_kib=160645,fd=139,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11337056,art_committed=11924520,native_heap=15128352,pss_kib=160661,fd=139,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11369824,art_committed=11924520,native_heap=12493648,pss_kib=160701,fd=140,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11500896,art_committed=11924520,native_heap=15055136,pss_kib=160893,fd=139,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11779424,art_committed=11924520,native_heap=15559120,pss_kib=161405,fd=139,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6452072,art_committed=12563304,native_heap=14247328,pss_kib=156005,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6632296,art_committed=12563304,native_heap=14250576,pss_kib=156145,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6779752,art_committed=12563304,native_heap=14251824,pss_kib=156293,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,hub,tap_to_ondraw_ns=5149685050,poll_delivery_ns=5188474060,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=236,closed=236,rows=9627,cursor_checks=228,cursor_failures=0,preflight_closed=8,room_closed=8,driver_closed=8,close_failures=0,db_phase_sum_ns=41700568269
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=7587344,art_committed=12563304,native_heap=11259888,pss_kib=155045,fd=137,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=7800336,art_committed=12563304,native_heap=11263824,pss_kib=155133,fd=137,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=7882256,art_committed=12563304,native_heap=11267536,pss_kib=155334,fd=137,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=8291856,art_committed=12563304,native_heap=11337488,pss_kib=155760,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=8341008,art_committed=12563304,native_heap=11550816,pss_kib=155808,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=8373776,art_committed=12563304,native_heap=13974096,pss_kib=156548,fd=136,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=8373776,art_committed=12563304,native_heap=13973216,pss_kib=156496,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=8422928,art_committed=12563304,native_heap=11338688,pss_kib=156612,fd=140,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=8537616,art_committed=12563304,native_heap=13900256,pss_kib=156688,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=8832528,art_committed=12563304,native_heap=14404752,pss_kib=156882,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=8979984,art_committed=12563304,native_heap=14405952,pss_kib=157456,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=9143824,art_committed=12563304,native_heap=14409216,pss_kib=157616,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_PERSONS,art_used=9307664,art_committed=12563304,native_heap=14410608,pss_kib=157772,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,nav_PERSONS,tap_to_ondraw_ns=5137428540,poll_delivery_ns=5185852290,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_PERSONS,statements=261,closed=261,rows=11137,cursor_checks=252,cursor_failures=0,preflight_closed=9,room_closed=9,driver_closed=9,close_failures=0,db_phase_sum_ns=47385207171
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,persons_1,persons=200,roles=100,tasks=1000,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,persons_1,person_max=73,role_max=63,task_max=118
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,persons_1,objects=1904,strings=4503,utf16=199760,collections=6,entries=1500,partial_engineering_bytes=1375233,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11242296,art_committed=12563304,native_heap=11538800,pss_kib=159132,fd=137,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11359176,art_committed=12563304,native_heap=11541312,pss_kib=159208,fd=137,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11506632,art_committed=12563304,native_heap=11545568,pss_kib=159384,fd=137,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11867080,art_committed=12563304,native_heap=11531984,pss_kib=159752,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11916232,art_committed=12563304,native_heap=11753648,pss_kib=159792,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11932616,art_committed=12563304,native_heap=14172576,pss_kib=160272,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11965384,art_committed=12563304,native_heap=14175952,pss_kib=160312,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11998152,art_committed=12563304,native_heap=11539056,pss_kib=160308,fd=140,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=12145608,art_committed=12563304,native_heap=14102864,pss_kib=160496,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=12407752,art_committed=12563304,native_heap=14604832,pss_kib=160996,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8299416,art_committed=12563304,native_heap=14456928,pss_kib=157188,fd=139,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8446872,art_committed=12563304,native_heap=14458160,pss_kib=157381,fd=139,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8659864,art_committed=12563304,native_heap=14461520,pss_kib=157553,fd=139,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,hub,tap_to_ondraw_ns=5056095884,poll_delivery_ns=5098840988,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=298,closed=298,rows=12659,cursor_checks=288,cursor_failures=0,preflight_closed=10,room_closed=10,driver_closed=10,close_failures=0,db_phase_sum_ns=52970242064
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=9434688,art_committed=12563304,native_heap=11471088,pss_kib=157429,fd=137,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=9664064,art_committed=12563304,native_heap=11475584,pss_kib=157577,fd=137,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=9877056,art_committed=12563304,native_heap=11480400,pss_kib=157865,fd=137,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=10352192,art_committed=12563304,native_heap=11572240,pss_kib=158389,fd=138,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=10417728,art_committed=12563304,native_heap=11794096,pss_kib=158445,fd=138,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=10434112,art_committed=12563304,native_heap=14214320,pss_kib=159149,fd=138,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=10450496,art_committed=12563304,native_heap=14216240,pss_kib=159173,fd=139,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=10483264,art_committed=12563304,native_heap=11579264,pss_kib=159173,fd=140,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=10597952,art_committed=12563304,native_heap=14143040,pss_kib=159257,fd=139,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_FUNCTIONS,art_used=11331136,art_committed=12563304,native_heap=11490624,pss_kib=157841,fd=138,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,nav_FUNCTIONS,tap_to_ondraw_ns=3347490989,poll_delivery_ns=3442086197,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_FUNCTIONS,statements=321,closed=321,rows=13168,cursor_checks=310,cursor_failures=0,preflight_closed=11,room_closed=11,driver_closed=11,close_failures=0,db_phase_sum_ns=56860114977
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,functions_1,persons=200,roles=100,tasks=null,eager_events=null,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,functions_1,person_max=73,role_max=63,task_max=null
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,functions_1,objects=903,strings=1503,utf16=35870,collections=4,entries=500,partial_engineering_bytes=370289,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11793400,art_committed=12563304,native_heap=13049104,pss_kib=233698,fd=137,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=12006392,art_committed=12563304,native_heap=13053440,pss_kib=233842,fd=137,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=12039160,art_committed=12563304,native_heap=13055712,pss_kib=233946,fd=137,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=12383224,art_committed=12563304,native_heap=11987840,pss_kib=234306,fd=138,gc=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=5798488,art_committed=12024408,native_heap=11535312,pss_kib=227671,fd=138,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=5798488,art_committed=12024408,native_heap=13943328,pss_kib=155599,fd=138,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=5847640,art_committed=12024408,native_heap=13946704,pss_kib=155527,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=5864024,art_committed=12024408,native_heap=11309728,pss_kib=155467,fd=140,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6011480,art_committed=12024408,native_heap=13877776,pss_kib=155687,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6290008,art_committed=12024408,native_heap=14379936,pss_kib=156239,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6453848,art_committed=12024408,native_heap=14383328,pss_kib=156411,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6634072,art_committed=12024408,native_heap=14386736,pss_kib=156579,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=6797912,art_committed=12024408,native_heap=14387984,pss_kib=156743,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,hub,tap_to_ondraw_ns=5076971926,poll_delivery_ns=5115737655,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=358,closed=358,rows=14690,cursor_checks=346,cursor_failures=0,preflight_closed=12,room_closed=12,driver_closed=12,close_failures=0,db_phase_sum_ns=62475848049
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7565792,art_committed=12024408,native_heap=11397600,pss_kib=156639,fd=137,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7926240,art_committed=12024408,native_heap=11407792,pss_kib=156751,fd=137,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7975392,art_committed=12024408,native_heap=11406080,pss_kib=157023,fd=137,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8434144,art_committed=12024408,native_heap=11475792,pss_kib=157512,fd=138,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8499680,art_committed=12024408,native_heap=11689280,pss_kib=157576,fd=138,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8516064,art_committed=12024408,native_heap=14108016,pss_kib=158252,fd=138,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8516064,art_committed=12024408,native_heap=14111648,pss_kib=158288,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8548832,art_committed=12024408,native_heap=11474672,pss_kib=158316,fd=140,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8696288,art_committed=12024408,native_heap=14038192,pss_kib=158496,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8958432,art_committed=12024408,native_heap=14540016,pss_kib=158992,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=9155040,art_committed=12024408,native_heap=14543280,pss_kib=159168,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=9318880,art_committed=12024408,native_heap=14545296,pss_kib=159376,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=9499104,art_committed=12024408,native_heap=14548848,pss_kib=159552,fd=139,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,nav_TASKS,tap_to_ondraw_ns=4994360050,poll_delivery_ns=5027727029,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_TASKS,statements=383,closed=383,rows=16200,cursor_checks=370,cursor_failures=0,preflight_closed=13,room_closed=13,driver_closed=13,close_failures=0,db_phase_sum_ns=68018329922
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,tasks_1,persons=200,roles=100,tasks=1000,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,tasks_1,person_max=73,role_max=63,task_max=118
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,tasks_1,objects=1904,strings=4503,utf16=199760,collections=6,entries=1500,partial_engineering_bytes=1375233,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11325928,art_committed=12024408,native_heap=11612992,pss_kib=160424,fd=137,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11555272,art_committed=12024408,native_heap=11619824,pss_kib=160516,fd=137,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=11588040,art_committed=12024408,native_heap=11619648,pss_kib=160680,fd=137,gc=9
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7610088,art_committed=12024408,native_heap=11516064,pss_kib=156926,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7626472,art_committed=12024408,native_heap=11752384,pss_kib=156950,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7659240,art_committed=12024408,native_heap=14156864,pss_kib=157710,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7675624,art_committed=12024408,native_heap=14164288,pss_kib=157734,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7708392,art_committed=12024408,native_heap=11527232,pss_kib=157842,fd=140,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=7839464,art_committed=12024408,native_heap=14091088,pss_kib=158006,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8101608,art_committed=12024408,native_heap=14593216,pss_kib=158522,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8298216,art_committed=12024408,native_heap=14596432,pss_kib=158690,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8462056,art_committed=12024408,native_heap=14597936,pss_kib=158858,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8642280,art_committed=12024408,native_heap=14601280,pss_kib=159030,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,hub,tap_to_ondraw_ns=5030916300,poll_delivery_ns=5070645311,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=420,closed=420,rows=17722,cursor_checks=406,cursor_failures=0,preflight_closed=14,room_closed=14,driver_closed=14,close_failures=0,db_phase_sum_ns=73590026531
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=9796816,art_committed=12024408,native_heap=11598928,pss_kib=159263,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=9944272,art_committed=12024408,native_heap=11602000,pss_kib=159375,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=9960656,art_committed=12024408,native_heap=11602000,pss_kib=159407,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10321104,art_committed=12024408,native_heap=11738208,pss_kib=159780,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10353872,art_committed=12024408,native_heap=11947168,pss_kib=159804,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10386640,art_committed=12024408,native_heap=14358128,pss_kib=160480,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10386640,art_committed=12024408,native_heap=14359280,pss_kib=160492,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10403312,art_committed=12024408,native_heap=11722240,pss_kib=160520,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10534384,art_committed=12024408,native_heap=11723488,pss_kib=160564,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10550768,art_committed=12024408,native_heap=11933264,pss_kib=160576,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10567152,art_committed=12024408,native_heap=14353680,pss_kib=160592,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10567152,art_committed=12024408,native_heap=14316016,pss_kib=160844,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10632688,art_committed=12024408,native_heap=11679040,pss_kib=160876,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10845728,art_committed=12024408,native_heap=11716160,pss_kib=161016,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10878496,art_committed=12024408,native_heap=11927104,pss_kib=161044,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10894880,art_committed=12024408,native_heap=14349136,pss_kib=160892,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10894880,art_committed=12024408,native_heap=14348704,pss_kib=160908,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=10960416,art_committed=12024408,native_heap=11712960,pss_kib=160980,fd=140,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,unlock,tap_to_ondraw_ns=8085894893,poll_delivery_ns=8095440049,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,unlock,statements=435,closed=435,rows=17732,cursor_checks=420,cursor_failures=0,preflight_closed=15,room_closed=15,driver_closed=15,close_failures=0,db_phase_sum_ns=76850867467
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=11157024,art_committed=12024408,native_heap=11669472,pss_kib=161244,fd=132,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=11195904,art_committed=12024408,native_heap=11655920,pss_kib=161304,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=11392512,art_committed=12024408,native_heap=11659888,pss_kib=161442,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=11425280,art_committed=12024408,native_heap=11661488,pss_kib=161552,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=11703808,art_committed=12024408,native_heap=11775472,pss_kib=161852,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=11720192,art_committed=12024408,native_heap=12003552,pss_kib=161888,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=11736576,art_committed=12024408,native_heap=14405872,pss_kib=161912,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=11769344,art_committed=12024408,native_heap=14408512,pss_kib=161940,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=11812432,art_committed=12024408,native_heap=11771168,pss_kib=161976,fd=140,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=5687816,art_committed=11864584,native_heap=12706320,pss_kib=155912,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=5949960,art_committed=11864584,native_heap=13208320,pss_kib=156436,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=6162952,art_committed=11864584,native_heap=13210976,pss_kib=156508,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=6310408,art_committed=11864584,native_heap=13212496,pss_kib=156672,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=6687240,art_committed=11864584,native_heap=10045600,pss_kib=155972,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,open_active,tap_to_ondraw_ns=4992973748,poll_delivery_ns=4971732706,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,open_active,statements=472,closed=472,rows=19254,cursor_checks=456,cursor_failures=0,preflight_closed=16,room_closed=16,driver_closed=16,close_failures=0,db_phase_sum_ns=82381326267
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7351864,art_committed=11864584,native_heap=10239952,pss_kib=155672,fd=134,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7532088,art_committed=11864584,native_heap=10242864,pss_kib=155848,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=7695928,art_committed=11864584,native_heap=10246496,pss_kib=156012,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8121912,art_committed=11864584,native_heap=10319456,pss_kib=156496,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8171064,art_committed=11864584,native_heap=10532208,pss_kib=156540,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8187448,art_committed=11864584,native_heap=12952528,pss_kib=157200,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8220216,art_committed=11864584,native_heap=12953872,pss_kib=157224,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8236600,art_committed=11864584,native_heap=10316896,pss_kib=157308,fd=140,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8367672,art_committed=11864584,native_heap=12217072,pss_kib=159996,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8646200,art_committed=11864584,native_heap=12718896,pss_kib=160500,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8842808,art_committed=11864584,native_heap=12721616,pss_kib=160660,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=8990264,art_committed=11864584,native_heap=12722720,pss_kib=160820,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,nav_TASKS,art_used=9154104,art_committed=11864584,native_heap=12725392,pss_kib=160992,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,nav_TASKS,tap_to_ondraw_ns=5001390467,poll_delivery_ns=5038418227,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_TASKS,statements=497,closed=497,rows=20764,cursor_checks=480,cursor_failures=0,preflight_closed=17,room_closed=17,driver_closed=17,close_failures=0,db_phase_sum_ns=87917922672
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,task_detail,art_used=9743200,art_committed=11864584,native_heap=9791344,pss_kib=158168,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,task_detail,art_used=10054496,art_committed=11864584,native_heap=9800064,pss_kib=158280,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,task_detail,art_used=10070880,art_committed=11864584,native_heap=9800224,pss_kib=158500,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,task_detail,tap_to_ondraw_ns=36101302,poll_delivery_ns=76227604,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,task_detail,statements=497,closed=497,rows=20764,cursor_checks=480,cursor_failures=0,preflight_closed=17,room_closed=17,driver_closed=17,close_failures=0,db_phase_sum_ns=87917922672
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=10740016,art_committed=11864584,native_heap=10006304,pss_kib=159250,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=11133232,art_committed=11864584,native_heap=10012880,pss_kib=159362,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=11329840,art_committed=11864584,native_heap=10030080,pss_kib=159838,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=11346224,art_committed=11864584,native_heap=10027008,pss_kib=159858,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=7650952,art_committed=11864584,native_heap=9866160,pss_kib=156438,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=7683720,art_committed=11864584,native_heap=9868160,pss_kib=156478,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=8175240,art_committed=11864584,native_heap=9876160,pss_kib=156930,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=8208008,art_committed=11864584,native_heap=9878144,pss_kib=156974,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=8699528,art_committed=11864584,native_heap=9886032,pss_kib=157422,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=8748680,art_committed=11864584,native_heap=9887888,pss_kib=157466,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=8765064,art_committed=11864584,native_heap=9888144,pss_kib=157490,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=9256584,art_committed=11864584,native_heap=9900192,pss_kib=157962,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=9272968,art_committed=11864584,native_heap=9900320,pss_kib=157994,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=9649800,art_committed=11864584,native_heap=9915040,pss_kib=158338,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=9944712,art_committed=11864584,native_heap=9919920,pss_kib=158610,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=10043016,art_committed=11864584,native_heap=10045088,pss_kib=158714,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=10075784,art_committed=11864584,native_heap=12674160,pss_kib=159478,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=10075784,art_committed=11864584,native_heap=12675872,pss_kib=159506,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=10092168,art_committed=11864584,native_heap=12487920,pss_kib=159518,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=10141320,art_committed=11864584,native_heap=10041232,pss_kib=159614,fd=140,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=10657416,art_committed=11864584,native_heap=11062640,pss_kib=160418,fd=139,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=10706568,art_committed=11864584,native_heap=12749424,pss_kib=160466,fd=139,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=10722952,art_committed=11864584,native_heap=12786928,pss_kib=160514,fd=139,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_1,art_used=10772104,art_committed=11864584,native_heap=12811872,pss_kib=160574,fd=139,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,page_1,tap_to_ondraw_ns=5007476196,poll_delivery_ns=4882979685,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,page_1,statements=528,closed=528,rows=20817,cursor_checks=510,cursor_failures=0,preflight_closed=18,room_closed=18,driver_closed=18,close_failures=0,db_phase_sum_ns=93364007929
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,page_1,objects=1939,strings=4598,utf16=201476,collections=7,entries=1532,partial_engineering_bytes=1393706,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_PAGE,number=1,total=128001,rows=32,order=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=8356336,art_committed=13838126,native_heap=9203168,pss_kib=160260,fd=136,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=8552912,art_committed=13838126,native_heap=9207152,pss_kib=160416,fd=136,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=8864208,art_committed=13838126,native_heap=9222048,pss_kib=160768,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=8864208,art_committed=13838126,native_heap=9222176,pss_kib=160792,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=9393096,art_committed=13838126,native_heap=9232064,pss_kib=161284,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=9409480,art_committed=13838126,native_heap=9232064,pss_kib=161304,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=9917384,art_committed=13838126,native_heap=9245504,pss_kib=161792,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=9950152,art_committed=13838126,native_heap=9242736,pss_kib=161824,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=10146760,art_committed=13838126,native_heap=9247280,pss_kib=161960,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=10458056,art_committed=13838126,native_heap=9252544,pss_kib=162324,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=10474440,art_committed=13838126,native_heap=9254384,pss_kib=162252,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=10949576,art_committed=13838126,native_heap=9404320,pss_kib=162158,fd=135,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=10982344,art_committed=13838126,native_heap=9380240,pss_kib=161926,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=11588552,art_committed=13838126,native_heap=9393152,pss_kib=162522,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=11654088,art_committed=13838126,native_heap=9403728,pss_kib=162562,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=12014536,art_committed=13838126,native_heap=9410176,pss_kib=162866,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=12194760,art_committed=13838126,native_heap=9422672,pss_kib=163098,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=12211144,art_committed=13838126,native_heap=9426928,pss_kib=163134,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=12653512,art_committed=13838126,native_heap=9441568,pss_kib=163562,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=12702664,art_committed=13838126,native_heap=9457728,pss_kib=161586,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=13030344,art_committed=13838126,native_heap=9463184,pss_kib=161894,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=13243336,art_committed=13838126,native_heap=9468656,pss_kib=161942,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=13505480,art_committed=13838126,native_heap=9505904,pss_kib=162366,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=13538248,art_committed=13838126,native_heap=11745984,pss_kib=162402,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=13554632,art_committed=13838126,native_heap=12120192,pss_kib=162414,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=7120648,art_committed=13838126,native_heap=11792752,pss_kib=156270,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=7137032,art_committed=13838126,native_heap=9344784,pss_kib=156142,fd=139,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=7620360,art_committed=13838126,native_heap=10363920,pss_kib=156774,fd=139,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=7636744,art_committed=13838126,native_heap=12048864,pss_kib=156806,fd=139,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=7669512,art_committed=13838126,native_heap=12090816,pss_kib=156846,fd=139,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2,art_used=7702280,art_committed=13838126,native_heap=12116816,pss_kib=156886,fd=139,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,page_2,tap_to_ondraw_ns=4940506405,poll_delivery_ns=4906599061,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,page_2,statements=560,closed=560,rows=20871,cursor_checks=541,cursor_failures=0,preflight_closed=19,room_closed=19,driver_closed=19,close_failures=0,db_phase_sum_ns=98831642667
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,page_2,objects=1939,strings=4598,utf16=201456,collections=7,entries=1532,partial_engineering_bytes=1393626,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_PAGE,number=2,total=128001,rows=32,order=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=9718928,art_committed=13838126,native_heap=9426640,pss_kib=158570,fd=136,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=9997440,art_committed=13838126,native_heap=9430992,pss_kib=158690,fd=136,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=10364728,art_committed=13838126,native_heap=9441392,pss_kib=159210,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=10397496,art_committed=13838126,native_heap=9441392,pss_kib=159230,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=10905400,art_committed=13838126,native_heap=9458544,pss_kib=159742,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=10938168,art_committed=13838126,native_heap=9460224,pss_kib=159778,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=11396920,art_committed=13838126,native_heap=9468352,pss_kib=160234,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=11429688,art_committed=13838126,native_heap=9469952,pss_kib=160274,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=11904824,art_committed=13838126,native_heap=9477904,pss_kib=160602,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=11953976,art_committed=13838126,native_heap=9480128,pss_kib=160762,fd=135,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=11970360,art_committed=13838126,native_heap=9479376,pss_kib=160782,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=12461880,art_committed=13838126,native_heap=9489728,pss_kib=161266,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=12478264,art_committed=13838126,native_heap=9492720,pss_kib=161346,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=12920632,art_committed=13838126,native_heap=9500480,pss_kib=161718,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=13150008,art_committed=13838126,native_heap=9504592,pss_kib=161858,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=13363000,art_committed=13838126,native_heap=9575008,pss_kib=162210,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=13379384,art_committed=13838126,native_heap=12187760,pss_kib=162330,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=13412152,art_committed=13838126,native_heap=12189168,pss_kib=162334,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=13412152,art_committed=13838126,native_heap=12000944,pss_kib=162350,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=13477688,art_committed=13838126,native_heap=9554608,pss_kib=162390,fd=140,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=6905112,art_committed=13711917,native_heap=10291456,pss_kib=156050,fd=139,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=6954264,art_committed=13711917,native_heap=12461120,pss_kib=156450,fd=139,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=6970648,art_committed=13711917,native_heap=11986864,pss_kib=158534,fd=139,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=7003416,art_committed=13711917,native_heap=12036608,pss_kib=156202,fd=139,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_4001,art_used=7068952,art_committed=13711917,native_heap=12014256,pss_kib=156250,fd=139,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,page_4001,tap_to_ondraw_ns=5337639165,poll_delivery_ns=5308100831,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,page_4001,statements=593,closed=593,rows=20895,cursor_checks=573,cursor_failures=0,preflight_closed=20,room_closed=20,driver_closed=20,close_failures=0,db_phase_sum_ns=104705926413
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,page_4001,objects=1907,strings=4505,utf16=199817,collections=7,entries=1501,partial_engineering_bytes=1376123,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_PAGE,number=4001,total=128001,rows=1,order=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86b_FIELD,bounds=Rect(63, 1581 - 798, 1747),focused=false,visible=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86b_FIELD_AFTER,bounds=Rect(63, 1581 - 798, 1747),focused=true,enabled=true,session=READY,ime_insets=true,window_types=[3, 3, 1, 2, 1]
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86b_IME,value=2001,class=NUMBER,physical_digit_taps=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=7574456,art_committed=14525839,native_heap=9301840,pss_kib=157443,fd=141,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=7951288,art_committed=14525839,native_heap=9312432,pss_kib=157595,fd=142,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=8065976,art_committed=14525839,native_heap=9310704,pss_kib=157919,fd=142,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=8491960,art_committed=14525839,native_heap=9434448,pss_kib=158371,fd=143,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=8541112,art_committed=14525839,native_heap=9645808,pss_kib=158419,fd=143,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=8557496,art_committed=14525839,native_heap=12049840,pss_kib=158423,fd=143,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=8590264,art_committed=14525839,native_heap=12050928,pss_kib=158403,fd=143,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=8639416,art_committed=14525839,native_heap=9416208,pss_kib=158391,fd=142,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=9089976,art_committed=14525839,native_heap=10432304,pss_kib=158943,fd=144,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=9089976,art_committed=14525839,native_heap=10435104,pss_kib=158967,fd=144,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=9122744,art_committed=14525839,native_heap=12127344,pss_kib=160191,fd=144,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=9155512,art_committed=14525839,native_heap=12166912,pss_kib=160235,fd=144,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,page_2001,art_used=9188280,art_committed=14525839,native_heap=12192816,pss_kib=159131,fd=144,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,page_2001,tap_to_ondraw_ns=5372062289,poll_delivery_ns=5396114008,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,page_2001,statements=626,closed=626,rows=20950,cursor_checks=605,cursor_failures=0,preflight_closed=21,room_closed=21,driver_closed=21,close_failures=0,db_phase_sum_ns=110608759225
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,page_2001,objects=1939,strings=4598,utf16=201552,collections=7,entries=1532,partial_engineering_bytes=1394010,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_PAGE,number=2001,total=128001,rows=32,order=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor,art_used=11203520,art_committed=14525839,native_heap=9462352,pss_kib=161463,fd=141,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor,art_used=11441128,art_committed=14525839,native_heap=9466304,pss_kib=161551,fd=141,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor,art_used=11572200,art_committed=14525839,native_heap=9469968,pss_kib=161819,fd=141,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,editor,tap_to_ondraw_ns=49065104,poll_delivery_ns=86496927,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,editor,statements=626,closed=626,rows=20950,cursor_checks=605,cursor_failures=0,preflight_closed=21,room_closed=21,driver_closed=21,close_failures=0,db_phase_sum_ns=110608759225
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,editor,persons=200,roles=100,tasks=1000,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,editor,person_max=73,role_max=63,task_max=118
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,editor,objects=1904,strings=4502,utf16=199760,collections=6,entries=1500,partial_engineering_bytes=1375162,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=13824320,art_committed=14525839,native_heap=9627776,pss_kib=164095,fd=141,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=13988144,art_committed=14525839,native_heap=9633120,pss_kib=164223,fd=141,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=8362120,art_committed=14525839,native_heap=9454896,pss_kib=159035,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=8411272,art_committed=14525839,native_heap=9456624,pss_kib=159075,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=8951944,art_committed=14525839,native_heap=9465552,pss_kib=159599,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=8984712,art_committed=14525839,native_heap=9467248,pss_kib=159651,fd=141,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=9525384,art_committed=14525839,native_heap=9477856,pss_kib=160175,fd=139,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=9607304,art_committed=14525839,native_heap=9478704,pss_kib=160227,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=9918600,art_committed=14525839,native_heap=9483424,pss_kib=160435,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=10213512,art_committed=14525839,native_heap=9489712,pss_kib=160816,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=10246280,art_committed=14525839,native_heap=9491264,pss_kib=160848,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=10786952,art_committed=14525839,native_heap=9501104,pss_kib=161336,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=10819720,art_committed=14525839,native_heap=9530544,pss_kib=161396,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=11262088,art_committed=14525839,native_heap=9537776,pss_kib=161856,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_cancel,art_used=11294856,art_committed=14525839,native_heap=9539376,pss_kib=161876,fd=142,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,editor_cancel,tap_to_ondraw_ns=33892865,poll_delivery_ns=76526511,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,editor_cancel,statements=626,closed=626,rows=20950,cursor_checks=605,cursor_failures=0,preflight_closed=21,room_closed=21,driver_closed=21,close_failures=0,db_phase_sum_ns=110608759225
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=8019736,art_committed=13598157,native_heap=9412880,pss_kib=158608,fd=140,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=8199960,art_committed=13598157,native_heap=9416240,pss_kib=158704,fd=140,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=8675096,art_committed=13598157,native_heap=9426256,pss_kib=159252,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=8675096,art_committed=13598157,native_heap=9426256,pss_kib=159280,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=9281304,art_committed=13598157,native_heap=9437520,pss_kib=159880,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=9314072,art_committed=13598157,native_heap=9437776,pss_kib=159916,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=9838360,art_committed=13598157,native_heap=9451296,pss_kib=160440,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=9887512,art_committed=13598157,native_heap=9448656,pss_kib=160484,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=10116888,art_committed=13598157,native_heap=9453696,pss_kib=160644,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=10460952,art_committed=13598157,native_heap=9459952,pss_kib=161064,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=10493720,art_committed=13598157,native_heap=9461872,pss_kib=161100,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=11050776,art_committed=13598157,native_heap=9473104,pss_kib=161652,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=11083544,art_committed=13598157,native_heap=9475648,pss_kib=161689,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=11525912,art_committed=13598157,native_heap=9483728,pss_kib=162113,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=11820824,art_committed=13598157,native_heap=9488944,pss_kib=162121,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12246808,art_committed=13598157,native_heap=9641056,pss_kib=162853,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12263192,art_committed=13598157,native_heap=11890880,pss_kib=162665,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12312344,art_committed=13598157,native_heap=12271216,pss_kib=162701,fd=143,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12328728,art_committed=13598157,native_heap=12083408,pss_kib=162713,fd=143,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12345112,art_committed=13598157,native_heap=9636960,pss_kib=162705,fd=144,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12771096,art_committed=13598157,native_heap=9706992,pss_kib=163399,fd=141,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12820248,art_committed=13598157,native_heap=9918992,pss_kib=163399,fd=141,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12820248,art_committed=13598157,native_heap=12339552,pss_kib=163559,fd=141,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12836632,art_committed=13598157,native_heap=12341024,pss_kib=163591,fd=142,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12853016,art_committed=13598157,native_heap=9703904,pss_kib=163587,fd=143,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=12951320,art_committed=13598157,native_heap=12119536,pss_kib=163703,fd=143,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=13213464,art_committed=13598157,native_heap=12322576,pss_kib=163839,fd=143,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=13426456,art_committed=13598157,native_heap=12771904,pss_kib=164391,fd=143,gc=19
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=7933192,art_committed=13598157,native_heap=12624832,pss_kib=159167,fd=143,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,editor_save,art_used=8113416,art_committed=13598157,native_heap=12627824,pss_kib=159347,fd=143,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,editor_save,tap_to_ondraw_ns=7986122706,poll_delivery_ns=7886821039,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,editor_save,statements=676,closed=676,rows=22470,cursor_checks=653,cursor_failures=0,preflight_closed=23,room_closed=23,driver_closed=23,close_failures=0,db_phase_sum_ns=119632830525
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8363144,art_committed=13598157,native_heap=9457968,pss_kib=158447,fd=142,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8576136,art_committed=13598157,native_heap=9461280,pss_kib=158571,fd=142,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8641672,art_committed=13598157,native_heap=9463328,pss_kib=158707,fd=142,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=8985736,art_committed=13598157,native_heap=9487600,pss_kib=159059,fd=142,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9034888,art_committed=13598157,native_heap=9708912,pss_kib=159099,fd=142,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9051272,art_committed=13598157,native_heap=12129136,pss_kib=159875,fd=142,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9051272,art_committed=13598157,native_heap=12130736,pss_kib=159887,fd=143,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9100424,art_committed=13598157,native_heap=9493584,pss_kib=159959,fd=144,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9231496,art_committed=13598157,native_heap=12056768,pss_kib=160147,fd=143,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9510024,art_committed=13598157,native_heap=12558640,pss_kib=160655,fd=143,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9706632,art_committed=13598157,native_heap=12561440,pss_kib=160827,fd=143,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=9854088,art_committed=13598157,native_heap=12562688,pss_kib=160991,fd=143,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,hub,art_used=10034312,art_committed=13598157,native_heap=12565664,pss_kib=161159,fd=143,gc=20
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,hub,tap_to_ondraw_ns=5020849426,poll_delivery_ns=5087564217,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=713,closed=713,rows=23992,cursor_checks=689,cursor_failures=0,preflight_closed=24,room_closed=24,driver_closed=24,close_failures=0,db_phase_sum_ns=125202726983
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_HELD,p86-stress100,art_used=12579512,art_committed=13598157,native_heap=8723616,pss_kib=162612,fd=142,gc=20,statements=738,closed=738,rows=25502,cursor_checks=713,cursor_failures=0,preflight_closed=25,room_closed=25,driver_closed=25,close_failures=0,db_phase_sum_ns=130761923700
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,held_old_plus_current,objects=3811,strings=9003,utf16=399510,collections=10,entries=2801,partial_engineering_bytes=2748749,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_OVERLAP,held_workspace=1,current_workspace=1,common_admission=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=13186416,art_committed=13675135,native_heap=7859648,pss_kib=162868,fd=141,gc=21
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=13317488,art_committed=13675135,native_heap=7862720,pss_kib=163016,fd=141,gc=21
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=13333872,art_committed=13675135,native_heap=7862720,pss_kib=163024,fd=141,gc=21
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=7996104,art_committed=13675135,native_heap=7908864,pss_kib=158224,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8012488,art_committed=13675135,native_heap=8135248,pss_kib=158236,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8028872,art_committed=13675135,native_heap=10521552,pss_kib=159084,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8028872,art_committed=13675135,native_heap=10522960,pss_kib=159096,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8045288,art_committed=13675135,native_heap=7885664,pss_kib=159180,fd=143,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8192744,art_committed=13675135,native_heap=7886912,pss_kib=159228,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8225512,art_committed=13675135,native_heap=8096688,pss_kib=159252,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8241896,art_committed=13675135,native_heap=10500720,pss_kib=159184,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8258280,art_committed=13675135,native_heap=10500432,pss_kib=159200,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8307432,art_committed=13675135,native_heap=7863456,pss_kib=159268,fd=143,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8553288,art_committed=13675135,native_heap=7908656,pss_kib=159484,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8553288,art_committed=13675135,native_heap=8119744,pss_kib=159508,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8586056,art_committed=13675135,native_heap=10525056,pss_kib=159532,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8586056,art_committed=13675135,native_heap=10524768,pss_kib=159544,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,unlock,art_used=8635208,art_committed=13675135,native_heap=7889488,pss_kib=159624,fd=144,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,unlock,tap_to_ondraw_ns=8054326403,poll_delivery_ns=8062134476,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,unlock,statements=815,closed=815,rows=28544,cursor_checks=787,cursor_failures=0,preflight_closed=28,room_closed=28,driver_closed=28,close_failures=0,db_phase_sum_ns=145103847911
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=8849264,art_committed=13675135,native_heap=7837392,pss_kib=159820,fd=141,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=9095024,art_committed=13675135,native_heap=7843248,pss_kib=159964,fd=141,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=9111408,art_committed=13675135,native_heap=7843248,pss_kib=160076,fd=141,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=9389936,art_committed=13675135,native_heap=7959360,pss_kib=160384,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=9406320,art_committed=13675135,native_heap=8168256,pss_kib=160416,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=9455472,art_committed=13675135,native_heap=10572416,pss_kib=160516,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=9455472,art_committed=13675135,native_heap=10573472,pss_kib=160528,fd=142,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=9521008,art_committed=13675135,native_heap=7938128,pss_kib=160612,fd=144,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=9652080,art_committed=13675135,native_heap=10499632,pss_kib=160812,fd=143,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=9914224,art_committed=13675135,native_heap=11003104,pss_kib=161320,fd=143,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=10093432,art_committed=13675135,native_heap=11004304,pss_kib=161488,fd=143,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=10257272,art_committed=13675135,native_heap=11007024,pss_kib=161656,fd=143,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,open_active,art_used=10453880,art_committed=13675135,native_heap=11009952,pss_kib=161832,fd=143,gc=22
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,open_active,tap_to_ondraw_ns=5019560779,poll_delivery_ns=5054613227,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,open_active,statements=852,closed=852,rows=30066,cursor_checks=823,cursor_failures=0,preflight_closed=29,room_closed=29,driver_closed=29,close_failures=0,db_phase_sum_ns=150656844680
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,reauth_final,persons=200,roles=100,tasks=1000,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,reauth_final,person_max=73,role_max=63,task_max=118
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,reauth_final,objects=1909,strings=4503,utf16=199760,collections=6,entries=1500,partial_engineering_bytes=1375873,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=10361128,art_committed=13873646,native_heap=7745776,pss_kib=160625,fd=141,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=10574120,art_committed=13873646,native_heap=7749712,pss_kib=160737,fd=141,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=10950952,art_committed=13873646,native_heap=7757024,pss_kib=161205,fd=142,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=10983720,art_committed=13873646,native_heap=7759664,pss_kib=161225,fd=142,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=11639080,art_committed=13873646,native_heap=7773456,pss_kib=161898,fd=139,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=11688232,art_committed=13873646,native_heap=7774384,pss_kib=161942,fd=142,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=12245288,art_committed=13873646,native_heap=7784976,pss_kib=162506,fd=142,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=12310824,art_committed=13873646,native_heap=7786096,pss_kib=162554,fd=142,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=12605736,art_committed=13873646,native_heap=7790896,pss_kib=162706,fd=142,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=12867880,art_committed=13873646,native_heap=7797440,pss_kib=163150,fd=142,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=12900648,art_committed=13873646,native_heap=7797696,pss_kib=163186,fd=142,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=13474088,art_committed=13873646,native_heap=7808784,pss_kib=163722,fd=142,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=13506856,art_committed=13873646,native_heap=7808784,pss_kib=163758,fd=142,gc=23
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=7652976,art_committed=13873646,native_heap=7692832,pss_kib=158162,fd=139,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=7669360,art_committed=13873646,native_heap=7717584,pss_kib=158202,fd=142,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=7898736,art_committed=13873646,native_heap=7722608,pss_kib=158350,fd=142,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=8078960,art_committed=13873646,native_heap=7725552,pss_kib=158602,fd=142,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=8652400,art_committed=13873646,native_heap=7860848,pss_kib=159186,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=8685168,art_committed=13873646,native_heap=8070768,pss_kib=159202,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=8685168,art_committed=13873646,native_heap=10476080,pss_kib=160114,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=8701552,art_committed=13873646,native_heap=10475792,pss_kib=160126,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=8750704,art_committed=13873646,native_heap=7840288,pss_kib=160166,fd=144,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=8980080,art_committed=13873646,native_heap=7751472,pss_kib=160382,fd=139,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=9029232,art_committed=13873646,native_heap=7966512,pss_kib=160362,fd=142,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=9045616,art_committed=13873646,native_heap=10371632,pss_kib=160390,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=9062000,art_committed=13873646,native_heap=10371344,pss_kib=160406,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=9094768,art_committed=13873646,native_heap=7735696,pss_kib=160490,fd=144,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=9143920,art_committed=13873646,native_heap=10149968,pss_kib=160610,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=9438832,art_committed=13873646,native_heap=10354480,pss_kib=160730,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=9668208,art_committed=13873646,native_heap=10802016,pss_kib=161306,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=9832048,art_committed=13873646,native_heap=10804688,pss_kib=161474,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=9995888,art_committed=13873646,native_heap=10805936,pss_kib=161642,fd=143,gc=24
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-stress100,large_active_to_completed,art_used=20782240,art_committed=20782240,native_heap=7684000,pss_kib=168788,fd=143,gc=26
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-stress100,large_active_to_completed,tap_to_ondraw_ns=8509759997,poll_delivery_ns=7706143851,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,large_active_to_completed,statements=898,closed=898,rows=31585,cursor_checks=867,cursor_failures=0,preflight_closed=31,room_closed=31,driver_closed=31,close_failures=0,db_phase_sum_ns=160105591862
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,large_completed,persons=200,roles=100,tasks=1000,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,large_completed,person_max=73,role_max=63,task_max=118
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,large_completed,objects=1904,strings=4503,utf16=199760,collections=6,entries=1500,partial_engineering_bytes=1375233,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_FINAL,p86-stress100,art_used=59490168,art_committed=61295296,native_heap=45660768,pss_kib=246726,fd=144,gc=29,statements=898,closed=898,rows=31585,cursor_checks=867,cursor_failures=0,preflight_closed=32,room_closed=31,driver_closed=31,close_failures=0,db_phase_sum_ns=161629070665,late_publication=false,core_port_unbound=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CASE,p86-stress100,FUNCTIONAL_PASS,budget=UNPROVEN,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P86 PASS p86-stress100; memory admission UNPROVEN
+INSTRUMENTATION_CODE: -1

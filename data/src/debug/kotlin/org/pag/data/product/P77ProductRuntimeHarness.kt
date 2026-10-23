@@ -52,7 +52,7 @@ class P77ProductRuntimeHarness private constructor(
     }
 
     companion object {
-        fun create(activity: Activity, worker: Executor, main: Executor, foreground: () -> Boolean): P77ProductRuntimeHarness {
+        fun create(activity: Activity, worker: Executor, main: Executor, foreground: () -> Boolean, reuseEnabled:Boolean=true): P77ProductRuntimeHarness {
             check(activity.packageName == "org.pag.prototype.a.p77runtime")
             check(activity.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0)
             val parent=activity.noBackupFilesDir.canonicalFile
@@ -63,9 +63,9 @@ class P77ProductRuntimeHarness private constructor(
             }
             val base = File(parent, "p11-fixture-${UUID.randomUUID()}")
             val profile=activity.intent.getStringExtra("p83Fixture") ?: "default"
-            check(profile in setOf("default","small","medium","large","roles32","roles100","stress"))
-            val people=when(profile){"small"->20;"medium"->100;else->200}
-            val tasks=when(profile){"small"->40;"medium"->250;else->1000}
+            check(profile in setOf("default","small","medium","large","roles32","roles100","stress","p86-small","p86-stress32","p86-stress100"))
+            val people=when(profile){"small","p86-small"->20;"medium"->100;else->200}
+            val tasks=when(profile){"small","p86-small"->40;"medium"->250;else->1000}
             val fixture = P11SyntheticFixture(activity, worker, main,
                 taskCountPerAction = tasks, personCountPerAction = people, baseDirectory = base)
             if(profile!="default")fixture.seedMemoryAcceptance(profile)
@@ -76,7 +76,7 @@ class P77ProductRuntimeHarness private constructor(
                 val observations=Observations(faults)
                 val mutations=UncachedWorkspaceMutations()
                 val runtime = ProductRuntime(activity, faults.worker.wrap(worker), faults.main.wrap(main), mutations,
-                    fixture.runtimeAuthority(reuseEnabled = true,observations,faults::wrap).copy(coreReadHooks=if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
+                    fixture.runtimeAuthority(reuseEnabled = reuseEnabled,observations,faults::wrap).copy(coreReadHooks=if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
                 P77ProductRuntimeHarness(runtime, fixture,observations,mutations,faults,cleanupFaults,memory,profile)
             } catch (error: Throwable) {
                 fixture.close()

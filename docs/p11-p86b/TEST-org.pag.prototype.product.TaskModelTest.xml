@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.TaskModelTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-22T19:21:33.526Z" hostname="iuzjhtgvfc" time="0.204">
+  <properties/>
+  <testcase name="activeDeleteAndCompletedWritesAreDenied" classname="org.pag.prototype.product.TaskModelTest" time="0.136"/>
+  <testcase name="directHistoryPageReplacesPayloadAndUsesCorrectOrdinalWithoutRetainingPrefixes" classname="org.pag.prototype.product.TaskModelTest" time="0.051"/>
+  <testcase name="historyIsExplicitBoundedReplacementAndNeverNeededForEditor" classname="org.pag.prototype.product.TaskModelTest" time="0.004"/>
+  <testcase name="historyRejectsLateDuplicateRevokeActionAndEditorCallbacks" classname="org.pag.prototype.product.TaskModelTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

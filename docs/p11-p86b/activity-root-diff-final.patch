@@ -1,0 +1,58 @@
+--- MainActivity at basis
++++ P77 mirrored root (name normalized)
+@@ -29,7 +29,10 @@
+ import java.util.concurrent.Executors
+ import java.util.ServiceLoader
+ 
+-/** Product composition root. PrototypeActivity remains unregistered historical evidence. */
++/** P77-only full-workspace feasibility root, mechanically mirrored from MainActivity at §86a.
++ * Deliberate differences: isolated-package guard and no bindActiveCore. Lifecycle, session,
++ * repository, document and Compose wiring are otherwise identical. Not a product fallback.
++ */
+ class MainActivity : ComponentActivity() {
+     private lateinit var runtime: ProductRuntime
+     private var runtimeClose: (() -> Unit)? = null
+@@ -38,6 +41,13 @@
+     private var testAuthorityBanner = false
+     private var contentFrames: org.pag.prototype.product.CompactContentFrameObserver? = null
+     private lateinit var model: ProductViewModel
++    // Diagnostic IDs only; no payload retained and never used for authority or retirement.
++    var p86Committed = ""; private set
++    fun p86StateToken() = listOf(System.identityHashCode(model.workspace),
++        System.identityHashCode(model.tasks.history), model.tasks.form, model.tasks.selected?.id,
++        model.tasks.historyBusy, model.snapshot, model.activeArea, model.preparationArea,
++        model.personsLoading, model.workspaceRefreshing, model.selected?.status,
++        model.operations.moreFunctionsExpanded).joinToString(":")
+     private val worker by lazy { Executors.newSingleThreadExecutor() }
+     private val handler by lazy { Handler(Looper.getMainLooper()) }
+     private var documentSession: org.pag.domain.Subscription? = null
+@@ -80,6 +90,7 @@
+         override fun onReceive(context: Context, intent: Intent) { pendingDocument.clear(); runtime.session.foreground(false) }
+     }
+     override fun onCreate(savedInstanceState: Bundle?) {
++        check(BuildConfig.PAG_P77_RUNTIME_E2E && packageName == "org.pag.prototype.a.p77runtime")
+         super.onCreate(null)
+         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+         if (Build.VERSION.SDK_INT >= 33) setRecentsScreenshotEnabled(false)
+@@ -115,7 +126,7 @@
+         if (state == ProductStorageState.PARTIAL_OR_INVALID) runtime.session.storageFailure()
+         model = ProductViewModel(runtime.session, runtime.actions, state, runtime.persons, runtime.leadership, runtime.operations, runtime.tasks, runtime.protocol, runtime.material, runtime.expenses, runtime.memoryReports, runtime::start)
+         model.bindWorkspace(runtime.workspace)
+-        model.bindActiveCore(runtime.activeCore) { work -> mainExecutor.execute(work) }
++        // §86b: intentionally leave the existing optional compact port UNBOUND.
+         model.bindDocuments(runtime.documents, object : DocumentPicker {
+             override fun launch(actionId: String, generation: Long) {
+                 val current=runtime.session.snapshot()
+@@ -169,7 +180,11 @@
+         val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
+         if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenOff, filter, Context.RECEIVER_NOT_EXPORTED)
+         else registerReceiver(screenOff, filter)
+-        setContent { ProductScreen(model, testAuthorityBanner = testAuthorityBanner, contentFrames = contentFrames) }
++        setContent {
++            val token = p86StateToken()
++            ProductScreen(model, testAuthorityBanner = testAuthorityBanner, contentFrames = contentFrames)
++            androidx.compose.runtime.SideEffect { p86Committed = token }
++        }
+     }
+     override fun onResume() {
+         super.onResume(); resumed = true

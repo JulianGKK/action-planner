@@ -1,0 +1,10 @@
+{
+  "app/src/androidTest/AndroidManifest.xml": "012baa3830b40fc978b163c7f0817e0c8f43789d630ad159a75e4a44576a3236",
+  "app/src/p77runtime/AndroidManifest.xml": "538e3c5458004e5e390211c299069849275256f4538b4debdcd309528ea25dc2",
+  "app/src/p77runtime/kotlin/org/pag/prototype/P77RuntimeLaunchProvider.kt": "0e0385e425e51c8d84df4a42372f3371eda551ca54609f3e1a6144869c557bf9",
+  "app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt": "2face8df5d96c3a7837b2eb6fba81b81d01f67873bcff5e6c0ed0f6642772644",
+  "app/src/p77runtime/kotlin/org/pag/prototype/P86FullWorkspaceActivity.kt": "10a0bef8fb3d5d0b6780acfb5e0e6e1ab4ad23fd87310e3f45e3d7e431859559",
+  "data/src/debug/kotlin/org/pag/data/product/P11SyntheticFixture.kt": "565c756514a3bc8ee7a2c8b1e0bd0bcb63a15bff3d28aa97830fc1e2d9de41f6",
+  "data/src/debug/kotlin/org/pag/data/product/P77ProductRuntimeHarness.kt": "b1c3992473c8c72502be6baa76ea33f107822a7070c9f73d360d536f259593e2",
+  "data/src/debug/kotlin/org/pag/data/product/P86WorkspaceDiagnostics.kt": "6df4a05a49677691e2c6602003b04b51d5b4426c1360d6581f29666ea494d46c"
+}

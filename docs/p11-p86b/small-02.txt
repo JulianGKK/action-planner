@@ -1,0 +1,1235 @@
+INSTRUMENTATION_STATUS: stream=P86_BASELINE,p86-small,art_used=10684304,art_committed=67108864,native_heap=10218112,pss_kib=121533,fd=117,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=10700736,art_committed=67108864,native_heap=10227296,pss_kib=121619,fd=117,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=10913728,art_committed=67108864,native_heap=10300464,pss_kib=132080,fd=121,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=10962880,art_committed=67108864,native_heap=10293776,pss_kib=132366,fd=121,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11470912,art_committed=67108864,native_heap=10556000,pss_kib=143608,fd=131,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11536448,art_committed=67108864,native_heap=10534528,pss_kib=145257,fd=135,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11652528,art_committed=67108864,native_heap=10528720,pss_kib=145579,fd=134,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11668912,art_committed=67108864,native_heap=10534032,pss_kib=145602,fd=134,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11701680,art_committed=67108864,native_heap=10519408,pss_kib=145686,fd=135,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11997088,art_committed=67108864,native_heap=11019488,pss_kib=149251,fd=141,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12046240,art_committed=67108864,native_heap=11006496,pss_kib=149455,fd=142,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,unlock,tap_to_ondraw_ns=3694611613,poll_delivery_ns=3708739478,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,unlock,statements=15,closed=15,rows=10,cursor_checks=14,cursor_failures=0,preflight_closed=1,room_closed=1,driver_closed=1,close_failures=0,db_phase_sum_ns=1780104165
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_preparation,art_used=12269792,art_committed=67108864,native_heap=11022752,pss_kib=149785,fd=140,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_preparation,art_used=12433632,art_committed=67108864,native_heap=11026480,pss_kib=149885,fd=140,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_preparation,art_used=12564704,art_committed=67108864,native_heap=11029616,pss_kib=150113,fd=140,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_preparation,art_used=12876000,art_committed=67108864,native_heap=11142880,pss_kib=150501,fd=141,gc=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_preparation,art_used=5627480,art_committed=11886168,native_heap=11032160,pss_kib=143868,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_preparation,art_used=5791320,art_committed=11886168,native_heap=11376608,pss_kib=144036,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_preparation,art_used=5889624,art_committed=11886168,native_heap=10971632,pss_kib=145908,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_preparation,art_used=5938776,art_committed=11886168,native_heap=10954576,pss_kib=146031,fd=140,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,open_preparation,tap_to_ondraw_ns=2633230051,poll_delivery_ns=2567450312,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,open_preparation,statements=46,closed=46,rows=86,cursor_checks=44,cursor_failures=0,preflight_closed=2,room_closed=2,driver_closed=2,close_failures=0,db_phase_sum_ns=3694335260
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_PERSONS,art_used=6675384,art_committed=11886168,native_heap=11199056,pss_kib=146262,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_PERSONS,art_used=6953912,art_committed=11886168,native_heap=11210592,pss_kib=146552,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_PERSONS,art_used=7052216,art_committed=11886168,native_heap=11212032,pss_kib=146778,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_PERSONS,art_used=7691192,art_committed=11886168,native_heap=11376480,pss_kib=147701,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_PERSONS,art_used=7740344,art_committed=11886168,native_heap=11360976,pss_kib=147204,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_PERSONS,art_used=7887800,art_committed=11886168,native_heap=11272608,pss_kib=147364,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,prep_PERSONS,tap_to_ondraw_ns=1286760208,poll_delivery_ns=1360463020,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,prep_PERSONS,statements=69,closed=69,rows=115,cursor_checks=66,cursor_failures=0,preflight_closed=3,room_closed=3,driver_closed=3,close_failures=0,db_phase_sum_ns=5507707344
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_ROLES,art_used=8651224,art_committed=11886168,native_heap=11538768,pss_kib=148510,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_ROLES,art_used=8896984,art_committed=11886168,native_heap=11548064,pss_kib=148816,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_ROLES,art_used=9060824,art_committed=11886168,native_heap=11551360,pss_kib=149086,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_ROLES,art_used=9748952,art_committed=11886168,native_heap=11582272,pss_kib=152276,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_ROLES,art_used=9814488,art_committed=11886168,native_heap=11573328,pss_kib=152772,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_ROLES,art_used=9896408,art_committed=11886168,native_heap=11484800,pss_kib=152889,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,prep_ROLES,tap_to_ondraw_ns=1263305520,poll_delivery_ns=1274887916,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,prep_ROLES,statements=92,closed=92,rows=144,cursor_checks=88,cursor_failures=0,preflight_closed=4,room_closed=4,driver_closed=4,close_failures=0,db_phase_sum_ns=7322253852
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_TASKS,art_used=10004344,art_committed=11886168,native_heap=11534352,pss_kib=153015,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_TASKS,art_used=10250104,art_committed=11886168,native_heap=11540976,pss_kib=153157,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_TASKS,art_used=10397560,art_committed=11886168,native_heap=11543552,pss_kib=153411,fd=137,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_TASKS,art_used=11020152,art_committed=11886168,native_heap=11701712,pss_kib=154191,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_TASKS,art_used=11085688,art_committed=11886168,native_heap=11689936,pss_kib=151963,fd=139,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_TASKS,art_used=11151224,art_committed=11886168,native_heap=11987024,pss_kib=152028,fd=138,gc=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,prep_TASKS,tap_to_ondraw_ns=1373568073,poll_delivery_ns=1456376041,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,prep_TASKS,statements=117,closed=117,rows=214,cursor_checks=112,cursor_failures=0,preflight_closed=5,room_closed=5,driver_closed=5,close_failures=0,db_phase_sum_ns=9263793486
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_OVERVIEW,art_used=7563840,art_committed=11886168,native_heap=11850272,pss_kib=149148,fd=134,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_OVERVIEW,art_used=7809600,art_committed=11886168,native_heap=11854272,pss_kib=149286,fd=137,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_OVERVIEW,art_used=7907904,art_committed=11886168,native_heap=11858272,pss_kib=149570,fd=137,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_OVERVIEW,art_used=8497728,art_committed=11886168,native_heap=12044400,pss_kib=150229,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_OVERVIEW,art_used=8579648,art_committed=11886168,native_heap=12037600,pss_kib=150553,fd=139,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_OVERVIEW,art_used=8661568,art_committed=11886168,native_heap=12379536,pss_kib=150637,fd=138,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_OVERVIEW,art_used=8759872,art_committed=11886168,native_heap=12042864,pss_kib=150718,fd=139,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,prep_OVERVIEW,art_used=8809024,art_committed=11886168,native_heap=12024208,pss_kib=150794,fd=140,gc=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,prep_OVERVIEW,tap_to_ondraw_ns=2596711926,poll_delivery_ns=2619317603,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,prep_OVERVIEW,statements=148,closed=148,rows=290,cursor_checks=142,cursor_failures=0,preflight_closed=6,room_closed=6,driver_closed=6,close_failures=0,db_phase_sum_ns=11179760933
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,preparation,persons=20,roles=0,tasks=40,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,preparation,person_max=12,role_max=null,task_max=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,preparation,objects=108,strings=183,utf16=3760,collections=6,entries=80,partial_engineering_bytes=43265,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=8682560,art_committed=12106768,native_heap=11364384,pss_kib=150815,fd=137,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=8862784,art_committed=12106768,native_heap=11384848,pss_kib=150851,fd=137,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=9223232,art_committed=12106768,native_heap=11075712,pss_kib=153587,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=9239616,art_committed=12106768,native_heap=11075712,pss_kib=153615,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=10140736,art_committed=12106768,native_heap=11094864,pss_kib=154497,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=10173504,art_committed=12106768,native_heap=11095120,pss_kib=154533,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=10878016,art_committed=12106768,native_heap=11109008,pss_kib=155249,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=10910784,art_committed=12106768,native_heap=11109312,pss_kib=155289,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=11172928,art_committed=12106768,native_heap=11116080,pss_kib=155317,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=11795520,art_committed=12106768,native_heap=11126560,pss_kib=156178,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=11828288,art_committed=12106768,native_heap=11129216,pss_kib=156222,fd=138,gc=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=6573536,art_committed=12106768,native_heap=11036528,pss_kib=151260,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=6606304,art_committed=12106768,native_heap=11039280,pss_kib=151322,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=7245280,art_committed=12106768,native_heap=11052384,pss_kib=151948,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=7261664,art_committed=12106768,native_heap=11055488,pss_kib=152022,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=7327200,art_committed=12106768,native_heap=11058304,pss_kib=152062,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=7687648,art_committed=12106768,native_heap=11010096,pss_kib=149331,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=8146400,art_committed=12106768,native_heap=11169040,pss_kib=150435,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=8195552,art_committed=12106768,native_heap=11150176,pss_kib=150483,fd=139,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=8261088,art_committed=12106768,native_heap=11440416,pss_kib=150483,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=8637920,art_committed=12106768,native_heap=11114400,pss_kib=150565,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,preparation_to_active,art_used=8703456,art_committed=12106768,native_heap=11097808,pss_kib=150609,fd=139,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,preparation_to_active,tap_to_ondraw_ns=2710359426,poll_delivery_ns=2761945416,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,preparation_to_active,statements=271,closed=271,rows=421,cursor_checks=263,cursor_failures=0,preflight_closed=8,room_closed=8,driver_closed=8,close_failures=0,db_phase_sum_ns=15023545460
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=9461336,art_committed=12106768,native_heap=11318752,pss_kib=151505,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=9870936,art_committed=12106768,native_heap=11309296,pss_kib=151905,fd=139,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=9887320,art_committed=12106768,native_heap=11309296,pss_kib=151987,fd=139,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=10346072,art_committed=12106768,native_heap=11319296,pss_kib=152433,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=10395224,art_committed=12106768,native_heap=11299952,pss_kib=152541,fd=139,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=10493528,art_committed=12106768,native_heap=11648256,pss_kib=152637,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,nav_PERSONS,tap_to_ondraw_ns=1377878958,poll_delivery_ns=1359922604,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_PERSONS,statements=311,closed=311,rows=521,cursor_checks=301,cursor_failures=0,preflight_closed=10,room_closed=10,driver_closed=10,close_failures=0,db_phase_sum_ns=18723402955
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=11044088,art_committed=12106768,native_heap=11367264,pss_kib=153251,fd=137,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=11289848,art_committed=12106768,native_heap=11375248,pss_kib=153399,fd=137,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=11306232,art_committed=12106768,native_heap=11375248,pss_kib=153527,fd=137,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=11666680,art_committed=12106768,native_heap=11501024,pss_kib=153972,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=11732216,art_committed=12106768,native_heap=11495152,pss_kib=154084,fd=136,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=11814136,art_committed=12106768,native_heap=11841104,pss_kib=154167,fd=138,gc=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,hub,tap_to_ondraw_ns=1392623645,poll_delivery_ns=1445618698,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=348,closed=348,rows=623,cursor_checks=337,cursor_failures=0,preflight_closed=11,room_closed=11,driver_closed=11,close_failures=0,db_phase_sum_ns=20676603843
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=6343952,art_committed=12438752,native_heap=11085072,pss_kib=148742,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=6606096,art_committed=12438752,native_heap=11090832,pss_kib=148799,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=6753552,art_committed=12438752,native_heap=11094400,pss_kib=149076,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=7245072,art_committed=12438752,native_heap=11215072,pss_kib=149642,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=7310608,art_committed=12438752,native_heap=11208448,pss_kib=149758,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=7425296,art_committed=12438752,native_heap=11117408,pss_kib=149798,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,nav_FUNCTIONS,tap_to_ondraw_ns=1289582187,poll_delivery_ns=1297694843,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_FUNCTIONS,statements=371,closed=371,rows=672,cursor_checks=359,cursor_failures=0,preflight_closed=12,room_closed=12,driver_closed=12,close_failures=0,db_phase_sum_ns=22511964205
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7534512,art_committed=12438752,native_heap=11171472,pss_kib=149947,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7763888,art_committed=12438752,native_heap=11175488,pss_kib=150055,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7796656,art_committed=12438752,native_heap=11177504,pss_kib=150195,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=8124336,art_committed=12438752,native_heap=11294736,pss_kib=150489,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=8206256,art_committed=12438752,native_heap=11287984,pss_kib=150538,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=8288176,art_committed=12438752,native_heap=11634288,pss_kib=150598,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,hub,tap_to_ondraw_ns=1393753697,poll_delivery_ns=1436965729,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=408,closed=408,rows=774,cursor_checks=395,cursor_failures=0,preflight_closed=13,room_closed=13,driver_closed=13,close_failures=0,db_phase_sum_ns=24456320193
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=8895424,art_committed=12438752,native_heap=11345968,pss_kib=151321,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=9157568,art_committed=12438752,native_heap=11351072,pss_kib=151501,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=9288640,art_committed=12438752,native_heap=11355056,pss_kib=151697,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=9747392,art_committed=12438752,native_heap=11453200,pss_kib=152192,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=9812928,art_committed=12438752,native_heap=11437408,pss_kib=152280,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=9894848,art_committed=12438752,native_heap=11783792,pss_kib=152356,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,nav_TASKS,tap_to_ondraw_ns=1387361510,poll_delivery_ns=1437140572,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_TASKS,statements=433,closed=433,rows=864,cursor_checks=419,cursor_failures=0,preflight_closed=14,room_closed=14,driver_closed=14,close_failures=0,db_phase_sum_ns=26381145921
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10445024,art_committed=12438752,native_heap=11526640,pss_kib=152912,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10658016,art_committed=12438752,native_heap=11532672,pss_kib=153032,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10789088,art_committed=12438752,native_heap=11535456,pss_kib=153277,fd=137,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=11116768,art_committed=12438752,native_heap=11661920,pss_kib=153674,fd=138,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=11198688,art_committed=12438752,native_heap=11652864,pss_kib=153826,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=11280608,art_committed=12438752,native_heap=11960160,pss_kib=153918,fd=139,gc=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,hub,tap_to_ondraw_ns=1400207812,poll_delivery_ns=1444189010,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=470,closed=470,rows=966,cursor_checks=455,cursor_failures=0,preflight_closed=15,room_closed=15,driver_closed=15,close_failures=0,db_phase_sum_ns=28320542016
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=11651448,art_committed=12438752,native_heap=10911120,pss_kib=154875,fd=137,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=11979128,art_committed=12438752,native_heap=10919568,pss_kib=154983,fd=137,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=12274040,art_committed=12438752,native_heap=10925072,pss_kib=155507,fd=138,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=12306808,art_committed=12438752,native_heap=10927424,pss_kib=155547,fd=138,gc=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=6713880,art_committed=12251672,native_heap=10415280,pss_kib=149955,fd=135,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=6763032,art_committed=12251672,native_heap=10417264,pss_kib=149791,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=7352856,art_committed=12251672,native_heap=10427760,pss_kib=150363,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=7385624,art_committed=12251672,native_heap=10430336,pss_kib=150415,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=7729688,art_committed=12251672,native_heap=10436624,pss_kib=150427,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=8073752,art_committed=12251672,native_heap=10445792,pss_kib=151095,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=8090136,art_committed=12251672,native_heap=10445472,pss_kib=151127,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=8647192,art_committed=12251672,native_heap=10453824,pss_kib=149435,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=8663576,art_committed=12251672,native_heap=10453952,pss_kib=149459,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=9351704,art_committed=12251672,native_heap=10467792,pss_kib=150111,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=9384472,art_committed=12251672,native_heap=10474080,pss_kib=150160,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=9777688,art_committed=12251672,native_heap=10482592,pss_kib=150472,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=9794072,art_committed=12251672,native_heap=10482592,pss_kib=150560,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=10318360,art_committed=12251672,native_heap=10633104,pss_kib=151168,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=10367512,art_committed=12251672,native_heap=10617328,pss_kib=151404,fd=137,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=10580504,art_committed=12251672,native_heap=10534368,pss_kib=151556,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=10596888,art_committed=12251672,native_heap=10543472,pss_kib=151592,fd=138,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,active_to_completed,art_used=10646040,art_committed=12251672,native_heap=10524832,pss_kib=151644,fd=139,gc=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,active_to_completed,tap_to_ondraw_ns=2649670468,poll_delivery_ns=2566054843,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,active_to_completed,statements=516,closed=516,rows=1065,cursor_checks=499,cursor_failures=0,preflight_closed=17,room_closed=17,driver_closed=17,close_failures=0,db_phase_sum_ns=32025921596
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,completed,persons=20,roles=0,tasks=40,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,completed,person_max=12,role_max=null,task_max=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,completed,objects=124,strings=223,utf16=4550,collections=6,entries=80,partial_engineering_bytes=51313,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_LIFECYCLE,real_status_writes=true,PREPARATION_ACTIVE_COMPLETED=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11517120,art_committed=15378014,native_heap=11081568,pss_kib=153581,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11648192,art_committed=15378014,native_heap=11084256,pss_kib=153745,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11664576,art_committed=15378014,native_heap=11076432,pss_kib=153725,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12025264,art_committed=15378014,native_heap=11218608,pss_kib=154125,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12074416,art_committed=15378014,native_heap=11199616,pss_kib=154325,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12221872,art_committed=15378014,native_heap=11193376,pss_kib=154418,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12238488,art_committed=15378014,native_heap=11174448,pss_kib=154498,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12254872,art_committed=15378014,native_heap=11175648,pss_kib=154530,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12484152,art_committed=15378014,native_heap=11226384,pss_kib=154722,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12549688,art_committed=15378014,native_heap=11209280,pss_kib=154802,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,unlock,tap_to_ondraw_ns=3678586144,poll_delivery_ns=3689018436,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,unlock,statements=546,closed=546,rows=1085,cursor_checks=527,cursor_failures=0,preflight_closed=19,room_closed=19,driver_closed=19,close_failures=0,db_phase_sum_ns=35602519930
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=12762072,art_committed=15378014,native_heap=11159024,pss_kib=154976,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=13024216,art_committed=15378014,native_heap=11165472,pss_kib=155112,fd=134,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=13040600,art_committed=15378014,native_heap=11164720,pss_kib=155236,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=13302744,art_committed=15378014,native_heap=11279632,pss_kib=155532,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=13368280,art_committed=15378014,native_heap=11260912,pss_kib=155580,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=13466584,art_committed=15378014,native_heap=11622800,pss_kib=155652,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,open_active,tap_to_ondraw_ns=1427608385,poll_delivery_ns=1469209062,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,open_active,statements=583,closed=583,rows=1193,cursor_checks=563,cursor_failures=0,preflight_closed=20,room_closed=20,driver_closed=20,close_failures=0,db_phase_sum_ns=37560807119
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=14172688,art_committed=15378014,native_heap=11721904,pss_kib=157719,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=14418448,art_committed=15378014,native_heap=11728448,pss_kib=157987,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=14434832,art_committed=15378014,native_heap=11728448,pss_kib=157999,fd=137,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=14860816,art_committed=15378014,native_heap=11830464,pss_kib=158440,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=14877200,art_committed=15378014,native_heap=11795104,pss_kib=158324,fd=139,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=15008272,art_committed=15378014,native_heap=12160992,pss_kib=158420,fd=138,gc=10
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,nav_PERSONS,tap_to_ondraw_ns=1400061875,poll_delivery_ns=1380183541,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_PERSONS,statements=608,closed=608,rows=1289,cursor_checks=587,cursor_failures=0,preflight_closed=21,room_closed=21,driver_closed=21,close_failures=0,db_phase_sum_ns=39492595658
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,persons_0,persons=20,roles=6,tasks=40,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,persons_0,person_max=16,role_max=15,task_max=21
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,persons_0,objects=130,strings=261,utf16=4486,collections=6,entries=86,partial_engineering_bytes=54571,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=9440600,art_committed=15378014,native_heap=11847616,pss_kib=153280,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=9751896,art_committed=15378014,native_heap=11855136,pss_kib=153424,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=9768280,art_committed=15378014,native_heap=11855136,pss_kib=153608,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10161496,art_committed=15378014,native_heap=11976240,pss_kib=154002,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10210648,art_committed=15378014,native_heap=11940304,pss_kib=154116,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10325336,art_committed=15378014,native_heap=12302160,pss_kib=154400,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,hub,tap_to_ondraw_ns=1424778437,poll_delivery_ns=1403265677,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=645,closed=645,rows=1397,cursor_checks=623,cursor_failures=0,preflight_closed=22,room_closed=22,driver_closed=22,close_failures=0,db_phase_sum_ns=41453992481
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=10932688,art_committed=15378014,native_heap=11993216,pss_kib=154860,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=11276752,art_committed=15378014,native_heap=11836768,pss_kib=154876,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=11375056,art_committed=15378014,native_heap=11368560,pss_kib=157516,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=11866576,art_committed=15378014,native_heap=11487472,pss_kib=158032,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=11932112,art_committed=15378014,native_heap=11472192,pss_kib=156068,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=12014032,art_committed=15378014,native_heap=11802816,pss_kib=156124,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,nav_FUNCTIONS,tap_to_ondraw_ns=1317126770,poll_delivery_ns=1331023645,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_FUNCTIONS,statements=668,closed=668,rows=1452,cursor_checks=645,cursor_failures=0,preflight_closed=23,room_closed=23,driver_closed=23,close_failures=0,db_phase_sum_ns=43310764357
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,functions_0,persons=20,roles=6,tasks=null,eager_events=null,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,functions_0,person_max=16,role_max=15,task_max=null
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,functions_0,objects=89,strings=141,utf16=1816,collections=4,entries=46,partial_engineering_bytes=29547,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=12270880,art_committed=15378014,native_heap=11508592,pss_kib=156384,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=12500256,art_committed=15378014,native_heap=11512048,pss_kib=156584,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=12516640,art_committed=15378014,native_heap=11208688,pss_kib=158828,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=12893472,art_committed=15378014,native_heap=11286176,pss_kib=159204,fd=135,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=12959008,art_committed=15378014,native_heap=11259824,pss_kib=157100,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=13040928,art_committed=15378014,native_heap=11620352,pss_kib=157176,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,hub,tap_to_ondraw_ns=1415622968,poll_delivery_ns=1453603854,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=705,closed=705,rows=1560,cursor_checks=681,cursor_failures=0,preflight_closed=24,room_closed=24,driver_closed=24,close_failures=0,db_phase_sum_ns=45265584256
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=13664600,art_committed=15378014,native_heap=11313792,pss_kib=157852,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=14008664,art_committed=15378014,native_heap=11319744,pss_kib=157980,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=14025048,art_committed=15378014,native_heap=11322192,pss_kib=158224,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=14500184,art_committed=15378014,native_heap=11418832,pss_kib=158712,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=14549336,art_committed=15378014,native_heap=11386192,pss_kib=158696,fd=139,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=14631256,art_committed=15378014,native_heap=11699904,pss_kib=158776,fd=138,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,nav_TASKS,tap_to_ondraw_ns=1384009114,poll_delivery_ns=1377344114,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_TASKS,statements=730,closed=730,rows=1656,cursor_checks=705,cursor_failures=0,preflight_closed=25,room_closed=25,driver_closed=25,close_failures=0,db_phase_sum_ns=47208122642
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,tasks_0,persons=20,roles=6,tasks=40,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,tasks_0,person_max=16,role_max=15,task_max=21
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,tasks_0,objects=130,strings=261,utf16=4486,collections=6,entries=86,partial_engineering_bytes=54571,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=15247224,art_committed=15378014,native_heap=11466496,pss_kib=159788,fd=137,gc=11
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=6536672,art_committed=12565984,native_heap=10093504,pss_kib=150816,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=6602208,art_committed=12565984,native_heap=10095392,pss_kib=150536,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=6962656,art_committed=12565984,native_heap=10211744,pss_kib=150924,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7028192,art_committed=12565984,native_heap=10188016,pss_kib=151032,fd=139,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7110112,art_committed=12565984,native_heap=10519968,pss_kib=151112,fd=139,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,hub,tap_to_ondraw_ns=1421670000,poll_delivery_ns=1407576614,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=767,closed=767,rows=1764,cursor_checks=741,cursor_failures=0,preflight_closed=26,room_closed=26,driver_closed=26,close_failures=0,db_phase_sum_ns=49174322536
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=7748944,art_committed=12565984,native_heap=10239840,pss_kib=151596,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=8011088,art_committed=12565984,native_heap=10246752,pss_kib=151768,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=8060240,art_committed=12565984,native_heap=10247024,pss_kib=151904,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=8568144,art_committed=12565984,native_heap=10347056,pss_kib=152444,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=8617296,art_committed=12565984,native_heap=10312544,pss_kib=152524,fd=139,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_PERSONS,art_used=8715600,art_committed=12565984,native_heap=10644688,pss_kib=152612,fd=139,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,nav_PERSONS,tap_to_ondraw_ns=1378839844,poll_delivery_ns=1429805833,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_PERSONS,statements=792,closed=792,rows=1860,cursor_checks=765,cursor_failures=0,preflight_closed=27,room_closed=27,driver_closed=27,close_failures=0,db_phase_sum_ns=51108339461
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,persons_1,persons=20,roles=6,tasks=40,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,persons_1,person_max=16,role_max=15,task_max=21
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,persons_1,objects=130,strings=261,utf16=4486,collections=6,entries=86,partial_engineering_bytes=54571,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=9331624,art_committed=12565984,native_heap=10398816,pss_kib=153216,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=9642920,art_committed=12565984,native_heap=10406112,pss_kib=153340,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=9659304,art_committed=12565984,native_heap=10406112,pss_kib=153528,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10003368,art_committed=12565984,native_heap=10526944,pss_kib=153924,fd=135,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10052520,art_committed=12565984,native_heap=10490864,pss_kib=154032,fd=139,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10150824,art_committed=12565984,native_heap=10852672,pss_kib=154108,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,hub,tap_to_ondraw_ns=1409542031,poll_delivery_ns=1443977396,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=829,closed=829,rows=1968,cursor_checks=801,cursor_failures=0,preflight_closed=28,room_closed=28,driver_closed=28,close_failures=0,db_phase_sum_ns=53073285240
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=10741720,art_committed=12565984,native_heap=10543280,pss_kib=154728,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=11003864,art_committed=12565984,native_heap=10550016,pss_kib=154924,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=11151320,art_committed=12565984,native_heap=10551744,pss_kib=155124,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=11659224,art_committed=12565984,native_heap=10672800,pss_kib=155678,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=11741144,art_committed=12565984,native_heap=10647472,pss_kib=155786,fd=139,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_FUNCTIONS,art_used=11806680,art_committed=12565984,native_heap=10949216,pss_kib=155850,fd=138,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,nav_FUNCTIONS,tap_to_ondraw_ns=1324762604,poll_delivery_ns=1302282708,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_FUNCTIONS,statements=852,closed=852,rows=2023,cursor_checks=823,cursor_failures=0,preflight_closed=29,room_closed=29,driver_closed=29,close_failures=0,db_phase_sum_ns=54943685498
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,functions_1,persons=20,roles=6,tasks=null,eager_events=null,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,functions_1,person_max=16,role_max=15,task_max=null
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,functions_1,objects=89,strings=141,utf16=1816,collections=4,entries=46,partial_engineering_bytes=29547,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=12058288,art_committed=12565984,native_heap=10663360,pss_kib=156110,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=12287664,art_committed=12565984,native_heap=10666304,pss_kib=156254,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=12320432,art_committed=12565984,native_heap=10668160,pss_kib=156366,fd=137,gc=12
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7534144,art_committed=12565984,native_heap=10426608,pss_kib=151862,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7599680,art_committed=12565984,native_heap=10402752,pss_kib=152038,fd=139,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7681600,art_committed=12565984,native_heap=10733264,pss_kib=152102,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,hub,tap_to_ondraw_ns=1402725729,poll_delivery_ns=1386021927,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=889,closed=889,rows=2131,cursor_checks=859,cursor_failures=0,preflight_closed=30,room_closed=30,driver_closed=30,close_failures=0,db_phase_sum_ns=56893511589
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=8325232,art_committed=12565984,native_heap=10456896,pss_kib=152698,fd=137,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=8636528,art_committed=12565984,native_heap=10463008,pss_kib=152838,fd=137,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=8702064,art_committed=12565984,native_heap=10464800,pss_kib=153070,fd=137,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=9144432,art_committed=12565984,native_heap=10561008,pss_kib=153542,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=9209968,art_committed=12565984,native_heap=10528576,pss_kib=153610,fd=139,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=9275504,art_committed=12565984,native_heap=10826768,pss_kib=153658,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,nav_TASKS,tap_to_ondraw_ns=1378529687,poll_delivery_ns=1414304478,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_TASKS,statements=914,closed=914,rows=2227,cursor_checks=883,cursor_failures=0,preflight_closed=31,room_closed=31,driver_closed=31,close_failures=0,db_phase_sum_ns=58827895600
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,tasks_1,persons=20,roles=6,tasks=40,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,tasks_1,person_max=16,role_max=15,task_max=21
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,tasks_1,objects=130,strings=261,utf16=4486,collections=6,entries=86,partial_engineering_bytes=54571,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=9924128,art_committed=12565984,native_heap=10614224,pss_kib=154367,fd=137,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10137120,art_committed=12565984,native_heap=10618176,pss_kib=154511,fd=137,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10169888,art_committed=12565984,native_heap=10619728,pss_kib=154619,fd=137,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10530336,art_committed=12565984,native_heap=10746192,pss_kib=154992,fd=135,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10579488,art_committed=12565984,native_heap=10711632,pss_kib=155072,fd=139,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=10661408,art_committed=12565984,native_heap=11025728,pss_kib=155188,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,hub,tap_to_ondraw_ns=1423986146,poll_delivery_ns=1461216614,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=951,closed=951,rows=2335,cursor_checks=919,cursor_failures=0,preflight_closed=32,room_closed=32,driver_closed=32,close_failures=0,db_phase_sum_ns=60804011329
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11678288,art_committed=12565984,native_heap=10710224,pss_kib=156440,fd=137,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11825744,art_committed=12565984,native_heap=10712976,pss_kib=156576,fd=137,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11842128,art_committed=12565984,native_heap=10712976,pss_kib=156584,fd=137,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12203008,art_committed=12565984,native_heap=10847568,pss_kib=156960,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12268544,art_committed=12565984,native_heap=10812656,pss_kib=156977,fd=139,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12383232,art_committed=12565984,native_heap=10806336,pss_kib=156957,fd=138,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12416000,art_committed=12565984,native_heap=10771088,pss_kib=156989,fd=139,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12432384,art_committed=12565984,native_heap=10776352,pss_kib=157029,fd=139,gc=13
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=5865136,art_committed=11927168,native_heap=9638560,pss_kib=150449,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=5881520,art_committed=11927168,native_heap=9603072,pss_kib=150485,fd=139,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,unlock,tap_to_ondraw_ns=3663596769,poll_delivery_ns=3674813332,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,unlock,statements=966,closed=966,rows=2345,cursor_checks=933,cursor_failures=0,preflight_closed=33,room_closed=33,driver_closed=33,close_failures=0,db_phase_sum_ns=62582456801
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6114072,art_committed=11927168,native_heap=9552848,pss_kib=150133,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6376216,art_committed=11927168,native_heap=9559200,pss_kib=150293,fd=134,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6392600,art_committed=11927168,native_heap=9558448,pss_kib=150381,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6671128,art_committed=11927168,native_heap=9673728,pss_kib=150705,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6703896,art_committed=11927168,native_heap=9638336,pss_kib=150793,fd=139,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6818584,art_committed=11927168,native_heap=10000112,pss_kib=150901,fd=139,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,open_active,tap_to_ondraw_ns=1408545155,poll_delivery_ns=1439467811,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,open_active,statements=1003,closed=1003,rows=2453,cursor_checks=969,cursor_failures=0,preflight_closed=34,room_closed=34,driver_closed=34,close_failures=0,db_phase_sum_ns=64540639769
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=7459040,art_committed=11927168,native_heap=9708016,pss_kib=151565,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=7770336,art_committed=11927168,native_heap=9715088,pss_kib=151737,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=7803104,art_committed=11927168,native_heap=9715136,pss_kib=151885,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=8245472,art_committed=11927168,native_heap=9816928,pss_kib=152357,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=8311008,art_committed=11927168,native_heap=9782944,pss_kib=152517,fd=139,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,nav_TASKS,art_used=8392928,art_committed=11927168,native_heap=10115008,pss_kib=152583,fd=138,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,nav_TASKS,tap_to_ondraw_ns=1389892551,poll_delivery_ns=1431818801,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,nav_TASKS,statements=1028,closed=1028,rows=2549,cursor_checks=993,cursor_failures=0,preflight_closed=35,room_closed=35,driver_closed=35,close_failures=0,db_phase_sum_ns=66479080496
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,task_detail,art_used=8926744,art_committed=11927168,native_heap=9866192,pss_kib=153151,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,task_detail,art_used=9106968,art_committed=11927168,native_heap=9871840,pss_kib=153319,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,task_detail,art_used=9270808,art_committed=11927168,native_heap=9873904,pss_kib=153507,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,task_detail,tap_to_ondraw_ns=35351302,poll_delivery_ns=84081875,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,task_detail,statements=1028,closed=1028,rows=2549,cursor_checks=993,cursor_failures=0,preflight_closed=35,room_closed=35,driver_closed=35,close_failures=0,db_phase_sum_ns=66479080496
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor,art_used=10053944,art_committed=11927168,native_heap=10081136,pss_kib=154463,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor,art_used=10414392,art_committed=11927168,native_heap=10087504,pss_kib=154587,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor,art_used=10496312,art_committed=11927168,native_heap=10089872,pss_kib=154915,fd=137,gc=14
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,editor,tap_to_ondraw_ns=108752188,poll_delivery_ns=166153438,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,editor,statements=1028,closed=1028,rows=2549,cursor_checks=993,cursor_failures=0,preflight_closed=35,room_closed=35,driver_closed=35,close_failures=0,db_phase_sum_ns=66479080496
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,editor,persons=20,roles=6,tasks=40,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,editor,person_max=16,role_max=15,task_max=21
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,editor,objects=130,strings=260,utf16=4486,collections=6,entries=86,partial_engineering_bytes=54500,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=7216952,art_committed=11927168,native_heap=10295152,pss_kib=153182,fd=136,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=7511864,art_committed=11927168,native_heap=10301648,pss_kib=153262,fd=136,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=7921464,art_committed=11927168,native_heap=10320048,pss_kib=153790,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=7937848,art_committed=11927168,native_heap=10318864,pss_kib=153826,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=8527672,art_committed=11927168,native_heap=10330784,pss_kib=154398,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=8576824,art_committed=11927168,native_heap=10330976,pss_kib=154434,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=9101112,art_committed=11927168,native_heap=10341760,pss_kib=154986,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=9133880,art_committed=11927168,native_heap=10342400,pss_kib=155022,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=9674552,art_committed=11927168,native_heap=10353328,pss_kib=155407,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=9723704,art_committed=11927168,native_heap=10353376,pss_kib=155599,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=9756472,art_committed=11927168,native_heap=10354320,pss_kib=155511,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=10297144,art_committed=11927168,native_heap=10512384,pss_kib=156075,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=10346296,art_committed=11927168,native_heap=10549904,pss_kib=156151,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=10805048,art_committed=11927168,native_heap=10556880,pss_kib=156591,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_cancel,art_used=10821432,art_committed=11927168,native_heap=10558352,pss_kib=156611,fd=138,gc=15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,editor_cancel,tap_to_ondraw_ns=30876771,poll_delivery_ns=80093490,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,editor_cancel,statements=1028,closed=1028,rows=2549,cursor_checks=993,cursor_failures=0,preflight_closed=35,room_closed=35,driver_closed=35,close_failures=0,db_phase_sum_ns=66479080496
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=7125424,art_committed=12491136,native_heap=10281456,pss_kib=152832,fd=136,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=7256496,art_committed=12491136,native_heap=10284304,pss_kib=152932,fd=136,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=7780784,art_committed=12491136,native_heap=10295728,pss_kib=153488,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=7797168,art_committed=12491136,native_heap=10295904,pss_kib=153516,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=8370608,art_committed=12491136,native_heap=10306560,pss_kib=154064,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=8403376,art_committed=12491136,native_heap=10307072,pss_kib=154124,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=8944048,art_committed=12491136,native_heap=10318064,pss_kib=154656,fd=134,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=8993200,art_committed=12491136,native_heap=10318720,pss_kib=154804,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=9271728,art_committed=12491136,native_heap=10323392,pss_kib=154988,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=9566640,art_committed=12491136,native_heap=10329296,pss_kib=155388,fd=137,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=9599408,art_committed=12491136,native_heap=10329760,pss_kib=155408,fd=137,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=10156464,art_committed=12491136,native_heap=10344848,pss_kib=155956,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=10189232,art_committed=12491136,native_heap=10347408,pss_kib=155984,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=10615216,art_committed=12491136,native_heap=10355792,pss_kib=156420,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=10631600,art_committed=12491136,native_heap=10355792,pss_kib=156428,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=11270576,art_committed=12491136,native_heap=10529056,pss_kib=157198,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=11303344,art_committed=12491136,native_heap=10501776,pss_kib=157598,fd=139,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=11712944,art_committed=12491136,native_heap=10537872,pss_kib=158287,fd=137,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=11745712,art_committed=12491136,native_heap=10510816,pss_kib=158327,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=11844016,art_committed=12491136,native_heap=10873088,pss_kib=158371,fd=137,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,editor_save,art_used=11893168,art_committed=12491136,native_heap=10421792,pss_kib=158315,fd=136,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,editor_save,tap_to_ondraw_ns=3192898436,poll_delivery_ns=2596827967,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,editor_save,statements=1078,closed=1078,rows=2655,cursor_checks=1041,cursor_failures=0,preflight_closed=37,room_closed=37,driver_closed=37,close_failures=0,db_phase_sum_ns=70219151952
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=11918656,art_committed=12491136,native_heap=10423616,pss_kib=158315,fd=137,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=12098880,art_committed=12491136,native_heap=10426368,pss_kib=158459,fd=137,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=12131648,art_committed=12491136,native_heap=10428000,pss_kib=158519,fd=138,gc=16
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7044096,art_committed=12491136,native_heap=10395232,pss_kib=153611,fd=135,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7093248,art_committed=12491136,native_heap=10361632,pss_kib=153635,fd=139,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,hub,art_used=7191552,art_committed=12491136,native_heap=10717232,pss_kib=153887,fd=136,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,hub,tap_to_ondraw_ns=1420734010,poll_delivery_ns=1407533021,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,hub,statements=1115,closed=1115,rows=2763,cursor_checks=1077,cursor_failures=0,preflight_closed=38,room_closed=38,driver_closed=38,close_failures=0,db_phase_sum_ns=72183273513
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_HELD,p86-small,art_used=8605040,art_committed=12491136,native_heap=10374256,pss_kib=155235,fd=138,gc=17,statements=1140,closed=1140,rows=2859,cursor_checks=1101,cursor_failures=0,preflight_closed=39,room_closed=39,driver_closed=39,close_failures=0,db_phase_sum_ns=74128552418
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,held_old_plus_current,objects=263,strings=519,utf16=8962,collections=10,entries=153,partial_engineering_bytes=108865,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_OVERLAP,held_workspace=1,current_workspace=1,common_admission=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11283872,art_committed=12491136,native_heap=10038048,pss_kib=160251,fd=137,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11414944,art_committed=12491136,native_heap=10041488,pss_kib=160399,fd=137,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11431328,art_committed=12491136,native_heap=10041488,pss_kib=160407,fd=137,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11775392,art_committed=12491136,native_heap=10173264,pss_kib=160743,fd=138,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11824544,art_committed=12491136,native_heap=10147552,pss_kib=158739,fd=139,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11955616,art_committed=12491136,native_heap=10141552,pss_kib=158799,fd=138,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11972000,art_committed=12491136,native_heap=10106224,pss_kib=158783,fd=139,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=11988384,art_committed=12491136,native_heap=10107504,pss_kib=158815,fd=139,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12218384,art_committed=12491136,native_heap=10145280,pss_kib=159007,fd=138,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,unlock,art_used=12251152,art_committed=12491136,native_heap=10109984,pss_kib=159039,fd=139,gc=17
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,unlock,tap_to_ondraw_ns=3668311249,poll_delivery_ns=3676210155,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,unlock,statements=1217,closed=1217,rows=3073,cursor_checks=1175,cursor_failures=0,preflight_closed=42,room_closed=42,driver_closed=42,close_failures=0,db_phase_sum_ns=79793263040
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6138800,art_committed=12397440,native_heap=9346816,pss_kib=152959,fd=137,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6400944,art_committed=12397440,native_heap=9352544,pss_kib=153127,fd=134,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6417328,art_committed=12397440,native_heap=9351792,pss_kib=153051,fd=137,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6695856,art_committed=12397440,native_heap=9466528,pss_kib=153347,fd=138,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6745008,art_committed=12397440,native_heap=9431280,pss_kib=153427,fd=139,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_SAMPLE,p86-small,open_active,art_used=6843312,art_committed=12397440,native_heap=9534672,pss_kib=155923,fd=139,gc=18
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TOUCH,p86-small,open_active,tap_to_ondraw_ns=1410164948,poll_delivery_ns=1439867083,physical_tap=true,commit_before_draw=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_RESOURCES,open_active,statements=1254,closed=1254,rows=3181,cursor_checks=1211,cursor_failures=0,preflight_closed=43,room_closed=43,driver_closed=43,close_failures=0,db_phase_sum_ns=81754448142
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_WORKSPACE,reauth_final,persons=20,roles=6,tasks=40,eager_events=0,core_reads=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_TEXT_UNITS,reauth_final,person_max=16,role_max=15,task_max=21
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CENSUS,reauth_final,objects=135,strings=261,utf16=4486,collections=6,entries=86,partial_engineering_bytes=55211,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_FINAL,p86-small,art_used=7581992,art_committed=12397440,native_heap=9232992,pss_kib=156559,fd=137,gc=18,statements=1254,closed=1254,rows=3181,cursor_checks=1211,cursor_failures=0,preflight_closed=43,room_closed=43,driver_closed=43,close_failures=0,db_phase_sum_ns=81754448142,late_publication=false,core_port_unbound=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P86_CASE,p86-small,FUNCTIONAL_PASS,budget=UNPROVEN,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P86 PASS p86-small; memory admission UNPROVEN
+INSTRUMENTATION_CODE: -1

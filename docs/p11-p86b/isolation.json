@@ -1,0 +1,11 @@
+{
+  "release_forbidden_absent": [
+    "P86FullWorkspaceActivity",
+    "P86FullWorkspaceProbe",
+    "P86WorkspaceDiagnostics",
+    "P77ProductRuntimeHarness",
+    "p86-stress"
+  ],
+  "release_manifest_p86_absent": true,
+  "product_source_and_app_build_config_unchanged": true
+}

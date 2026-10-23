@@ -1,0 +1,12 @@
+{
+  "product_sources_and_build_config_unchanged": true,
+  "existing_release_apk_sha256": "157ad9e227368c05300bfd17485b8e38e63f4d7837cffb99ad30a381d1e766d5",
+  "forbidden_absent": [
+    "P86FullWorkspaceActivity",
+    "P86FullWorkspaceProbe",
+    "P86WorkspaceDiagnostics",
+    "P77ProductRuntimeHarness",
+    "p86-stress"
+  ],
+  "note": "Existing release-isolation-build.log artifact; no release installation"
+}

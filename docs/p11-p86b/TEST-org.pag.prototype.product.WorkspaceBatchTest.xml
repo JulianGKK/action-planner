@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.WorkspaceBatchTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-22T19:21:33.762Z" hostname="iuzjhtgvfc" time="0.167">
+  <properties/>
+  <testcase name="navigationAndAnotherActionFenceOldBatch" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.14"/>
+  <testcase name="preparationStillWaitsForIndependentProtectionMetadata" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.015"/>
+  <testcase name="lockAndLateCompletionNeverRestoreContentAfterReauthentication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="rapidNavigationDiscardsPendingBatchAndReturnRequestsFreshSnapshot" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.004"/>
+  <testcase name="oneExplicitBatchReplacesLegacyReadsAndPublishesAtomically" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

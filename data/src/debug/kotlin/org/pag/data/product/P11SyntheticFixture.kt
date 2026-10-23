@@ -90,11 +90,13 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
     /** Synthetic data only, before Runtime construction. No production writer bypass. */
     internal fun seedMemoryAcceptance(profile:String) {
         check(app.packageName=="org.pag.prototype.a.p77runtime")
-        val roles=when(profile){"roles32"->32;"roles100"->100;else->6}
-        val stress=profile=="stress"
+        val roles=when(profile){"roles32","p86-stress32"->32;"roles100","p86-stress100"->100;else->6}
+        val stress=profile=="stress" || profile.startsWith("p86-stress")
         ActionDatabaseAccess(wrapped).use(inventory.database,key,maintenance){db->db.withWriteTransaction {
             suspend fun exec(sql:String,vararg args:String) { usePrepared(sql){s->args.forEachIndexed{sIndex,v->s.bindText(sIndex+1,v)};s.step()} }
-            repeat(roles){i->val name="Funktion Ä界🦋 $i"
+            if(profile.startsWith("p86-"))for((id,label) in listOf(preparationId to "P86 Preparation",activeId to "P86 Active",completedId to "P86 Completed"))
+                exec("UPDATE actions SET title=? WHERE id=?",label,id)
+            repeat(roles){i->val name=if(profile.startsWith("p86-stress"))"Ä界🦋".repeat(15)+" $i" else "Funktion Ä界🦋 $i"
                 db.operations().let { exec("INSERT INTO roles VALUES(?,?,?,?,?)","p83-r$i",activeId,name,OperationalRules.normalizedName(name),"1") }
             }
             // UTF8 byte lengths differ from UTF16 units. Preserve every requested character.

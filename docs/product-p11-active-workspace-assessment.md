@@ -12767,3 +12767,30 @@ Produktfix keine Gerätefälle ausgeführt. Nur Tests/Dokumentation geändert.
 `reuseEnabled=false`, `ramReuseEnabled=false`, 8+8 MiB und READY-/Writer-/Sessionregeln
 unverändert. WIP-Commit/Push und Issue-Update, danach STOPP zum unabhängigen Review.
 Kein Merge/Release.
+
+
+## §86b — Full-Workspace ohne Compact-Port: Machbarkeit WIP / NO-GO
+
+Fortsetzung vom 2026-10-23, Basis `0a8f785`, isolierter P77-Testpfad mit echtem
+ProductRuntime/Repositories/SQLCipher/Compose, ungebundenem Compact-Core-Port.
+[Assessment, Rohbelege, Messgrenzen und Reproduktion](p11-p86b/assessment.md).
+
+Der bestehende Fullview-only-Pfad ist unter unveränderten Anforderungen kein
+belegbar tragfähiger vorübergehender 1.0-Kandidat: kein gemeinsames Admissionbudget
+vor vollständiger Boardmaterialisierung; nachweislich gleichzeitig gehaltene alte
+und neue Workspacegraphen; unbekannte Editor-/Compose-/Nativekopien und fehlende
+Consumer-Endnachweise. ART-/Native-/PSS-Samples und partielle DTO-Engineeringcharges
+sind weder Obergrenzen noch eine 8+8-MiB-Freigabe. Große ACTIVE-Navigation mit 32
+Rollen etwa 3,3–5,2 Sekunden pro Wechsel, Editor-Save etwa 8 Sekunden. Keine p95.
+
+48 gezielte Hosttests (TaskModel/WorkspaceBatch) und P77-/Runner-Build in der
+Fortsetzung bestanden; kleine und große Androidfälle samt Harnessabbrüchen sind
+im verlinkten Bericht einzeln ausgewiesen. Kein breiter Suitelauf. Reale
+Touch→Commit/OnDraw-Beobachtung bestätigt keine physische Displaypräsentation oder
+Retirement. Alte Fehlversuche bleiben als Rohbelege erhalten.
+
+**#37 gemeinsam mit #33/#34 architektonisch lösen; #32/#38 bleiben offen.**
+Produktquellen, Compactpfad, Reuse-/Session-/Permission-/Writer-/UNKNOWN-Gates,
+8+8 MiB, Schema und Crypto unverändert. Keine Produktentscheidung, kein
+Produktfallback, Merge oder Release. WIP sichern/pushen, #37/#44 aktualisieren,
+anschließend **STOPP für unabhängigen Review**.

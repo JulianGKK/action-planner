@@ -1,0 +1,755 @@
+{
+  "small-02": {
+    "functional_pass": true,
+    "upper_bound": "UNKNOWN",
+    "phases_ms": {
+      "unlock": [
+        3694.612,
+        3678.586,
+        3663.597,
+        3668.311
+      ],
+      "open_preparation": [
+        2633.23
+      ],
+      "prep_PERSONS": [
+        1286.76
+      ],
+      "prep_ROLES": [
+        1263.306
+      ],
+      "prep_TASKS": [
+        1373.568
+      ],
+      "prep_OVERVIEW": [
+        2596.712
+      ],
+      "preparation_to_active": [
+        2710.359
+      ],
+      "nav_PERSONS": [
+        1377.879,
+        1400.062,
+        1378.84
+      ],
+      "hub": [
+        1392.624,
+        1393.754,
+        1400.208,
+        1424.778,
+        1415.623,
+        1421.67,
+        1409.542,
+        1402.726,
+        1423.986,
+        1420.734
+      ],
+      "nav_FUNCTIONS": [
+        1289.582,
+        1317.127,
+        1324.763
+      ],
+      "nav_TASKS": [
+        1387.362,
+        1384.009,
+        1378.53,
+        1389.893
+      ],
+      "active_to_completed": [
+        2649.67
+      ],
+      "open_active": [
+        1427.608,
+        1408.545,
+        1410.165
+      ],
+      "task_detail": [
+        35.351
+      ],
+      "editor": [
+        108.752
+      ],
+      "editor_cancel": [
+        30.877
+      ],
+      "editor_save": [
+        3192.898
+      ]
+    },
+    "sampled_peaks": {
+      "art_used": 15247224,
+      "native_heap": 12379536,
+      "pss_kib": 160743,
+      "fd": 142,
+      "gc": 18
+    },
+    "census": {
+      "preparation": {
+        "objects": "108",
+        "strings": "183",
+        "utf16": "3760",
+        "collections": "6",
+        "entries": "80",
+        "partial_engineering_bytes": "43265",
+        "upper_bound": "UNKNOWN"
+      },
+      "completed": {
+        "objects": "124",
+        "strings": "223",
+        "utf16": "4550",
+        "collections": "6",
+        "entries": "80",
+        "partial_engineering_bytes": "51313",
+        "upper_bound": "UNKNOWN"
+      },
+      "persons_0": {
+        "objects": "130",
+        "strings": "261",
+        "utf16": "4486",
+        "collections": "6",
+        "entries": "86",
+        "partial_engineering_bytes": "54571",
+        "upper_bound": "UNKNOWN"
+      },
+      "functions_0": {
+        "objects": "89",
+        "strings": "141",
+        "utf16": "1816",
+        "collections": "4",
+        "entries": "46",
+        "partial_engineering_bytes": "29547",
+        "upper_bound": "UNKNOWN"
+      },
+      "tasks_0": {
+        "objects": "130",
+        "strings": "261",
+        "utf16": "4486",
+        "collections": "6",
+        "entries": "86",
+        "partial_engineering_bytes": "54571",
+        "upper_bound": "UNKNOWN"
+      },
+      "persons_1": {
+        "objects": "130",
+        "strings": "261",
+        "utf16": "4486",
+        "collections": "6",
+        "entries": "86",
+        "partial_engineering_bytes": "54571",
+        "upper_bound": "UNKNOWN"
+      },
+      "functions_1": {
+        "objects": "89",
+        "strings": "141",
+        "utf16": "1816",
+        "collections": "4",
+        "entries": "46",
+        "partial_engineering_bytes": "29547",
+        "upper_bound": "UNKNOWN"
+      },
+      "tasks_1": {
+        "objects": "130",
+        "strings": "261",
+        "utf16": "4486",
+        "collections": "6",
+        "entries": "86",
+        "partial_engineering_bytes": "54571",
+        "upper_bound": "UNKNOWN"
+      },
+      "editor": {
+        "objects": "130",
+        "strings": "260",
+        "utf16": "4486",
+        "collections": "6",
+        "entries": "86",
+        "partial_engineering_bytes": "54500",
+        "upper_bound": "UNKNOWN"
+      },
+      "held_old_plus_current": {
+        "objects": "263",
+        "strings": "519",
+        "utf16": "8962",
+        "collections": "10",
+        "entries": "153",
+        "partial_engineering_bytes": "108865",
+        "upper_bound": "UNKNOWN"
+      },
+      "reauth_final": {
+        "objects": "135",
+        "strings": "261",
+        "utf16": "4486",
+        "collections": "6",
+        "entries": "86",
+        "partial_engineering_bytes": "55211",
+        "upper_bound": "UNKNOWN"
+      }
+    },
+    "baseline": {
+      "art_used": "10684304",
+      "art_committed": "67108864",
+      "native_heap": "10218112",
+      "pss_kib": "121533",
+      "fd": "117",
+      "gc": "0"
+    },
+    "final": {
+      "art_used": "7581992",
+      "art_committed": "12397440",
+      "native_heap": "9232992",
+      "pss_kib": "156559",
+      "fd": "137",
+      "gc": "18",
+      "statements": "1254",
+      "closed": "1254",
+      "rows": "3181",
+      "cursor_checks": "1211",
+      "cursor_failures": "0",
+      "preflight_closed": "43",
+      "room_closed": "43",
+      "driver_closed": "43",
+      "close_failures": "0",
+      "db_phase_sum_ns": "81754448142",
+      "late_publication": "false",
+      "core_port_unbound": "true"
+    }
+  },
+  "stress32-01": {
+    "functional_pass": true,
+    "upper_bound": "UNKNOWN",
+    "phases_ms": {
+      "unlock": [
+        8094.101,
+        8105.266,
+        8080.176
+      ],
+      "open_active": [
+        5306.211,
+        4976.043,
+        4928.195
+      ],
+      "nav_PERSONS": [
+        5194.88,
+        4938.087
+      ],
+      "hub": [
+        5125.109,
+        5099.578,
+        5034.558,
+        5006.6,
+        4993.051,
+        4988.059,
+        4956.44
+      ],
+      "nav_FUNCTIONS": [
+        3325.524,
+        3298.053
+      ],
+      "nav_TASKS": [
+        5000.774,
+        4981.44,
+        4932.479
+      ],
+      "task_detail": [
+        39.965
+      ],
+      "page_1": [
+        4989.035
+      ],
+      "page_2": [
+        4926.337
+      ],
+      "page_4001": [
+        5336.08
+      ],
+      "page_2001": [
+        5342.852
+      ],
+      "editor": [
+        59.614
+      ],
+      "editor_cancel": [
+        34.924
+      ],
+      "editor_save": [
+        8002.255
+      ]
+    },
+    "sampled_peaks": {
+      "art_used": 44271984,
+      "native_heap": 16429168,
+      "pss_kib": 233517,
+      "fd": 145,
+      "gc": 17
+    },
+    "census": {
+      "initial": {
+        "objects": "1841",
+        "strings": "4299",
+        "utf16": "194320",
+        "collections": "6",
+        "entries": "1432",
+        "partial_engineering_bytes": "1330381",
+        "upper_bound": "UNKNOWN"
+      },
+      "persons_0": {
+        "objects": "1836",
+        "strings": "4299",
+        "utf16": "194320",
+        "collections": "6",
+        "entries": "1432",
+        "partial_engineering_bytes": "1329741",
+        "upper_bound": "UNKNOWN"
+      },
+      "functions_0": {
+        "objects": "835",
+        "strings": "1299",
+        "utf16": "30430",
+        "collections": "4",
+        "entries": "432",
+        "partial_engineering_bytes": "324797",
+        "upper_bound": "UNKNOWN"
+      },
+      "tasks_0": {
+        "objects": "1836",
+        "strings": "4299",
+        "utf16": "194320",
+        "collections": "6",
+        "entries": "1432",
+        "partial_engineering_bytes": "1329741",
+        "upper_bound": "UNKNOWN"
+      },
+      "persons_1": {
+        "objects": "1836",
+        "strings": "4299",
+        "utf16": "194320",
+        "collections": "6",
+        "entries": "1432",
+        "partial_engineering_bytes": "1329741",
+        "upper_bound": "UNKNOWN"
+      },
+      "functions_1": {
+        "objects": "835",
+        "strings": "1299",
+        "utf16": "30430",
+        "collections": "4",
+        "entries": "432",
+        "partial_engineering_bytes": "324797",
+        "upper_bound": "UNKNOWN"
+      },
+      "tasks_1": {
+        "objects": "1836",
+        "strings": "4299",
+        "utf16": "194320",
+        "collections": "6",
+        "entries": "1432",
+        "partial_engineering_bytes": "1329741",
+        "upper_bound": "UNKNOWN"
+      },
+      "page_1": {
+        "objects": "1871",
+        "strings": "4394",
+        "utf16": "196036",
+        "collections": "7",
+        "entries": "1464",
+        "partial_engineering_bytes": "1348214",
+        "upper_bound": "UNKNOWN"
+      },
+      "page_2": {
+        "objects": "1871",
+        "strings": "4394",
+        "utf16": "196016",
+        "collections": "7",
+        "entries": "1464",
+        "partial_engineering_bytes": "1348134",
+        "upper_bound": "UNKNOWN"
+      },
+      "page_4001": {
+        "objects": "1839",
+        "strings": "4301",
+        "utf16": "194377",
+        "collections": "7",
+        "entries": "1433",
+        "partial_engineering_bytes": "1330631",
+        "upper_bound": "UNKNOWN"
+      },
+      "page_2001": {
+        "objects": "1871",
+        "strings": "4394",
+        "utf16": "196112",
+        "collections": "7",
+        "entries": "1464",
+        "partial_engineering_bytes": "1348518",
+        "upper_bound": "UNKNOWN"
+      },
+      "editor": {
+        "objects": "1836",
+        "strings": "4298",
+        "utf16": "194320",
+        "collections": "6",
+        "entries": "1432",
+        "partial_engineering_bytes": "1329670",
+        "upper_bound": "UNKNOWN"
+      },
+      "held_old_plus_current": {
+        "objects": "3675",
+        "strings": "8595",
+        "utf16": "388630",
+        "collections": "10",
+        "entries": "2665",
+        "partial_engineering_bytes": "2657765",
+        "upper_bound": "UNKNOWN"
+      },
+      "reauth_final": {
+        "objects": "1841",
+        "strings": "4299",
+        "utf16": "194320",
+        "collections": "6",
+        "entries": "1432",
+        "partial_engineering_bytes": "1330381",
+        "upper_bound": "UNKNOWN"
+      }
+    },
+    "baseline": {
+      "art_used": "43321232",
+      "art_committed": "67108864",
+      "native_heap": "10140896",
+      "pss_kib": "153474",
+      "fd": "115",
+      "gc": "0"
+    },
+    "final": {
+      "art_used": "11741664",
+      "art_committed": "13269727",
+      "native_heap": "10347440",
+      "pss_kib": "160260",
+      "fd": "141",
+      "gc": "17",
+      "statements": "852",
+      "closed": "852",
+      "rows": "28638",
+      "cursor_checks": "823",
+      "cursor_failures": "0",
+      "preflight_closed": "29",
+      "room_closed": "29",
+      "driver_closed": "29",
+      "close_failures": "0",
+      "db_phase_sum_ns": "149089759629",
+      "late_publication": "false",
+      "core_port_unbound": "true"
+    }
+  },
+  "stress100-02": {
+    "functional_pass": false,
+    "upper_bound": "UNKNOWN",
+    "phases_ms": {
+      "unlock": [
+        8123.514
+      ],
+      "open_active": [
+        5416.391
+      ],
+      "nav_PERSONS": [
+        5284.992
+      ],
+      "hub": [
+        5229.949
+      ],
+      "nav_FUNCTIONS": [
+        3385.914
+      ],
+      "roles100_expand": [
+        44.708
+      ],
+      "roles100_collapse": [
+        24.414
+      ]
+    },
+    "sampled_peaks": {
+      "art_used": 44468592,
+      "native_heap": 19722192,
+      "pss_kib": 240125,
+      "fd": 140,
+      "gc": 5
+    },
+    "census": {
+      "initial": {
+        "objects": "1909",
+        "strings": "4503",
+        "utf16": "199760",
+        "collections": "6",
+        "entries": "1500",
+        "partial_engineering_bytes": "1375873",
+        "upper_bound": "UNKNOWN"
+      },
+      "persons_0": {
+        "objects": "1904",
+        "strings": "4503",
+        "utf16": "199760",
+        "collections": "6",
+        "entries": "1500",
+        "partial_engineering_bytes": "1375233",
+        "upper_bound": "UNKNOWN"
+      },
+      "functions_0": {
+        "objects": "903",
+        "strings": "1503",
+        "utf16": "35870",
+        "collections": "4",
+        "entries": "500",
+        "partial_engineering_bytes": "370289",
+        "upper_bound": "UNKNOWN"
+      }
+    },
+    "baseline": {
+      "art_used": "43485072",
+      "art_committed": "67108864",
+      "native_heap": "10137888",
+      "pss_kib": "146142",
+      "fd": "114",
+      "gc": "0"
+    }
+  },
+  "stress100-03": {
+    "functional_pass": true,
+    "upper_bound": "UNKNOWN",
+    "phases_ms": {
+      "unlock": [
+        8124.813,
+        8085.895,
+        8054.326
+      ],
+      "open_active": [
+        5451.632,
+        4992.974,
+        5019.561
+      ],
+      "nav_PERSONS": [
+        5303.777,
+        5137.429
+      ],
+      "hub": [
+        5222.646,
+        5102.56,
+        5149.685,
+        5056.096,
+        5076.972,
+        5030.916,
+        5020.849
+      ],
+      "nav_FUNCTIONS": [
+        3374.953,
+        3347.491
+      ],
+      "roles100_expand": [
+        46.458
+      ],
+      "roles100_collapse": [
+        27.468
+      ],
+      "nav_TASKS": [
+        5119.024,
+        4994.36,
+        5001.39
+      ],
+      "task_detail": [
+        36.101
+      ],
+      "page_1": [
+        5007.476
+      ],
+      "page_2": [
+        4940.506
+      ],
+      "page_4001": [
+        5337.639
+      ],
+      "page_2001": [
+        5372.062
+      ],
+      "editor": [
+        49.065
+      ],
+      "editor_cancel": [
+        33.893
+      ],
+      "editor_save": [
+        7986.123
+      ],
+      "large_active_to_completed": [
+        8509.76
+      ]
+    },
+    "sampled_peaks": {
+      "art_used": 59490168,
+      "native_heap": 45660768,
+      "pss_kib": 246726,
+      "fd": 144,
+      "gc": 29
+    },
+    "census": {
+      "initial": {
+        "objects": "1909",
+        "strings": "4503",
+        "utf16": "199760",
+        "collections": "6",
+        "entries": "1500",
+        "partial_engineering_bytes": "1375873",
+        "upper_bound": "UNKNOWN"
+      },
+      "persons_0": {
+        "objects": "1904",
+        "strings": "4503",
+        "utf16": "199760",
+        "collections": "6",
+        "entries": "1500",
+        "partial_engineering_bytes": "1375233",
+        "upper_bound": "UNKNOWN"
+      },
+      "functions_0": {
+        "objects": "903",
+        "strings": "1503",
+        "utf16": "35870",
+        "collections": "4",
+        "entries": "500",
+        "partial_engineering_bytes": "370289",
+        "upper_bound": "UNKNOWN"
+      },
+      "tasks_0": {
+        "objects": "1904",
+        "strings": "4503",
+        "utf16": "199760",
+        "collections": "6",
+        "entries": "1500",
+        "partial_engineering_bytes": "1375233",
+        "upper_bound": "UNKNOWN"
+      },
+      "persons_1": {
+        "objects": "1904",
+        "strings": "4503",
+        "utf16": "199760",
+        "collections": "6",
+        "entries": "1500",
+        "partial_engineering_bytes": "1375233",
+        "upper_bound": "UNKNOWN"
+      },
+      "functions_1": {
+        "objects": "903",
+        "strings": "1503",
+        "utf16": "35870",
+        "collections": "4",
+        "entries": "500",
+        "partial_engineering_bytes": "370289",
+        "upper_bound": "UNKNOWN"
+      },
+      "tasks_1": {
+        "objects": "1904",
+        "strings": "4503",
+        "utf16": "199760",
+        "collections": "6",
+        "entries": "1500",
+        "partial_engineering_bytes": "1375233",
+        "upper_bound": "UNKNOWN"
+      },
+      "page_1": {
+        "objects": "1939",
+        "strings": "4598",
+        "utf16": "201476",
+        "collections": "7",
+        "entries": "1532",
+        "partial_engineering_bytes": "1393706",
+        "upper_bound": "UNKNOWN"
+      },
+      "page_2": {
+        "objects": "1939",
+        "strings": "4598",
+        "utf16": "201456",
+        "collections": "7",
+        "entries": "1532",
+        "partial_engineering_bytes": "1393626",
+        "upper_bound": "UNKNOWN"
+      },
+      "page_4001": {
+        "objects": "1907",
+        "strings": "4505",
+        "utf16": "199817",
+        "collections": "7",
+        "entries": "1501",
+        "partial_engineering_bytes": "1376123",
+        "upper_bound": "UNKNOWN"
+      },
+      "page_2001": {
+        "objects": "1939",
+        "strings": "4598",
+        "utf16": "201552",
+        "collections": "7",
+        "entries": "1532",
+        "partial_engineering_bytes": "1394010",
+        "upper_bound": "UNKNOWN"
+      },
+      "editor": {
+        "objects": "1904",
+        "strings": "4502",
+        "utf16": "199760",
+        "collections": "6",
+        "entries": "1500",
+        "partial_engineering_bytes": "1375162",
+        "upper_bound": "UNKNOWN"
+      },
+      "held_old_plus_current": {
+        "objects": "3811",
+        "strings": "9003",
+        "utf16": "399510",
+        "collections": "10",
+        "entries": "2801",
+        "partial_engineering_bytes": "2748749",
+        "upper_bound": "UNKNOWN"
+      },
+      "reauth_final": {
+        "objects": "1909",
+        "strings": "4503",
+        "utf16": "199760",
+        "collections": "6",
+        "entries": "1500",
+        "partial_engineering_bytes": "1375873",
+        "upper_bound": "UNKNOWN"
+      },
+      "large_completed": {
+        "objects": "1904",
+        "strings": "4503",
+        "utf16": "199760",
+        "collections": "6",
+        "entries": "1500",
+        "partial_engineering_bytes": "1375233",
+        "upper_bound": "UNKNOWN"
+      }
+    },
+    "baseline": {
+      "art_used": "43485072",
+      "art_committed": "67108864",
+      "native_heap": "10148880",
+      "pss_kib": "156789",
+      "fd": "117",
+      "gc": "0"
+    },
+    "final": {
+      "art_used": "59490168",
+      "art_committed": "61295296",
+      "native_heap": "45660768",
+      "pss_kib": "246726",
+      "fd": "144",
+      "gc": "29",
+      "statements": "898",
+      "closed": "898",
+      "rows": "31585",
+      "cursor_checks": "867",
+      "cursor_failures": "0",
+      "preflight_closed": "32",
+      "room_closed": "31",
+      "driver_closed": "31",
+      "close_failures": "0",
+      "db_phase_sum_ns": "161629070665",
+      "late_publication": "false",
+      "core_port_unbound": "true"
+    }
+  }
+}
