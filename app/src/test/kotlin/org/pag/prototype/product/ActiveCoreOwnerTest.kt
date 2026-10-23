@@ -221,6 +221,91 @@ class ActiveCoreOwnerTest {
         assertFalse(rejected.live.get());assertNull(oversized.model.compactTasksPresentation)
     }
 
+    private fun hubOwner():Triple<H,Lifetime,CompactHubPresentation> {
+        val h=H();val life=h.port.deliver()
+        return Triple(h,life,checkNotNull(h.model.compactHubPresentation))
+    }
+    @Test fun hubHasExactlyThreeMetadataCardsCorrectScalarsAndOriginalNavigation() {
+        val (h,life,view)=hubOwner();val reads=h.port.reads;val interactions=h.session.interactions
+        assertSame(view,h.model.compactHubPresentation);assertEquals(3,view.size())
+        val areas=listOf(ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS)
+        val values=listOf(100L to 100L,0L to 100L,40L to 10L)
+        val lines=listOf(listOf("100 insgesamt","100 vor Ort"),listOf("0 Funktionen","100 Personen vor Ort"),listOf("40 offen","10 in Arbeit"))
+        repeat(3){index->
+            val card=checkNotNull(view.card(index));assertEquals(areas[index],card.area)
+            assertTrue(card.summary.isEmpty());assertSame(card,view.card(index))
+            assertEquals(values[index].first,view.value(index,0));assertEquals(values[index].second,view.value(index,1))
+            repeat(2){line->assertEquals(lines[index][line],compactHubSummary(index,line,view.value(index,line)!!))}
+            assertSame(view.navigation(card.area),view.navigation(card.area))
+        }
+        assertEquals(reads,h.port.reads);assertEquals(interactions,h.session.interactions)
+        val hits=life.hits
+        for(index in listOf(-1,3,Int.MAX_VALUE)){assertNull(view.card(index));assertNull(view.value(index,0))}
+        assertNull(view.value(0,-1));assertNull(view.value(0,2));assertNull(view.navigation(ActiveArea.HUB))
+        assertEquals(hits,life.hits)
+        val renderer=Class.forName("org.pag.prototype.product.ActiveWorkspaceKt").declaredMethods.single {
+            it.name=="CompactActiveContent" && it.parameterTypes.contains(CompactHubPresentation::class.java)
+        }
+        assertFalse(renderer.parameterTypes.contains(ActiveCorePayload::class.java))
+        val fields=view.javaClass.declaredFields.filterNot{java.lang.reflect.Modifier.isStatic(it.modifiers)}
+        assertEquals(11,fields.size)
+        assertTrue(fields.all{it.type==Any::class.java || it.type==ProductViewModel::class.java || it.type==List::class.java || it.type==kotlin.jvm.functions.Function0::class.java})
+        for(area in areas) {
+            val (owner,_,hub)=hubOwner();val click=checkNotNull(hub.navigation(area))
+            click();assertEquals(area,owner.model.activeArea);assertEquals(2,owner.port.reads)
+            val count=owner.port.reads;click();assertEquals(count,owner.port.reads);assertNull(hub.value(0,0))
+        }
+    }
+    @Test fun oldHubHandleAndCallbacksDenySessionActionGenerationLockAndRevoke() {
+        for(reason in listOf("lock","revoke","generation","action","status","context","fresh-session")) {
+            val (h,life,hub)=hubOwner();val click=checkNotNull(hub.navigation(ActiveArea.PERSONS))
+            when(reason) {
+                "lock"->h.model.lock();"revoke"->life.close();"context"->{life.current=false}
+                "generation"->h.session.change(SessionSnapshot(SessionState.READY,2))
+                "action"->{h.repo.action=h.repo.action.copy(id="other");h.model.detail("other")}
+                "status"->{h.repo.action=h.repo.action.copy(status=ActionStatus.COMPLETED);h.model.detail("a")}
+                else->h.session.state=SessionSnapshot(SessionState.LOCKED,2)
+            }
+            val reads=h.port.reads
+            assertNull(reason,hub.value(0,0));assertNull(hub.card(0));click();assertEquals(reads,h.port.reads)
+            life.current=true;h.session.state=SessionSnapshot(SessionState.READY,1)
+            assertNull(hub.value(1,0));click();assertEquals(reads,h.port.reads)
+        }
+    }
+    @Test fun revokeBetweenHubScalarsDoesNotRecallEarlierValueAndDeniesFurtherResolutions() {
+        val (h,life,hub)=hubOwner();val first=hub.value(0,0);val text=compactHubSummary(0,0,first!!)
+        assertEquals(100L,first);life.close()
+        assertNull(hub.value(0,1));assertNull(hub.value(1,0));assertNull(hub.card(2))
+        assertEquals("100 insgesamt",text) // Prior framework text is not recalled; no atomic frame.
+        val reads=h.port.reads;hub.navigation(ActiveArea.TASKS)!!();assertEquals(reads,h.port.reads)
+        assertNull(hub.javaClass.getDeclaredField("owner").also{it.isAccessible=true}.get(hub))
+    }
+    @Test fun hubWriterPendingUnknownLateMainAndForeignThreadCannotResolveOrNavigate() {
+        val h=H();val callback=h.port.pending.single().second
+        val life=h.port.deliver();val hub=checkNotNull(h.model.compactHubPresentation)
+        val hits=life.hits;val foreign=java.util.concurrent.atomic.AtomicReference<Long?>(-1)
+        val t=Thread{foreign.set(hub.value(0,0));hub.navigation(ActiveArea.PERSONS)!!()}
+        t.start();t.join(3000);assertFalse(t.isAlive);assertNull(foreign.get());assertEquals(hits,life.hits)
+        val mutations=UncachedWorkspaceMutations();val ticket=checkNotNull(mutations.beforeActiveRead("a",1))
+        ticket.onInvalidated{life.close()}
+        val pending=checkNotNull(mutations.beforeTaskQueue("a",1));val reads=h.port.reads
+        assertNull(hub.value(0,0));hub.navigation(ActiveArea.FUNCTIONS)!!();assertEquals(reads,h.port.reads)
+        assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.UNKNOWN,WorkspaceWriteCleanup.COMPLETE)))
+        assertNull(mutations.beforeActiveRead("a",1));assertNull(hub.value(2,0))
+        repeat(2){callback(core(),life)};assertNull(h.model.compactHubPresentation);assertEquals(reads,h.port.reads)
+    }
+    @Test fun hubOldIdentityCannotFollowReplacementAndPublicationRaceDeniesValuesAndCallbacks() {
+        val (h,_,old)=hubOwner();val click=checkNotNull(old.navigation(ActiveArea.TASKS))
+        h.model.detail("a");val life=h.port.deliver();val next=checkNotNull(h.model.compactHubPresentation)
+        assertNotSame(old,next);assertNull(old.value(0,0));assertNotNull(next.value(0,0))
+        val reads=h.port.reads;click();assertEquals(reads,h.port.reads)
+        val invalid=Any();assertNull(h.model.compactHubValue(invalid,0,0))
+        h.model.compactHubOpen(invalid,ActiveArea.TASKS);assertEquals(reads,h.port.reads)
+        assertNotNull(next.value(0,0)) // Invalid identity cannot revoke the current original slot.
+        life.duringInstall={life.close()};assertNull(next.value(0,0));assertNull(h.model.compactHubPresentation)
+        next.navigation(ActiveArea.PERSONS)!!();assertEquals(reads,h.port.reads)
+    }
+
     @Test fun oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse() {
         val h=H(true);h.port.deliver();val first=h.model.activeCore
         assertNotNull(first);assertNull(h.model.workspace)
@@ -324,7 +409,7 @@ class ActiveCoreOwnerTest {
         assertEquals(100L,value.people.overall.total);assertTrue(value.people.hasMore)
         assertEquals(40L,value.tasks.overall.open);assertTrue(value.tasks.hasMore)
         assertEquals("32 von 100 angezeigt · weitere Einträge verfügbar",compactPageLabel(32,100,true))
-        assertEquals("100 insgesamt",activeCompactHubCards(value).first().summary.first())
+        assertEquals("100 insgesamt",compactHubSummary(0,0,h.model.compactHubPresentation!!.value(0,0)!!))
     }
     @Test fun actualProductRouterSelectsCompactRendererForEveryCompactActiveArea() {
         val h=H(true);h.port.deliver()

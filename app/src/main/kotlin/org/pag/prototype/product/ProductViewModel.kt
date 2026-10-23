@@ -20,9 +20,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private val ownerThread=Thread.currentThread()
     private var ownerDispatch: (() -> Unit) -> Unit = { work -> check(Thread.currentThread() === ownerThread);work() }
     private var activeCorePort:ActiveCoreLoadPort?=null
-    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any, val persons:CompactPersonsPresentation, val tasks:CompactTasksPresentation) {
+    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any, val persons:CompactPersonsPresentation, val tasks:CompactTasksPresentation, val hub:CompactHubPresentation) {
         var subscription:Subscription?=null
-        fun close() { persons.invalidate();tasks.invalidate();subscription?.cancel();lifetime.close() }
+        fun close() { persons.invalidate();tasks.invalidate();hub.invalidate();subscription?.cancel();lifetime.close() }
     }
     private val coreSlot=AtomicReference<CoreSlot?>(null)
     private var coreLoad:Any?=null
@@ -51,6 +51,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     /** Pre-admitted metadata handles, never second page/payload roots. */
     internal val compactPersonsPresentation:CompactPersonsPresentation? get() = presentationSlot(ActiveArea.PERSONS)?.persons
     internal val compactTasksPresentation:CompactTasksPresentation? get() = presentationSlot(ActiveArea.TASKS)?.tasks
+    internal val compactHubPresentation:CompactHubPresentation? get() = presentationSlot(ActiveArea.HUB)?.hub
     private fun presentationSlot(area:ActiveArea):CoreSlot? {
         coreSignal
         if(Thread.currentThread() !== ownerThread || activeArea!=area || !compactActiveMode)return null
@@ -101,6 +102,18 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if(index !in 0 until 32)return null
         return resolveCompactPresentation(identity,ActiveArea.TASKS){it.tasks.items.getOrNull(index)?.title}
     }
+    internal fun compactHubCurrent(identity:Any):Boolean? = resolveCompactPresentation(identity,ActiveArea.HUB){true}
+    internal fun compactHubValue(identity:Any,index:Int,line:Int):Long? = resolveCompactPresentation(identity,ActiveArea.HUB){
+        when(index) {
+            0->if(line==0)it.people.overall.total else it.people.overall.onSite
+            1->if(line==0)it.functions.items.size.toLong() else it.functions.onSiteCount
+            else->if(line==0)it.tasks.overall.open else it.tasks.overall.inProgress
+        }
+    }
+    internal fun compactHubOpen(identity:Any,area:ActiveArea) {
+        // Authorization returns before navigation; no repository work inside publication.
+        if(compactHubCurrent(identity)==true)activeArea(area)
+    }
     internal fun compactPresentationComposition(identity:Any,observed:Boolean) {
         if(Thread.currentThread() !== ownerThread)return
         val slot=coreSlot.get()?.takeIf {it.identity===identity} ?: return
@@ -144,11 +157,11 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 lifetime.close();personsLoading=false;workspaceError=true;return@loadOwned
             }
             val slotIdentity=Any()
-            val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity),CompactTasksPresentation(this,slotIdentity))
+            val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity),CompactTasksPresentation(this,slotIdentity),CompactHubPresentation(this,slotIdentity))
             slot.subscription=lifetime.onInvalidated {
                 val held=coreSlot.get()
                 if(held?.identity === slotIdentity && coreSlot.compareAndSet(held,null)) {
-                    held.persons.invalidate();held.tasks.invalidate()
+                    held.persons.invalidate();held.tasks.invalidate();held.hub.invalidate()
                     // No Compose mutation on a session worker; authority/reference already gone.
                     runCatching { ownerDispatch { coreSignal++ } }
                 }

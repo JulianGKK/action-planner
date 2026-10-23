@@ -59,14 +59,15 @@ class CoreReadAdmissionBudgetTest {
         }
     }
 
-    @Test fun personsAndTasksShareOneScratchAndBothHandlesAtExactLimitsBeforeMaterialization() = runBlocking {
+    @Test fun threePresentationHandlesAndHubMetadataShareOneScratchAtExactLimits() = runBlocking {
         val extra=CompactPresentationBudget.reservation
         val extraR=ActiveWorkspaceBudget.estimateUnits(extra.retained).second
         val extraT=ActiveWorkspaceBudget.estimateUnits(extra.transition).second
-        assertEquals(304L,extraR);assertEquals(61392L,extraT)
+        assertEquals(2440L,extraR);assertEquals(63528L,extraT)
         val handle=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.handle).second
+        val hub=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.hub).second
         val shared=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.sharedTransition).second
-        assertEquals(152L,handle);assertEquals(handle*2,extraR);assertEquals(handle*2+shared,extraT)
+        assertEquals(152L,handle);assertEquals(2136L,hub);assertEquals(handle*2+hub,extraR);assertEquals(handle*2+hub+shared,extraT)
         var work=0
         val fitting=plan(r-extraR,t-extraT){work++}
         val receipt=CoreReadAdmission.admit(listOf(fitting),extra)

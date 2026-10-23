@@ -98,7 +98,13 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
     }
     if(!renderContent)return
     if(model.compactActiveMode) {
-        if(model.activeArea==ActiveArea.PERSONS) {
+        if(model.activeArea==ActiveArea.HUB) {
+            val hub=model.compactHubPresentation
+            if(hub==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
+            hub.compositionObserved()
+            DisposableEffect(hub) { onDispose {hub.compositionDisposed()} }
+            key(model.activeArea) { CompactActiveContent(hub,model.activeNavigationEnabled,contentFrames) }
+        } else if(model.activeArea==ActiveArea.PERSONS) {
             val persons=model.compactPersonsPresentation
             if(persons==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
             persons.compositionObserved()
@@ -163,29 +169,60 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
 internal fun compactPageLabel(shown:Int,total:Long,hasMore:Boolean):String =
     "$shown von $total angezeigt" + if(hasMore) " · weitere Einträge verfügbar" else ""
 
-internal fun activeCompactHubCards(core:ActiveCorePayload):List<HubCard> = listOf(
-    HubCard(ActiveArea.PERSONS,listOf("${core.people.overall.total} insgesamt","${core.people.overall.onSite} vor Ort")),
-    HubCard(ActiveArea.FUNCTIONS,listOf("${core.functions.items.size} Funktionen","${core.functions.onSiteCount} Personen vor Ort")),
-    HubCard(ActiveArea.TASKS,listOf("${core.tasks.overall.open} offen","${core.tasks.overall.inProgress} in Arbeit"))
-)
-
 @Composable private fun CompactActiveContent(core:ActiveCorePayload,area:ActiveArea,enabled:Boolean,onOpen:(ActiveArea)->Unit, observer:CompactContentFrameObserver?=null) {
     val frameModifier=compactFrameModifier(area,observer)
     Column(frameModifier,verticalArrangement=Arrangement.spacedBy(16.dp)) {
         PreparationHeading(area.label)
         when(area) {
-            ActiveArea.HUB -> {
-                ActiveHubGrid(activeCompactHubCards(core),enabled,onOpen=onOpen)
-                listOf(ActiveArea.PROTOCOL,ActiveArea.MATERIAL,ActiveArea.COSTS,ActiveArea.MEMORY_REPORTS,ActiveArea.DETAILS).forEach { next ->
-                    FormOutlinedButton({onOpen(next)},enabled=enabled) {Text(next.label)}
-                }
-            }
             ActiveArea.FUNCTIONS -> {
                 Text("${core.functions.onSiteCount} Personen vor Ort · ${core.functions.withoutFunction} ohne Funktion")
                 if (core.functions.items.isEmpty()) Text("Noch keine aktuellen Funktionen")
                 core.functions.items.forEach { function -> Text("${function.role.name}: ${function.onSiteCount} vor Ort") }
             }
             else -> Unit
+        }
+    }
+}
+
+internal fun compactHubSummary(index:Int,line:Int,value:Long):String=when(index) {
+    0->if(line==0)"$value insgesamt" else "$value vor Ort"
+    1->if(line==0)"$value Funktionen" else "$value Personen vor Ort"
+    else->if(line==0)"$value offen" else "$value in Arbeit"
+}
+
+/** Indexed layout: one original metadata card list, no chunked/copied card lists. */
+@Composable private fun CompactActiveContent(hub:CompactHubPresentation,enabled:Boolean,observer:CompactContentFrameObserver?=null) {
+    Column(compactFrameModifier(ActiveArea.HUB,observer),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        PreparationHeading(ActiveArea.HUB.label)
+        val fontScale=LocalDensity.current.fontScale
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val columns=activeHubColumns(maxWidth.value,fontScale)
+            Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                for(row in 0 until (hub.size()+columns-1)/columns) {
+                    Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                        for(index in row*columns until minOf((row+1)*columns,hub.size())) {
+                            val card=hub.card(index) ?: continue
+                            val first=hub.value(index,0) ?: continue
+                            val second=hub.value(index,1) ?: continue
+                            val click=hub.navigation(card.area) ?: continue
+                            FormOutlinedButton(click,enabled=enabled,modifier=Modifier.weight(1f).heightIn(min=96.dp)) {
+                                Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                                    PreparationHeading(card.label)
+                                    Text(compactHubSummary(index,0,first));Text(compactHubSummary(index,1,second))
+                                    Text("${card.label} öffnen")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Existing auxiliary routes; same original callbacks, no per-render owner capture.
+        for(area in ActiveArea.entries) {
+            if(area==ActiveArea.PROTOCOL || area==ActiveArea.MATERIAL || area==ActiveArea.COSTS || area==ActiveArea.MEMORY_REPORTS || area==ActiveArea.DETAILS) {
+                val click=hub.navigation(area) ?: continue
+                FormOutlinedButton(click,enabled=enabled){Text(area.label)}
+            }
         }
     }
 }

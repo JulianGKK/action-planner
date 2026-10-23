@@ -1,0 +1,30 @@
+P94_OWNER_BEFORE_UI,session=READY,area=HUB,cards=3
+P94_UI_ROOT,package=org.pag.prototype.a.p77runtime,children=3
+P94_UI_NODE,visible=true,text=P77 ISOLIERTER TEST – synthetischer Schlüssel und synthetische Testdaten; keine Produktanmeldung
+P94_UI_NODE,visible=true,text=Sperren
+P94_UI_NODE,visible=true,text=‹ Aktionen
+P94_UI_NODE,visible=true,text=Synthetic action
+P94_UI_NODE,visible=true,text=AKTIV
+P94_UI_NODE,visible=true,text=Lagebild
+P94_UI_NODE,visible=true,text=Personen
+P94_UI_NODE,visible=true,text=200 insgesamt
+P94_UI_NODE,visible=true,text=200 vor Ort
+P94_UI_NODE,visible=true,text=Personen öffnen
+P94_UI_NODE,visible=true,text=Funktionen
+P94_UI_NODE,visible=true,text=6 Funktionen
+P94_UI_NODE,visible=true,text=200 Personen vor Ort
+P94_UI_NODE,visible=true,text=Funktionen öffnen
+P94_UI_NODE,visible=true,text=Aufgaben
+P94_UI_NODE,visible=true,text=1000 offen
+P94_UI_NODE,visible=true,text=0 in Arbeit
+P94_UI_NODE,visible=true,text=Aufgaben öffnen
+P94_UI_NODE,visible=true,text=Protokoll
+P94_UI_NODE,visible=true,text=Material
+P94_VISIBLE_CARD,PERSONS,total=200,onSite=200,clickable=true
+P94_VISIBLE_CARD,FUNCTIONS,count=6,onSite=200,clickable=true
+P94_VISIBLE_CARD,TASKS,open=1000,inProgress=0,clickable=true
+P94_UI,people=200,tasks=1000,storedEvents=5000,cards=3,visibleCardValues=EXACT,reuse=false,ramReuse=false
+P94_FENCES,writerPending=DENIED,UNKNOWN=DENIED,lateMain=DENIED,lock=DENIED,newCoreReads=0,secondAdmission=DENIED,retirement=UNCONFIRMED,unknownInjection=protocol_metadata_only,scalarBeforeRevoke=RETURNED,scalarAfterRevoke=DENIED,atomicFrame=NOT_CLAIMED
+P94_CASE,ANDROID-PASS,fixtureCleanup=true,physicalWipe=NOT_CLAIMED,frameworkNativeBounds=NOT_CLAIMED
+INSTRUMENTATION_RESULT: result=P94 PASS
+INSTRUMENTATION_CODE: -1

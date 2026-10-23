@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P83OverlapBudgetTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-23T19:06:14.570Z" hostname="iuzjhtgvfc" time="1.117">
+  <properties/>
+  <testcase name="productLoaderRefusesOldComposePlusNewReadBeforeAnyNewSqlMaterialization" classname="org.pag.data.product.P83OverlapBudgetTest" time="0.375"/>
+  <testcase name="individuallyAdmittedReadsCanExceedTransitionWhenOldGraphStillLives" classname="org.pag.data.product.P83OverlapBudgetTest" time="0.191"/>
+  <testcase name="normalNativeShaped2001000PlanPassesProductAdmissionAgainAfterUnpublishedRetirement" classname="org.pag.data.product.P83OverlapBudgetTest" time="0.137"/>
+  <testcase name="realisticSizesUnicodeIncludingHundredRolesKeepCompleteCountsWithoutProductApproval" classname="org.pag.data.product.P83OverlapBudgetTest" time="0.414"/>
+  <system-out><![CDATA[P84 PRODUCT-REFUSAL oldR=4186552 plannedNewT=16776168 sum=20962720 readCount=1 beforeNewSQL=true
+P83 HOST-CHARACTERIZATION oldR=4186552 newR=4186552 newT=16776168 oldPlusNewT=20962720 joint=BLOCKER
+P83 HOST-FIXTURE 20/40/6 retained=1305256 transition=5250984 result=ADMITTED
+P83 HOST-FIXTURE 100/250/6 retained=1607192 transition=6458728 result=ADMITTED
+P83 HOST-FIXTURE 200/1000/6 retained=1607652 transition=6460568 result=ADMITTED
+P83 HOST-FIXTURE 200/1000/32 retained=1821796 transition=7317144 result=ADMITTED
+P83 HOST-FIXTURE 200/1000/100 retained=2378408 transition=9543592 result=ADMITTED
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
