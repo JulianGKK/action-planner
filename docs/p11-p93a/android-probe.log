@@ -1,0 +1,20 @@
+P93_OWNER_BEFORE_UI,session=READY,area=TASKS,shown=32
+P93_UI_ROOT,package=org.pag.prototype.a.p77runtime,children=3
+P93_UI_NODE,visible=true,text=P77 ISOLIERTER TEST – synthetischer Schlüssel und synthetische Testdaten; keine Produktanmeldung
+P93_UI_NODE,visible=true,text=Sperren
+P93_UI_NODE,visible=true,text=‹ Aktionen
+P93_UI_NODE,visible=true,text=Synthetic action
+P93_UI_NODE,visible=true,text=AKTIV
+P93_UI_NODE,visible=true,text=‹ Zum Lagebild
+P93_UI_NODE,visible=true,text=Aufgaben
+P93_UI_NODE,visible=true,text=1000 offen · 0 in Arbeit · 0 abgeschlossen · 0 abgebrochen
+P93_UI_NODE,visible=true,text=32 von 1000 angezeigt · weitere Einträge verfügbar
+P93_UI_NODE,visible=true,text=Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Synthetic task 305
+P93_UI_NODE,visible=true,text=Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Synthetic task 399
+P93_UI_NODE,visible=true,text=Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Synthetic task 324
+P93_UI_NODE,visible=true,text=Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Ä界🦋Synthetic task 280
+P93_UI,people=200,tasks=1000,storedEvents=5000,shown=32,titles=32_DISTINCT_EXACT_FIXTURE_VALUES,visibleText=PASS,reuse=false,ramReuse=false
+P93_FENCES,writerPending=DENIED,UNKNOWN=DENIED,lateMain=DENIED,lock=DENIED,newCoreReads=0,secondAdmission=DENIED,retirement=UNCONFIRMED,unknownInjection=protocol_metadata_only,scalarBeforeRevoke=RETURNED,scalarAfterRevoke=DENIED,atomicFrame=NOT_CLAIMED
+P93_CASE,ANDROID-PASS,fixtureCleanup=true,physicalWipe=NOT_CLAIMED,frameworkNativeBounds=NOT_CLAIMED
+INSTRUMENTATION_RESULT: result=P93 PASS
+INSTRUMENTATION_CODE: -1

@@ -59,8 +59,8 @@ internal class ActiveCoreStore(private val sql: PooledConnection, private val co
         // Includes bounded lifetime, revoke-listener and ViewModel slot metadata for §70.
         internal val envelope = ActiveCoreReservation(
             CoreReadAdmission.add(ActiveWorkspaceBudget.Units(objects = 24, lists = 2, listCapacity = 4, references = 64),
-                CompactPersonsPresentationBudget.reservation.retained),
+                CompactPresentationBudget.reservation.retained),
             CoreReadAdmission.add(ActiveWorkspaceBudget.Units(objects = 48, lists = 4, listCapacity = 16, references = 128),
-                CompactPersonsPresentationBudget.reservation.transition))
+                CompactPresentationBudget.reservation.transition))
     }
 }

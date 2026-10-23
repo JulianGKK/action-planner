@@ -20,9 +20,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private val ownerThread=Thread.currentThread()
     private var ownerDispatch: (() -> Unit) -> Unit = { work -> check(Thread.currentThread() === ownerThread);work() }
     private var activeCorePort:ActiveCoreLoadPort?=null
-    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any, val persons:CompactPersonsPresentation) {
+    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any, val persons:CompactPersonsPresentation, val tasks:CompactTasksPresentation) {
         var subscription:Subscription?=null
-        fun close() { persons.invalidate();subscription?.cancel();lifetime.close() }
+        fun close() { persons.invalidate();tasks.invalidate();subscription?.cancel();lifetime.close() }
     }
     private val coreSlot=AtomicReference<CoreSlot?>(null)
     private var coreLoad:Any?=null
@@ -48,45 +48,60 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         }
         return core
     }
-    /** One pre-admitted metadata handle per slot, never a second page/payload root. */
-    internal val compactPersonsPresentation:CompactPersonsPresentation? get() {
+    /** Pre-admitted metadata handles, never second page/payload roots. */
+    internal val compactPersonsPresentation:CompactPersonsPresentation? get() = presentationSlot(ActiveArea.PERSONS)?.persons
+    internal val compactTasksPresentation:CompactTasksPresentation? get() = presentationSlot(ActiveArea.TASKS)?.tasks
+    private fun presentationSlot(area:ActiveArea):CoreSlot? {
         coreSignal
-        if(Thread.currentThread() !== ownerThread || activeArea!=ActiveArea.PERSONS || !compactActiveMode)return null
+        if(Thread.currentThread() !== ownerThread || activeArea!=area || !compactActiveMode)return null
         val slot=coreSlot.get() ?: return null
-        if(!compactPersonsCurrent(slot)) {dropCompactPersons(slot);return null}
-        return slot.persons
+        if(!compactPresentationCurrent(slot,area)) {dropCompactPresentation(slot);return null}
+        return slot
     }
-    private fun dropCompactPersons(slot:CoreSlot) {
+    private fun dropCompactPresentation(slot:CoreSlot) {
         if(coreSlot.compareAndSet(slot,null))slot.close() // No outstanding-read retirement.
     }
-    private fun compactPersonsCurrent(slot:CoreSlot):Boolean {
+    private fun compactPresentationCurrent(slot:CoreSlot,area:ActiveArea):Boolean {
         val current=session.snapshot()
         val core=slot.value.core
-        return coreSlot.get()===slot && activeArea==ActiveArea.PERSONS && compactActiveMode && activeNavigationEnabled &&
+        return coreSlot.get()===slot && activeArea==area && compactActiveMode && activeNavigationEnabled &&
             snapshot.state==SessionState.READY && current.state==SessionState.READY &&
             snapshot.generation==core.state.binding.generation && current.generation==core.state.binding.generation &&
             selected?.id==core.state.binding.actionId && selected?.status==ActionStatus.ACTIVE && slot.lifetime.isCurrent()
     }
-    private inline fun <T> resolveCompactPersons(identity:Any,crossinline read:(ActiveCorePeoplePage)->T):T? {
+    private inline fun <T> resolveCompactPresentation(identity:Any,area:ActiveArea,crossinline read:(ActiveCorePayload)->T):T? {
         if(Thread.currentThread() !== ownerThread)return null
         val slot=coreSlot.get()?.takeIf {it.identity===identity} ?: return null
-        if(!compactPersonsCurrent(slot) || !slot.lifetime.authorizeHit(slot.value.core.state.binding.actionId)) {
-            dropCompactPersons(slot);return null
+        if(!compactPresentationCurrent(slot,area) || !slot.lifetime.authorizeHit(slot.value.core.state.binding.actionId)) {
+            dropCompactPresentation(slot);return null
         }
         var value:T?=null
-        val accepted=slot.lifetime.publish { if(compactPersonsCurrent(slot))value=read(slot.value.core.people) }
-        if(!accepted || !compactPersonsCurrent(slot)) {dropCompactPersons(slot);return null}
+        val accepted=slot.lifetime.publish { if(compactPresentationCurrent(slot,area))value=read(slot.value.core) }
+        if(!accepted || !compactPresentationCurrent(slot,area)) {dropCompactPresentation(slot);return null}
         return value
     }
-    internal fun compactPersonsShown(identity:Any):Int? = resolveCompactPersons(identity){it.items.size}
-    internal fun compactPersonsTotal(identity:Any):Long? = resolveCompactPersons(identity){it.overall.total}
-    internal fun compactPersonsHasMore(identity:Any):Boolean? = resolveCompactPersons(identity){it.hasMore}
-    internal fun compactPersonsCount(identity:Any,status:OperationalStatus):Long? = resolveCompactPersons(identity){it.overall.count(status)}
+    internal fun compactPersonsShown(identity:Any):Int? = resolveCompactPresentation(identity,ActiveArea.PERSONS){it.people.items.size}
+    internal fun compactPersonsTotal(identity:Any):Long? = resolveCompactPresentation(identity,ActiveArea.PERSONS){it.people.overall.total}
+    internal fun compactPersonsHasMore(identity:Any):Boolean? = resolveCompactPresentation(identity,ActiveArea.PERSONS){it.people.hasMore}
+    internal fun compactPersonsCount(identity:Any,status:OperationalStatus):Long? = resolveCompactPresentation(identity,ActiveArea.PERSONS){it.people.overall.count(status)}
     internal fun compactPersonPseudonym(identity:Any,index:Int):String? {
         if(index !in 0 until 32)return null
-        return resolveCompactPersons(identity){it.items.getOrNull(index)?.pseudonym}
+        return resolveCompactPresentation(identity,ActiveArea.PERSONS){it.people.items.getOrNull(index)?.pseudonym}
     }
-    internal fun compactPersonsComposition(identity:Any,observed:Boolean) {
+    internal fun compactTasksShown(identity:Any):Int? = resolveCompactPresentation(identity,ActiveArea.TASKS){it.tasks.items.size}
+    internal fun compactTasksActiveCount(identity:Any):Long? = resolveCompactPresentation(identity,ActiveArea.TASKS){it.tasks.overall.open+it.tasks.overall.inProgress}
+    internal fun compactTasksHasMore(identity:Any):Boolean? = resolveCompactPresentation(identity,ActiveArea.TASKS){it.tasks.hasMore}
+    internal fun compactTasksCount(identity:Any,status:TaskStatus):Long? = resolveCompactPresentation(identity,ActiveArea.TASKS){
+        when(status) {
+            TaskStatus.OPEN->it.tasks.overall.open;TaskStatus.IN_PROGRESS->it.tasks.overall.inProgress
+            TaskStatus.DONE->it.tasks.overall.done;TaskStatus.CANCELLED->it.tasks.overall.cancelled
+        }
+    }
+    internal fun compactTaskTitle(identity:Any,index:Int):String? {
+        if(index !in 0 until 32)return null
+        return resolveCompactPresentation(identity,ActiveArea.TASKS){it.tasks.items.getOrNull(index)?.title}
+    }
+    internal fun compactPresentationComposition(identity:Any,observed:Boolean) {
         if(Thread.currentThread() !== ownerThread)return
         val slot=coreSlot.get()?.takeIf {it.identity===identity} ?: return
         if(observed)slot.lifetime.compositionObserved() else slot.lifetime.compositionDisposed()
@@ -129,11 +144,11 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 lifetime.close();personsLoading=false;workspaceError=true;return@loadOwned
             }
             val slotIdentity=Any()
-            val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity))
+            val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity),CompactTasksPresentation(this,slotIdentity))
             slot.subscription=lifetime.onInvalidated {
                 val held=coreSlot.get()
                 if(held?.identity === slotIdentity && coreSlot.compareAndSet(held,null)) {
-                    held.persons.invalidate()
+                    held.persons.invalidate();held.tasks.invalidate()
                     // No Compose mutation on a session worker; authority/reference already gone.
                     runCatching { ownerDispatch { coreSignal++ } }
                 }

@@ -142,6 +142,85 @@ class ActiveCoreOwnerTest {
         assertNull(h.model.compactPersonsPresentation);assertFalse(life.live.get())
     }
 
+    private fun tasksFixture(size:Int=32):ActiveCoreResult.Value {
+        val value=core();val counts=CompactTaskCounts(640,200,17,100,60)
+        val items=(0 until size).map { CompactTaskItem("t$it","Synthetic task Ä界🦋 $it",TaskPriority.NORMAL,
+            TaskStatus.OPEN,null,null,null,null,it.toLong(),1) }
+        return value.copy(core=value.core.copy(tasks=value.core.tasks.copy(overall=counts,filtered=counts,items=items)))
+    }
+    private fun tasksOwner():Triple<H,Lifetime,CompactTasksPresentation> {
+        val h=H();h.model.activeArea(ActiveArea.TASKS);h.port.deliver()
+        assertNull(h.model.activeCore)
+        val life=h.port.deliver(tasksFixture())
+        return Triple(h,life,checkNotNull(h.model.compactTasksPresentation))
+    }
+    @Test fun tasksHandleResolvesOnlyThirtyTwoUnicodeTitlesAndExactExistingCounters() {
+        val (h,life,view)=tasksOwner();val reads=h.port.reads;val interactions=h.session.interactions
+        assertSame(view,h.model.compactTasksPresentation);assertNull(h.model.compactPersonsPresentation)
+        assertEquals(32,view.shown());assertEquals(840L,view.activeCount());assertEquals(true,view.hasMore())
+        assertEquals(640L,view.count(TaskStatus.OPEN));assertEquals(200L,view.count(TaskStatus.IN_PROGRESS))
+        assertEquals(100L,view.count(TaskStatus.DONE));assertEquals(60L,view.count(TaskStatus.CANCELLED))
+        repeat(32){assertEquals("Synthetic task Ä界🦋 $it",view.title(it))}
+        val hits=life.hits
+        for(index in listOf(-1,32,Int.MIN_VALUE,Int.MAX_VALUE))assertNull(view.title(index))
+        assertEquals(hits,life.hits);assertEquals(reads,h.port.reads);assertEquals(interactions,h.session.interactions)
+        val fields=view.javaClass.declaredFields.filterNot {java.lang.reflect.Modifier.isStatic(it.modifiers)}
+        assertEquals(2,fields.size);assertTrue(fields.all{it.type==Any::class.java || it.type==ProductViewModel::class.java})
+        view.compositionObserved();view.compositionDisposed();assertEquals(1,life.observations);assertEquals(1,life.disposals)
+        assertEquals("Synthetic task Ä界🦋 0",view.title(0)) // No retirement grant.
+    }
+    @Test fun oldTasksHandlesDenyLockRevokeGenerationActionStatusAndContextWithoutNewRead() {
+        for(reason in listOf("lock","revoke","generation","action","status","context","fresh-session")) {
+            val (h,life,view)=tasksOwner()
+            when(reason) {
+                "lock"->h.model.lock();"revoke"->life.close();"context"->{life.current=false}
+                "generation"->h.session.change(SessionSnapshot(SessionState.READY,2))
+                "action"->{h.repo.action=h.repo.action.copy(id="other");h.model.detail("other")}
+                "status"->{h.repo.action=h.repo.action.copy(status=ActionStatus.COMPLETED);h.model.detail("a")}
+                else->h.session.state=SessionSnapshot(SessionState.LOCKED,2)
+            }
+            val reads=h.port.reads
+            repeat(2){assertNull(reason,view.title(0));assertNull(view.shown());assertNull(view.activeCount());assertNull(view.hasMore());assertNull(view.count(TaskStatus.OPEN))}
+            life.current=true;h.session.state=SessionSnapshot(SessionState.READY,1)
+            assertNull(view.title(0));assertEquals(reads,h.port.reads)
+        }
+    }
+    @Test fun revokeBetweenTaskScalarsPreservesAlreadyReturnedTextButDeniesEveryLaterLookup() {
+        val (h,life,view)=tasksOwner();val first=view.title(0)
+        assertEquals("Synthetic task Ä界🦋 0",first)
+        life.close() // Controlled boundary between two actual UI-style scalar calls.
+        assertNull(view.title(1));assertNull(view.count(TaskStatus.OPEN));assertNull(view.shown())
+        assertEquals("Synthetic task Ä界🦋 0",first) // No recall or atomic whole-frame claim.
+        assertNull(view.javaClass.getDeclaredField("owner").also{it.isAccessible=true}.get(view))
+        assertNull(h.model.compactTasksPresentation)
+    }
+    @Test fun taskWriterPendingUnknownAndLateMainCannotRestoreOldHandleOrResolveSql() {
+        val h=H();h.model.activeArea(ActiveArea.TASKS);h.port.deliver()
+        val callback=h.port.pending.single().second
+        val life=h.port.deliver(tasksFixture());val view=checkNotNull(h.model.compactTasksPresentation)
+        val mutations=UncachedWorkspaceMutations();val ticket=checkNotNull(mutations.beforeActiveRead("a",1))
+        ticket.onInvalidated{life.close()}
+        assertNotNull(view.title(0));val reads=h.port.reads
+        val pending=checkNotNull(mutations.beforeTaskQueue("a",1))
+        assertNull(view.title(1));assertNull(view.activeCount())
+        assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.UNKNOWN,WorkspaceWriteCleanup.COMPLETE)))
+        assertNull(mutations.beforeActiveRead("a",1));assertNull(view.title(2))
+        repeat(2){callback(tasksFixture(),life)}
+        assertNull(h.model.compactTasksPresentation);assertEquals(reads,h.port.reads)
+    }
+    @Test fun taskHandleRejectsForeignThreadPublicationRaceReplacementAndOversizedPage() {
+        val (h,life,view)=tasksOwner();val result=java.util.concurrent.atomic.AtomicReference<String?>("not denied")
+        val hits=life.hits;val t=Thread{result.set(view.title(0))};t.start();t.join(3000)
+        assertFalse(t.isAlive);assertNull(result.get());assertEquals(hits,life.hits)
+        life.duringInstall={life.close()};assertNull(view.title(0))
+        h.model.activeArea(ActiveArea.TASKS);h.port.deliver(tasksFixture())
+        val next=checkNotNull(h.model.compactTasksPresentation)
+        assertNotSame(view,next);assertNull(view.title(0));assertNotNull(next.title(0))
+        val oversized=H();oversized.model.activeArea(ActiveArea.TASKS);oversized.port.deliver()
+        val rejected=oversized.port.deliver(tasksFixture(33))
+        assertFalse(rejected.live.get());assertNull(oversized.model.compactTasksPresentation)
+    }
+
     @Test fun oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse() {
         val h=H(true);h.port.deliver();val first=h.model.activeCore
         assertNotNull(first);assertNull(h.model.workspace)

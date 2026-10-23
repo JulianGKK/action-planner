@@ -16,6 +16,6 @@ internal class CompactPersonsPresentation internal constructor(
     fun hasMore():Boolean? = owner?.compactPersonsHasMore(identity)
     fun count(status:OperationalStatus):Long? = owner?.compactPersonsCount(identity,status)
     fun pseudonym(index:Int):String? = owner?.compactPersonPseudonym(identity,index)
-    fun compositionObserved() = owner?.compactPersonsComposition(identity,true)
-    fun compositionDisposed() = owner?.compactPersonsComposition(identity,false)
+    fun compositionObserved() = owner?.compactPresentationComposition(identity,true)
+    fun compositionDisposed() = owner?.compactPresentationComposition(identity,false)
 }

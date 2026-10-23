@@ -104,6 +104,12 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             persons.compositionObserved()
             DisposableEffect(persons) { onDispose {persons.compositionDisposed()} }
             key(model.activeArea) { CompactActiveContent(persons,contentFrames) }
+        } else if(model.activeArea==ActiveArea.TASKS) {
+            val tasks=model.compactTasksPresentation
+            if(tasks==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
+            tasks.compositionObserved()
+            DisposableEffect(tasks) { onDispose {tasks.compositionDisposed()} }
+            key(model.activeArea) { CompactActiveContent(tasks,contentFrames) }
         } else {
             val core=model.activeCore
             if(core==null) {if(model.workspaceError)PagErrorState() else PagLoadingState();return}
@@ -179,12 +185,6 @@ internal fun activeCompactHubCards(core:ActiveCorePayload):List<HubCard> = listO
                 if (core.functions.items.isEmpty()) Text("Noch keine aktuellen Funktionen")
                 core.functions.items.forEach { function -> Text("${function.role.name}: ${function.onSiteCount} vor Ort") }
             }
-            ActiveArea.TASKS -> {
-                val counts=core.tasks.overall
-                Text("${counts.open} offen · ${counts.inProgress} in Arbeit · ${counts.done} abgeschlossen · ${counts.cancelled} abgebrochen")
-                Text(compactPageLabel(core.tasks.items.size,counts.open+counts.inProgress,core.tasks.hasMore))
-                core.tasks.items.forEach { task -> Text(task.title) }
-            }
             else -> Unit
         }
     }
@@ -203,6 +203,24 @@ internal fun activeCompactHubCards(core:ActiveCorePayload):List<HubCard> = listO
             Text("${operationalLabel(status)}: $count")
         }
         repeat(shown) { index -> persons.pseudonym(index)?.let { Text(it) } }
+    }
+}
+
+/** TASKS exports only bounded scalar values through its original slot identity. */
+@Composable private fun CompactActiveContent(tasks:CompactTasksPresentation,observer:CompactContentFrameObserver?=null) {
+    val shown=tasks.shown() ?: return
+    val active=tasks.activeCount() ?: return
+    val more=tasks.hasMore() ?: return
+    val open=tasks.count(TaskStatus.OPEN) ?: return
+    val progress=tasks.count(TaskStatus.IN_PROGRESS) ?: return
+    val done=tasks.count(TaskStatus.DONE) ?: return
+    val cancelled=tasks.count(TaskStatus.CANCELLED) ?: return
+    Column(compactFrameModifier(ActiveArea.TASKS,observer),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+        PreparationHeading(ActiveArea.TASKS.label)
+        Text("$open offen · $progress in Arbeit · $done abgeschlossen · $cancelled abgebrochen")
+        Text(compactPageLabel(shown,active,more))
+        // Scalar accesses are independently authorized, never an atomic whole-frame receipt.
+        repeat(shown) { index -> tasks.title(index)?.let { Text(it) } }
     }
 }
 

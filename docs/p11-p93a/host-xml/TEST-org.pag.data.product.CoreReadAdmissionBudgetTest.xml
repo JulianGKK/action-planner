@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.CoreReadAdmissionBudgetTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-23T18:51:20.698Z" hostname="iuzjhtgvfc" time="0.06">
+  <properties/>
+  <testcase name="overflowCannotAuthorizeMaterialization" classname="org.pag.data.product.CoreReadAdmissionBudgetTest" time="0.011"/>
+  <testcase name="exactSeparateLimitsAndEachNextByteAreCheckedBeforeMaterialization" classname="org.pag.data.product.CoreReadAdmissionBudgetTest" time="0.043"/>
+  <testcase name="oldNewBuilderAndFormOverheadShareOneAdmission" classname="org.pag.data.product.CoreReadAdmissionBudgetTest" time="0.0"/>
+  <testcase name="personsAndTasksShareOneScratchAndBothHandlesAtExactLimitsBeforeMaterialization" classname="org.pag.data.product.CoreReadAdmissionBudgetTest" time="0.001"/>
+  <testcase name="outstandingReadChecksBothReceiptLimitsAndKeepsExclusiveFenceOnRefusal" classname="org.pag.data.product.CoreReadAdmissionBudgetTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

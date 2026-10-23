@@ -59,19 +59,24 @@ class CoreReadAdmissionBudgetTest {
         }
     }
 
-    @Test fun personsPresentationOverheadSharesExactLimitsBeforeMaterialization() = runBlocking {
-        val extra=CompactPersonsPresentationBudget.reservation
+    @Test fun personsAndTasksShareOneScratchAndBothHandlesAtExactLimitsBeforeMaterialization() = runBlocking {
+        val extra=CompactPresentationBudget.reservation
         val extraR=ActiveWorkspaceBudget.estimateUnits(extra.retained).second
         val extraT=ActiveWorkspaceBudget.estimateUnits(extra.transition).second
-        assertEquals(152L,extraR);assertEquals(61088L,extraT)
+        assertEquals(304L,extraR);assertEquals(61392L,extraT)
+        val handle=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.handle).second
+        val shared=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.sharedTransition).second
+        assertEquals(152L,handle);assertEquals(handle*2,extraR);assertEquals(handle*2+shared,extraT)
         var work=0
         val fitting=plan(r-extraR,t-extraT){work++}
         val receipt=CoreReadAdmission.admit(listOf(fitting),extra)
         assertEquals(r,receipt.retained);assertEquals(t,receipt.transition)
         fitting.materialize(receipt);assertEquals(1,work)
-        val overflowing=plan(r-extraR+1,t-extraT){work++}
-        try {CoreReadAdmission.admit(listOf(overflowing),extra);fail("No free presentation handle")}
-        catch(rejected:BoundedActiveRejected){assertEquals(BoundedActiveStatus.BUDGET_REFUSED,rejected.status)}
+        for((retained,transition) in listOf((r-extraR+1) to (t-extraT),(r-extraR) to (t-extraT+1))) {
+            val overflowing=plan(retained,transition){work++}
+            try {CoreReadAdmission.admit(listOf(overflowing),extra);fail("No free presentation handles/scratch")}
+            catch(rejected:BoundedActiveRejected){assertEquals(BoundedActiveStatus.BUDGET_REFUSED,rejected.status)}
+        }
         assertEquals(1,work)
     }
 
