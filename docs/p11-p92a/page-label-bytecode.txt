@@ -9,4 +9,3 @@ public static final java.lang.String compactPageLabel(int, long, boolean);
       12: ldc_w         #875                // String
       15: invokedynamic #1412,  0           // InvokeDynamic #37:makeConcatWithConstants:(IJLjava/lang/String;)Ljava/lang/String;
       20: areturn
-
