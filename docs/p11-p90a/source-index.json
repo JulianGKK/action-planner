@@ -1,0 +1,243 @@
+[
+  {
+    "coordinate": "androidx.compose.material3:material3-android:1.4.0",
+    "entry": "commonMain/androidx/compose/material3/Text.kt",
+    "sha256": "f638817208f2ac7a6db976d085acba3cbdcee22c3eb2fb6f9cbf72ca5f570d65",
+    "line_hits": {
+      "fun Text(": [
+        102,
+        209,
+        265,
+        310,
+        357,
+        401
+      ],
+      "BasicText(": [
+        125,
+        235
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.foundation:foundation-android:1.12.1",
+    "entry": "commonMain/androidx/compose/foundation/text/BasicText.kt",
+    "sha256": "a1689c55fdf9fe6f6323c46e5280a97737dad41eecce0999c148f2b6b9556cb8",
+    "line_hits": {
+      "fun BasicText(": [
+        92,
+        198,
+        322,
+        363,
+        391,
+        414,
+        439,
+        452
+      ],
+      "TextStringSimpleElement(": [
+        153
+      ],
+      "BackgroundTextMeasurement(": [
+        126,
+        236,
+        693,
+        746,
+        759
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.foundation:foundation-android:1.12.1",
+    "entry": "androidMain/androidx/compose/foundation/text/BasicText.android.kt",
+    "sha256": "a56f4b279660971c0a49267998c95190220701a861ea7bb4eba577fc24faf945",
+    "line_hits": {
+      "LocalBackgroundTextMeasurementExecutor =": [
+        61
+      ],
+      "executor != null": [
+        72,
+        120
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.foundation:foundation-android:1.12.1",
+    "entry": "commonMain/androidx/compose/foundation/text/modifiers/TextStringSimpleElement.kt",
+    "sha256": "01607f57712f02f96dc40b87202f89891f1c7c2c6b39923ab77a45c33a2eac4f",
+    "line_hits": {
+      "private val text: String": [
+        33
+      ],
+      "override fun create": [
+        43
+      ],
+      "override fun update": [
+        55
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.foundation:foundation-android:1.12.1",
+    "entry": "commonMain/androidx/compose/foundation/text/modifiers/TextStringSimpleNode.kt",
+    "sha256": "1c00db516bca9827173676964d72748d5afec0909f8901721c95ffd0ea955e91",
+    "line_hits": {
+      "private var text: String": [
+        75
+      ],
+      "applySemantics()": [
+        326
+      ],
+      "text = AnnotatedString(": [
+        342
+      ],
+      "getTextLayoutResult(": [
+        374
+      ],
+      "override fun ContentDrawScope.draw()": [
+        450
+      ],
+      "localParagraph.paint(": [
+        482,
+        500
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.foundation:foundation-android:1.12.1",
+    "entry": "commonMain/androidx/compose/foundation/text/modifiers/ParagraphLayoutCache.kt",
+    "sha256": "efa90b21a847feb7dd08171b2505f2afbfb0499e152830c970548adba7a0b4ea",
+    "line_hits": {
+      "private var text: String": [
+        50
+      ],
+      "internal var paragraph:": [
+        93
+      ],
+      "private var paragraphIntrinsics:": [
+        105
+      ],
+      "fun slowCreateTextLayoutResultOrNull": [
+        367
+      ],
+      "TextLayoutInput(": [
+        378
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.ui:ui-text-android:1.12.1",
+    "entry": "androidMain/androidx/compose/ui/text/ParagraphIntrinsics.android.kt",
+    "sha256": "ebd8e63db1847c2cf01c9c3a2b58999db550899a871b34aaae2225237fb2562e",
+    "line_hits": {
+      "class AndroidParagraphIntrinsics(": [
+        57
+      ],
+      "val text: String": [
+        58
+      ],
+      "createCharSequence(": [
+        168
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.ui:ui-text-android:1.12.1",
+    "entry": "androidMain/androidx/compose/ui/text/AndroidParagraph.android.kt",
+    "sha256": "fac01b81afd3226edaa725af1354a77f78319d25a1dba850e53337f65c04c9e8",
+    "line_hits": {
+      "private val layout:": [
+        142
+      ],
+      "internal val charSequence:": [
+        144
+      ],
+      "constructTextLayout(": [
+        240,
+        271,
+        291,
+        712
+      ],
+      "override fun paint(": [
+        629,
+        644,
+        666
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.ui:ui-text-android:1.12.1",
+    "entry": "androidMain/androidx/compose/ui/text/android/TextLayout.android.kt",
+    "sha256": "4ec56bf08790928e5796411f905da1b245bfe48bf4c9effb25e22ed49e460b09",
+    "line_hits": {
+      "val layout: Layout": [
+        163
+      ],
+      "BoringLayoutFactory.create(": [
+        252
+      ],
+      "StaticLayoutFactory.create(": [
+        265,
+        1116
+      ],
+      "val text: CharSequence": [
+        388
+      ],
+      "fun paint(": [
+        817
+      ],
+      "layout.draw(": [
+        836
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.ui:ui-android:1.12.1",
+    "entry": "androidMain/androidx/compose/ui/platform/AndroidComposeViewAccessibilityDelegateCompat.android.kt",
+    "sha256": "fa6ee0b3459cb6529c43a663b234e5a46318f50ef271509f2393038b017414a0",
+    "line_hits": {
+      "private var previousSemanticsNodes:": [
+        402
+      ],
+      "info.text =": [
+        1216
+      ],
+      "private fun sendEvent(": [
+        1313
+      ],
+      "event.text.add(it)": [
+        2635
+      ],
+      "previousSemanticsNodes.clear()": [
+        2491
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.ui:ui-android:1.12.1",
+    "entry": "androidMain/androidx/compose/ui/platform/AndroidComposeView.android.kt",
+    "sha256": "54bc7b9871684e8973e50e4b58d4198df873ab12f9ca3e4e6000633005e8e58c",
+    "line_hits": {
+      "override fun onDetachedFromWindow()": [
+        2440
+      ],
+      "snapshotObserver.stopObserving()": [
+        2454
+      ]
+    }
+  },
+  {
+    "coordinate": "androidx.compose.ui:ui-android:1.12.1",
+    "entry": "androidMain/androidx/compose/ui/platform/RenderNodeLayer.android.kt",
+    "sha256": "2a736d00bd0db1dddc3feb6978f6cefad5d75466fe676abaff464d584745a92b",
+    "line_hits": {
+      "override fun destroy()": [
+        336
+      ],
+      "renderNode.discardDisplayList()": [
+        338
+      ],
+      "ownerView.recycle(this)": [
+        345
+      ]
+    }
+  }
+]

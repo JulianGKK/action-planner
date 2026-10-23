@@ -12858,3 +12858,27 @@ Nur ADR/Dokumentation, keine neuen Tests/Builds oder Performancewerte; vorhanden
 §§83–88 ausgewertet. Produktquellen und sämtliche Sicherheitsgates unverändert.
 #37/#33/#34/#38 bleiben offen; #37/#44 aktualisieren, WIP pushen, anschließend
 **STOPP zum unabhängigen Review**, kein Merge/Release.
+
+
+## §90a — Konkreter Compose-Textconsumer: NO-GO, Produktentscheidung erforderlich
+
+[Kurzer Nachweis mit technischen Quellen](p11-p90a/assessment.md), Basis `20fd926`.
+Pfad: CompactActiveContent → Material3 Text(String) → BasicText/TextStringSimpleNode
+→ Paragraph-/Androidlayout bzw. Semantics/Accessibility und Canvas/Renderressourcen.
+Tatsächlich aufgelöste Versionen (Material3 1.4.0, Compose 1.12.1) und Source-/AAR-
+Hashes geprüft. Kein neuer Architekturentwurf.
+
+Kein gemeinsamer Consumer-End- oder vorab belegter maximaler Restgrenzenvertrag:
+Accessibilityclients dürfen ausdrücklich eigene Eventkopien behalten; lokale
+Node-/Semantics-/Runtime-Enden rufen diese nicht zurück. Auch ohne externe Kopien
+liefern Text-/Layoutcaches und approximative RenderNode-Messwerte keine gemeinsame
+Native-/Renderobergrenze. Framecommit ist kein Last-Consumer-Ende. Bekannte lokale
+Text-/Cachelimits werden nicht als kostenfreier Gesamt-Restbound umgedeutet.
+
+**Stopgate §89a B nicht bestanden.** Erforderlich ist eine ausdrückliche Entscheidung
+über Budgetumfang/Nachweisanspruch für kontrollierte Appdaten versus unkontrollierte
+Framework-/Native-/ausgegebene Clientkopien, oder über den geschützten Ausgabepfad
+selbst. Keine solche Änderung hier beschlossen. Produktquellen/Gates unverändert;
+kein zusätzlicher P77-Test oder neue Performancewerte, nur Offline-Dependency- und
+Quellprüfung. #37/#44 aktualisieren, WIP pushen, **STOPP zum unabhängigen Review und
+zur Produktentscheidung**. Kein selbständiger §91 mit gleicher Analyse, kein Merge/Release.
