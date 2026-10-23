@@ -12835,3 +12835,26 @@ Freigabebeweise. Keine globale native Key-/Allocator-/Frame-Wipegarantie und kei
 8+8-MiB-Abnahme. Produktquellen, Gates, Schema/Crypto/Owner/Reuse unverändert.
 #32 bleibt für Review/Restumfang offen; WIP sichern/pushen, Issue aktualisieren,
 danach **STOPP zum unabhängigen Review**, kein Merge/Release.
+
+
+## §89a — ADR Workspace/Presentation: NO-GO, Consumervertrag zuerst
+
+[Entscheidung und kleine Folgeaufträge](p11-p89a/assessment.md), Basis `20adc78`.
+Zwei Varianten geprüft: A unveränderlicher RAM-Kern mit bestehenden rohen
+Compose-Borrows; B kontrollierte Präsentationshandles im bestehenden Runtime-/
+VM-Owner mit gemeinsamer Daten-/Präsentationsbuchung. A verworfen: fortgesetztes
+frisches Laden, endliches 8+8-Budget und unbefristet unkontrollierte Altverbraucher
+sind so nicht gleichzeitig durchsetzbar. Reauth-/Writer-/Fullview-Refusal wird
+nicht durch ein neues Dispose-/OnDraw-Signal aufgehoben.
+
+B ist bevorzugte Richtung, **keine releasefähige Freigabe**: konkreter Kosten-/
+Endproducer für Text/Layout/Render/Editor/IME/Semantics fehlt. Erster Auftrag
+liefert ausschließlich diesen Vertrag oder stoppt; erst danach Borrow-API,
+gemeinsame Admission, Writer-/Securityintegration und echte 100–150-ms-Median/p95-
+Abnahme. Nativekosten unbekannt bleiben nicht null. 200/1.000/5.000, 6/32 Rollen;
+100 Rollen kontrollierte Refusal statt stiller Kürzung/Fallback.
+
+Nur ADR/Dokumentation, keine neuen Tests/Builds oder Performancewerte; vorhandene
+§§83–88 ausgewertet. Produktquellen und sämtliche Sicherheitsgates unverändert.
+#37/#33/#34/#38 bleiben offen; #37/#44 aktualisieren, WIP pushen, anschließend
+**STOPP zum unabhängigen Review**, kein Merge/Release.
