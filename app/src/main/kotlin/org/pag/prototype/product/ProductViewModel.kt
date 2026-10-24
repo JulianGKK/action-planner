@@ -304,6 +304,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     var personDetailLoading by mutableStateOf(false); private set
     var workspace by mutableStateOf<WorkspaceSnapshot?>(null); private set
     var workspaceError by mutableStateOf(false); private set
+    var workspaceRefusal by mutableStateOf<WorkspaceFailure?>(null); private set
     var preparationArea by mutableStateOf(PreparationArea.OVERVIEW); private set
     var workspaceRefreshing by mutableStateOf(false); private set
     val preparationAvailable get() = snapshot.state == SessionState.READY && selected?.status == ActionStatus.PREPARATION
@@ -500,7 +501,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         fullActiveView=false
         workspaceTicket?.cancel();workspaceTicket=null
         preparationArea = PreparationArea.OVERVIEW; activeArea = ActiveArea.HUB; workspaceRefreshing = false
-        workspaceRequest++; workspace = null; workspaceError = false; detailLoading = false; personDetailLoading = false
+        workspaceRequest++; workspace = null; workspaceError = false;workspaceRefusal=null; detailLoading = false; personDetailLoading = false
         tasks.clear(); operations.clear(); protocol.clear(); material.clear(); expenses.clear(); memoryReports.clear(); documents.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
         personForm = false; editingPerson = null; personError = null; personSaving = false
     }
@@ -528,7 +529,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (active && activeSection == ActiveArea.DETAILS) return
         workspaceRefreshing = previous != null
         personsLoading = previous == null
-        workspaceError = false
+        workspaceError = false;workspaceRefusal=null
         val needTasks = taskRepository != null && operations.screen == OperationsScreen.OVERVIEW &&
             (!active || (activeSection != ActiveArea.FUNCTIONS && (workspaceRepository==null || activeSection in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.TASKS,ActiveArea.MATERIAL)))) &&
             (!preparation || (selectedPerson == null && area in setOf(PreparationArea.OVERVIEW, PreparationArea.TASKS, PreparationArea.MATERIAL)))
@@ -610,6 +611,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 if(!current() || published)return@read
                 when(result) {
                     is WorkspaceResult.Rejected->{
+                        workspaceRefusal=result.reason
                         if(expectedAction!=null && onOpeningRejected!=null){workspaceRequest++;onOpeningRejected()}
                         else failed()
                     }

@@ -1,0 +1,13 @@
+INSTRUMENTATION_STATUS: stream=P106,exposed,BEFORE_AFTER,previous_P105_full_boards=20/40,current_fullview_materializations=0,direct_repository=REFUSED,direct_boards=REFUSED,missing_store_entry=REFUSED,visible_refusal=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P106,exposed,FAILURE,java.lang.NoSuchFieldException: No field worker in class Lorg/pag/prototype/P86FullWorkspaceActivity; (declaration of 'org.pag.prototype.P86FullWorkspaceActivity' appears in /data/app/~~L2i2zeNbwxmgfunrUJ8d5Q==/org.pag.prototype.a.p77runtime-Ac46BQqmB5Isseyx7nXmXw==/base.apk!classes9.dex)
+	at java.lang.Class.getDeclaredField(Native Method)
+	at org.pag.prototype.P106FullviewEntryProbe.field(P106FullviewEntryProbe.kt:21)
+	at org.pag.prototype.P106FullviewEntryProbe.onStart(P106FullviewEntryProbe.kt:63)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P106 FAIL exposed
+INSTRUMENTATION_CODE: 0

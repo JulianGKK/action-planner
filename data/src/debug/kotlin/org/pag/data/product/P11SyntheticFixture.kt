@@ -37,6 +37,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
     private var allowed=true
     private var epoch=1L
     private val owner=AtomicReference<SessionDbKeyOwner?>()
+    private val workspaceMemory=OutstandingCoreRead()
     private val access=object:StorageAccess {
         override fun acquire(scope:AccessScope):StorageContext? {
             if(!allowed || scope!=AccessScope.READY)return null
@@ -264,9 +265,28 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         }
         return "five_kinds_ABA_STALE=true,plan_empty_repopulate_header=true,fixed_wallclock=42,task_event_exactly_once=true"
     }
+    internal fun p106StoreWithoutEntry(runtime:ProductRuntime):WorkspaceResult {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        val c=checkNotNull(runtime.session.acquire(AccessScope.READY))
+        @Suppress("UNCHECKED_CAST")
+        val ref=runtime.javaClass.getDeclaredField("owner").let{it.isAccessible=true;it.get(runtime)} as AtomicReference<SessionDbKeyOwner?>
+        return checkNotNull(ref.get()).withDbKey(c){borrowed->
+            ActionDatabaseAccess(wrapped).use(inventory.database,borrowed,c){db->db.withReadTransaction {
+                WorkspaceStore(db,c,workspaceMemory).read(WorkspaceReadRequest(activeId,ActionStatus.ACTIVE,c.generation,emptySet()))
+            }}
+        }
+    }
+    internal fun p106Replacement(activity:android.app.Activity,worker:Executor,main:Executor):ProductRuntime {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        return ProductRuntime(activity,worker,main,UncachedWorkspaceMutations(),runtimeAuthority(false,object:ActiveCoreLoadObservation {
+            override fun ticketIssued(ticket:WorkspaceMutationInvalidation.ActiveReadTicket){}
+            override fun readerStarted(){}
+            override fun hitAuthorized(accepted:Boolean,elapsedNanos:Long){}
+        }),{activity.hasWindowFocus()})
+    }
     private fun fail():Nothing=error("SYNTHETIC_STORAGE_FAILURE")
     val actions:ActionRepository=ProductActionRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
-    val workspace:WorkspaceRepository=ProductWorkspaceRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
+    val workspace:WorkspaceRepository=ProductWorkspaceRepository(wrapped,access,inventory,owner::get,worker,main,::fail,workspaceMemory)
     val persons:PersonRepository=ProductPersonRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
     val operations:OperationsRepository=ProductOperationsRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
     val tasks:TaskRepository=ProductTaskRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
@@ -383,7 +403,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         check(app.packageName=="org.pag.data.unlockprobe")
         val mutations=UncachedWorkspaceMutations()
         val reader=ProductActiveCoreReader(wrapped,access,inventory,owner::get,blocked=::fail)
-        return ProductActiveCoreLoader(access,mutations,worker,main,readCandidate={ c,t,l,m -> reader.readForTicket(c,t,l,outstanding=m) })
+        return ProductActiveCoreLoader(access,mutations,worker,main,readCandidate={ c,t,l,m -> reader.readForTicket(c,t,l,outstanding=m) },outstanding=workspaceMemory)
     }
     /** The test authority is fed into the real ProductRuntime only by the isolated P77 debug factory.
      * SessionCoordinator, Maintenance, key owner, Room and core reader remain ProductRuntime's.
@@ -411,7 +431,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
                 return org.pag.security.Cancellation{}
             }
         }
-        return ProductRuntimeTestAuthority(base,synthetic,{true},{true},reuseEnabled,observation,coreAccess)
+        return ProductRuntimeTestAuthority(base,synthetic,{true},{true},reuseEnabled,observation,coreAccess,workspaceMemory=workspaceMemory)
     }
     /** Isolated native fault harness. Same reader/DB; supplied session is not product authentication. */
     internal fun coreForSession(session:StorageAccess,mutations:WorkspaceMutationInvalidation,

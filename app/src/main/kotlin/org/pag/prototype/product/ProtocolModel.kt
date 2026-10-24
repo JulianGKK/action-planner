@@ -247,5 +247,6 @@ internal fun protocolFailure(reason: ProtocolFailure) = when (reason) {
     ProtocolFailure.WRONG_ACTION -> "Der Eintrag ist in dieser Aktion nicht verfügbar."
     ProtocolFailure.INVALID_STATE -> "In diesem Aktionsstatus ist diese Änderung nicht möglich."
     ProtocolFailure.INVALID -> "Eingaben prüfen."
+    ProtocolFailure.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
     ProtocolFailure.STALE -> "Der Eintrag oder Aktionsstatus hat sich inzwischen geändert. Die Eingaben wurden nicht gespeichert."
 }

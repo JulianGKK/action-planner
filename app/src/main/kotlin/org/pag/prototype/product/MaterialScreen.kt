@@ -13,6 +13,7 @@ import org.pag.domain.*
     model.error?.let { Text(when (it) {
         OperationsFailure.INVALID -> "Bitte Bezeichnung (1–120 Zeichen), Menge (max. 40) und Ort (max. 80) prüfen."
         OperationsFailure.REVISION_EXHAUSTED -> "Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
+    OperationsFailure.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
     OperationsFailure.STALE -> "Der Materialeintrag wurde inzwischen geändert. Die Eingaben wurden nicht gespeichert."
         OperationsFailure.NOT_ALLOWED -> "Im aktuellen Aktionsstatus ist diese Änderung nicht möglich."
         else -> "Das Material oder die Zuordnung ist in dieser Aktion nicht verfügbar."

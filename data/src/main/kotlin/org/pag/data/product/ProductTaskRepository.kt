@@ -16,9 +16,11 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
     private val worker:Executor,private val main:Executor,private val blocked:()->Unit,
     private val mutations:WorkspaceMutationInvalidation=UncachedWorkspaceMutations(),
     private val now:()->Long=System::currentTimeMillis):TaskRepository {
+    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked)
+    internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
     private val database=ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary=TaskMutationBoundary(access,worker,main,mutations,blocked)
-    override fun board(actionId:String,publish:(OperationsResult<TaskBoard>)->Unit)=run(publish){d,c->d.withReadTransaction{TaskStore(d,c,now).board(actionId)}}
+    override fun board(actionId:String,publish:(OperationsResult<TaskBoard>)->Unit)=run(actionId,publish){d,c->d.withReadTransaction{TaskStore(d,c,now).board(actionId)}}
     // One bounded page in flight, including the Main callback; never a history cache/queue.
     private val historyPending=AtomicBoolean(false)
     override fun history(expected:Task,after:CompactEventCursor?,publish:(CompactTaskResult)->Unit)=readHistory(expected,after,null,publish)
@@ -28,8 +30,12 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
         if(!historyPending.compareAndSet(false,true)){denied(BoundedActiveStatus.BUDGET_REFUSED);return}
         val c=access.acquire(AccessScope.READY)
         if(c==null || c.scope!=AccessScope.READY || c.generation<0 || !c.check(AccessPoint.OPERATION)){historyPending.set(false);denied(BoundedActiveStatus.ACCESS_REVOKED);return}
+        val memory=readExclusion.record()
+        val entry=memory.beginFullview(expected.actionId,c.generation)
+        if(entry==null){historyPending.set(false);denied(BoundedActiveStatus.BUDGET_REFUSED);return}
+        if(!memory.enterFullview(entry,expected.actionId,c.generation)){entry.workerRejected();historyPending.set(false);denied(BoundedActiveStatus.BUDGET_REFUSED);return}
         val ticket=mutations.beforeActiveRead(expected.actionId,c.generation)
-        if(ticket==null){historyPending.set(false);denied(BoundedActiveStatus.ACCESS_REVOKED);return}
+        if(ticket==null){entry.workerRejected();historyPending.set(false);denied(BoundedActiveStatus.ACCESS_REVOKED);return}
         val state=CompactTaskState(P3bFreeActiveCoreBinding(ticket.actionId,ticket.generation),ticket.mutationEpoch)
         fun current()=ticket.isLive() && c.generation==state.binding.generation && c.check(AccessPoint.STEP)
         val failedScope=AtomicBoolean(false)
@@ -38,9 +44,9 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
         val delivered=AtomicBoolean(false)
         fun finish(){if(finished.compareAndSet(false,true)){mutations.revokeActiveRead(ticket);if(!failedScope.get())historyPending.set(false)}}
         if(after!=null && (after.state!=state || after.taskId!=expected.id)) {
-            finish();denied(BoundedActiveStatus.ACCESS_REVOKED);return
+            entry.workerRejected();finish();denied(BoundedActiveStatus.ACCESS_REVOKED);return
         }
-        try { worker.execute historyWorker@{
+        val historyWork=entry.worker(Runnable historyWorker@{
             if(!dispatched.compareAndSet(false,true))return@historyWorker
             val result:CompactTaskResult=try {
                 requireOperations(c,AccessPoint.OPERATION)
@@ -69,7 +75,7 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
                 if(f.suppressed.isNotEmpty())failedScope.set(true)
                 CompactTaskResult.Rejected(if(failedScope.get())BoundedActiveStatus.STORAGE_FAILURE else f.status)
             } catch(_:Exception){failedScope.set(true);CompactTaskResult.Rejected(BoundedActiveStatus.STORAGE_FAILURE)}
-            try { main.execute historyMain@{
+            try { val delivery=entry.main(Runnable historyMain@{
                 if(!delivered.compareAndSet(false,true))return@historyMain
                 try {
                     // An upstream/cleanup exception cannot authorize retry or a new keylease.
@@ -82,9 +88,10 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
                         else publish(result)
                     }
                 } finally {finish()}
-            }} catch(_:RejectedExecutionException){finish()}
+            });main.execute(delivery)} catch(_:RejectedExecutionException){finish();entry.mainRejected()}
             catch(_:Exception){mutations.revokeActiveRead(ticket)} // Acceptance unknown: keep page slot occupied.
-        }} catch(_:RejectedExecutionException){finish();denied(BoundedActiveStatus.STORAGE_FAILURE)}
+        })
+        try{worker.execute(historyWork)} catch(_:RejectedExecutionException){finish();entry.workerRejected();denied(BoundedActiveStatus.STORAGE_FAILURE)}
         catch(_:Exception){mutations.revokeActiveRead(ticket)}
     }
     override fun create(actionId:String,input:TaskInput,publish:(OperationsResult<Task>)->Unit)=write(actionId,publish){it.create(actionId,input)}
@@ -98,16 +105,8 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
                 d.useWriterConnection { tx -> confirmedTaskTransaction(tx,c,progress){work(TaskStore(d,c,now))} }
             }}
         }
-    private fun <T> run(publish:(OperationsResult<T>)->Unit,work:suspend(ActionDatabase,StorageContext)->OperationsResult<T>) {
-        val c=access.acquire(AccessScope.READY)?:return
-        worker.execute {
-            try {
-                requireOperations(c,AccessPoint.OPERATION)
-                if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
-                val result=(owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){work(it,c)}}
-                main.execute{c.publish{publish(result)}}
-            }catch(_:Exception){main.execute{if(c.check(AccessPoint.STEP))blocked()}}
-        }
+    private fun <T> run(actionId:String,publish:(OperationsResult<T>)->Unit,work:suspend(ActionDatabase,StorageContext)->OperationsResult<T>) {
+        readExclusion.read(actionId,publish,{OperationsResult.Rejected(OperationsFailure.OWNER_UNCONFIRMED)},work)
     }
 }
 internal interface TaskStoreData {

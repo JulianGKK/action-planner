@@ -130,6 +130,9 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
     }
     if (model.personDetailLoading) { PagLoadingState(); return }
     val content = model.workspace
+    if (content == null && model.workspaceRefusal==WorkspaceFailure.OWNER_UNCONFIRMED) {
+        return
+    }
     if (content == null) { if (model.workspaceError) PagErrorState() else PagLoadingState(); return }
     if (model.workspaceError) Text("Die Aktualisierung ist fehlgeschlagen. Die bisherige Ansicht bleibt erhalten.")
     val board = content.operations

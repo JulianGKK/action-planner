@@ -7,18 +7,31 @@ import org.pag.data.prototype.b2.StorageAccessRevoked
 import org.pag.domain.*
 
 /** Batches only explicitly requested reads. No connection/key lifetime crosses this call. */
-class ProductWorkspaceRepository(app:Context,private val access:StorageAccess,private val inventory:ProductInventory,
+class ProductWorkspaceRepository internal constructor(app:Context,private val access:StorageAccess,private val inventory:ProductInventory,
     private val owner:()->SessionDbKeyOwner?,private val worker:Executor,private val main:Executor,
-    private val blocked:()->Unit):WorkspaceRepository {
+    private val blocked:()->Unit,
+    private val memory:OutstandingCoreRead,
+    private val materializing:(()->Unit)?=null):WorkspaceRepository {
+    constructor(app:Context,access:StorageAccess,inventory:ProductInventory,owner:()->SessionDbKeyOwner?,
+        worker:Executor,main:Executor,blocked:()->Unit):this(app,access,inventory,owner,worker,main,blocked,OutstandingCoreRead.product)
+
     private val database=ActionDatabaseAccess(app.applicationContext)
     private class ReadCancelled:RuntimeException()
     override fun read(request:WorkspaceReadRequest,publish:(WorkspaceResult)->Unit) {
         val c=access.acquire(AccessScope.READY) ?: return
         if(request.generation!=c.generation)return
+        if(memory.fullviewOverlapUnconfirmed()) {
+            main.execute{c.publish{publish(WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))}}
+            return
+        }
+        val entry=memory.beginFullview(request.actionId,request.generation) ?: run {
+            main.execute{c.publish{publish(WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))}}
+            return
+        }
         val frozen=request.copy(parts=request.parts.toSet())
         val ticket=DocumentNamespaceLane.ticket()
         fun requireRequest(){if(frozen.ticket?.active==false)throw ReadCancelled()}
-        worker.execute {
+        val work=entry.worker(Runnable {
             try {
                 requireRequest()
                 val result=DocumentNamespaceLane.exclusive(ticket) {
@@ -28,29 +41,38 @@ class ProductWorkspaceRepository(app:Context,private val access:StorageAccess,pr
                     requireRequest()
                     (owner() ?: throw ProductStorageFailure()).withDbKey(c){key->
                         database.use(inventory.database,key,c){db->db.withReadTransaction {
-                            WorkspaceStore(db,c).read(frozen)
+                            WorkspaceStore(db,c,memory,materializing).read(frozen,entry)
                         }}
                     }.also{requireOperations(c)}
                 }
                 requireRequest()
-                main.execute{c.publish{if(frozen.ticket?.active!=false)publish(result)}}
+                val delivery=entry.main(Runnable{c.publish{if(frozen.ticket?.active!=false)publish(result)}})
+                try{main.execute(delivery)}catch(_:java.util.concurrent.RejectedExecutionException){entry.mainRejected()}
+
             }catch(_:ReadCancelled){/* Superseded before key/DB admission or after full cleanup. */}
              catch(_:StorageAccessRevoked){/* No stale publication. */}
              catch(_:Exception){main.execute{if(c.check(AccessPoint.STEP))blocked()}}
-        }
+        })
+        try{worker.execute(work)}catch(_:java.util.concurrent.RejectedExecutionException){entry.workerRejected()}
+        // Uncertain queue acceptance deliberately retains the exclusion until actual dispatch.
     }
 }
 
 /** Same existing stores and permission checks, one atomic transaction. No LeadershipStore. */
-internal class WorkspaceStore(private val db:ActionDatabase,private val c:StorageContext) {
+internal class WorkspaceStore(private val db:ActionDatabase,private val c:StorageContext,
+    private val memory:OutstandingCoreRead=OutstandingCoreRead.product,
+    private val materializing:(()->Unit)?=null) {
     private fun <T> value(result:OperationsResult<T>):T=when(result) {
         is OperationsResult.Value->result.value
         is OperationsResult.Rejected->throw Rejected(result.reason)
     }
     private class Rejected(val reason:OperationsFailure):RuntimeException()
-    suspend fun read(request:WorkspaceReadRequest):WorkspaceResult {
+    suspend fun read(request:WorkspaceReadRequest,entry:OutstandingCoreRead.FullviewEntry?=null):WorkspaceResult {
         requireOperations(c,AccessPoint.OPERATION)
         if(request.generation!=c.generation)throw StorageAccessRevoked()
+        if(request.ticket?.active==false)return WorkspaceResult.Rejected(WorkspaceFailure.STALE)
+        if(entry==null || !memory.enterFullview(entry,request))return WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED)
+        materializing?.invoke()
         val action=db.actions().get(request.actionId)?.model() ?: return WorkspaceResult.Rejected(WorkspaceFailure.NOT_FOUND)
         requireOperations(c)
         if(request.expectedAction!=null && request.expectedAction!=action)return WorkspaceResult.Rejected(WorkspaceFailure.STALE)

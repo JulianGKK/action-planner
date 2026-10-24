@@ -30,6 +30,7 @@ class P77ProductRuntimeHarness private constructor(
     class Observations internal constructor(private val faults:P81RuntimeFaults) : ActiveCoreLoadObservation {
         val tickets = AtomicInteger()
         val reads = AtomicInteger()
+        val workspaceMaterializations=AtomicInteger()
         val hitAttempts = AtomicInteger()
         val hitAccepted = AtomicInteger()
         val hitNanos=java.util.Collections.synchronizedList(mutableListOf<Long>())
@@ -52,6 +53,8 @@ class P77ProductRuntimeHarness private constructor(
     }
     fun p104NativeRevisions()=fixture.p104NativeRevisions()
     fun p104VerifyMigration()=fixture.p104VerifyMigration()
+    fun p106StoreWithoutEntry()=fixture.p106StoreWithoutEntry(runtime)
+    fun p106Replacement(activity:Activity,worker:Executor,main:Executor)=fixture.p106Replacement(activity,worker,main)
     fun p101SeededVersion()=fixture.p101SeededVersion
     fun outstandingState()=runtime.activeCore.outstandingState().toString()
     val cleanupConfirmed=java.util.concurrent.atomic.AtomicBoolean(false)
@@ -92,7 +95,7 @@ class P77ProductRuntimeHarness private constructor(
                 val observations=Observations(faults)
                 val mutations=UncachedWorkspaceMutations()
                 val runtime = ProductRuntime(activity, faults.worker.wrap(worker), faults.main.wrap(main), mutations,
-                    fixture.runtimeAuthority(reuseEnabled = reuseEnabled,observations,faults::wrap).copy(coreReadHooks=if(activity.intent.getBooleanExtra("p100Probe",false))p100.hooks else if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
+                    fixture.runtimeAuthority(reuseEnabled = reuseEnabled,observations,faults::wrap).copy(workspaceMaterializing={observations.workspaceMaterializations.incrementAndGet()},coreReadHooks=if(activity.intent.getBooleanExtra("p100Probe",false))p100.hooks else if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
                 if(activity.intent.getBooleanExtra("p101Probe",false)) {
                     // Align the existing document repository with this already-authorized synthetic
                     // runtime root. Normal product uses the same platform root for both already.

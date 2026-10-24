@@ -14,9 +14,11 @@ class ProductOperationsRepository(app:Context,private val access:StorageAccess,
     private val worker:Executor,private val main:Executor,private val blocked:()->Unit,
     mutations:WorkspaceMutationInvalidation=UncachedWorkspaceMutations(),
     private val now:()->Long=System::currentTimeMillis):OperationsRepository {
+    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked)
+    internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
     private val database=ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary=WorkspaceWriteBoundary(access,worker,main,mutations,blocked)
-    override fun board(actionId:String,publish:(OperationsResult<OperationalBoard>)->Unit)=run(publish){d,c->d.withReadTransaction{OperationsStore(d,c,now).board(actionId)}}
+    override fun board(actionId:String,publish:(OperationsResult<OperationalBoard>)->Unit)=run(actionId,publish){d,c->d.withReadTransaction{OperationsStore(d,c,now).board(actionId)}}
     override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,null,name)}
     override fun renameRole(actionId:String,expected:Role,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,expected,name)}
     override fun deleteRole(actionId:String,expected:Role,publish:(OperationsResult<Unit>)->Unit)=write(actionId,publish){it.deleteRole(actionId,expected)}
@@ -34,16 +36,8 @@ class ProductOperationsRepository(app:Context,private val access:StorageAccess,
                 db.useWriterConnection { tx -> confirmedWorkspaceTransaction(tx,c,p,{it is OperationsResult.Rejected}) {work(OperationsStore(db,c,now))} }
             }}
         }
-    private fun <T> run(publish:(OperationsResult<T>)->Unit,work:suspend(ActionDatabase,StorageContext)->OperationsResult<T>) {
-        val c=access.acquire(AccessScope.READY)?:return
-        worker.execute {
-            try {
-                requireOperations(c,AccessPoint.OPERATION)
-                if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
-                val result=(owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){work(it,c)}}
-                main.execute{c.publish{publish(result)}}
-            }catch(_:Exception){main.execute{if(c.check(AccessPoint.STEP))blocked()}}
-        }
+    private fun <T> run(actionId:String,publish:(OperationsResult<T>)->Unit,work:suspend(ActionDatabase,StorageContext)->OperationsResult<T>) {
+        readExclusion.read(actionId,publish,{OperationsResult.Rejected(OperationsFailure.OWNER_UNCONFIRMED)},work)
     }
 }
 internal fun requireOperations(c:StorageContext,point:AccessPoint=AccessPoint.STEP) {

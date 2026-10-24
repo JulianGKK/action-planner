@@ -17,15 +17,17 @@ class ProductPersonRepository(app: Context, private val access: StorageAccess,
     constructor(app:Context,access:StorageAccess,inventory:ProductInventory,owner:()->SessionDbKeyOwner?,
         worker:Executor,main:Executor,blocked:()->Unit):this(app,access,inventory,owner,worker,main,UncachedWorkspaceMutations(),blocked)
     private val mutationBoundary=WorkspaceWriteBoundary(access,worker,main,mutations,blocked)
+    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked)
+    internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
     private val database = ActionDatabaseAccess(app.applicationContext)
     override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) =
-        run(publish) { db, context -> db.withReadTransaction {
+        run(actionId,publish) { db, context -> db.withReadTransaction {
             permitted(db, actionId, context, false)?.let { return@withReadTransaction it }
             requirePersonAccess(context)
             PersonResult.Value(db.persons().list(actionId).map { it.model() })
         } }
     override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) =
-        run(publish) { db, context -> db.withReadTransaction {
+        run(actionId,publish) { db, context -> db.withReadTransaction {
             permitted(db, actionId, context, false)?.let { return@withReadTransaction it }
             requirePersonAccess(context)
             PersonResult.Value(db.persons().get(actionId, personId)?.model())
@@ -45,19 +47,10 @@ class ProductPersonRepository(app: Context, private val access: StorageAccess,
                 } }
             }}
         }
-    private fun <T> run(publish: (T) -> Unit, work: suspend (ActionDatabase, StorageContext) -> T) {
-        val context = access.acquire(AccessScope.READY) ?: return
-        val keyOwner = owner() ?: run { blocked(); return }
-        worker.execute {
-            try {
-                if (context.scope != AccessScope.READY || inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
-                val result = keyOwner.withDbKey(context) { key -> database.use(inventory.database, key, context) { db -> work(db, context) } }
-                main.execute { context.publish { publish(result) } }
-            } catch (_: Exception) {
-                main.execute { if (context.check(AccessPoint.STEP)) blocked() }
-            }
-        }
+    private fun <T> run(actionId:String,publish:(PersonResult<T>)->Unit,work:suspend(ActionDatabase,StorageContext)->PersonResult<T>) {
+        readExclusion.read(actionId,publish,{PersonResult.Rejected(PersonRejection.OWNER_UNCONFIRMED)},work)
     }
+
 }
 
 private fun requirePersonAccess(context: StorageContext) {

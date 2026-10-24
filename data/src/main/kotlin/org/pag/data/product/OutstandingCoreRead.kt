@@ -13,6 +13,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Native/frame calibration remains unconfirmed: this is an exclusion fence, not certification.
  */
 internal class OutstandingCoreRead {
+    companion object {
+        /** The SAME original memory record survives Runtime/Activity reconstruction.
+         * No second payload registry and no session/key authority. Never reset on reauth. */
+        internal val product = OutstandingCoreRead()
+    }
+    /** Refusal only: false is NOT a fullview budget admission or owner-end receipt. */
+    @Synchronized internal fun fullviewOverlapUnconfirmed():Boolean = closed || current!=null
+
     enum class Phase { READER_ADMITTED, WORKER_MATERIALIZING, CANDIDATE_COMPLETE, MAIN_PENDING,
         MAIN_DELIVERED, RETAINED, COMPOSE_TRANSITION, RETIRED, DENIED, REVOKED, FAILED_OR_UNCONFIRMED }
     data class State(val phase:Phase, val retained:Long, val transition:Long, val localRetained:Long,
@@ -20,13 +28,60 @@ internal class OutstandingCoreRead {
         val compositionDisposed:Boolean, val retirementConfirmed:Boolean, val refusal:String,
         val fullViewUnconfirmed:Boolean, val nativeFrameCalibration:String="UNCONFIRMED")
     private var current: Read?=null
+    private var fullEntry:FullviewEntry?=null
+    /** Overlap exclusion only. This is deliberately NOT a budget receipt. */
+    @Synchronized internal fun beginFullview(actionId:String,generation:Long):FullviewEntry? {
+        if(closed || current!=null || fullEntry!=null)return null
+        return FullviewEntry(actionId,generation).also{fullEntry=it}
+    }
+    internal fun enterFullview(entry:FullviewEntry,request:WorkspaceReadRequest):Boolean =
+        request.ticket?.active!=false && enterFullview(entry,request.actionId,request.generation)
+    @Synchronized internal fun enterFullview(entry:FullviewEntry,actionId:String,generation:Long):Boolean {
+        if(closed || current!=null || fullEntry!==entry || entry.started ||
+            entry.actionId!=actionId || entry.generation!=generation)return false
+        entry.started=true;fullView=true
+        return true
+    }
+    internal inner class FullviewEntry(val actionId:String,val generation:Long) {
+        internal var started=false
+        private var workerEnded=false
+        private var mainExpected=false
+        private var mainEnded=false
+        private var workerTask:OnceTask?=null
+        private var mainTask:OnceTask?=null
+        fun worker(work:Runnable):Runnable=synchronized(this@OutstandingCoreRead){
+            check(fullEntry===this && workerTask==null && !workerEnded)
+            OnceTask(work){synchronized(this@OutstandingCoreRead){workerEnded=true;finish()}}.also{workerTask=it}
+        }
+        fun main(work:Runnable):Runnable=synchronized(this@OutstandingCoreRead){
+            check(fullEntry===this && !mainExpected);mainExpected=true
+            OnceTask(work){synchronized(this@OutstandingCoreRead){mainEnded=true;finish()}}.also{mainTask=it}
+        }
+        fun workerRejected()=synchronized(this@OutstandingCoreRead){if(workerTask?.rejectUnqueued()!=false){workerEnded=true;finish()}}
+        fun mainRejected()=synchronized(this@OutstandingCoreRead){if(mainTask?.rejectUnqueued()!=false){mainEnded=true;finish()}}
+        private fun finish(){if(workerEnded && (!mainExpected || mainEnded) && fullEntry===this)fullEntry=null}
+    }
+    private class OnceTask(work:Runnable,private val ended:()->Unit):Runnable {
+        private val work=AtomicReference<Runnable?>(work)
+        private val dispatched=AtomicBoolean()
+        fun rejectUnqueued():Boolean {
+            if(!dispatched.compareAndSet(false,true))return false
+            work.set(null);return true
+        }
+        override fun run(){
+            // No terminal shell field keeps the callback/result. ACK only after invocation.
+            if(!dispatched.compareAndSet(false,true))return
+            try{work.getAndSet(null)?.run()}finally{ended()}
+        }
+    }
+
     private var closed=false
     private var fullView=false
     private var refusal="none"
     private var last=Phase.RETIRED
     @Synchronized fun begin():Read? {
-        if(closed || fullView || current!=null) {
-            refusal=when {closed->"CLOSED";fullView->"FULL_VIEW_UNCONFIRMED";current!!.observed->"COMPOSE_OR_FRAME_UNCONFIRMED";else->"OUTSTANDING_READ"}
+        if(closed || fullView || fullEntry!=null || current!=null) {
+            refusal=when {closed->"CLOSED";fullView || fullEntry!=null->"FULL_VIEW_UNCONFIRMED";current!!.observed->"COMPOSE_OR_FRAME_UNCONFIRMED";else->"OUTSTANDING_READ"}
             return null
         }
         refusal="none"

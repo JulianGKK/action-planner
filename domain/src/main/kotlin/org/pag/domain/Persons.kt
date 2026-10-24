@@ -12,7 +12,7 @@ object PersonRules {
     fun mayManage(status: ActionStatus) = status == ActionStatus.PREPARATION
 }
 
-enum class PersonRejection { ACTION_NOT_FOUND, NOT_FOUND, NOT_ALLOWED, INVALID_PSEUDONYM, DUPLICATE_PSEUDONYM, STALE, REVISION_EXHAUSTED }
+enum class PersonRejection { ACTION_NOT_FOUND, NOT_FOUND, NOT_ALLOWED, INVALID_PSEUDONYM, DUPLICATE_PSEUDONYM, STALE, REVISION_EXHAUSTED, OWNER_UNCONFIRMED }
 sealed interface PersonResult<out T> {
     data class Value<T>(val value: T) : PersonResult<T>
     data class Rejected(val reason: PersonRejection) : PersonResult<Nothing>

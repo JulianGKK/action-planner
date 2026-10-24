@@ -16,14 +16,16 @@ class ProductProtocolRepository(
     mutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(),
     private val now: () -> Long = System::currentTimeMillis
 ) : ProtocolRepository {
+    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked)
+    internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
     private val database = ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary = WorkspaceWriteBoundary(access, worker, main, mutations, blocked)
     override fun summary(actionId: String, publish: (ProtocolResult<ProtocolSummary>) -> Unit) =
-        read(publish) { it.summary(actionId) }
+        read(actionId,publish) { it.summary(actionId) }
     override fun listTimeline(actionId: String, publish: (ProtocolResult<List<ProtocolTimelineItem>>) -> Unit) =
-        read(publish) { it.timeline(actionId) }
+        read(actionId,publish) { it.timeline(actionId) }
     override fun getEntry(actionId: String, entryId: String, publish: (ProtocolResult<ProtocolEntryDetail>) -> Unit) =
-        read(publish) { it.detail(actionId, entryId) }
+        read(actionId,publish) { it.detail(actionId, entryId) }
     override fun createEntry(actionId: String, expectedActionStatus: ActionStatus, input: ProtocolInput,
         publish: (ProtocolResult<ProtocolSaved>) -> Unit) {
         val copy = freezeProtocolInput(ProtocolRules.normalized(input))
@@ -41,8 +43,8 @@ class ProductProtocolRepository(
         val expected = freezeProtocolExpected(expectedRevision)
         write(actionId, publish) { it.markMistaken(actionId, expectedActionStatus, expected) }
     }
-    private fun <T> read(publish: (ProtocolResult<T>) -> Unit, work: suspend (ProtocolStore) -> ProtocolResult<T>) =
-        run(publish) { d, c -> d.withReadTransaction { work(ProtocolStore(d, c, now)) } }
+    private fun <T> read(actionId:String,publish: (ProtocolResult<T>) -> Unit, work: suspend (ProtocolStore) -> ProtocolResult<T>) =
+        run(actionId,publish) { d, c -> d.withReadTransaction { work(ProtocolStore(d, c, now)) } }
     private fun <T> write(actionId: String, publish: (ProtocolResult<T>) -> Unit,
         work: suspend (ProtocolStore) -> ProtocolResult<T>) =
         mutationBoundary.submit<ProtocolResult<T>>(WorkspaceMutation(WorkspaceWriterFamily.PROTOCOL, actionId), publish,
@@ -58,20 +60,8 @@ class ProductProtocolRepository(
                 }
             }
         }
-    private fun <T> run(publish: (ProtocolResult<T>) -> Unit, work: suspend (ActionDatabase, StorageContext) -> ProtocolResult<T>) {
-        val c = access.acquire(AccessScope.READY) ?: return
-        worker.execute {
-            try {
-                requireOperations(c, AccessPoint.OPERATION)
-                if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
-                val result = (owner() ?: throw ProductStorageFailure()).withDbKey(c) { key ->
-                    database.use(inventory.database, key, c) { work(it, c) }
-                }
-                main.execute { c.publish { publish(result) } }
-            } catch (_: Exception) {
-                main.execute { if (c.check(AccessPoint.STEP)) blocked() }
-            }
-        }
+    private fun <T> run(actionId:String,publish: (ProtocolResult<T>) -> Unit, work: suspend (ActionDatabase, StorageContext) -> ProtocolResult<T>) {
+        readExclusion.read(actionId,publish,{ProtocolResult.Rejected(ProtocolFailure.OWNER_UNCONFIRMED)},work)
     }
 }
 

@@ -19,18 +19,22 @@ class ProductActiveCoreLoader internal constructor(
     private val mutations: WorkspaceMutationInvalidation,
     private val worker: Executor,
     private val main: Executor,
-    private val readCandidate: (StorageContext, WorkspaceMutationInvalidation.ActiveReadTicket, Long, OutstandingCoreRead.Read) -> ActiveCoreResult
+    private val readCandidate: (StorageContext, WorkspaceMutationInvalidation.ActiveReadTicket, Long, OutstandingCoreRead.Read) -> ActiveCoreResult,
+    private val outstanding:OutstandingCoreRead=OutstandingCoreRead()
 ) : ActiveCoreLoadPort {
+    internal constructor(access:StorageAccess,mutations:WorkspaceMutationInvalidation,worker:Executor,main:Executor,
+        readCandidate:(StorageContext,WorkspaceMutationInvalidation.ActiveReadTicket,Long,OutstandingCoreRead.Read)->ActiveCoreResult):
+        this(access,mutations,worker,main,readCandidate,OutstandingCoreRead())
     private var reuseForIsolatedTest=false
     private var observation:ActiveCoreLoadObservation?=null
     override val reuseEnabled get()=reuseForIsolatedTest
     internal constructor(access:StorageAccess,mutations:WorkspaceMutationInvalidation,worker:Executor,main:Executor,
         readCandidate:(StorageContext,WorkspaceMutationInvalidation.ActiveReadTicket,Long,OutstandingCoreRead.Read)->ActiveCoreResult,
-        reuseEnabled:Boolean,observation:ActiveCoreLoadObservation?):this(access,mutations,worker,main,readCandidate) {
+        reuseEnabled:Boolean,observation:ActiveCoreLoadObservation?,outstanding:OutstandingCoreRead=OutstandingCoreRead()):this(access,mutations,worker,main,readCandidate,outstanding) {
         reuseForIsolatedTest=reuseEnabled;this.observation=observation
     }
     private val ownerThread=Thread.currentThread()
-    private val outstanding=OutstandingCoreRead()
+    private var loaderClosed=false
     private var latestLoad:Any?=null
     private var lifetime:ProductActiveCoreLifetime?=null
     internal fun outstandingState()=outstanding.state()
@@ -42,13 +46,16 @@ class ProductActiveCoreLoader internal constructor(
         check(Thread.currentThread()===ownerThread)
         cancelPending();outstanding.fullViewStarting()
     }
-    fun close(){outstanding.close();lifetime?.close()}
+    fun close(){
+        loaderClosed=true;lifetime?.close()
+        // Closing this Runtime does not certify the end of the original memory record.
+    }
     fun load(actionId:String,callback:(ActiveCoreResult)->Unit):Boolean =
         loadOwned(actionId){result,life->try{callback(result)}finally{life?.close()}}
 
     override fun loadOwned(actionId:String,callback:(ActiveCoreResult,ActiveCoreLifetime?)->Unit):Boolean {
         check(Thread.currentThread()===ownerThread){"ACTIVE core admission is owner-thread-only"}
-        if(actionId.isBlank())return false
+        if(loaderClosed || actionId.isBlank())return false
         // Backpressure BEFORE READY/ticket/namespace/key/worker admission. It cannot cancel
         // another read, change an epoch or mint fallback authority just because it is busy.
         val memory=outstanding.begin() ?: return false

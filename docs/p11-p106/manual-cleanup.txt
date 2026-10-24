@@ -1,0 +1,6 @@
+Final script 'after' initially FAILED: one p11-fixture root remained after failed replacement READY probe.
+Exact synthetic root: no_backup/p11-fixture-c365bbc3-2fab-4c32-9d4a-cc0a8baa315f
+Explicit remediation: adb -s RFCT1186YRJ shell am force-stop org.pag.prototype.a.p77runtime
+Then run-as org.pag.prototype.a.p77runtime rm -r of ONLY the exact synthetic root above.
+Subsequent python3 docs/p11-p106/run-device.py after: P106 after checks passed.
+This is manual harness cleanup, not successful automatic product cleanup evidence.

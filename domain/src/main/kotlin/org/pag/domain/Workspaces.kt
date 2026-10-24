@@ -16,7 +16,7 @@ data class WorkspaceRead(val actionId:String,val status:ActionStatus,val generat
     val material:MaterialSummary?=null,val expenses:ExpenseSummary?=null,val memory:MemoryReportSummary?=null,
     val documents:DocumentSummary?=null,val memoryHeaders:List<MemoryReportHeader>?=null,
     val protocolTimeline:List<ProtocolTimelineItem>?=null,val materialBoard:MaterialBoard?=null,val expenseBoard:ExpenseBoard?=null)
-enum class WorkspaceFailure { NOT_FOUND, NOT_ALLOWED, STALE }
+enum class WorkspaceFailure { NOT_FOUND, NOT_ALLOWED, STALE, OWNER_UNCONFIRMED }
 sealed interface WorkspaceResult {
     data class Value(val value:WorkspaceRead):WorkspaceResult
     data class Rejected(val reason:WorkspaceFailure):WorkspaceResult

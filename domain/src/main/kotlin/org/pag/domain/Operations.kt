@@ -41,7 +41,7 @@ object OperationalRules {
     fun place(value: String, status: OperationalStatus): String? = if (placeRelevant(status)) value.trim().takeIf { it.isNotEmpty() } else null
     fun validPlan(roleIds: Set<String>, primaryRoleId: String?) = primaryRoleId == null || primaryRoleId in roleIds
 }
-enum class OperationsFailure { NOT_FOUND, NOT_ALLOWED, INVALID, DUPLICATE, IN_USE, STALE, TASK_EVENT_LIMIT_REACHED, REVISION_EXHAUSTED }
+enum class OperationsFailure { NOT_FOUND, NOT_ALLOWED, INVALID, DUPLICATE, IN_USE, STALE, TASK_EVENT_LIMIT_REACHED, REVISION_EXHAUSTED, OWNER_UNCONFIRMED }
 sealed interface OperationsResult<out T> {
     data class Value<T>(val value: T): OperationsResult<T>
     data class Rejected(val reason: OperationsFailure): OperationsResult<Nothing>

@@ -13,14 +13,16 @@ class ProductMemoryReportRepository(app: Context, private val access: StorageAcc
     private val owner: () -> SessionDbKeyOwner?, private val worker: Executor, private val main: Executor,
     private val blocked: () -> Unit,
     mutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(), private val now: () -> Long = System::currentTimeMillis) : MemoryReportRepository {
+    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked)
+    internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
     private val database = ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary = WorkspaceWriteBoundary(access, worker, main, mutations, blocked)
     override fun summary(actionId: String, publish: (OperationsResult<MemoryReportSummary>) -> Unit) =
-        run(publish) { d, c -> d.withReadTransaction { MemoryReportStore(d, c, now).summary(actionId) } }
+        run(actionId,publish) { d, c -> d.withReadTransaction { MemoryReportStore(d, c, now).summary(actionId) } }
     override fun list(actionId: String, publish: (OperationsResult<List<MemoryReportHeader>>) -> Unit) =
-        run(publish) { d, c -> d.withReadTransaction { MemoryReportStore(d, c, now).list(actionId) } }
+        run(actionId,publish) { d, c -> d.withReadTransaction { MemoryReportStore(d, c, now).list(actionId) } }
     override fun detail(actionId: String, reportId: String, publish: (OperationsResult<MemoryReportDetail>) -> Unit) =
-        run(publish) { d, c -> d.withReadTransaction { MemoryReportStore(d, c, now).detail(actionId, reportId) } }
+        run(actionId,publish) { d, c -> d.withReadTransaction { MemoryReportStore(d, c, now).detail(actionId, reportId) } }
     override fun create(actionId: String, authorLabel: String, firstSection: MemorySectionSave, publish: (OperationsResult<MemoryReportHeader>) -> Unit) =
         frozenWrite(actionId, publish, firstSection) { store, section -> store.create(actionId, authorLabel, section) }
     override fun saveSection(actionId: String, expected: MemoryReportHeader, section: MemorySectionSave, publish: (OperationsResult<MemoryReportHeader>) -> Unit) =
@@ -49,16 +51,8 @@ class ProductMemoryReportRepository(app: Context, private val access: StorageAcc
                 }
             }
         }
-    private fun <T> run(publish: (OperationsResult<T>) -> Unit, work: suspend (ActionDatabase, StorageContext) -> OperationsResult<T>) {
-        val c = access.acquire(AccessScope.READY) ?: return
-        worker.execute {
-            try {
-                requireOperations(c, AccessPoint.OPERATION)
-                if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
-                val result = (owner() ?: throw ProductStorageFailure()).withDbKey(c) { key -> database.use(inventory.database, key, c) { work(it, c) } }
-                main.execute { c.publish { publish(result) } }
-            } catch (_: Exception) { main.execute { if (c.check(AccessPoint.STEP)) blocked() } }
-        }
+    private fun <T> run(actionId:String,publish: (OperationsResult<T>) -> Unit, work: suspend (ActionDatabase, StorageContext) -> OperationsResult<T>) {
+        readExclusion.read(actionId,publish,{OperationsResult.Rejected(OperationsFailure.OWNER_UNCONFIRMED)},work)
     }
 }
 /** Map/Set and nested MULTI keys are independently copied and wrapped before queue.

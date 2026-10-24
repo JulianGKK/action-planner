@@ -1,0 +1,206 @@
+> Task :verifyArchitecture
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:mergeP77runtimeNativeDebugMetadata NO-SOURCE
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeRFile UP-TO-DATE
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :app:javaPreCompileP77runtime UP-TO-DATE
+> Task :app:generateP77runtimeAssets UP-TO-DATE
+> Task :data:generateDebugAssets UP-TO-DATE
+> Task :data:mergeDebugAssets UP-TO-DATE
+> Task :security:generateDebugAssets UP-TO-DATE
+> Task :security:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeP77runtimeAssets UP-TO-DATE
+> Task :app:compressP77runtimeAssets UP-TO-DATE
+> Task :app:generateP77runtimeGlobalSynthetics UP-TO-DATE
+> Task :app:checkP77runtimeDuplicateClasses UP-TO-DATE
+> Task :app:desugarP77runtimeFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexP77runtime UP-TO-DATE
+> Task :security:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :security:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkP77runtimeAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeResources UP-TO-DATE
+> Task :app:createP77runtimeCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksP77runtime UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :security:extractDeepLinksDebug UP-TO-DATE
+> Task :security:processDebugManifest UP-TO-DATE
+> Task :app:processP77runtimeMainManifest UP-TO-DATE
+> Task :app:processP77runtimeManifest UP-TO-DATE
+> Task :app:processP77runtimeManifestForPackage UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :security:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processP77runtimeResources UP-TO-DATE
+> Task :app:mergeP77runtimeJniLibFolders UP-TO-DATE
+> Task :data:configureNdkBuildDebug[arm64-v8a]
+> Task :data:buildNdkBuildDebug[arm64-v8a]
+> Task :data:configureNdkBuildDebug[armeabi-v7a]
+> Task :data:buildNdkBuildDebug[armeabi-v7a]
+> Task :data:configureNdkBuildDebug[x86]
+> Task :data:buildNdkBuildDebug[x86]
+> Task :data:configureNdkBuildDebug[x86_64]
+> Task :data:buildNdkBuildDebug[x86_64]
+> Task :data:mergeDebugJniLibFolders UP-TO-DATE
+> Task :data:mergeDebugNativeLibs UP-TO-DATE
+> Task :data:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :security:mergeDebugJniLibFolders UP-TO-DATE
+> Task :security:mergeDebugNativeLibs NO-SOURCE
+> Task :security:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeP77runtimeNativeLibs UP-TO-DATE
+> Task :app:stripP77runtimeDebugSymbols UP-TO-DATE
+> Task :app:preparePrototypeDebugKeystore UP-TO-DATE
+> Task :app:validateSigningP77runtime UP-TO-DATE
+> Task :app:writeP77runtimeAppMetadata UP-TO-DATE
+> Task :app:writeP77runtimeSigningConfigVersions UP-TO-DATE
+> Task :app:preP77runtimeAndroidTestBuild SKIPPED
+> Task :app:mergeP77runtimeAndroidTestManifest UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestManifest UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:packageP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeAndroidTestLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestRFile UP-TO-DATE
+> Task :app:javaPreCompileP77runtimeAndroidTest UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:compressP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestGlobalSynthetics UP-TO-DATE
+> Task :app:checkP77runtimeAndroidTestDuplicateClasses UP-TO-DATE
+> Task :app:desugarP77runtimeAndroidTestFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexP77runtimeAndroidTest UP-TO-DATE
+> Task :app:checkP77runtimeAndroidTestAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeAndroidTestSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeAndroidTestNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestJniLibFolders UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestNativeLibs NO-SOURCE
+> Task :app:stripP77runtimeAndroidTestDebugSymbols NO-SOURCE
+> Task :app:validateSigningP77runtimeAndroidTest UP-TO-DATE
+> Task :app:writeP77runtimeAndroidTestSigningConfigVersions UP-TO-DATE
+> Task :data:preDebugUnitTestBuild
+> Task :data:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin
+> Task :data:compileDebugKotlin
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :data:bundleLibCompileToJarDebug
+> Task :data:bundleLibRuntimeToJarDebug
+> Task :data:bundleLibRuntimeToDirDebug
+> Task :data:kspDebugUnitTestKotlin
+> Task :app:mergeLibDexP77runtimeAndroidTest UP-TO-DATE
+> Task :app:mergeLibDexP77runtime
+
+> Task :data:compileDebugUnitTestKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/DocumentImportStagingTest.kt:104:182 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Long'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/P106FullviewOverlapTest.kt:24:76 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Runnable'.
+
+> Task :data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :app:compileP77runtimeKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PreparationWorkspace.kt:148:42 Condition is always 'true'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:422:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:438:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:454:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:470:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:638:75 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:646:76 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+
+> Task :data:testDebugUnitTest
+> Task :app:compileP77runtimeJavaWithJavac UP-TO-DATE
+> Task :app:processP77runtimeJavaRes UP-TO-DATE
+> Task :app:mergeP77runtimeJavaResource
+> Task :app:dexBuilderP77runtime
+> Task :app:bundleP77runtimeClassesToCompileJar
+> Task :app:mergeProjectDexP77runtime
+> Task :app:packageP77runtime
+> Task :app:createP77runtimeApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleP77runtime
+
+> Task :app:compileP77runtimeAndroidTestKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P103EditorCasProbe.kt:58:73 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P103EditorCasProbe.kt:61:47 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P103EditorCasProbe.kt:62:33 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P103EditorCasProbe.kt:66:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P103EditorCasProbe.kt:69:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:61:73 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:64:47 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:65:33 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:69:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:72:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P11UnlockProbe.kt:29:34 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MainActivity'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c2ProtocolProbe.kt:80:20 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c2ProtocolProbe.kt:81:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c3ProtocolProbe.kt:72:20 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c3ProtocolProbe.kt:73:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:77:20 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:79:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:231:58 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:232:199 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:266:62 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:269:92 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:345:440 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:345:571 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:118:74 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:120:161 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:121:125 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:124:45 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:126:57 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:142:20 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P8ExpenseProbe.kt:143:23 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P8ExpenseProbe.kt:144:60 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+
+> Task :app:compileP77runtimeAndroidTestJavaWithJavac UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestJavaRes UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestJavaResource UP-TO-DATE
+> Task :app:dexBuilderP77runtimeAndroidTest UP-TO-DATE
+> Task :app:mergeProjectDexP77runtimeAndroidTest UP-TO-DATE
+> Task :app:packageP77runtimeAndroidTest UP-TO-DATE
+> Task :app:createP77runtimeAndroidTestApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleP77runtimeAndroidTest UP-TO-DATE
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 49s
+129 actionable tasks: 25 executed, 104 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html

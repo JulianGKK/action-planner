@@ -92,26 +92,27 @@ class ProductRuntime private constructor(activity: Activity, private val worker:
     fun authenticationForegroundAvailable() { (authentication as? ProductCredentialAuthentication)?.foregroundAvailable() }
     fun close() { session.lock(); keyLifetime.cancel(); leadershipLifetime.cancel(); leadership.revoke();
         workspaceMutations.revokeActiveRead(); activeCore.close(); owner.getAndSet(null)?.invalidate() }
+    private val workspaceMemory=testAuthority?.workspaceMemory ?: OutstandingCoreRead.product
     val actions: ActionRepository = ProductActionRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, workspaceMutations, session::storageFailure)
     val workspace:WorkspaceRepository=ProductWorkspaceRepository(activity.applicationContext,session,inventory,
-        {owner.get()},worker,main,session::storageFailure)
+        {owner.get()},worker,main,session::storageFailure,workspaceMemory,testAuthority?.workspaceMaterializing)
     val persons: PersonRepository = ProductPersonRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, workspaceMutations, session::storageFailure)
+        { owner.get() }, worker, main, workspaceMutations, session::storageFailure).also{it.bindWorkspaceMemory(workspaceMemory)}
     val tasks: TaskRepository = ProductTaskRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
+        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations).also{it.bindWorkspaceMemory(workspaceMemory)}
     val protocol: ProtocolRepository = ProductProtocolRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
+        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations).also{it.bindWorkspaceMemory(workspaceMemory)}
     val material: MaterialRepository = ProductMaterialRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
+        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations).also{it.bindWorkspaceMemory(workspaceMemory)}
     val memoryReports: MemoryReportRepository = ProductMemoryReportRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
+        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations).also{it.bindWorkspaceMemory(workspaceMemory)}
     val expenses: ExpenseRepository = ProductExpenseRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
+        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations).also{it.bindWorkspaceMemory(workspaceMemory)}
     val documents: DocumentRepository = ProductDocumentRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, mutations = workspaceMutations, blocked = session::storageFailure)
     val operations: OperationsRepository = ProductOperationsRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
+        { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations).also{it.bindWorkspaceMemory(workspaceMemory)}
     val leadership: LeadershipRepository = ProductLeadershipRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, MonotonicTime { SystemClock.elapsedRealtime() }, mutations=workspaceMutations, blocked=session::storageFailure)
     private val leadershipLifetime = session.observe { state ->
@@ -123,7 +124,7 @@ class ProductRuntime private constructor(activity: Activity, private val worker:
     private val activeCoreReader = ProductActiveCoreReader(activity.applicationContext,session,inventory,
         {owner.get()},blocked=session::storageFailure,testHooks=testAuthority?.coreReadHooks)
     val activeCore = ProductActiveCoreLoader(testAuthority?.coreAccess?.invoke(session) ?: session,workspaceMutations,worker,main,{c,t,l,m->activeCoreReader.readForTicket(c,t,l,outstanding=m)},
-        reuseEnabled = testAuthority?.reuseEnabled == true, observation = testAuthority?.observation)
+        reuseEnabled = testAuthority?.reuseEnabled == true, observation = testAuthority?.observation,outstanding=workspaceMemory)
 }
 
 /** Test-only synthetic credentials and storage binding. Construction is guarded above by an exact
@@ -138,7 +139,9 @@ internal data class ProductRuntimeTestAuthority(
     val reuseEnabled: Boolean = false,
     val observation: ActiveCoreLoadObservation? = null,
     val coreAccess: ((StorageAccess) -> StorageAccess)? = null,
-    val coreReadHooks: CoreReadTestHooks? = null
+    val coreReadHooks: CoreReadTestHooks? = null,
+    val workspaceMemory:OutstandingCoreRead?=null,
+    val workspaceMaterializing:(()->Unit)?=null
 )
 
 /** Runs as a secondary-constructor argument, before the primary constructor initializes resources. */

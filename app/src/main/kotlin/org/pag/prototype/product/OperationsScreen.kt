@@ -121,7 +121,8 @@ internal fun createRoleError(reason:OperationsFailure)=when(reason){
     OperationsFailure.INVALID->"Bitte einen Rollen- oder Funktionsnamen eingeben."
     OperationsFailure.NOT_FOUND->"Die Aktion ist nicht mehr verfügbar."
     OperationsFailure.REVISION_EXHAUSTED->"Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
-    OperationsFailure.STALE->"Die Erstellung wurde nicht freigegeben. Der Entwurf bleibt erhalten."
+    OperationsFailure.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
+    OperationsFailure.STALE ->"Die Erstellung wurde nicht freigegeben. Der Entwurf bleibt erhalten."
     else->operationsError(reason)
 }
 /** Both productive role surfaces use the same snapshot-bound editor/confirmation. */
@@ -191,5 +192,6 @@ internal fun operationsError(failure:OperationsFailure)=when(failure){
     OperationsFailure.DUPLICATE->"Dieser Rollenname ist in der Aktion bereits vergeben."
     OperationsFailure.IN_USE->"Die Rolle wird noch von einer Person oder Aufgabe verwendet und kann nicht gelöscht werden."
     OperationsFailure.REVISION_EXHAUSTED->"Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
-    OperationsFailure.STALE->"Die Lage wurde inzwischen geändert. Bitte neu öffnen."
+    OperationsFailure.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
+    OperationsFailure.STALE ->"Die Lage wurde inzwischen geändert. Bitte neu öffnen."
 }
