@@ -33,7 +33,7 @@ class ActiveWorkspaceTest {
     private class People : PersonRepository {
         var lists = 0
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { lists++ }
-        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0)))
+        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0, editRevision = 0)))
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
         override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
@@ -77,9 +77,9 @@ class ActiveWorkspaceTest {
         override fun summary(actionId: String, publish: (ProtocolResult<ProtocolSummary>) -> Unit) { summaries.add(publish) }
     }
     private val model = ProductViewModel(session, actions, ProductStorageState.READY_TO_OPEN, people, protection, ops, tasks, protocolPort) {}
-    private val person = OperationalPerson(Person("p", "a", "synthetic", 0), PersonRolePlan(setOf("r"), "r"), null)
-    private val board = OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r", "a", "Support", 0)), listOf(person))
-    private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null)
+    private val person = OperationalPerson(Person("p", "a", "synthetic", 0, editRevision = 0), PersonRolePlan(setOf("r"), "r", editRevision = 0), null)
+    private val board = OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r", "a", "Support", 0, editRevision = 0)), listOf(person))
+    private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null, editRevision = 0)
     private val taskBoard = TaskBoard("a", listOf(task), emptyList())
     private fun open() = model.detail("a")
     private fun complete() {
@@ -116,8 +116,8 @@ class ActiveWorkspaceTest {
         complete(); assertNotNull(model.workspace)
     }
     @Test fun summaryUsesCurrentOnSiteFunctionRatherThanPlan() {
-        val live = person.copy(state = PersonOperationalState("a", "p", "current", OperationalStatus.ON_SITE, null, 1))
-        val current = board.copy(roles = board.roles + Role("current", "a", "Hummel", 0), persons = listOf(live))
+        val live = person.copy(state = PersonOperationalState("a", "p", "current", OperationalStatus.ON_SITE, null, 1, editRevision = 0))
+        val current = board.copy(roles = board.roles + Role("current", "a", "Hummel", 0, editRevision = 0), persons = listOf(live))
         val cards = activeHubCards(actions.row, current, taskBoard)
         assertEquals(listOf("1 Hummel"), cards[2].summary)
         assertTrue(cards[0].summary.contains("1 vor Ort")); assertNull(cards[0].attention)
@@ -125,13 +125,13 @@ class ActiveWorkspaceTest {
         assertNotNull(cards[1].attention); assertEquals(3, cards[3].summary.size)
     }
     @Test fun missingStateAndNoStatusBothCountWithoutClaimingAvailability() {
-        val unknown = person.copy(person = person.person.copy(id = "q"), state = PersonOperationalState("a", "q", "r", OperationalStatus.NO_STATUS, null, 0))
+        val unknown = person.copy(person = person.person.copy(id = "q"), state = PersonOperationalState("a", "q", "r", OperationalStatus.NO_STATUS, null, 0, editRevision = 0))
         val cards = activeHubCards(actions.row, board.copy(persons = listOf(person, unknown)), taskBoard)
         assertTrue(cards[0].summary.contains("2 ohne Lage")); assertEquals("2 Personen ohne aktuelle Lage", cards[0].attention)
         assertEquals(listOf("Noch keine aktuellen Funktionen"), cards[2].summary)
     }
     @Test fun oneAttentionUsesCustodyThenUnreachableThenMissing() {
-        fun p(id: String, status: OperationalStatus) = person.copy(person = person.person.copy(id = id), state = PersonOperationalState("a", id, null, status, null, 0))
+        fun p(id: String, status: OperationalStatus) = person.copy(person = person.person.copy(id = id), state = PersonOperationalState("a", id, null, status, null, 0, editRevision = 0))
         val cards = activeHubCards(actions.row, board.copy(persons = listOf(person, p("c", OperationalStatus.IN_CUSTODY), p("u", OperationalStatus.NOT_REACHABLE))), taskBoard)
         assertEquals("1 Person in Gewahrsam", cards[0].attention)
         assertNull(cards[2].attention); assertNull(cards[3].attention)

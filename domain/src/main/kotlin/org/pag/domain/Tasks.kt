@@ -8,7 +8,7 @@ data class TaskInput(val title:String, val priority:TaskPriority=TaskPriority.NO
     val dueAt:Long?=null, val sourceTemplateKey:String?=null)
 data class Task(val id:String,val actionId:String,val title:String,val priority:TaskPriority,val status:TaskStatus,
     val assigneePersonId:String?,val assigneeRoleId:String?,val affectedPersonId:String?,val dueAt:Long?,
-    val sourceTemplateKey:String?,val createdAt:Long,val updatedAt:Long,val completedAt:Long?) {
+    val sourceTemplateKey:String?,val createdAt:Long,val updatedAt:Long,val completedAt:Long?,val editRevision:Long) {
     fun input()=TaskInput(title,priority,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey)
 }
 data class TaskEvent(val id:String,val actionId:String,val taskId:String,val type:TaskEventType,val occurredAt:Long)

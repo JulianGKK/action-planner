@@ -35,11 +35,12 @@ class BoundedActiveStoreTest {
             exec("INSERT INTO actions VALUES('a','Synthetic action','Synthetic description',1,2,0,'ACTIVE','SENSITIVE',NULL)")
             if (people > 0) {
                 exec("WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i<$people) " +
-                    "INSERT INTO persons SELECT 'p'||i,'a','synthetic '||i,'synthetic '||i,i FROM n")
-                exec("INSERT INTO person_operational_states SELECT 'a',id,NULL,'ON_SITE',NULL,0 FROM persons")
+                    "INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) SELECT 'p'||i,'a','synthetic '||i,'synthetic '||i,i FROM n")
+                exec("INSERT INTO person_role_plans(actionId,personId,primaryRoleId,editRevision) SELECT actionId,id,NULL,0 FROM persons")
+                exec("INSERT INTO person_operational_states(actionId,personId,currentRoleId,operationalStatus,currentPlaceLabel,updatedAt) SELECT 'a',id,NULL,'ON_SITE',NULL,0 FROM persons")
             }
             if (roles > 0) exec("WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i<$roles) " +
-                "INSERT INTO roles SELECT 'r'||i,'a','synthetic role '||i,'synthetic role '||i,i FROM n")
+                "INSERT INTO roles(id,actionId,name,normalizedName,createdAt) SELECT 'r'||i,'a','synthetic role '||i,'synthetic role '||i,i FROM n")
         }
         fun read(id: String = "a", requestedGeneration: Long = 1): BoundedActiveResult = boundedActiveRead(
             BoundedActiveBinding(id, requestedGeneration),
@@ -63,13 +64,13 @@ class BoundedActiveStoreTest {
     @Test fun validSmallActiveReadHasExactExpectedDomainProjection() = H().use { h ->
         h.seed()
         h.exec("INSERT INTO person_planned_roles VALUES('a','p1','r1')")
-        h.exec("INSERT INTO person_role_plans VALUES('a','p1','r1')")
+        h.exec("UPDATE person_role_plans SET primaryRoleId='r1' WHERE actionId='a' AND personId='p1'")
         h.exec("UPDATE person_operational_states SET currentRoleId='r1' WHERE personId='p1'")
         val result = h.read() as BoundedActiveResult.Value
         assertEquals(Action("a", "Synthetic action", "Synthetic description", 1, 2, 0, ActionStatus.ACTIVE), result.action)
-        assertEquals(OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r1", "a", "synthetic role 1", 1)),
-            listOf(OperationalPerson(Person("p1", "a", "synthetic 1", 1), PersonRolePlan(setOf("r1"), "r1"),
-                PersonOperationalState("a", "p1", "r1", OperationalStatus.ON_SITE, null, 0)))), result.operations)
+        assertEquals(OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r1", "a", "synthetic role 1", 1, editRevision = 0)),
+            listOf(OperationalPerson(Person("p1", "a", "synthetic 1", 1, editRevision = 0), PersonRolePlan(setOf("r1"), "r1", editRevision = 0),
+                PersonOperationalState("a", "p1", "r1", OperationalStatus.ON_SITE, null, 0, editRevision = 0)))), result.operations)
         assertTrue(result.retainedCharge <= ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
         assertTrue(result.transitionCharge <= ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)
         assertTrue(h.phases.indexOf(BoundedActiveStore.Phase.ADMITTED) < h.phases.indexOf(BoundedActiveStore.Phase.TEXT))
@@ -89,7 +90,7 @@ class BoundedActiveStoreTest {
         val changes = listOf(
             "UPDATE person_operational_states SET currentRoleId='foreign'",
             "INSERT INTO person_planned_roles VALUES('a','missing','r1')",
-            "INSERT INTO person_role_plans VALUES('a','p1','r1')",
+            "UPDATE person_role_plans SET primaryRoleId='r1' WHERE actionId='a' AND personId='p1'",
             "DELETE FROM person_operational_states")
         for (change in changes) H().use { h ->
             h.seed(); h.exec("PRAGMA foreign_keys=OFF"); h.exec(change)
@@ -197,7 +198,7 @@ class BoundedActiveStoreTest {
     @Test fun batchesAreDeterministicAndDoNotMixSecondAction() = H().use { h ->
         h.seed(40, 2)
         h.exec("INSERT INTO actions VALUES('b','Other synthetic','description',1,2,0,'ACTIVE','SENSITIVE',NULL)")
-        h.exec("INSERT INTO persons VALUES('other','b',printf('%01000000d',0),'other',0)")
+        h.exec("INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) VALUES('other','b',printf('%01000000d',0),'other',0)")
         val result = h.read() as BoundedActiveResult.Value
         assertEquals(40, result.operations.persons.size)
         assertEquals((1..40).map { "p$it" }, result.operations.persons.map { it.person.id })

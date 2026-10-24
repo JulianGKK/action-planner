@@ -12,7 +12,7 @@ private typealias ProtocolHarness = CoreWriterIntegrationTest.H
 class ProtocolWriterIntegrationTest {
     private fun harness()=ProtocolHarness().also{h->
         h.exec("UPDATE actions SET status='ACTIVE' WHERE id='a'")
-        h.exec("INSERT INTO persons VALUES('foreign','b','Synthetic foreign','synthetic foreign',0)")
+        h.exec("INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) VALUES('foreign','b','Synthetic foreign','synthetic foreign',0)")
         runBlocking{h.db.installHostProtocolConstraints()}
     }
     private fun input(title:String="Synthetic protocol")=ProtocolInput(ProtocolClassification.KEY_EVENT,title,10,

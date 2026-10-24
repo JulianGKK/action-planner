@@ -63,7 +63,7 @@ class P101WriterAcceptanceProbe:Instrumentation() {
             val r=h.runtime.leadership
             when(scenario) {
                 "migration"->{
-                    check(d.schemaVersion()==11L && d.count("persons")==20L && d.count("tasks")==40L)
+                    check(d.schemaVersion()==12L && d.count("persons")==20L && d.count("tasks")==40L)
                     check(main{h.mutations.mutationEpoch}==0L)
                     emit("MIGRATION,seed_version=10,READY_denied_before_auth=true,version_after_authorized_maintenance=11,persons=20,tasks=40,ready_writer_epoch=0")
                 }

@@ -70,8 +70,9 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
                 db.actions().insert(ActionRow(id,"Synthetic action","Synthetic benchmark",1,2,0,status.name,completedAt=if(status==ActionStatus.COMPLETED)3 else null))
                 repeat(personCountPerAction){i->
                     val p="person-$i"
-                    db.persons().insert(PersonRow("$id-$p",id,"Synthetic $i",PersonRules.normalized("Synthetic $i"),i.toLong()))
-                    if(status!=ActionStatus.PREPARATION)db.operations().insertState(OperationalRow(id,"$id-$p",null,"NO_STATUS",null,1))
+                    db.persons().insert(PersonRow("$id-$p",id,"Synthetic $i",PersonRules.normalized("Synthetic $i"),i.toLong(), editRevision = 0))
+                    db.operations().insertPlan(RolePlanRow(id,"$id-$p",null,0))
+                    if(status!=ActionStatus.PREPARATION)db.operations().insertState(OperationalRow(id,"$id-$p",null,"NO_STATUS",null,1, editRevision = 0))
                 }
                 if(status!=ActionStatus.COMPLETED) {
                     repeat(taskCountPerAction){i->check(TaskStore(db,c){1}.create(id,TaskInput("Synthetic task $i")) is OperationsResult.Value)}
@@ -97,7 +98,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
             if(profile.startsWith("p86-"))for((id,label) in listOf(preparationId to "P86 Preparation",activeId to "P86 Active",completedId to "P86 Completed"))
                 exec("UPDATE actions SET title=? WHERE id=?",label,id)
             repeat(roles){i->val name=if(profile.startsWith("p86-stress"))"Ä界🦋".repeat(15)+" $i" else "Funktion Ä界🦋 $i"
-                db.operations().let { exec("INSERT INTO roles VALUES(?,?,?,?,?)","p83-r$i",activeId,name,OperationalRules.normalizedName(name),"1") }
+                db.operations().let { exec("INSERT INTO roles(id,actionId,name,normalizedName,createdAt) VALUES(?,?,?,?,?)","p83-r$i",activeId,name,OperationalRules.normalizedName(name),"1") }
             }
             // UTF8 byte lengths differ from UTF16 units. Preserve every requested character.
             val personText=if(stress)"Ä界🦋".repeat(15) else "Ä界🦋"
@@ -122,9 +123,10 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
             }
         }}
     }
-    internal var p101SeededVersion=11;private set
+    internal var p101SeededVersion=12;private set
     /** Exact synthetic legacy seed, before Runtime/Session construction; never product data. */
     internal fun p101LegacyTen() {
+        p104LegacyEleven()
         check(app.packageName=="org.pag.prototype.a.p77runtime")
         org.pag.data.prototype.b2.B2Native.open(inventory.database,key,maintenance).use{db->
             db.beginTransaction()
@@ -134,6 +136,133 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
             }finally{db.endTransaction()}
         }
         p101SeededVersion=10
+    }
+    private var p104Before:List<String>?=null
+    /** Builds legacy synthetic input ONLY before ProductRuntime exists. Never a product downgrade. */
+    internal fun p104LegacyEleven() {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        org.pag.data.prototype.b2.B2Native.open(inventory.database,key,maintenance).use{db->
+            db.beginTransaction()
+            try {
+                // Exact schema-11 contract: only the five additive columns are removed.
+                for(table in EDIT_REVISION_TABLES)db.execSQL("ALTER TABLE $table DROP COLUMN editRevision")
+                db.execSQL("DELETE FROM person_role_plans WHERE primaryRoleId IS NULL AND NOT EXISTS(SELECT 1 FROM person_planned_roles a WHERE a.actionId=person_role_plans.actionId AND a.personId=person_role_plans.personId)")
+                val schema=org.json.JSONObject(app.assets.open("p104-schema11.json").bufferedReader().use{it.readText()}).getJSONObject("database")
+                val identity=schema.getString("identityHash")
+                db.execSQL("UPDATE room_master_table SET identity_hash=? WHERE id=42",arrayOf(identity))
+                db.version=11;db.setTransactionSuccessful()
+            }finally{db.endTransaction()}
+            p104Before=p104Digest(db)
+        }
+    }
+    private fun p104Digest(db:net.zetetic.database.sqlcipher.SQLiteDatabase):List<String> {
+        val schema=org.json.JSONObject(app.assets.open("p104-schema11.json").bufferedReader().use{it.readText()}).getJSONObject("database").getJSONArray("entities")
+        val output=ArrayList<String>()
+        for(i in 0 until schema.length()){
+            val e=schema.getJSONObject(i);val table=e.getString("tableName");val fields=e.getJSONArray("fields")
+            val cols=(0 until fields.length()).map{fields.getJSONObject(it).getString("columnName")}
+            // New empty headers are the sole intentional added rows.
+            val where=if(table=="person_role_plans")" WHERE primaryRoleId IS NOT NULL OR EXISTS(SELECT 1 FROM person_planned_roles a WHERE a.actionId=person_role_plans.actionId AND a.personId=person_role_plans.personId)" else ""
+            val rows=ArrayList<String>()
+            db.rawQuery("SELECT "+cols.joinToString{ "quote(`$it`)" }+" FROM `$table`"+where,emptyArray<String>()).use{c->
+                while(c.moveToNext())rows.add((0 until c.columnCount).joinToString("|"){c.getString(it)})
+            }
+            val digest=java.security.MessageDigest.getInstance("SHA-256")
+            for(row in rows.sorted())digest.update((row+"\n").toByteArray(Charsets.UTF_8))
+            output.add(table+":"+rows.size+":"+digest.digest().joinToString(""){"%02x".format(it)})
+        }
+        return output
+    }
+    internal fun p104VerifyMigration():String {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        org.pag.data.prototype.b2.B2Native.open(inventory.database,key,maintenance).use{db->
+            check(db.version==12)
+            check(p104Before==p104Digest(db))
+            for(table in EDIT_REVISION_TABLES)db.rawQuery("SELECT COUNT(*) FROM $table WHERE typeof(editRevision)!='integer' OR editRevision!=0",emptyArray<String>()).use{check(it.moveToFirst() && it.getLong(0)==0L)}
+            db.rawQuery("SELECT COUNT(*) FROM persons p WHERE NOT EXISTS(SELECT 1 FROM person_role_plans h WHERE h.actionId=p.actionId AND h.personId=p.id)",emptyArray<String>()).use{check(it.moveToFirst() && it.getLong(0)==0L)}
+            db.rawQuery("PRAGMA foreign_key_check",emptyArray<String>()).use{check(!it.moveToFirst())}
+            return "version=12,all_legacy_columns_SHA256_equal=true,revision_zero=true,headers_complete=true,foreign_keys=true"
+        }
+    }
+    internal fun p104AbortMigration():String {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        val permitted=java.util.concurrent.atomic.AtomicBoolean(true)
+        val altered=java.util.concurrent.atomic.AtomicInteger()
+        var commitDenied=false
+        val c=object:StorageContext by maintenance {
+            override fun check(point:AccessPoint)=permitted.get() && maintenance.check(point)
+        }
+        fun field(o:Any,n:String)=o.javaClass.getDeclaredField(n).let{it.isAccessible=true;it.get(o)}
+        val hooks=ActionPreflightHooks(resources=org.pag.data.prototype.b2.B2ResourceHooks(statement={raw->
+            val vendor=if(raw.javaClass.name=="net.zetetic.database.sqlcipher.driver.JournalModeStatement")field(raw,"delegate")!! else raw
+            val sql=field(vendor,"sql") as String
+            object:androidx.sqlite.SQLiteStatement by raw {
+                override fun step():Boolean {val result=raw.step()
+                    if(sql.trimStart().startsWith("ALTER TABLE",true) && sql.contains("editRevision"))altered.incrementAndGet()
+                    return result
+                }
+            }
+        }),driverHooks=org.pag.data.prototype.b2.B2Hooks(beforeCommit={
+            if(altered.get()==5){commitDenied=true;permitted.set(false)}
+        }))
+        var returned=false
+        try{ActionDatabaseAccess(wrapped,hooks).use(inventory.database,key,c){returned=true}}
+        catch(_:Exception){check(commitDenied)}
+        check(!returned && commitDenied && altered.get()==5)
+        org.pag.data.prototype.b2.B2Native.open(inventory.database,key,maintenance).use{db->
+            check(db.version==11)
+            for(table in EDIT_REVISION_TABLES)db.rawQuery("SELECT COUNT(*) FROM pragma_table_info('$table') WHERE name='editRevision'",emptyArray<String>()).use{check(it.moveToFirst() && it.getLong(0)==0L)}
+            check(p104Before==p104Digest(db))
+        }
+        return "five_ALTER_steps_returned=true,commit_authority_revoked=true,version_still_11=true,no_partial_columns=true,all_legacy_digests_equal=true"
+    }
+    /** SQLCipher/Room CAS proof with a fixed synthetic wallclock. Original Runtime gates
+     * are checked separately by P104EditorCasProbe; this seam asserts database semantics only. */
+    internal fun p104NativeRevisions():String {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        val c=access.acquire(AccessScope.READY)!!
+        ActionDatabaseAccess(wrapped).use(inventory.database,key,c){db->
+            fun <T> value(r:OperationsResult<T>)=(r as OperationsResult.Value).value
+            db.withWriteTransaction {
+                val person=db.persons().list(preparationId).first().model()
+                val people=PersonWriterStore(RoomCoreWriterData(db),c){42}
+                val b=(people.change(preparationId,person,"P104 B") as PersonResult.Value).value
+                val a=(people.change(preparationId,b,person.pseudonym) as PersonResult.Value).value
+                check(a==person.copy(editRevision=person.editRevision+2))
+                check(people.change(preparationId,person,"Stale")==PersonResult.Rejected(PersonRejection.STALE))
+                val ops=OperationsStore(db,c){42}
+                val role=value(ops.role(preparationId,null,"P104 role A"))
+                val rb=value(ops.role(preparationId,role,"P104 role B"))
+                value(ops.role(preparationId,rb,role.name))
+                check(ops.role(preparationId,role,"Stale")==OperationsResult.Rejected(OperationsFailure.STALE))
+                suspend fun plan()=value(ops.board(preparationId)).persons.single{it.person.id==person.id}.plan
+                val original=plan();val target=PersonRolePlan(setOf(role.id),role.id,original.editRevision)
+                check(ops.plan(preparationId,person.id,ExpectedPersonRolePlan(preparationId,person.id,original),target) is OperationsResult.Value)
+                check(ops.plan(preparationId,person.id,ExpectedPersonRolePlan(preparationId,person.id,plan()),original) is OperationsResult.Value)
+                check(plan()==original.copy(editRevision=original.editRevision+2))
+                check(ops.plan(preparationId,person.id,ExpectedPersonRolePlan(preparationId,person.id,original),target)==OperationsResult.Rejected(OperationsFailure.STALE))
+                check(ops.plan(preparationId,person.id,ExpectedPersonRolePlan(preparationId,person.id,plan()),target) is OperationsResult.Value)
+                val initialState=db.operations().states(activeId).first().model()
+                check(ops.snapshot(activeId,initialState.personId,initialState,initialState.status,initialState.currentRoleId,initialState.currentPlaceLabel.orEmpty()) is OperationsResult.Value)
+                val state=db.operations().state(activeId,initialState.personId)!!.model()
+                check(ops.snapshot(activeId,state.personId,state,OperationalStatus.UNCLEAR,null,"") is OperationsResult.Value)
+                val sb=db.operations().state(activeId,state.personId)!!.model()
+                check(ops.snapshot(activeId,state.personId,sb,state.status,state.currentRoleId,state.currentPlaceLabel.orEmpty()) is OperationsResult.Value)
+                val sa=db.operations().state(activeId,state.personId)!!.model()
+                check(sa.updatedAt==42L && sa==state.copy(editRevision=state.editRevision+2))
+                check(ops.snapshot(activeId,state.personId,state,OperationalStatus.LEFT,null,"")==OperationsResult.Rejected(OperationsFailure.STALE))
+                val tasks=TaskStore(db,c){42}
+                val t=value(tasks.create(preparationId,TaskInput("P104 task A")))
+                val tb=value(tasks.edit(preparationId,t,TaskInput("P104 task B")))
+                val ta=value(tasks.edit(preparationId,tb,t.input()))
+                check(ta==t.copy(editRevision=2))
+                val count=db.tasks().eventCount(preparationId)
+                check(tasks.transition(preparationId,t,TaskStatus.CANCELLED)==OperationsResult.Rejected(OperationsFailure.STALE))
+                val tc=value(tasks.transition(preparationId,ta,TaskStatus.CANCELLED))
+                check(tc.editRevision==3L && db.tasks().eventCount(preparationId)==count+1)
+            }
+        }
+        return "five_kinds_ABA_STALE=true,plan_empty_repopulate_header=true,fixed_wallclock=42,task_event_exactly_once=true"
     }
     private fun fail():Nothing=error("SYNTHETIC_STORAGE_FAILURE")
     val actions:ActionRepository=ProductActionRepository(wrapped,access,inventory,owner::get,worker,main,::fail)

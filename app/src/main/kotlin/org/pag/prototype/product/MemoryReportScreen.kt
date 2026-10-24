@@ -20,7 +20,8 @@ import org.pag.domain.*
     }
     model.error?.let {
         Text(when (it) {
-            OperationsFailure.STALE -> "Der gespeicherte Bericht wurde inzwischen geändert. Deine aktuellen Eingaben bleiben erhalten."
+            OperationsFailure.REVISION_EXHAUSTED -> "Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
+    OperationsFailure.STALE -> "Der gespeicherte Bericht wurde inzwischen geändert. Deine aktuellen Eingaben bleiben erhalten."
             OperationsFailure.INVALID -> "Bitte Eingabegrenzen und offene Detailentscheidungen prüfen."
             OperationsFailure.NOT_ALLOWED -> "Dieser Schritt ist im aktuellen Berichts- oder Aktionsstatus nicht möglich."
             else -> "Gedächtnisprotokoll konnte nicht geladen oder gespeichert werden."

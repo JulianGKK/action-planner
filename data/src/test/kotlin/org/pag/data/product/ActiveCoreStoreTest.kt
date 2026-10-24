@@ -56,19 +56,19 @@ class ActiveCoreStoreTest {
         init {
             require(history>=5 && taskCount.toLong()*history<=TaskRules.MAX_TASK_EVENTS_PER_ACTION)
             exec("INSERT INTO actions VALUES('a','Synthetic action','Synthetic description',1,2,0,'ACTIVE','SENSITIVE',NULL)")
-            exec("WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i+1<$roleCount) INSERT INTO roles SELECT 'r'||i,'a','Synthetic role '||i,'synthetic role '||i,i FROM n")
-            exec("WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i+1<$people) INSERT INTO persons SELECT 'p'||i,'a','Synthetic person '||i,'synthetic person '||i,i FROM n")
+            exec("WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i+1<$roleCount) INSERT INTO roles(id,actionId,name,normalizedName,createdAt) SELECT 'r'||i,'a','Synthetic role '||i,'synthetic role '||i,i FROM n")
+            exec("WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i+1<$people) INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) SELECT 'p'||i,'a','Synthetic person '||i,'synthetic person '||i,i FROM n")
             exec("INSERT INTO person_planned_roles SELECT 'a',id,'r'||(createdAt%$roleCount) FROM persons")
             exec("INSERT INTO person_planned_roles SELECT 'a',id,'r'||((createdAt+1)%$roleCount) FROM persons")
-            exec("INSERT INTO person_role_plans SELECT 'a',id,'r'||(createdAt%$roleCount) FROM persons")
-            exec("INSERT INTO person_operational_states SELECT 'a',id,'r'||(createdAt%$roleCount),'ON_SITE',NULL,1 FROM persons")
+            exec("INSERT INTO person_role_plans(actionId,personId,primaryRoleId) SELECT 'a',id,'r'||(createdAt%$roleCount) FROM persons")
+            exec("INSERT INTO person_operational_states(actionId,personId,currentRoleId,operationalStatus,currentPlaceLabel,updatedAt) SELECT 'a',id,'r'||(createdAt%$roleCount),'ON_SITE',NULL,1 FROM persons")
             repeat(taskCount) { i ->
                 val status = when(i%5) { 0 -> TaskStatus.OPEN; 1 -> TaskStatus.IN_PROGRESS; 3 -> TaskStatus.CANCELLED; else -> TaskStatus.DONE }
                 expected.add(Task("t%04d".format(java.util.Locale.ROOT,i),"a","Synthetic task $i",TaskPriority.entries[i%3],status,
                     if(i%2==0) "p${i%people}" else null,if(i%2==1) "r${i%roleCount}" else null,"p${i%people}",
-                    if(i%4==0) null else (i%3).toLong(),"template",(i%3).toLong(),(i%4).toLong(),if(status==TaskStatus.DONE) 3 else null))
+                    if(i%4==0) null else (i%3).toLong(),"template",(i%3).toLong(),(i%4).toLong(),if(status==TaskStatus.DONE) 3 else null, editRevision = 0))
             }
-            exec("INSERT INTO tasks VALUES " + expected.joinToString { t ->
+            exec("INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) VALUES " + expected.joinToString { t ->
                 fun q(s: String?) = s?.let { "'$it'" } ?: "NULL"
                 "(${listOf(t.id,t.actionId,t.title,t.priority.name,t.status.name,t.assigneePersonId,t.assigneeRoleId,t.affectedPersonId).joinToString { q(it) }},${t.dueAt?:"NULL"},'template',${t.createdAt},${t.updatedAt},${t.completedAt?:"NULL"})"
             })
@@ -168,7 +168,7 @@ class ActiveCoreStoreTest {
         assertEquals(h.people.toLong(),page.overall.total)
         assertEquals(h.people.toLong(),page.overall.onSite)
         assertEquals(h.roleCount,functions.items.size)
-        assertEquals((0 until h.roleCount).map{Role("r$it","a","Synthetic role $it",it.toLong())},functions.items.map{it.role})
+        assertEquals((0 until h.roleCount).map{Role("r$it","a","Synthetic role $it",it.toLong(), editRevision = 0)},functions.items.map{it.role})
         assertEquals((0 until minOf(h.people,32)).map{"p$it"},page.items.map{it.id})
         for((i,p) in page.items.withIndex()) {
             assertEquals("Synthetic person $i",p.pseudonym)
@@ -314,8 +314,8 @@ class ActiveCoreStoreTest {
             "UPDATE roles SET normalizedName='mismatch' WHERE id='r0'", "UPDATE persons SET createdAt=x'00'", "DELETE FROM person_operational_states")) H().use { h ->
             h.exec("PRAGMA foreign_keys=OFF")
             h.exec("INSERT INTO actions VALUES('b','Synthetic','Synthetic description',1,2,0,'ACTIVE','SENSITIVE',NULL)")
-            h.exec("INSERT INTO persons VALUES('foreign','b','Synthetic','synthetic',1)")
-            h.exec("INSERT INTO roles VALUES('foreign','b','Synthetic','synthetic',1)")
+            h.exec("INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) VALUES('foreign','b','Synthetic','synthetic',1)")
+            h.exec("INSERT INTO roles(id,actionId,name,normalizedName,createdAt) VALUES('foreign','b','Synthetic','synthetic',1)")
             h.exec(change)
             denied(BoundedActiveStatus.INVALID_DATA,h.read());assertEquals(0,h.publicationAttempts);assertEquals(1,h.blocked)
         }

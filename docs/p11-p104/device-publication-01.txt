@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P104,publication,PUBLICATION,commit_before_lock_preserved=true,lost_old_Main_and_double_callback_no_success=true,new_write_before_old_patch=true,lock_before_worker_no_write=true,actual_status_permission_change_denies=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P104,publication,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false,persisted_revisions=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P104 PASS publication
+INSTRUMENTATION_CODE: -1

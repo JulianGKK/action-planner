@@ -15,7 +15,7 @@ class BoundedTaskFixturePreconditionTest {
             repeat(100) { i ->
                 val task = "00000000-0000-0000-0000-%012d".format(java.util.Locale.ROOT,i)
                 val event = "11111111-0000-0000-0000-%012d".format(java.util.Locale.ROOT,i)
-                db.execute("INSERT INTO tasks VALUES('$task','p11-active','Synthetic task $i','NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
+                db.execute("INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) VALUES('$task','p11-active','Synthetic task $i','NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
                 db.execute("INSERT INTO task_events VALUES('$event','p11-active','$task','CREATED',1)")
             }
             if (transitioned) {
@@ -90,7 +90,7 @@ class BoundedTaskFixturePreconditionTest {
             repeat(40){i->
                 val id="00000000-0000-0000-0000-%012d".format(java.util.Locale.ROOT,i)
                 val event="11111111-0000-0000-0000-%012d".format(java.util.Locale.ROOT,i)
-                exec("INSERT INTO tasks VALUES('$id','p11-active','Synthetic task $i','NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
+                exec("INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) VALUES('$id','p11-active','Synthetic task $i','NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
                 exec("INSERT INTO task_events VALUES('$event','p11-active','$id','CREATED',1)")
             }
         }
@@ -136,11 +136,11 @@ class BoundedTaskFixturePreconditionTest {
         val first=h.complete()
         repeat(3){assertEquals(first,h.complete())}
         val statements=h.db.payloadStatements;val blobs=h.db.blobReads
-        val row=TaskRow("33333333-0000-0000-0000-000000000000","p11-active","Synthetic oversized template","NORMAL","OPEN",null,null,null,null,"x".repeat(200000),1,1,null)
+        val row=TaskRow("33333333-0000-0000-0000-000000000000","p11-active","Synthetic oversized template","NORMAL","OPEN",null,null,null,null,"x".repeat(200000),1,1,null, editRevision = 0)
         assertTrue(TaskRules.valid(row.model().input()))
         h.exec("BEGIN")
         try {
-            h.exec("INSERT INTO tasks VALUES('${row.id}','p11-active','${row.title}','NORMAL','OPEN',NULL,NULL,NULL,NULL,replace(printf('%0200000d',0),'0','x'),1,1,NULL)")
+            h.exec("INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) VALUES('${row.id}','p11-active','${row.title}','NORMAL','OPEN',NULL,NULL,NULL,NULL,replace(printf('%0200000d',0),'0','x'),1,1,NULL)")
             h.exec("INSERT INTO task_events VALUES('44444444-0000-0000-0000-000000000000','p11-active','${row.id}','CREATED',1)")
             h.exec("COMMIT")
         }catch(failure:Throwable){h.exec("ROLLBACK");throw failure}
@@ -164,7 +164,7 @@ class BoundedTaskFixturePreconditionTest {
         val input=TaskInput("Synthetic oversized template",sourceTemplateKey="x".repeat(200000))
         assertTrue(TaskRules.valid(input))
         val row=TaskRow("synthetic","p11-active",input.title,"NORMAL","OPEN",null,null,null,null,
-            input.sourceTemplateKey,1,1,null)
+            input.sourceTemplateKey,1,1,null, editRevision = 0)
         assertEquals(input,row.model().input())
         assertEquals(TaskEventType.STARTED,TaskRules.event(TaskStatus.OPEN,TaskStatus.IN_PROGRESS))
     }

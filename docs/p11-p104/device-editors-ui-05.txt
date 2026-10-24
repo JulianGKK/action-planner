@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P104,editors_ui,EDITOR_UI,role_plan_task_live_STALE_drafts_preserved=true,visible_explicit_reload=true,explicit_cancel_discards=true,navigation_discard_notice_visible=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P104,editors_ui,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false,persisted_revisions=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P104 PASS editors_ui
+INSTRUMENTATION_CODE: -1

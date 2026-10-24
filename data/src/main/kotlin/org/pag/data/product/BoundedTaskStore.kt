@@ -92,7 +92,7 @@ internal class BoundedTaskStore(private val sql: PooledConnection, private val c
                     "tasks" -> {
                         if (text(1) != actionId) invalid()
                         tasks.add(TaskRow(text(0), text(1), text(2), text(3), text(4), texts[5],
-                            texts[6], texts[7], numbers[0], texts[8], number(1), number(2), numbers[3]).model())
+                            texts[6], texts[7], numbers[0], texts[8], number(1), number(2), numbers[3], editRevision = number(4)).model())
                     }
                     "task_events" -> {
                         if (text(1) != actionId) invalid()
@@ -134,9 +134,9 @@ internal class BoundedTaskStore(private val sql: PooledConnection, private val c
     }
 
     private fun units(rows: Long, fields: Long, bytes: Long, copies: Long): ActiveWorkspaceBudget.Units = checked {
-        ActiveWorkspaceBudget.Units(objects = Math.multiplyExact(rows, copies * 8),
+        ActiveWorkspaceBudget.Units(objects = Math.multiplyExact(rows, copies * 9),
             strings = Math.multiplyExact(fields, copies), utf16Units = Math.multiplyExact(bytes, copies),
-            arrays = Math.multiplyExact(fields, copies), arrayPayloadBytes = Math.multiplyExact(bytes, copies),
+            arrays = Math.multiplyExact(fields, copies), arrayPayloadBytes = Math.addExact(Math.multiplyExact(bytes,copies),Math.multiplyExact(rows,copies*8)),
             lists = 16, listCapacity = Math.multiplyExact(rows, copies),
             maps = 8, mapCapacity = Math.multiplyExact(rows, copies),
             references = Math.multiplyExact(rows, copies * 16))
@@ -252,7 +252,7 @@ internal class BoundedTaskStore(private val sql: PooledConnection, private val c
                 listOf(Number("startAt"), Number("expectedEndAt"), Number("createdAt"), Number("completedAt", true))),
             Table("tasks", "actionId", listOf(Text("id"), Text("actionId"), Text("title"), Text("priority"), Text("status"),
                 Text("assigneePersonId", true), Text("assigneeRoleId", true), Text("affectedPersonId", true), Text("sourceTemplateKey", true)),
-                listOf(Number("dueAt", true), Number("createdAt"), Number("updatedAt"), Number("completedAt", true))),
+                listOf(Number("dueAt", true), Number("createdAt"), Number("updatedAt"), Number("completedAt", true),Number("editRevision"))),
             Table("task_events", "actionId", listOf(Text("id"), Text("actionId"), Text("taskId"), Text("type")), listOf(Number("occurredAt")))
         )
     }

@@ -33,8 +33,8 @@ class OperationsStorageTest {
         val i=ProductInventory(root,{true},{true})
         ActionDatabaseAccess(app).use(i.database,key,context(AccessScope.MAINTENANCE),true){d->d.withWriteTransaction {
             listOf("a","b").forEach{id->d.actions().insert(ActionRow(id,"synthetic","synthetic",1,2,0,"PREPARATION"))}
-            listOf("Motte","Meise","Supporter").forEach{id->d.persons().insert(PersonRow(id,"a",id,id.lowercase(),0))}
-            d.persons().insert(PersonRow("other","b","synthetic other","synthetic other",0))
+            listOf("Motte","Meise","Supporter").forEach{id->PersonRow(id,"a",id,id.lowercase(),0, editRevision = 0).let{seeded->d.persons().insert(seeded);d.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))}}
+            PersonRow("other","b","synthetic other","synthetic other",0, editRevision = 0).let{seeded->d.persons().insert(seeded);d.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))}
         }}
         return i
     }
@@ -46,7 +46,7 @@ class OperationsStorageTest {
     private fun rejected(result:OperationsResult<*>,reason:OperationsFailure){assertEquals(OperationsResult.Rejected(reason),result)}
     private fun role(i:ProductInventory,name:String="Blockierende",a:String="a")=value(write(i){it.role(a,null,name)})
     private fun expected(i:ProductInventory,p:String)=ExpectedPersonRolePlan("a",p,board(i).persons.single{it.person.id==p}.plan)
-    private fun plan(i:ProductInventory,p:String,ids:Set<String>,primary:String?=null)=expected(i,p).let{old->value(write(i){it.plan("a",p,old,PersonRolePlan(ids,primary))})}
+    private fun plan(i:ProductInventory,p:String,ids:Set<String>,primary:String?=null)=expected(i,p).let{old->value(write(i){it.plan("a",p,old,PersonRolePlan(ids,primary, editRevision = 0))})}
     private fun board(i:ProductInventory,a:String="a")=value(use(i){d->d.withReadTransaction{OperationsStore(d,context()){++time}.board(a)}})
     private fun advance(i:ProductInventory,a:String="a",from:ActionStatus=ActionStatus.PREPARATION)=use(i){it.advanceAction(a,from,context())}
     private fun state(i:ProductInventory,p:String="Motte")=board(i).persons.single{it.person.id==p}.state!!
@@ -68,19 +68,19 @@ class OperationsStorageTest {
     @Test fun plansAreMultipleMainIsSingleAndReferencesActionLocal(){
         val i=fixture();val support=role(i,"Support");val gesa=role(i,"Gesa-Support");val foreign=role(i,"Other","b")
         plan(i,"Supporter",setOf(support.id,gesa.id),support.id)
-        assertEquals(PersonRolePlan(setOf(support.id,gesa.id),support.id),board(i).persons.single{it.person.id=="Supporter"}.plan)
+        assertEquals(PersonRolePlan(setOf(support.id,gesa.id),support.id, editRevision = 0),board(i).persons.single{it.person.id=="Supporter"}.plan)
         val old=expected(i,"Supporter")
-        rejected(write(i){it.plan("a","Supporter",old,PersonRolePlan(setOf(support.id),gesa.id))},OperationsFailure.INVALID)
-        rejected(write(i){it.plan("a","Supporter",old,PersonRolePlan(setOf(foreign.id),foreign.id))},OperationsFailure.NOT_FOUND)
-        rejected(write(i){it.plan("b","Supporter",ExpectedPersonRolePlan("b","Supporter",PersonRolePlan(emptySet(),null)),PersonRolePlan(emptySet(),null))},OperationsFailure.NOT_FOUND)
+        rejected(write(i){it.plan("a","Supporter",old,PersonRolePlan(setOf(support.id),gesa.id, editRevision = 0))},OperationsFailure.INVALID)
+        rejected(write(i){it.plan("a","Supporter",old,PersonRolePlan(setOf(foreign.id),foreign.id, editRevision = 0))},OperationsFailure.NOT_FOUND)
+        rejected(write(i){it.plan("b","Supporter",ExpectedPersonRolePlan("b","Supporter",PersonRolePlan(emptySet(),null, editRevision = 0)),PersonRolePlan(emptySet(),null, editRevision = 0))},OperationsFailure.NOT_FOUND)
         assertTrue(board(i,"b").persons.single().plan.roleIds.isEmpty())
     }
     @Test fun expectedPlanRejectsSecondOldEditorThroughProductBoundary() {
         val i=fixture();val role=role(i);val r=repo(i)
-        val old=ExpectedPersonRolePlan("a","Motte",PersonRolePlan(emptySet(),null))
-        r.planRoles("a","Motte",old,PersonRolePlan(setOf(role.id),role.id)){assertEquals(OperationsResult.Value(Unit),it)}
-        r.planRoles("a","Motte",old,PersonRolePlan(emptySet(),null)){assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),it)}
-        assertEquals(PersonRolePlan(setOf(role.id),role.id),board(i).persons.single{it.person.id=="Motte"}.plan)
+        val old=ExpectedPersonRolePlan("a","Motte",PersonRolePlan(emptySet(),null, editRevision = 0))
+        r.planRoles("a","Motte",old,PersonRolePlan(setOf(role.id),role.id, editRevision = 0)){assertEquals(OperationsResult.Value(Unit),it)}
+        r.planRoles("a","Motte",old,PersonRolePlan(emptySet(),null, editRevision = 0)){assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),it)}
+        assertEquals(PersonRolePlan(setOf(role.id),role.id, editRevision = 0),board(i).persons.single{it.person.id=="Motte"}.plan)
     }
     @Test fun roleExpectedSnapshotRejectsOldRenameAndDeleteThroughProductBoundary(){
         val i=fixture();val original=role(i);val r=repo(i)
@@ -136,11 +136,11 @@ class OperationsStorageTest {
     }
     @Test fun statusBoundariesAndActiveAdHocRoleLeavePlanFrozen(){
         val i=fixture();val r=role(i)
-        val fake=PersonOperationalState("a","Motte",null,OperationalStatus.NO_STATUS,null,0)
+        val fake=PersonOperationalState("a","Motte",null,OperationalStatus.NO_STATUS,null,0, editRevision = 0)
         rejected(write(i){it.snapshot("a","Motte",fake,OperationalStatus.ON_SITE,r.id,"")},OperationsFailure.NOT_ALLOWED)
         plan(i,"Motte",setOf(r.id),r.id);advance(i)
         val liveRole=role(i,"Ad hoc")
-        rejected(write(i){it.plan("a","Motte",ExpectedPersonRolePlan("a","Motte",PersonRolePlan(emptySet(),null)),PersonRolePlan(emptySet(),null))},OperationsFailure.NOT_ALLOWED)
+        rejected(write(i){it.plan("a","Motte",ExpectedPersonRolePlan("a","Motte",PersonRolePlan(emptySet(),null, editRevision = 0)),PersonRolePlan(emptySet(),null, editRevision = 0))},OperationsFailure.NOT_ALLOWED)
         rejected(write(i){it.role("a",r,"Must not rename")},OperationsFailure.NOT_ALLOWED)
         rejected(write(i){it.deleteRole("a",r)},OperationsFailure.NOT_ALLOWED)
         update(i,s=OperationalStatus.ON_SITE,role=liveRole.id);advance(i,from=ActionStatus.ACTIVE)

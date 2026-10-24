@@ -292,14 +292,18 @@ class TaskMutationSqliteTest {
         assertEquals(c,h.task(a.id));assertEquals(2L,h.count("task_events"))
         assertEquals(WorkspaceWriteOutcome.ROLLED_BACK,h.reports.last().outcome)
     }
-    @Test fun sameMillisecondTaskAbaIsNotAPersistentRevisionProof()=H().use{h->
+    @Test fun sameMillisecondTaskAbaIsRejectedByPersistentRevision()=H().use{h->
         h.clock={7L}
-        fun write(work:suspend(TaskStore)->OperationsResult<Task>):Task{var r:OperationsResult<Task>?=null;h.submit<Task>({r=it},work);h.worker.drain();h.main.drain();assertTrue(r is OperationsResult.Value);return (r as OperationsResult.Value).value}
-        val a=write{it.create("a",TaskInput("A"))}
-        val b=write{it.edit("a",a,TaskInput("B"))};assertEquals(a,write{it.edit("a",b,TaskInput("A"))})
-        val started=write{it.transition("a",a,TaskStatus.CANCELLED)}
-        assertEquals(a,write{it.transition("a",started,TaskStatus.OPEN)})
-        assertTrue(write{it.edit("a",a,TaskInput("Old editor accepted after ABA"))}.title.startsWith("Old"))
+        fun write(work:suspend(TaskStore)->OperationsResult<Task>):OperationsResult<Task>{var r:OperationsResult<Task>?=null;h.submit<Task>({r=it},work);h.worker.drain();h.main.drain();return r!!}
+        val a=(write{it.create("a",TaskInput("A"))} as OperationsResult.Value).value
+        val b=(write{it.edit("a",a,TaskInput("B"))} as OperationsResult.Value).value
+        val again=(write{it.edit("a",b,TaskInput("A"))} as OperationsResult.Value).value
+        assertEquals(a.copy(editRevision=2),again)
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),write{it.edit("a",a,TaskInput("Old editor"))})
+        val cancelled=(write{it.transition("a",again,TaskStatus.CANCELLED)} as OperationsResult.Value).value
+        val reopened=(write{it.transition("a",cancelled,TaskStatus.OPEN)} as OperationsResult.Value).value
+        assertEquals(a.copy(editRevision=4),reopened)
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),write{it.transition("a",a,TaskStatus.CANCELLED)})
         assertEquals(3L,h.count("task_events"))
     }
     @Test fun taskAndEventBothRollbackOnFailureAndUnconfirmedOutcomeNeverSucceeds() {

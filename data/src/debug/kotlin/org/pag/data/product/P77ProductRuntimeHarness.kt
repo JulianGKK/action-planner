@@ -42,6 +42,16 @@ class P77ProductRuntimeHarness private constructor(
         fun originalTicketLive()=originalTicket.get()?.isLive()==true
         fun hasSingleOriginalTicket() = tickets.get()==1 && originalTicket.get()?.isLive()==true
     }
+    fun p104PrepareLegacyWhileLocked(){
+        check(runtime.session.snapshot().state==org.pag.domain.SessionState.LOCKED)
+        fixture.p104LegacyEleven()
+    }
+    fun p104AbortMigration():String {
+        check(runtime.session.snapshot().state==org.pag.domain.SessionState.LOCKED)
+        return fixture.p104AbortMigration().also{check(runtime.session.snapshot().state==org.pag.domain.SessionState.LOCKED)}
+    }
+    fun p104NativeRevisions()=fixture.p104NativeRevisions()
+    fun p104VerifyMigration()=fixture.p104VerifyMigration()
     fun p101SeededVersion()=fixture.p101SeededVersion
     fun outstandingState()=runtime.activeCore.outstandingState().toString()
     val cleanupConfirmed=java.util.concurrent.atomic.AtomicBoolean(false)
@@ -72,6 +82,7 @@ class P77ProductRuntimeHarness private constructor(
                 taskCountPerAction = tasks, personCountPerAction = people, baseDirectory = base)
             if(profile!="default")fixture.seedMemoryAcceptance(profile,
                 budgetRefusal=activity.intent.getBooleanExtra("p100Probe",false) && activity.intent.getBooleanExtra("p100BudgetRefused",false))
+            if(activity.intent.getBooleanExtra("p104Migration11",false))fixture.p104LegacyEleven()
             if(activity.intent.getBooleanExtra("p101Probe",false) && activity.intent.getBooleanExtra("p101Migration10",false))fixture.p101LegacyTen()
             return try {
                 val faults=P81RuntimeFaults()

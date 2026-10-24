@@ -20,14 +20,14 @@ class ActiveIntegrationTest {
     }
     private class World(status: ActionStatus = ActionStatus.ACTIVE) {
         var action = Action("a", "Übungsaktion", "Nur synthetisch", 1, 2, 0, status)
-        val roles = listOf(Role("support", "a", "Support", 0), Role("hummel", "a", "Hummel", 0))
+        val roles = listOf(Role("support", "a", "Support", 0, editRevision = 0), Role("hummel", "a", "Hummel", 0, editRevision = 0))
         var people = listOf(
-            OperationalPerson(Person("p", "a", "Motte", 0), PersonRolePlan(setOf("support"), "support"), PersonOperationalState("a", "p", "support", OperationalStatus.ON_SITE, null, 1)),
-            OperationalPerson(Person("q", "a", "Meise", 0), PersonRolePlan(setOf("hummel"), "hummel"), PersonOperationalState("a", "q", "hummel", OperationalStatus.NO_STATUS, null, 1)),
-            OperationalPerson(Person("k", "a", "Klee", 0), PersonRolePlan(emptySet(), null), PersonOperationalState("a", "k", null, OperationalStatus.ON_SITE, null, 1)))
+            OperationalPerson(Person("p", "a", "Motte", 0, editRevision = 0), PersonRolePlan(setOf("support"), "support", editRevision = 0), PersonOperationalState("a", "p", "support", OperationalStatus.ON_SITE, null, 1, editRevision = 0)),
+            OperationalPerson(Person("q", "a", "Meise", 0, editRevision = 0), PersonRolePlan(setOf("hummel"), "hummel", editRevision = 0), PersonOperationalState("a", "q", "hummel", OperationalStatus.NO_STATUS, null, 1, editRevision = 0)),
+            OperationalPerson(Person("k", "a", "Klee", 0, editRevision = 0), PersonRolePlan(emptySet(), null, editRevision = 0), PersonOperationalState("a", "k", null, OperationalStatus.ON_SITE, null, 1, editRevision = 0)))
         var rows = listOf(
-            Task("t", "a", "Übungsaufgabe", TaskPriority.HIGH, TaskStatus.OPEN, null, "support", "p", null, null, 1, 1, null),
-            Task("assigned", "a", "Zuständigkeitsbeispiel", TaskPriority.NORMAL, TaskStatus.OPEN, "p", null, "k", null, null, 2, 2, null))
+            Task("t", "a", "Übungsaufgabe", TaskPriority.HIGH, TaskStatus.OPEN, null, "support", "p", null, null, 1, 1, null, editRevision = 0),
+            Task("assigned", "a", "Zuständigkeitsbeispiel", TaskPriority.NORMAL, TaskStatus.OPEN, "p", null, "k", null, null, 2, 2, null, editRevision = 0))
         var events = listOf(TaskEvent("e", "a", "t", TaskEventType.CREATED, 1))
         var defer = false; var opReads = 0; var taskReads = 0; var opWrites = 0; var taskWrites = 0
         val pendingOps = mutableListOf<(OperationsResult<OperationalBoard>) -> Unit>()
@@ -63,7 +63,7 @@ class ActiveIntegrationTest {
         val taskPort = object : TaskRepository {
             override fun board(actionId: String, publish: (OperationsResult<TaskBoard>) -> Unit) { taskReads++; if (defer) pendingTasks.add(publish) else publish(OperationsResult.Value(tasks())) }
             override fun create(actionId: String, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) {
-                taskWrites++; val t = Task("new", actionId, input.title, input.priority, TaskStatus.OPEN, input.assigneePersonId, input.assigneeRoleId, input.affectedPersonId, input.dueAt, input.sourceTemplateKey, 5, 5, null)
+                taskWrites++; val t = Task("new", actionId, input.title, input.priority, TaskStatus.OPEN, input.assigneePersonId, input.assigneeRoleId, input.affectedPersonId, input.dueAt, input.sourceTemplateKey, 5, 5, null, editRevision = 0)
                 rows = rows + t; events = events + TaskEvent("new-e", actionId, t.id, TaskEventType.CREATED, 5); publish(OperationsResult.Value(t))
             }
             override fun edit(actionId: String, expected: Task, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) {
@@ -195,7 +195,7 @@ class ActiveIntegrationTest {
     @Test fun completedCrossAreaReadsRemainAvailableAndAllWritesAreDenied() {
         val h = Harness(ActionStatus.COMPLETED); val m = h.model
         assertNotNull(m.workspace?.operations); assertNotNull(m.workspace?.tasks)
-        m.operations.focus("p"); m.operations.update("p"); m.operations.changeFunction(); m.operations.newFunction(); m.operations.saveNewFunction(); m.operations.renameRole(Role("support","a","synthetic",0), "X"); m.operations.deleteRole(Role("support","a","synthetic",0))
+        m.operations.focus("p"); m.operations.update("p"); m.operations.changeFunction(); m.operations.newFunction(); m.operations.saveNewFunction(); m.operations.renameRole(Role("support","a","synthetic",0, editRevision = 0), "X"); m.operations.deleteRole(Role("support","a","synthetic",0, editRevision = 0))
         m.tasks.open(m.tasks.board!!.tasks.first()); m.tasks.edit(); m.tasks.add(); m.tasks.transition(TaskStatus.DONE); m.tasks.delete()
         assertEquals(0, h.world.opWrites); assertEquals(0, h.world.taskWrites); assertFalse(m.tasks.form); assertFalse(m.operations.live)
     }

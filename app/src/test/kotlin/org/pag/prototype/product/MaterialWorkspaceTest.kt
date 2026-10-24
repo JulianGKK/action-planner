@@ -68,9 +68,9 @@ class MaterialWorkspaceTest {
     private val protection = Protection(); private val port = MaterialFake(); private val protocol = ProtocolFake()
     private val model = ProductViewModel(session, actions, ProductStorageState.READY_TO_OPEN, People(), protection,
         ops, tasks, protocol, port) {}
-    private val person = Person("p", "a", "Motte", 0)
-    private val opBoard get() = OperationalBoard("a", actions.row.status, emptyList(), listOf(OperationalPerson(person, PersonRolePlan(emptySet(), null), null)))
-    private val task = Task("t", "a", "synthetic task", TaskPriority.NORMAL, TaskStatus.DONE, null, null, null, null, null, 0, 0, 0)
+    private val person = Person("p", "a", "Motte", 0, editRevision = 0)
+    private val opBoard get() = OperationalBoard("a", actions.row.status, emptyList(), listOf(OperationalPerson(person, PersonRolePlan(emptySet(), null, editRevision = 0), null)))
+    private val task = Task("t", "a", "synthetic task", TaskPriority.NORMAL, TaskStatus.DONE, null, null, null, null, null, 0, 0, 0, editRevision = 0)
     private val taskBoard = TaskBoard("a", listOf(task, task.copy(id = "cancelled", status = TaskStatus.CANCELLED, completedAt = null)), emptyList())
     private val item = MaterialItem("m", "a", "MATERIAL-SENTINEL-NAME", "MATERIAL-SENTINEL-QTY", "MATERIAL-SENTINEL-PLACE", "p", "t", "GLUE", 1)
     private fun open(phase: ActionStatus = ActionStatus.ACTIVE) { actions.row = actions.row.copy(status = phase); model.detail("a") }

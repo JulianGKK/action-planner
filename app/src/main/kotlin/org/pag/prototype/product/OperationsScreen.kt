@@ -120,6 +120,7 @@ import java.time.format.FormatStyle
 internal fun createRoleError(reason:OperationsFailure)=when(reason){
     OperationsFailure.INVALID->"Bitte einen Rollen- oder Funktionsnamen eingeben."
     OperationsFailure.NOT_FOUND->"Die Aktion ist nicht mehr verfügbar."
+    OperationsFailure.REVISION_EXHAUSTED->"Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
     OperationsFailure.STALE->"Die Erstellung wurde nicht freigegeben. Der Entwurf bleibt erhalten."
     else->operationsError(reason)
 }
@@ -167,6 +168,10 @@ internal fun createRoleError(reason:OperationsFailure)=when(reason){
         FormTextField(ops.livePlace,ops::place,label={Text("Ort / Ziel")},keyboardOptions=productKeyboard(ProductTextKind.PLACE),enabled=!ops.busy,singleLine=true,
             supportingText={Text("${Character.codePointCount(ops.livePlace,0,ops.livePlace.length)} / 80 Zeichen")},modifier=Modifier.fillMaxWidth())
     }
+    if(ops.error==OperationsFailure.STALE){
+        Text("Beim Neuladen wird dein bisheriger Entwurf ersetzt.")
+        FormOutlinedButton(ops::reloadLive,enabled=!ops.busy){Text("Entwurf verwerfen und Lage neu laden")}
+    }
     FormButton(ops::saveLive,enabled=!ops.busy){Text("Übernehmen")}
     FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Abbrechen")}
     FormOutlinedButton(model::operationalPersonDetail,enabled=!ops.busy){Text("Personendetails")}
@@ -185,5 +190,6 @@ internal fun operationsError(failure:OperationsFailure)=when(failure){
     OperationsFailure.INVALID->"Bitte Rollenname, Hauptfunktion oder Ort prüfen (maximal 80 Zeichen)."
     OperationsFailure.DUPLICATE->"Dieser Rollenname ist in der Aktion bereits vergeben."
     OperationsFailure.IN_USE->"Die Rolle wird noch von einer Person oder Aufgabe verwendet und kann nicht gelöscht werden."
+    OperationsFailure.REVISION_EXHAUSTED->"Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
     OperationsFailure.STALE->"Die Lage wurde inzwischen geändert. Bitte neu öffnen."
 }

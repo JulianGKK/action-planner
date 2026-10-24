@@ -31,7 +31,7 @@ class LeadershipViewModelTest {
     }
     private class People : PersonRepository {
         var writes=0; var lists=0
-        val row=Person("synthetic-person","synthetic-action","synthetic-01",1)
+        val row=Person("synthetic-person","synthetic-action","synthetic-01",1, editRevision = 0)
         var deferred: ((PersonResult<List<Person>>) -> Unit)?=null
         var defer=false
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) {

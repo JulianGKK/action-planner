@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P104,migration_abort,MIGRATION_ABORT,five_ALTER_steps_returned=true,commit_authority_revoked=true,version_still_11=true,no_partial_columns=true,all_legacy_digests_equal=true,runtime_LOCKED=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P104,migration_abort,MIGRATION_RETRY,version=12,all_legacy_columns_SHA256_equal=true,revision_zero=true,headers_complete=true,foreign_keys=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P104,migration_abort,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false,persisted_revisions=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P104 PASS migration_abort
+INSTRUMENTATION_CODE: -1

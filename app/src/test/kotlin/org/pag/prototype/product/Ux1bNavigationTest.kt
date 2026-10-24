@@ -29,7 +29,7 @@ class Ux1bNavigationTest {
     private class People:PersonRepository {
         var lists=0;var gets=0
         override fun listPersons(actionId:String,publish:(PersonResult<List<Person>>)->Unit){lists++;publish(PersonResult.Value(emptyList()))}
-        override fun getPerson(actionId:String,personId:String,publish:(PersonResult<Person?>)->Unit){gets++;publish(PersonResult.Value(Person(personId,actionId,"synthetic",0)))}
+        override fun getPerson(actionId:String,personId:String,publish:(PersonResult<Person?>)->Unit){gets++;publish(PersonResult.Value(Person(personId,actionId,"synthetic",0, editRevision = 0)))}
         override fun createPerson(actionId:String,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
         override fun updatePerson(actionId:String,expected: Person,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
     }
@@ -38,11 +38,11 @@ class Ux1bNavigationTest {
         var pendingSave:((OperationsResult<Unit>)->Unit)?=null
         override fun board(actionId:String,publish:(OperationsResult<OperationalBoard>)->Unit){
             reads++
-            val person=OperationalPerson(Person("p",actionId,"synthetic",0),PersonRolePlan(setOf("r"),"r"),
-                PersonOperationalState(actionId,"p","r",OperationalStatus.ON_SITE,null,0))
-            val other=person.copy(person=person.person.copy(id="other"),plan=PersonRolePlan(emptySet(),null),
+            val person=OperationalPerson(Person("p",actionId,"synthetic",0, editRevision = 0),PersonRolePlan(setOf("r"),"r", editRevision = 0),
+                PersonOperationalState(actionId,"p","r",OperationalStatus.ON_SITE,null,0, editRevision = 0))
+            val other=person.copy(person=person.person.copy(id="other"),plan=PersonRolePlan(emptySet(),null, editRevision = 0),
                 state=person.state!!.copy(personId="other",currentRoleId=null))
-            publish(OperationsResult.Value(OperationalBoard(actionId,status(),listOf(Role("r",actionId,"Support",0)),listOf(person,other))))
+            publish(OperationsResult.Value(OperationalBoard(actionId,status(),listOf(Role("r",actionId,"Support",0, editRevision = 0)),listOf(person,other))))
         }
         override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit){}
         override fun renameRole(actionId:String,expected: Role,name:String,publish:(OperationsResult<Role>)->Unit){}

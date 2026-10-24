@@ -1,0 +1,73 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin UP-TO-DATE
+> Task :data:compileDebugKotlin UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:preDebugAndroidTestBuild
+> Task :data:generateDebugAndroidTestResources UP-TO-DATE
+> Task :data:packageDebugAndroidTestResources UP-TO-DATE
+> Task :data:processDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :data:parseDebugAndroidTestLocalResources UP-TO-DATE
+> Task :data:generateDebugAndroidTestRFile UP-TO-DATE
+> Task :data:kspDebugAndroidTestKotlin
+
+> Task :data:compileDebugAndroidTestKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ActionLifecycleStorageTest.kt:166:45 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:58:181 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Role'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:62:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Role'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:62:159 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Role'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:67:94 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Person'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:102:44 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Person'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/CoreWriterBoundaryStorageTest.kt:112:38 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Person'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/DocumentPdfStorageTest.kt:66:63 The corresponding parameter in the supertype 'DocumentPdfInput' is named 'count'. This may cause problems when calling this function with named arguments.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/MaterialStorageTest.kt:90:34 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MaterialItem'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/MaterialStorageTest.kt:90:94 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MaterialItem'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/MaterialStorageTest.kt:91:27 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MaterialItem'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/P74WindowGrowthTest.kt:43:59 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/P74WindowGrowthTest.kt:44:54 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/P74WindowGrowthTest.kt:49:54 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/P74WindowGrowthTest.kt:50:65 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/P74WindowGrowthTest.kt:53:51 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/PersonStorageTest.kt:81:82 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Person'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/PersonStorageTest.kt:82:44 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Person'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ProtocolStorageTest.kt:94:64 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProtocolEntryDetail'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ProtocolStorageTest.kt:100:30 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProtocolSaved'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ProtocolStorageTest.kt:101:26 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProtocolEntryDetail'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ProtocolStorageTest.kt:101:79 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProtocolEntryDetail'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/ProtocolStorageTest.kt:102:39 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProtocolEntryDetail'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:85:73 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Task'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:86:30 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Task'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:133:21 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Task'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:133:25 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Task'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:134:27 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Task'.
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 21s
+27 actionable tasks: 3 executed, 24 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html

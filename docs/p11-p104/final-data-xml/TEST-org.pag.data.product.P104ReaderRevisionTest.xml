@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P104ReaderRevisionTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-24T16:29:43.049Z" hostname="iuzjhtgvfc" time="2.926">
+  <properties/>
+  <testcase name="normalLargeFixturesAndAllStoredRevisionsReachEditableDetailsWithoutZeroDefaults" classname="org.pag.data.product.P104ReaderRevisionTest" time="2.644"/>
+  <testcase name="boundedFullReaderCarriesEveryNonzeroRevision" classname="org.pag.data.product.P104ReaderRevisionTest" time="0.273"/>
+  <system-out><![CDATA[P104_FULLVIEW roles=6 BUDGET_REFUSED=true no_budget_relaxation=true
+P104_LARGE roles=6 people=200 tasks=1000 events=5000 retained=1663959 transition=6727680 revisions=7 product_100_role_approval=false
+P104_FULLVIEW roles=32 BUDGET_REFUSED=true no_budget_relaxation=true
+P104_LARGE roles=32 people=200 tasks=1000 events=5000 retained=1892247 transition=7750792 revisions=7 product_100_role_approval=false
+P104_FULLVIEW roles=100 BUDGET_REFUSED=true no_budget_relaxation=true
+P104_LARGE roles=100 people=200 tasks=1000 events=5000 retained=2485851 transition=10413800 revisions=7 product_100_role_approval=false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

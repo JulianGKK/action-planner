@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P103OperationalAbaTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-24T16:16:37.573Z" hostname="iuzjhtgvfc" time="0.162">
+  <properties/>
+  <testcase name="equalWallTimeCannotBypassPersistentRevision" classname="org.pag.data.product.P103OperationalAbaTest" time="0.162"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

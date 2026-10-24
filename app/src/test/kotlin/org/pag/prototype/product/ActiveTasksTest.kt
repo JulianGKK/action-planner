@@ -33,7 +33,7 @@ class ActiveTasksTest {
     private class People : PersonRepository {
         var lists = 0
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { lists++ }
-        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0)))
+        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0, editRevision = 0)))
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
         override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
@@ -55,7 +55,7 @@ class ActiveTasksTest {
         }
         override fun board(actionId: String, publish: (OperationsResult<TaskBoard>) -> Unit) { loads.add(publish) }
         override fun create(actionId: String, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) {
-            val task = Task("new", actionId, input.title, input.priority, TaskStatus.OPEN, input.assigneePersonId, input.assigneeRoleId, input.affectedPersonId, input.dueAt, input.sourceTemplateKey, 5, 5, null)
+            val task = Task("new", actionId, input.title, input.priority, TaskStatus.OPEN, input.assigneePersonId, input.assigneeRoleId, input.affectedPersonId, input.dueAt, input.sourceTemplateKey, 5, 5, null, editRevision = 0)
             rows = rows + task; events = events + TaskEvent("e-new", actionId, task.id, TaskEventType.CREATED, 5); result(task, publish)
         }
         override fun edit(actionId: String, expected: Task, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) {
@@ -87,9 +87,9 @@ class ActiveTasksTest {
     private val session = Session(); private val actions = Actions(); private val people = People()
     private val ops = Ops(); private val tasks = Tasks(); private val protection = Protection()
     private val model = ProductViewModel(session, actions, ProductStorageState.READY_TO_OPEN, people, protection, ops, tasks) {}
-    private val person = OperationalPerson(Person("p", "a", "synthetic", 0), PersonRolePlan(setOf("r"), "r"), null)
-    private val board = OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r", "a", "Support", 0)), listOf(person))
-    private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null)
+    private val person = OperationalPerson(Person("p", "a", "synthetic", 0, editRevision = 0), PersonRolePlan(setOf("r"), "r", editRevision = 0), null)
+    private val board = OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r", "a", "Support", 0, editRevision = 0)), listOf(person))
+    private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null, editRevision = 0)
     private val taskBoard = TaskBoard("a", listOf(task), emptyList())
     private fun open() { tasks.rows = taskBoard.tasks; model.detail("a") }
     private fun complete() {

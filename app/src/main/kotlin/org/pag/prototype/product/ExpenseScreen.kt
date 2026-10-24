@@ -13,7 +13,8 @@ import org.pag.domain.*
     PreparationHeading("Kosten")
     if (model.completedView) Text("Kosten können auch nach Abschluss ergänzt oder korrigiert werden. Die Aktion selbst bleibt abgeschlossen.")
     model.error?.let { Text(when (it) {
-        OperationsFailure.STALE -> "Der Kosteneintrag wurde inzwischen geändert. Die Eingaben wurden nicht gespeichert."
+        OperationsFailure.REVISION_EXHAUSTED -> "Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
+    OperationsFailure.STALE -> "Der Kosteneintrag wurde inzwischen geändert. Die Eingaben wurden nicht gespeichert."
         OperationsFailure.INVALID -> "Bitte Bezeichnung, zahlende Bezeichnungen, positive Eurobeträge und die genaue Zahlungsaufteilung prüfen."
         OperationsFailure.NOT_ALLOWED -> "Kosten sind im aktuellen Aktionsstatus nicht verfügbar."
         else -> "Die Kosten konnten nicht geladen oder gespeichert werden."

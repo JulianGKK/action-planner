@@ -18,10 +18,10 @@ internal class HostTaskData(private val sql: SqliteHostConnection, private val a
     private fun row(s:SQLiteStatement):TaskRow {
         fun text(i:Int)=if(s.isNull(i)) null else s.getText(i)
         fun number(i:Int)=if(s.isNull(i)) null else s.getLong(i)
-        return TaskRow(s.getText(0),s.getText(1),s.getText(2),s.getText(3),s.getText(4),text(5),text(6),text(7),number(8),text(9),s.getLong(10),s.getLong(11),number(12))
+        return TaskRow(s.getText(0),s.getText(1),s.getText(2),s.getText(3),s.getText(4),text(5),text(6),text(7),number(8),text(9),s.getLong(10),s.getLong(11),number(12), editRevision = s.getLong(13))
     }
-    private val fields="id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt"
-    private fun values(t:TaskRow)=listOf<Any?>(t.id,t.actionId,t.title,t.priority,t.status,t.assigneePersonId,t.assigneeRoleId,t.affectedPersonId,t.dueAt,t.sourceTemplateKey,t.createdAt,t.updatedAt,t.completedAt)
+    private val fields="id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt,editRevision"
+    private fun values(t:TaskRow)=listOf<Any?>(t.id,t.actionId,t.title,t.priority,t.status,t.assigneePersonId,t.assigneeRoleId,t.affectedPersonId,t.dueAt,t.sourceTemplateKey,t.createdAt,t.updatedAt,t.completedAt,t.editRevision)
     private suspend fun change(statement:String,args:List<Any?>):Int {
         query(statement,args){it.step()}
         return query("SELECT changes()"){it.step();it.getLong(0).toInt()}
@@ -32,9 +32,10 @@ internal class HostTaskData(private val sql: SqliteHostConnection, private val a
         override suspend fun get(actionId:String,id:String)=query("SELECT $fields FROM tasks WHERE actionId=? AND id=?",listOf(actionId,id)){if(it.step())row(it)else null}
         override suspend fun events(actionId:String)=query("SELECT id,actionId,taskId,type,occurredAt FROM task_events WHERE actionId=? ORDER BY occurredAt,rowid",listOf(actionId)) { s ->buildList{while(s.step())add(TaskEventRow(s.getText(0),s.getText(1),s.getText(2),s.getText(3),s.getLong(4)))} }
         override suspend fun roleReferences(actionId:String,roleId:String)=query("SELECT COUNT(*) FROM tasks WHERE actionId=? AND assigneeRoleId=?",listOf(actionId,roleId)){it.step();it.getLong(0).toInt()}
-        override suspend fun insert(row:TaskRow) {change("INSERT INTO tasks($fields) VALUES(${List(13){"?"}.joinToString()})",values(row))}
-        override suspend fun update(row:TaskRow)=change("UPDATE tasks SET ${fields.split(',').joinToString{"$it=?"}} WHERE id=?",values(row)+row.id)
+        override suspend fun insert(row:TaskRow) {change("INSERT INTO tasks($fields) VALUES(${List(14){"?"}.joinToString()})",values(row))}
+        override suspend fun change(actionId:String,id:String,expectedRevision:Long,title:String,priority:String,status:String,person:String?,role:String?,affected:String?,due:Long?,time:Long,completed:Long?)=change("UPDATE tasks SET title=?,priority=?,status=?,assigneePersonId=?,assigneeRoleId=?,affectedPersonId=?,dueAt=?,updatedAt=?,completedAt=?,editRevision=editRevision+1 WHERE actionId=? AND id=? AND editRevision=? AND editRevision>=0 AND editRevision<9223372036854775807",listOf(title,priority,status,person,role,affected,due,time,completed,actionId,id,expectedRevision))
+        override suspend fun claimDelete(actionId:String,id:String,expectedRevision:Long)=change("UPDATE tasks SET editRevision=editRevision+1 WHERE actionId=? AND id=? AND editRevision=? AND editRevision<9223372036854775807",listOf(actionId,id,expectedRevision))
         override suspend fun event(row:TaskEventRow) {change("INSERT INTO task_events VALUES(?,?,?,?,?)",listOf(row.id,row.actionId,row.taskId,row.type,row.occurredAt));afterEvent()}
-        override suspend fun delete(actionId:String,id:String)=change("DELETE FROM tasks WHERE actionId=? AND id=?",listOf(actionId,id))
+        override suspend fun delete(actionId:String,id:String,expectedRevision:Long)=change("DELETE FROM tasks WHERE actionId=? AND id=? AND editRevision=?",listOf(actionId,id,expectedRevision))
     }
 }

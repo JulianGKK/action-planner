@@ -21,7 +21,7 @@ class TaskModelTest {
         var deferWrites=false;var pending:((OperationsResult<Task>)->Unit)?=null
         var writes=0;var expected:Task?=null;var input:TaskInput?=null;var deferred=false
         var callback:((OperationsResult<TaskBoard>)->Unit)?=null
-        var tasks=listOf(Task("t","a","EA kontaktieren",TaskPriority.HIGH,TaskStatus.OPEN,null,"r","motte",null,null,1,1,null))
+        var tasks=listOf(Task("t","a","EA kontaktieren",TaskPriority.HIGH,TaskStatus.OPEN,null,"r","motte",null,null,1,1,null, editRevision = 0))
         override fun board(actionId:String,publish:(OperationsResult<TaskBoard>)->Unit){if(deferred)callback=publish else publish(OperationsResult.Value(TaskBoard(actionId,tasks,emptyList())))}
         override fun create(actionId:String,input:TaskInput,publish:(OperationsResult<Task>)->Unit){writes++;eventRejection?.let{publish(OperationsResult.Rejected(it));return};this.input=input;val t=tasks.first().copy(id="new",title=input.title,affectedPersonId=input.affectedPersonId);tasks=tasks+t;publish(OperationsResult.Value(t))}
         override fun edit(actionId:String,expected:Task,input:TaskInput,publish:(OperationsResult<Task>)->Unit){writes++;this.expected=expected;this.input=input;if(deferWrites){pending=publish;return};if(tasks.singleOrNull{it.id==expected.id}!=expected)publish(OperationsResult.Rejected(OperationsFailure.STALE)) else {val t=expected.copy(title=input.title,priority=input.priority,assigneePersonId=input.assigneePersonId,assigneeRoleId=input.assigneeRoleId,affectedPersonId=input.affectedPersonId,dueAt=input.dueAt);tasks=tasks.map{if(it.id==t.id)t else it};publish(OperationsResult.Value(t))}}

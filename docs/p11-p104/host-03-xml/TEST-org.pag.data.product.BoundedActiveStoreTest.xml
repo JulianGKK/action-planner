@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.BoundedActiveStoreTest" tests="22" skipped="0" failures="0" errors="0" timestamp="2026-10-24T16:15:12.489Z" hostname="iuzjhtgvfc" time="8.442">
+  <properties/>
+  <testcase name="manyPeopleAreRefusedBeforeAnyFullRowOrTextMaterialization" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.644"/>
+  <testcase name="malformedUtf8AndDomainInvalidRowsAreNotBudgetPressure" classname="org.pag.data.product.BoundedActiveStoreTest" time="1.187"/>
+  <testcase name="coroutineCanResumeOnDifferentThreadsWithoutReusingThreadConfinedLedger" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.174"/>
+  <testcase name="preparationCompletedAndMissingOrForeignActionAreDeniedWithoutPayload" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.462"/>
+  <testcase name="lastRepresentableReaderBudgetAndNextByteAreCheckedBeforeMaterializing" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.249"/>
+  <testcase name="revokeAtEveryReadBoundaryReturnsNoPartialContentAndClosesStatements" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.673"/>
+  <testcase name="realSqlIntegerSumOverflowIsAnErrorNotFloatOrWrappedBudget" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.113"/>
+  <testcase name="wrongDatabaseEncodingIsNotGuessed" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.129"/>
+  <testcase name="cleanupFailureOverridesSuccessfulReadAndBudgetRefusal" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.311"/>
+  <testcase name="invalidRolePersonAndPrimaryRoleReferencesFailBeforeAdmission" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.509"/>
+  <testcase name="longSingleActionPersonOrRoleTextIsRefusedBeforeBlobFetch" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.425"/>
+  <testcase name="generationAndBindingChangesDuringMaterializationDenyResult" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.391"/>
+  <testcase name="embeddedNulAndSupplementaryUnicodePreserveCompleteByteContent" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.152"/>
+  <testcase name="nulCannotHideAnOversizedSuffixFromAdmission" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.136"/>
+  <testcase name="manyRolesAndPlanningRelationsAreRefusedBeforeMaterialization" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.148"/>
+  <testcase name="budgetRefusalDoesNotBlockStorageButInvalidDataDoes" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.132"/>
+  <testcase name="batchesAreDeterministicAndDoNotMixSecondAction" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.186"/>
+  <testcase name="validSmallActiveReadHasExactExpectedDomainProjection" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.141"/>
+  <testcase name="noLatePublicationAfterCleanupLockGenerationOrActionChange" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.429"/>
+  <testcase name="countAndMaximumGuardsDenyBeforePotentiallyLargeSqlSums" classname="org.pag.data.product.BoundedActiveStoreTest" time="1.55"/>
+  <testcase name="unicodeNormalizationExpansionAndContextKeepDomainRules" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.157"/>
+  <testcase name="wrongSqlTypesFailBeforePayloadAndDbFailureStaysStorageFailure" classname="org.pag.data.product.BoundedActiveStoreTest" time="0.128"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -33,7 +33,7 @@ class CompletedProtocolWorkspaceTest {
     private class People : PersonRepository {
         var lists = 0
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { lists++ }
-        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0)))
+        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0, editRevision = 0)))
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
         override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
@@ -73,9 +73,9 @@ class CompletedProtocolWorkspaceTest {
     private val ops = Ops(); private val tasks = Tasks(); private val protection = Protection()
     private val protocolDelegate = ProtocolFake()
     private val model = ProductViewModel(session, actions, ProductStorageState.READY_TO_OPEN, people, protection, ops, tasks, protocolDelegate) {}
-    private val person = OperationalPerson(Person("p", "a", "synthetic", 0), PersonRolePlan(setOf("r"), "r"), null)
-    private val board = OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r", "a", "Support", 0)), listOf(person))
-    private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null)
+    private val person = OperationalPerson(Person("p", "a", "synthetic", 0, editRevision = 0), PersonRolePlan(setOf("r"), "r", editRevision = 0), null)
+    private val board = OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r", "a", "Support", 0, editRevision = 0)), listOf(person))
+    private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null, editRevision = 0)
     private val taskBoard = TaskBoard("a", listOf(task), emptyList())
     private fun open() = model.detail("a")
     private fun complete() {

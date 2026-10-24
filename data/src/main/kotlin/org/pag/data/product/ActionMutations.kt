@@ -55,7 +55,7 @@ internal class ActionWriterStore(private val data:CoreWriterData,private val con
                 person.model()
                 if (!context.check(AccessPoint.STEP)) throw StorageAccessRevoked()
                 data.operations.insertState(OperationalRow(id, person.id, plans[person.id]?.primaryRoleId,
-                    OperationalStatus.NO_STATUS.name, null, timestamp))
+                    OperationalStatus.NO_STATUS.name, null, timestamp, editRevision = 0))
             }
             if (!context.check(AccessPoint.STEP)) throw StorageAccessRevoked()
         }

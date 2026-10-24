@@ -45,8 +45,8 @@ class P7MaterialProbe : Instrumentation() {
     }
     private class Ops(private val actions: Actions) : OperationsRepository {
         override fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit) = publish(OperationsResult.Value(
-            OperationalBoard(actionId, actions.row.status, emptyList(), listOf(OperationalPerson(Person("p", actionId, "Motte", 0),
-                PersonRolePlan(emptySet(), null), PersonOperationalState(actionId, "p", null, OperationalStatus.ON_SITE, null, 0))))))
+            OperationalBoard(actionId, actions.row.status, emptyList(), listOf(OperationalPerson(Person("p", actionId, "Motte", 0, editRevision = 0),
+                PersonRolePlan(emptySet(), null, editRevision = 0), PersonOperationalState(actionId, "p", null, OperationalStatus.ON_SITE, null, 0, editRevision = 0))))))
         override fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit) { error("No P7 P4 mutation") }
         override fun renameRole(actionId: String, expected: Role, name: String, publish: (OperationsResult<Role>) -> Unit) { error("No P7 P4 mutation") }
         override fun deleteRole(actionId: String, expected: Role, publish: (OperationsResult<Unit>) -> Unit) { error("No P7 P4 mutation") }
@@ -55,8 +55,8 @@ class P7MaterialProbe : Instrumentation() {
     }
     private class Tasks : TaskRepository {
         override fun board(actionId: String, publish: (OperationsResult<TaskBoard>) -> Unit) = publish(OperationsResult.Value(TaskBoard(actionId, listOf(
-            Task("t", actionId, "Synthetische Aufgabe", TaskPriority.NORMAL, TaskStatus.DONE, null, null, null, null, null, 0, 1, 1),
-            Task("cancelled", actionId, "Synthetische entfallene Aufgabe", TaskPriority.NORMAL, TaskStatus.CANCELLED, null, null, null, null, null, 0, 1, null)), emptyList())))
+            Task("t", actionId, "Synthetische Aufgabe", TaskPriority.NORMAL, TaskStatus.DONE, null, null, null, null, null, 0, 1, 1, editRevision = 0),
+            Task("cancelled", actionId, "Synthetische entfallene Aufgabe", TaskPriority.NORMAL, TaskStatus.CANCELLED, null, null, null, null, null, 0, 1, null, editRevision = 0)), emptyList())))
         override fun create(actionId: String, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) { error("No P7 task mutation") }
         override fun edit(actionId: String, expected: Task, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) { error("No P7 task mutation") }
         override fun transition(actionId: String, expected: Task, status: TaskStatus, publish: (OperationsResult<Task>) -> Unit) { error("No P7 task mutation") }

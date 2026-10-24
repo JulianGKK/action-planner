@@ -133,6 +133,7 @@ internal fun entityRowKey(kind:String,id:String)="$kind:$id"
 
 private fun taskListError(f:OperationsFailure)=when(f){
     OperationsFailure.INVALID->"Bitte Titel (1–120 Zeichen), Zuständigkeit und Fälligkeit prüfen."
+    OperationsFailure.REVISION_EXHAUSTED->"Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
     OperationsFailure.STALE->"Die Aufgabe wurde inzwischen geändert. Bitte neu öffnen."
     OperationsFailure.NOT_ALLOWED->"Im aktuellen Aktionsstatus ist diese Änderung nicht möglich."
     else->"Die Aufgabe oder Zuordnung ist in dieser Aktion nicht verfügbar."

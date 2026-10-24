@@ -49,7 +49,7 @@ class ProtocolStorageTest {
         ActionDatabaseAccess(app).use(i.database, key, context(AccessScope.MAINTENANCE), true) { d -> d.withWriteTransaction {
             for (a in listOf("a", "b")) d.actions().insert(ActionRow(a, "synthetic", "synthetic", 1, 2, 0, "ACTIVE"))
             for ((id, a, label) in listOf(Triple("p", "a", "Motte"), Triple("q", "a", "Meise"), Triple("foreign", "b", "Klee"))) {
-                d.persons().insert(PersonRow(id, a, label, label.lowercase(), 0))
+                PersonRow(id, a, label, label.lowercase(), 0, editRevision = 0).let{seeded->d.persons().insert(seeded);d.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))}
             }
         } }
         return i
@@ -156,7 +156,7 @@ class ProtocolStorageTest {
         use(i) { d -> d.withWriteTransaction {
             assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED), TaskStore(d, context()) { time }.create("a", TaskInput("synthetic")))
             assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED), OperationsStore(d, context()) { time }.role("a", null, "synthetic"))
-            assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED), OperationsStore(d, context()) { time }.snapshot("a", "p", PersonOperationalState("a", "p", null, OperationalStatus.NO_STATUS, null, 0), OperationalStatus.ON_SITE, null, ""))
+            assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED), OperationsStore(d, context()) { time }.snapshot("a", "p", PersonOperationalState("a", "p", null, OperationalStatus.NO_STATUS, null, 0, editRevision = 0), OperationalStatus.ON_SITE, null, ""))
         } }
     }
     @Test fun revisionsKeepFullOldSnapshotsAndRejectStale() {

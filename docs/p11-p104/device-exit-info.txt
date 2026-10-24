@@ -1,0 +1,68 @@
+ACTIVITY MANAGER PROCESS EXIT INFO (dumpsys activity exit-info)
+Last Timestamp of Persistence Into Persistent Storage: 2026-10-24 17:49:25.738
+  package: org.pag.prototype.a.p77runtime
+    Historical Process Exit for uid=10366
+        ApplicationExitInfo #0:
+          timestamp=2026-10-24 18:18:22.218 pid=5285 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=4 (APP CRASH(EXCEPTION)) subreason=0 (UNKNOWN) status=0
+          importance=125 pss=0,00 rss=0,00 description=crash state=empty trace=null
+        ApplicationExitInfo #1:
+          timestamp=2026-10-24 15:20:39.108 pid=973 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=141MB rss=260MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #2:
+          timestamp=2026-10-24 15:20:14.188 pid=724 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=148MB rss=271MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #3:
+          timestamp=2026-10-24 15:19:50.031 pid=557 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=148MB rss=270MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #4:
+          timestamp=2026-10-24 15:12:37.403 pid=32684 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=144MB rss=266MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #5:
+          timestamp=2026-10-24 15:03:43.478 pid=32321 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=142MB rss=263MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #6:
+          timestamp=2026-10-24 14:08:35.217 pid=31285 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=219MB rss=342MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #7:
+          timestamp=2026-10-24 14:07:57.394 pid=31197 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=146MB rss=268MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #8:
+          timestamp=2026-10-24 14:07:27.191 pid=31103 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=220MB rss=343MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #9:
+          timestamp=2026-10-24 13:53:06.915 pid=30505 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=210MB rss=330MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #10:
+          timestamp=2026-10-24 13:52:39.215 pid=30423 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=220MB rss=343MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #11:
+          timestamp=2026-10-24 13:52:01.275 pid=30347 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=209MB rss=328MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #12:
+          timestamp=2026-10-24 13:51:38.174 pid=30270 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=210MB rss=330MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #13:
+          timestamp=2026-10-24 13:51:09.101 pid=30194 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=213MB rss=333MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #14:
+          timestamp=2026-10-24 13:50:33.725 pid=30115 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=210MB rss=330MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null
+        ApplicationExitInfo #15:
+          timestamp=2026-10-24 13:50:08.233 pid=30040 realUid=10366 packageUid=10366 definingUid=10366 user=0
+          process=org.pag.prototype.a.p77runtime reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=125 pss=212MB rss=332MB description=stop org.pag.prototype.a.p77runtime due to finished inst state=empty trace=null

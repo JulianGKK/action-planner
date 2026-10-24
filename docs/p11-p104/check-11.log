@@ -1,0 +1,171 @@
+> Task :verifyArchitecture
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:mergeP77runtimeNativeDebugMetadata NO-SOURCE
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeRFile UP-TO-DATE
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :app:javaPreCompileP77runtime UP-TO-DATE
+> Task :app:generateP77runtimeAssets UP-TO-DATE
+> Task :data:generateDebugAssets UP-TO-DATE
+> Task :data:mergeDebugAssets UP-TO-DATE
+> Task :security:generateDebugAssets UP-TO-DATE
+> Task :security:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeP77runtimeAssets UP-TO-DATE
+> Task :app:compressP77runtimeAssets UP-TO-DATE
+> Task :app:generateP77runtimeGlobalSynthetics UP-TO-DATE
+> Task :app:checkP77runtimeDuplicateClasses UP-TO-DATE
+> Task :app:desugarP77runtimeFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexP77runtime UP-TO-DATE
+> Task :security:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :security:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkP77runtimeAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeResources UP-TO-DATE
+> Task :app:createP77runtimeCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksP77runtime UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :security:extractDeepLinksDebug UP-TO-DATE
+> Task :security:processDebugManifest UP-TO-DATE
+> Task :app:processP77runtimeMainManifest UP-TO-DATE
+> Task :app:processP77runtimeManifest UP-TO-DATE
+> Task :app:processP77runtimeManifestForPackage UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :security:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processP77runtimeResources UP-TO-DATE
+> Task :app:mergeP77runtimeJniLibFolders UP-TO-DATE
+> Task :data:configureNdkBuildDebug[arm64-v8a]
+> Task :data:buildNdkBuildDebug[arm64-v8a]
+> Task :data:configureNdkBuildDebug[armeabi-v7a]
+> Task :data:buildNdkBuildDebug[armeabi-v7a]
+> Task :data:configureNdkBuildDebug[x86]
+> Task :data:buildNdkBuildDebug[x86]
+> Task :data:configureNdkBuildDebug[x86_64]
+> Task :data:buildNdkBuildDebug[x86_64]
+> Task :data:mergeDebugJniLibFolders UP-TO-DATE
+> Task :data:mergeDebugNativeLibs UP-TO-DATE
+> Task :data:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :security:mergeDebugJniLibFolders UP-TO-DATE
+> Task :security:mergeDebugNativeLibs NO-SOURCE
+> Task :security:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeP77runtimeNativeLibs UP-TO-DATE
+> Task :app:stripP77runtimeDebugSymbols UP-TO-DATE
+> Task :app:preparePrototypeDebugKeystore UP-TO-DATE
+> Task :app:validateSigningP77runtime UP-TO-DATE
+> Task :app:writeP77runtimeAppMetadata UP-TO-DATE
+> Task :app:writeP77runtimeSigningConfigVersions UP-TO-DATE
+> Task :app:preP77runtimeAndroidTestBuild SKIPPED
+> Task :app:mergeP77runtimeAndroidTestManifest UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestManifest UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:packageP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeAndroidTestLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestRFile UP-TO-DATE
+> Task :app:javaPreCompileP77runtimeAndroidTest UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:compressP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestGlobalSynthetics UP-TO-DATE
+> Task :app:checkP77runtimeAndroidTestDuplicateClasses UP-TO-DATE
+> Task :app:desugarP77runtimeAndroidTestFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexP77runtimeAndroidTest UP-TO-DATE
+> Task :app:checkP77runtimeAndroidTestAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeAndroidTestSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeAndroidTestNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestJniLibFolders UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestNativeLibs NO-SOURCE
+> Task :app:stripP77runtimeAndroidTestDebugSymbols NO-SOURCE
+> Task :app:validateSigningP77runtimeAndroidTest UP-TO-DATE
+> Task :app:writeP77runtimeAndroidTestSigningConfigVersions UP-TO-DATE
+> Task :data:preDebugUnitTestBuild
+> Task :data:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin
+> Task :data:compileDebugKotlin
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :data:bundleLibRuntimeToDirDebug
+> Task :data:bundleLibCompileToJarDebug
+> Task :data:bundleLibRuntimeToJarDebug
+> Task :app:compileP77runtimeKotlin UP-TO-DATE
+> Task :app:compileP77runtimeJavaWithJavac UP-TO-DATE
+> Task :app:processP77runtimeJavaRes UP-TO-DATE
+> Task :app:mergeP77runtimeJavaResource UP-TO-DATE
+> Task :app:dexBuilderP77runtime UP-TO-DATE
+> Task :app:mergeProjectDexP77runtime UP-TO-DATE
+> Task :app:bundleP77runtimeClassesToCompileJar UP-TO-DATE
+> Task :data:kspDebugUnitTestKotlin
+> Task :app:mergeLibDexP77runtimeAndroidTest UP-TO-DATE
+> Task :data:compileDebugUnitTestKotlin
+> Task :data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:mergeLibDexP77runtime
+
+> Task :app:compileP77runtimeAndroidTestKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:60:73 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:63:47 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:64:33 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:68:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:71:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+
+> Task :data:testDebugUnitTest
+
+P104ReaderRevisionTest > boundedFullReaderCarriesEveryNonzeroRevision FAILED
+    org.pag.data.product.BoundedActiveRejected at P104ReaderRevisionTest.kt:15
+
+2 tests completed, 1 failed
+
+> Task :data:testDebugUnitTest FAILED
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':data:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 15s
+120 actionable tasks: 19 executed, 101 up-to-date

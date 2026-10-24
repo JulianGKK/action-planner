@@ -38,7 +38,7 @@ class MaterialStorageTest {
         val i = ProductInventory(root, { true }, { true })
         ActionDatabaseAccess(app).use(i.database, key, context(AccessScope.MAINTENANCE), true) { d -> d.withWriteTransaction {
             listOf("a", "b").forEach { d.actions().insert(ActionRow(it, "synthetic", "synthetic", 1, 2, 0, "PREPARATION")) }
-            d.persons().insert(PersonRow("p", "a", "Motte", "motte", 0)); d.persons().insert(PersonRow("q", "b", "Meise", "meise", 0))
+            PersonRow("p", "a", "Motte", "motte", 0, editRevision = 0).let{seeded->d.persons().insert(seeded);d.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))}; PersonRow("q", "b", "Meise", "meise", 0, editRevision = 0).let{seeded->d.persons().insert(seeded);d.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))}
             val store = TaskStore(d, context()) { time }
             value(store.create("a", TaskInput("synthetic task"))); value(store.create("b", TaskInput("synthetic foreign task")))
         } }

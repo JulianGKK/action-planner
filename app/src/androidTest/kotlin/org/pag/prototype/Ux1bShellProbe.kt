@@ -53,16 +53,16 @@ class Ux1bShellProbe : Instrumentation() {
     }
     private class People:PersonRepository {
         override fun listPersons(actionId:String,publish:(PersonResult<List<Person>>)->Unit)=publish(PersonResult.Value(emptyList()))
-        override fun getPerson(actionId:String,personId:String,publish:(PersonResult<Person?>)->Unit)=publish(PersonResult.Value(Person(personId,actionId,"synthetic person",0)))
-        override fun createPerson(actionId:String,pseudonym:String,publish:(PersonResult<Person>)->Unit)=publish(PersonResult.Value(Person("synthetic","synthetic",pseudonym,0)))
+        override fun getPerson(actionId:String,personId:String,publish:(PersonResult<Person?>)->Unit)=publish(PersonResult.Value(Person(personId,actionId,"synthetic person",0, editRevision = 0)))
+        override fun createPerson(actionId:String,pseudonym:String,publish:(PersonResult<Person>)->Unit)=publish(PersonResult.Value(Person("synthetic","synthetic",pseudonym,0, editRevision = 0)))
         override fun updatePerson(actionId:String,expected: Person,pseudonym:String,publish:(PersonResult<Person>)->Unit){}
     }
     private class NavigationOps(private val actions:Actions):OperationsRepository {
         var reads=0
         override fun board(actionId:String,publish:(OperationsResult<OperationalBoard>)->Unit){
-            reads++;publish(OperationsResult.Value(OperationalBoard(actionId,actions.row.status,listOf(Role("r",actionId,"Support",0)),
-                listOf(OperationalPerson(Person("p",actionId,"synthetic person",0),PersonRolePlan(setOf("r"),"r"),
-                    PersonOperationalState(actionId,"p","r",OperationalStatus.ON_SITE,null,0))))))
+            reads++;publish(OperationsResult.Value(OperationalBoard(actionId,actions.row.status,listOf(Role("r",actionId,"Support",0, editRevision = 0)),
+                listOf(OperationalPerson(Person("p",actionId,"synthetic person",0, editRevision = 0),PersonRolePlan(setOf("r"),"r", editRevision = 0),
+                    PersonOperationalState(actionId,"p","r",OperationalStatus.ON_SITE,null,0, editRevision = 0))))))
         }
         override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit){}
         override fun renameRole(actionId:String,expected: Role,name:String,publish:(OperationsResult<Role>)->Unit){}

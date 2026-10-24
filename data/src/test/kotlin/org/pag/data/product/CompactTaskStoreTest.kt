@@ -39,18 +39,18 @@ class CompactTaskStoreTest {
         init {
             require(count.toLong()*history<=TaskRules.MAX_TASK_EVENTS_PER_ACTION)
             exec("INSERT INTO actions VALUES('active','Synthetic','Synthetic description',1,2,0,'ACTIVE','SENSITIVE',NULL)")
-            exec("WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i+1<$people) INSERT INTO persons SELECT 'p-'||i,'active','Synthetic '||i,'synthetic '||i,1 FROM n")
-            exec("INSERT INTO person_operational_states SELECT actionId,id,NULL,'NO_STATUS',NULL,1 FROM persons")
-            exec("INSERT INTO roles VALUES('r','active','Synthetic role','synthetic role',1)")
+            exec("WITH RECURSIVE n(i) AS (VALUES(0) UNION ALL SELECT i+1 FROM n WHERE i+1<$people) INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) SELECT 'p-'||i,'active','Synthetic '||i,'synthetic '||i,1 FROM n")
+            exec("INSERT INTO person_operational_states(actionId,personId,currentRoleId,operationalStatus,currentPlaceLabel,updatedAt) SELECT actionId,id,NULL,'NO_STATUS',NULL,1 FROM persons")
+            exec("INSERT INTO roles(id,actionId,name,normalizedName,createdAt) VALUES('r','active','Synthetic role','synthetic role',1)")
             repeat(count) { i ->
                 val status=when(i%5) {0->TaskStatus.OPEN;1->TaskStatus.IN_PROGRESS;3->TaskStatus.CANCELLED;else->TaskStatus.DONE}
                 expected.add(Task("task-%04d".format(java.util.Locale.ROOT,i),"active",
                     if(i%7==0) "Ü🚩\u0000"+"x".repeat(116) else "Synthetic task $i",TaskPriority.entries[i%3],status,
                     if(i%2==0) "p-${i%people}" else null,if(i%2!=0) "r" else null,"p-${i%people}",
-                    when(i%4) {0->null;1->Long.MIN_VALUE;else->(i%3).toLong()},"template",(i%3).toLong(),(i%4).toLong(),if(status==TaskStatus.DONE) 3 else null))
+                    when(i%4) {0->null;1->Long.MIN_VALUE;else->(i%3).toLong()},"template",(i%3).toLong(),(i%4).toLong(),if(status==TaskStatus.DONE) 3 else null, editRevision = 0))
             }
             val rows=expected.joinToString { t -> "(${listOf(t.id,t.actionId,t.title,t.priority.name,t.status.name,t.assigneePersonId,t.assigneeRoleId,t.affectedPersonId).joinToString { literal(it) }},${t.dueAt?:"NULL"},${literal(t.sourceTemplateKey)},${t.createdAt},${t.updatedAt},${t.completedAt?:"NULL"})" }
-            if(rows.isNotEmpty()) exec("INSERT INTO tasks VALUES $rows")
+            if(rows.isNotEmpty()) exec("INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) VALUES $rows")
             // Legal lifecycle histories with fixed length and the requested final status.
             // OPEN prefixes combine 3-step start/complete/reopen and 2-step cancel/reopen cycles.
             require(history>=5)
@@ -376,7 +376,7 @@ class CompactTaskStoreTest {
     @Test fun unicodeAndNulIdsKeepExactUtf16TaskRulesOrderAcrossPageBoundaries()=Harness().use { h ->
         h.exec("DELETE FROM task_events");h.exec("DELETE FROM tasks")
         val ids=(0..70).map { "same-"+(when(it%4){0->"\uE000";1->"🚩";2->"\u0000";else->"ä"})+"%03d".format(java.util.Locale.ROOT,it) }
-        for(id in ids) h.exec("INSERT INTO tasks VALUES(${h.literal(id)},'active','Unicode 🚩','HIGH','OPEN',NULL,NULL,NULL,1,NULL,1,1,NULL)")
+        for(id in ids) h.exec("INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) VALUES(${h.literal(id)},'active','Unicode 🚩','HIGH','OPEN',NULL,NULL,NULL,1,NULL,1,1,NULL)")
         assertEquals(ids.sorted(),h.all(CompactTaskQuery()).map{it.id})
     }
 
@@ -402,8 +402,8 @@ class CompactTaskStoreTest {
         for(change in listOf("affectedPersonId='foreign'","assigneePersonId='foreign'","assigneeRoleId='foreign'","assigneeRoleId='r'")) Harness().use { h ->
             h.exec("PRAGMA foreign_keys=OFF")
             h.exec("INSERT INTO actions VALUES('other','Synthetic','Synthetic description',1,2,0,'ACTIVE','SENSITIVE',NULL)")
-            h.exec("INSERT INTO persons VALUES('foreign','other','Synthetic','synthetic',1)")
-            h.exec("INSERT INTO roles VALUES('foreign','other','Synthetic','synthetic',1)")
+            h.exec("INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) VALUES('foreign','other','Synthetic','synthetic',1)")
+            h.exec("INSERT INTO roles(id,actionId,name,normalizedName,createdAt) VALUES('foreign','other','Synthetic','synthetic',1)")
             h.exec("UPDATE tasks SET $change WHERE id='task-0000'")
             assertDenied(BoundedActiveStatus.INVALID_DATA,h.page());assertEquals(0,h.publications)
         }
@@ -414,7 +414,7 @@ class CompactTaskStoreTest {
         val blobs=h.db.blobReads
         assertDenied(BoundedActiveStatus.BUDGET_REFUSED,h.page());assertEquals(blobs,h.db.blobReads)
         h.exec("UPDATE tasks SET title='Synthetic',affectedPersonId=NULL")
-        h.exec("INSERT INTO tasks VALUES(replace(printf('%0257d',0),'0','x'),'active','Synthetic','NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
+        h.exec("INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) VALUES(replace(printf('%0257d',0),'0','x'),'active','Synthetic','NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
         assertDenied(BoundedActiveStatus.BUDGET_REFUSED,h.page());assertEquals(blobs,h.db.blobReads)
         assertEquals(8388608L,ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
     }

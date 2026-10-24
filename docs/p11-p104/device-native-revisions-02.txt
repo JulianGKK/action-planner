@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P104,native_revisions,SQLCIPHER,five_kinds_ABA_STALE=true,plan_empty_repopulate_header=true,fixed_wallclock=42,task_event_exactly_once=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P104,native_revisions,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false,persisted_revisions=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P104 PASS native_revisions
+INSTRUMENTATION_CODE: -1

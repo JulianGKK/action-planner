@@ -33,7 +33,7 @@ class WorkspaceBatchTest {
     private class People : PersonRepository {
         var lists = 0
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { lists++ }
-        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0)))
+        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0, editRevision = 0)))
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
         override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
@@ -122,7 +122,7 @@ class WorkspaceBatchTest {
         model.detail("a");complete();val before=model.workspace
         model.loadWorkspace();val old=pending.lastIndex;model.loadWorkspace()
         complete(old);assertSame(before,model.workspace);assertTrue(model.workspaceRefreshing)
-        complete(change={it.copy(operations=it.operations.copy(roles=listOf(Role("r","a","Synthetic",0))))});assertNotSame(before,model.workspace);assertFalse(model.workspaceRefreshing)
+        complete(change={it.copy(operations=it.operations.copy(roles=listOf(Role("r","a","Synthetic",0, editRevision = 0))))});assertNotSame(before,model.workspace);assertFalse(model.workspaceRefreshing)
     }
     @Test fun preparationStillWaitsForIndependentProtectionMetadata() {
         actions.row=actions.row.copy(status=ActionStatus.PREPARATION);session.emit(SessionState.LOCKED,2);session.emit(SessionState.READY,3);model.detail("a")

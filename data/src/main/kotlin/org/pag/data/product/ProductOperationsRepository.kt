@@ -65,7 +65,9 @@ internal class OperationsStore(private val data:CoreWriterData,private val c:Sto
         val states=step{data.operations.states(actionId)}.associateBy{it.personId}
         val persons=people.map{p->
             val ids=assignments.filter{it.personId==p.id}.map{it.roleId}.toSet()
-            val plan=PersonRolePlan(ids,plans[p.id]?.primaryRoleId)
+            val header=plans[p.id]?:throw ProductStorageFailure()
+            if(header.editRevision<0)throw ProductStorageFailure()
+            val plan=PersonRolePlan(ids,header.primaryRoleId,header.editRevision)
             if(!OperationalRules.validPlan(ids,plan.primaryRoleId) || ids.any{id->roles.none{it.id==id}})throw ProductStorageFailure()
             val state=states[p.id]?.model()
             if((status==ActionStatus.ACTIVE || status==ActionStatus.COMPLETED) && state==null)throw ProductStorageFailure()
@@ -83,12 +85,13 @@ internal class OperationsStore(private val data:CoreWriterData,private val c:Sto
             if(row.model()!=expected)return denied(OperationsFailure.STALE)
             row
         }
+        if(old?.editRevision==Long.MAX_VALUE)return denied(OperationsFailure.REVISION_EXHAUSTED)
         val normalized=OperationalRules.normalizedName(name)
         val existing=step{data.operations.roles(actionId)}.onEach{it.model()}
         if(existing.any{it.normalizedName==normalized && it.id!=expected?.id})return denied(OperationsFailure.DUPLICATE)
-        val row=old?.copy(name=name,normalizedName=normalized)?:RoleRow(UUID.randomUUID().toString(),actionId,name,normalized,now())
-        if(old==null)step{data.operations.insertRole(row)}else if(step{data.operations.updateRole(row)}!=1)throw ProductStorageFailure()
-        return OperationsResult.Value(row.model())
+        val row=old?.copy(name=name,normalizedName=normalized)?:RoleRow(UUID.randomUUID().toString(),actionId,name,normalized,now(), editRevision = 0)
+        if(old==null)step{data.operations.insertRole(row)}else if(step{data.operations.renameRole(actionId,row.id,old.editRevision,name,normalized)}!=1)throw ProductStorageFailure()
+        return OperationsResult.Value((step{data.operations.role(actionId,row.id)}?:throw ProductStorageFailure()).model())
     }
     suspend fun deleteRole(actionId:String,expected:Role):OperationsResult<Unit> {
         val status=actionStatus(actionId)?:return denied(OperationsFailure.NOT_FOUND)
@@ -97,8 +100,10 @@ internal class OperationsStore(private val data:CoreWriterData,private val c:Sto
         val roleId=expected.id
         val current=step{data.operations.role(actionId,roleId)}?.model()?:return denied(OperationsFailure.NOT_FOUND)
         if(current!=expected)return denied(OperationsFailure.STALE)
+        if(current.editRevision==Long.MAX_VALUE)return denied(OperationsFailure.REVISION_EXHAUSTED)
         if(step{data.operations.plannedReferences(actionId,roleId)}>0 || step{data.operations.liveReferences(actionId,roleId)}>0 || step{data.tasks.roleReferences(actionId,roleId)}>0)return denied(OperationsFailure.IN_USE)
-        if(step{data.operations.removeRole(actionId,roleId)}!=1)throw ProductStorageFailure()
+        if(step{data.operations.claimRoleDelete(actionId,roleId,expected.editRevision)}!=1)return denied(OperationsFailure.STALE)
+        if(step{data.operations.removeRole(actionId,roleId,expected.editRevision+1)}!=1)throw ProductStorageFailure()
         return OperationsResult.Value(Unit)
     }
     suspend fun plan(actionId:String,personId:String,expected:ExpectedPersonRolePlan,plan:PersonRolePlan):OperationsResult<Unit> {
@@ -108,21 +113,24 @@ internal class OperationsStore(private val data:CoreWriterData,private val c:Sto
         if(expected.actionId!=actionId || expected.personId!=personId)return denied(OperationsFailure.STALE)
         val current=readPlan(actionId,personId)
         if(current!=expected.plan)return denied(OperationsFailure.STALE)
+        if(current.editRevision==Long.MAX_VALUE)return denied(OperationsFailure.REVISION_EXHAUSTED)
         if(!OperationalRules.validPlan(plan.roleIds,plan.primaryRoleId))return denied(OperationsFailure.INVALID)
         for(id in plan.roleIds)step{data.operations.role(actionId,id)}?.model()?:return denied(OperationsFailure.NOT_FOUND)
-        step{data.operations.removePlan(actionId,personId)}
+        if(step{data.operations.claimPlan(actionId,personId,current.editRevision)}!=1)return denied(OperationsFailure.STALE)
         step{data.operations.removeAssignments(actionId,personId)}
         for(id in plan.roleIds)step{data.operations.assign(PlannedRoleRow(actionId,personId,id))}
-        step{data.operations.insertPlan(RolePlanRow(actionId,personId,plan.primaryRoleId))}
+        if(step{data.operations.finishPlan(actionId,personId,current.editRevision+1,plan.primaryRoleId)}!=1)throw ProductStorageFailure()
         return OperationsResult.Value(Unit)
     }
     /** Reads only the selected person's complete plan, before any deleting/inserting SQL. */
     private suspend fun readPlan(actionId:String,personId:String):PersonRolePlan {
         val ids=step{data.operations.personAssignments(actionId,personId)}.map{it.roleId}.toSet()
-        val primary=step{data.operations.personPlan(actionId,personId)}?.primaryRoleId
+        val header=step{data.operations.personPlan(actionId,personId)}?:throw ProductStorageFailure()
+        if(header.editRevision<0)throw ProductStorageFailure()
+        val primary=header.primaryRoleId
         if(!OperationalRules.validPlan(ids,primary))throw ProductStorageFailure()
         for(id in ids)step{data.operations.role(actionId,id)}?.model()?:throw ProductStorageFailure()
-        return PersonRolePlan(ids,primary)
+        return PersonRolePlan(ids,primary,header.editRevision)
     }
     suspend fun snapshot(actionId:String,personId:String,expected:PersonOperationalState,status:OperationalStatus,roleId:String?,place:String):OperationsResult<Unit> {
         val actionStatus=actionStatus(actionId)?:return denied(OperationsFailure.NOT_FOUND)
@@ -130,13 +138,14 @@ internal class OperationsStore(private val data:CoreWriterData,private val c:Sto
         step{data.persons.get(actionId,personId)}?.model()?:return denied(OperationsFailure.NOT_FOUND)
         val old=step{data.operations.state(actionId,personId)}?:throw ProductStorageFailure()
         if(expected.actionId!=actionId || expected.personId!=personId || old.model()!=expected)return denied(OperationsFailure.STALE)
+        if(old.editRevision==Long.MAX_VALUE)return denied(OperationsFailure.REVISION_EXHAUSTED)
         // Validate caller's role even when this status clears it, so foreign references never pass.
         if(roleId!=null)step{data.operations.role(actionId,roleId)}?.model()?:return denied(OperationsFailure.NOT_FOUND)
         if(!OperationalRules.validPlace(place))return denied(OperationsFailure.INVALID)
         val row=old.copy(currentRoleId=roleId.takeIf{OperationalRules.roleAllowed(status)},operationalStatus=status.name,
             currentPlaceLabel=OperationalRules.place(place,status),updatedAt=now())
         row.model()
-        if(step{data.operations.updateState(row)}!=1)throw ProductStorageFailure()
+        if(step{data.operations.changeState(actionId,personId,old.editRevision,row.currentRoleId,row.operationalStatus,row.currentPlaceLabel,row.updatedAt)}!=1)throw ProductStorageFailure()
         return OperationsResult.Value(Unit)
     }
 }

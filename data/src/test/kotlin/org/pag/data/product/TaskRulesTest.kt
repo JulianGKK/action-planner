@@ -5,7 +5,7 @@ import org.junit.Test
 import org.pag.domain.*
 
 class TaskRulesTest {
-    private fun task(s:TaskStatus=TaskStatus.OPEN)=Task("t","a","EA kontaktieren",TaskPriority.HIGH,s,null,"gesa","motte",null,"CONTACT_EA",1,1,9L.takeIf{s==TaskStatus.DONE})
+    private fun task(s:TaskStatus=TaskStatus.OPEN)=Task("t","a","EA kontaktieren",TaskPriority.HIGH,s,null,"gesa","motte",null,"CONTACT_EA",1,1,9L.takeIf{s==TaskStatus.DONE}, editRevision = 0)
     @Test fun titleCodepointsAndDefaults(){
         assertFalse(TaskRules.valid(TaskInput(" \n ")))
         assertTrue(TaskRules.valid(TaskInput(" 😀 ")))

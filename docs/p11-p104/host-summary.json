@@ -1,0 +1,90 @@
+{
+  "data": [
+    {
+      "name": "org.pag.data.product.CoreReadAdmissionBudgetTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.data.product.P104RevisionTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.data.product.P104ConcurrentCasTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.data.product.P104ReaderRevisionTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.data.product.P104MigrationTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.data.product.CoreWriterIntegrationTest",
+      "tests": 39,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.data.product.BoundedActiveStoreTest",
+      "tests": 22,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.data.product.TaskMutationSqliteTest",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0
+    }
+  ],
+  "app": [
+    {
+      "name": "org.pag.prototype.product.ActiveTasksTest",
+      "tests": 29,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.prototype.product.RoleEditorModelTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.prototype.product.OperationsModelTest",
+      "tests": 20,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.prototype.product.PersonViewModelTest",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveCoreOwnerTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "org.pag.prototype.product.TaskModelTest",
+      "tests": 28,
+      "failures": 0,
+      "errors": 0
+    }
+  ]
+}

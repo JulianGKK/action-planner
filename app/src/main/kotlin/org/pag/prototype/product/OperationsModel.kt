@@ -81,6 +81,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     private fun roleEditorCurrent()=planning && session().generation==roleEditorGeneration &&
         (editingRole?:deletingRole)?.actionId==action()?.id
     private var expected:PersonOperationalState?=null
+    private var liveGeneration=0L
     private var request=0L
     val planning get()=session().state==SessionState.READY && action()?.let{OperationalRules.mayPlan(it.status)}==true
     val live get()=session().state==SessionState.READY && action()?.let{OperationalRules.mayUpdateSnapshot(it.status)}==true
@@ -145,6 +146,35 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
             }
         }
     }
+    /** Only an explicit user action may replace the live draft and its original revision. */
+    fun reloadLive() {
+        val old=expected?:return
+        val generation=liveGeneration; val token=request; val route=screen
+        if(!live || busy || session().generation!=generation || error!=OperationsFailure.STALE ||
+            route !in setOf(OperationsScreen.LIVE,OperationsScreen.FUNCTION) || action()?.id!=old.actionId)return
+        interaction()
+        if(!live || session().generation!=generation || request!=token || expected!==old)return
+        busy=true
+        var delivered=false
+        repository?.board(old.actionId){result->
+            if(delivered)return@board
+            delivered=true
+            if(request!=token || !live || session().generation!=generation || action()?.id!=old.actionId ||
+                screen!=route || expected!==old || personId!=old.personId)return@board
+            busy=false
+            when(result){
+                is OperationsResult.Rejected->error=result.reason
+                is OperationsResult.Value->{
+                    val b=result.value
+                    val fresh=b.persons.singleOrNull{it.person.id==old.personId && it.person.actionId==old.actionId}?.state
+                    if(b.actionId!=old.actionId || !OperationalRules.mayUpdateSnapshot(b.status) || fresh==null)
+                        error=OperationsFailure.NOT_FOUND
+                    else {expected=fresh;liveStatus=fresh.status;liveRoleId=fresh.currentRoleId
+                        livePlace=fresh.currentPlaceLabel.orEmpty();error=null}
+                }
+            }
+        }
+    }
     fun update(id: String) {
         interaction()
         if (!live || busy) return
@@ -152,7 +182,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         val before = session(); val token = request; val actionId = action()?.id
         leaveSensitive()
         if (!live || session().generation != before.generation || request != token || action()?.id != actionId) return
-        dropCreate();personId = id; expected = state; liveStatus = state.status; liveRoleId = state.currentRoleId
+        dropCreate();personId = id; expected = state; liveGeneration=before.generation; liveStatus = state.status; liveRoleId = state.currentRoleId
         livePlace = state.currentPlaceLabel.orEmpty(); screen = OperationsScreen.LIVE; error = null
     }
     /** RAM-only focus on the already published complete board; no inventory or read. */
@@ -225,10 +255,10 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     fun savePlan(){
         val a=action()?:return;val p=personId?:return;val old=planExpected?:return
         if(!planning || busy || screen!=OperationsScreen.PLAN || old.actionId!=a.id || old.personId!=p || session().generation!=planGeneration)return
-        val draft=PersonRolePlan(roleIds.toSet(),primaryRoleId)
+        val draft=PersonRolePlan(roleIds.toSet(),primaryRoleId, editRevision = old.editRevision)
         write{publish->repository?.planRoles(a.id,p,old,draft,publish)}
     }
-    fun saveLive(){val a=action()?:return;val p=personId?:return;val old=expected?:return;if(!live || busy)return;if(!OperationalRules.validPlace(livePlace)){error=OperationsFailure.INVALID;return};write{publish->repository?.updateSnapshot(a.id,p,old,liveStatus,liveRoleId,livePlace,publish)}}
+    fun saveLive(){val a=action()?:return;val p=personId?:return;val old=expected?:return;if(!live || busy || session().generation!=liveGeneration || a.id!=old.actionId)return;if(!OperationalRules.validPlace(livePlace)){error=OperationsFailure.INVALID;return};write{publish->repository?.updateSnapshot(a.id,p,old,liveStatus,liveRoleId,livePlace,publish)}}
     /** Template/no-text entry: never owns or resets another open form. */
     fun createRole(name:String)=createRoleWrite(name,null)
     private fun createRoleWrite(name:String,owner:RoleCreateSurface?){

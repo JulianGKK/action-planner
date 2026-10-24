@@ -1,0 +1,35 @@
+INSTRUMENTATION_STATUS: stream=P104,migration,STARTUP_EXCEPTION,android.database.sqlite.SQLiteException: no such column: "editRevision" (code 1): , while compiling: ALTER TABLE persons DROP COLUMN editRevision
+	at net.zetetic.database.sqlcipher.SQLiteConnection.nativePrepareStatement(Native Method)
+	at net.zetetic.database.sqlcipher.SQLiteConnection.acquirePreparedStatement(SQLiteConnection.java:973)
+	at net.zetetic.database.sqlcipher.SQLiteConnection.prepare(SQLiteConnection.java:537)
+	at net.zetetic.database.sqlcipher.SQLiteSession.prepare(SQLiteSession.java:593)
+	at net.zetetic.database.sqlcipher.SQLiteProgram.<init>(SQLiteProgram.java:65)
+	at net.zetetic.database.sqlcipher.SQLiteStatement.<init>(SQLiteStatement.java:38)
+	at net.zetetic.database.sqlcipher.SQLiteDatabase.executeSql(SQLiteDatabase.java:2001)
+	at net.zetetic.database.sqlcipher.SQLiteDatabase.execSQL(SQLiteDatabase.java:1911)
+	at org.pag.data.product.P11SyntheticFixture.p104LegacyEleven$data(P11SyntheticFixture.kt:147)
+	at org.pag.data.product.P77ProductRuntimeHarness$Companion.create(P77ProductRuntimeHarness.kt:88)
+	at org.pag.prototype.P77RuntimeLaunchProvider.create(P77RuntimeLaunchProvider.kt:13)
+	at org.pag.prototype.P86FullWorkspaceActivity.initializeProduct(P86FullWorkspaceActivity.kt:115)
+	at org.pag.prototype.P86FullWorkspaceActivity.onCreate(P86FullWorkspaceActivity.kt:104)
+	at android.app.Activity.performCreate(Activity.java:8591)
+	at android.app.Activity.performCreate(Activity.java:8570)
+	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1384)
+	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4150)
+	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4325)
+	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:101)
+	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2574)
+	at android.os.Handler.dispatchMessage(Handler.java:106)
+	at android.os.Looper.loopOnce(Looper.java:226)
+	at android.os.Looper.loop(Looper.java:313)
+	at android.app.ActivityThread.main(ActivityThread.java:8762)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:604)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1067)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: shortMsg=Process crashed.
+INSTRUMENTATION_CODE: 0

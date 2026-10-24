@@ -90,17 +90,18 @@ internal class PersonWriterStore(private val data:CoreWriterData,private val con
             if (row.model() != expected) return PersonResult.Rejected(PersonRejection.STALE)
             row
         }
+        if(existing?.editRevision==Long.MAX_VALUE)return PersonResult.Rejected(PersonRejection.REVISION_EXHAUSTED)
         val normalized = PersonRules.normalized(pseudonym)
         requirePersonAccess(context)
         val duplicate = data.persons.samePseudonym(actionId, normalized)?.also { it.model() }
         if (duplicate != null && duplicate.id != existing?.id)
             return PersonResult.Rejected(PersonRejection.DUPLICATE_PSEUDONYM)
         val row = existing?.copy(pseudonym = pseudonym, pseudonymNormalized = normalized)
-            ?: PersonRow(UUID.randomUUID().toString(), actionId, pseudonym, normalized, now())
+            ?: PersonRow(UUID.randomUUID().toString(), actionId, pseudonym, normalized, now(), editRevision = 0)
         requirePersonAccess(context)
-        if (existing == null) data.persons.insert(row)
-        else if (data.persons.rename(actionId, existing.id, pseudonym, normalized) != 1) throw ProductStorageFailure()
+        if (existing == null) {data.persons.insert(row);data.operations.insertPlan(RolePlanRow(actionId,row.id,null,0))}
+        else if (data.persons.rename(actionId, existing.id, pseudonym, normalized,existing.editRevision) != 1) throw ProductStorageFailure()
         if (!context.check(AccessPoint.COMMIT)) throw StorageAccessRevoked()
-        return PersonResult.Value(row.model())
+        return PersonResult.Value((data.persons.get(actionId,row.id)?:throw ProductStorageFailure()).model())
     }
 }

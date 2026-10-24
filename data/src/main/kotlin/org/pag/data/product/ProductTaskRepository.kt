@@ -146,14 +146,14 @@ internal class TaskStore(private val data:TaskStoreData,private val c:StorageCon
             return denied(OperationsFailure.TASK_EVENT_LIMIT_REACHED)
         write()
         step{data.tasks.event(TaskEventRow(UUID.randomUUID().toString(),t.actionId,t.id,type.name,t.updatedAt))}
-        return OperationsResult.Value(t)
+        return OperationsResult.Value(step{data.tasks.get(t.actionId,t.id)}?.model()?:throw ProductStorageFailure())
     }
     suspend fun create(a:String,i:TaskInput):OperationsResult<Task> {
         val s=status(a)?:return denied(OperationsFailure.NOT_FOUND)
         if(!TaskRules.mayWrite(s))return denied(OperationsFailure.NOT_ALLOWED)
         if(!TaskRules.valid(i))return denied(OperationsFailure.INVALID)
         if(!validReferences(a,i))return denied(OperationsFailure.NOT_FOUND)
-        val time=now();val t=Task(UUID.randomUUID().toString(),a,i.title.trim(),i.priority,TaskStatus.OPEN,i.assigneePersonId,i.assigneeRoleId,i.affectedPersonId,i.dueAt,i.sourceTemplateKey,time,time,null)
+        val time=now();val t=Task(UUID.randomUUID().toString(),a,i.title.trim(),i.priority,TaskStatus.OPEN,i.assigneePersonId,i.assigneeRoleId,i.affectedPersonId,i.dueAt,i.sourceTemplateKey,time,time,null, editRevision = 0)
         return withEvent(t,TaskEventType.CREATED){step{data.tasks.insert(t.row())}}
     }
     private suspend fun existing(a:String,t:Task):OperationsResult<Task> {
@@ -161,26 +161,28 @@ internal class TaskStore(private val data:TaskStoreData,private val c:StorageCon
         if(!TaskRules.mayWrite(s))return denied(OperationsFailure.NOT_ALLOWED)
         val old=step{data.tasks.get(a,t.id)}?.model()?:return denied(OperationsFailure.NOT_FOUND)
         if(t.actionId!=a || t!=old)return denied(OperationsFailure.STALE)
+        if(old.editRevision==Long.MAX_VALUE)return denied(OperationsFailure.REVISION_EXHAUSTED)
         return OperationsResult.Value(old)
     }
     suspend fun edit(a:String,t:Task,i:TaskInput):OperationsResult<Task> {
         val found=existing(a,t);if(found is OperationsResult.Rejected)return found
         if(!TaskRules.valid(i))return denied(OperationsFailure.INVALID)
         if(!validReferences(a,i))return denied(OperationsFailure.NOT_FOUND)
-        val updated=t.copy(title=i.title.trim(),priority=i.priority,assigneePersonId=i.assigneePersonId,assigneeRoleId=i.assigneeRoleId,affectedPersonId=i.affectedPersonId,dueAt=i.dueAt,updatedAt=now())
-        if(step{data.tasks.update(updated.row())}!=1)throw ProductStorageFailure()
-        return OperationsResult.Value(updated)
+        val updated=t.copy(title=i.title.trim(),priority=i.priority,assigneePersonId=i.assigneePersonId,assigneeRoleId=i.assigneeRoleId,affectedPersonId=i.affectedPersonId,dueAt=i.dueAt,updatedAt=now(),editRevision=t.editRevision+1)
+        if(step{data.tasks.change(a,t.id,t.editRevision,updated.title,updated.priority.name,updated.status.name,updated.assigneePersonId,updated.assigneeRoleId,updated.affectedPersonId,updated.dueAt,updated.updatedAt,updated.completedAt)}!=1)throw ProductStorageFailure()
+        return OperationsResult.Value(step{data.tasks.get(a,t.id)}?.model()?:throw ProductStorageFailure())
     }
     suspend fun transition(a:String,t:Task,to:TaskStatus):OperationsResult<Task> {
         val found=existing(a,t);if(found is OperationsResult.Rejected)return found
         val type=TaskRules.event(t.status,to)?:return denied(OperationsFailure.INVALID)
-        val updated=TaskRules.transition(t,to,now())?:return denied(OperationsFailure.INVALID)
-        return withEvent(updated,type){if(step{data.tasks.update(updated.row())}!=1)throw ProductStorageFailure()}
+        val updated=(TaskRules.transition(t,to,now())?:return denied(OperationsFailure.INVALID)).copy(editRevision=t.editRevision+1)
+        return withEvent(updated,type){if(step{data.tasks.change(a,t.id,t.editRevision,updated.title,updated.priority.name,updated.status.name,updated.assigneePersonId,updated.assigneeRoleId,updated.affectedPersonId,updated.dueAt,updated.updatedAt,updated.completedAt)}!=1)throw ProductStorageFailure()}
     }
     suspend fun delete(a:String,t:Task):OperationsResult<Unit> {
         val found=existing(a,t);if(found is OperationsResult.Rejected)return found
         if(!TaskRules.mayDelete(status(a)!!))return denied(OperationsFailure.NOT_ALLOWED)
-        if(step{data.tasks.delete(a,t.id)}!=1)throw ProductStorageFailure()
+        if(step{data.tasks.claimDelete(a,t.id,t.editRevision)}!=1)return denied(OperationsFailure.STALE)
+        if(step{data.tasks.delete(a,t.id,t.editRevision+1)}!=1)throw ProductStorageFailure()
         return OperationsResult.Value(Unit)
     }
 }

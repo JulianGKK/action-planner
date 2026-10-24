@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P104MigrationTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-24T16:30:32.931Z" hostname="iuzjhtgvfc" time="0.816">
+  <properties/>
+  <testcase name="elevenToTwelvePreservesValuesBackfillsStableHeadersAndChecksForeignKeys" classname="org.pag.data.product.P104MigrationTest" time="0.153"/>
+  <testcase name="migratedAndFreshTwelveHaveTheSameRoomColumnContract" classname="org.pag.data.product.P104MigrationTest" time="0.171"/>
+  <testcase name="interruptedMigrationRollsBackAllFiveColumnsAndBackfill" classname="org.pag.data.product.P104MigrationTest" time="0.15"/>
+  <testcase name="invalidRevisionAffinityAndMissingHeaderCannotBecomeValidExpected" classname="org.pag.data.product.P104MigrationTest" time="0.341"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

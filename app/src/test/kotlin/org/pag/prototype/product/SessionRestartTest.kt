@@ -33,7 +33,7 @@ class SessionRestartTest {
         override fun updateAction(expected: Action, changes: NewAction, publish: (ActionChangeResult) -> Unit) {}
         override fun advanceActionStatus(id: String, expected: ActionStatus, publish: (ActionChangeResult) -> Unit) {}
     }
-    private val person = Person("synthetic-person", row.id, "synthetic-01", 0)
+    private val person = Person("synthetic-person", row.id, "synthetic-01", 0, editRevision = 0)
     private val people = object : PersonRepository {
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { publish(PersonResult.Value(listOf(person))) }
         override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) { publish(PersonResult.Value(person)) }

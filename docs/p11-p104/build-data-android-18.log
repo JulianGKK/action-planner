@@ -1,0 +1,63 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin UP-TO-DATE
+> Task :data:compileDebugKotlin UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:preDebugAndroidTestBuild
+> Task :data:generateDebugAndroidTestResources UP-TO-DATE
+> Task :data:packageDebugAndroidTestResources UP-TO-DATE
+> Task :data:processDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :data:parseDebugAndroidTestLocalResources UP-TO-DATE
+> Task :data:generateDebugAndroidTestRFile UP-TO-DATE
+> Task :data:kspDebugAndroidTestKotlin
+
+> Task :data:compileDebugAndroidTestKotlin
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt:178:118 Unresolved reference 'update' on receiver of type 'TaskDao'.
+
+> Task :data:compileDebugAndroidTestKotlin FAILED
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':data:compileDebugAndroidTestKotlin' (registered by plugin 'com.android.internal.library').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Kotlin compiler: UNRESOLVED_REFERENCE
+       Kotlin compiler error
+         Unresolved reference 'update' on receiver of type 'TaskDao'.
+         Location: /home/julian-tio-valenzuela/Projekte/action-planner/data/src/androidTest/kotlin/org/pag/data/product/TaskStorageTest.kt line 178
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 11s
+27 actionable tasks: 3 executed, 24 up-to-date

@@ -33,7 +33,7 @@ class PreparationWorkspaceTest {
     private class People : PersonRepository {
         var lists = 0
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { lists++ }
-        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0)))
+        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0, editRevision = 0)))
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
         override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
@@ -72,9 +72,9 @@ class PreparationWorkspaceTest {
     private val session = Session(); private val actions = Actions(); private val people = People()
     private val ops = Ops(); private val tasks = Tasks(); private val protection = Protection()
     private val model = ProductViewModel(session, actions, ProductStorageState.READY_TO_OPEN, people, protection, ops, tasks) {}
-    private val person = OperationalPerson(Person("p", "a", "synthetic", 0), PersonRolePlan(setOf("r"), "r"), null)
-    private val board = OperationalBoard("a", ActionStatus.PREPARATION, listOf(Role("r", "a", "Support", 0)), listOf(person))
-    private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null)
+    private val person = OperationalPerson(Person("p", "a", "synthetic", 0, editRevision = 0), PersonRolePlan(setOf("r"), "r", editRevision = 0), null)
+    private val board = OperationalBoard("a", ActionStatus.PREPARATION, listOf(Role("r", "a", "Support", 0, editRevision = 0)), listOf(person))
+    private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null, editRevision = 0)
     private val taskBoard = TaskBoard("a", listOf(task), emptyList())
     private fun open() = model.detail("a")
     private fun complete(state: SensitiveState = SensitiveState.UNINITIALIZED) {
@@ -110,7 +110,7 @@ class PreparationWorkspaceTest {
         protection.states.last().second(SensitiveResult.Value(SensitiveState.UNINITIALIZED)); assertEquals(1, model.persons.size)
     }
     @Test fun summaryUsesLoadedPlansAndOnlyActiveHighTasks() {
-        open(); ops.loads.last()(OperationsResult.Value(board.copy(persons = listOf(person, person.copy(person = person.person.copy(id = "p2"), plan = PersonRolePlan(emptySet(), null))))))
+        open(); ops.loads.last()(OperationsResult.Value(board.copy(persons = listOf(person, person.copy(person = person.person.copy(id = "p2"), plan = PersonRolePlan(emptySet(), null, editRevision = 0))))))
         tasks.loads.last()(OperationsResult.Value(taskBoard.copy(tasks = listOf(task, task.copy(id = "work", status = TaskStatus.IN_PROGRESS, priority = TaskPriority.NORMAL), task.copy(id = "done", status = TaskStatus.DONE)))))
         protection.states.last().second(SensitiveResult.Value(SensitiveState.READY))
         assertEquals(PreparationSummary(2, 1, 1, 1, 1, 1), preparationSummary(model.workspace!!))
@@ -162,10 +162,10 @@ class PreparationWorkspaceTest {
         }
     }
     @Test fun missingPlanningProducesOneShortCardLabelNotTechnicalSpam() {
-        assertNull(plannedRoles(person.copy(plan = PersonRolePlan(emptySet(), null)), board))
+        assertNull(plannedRoles(person.copy(plan = PersonRolePlan(emptySet(), null, editRevision = 0)), board))
         assertEquals("Support", plannedRoles(person, board))
-        val other = Role("second", "a", "synthetic role", 0)
-        assertEquals("synthetic role, Support", plannedRoles(person.copy(plan = PersonRolePlan(setOf("r", "second"), "second")), board.copy(roles = board.roles + other)))
+        val other = Role("second", "a", "synthetic role", 0, editRevision = 0)
+        assertEquals("synthetic role, Support", plannedRoles(person.copy(plan = PersonRolePlan(setOf("r", "second"), "second", editRevision = 0)), board.copy(roles = board.roles + other)))
     }
     @Test fun refreshKeepsOldContentUntilAllReplacementDataArrive() {
         open(); complete(); val old = model.workspace; model.loadWorkspace(); assertSame(old, model.workspace); assertTrue(model.workspaceRefreshing)

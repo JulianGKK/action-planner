@@ -4,10 +4,10 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.pag.domain.*
 
-/** Negative schema-11 evidence using the real store and outer SQLite transaction. The
+/** Schema12 regression of the schema11 counterexample, using the real store and outer SQLite transaction. The
  * injected constant WALL clock is not a vendor failure or a new revision authority. */
 class P103OperationalAbaTest {
-    @Test fun equalWallTimeCanRestoreWholeStateAndOldExpectedStillCommits()=CoreWriterIntegrationTest.H().use{h->
+    @Test fun equalWallTimeCannotBypassPersistentRevision()=CoreWriterIntegrationTest.H().use{h->
         h.advance(ActionStatus.PREPARATION)
         fun write(expected:PersonOperationalState,status:OperationalStatus,place:String="")=
             h.write<OperationsResult<Unit>>(WorkspaceWriterFamily.OPERATIONS,{it is OperationsResult.Rejected},
@@ -19,8 +19,8 @@ class P103OperationalAbaTest {
         assertTrue(write(a,OperationalStatus.UNCLEAR,"Synthetic place") is OperationsResult.Value)
         assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),write(a,OperationalStatus.LEFT))
         assertTrue(write(h.state(),OperationalStatus.ON_SITE) is OperationsResult.Value)
-        assertEquals(a,h.state())
-        assertTrue(write(a,OperationalStatus.LEFT) is OperationsResult.Value) // BLOCKER, not ABA safety
-        assertEquals(WorkspaceWriteOutcome.COMMITTED,h.completions.last().outcome)
+        assertEquals(a.copy(editRevision=a.editRevision+2),h.state())
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),write(a,OperationalStatus.LEFT))
+        assertEquals(WorkspaceWriteOutcome.ROLLED_BACK,h.completions.last().outcome)
     }
 }

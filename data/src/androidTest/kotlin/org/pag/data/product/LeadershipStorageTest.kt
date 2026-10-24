@@ -39,8 +39,8 @@ class LeadershipStorageTest {
         return ProductInventory(root,{true},{true}).also { i->ActionDatabaseAccess(app).use(i.database,key,context(AccessScope.MAINTENANCE),true){d->d.withWriteTransaction{
             d.actions().insert(ActionRow(id,"synthetic","synthetic",1,2,0,"PREPARATION"));d.actions().insert(ActionRow(other,"synthetic other","synthetic",1,2,0,"PREPARATION"))
             if(withPersons){
-            d.persons().insert(PersonRow(person,id,"synthetic-01","synthetic-01",0));d.persons().insert(PersonRow(second,id,"synthetic-02","synthetic-02",0))
-            d.persons().insert(PersonRow("synthetic-other-action-person",other,"synthetic-01","synthetic-01",0))
+            PersonRow(person,id,"synthetic-01","synthetic-01",0, editRevision = 0).let{seeded->d.persons().insert(seeded);d.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))};PersonRow(second,id,"synthetic-02","synthetic-02",0, editRevision = 0).let{seeded->d.persons().insert(seeded);d.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))}
+            PersonRow("synthetic-other-action-person",other,"synthetic-01","synthetic-01",0, editRevision = 0).let{seeded->d.persons().insert(seeded);d.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))}
             }
         }}}
     }

@@ -74,7 +74,7 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         val texts=listOf("id","actionId","title","priority","status")
         val optional=listOf("assigneePersonId","assigneeRoleId","affectedPersonId","sourceTemplateKey")
         val checks=texts.map { "typeof(t.$it)!='text'" } + optional.map { "(t.$it IS NOT NULL AND typeof(t.$it)!='text')" } +
-            listOf("typeof(t.createdAt)!='integer'","typeof(t.updatedAt)!='integer'",
+            listOf("typeof(t.editRevision)!='integer'","t.editRevision<0","typeof(t.createdAt)!='integer'","typeof(t.updatedAt)!='integer'",
                 "(t.dueAt IS NOT NULL AND typeof(t.dueAt)!='integer')", "(t.completedAt IS NOT NULL AND typeof(t.completedAt)!='integer')",
                 "t.priority NOT IN ('HIGH','NORMAL','LOW')", "t.status NOT IN ('OPEN','IN_PROGRESS','DONE','CANCELLED')",
                 "((t.status='DONE')!=(t.completedAt IS NOT NULL))", "(t.assigneePersonId IS NOT NULL AND t.assigneeRoleId IS NOT NULL)",
@@ -212,8 +212,8 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         val reservation=reserve(1,texts.size,sized.second)
         observe(Phase.ADMITTED);gate()
         var task: Task?=null
-        fetch("tasks",where,args,texts,listOf("dueAt","createdAt","updatedAt","completedAt"),sized) { t,n,_ ->
-            task=TaskRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),t[3]?:invalid(),t[4]?:invalid(),t[5],t[6],t[7],n[0],t[8],n[1]?:invalid(),n[2]?:invalid(),n[3]).model()
+        fetch("tasks",where,args,texts,listOf("dueAt","createdAt","updatedAt","completedAt","editRevision"),sized) { t,n,_ ->
+            task=TaskRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),t[3]?:invalid(),t[4]?:invalid(),t[5],t[6],t[7],n[0],t[8],n[1]?:invalid(),n[2]?:invalid(),n[3], editRevision = n[4]?:invalid()).model()
         }
         return finish(CompactTaskDetail(state,task?:invalid()),reservation)
     }
@@ -322,9 +322,9 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
     private data class Reservation(val units: BoundedTaskReservation, val retained: Long, val transition: Long)
     private fun pageUnits(rows: Long, fields: Int, bytes: Long): ActiveCoreReservation {
         fun units(copies: Long) = ActiveWorkspaceBudget.Units(
-            objects=(rows+16)*copies*8, strings=(rows*fields+16)*copies,
+            objects=(rows+16)*copies*8+rows*copies, strings=(rows*fields+16)*copies,
             utf16Units=(bytes+16384)*copies, arrays=(rows*fields+16)*copies,
-            arrayPayloadBytes=(bytes+16384)*copies, lists=16, listCapacity=(rows+32)*copies,
+            arrayPayloadBytes=(bytes+16384)*copies+rows*copies*8, lists=16, listCapacity=(rows+32)*copies,
             indexes=2,indexCapacity=rows*copies,references=(rows+32)*copies*16)
         // Overlap of old/new page and future UI/form references charged conservatively.
         // No entire-board map/index; sorting is limited to one page. Fixed allowance includes

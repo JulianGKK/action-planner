@@ -7,7 +7,7 @@ import org.pag.domain.*
 /** UI port proofs only. Commit/cleanup evidence is proved by the real SQLite boundary tests. */
 class RoleEditorModelTest {
     private class Repo:OperationsRepository {
-        var role=Role("r","a","Original",1)
+        var role=Role("r","a","Original",1, editRevision = 0)
         var rename:((OperationsResult<Role>)->Unit)?=null
         var delete:((OperationsResult<Unit>)->Unit)?=null
         var reload:((OperationsResult<OperationalBoard>)->Unit)?=null

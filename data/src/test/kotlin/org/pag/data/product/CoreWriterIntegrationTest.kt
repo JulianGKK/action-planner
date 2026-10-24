@@ -64,8 +64,9 @@ class CoreWriterIntegrationTest {
         init {
             exec("INSERT INTO actions VALUES('a','Synthetic action','Synthetic description',1,2,0,'PREPARATION','SENSITIVE',NULL)")
             exec("INSERT INTO actions VALUES('b','Synthetic other','Synthetic other description',1,2,0,'PREPARATION','SENSITIVE',NULL)")
-            exec("INSERT INTO persons VALUES('p0','a','Synthetic zero','synthetic zero',0),('p1','a','Synthetic one','synthetic one',1)")
-            exec("INSERT INTO roles VALUES('r0','a','Synthetic role','synthetic role',0)")
+            exec("INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) VALUES('p0','a','Synthetic zero','synthetic zero',0),('p1','a','Synthetic one','synthetic one',1)")
+            exec("INSERT INTO person_role_plans(actionId,personId,primaryRoleId,editRevision) SELECT actionId,id,NULL,0 FROM persons")
+            exec("INSERT INTO roles(id,actionId,name,normalizedName,createdAt) VALUES('r0','a','Synthetic role','synthetic role',0)")
             worker.onQueue={assertTrue(requests.isNotEmpty());assertTrue(epoch.mutationEpoch>0);assertFalse(epoch.ramReuseEnabled)}
         }
         fun exec(sql:String)=runBlocking{db.execute(sql)}
@@ -152,7 +153,7 @@ class CoreWriterIntegrationTest {
         val stale=h.write<ActionChangeResult>(WorkspaceWriterFamily.ACTION_EDIT,{it is ActionChangeResult.Rejected},{null}){ActionWriterStore(h.data,it){++h.time}.change(original,NewAction("Stale editor","Synthetic description",1,3))}
         assertEquals(ActionChangeResult.Rejected(ActionChangeRejection.STALE),stale)
         assertEquals(WorkspaceWriteOutcome.ROLLED_BACK,h.completions.last().outcome)
-        h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",PersonRolePlan(emptySet(),null)),PersonRolePlan(setOf("r0"),"r0"))}
+        h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",PersonRolePlan(emptySet(),null, editRevision = 0)),PersonRolePlan(setOf("r0"),"r0", editRevision = 0))}
         assertTrue(h.advance(ActionStatus.PREPARATION) is ActionChangeResult.Applied)
         assertEquals(ActionStatus.ACTIVE,h.actionRow().status);assertEquals(2L,h.count("person_operational_states"))
         assertEquals("r0",h.state().currentRoleId);assertEquals(OperationalStatus.NO_STATUS,h.state().status)
@@ -175,7 +176,7 @@ class CoreWriterIntegrationTest {
         assertEquals(PersonResult.Rejected(PersonRejection.DUPLICATE_PSEUDONYM),h.person("p1","Synthetic renamed"))
         val role=value(h.ops{it.role("a",null,"Synthetic second")})
         value(h.ops{it.role("a",h.roleRow(),"Synthetic role renamed")})
-        value(h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",PersonRolePlan(emptySet(),null)),PersonRolePlan(setOf("r0",role.id),"r0"))})
+        value(h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",PersonRolePlan(emptySet(),null, editRevision = 0)),PersonRolePlan(setOf("r0",role.id),"r0", editRevision = 0))})
         assertEquals(OperationsResult.Rejected(OperationsFailure.IN_USE),h.ops{it.deleteRole("a",h.roleRow())})
         val unused=value(h.ops{it.role("a",null,"Synthetic unused")});value(h.ops{it.deleteRole("a",unused)})
         h.advance(ActionStatus.PREPARATION)
@@ -211,17 +212,17 @@ class CoreWriterIntegrationTest {
         assertEquals(PersonResult.Rejected(PersonRejection.NOT_FOUND),h.personExpected(original.copy(id="missing"),"Missing"))
         assertEquals(0,updates);assertEquals(original,h.personRow())
         val changed=(h.personExpected(original,"New value") as PersonResult.Value).value
-        assertEquals(original.copy(pseudonym="New value"),changed)
+        assertEquals(original.copy(pseudonym="New value",editRevision=1),changed)
         assertTrue(h.personExpected(changed,"Sequential editor") is PersonResult.Value)
         assertEquals(2,updates);assertEquals(0,h.blocks)
     }
-    @Test fun schema11FullStateCasExplicitlyCannotDetectAba()=H().use { h->
+    @Test fun persistentPersonRevisionRejectsAba()=H().use { h->
         val original=h.personRow()
         val b=(h.personExpected(original,"B") as PersonResult.Value).value
         val a=(h.personExpected(b,original.pseudonym) as PersonResult.Value).value
-        assertEquals(original,a) // No persistent monotone revision in schema 11.
-        assertTrue(h.personExpected(original,"Stale after ABA") is PersonResult.Value)
-        assertEquals("Stale after ABA",h.personRow().pseudonym)
+        assertEquals(original.copy(editRevision=2),a)
+        assertEquals(PersonResult.Rejected(PersonRejection.STALE),h.personExpected(original,"Stale after ABA"))
+        assertEquals(original.pseudonym,h.personRow().pseudonym)
     }
     @Test fun personRenameUnknownCleanupAndRevokeCannotPublishValue() {
         for(at in listOf("end-before","end-after","cleanup","rollback","queued","commit","after-commit","permission","generation","action")) H().use {h->
@@ -262,32 +263,32 @@ class CoreWriterIntegrationTest {
         assertEquals("First",h.personRow().pseudonym);assertFalse(h.epoch.ramReuseEnabled)
     }
     @Test fun rolePlanOldEditorsConflictAndConfirmedFirstPlanSurvives()=H().use {h->
-        val original=PersonRolePlan(emptySet(),null)
-        val a=PersonRolePlan(setOf("r0"),"r0")
+        val original=PersonRolePlan(emptySet(),null, editRevision = 0)
+        val a=PersonRolePlan(setOf("r0"),"r0", editRevision = 0)
         val expected=ExpectedPersonRolePlan("a","p0",original)
         assertEquals(OperationsResult.Value(Unit),h.ops{it.plan("a","p0",expected,a)})
         assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.ops{it.plan("a","p0",expected,original)})
         assertEquals(WorkspaceWriteCompletion(WorkspaceWriteOutcome.ROLLED_BACK,WorkspaceWriteCleanup.COMPLETE),h.completions.last())
         val board=runBlocking{OperationsStore(h.data,h.context){0}.board("a")} as OperationsResult.Value
-        assertEquals(a,board.value.persons.single{it.person.id=="p0"}.plan)
+        assertEquals(a.copy(editRevision=1),board.value.persons.single{it.person.id=="p0"}.plan)
     }
     @Test fun rolePlanCasCoversWholeSetsPrimaryEmptyForeignAndMissingReferences()=H().use{h->
-        h.exec("INSERT INTO roles VALUES('r1','a','Second','second',1),('foreign','b','Foreign','foreign',1)")
-        val empty=PersonRolePlan(emptySet(),null)
+        h.exec("INSERT INTO roles(id,actionId,name,normalizedName,createdAt) VALUES('r1','a','Second','second',1),('foreign','b','Foreign','foreign',1)")
+        val empty=PersonRolePlan(emptySet(),null, editRevision = 0)
         fun old(plan:PersonRolePlan)=ExpectedPersonRolePlan("a","p0",plan)
         fun save(expected:ExpectedPersonRolePlan,plan:PersonRolePlan)=h.ops{it.plan("a","p0",expected,plan)}
-        val a=PersonRolePlan(setOf("r0","r1"),"r0")
+        val a=PersonRolePlan(setOf("r0","r1"),"r0", editRevision = 1)
         assertEquals(OperationsResult.Value(Unit),save(old(empty),a))
         var writes=0
         h.db.beforePrepare={if(it.trimStart().startsWith("DELETE",true) || it.trimStart().startsWith("INSERT",true))writes++}
-        for(expected in listOf(old(empty),old(a.copy(primaryRoleId="r1")),old(PersonRolePlan(setOf("r0"),"r0")),
+        for(expected in listOf(old(empty),old(a.copy(primaryRoleId="r1")),old(PersonRolePlan(setOf("r0"),"r0", editRevision = 0)),
             ExpectedPersonRolePlan("b","p0",a),ExpectedPersonRolePlan("a","p1",a))) {
             assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),save(expected,empty))
             assertEquals(WorkspaceWriteOutcome.ROLLED_BACK,h.completions.last().outcome)
         }
-        for(id in listOf("missing","foreign"))assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),save(old(a),PersonRolePlan(setOf(id),id)))
+        for(id in listOf("missing","foreign"))assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),save(old(a),PersonRolePlan(setOf(id),id, editRevision = 0)))
         assertEquals(0,writes)
-        val b=PersonRolePlan(setOf("r1"),"r1")
+        val b=PersonRolePlan(setOf("r1"),"r1", editRevision = 2)
         assertEquals(OperationsResult.Value(Unit),save(old(a),b))
         assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),save(old(a),empty))
         val board=runBlocking{OperationsStore(h.data,h.context){0}.board("a")} as OperationsResult.Value
@@ -295,21 +296,21 @@ class CoreWriterIntegrationTest {
         assertEquals(empty,board.value.persons.single{it.person.id=="p1"}.plan)
         assertEquals(OperationsResult.Value(Unit),save(old(b),empty))
         assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),save(old(b),a))
-        assertEquals(OperationsResult.Value(Unit),save(old(empty),a)) // Stored empty and absent empty have identical domain meaning.
+        assertEquals(OperationsResult.Value(Unit),save(old(empty.copy(editRevision=3)),a)) // Stable empty header retains its revision.
     }
-    @Test fun rolePlanExpectedIsImmutableAndSchema11CannotDetectAba()=H().use{h->
-        val mutable=linkedSetOf("r0");val frozen=ExpectedPersonRolePlan("a","p0",PersonRolePlan(mutable,"r0"))
+    @Test fun rolePlanExpectedIsImmutableAndRevisionRejectsAba()=H().use{h->
+        val mutable=linkedSetOf("r0");val frozen=ExpectedPersonRolePlan("a","p0",PersonRolePlan(mutable,"r0", editRevision = 0))
         mutable.clear();assertEquals(setOf("r0"),frozen.plan.roleIds)
         assertThrows(UnsupportedOperationException::class.java){(frozen.plan.roleIds as MutableSet).clear()}
-        val a=PersonRolePlan(emptySet(),null);val b=frozen.plan
+        val a=PersonRolePlan(emptySet(),null, editRevision = 0);val b=frozen.plan
         val old=ExpectedPersonRolePlan("a","p0",a)
         assertTrue(h.ops{it.plan("a","p0",old,b)} is OperationsResult.Value)
-        assertTrue(h.ops{it.plan("a","p0",frozen,a)} is OperationsResult.Value)
-        assertTrue(h.ops{it.plan("a","p0",old,b)} is OperationsResult.Value) // Explicit negative ABA proof.
+        assertTrue(h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",b.copy(editRevision=1)),a)} is OperationsResult.Value)
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.ops{it.plan("a","p0",old,b)})
     }
     @Test fun planWritesKeepOuterOutcomeCleanupAndAuthorityGates() {
         for(at in listOf("normal","stale","end-before","end-after","cleanup","rollback","queued","commit","after-commit","permission","generation","action"))H().use{h->
-            val empty=PersonRolePlan(emptySet(),null);val next=PersonRolePlan(setOf("r0"),"r0")
+            val empty=PersonRolePlan(emptySet(),null, editRevision = 0);val next=PersonRolePlan(setOf("r0"),"r0", editRevision = 0)
             val expected=ExpectedPersonRolePlan("a","p0",if(at in listOf("stale","rollback"))next else empty)
             var calls=0;var result:OperationsResult<Unit>?=null
             when(at){"end-before"->h.failEndBefore=true;"end-after"->h.failEndAfter=true;"cleanup"->h.dbCleanup={error("SYNTHETIC_CLEANUP")};"rollback"->h.failRollback=true;"commit"->h.beforeEnd={h.ready=false};"after-commit"->h.afterEnd={h.ready=false}}
@@ -322,7 +323,7 @@ class CoreWriterIntegrationTest {
             if(at=="stale")assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),result)
             val changed=at in listOf("normal","end-after","cleanup","after-commit","permission","generation","action")
             assertEquals(if(changed)1L else 0L,h.count("person_planned_roles"))
-            assertEquals(if(changed)1L else 0L,h.count("person_role_plans"))
+            assertEquals(2L,h.count("person_role_plans"))
             if(at in listOf("stale","normal"))assertEquals(WorkspaceWriteCompletion(if(at=="stale")WorkspaceWriteOutcome.ROLLED_BACK else WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE),h.completions.single())
             if(at.startsWith("end") || at=="rollback")assertEquals(WorkspaceWriteOutcome.UNKNOWN,h.completions.single().outcome)
             if(at=="cleanup")assertEquals(WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED,h.completions.single().cleanup)
@@ -330,27 +331,27 @@ class CoreWriterIntegrationTest {
         }
     }
     @Test fun planInsertFailureRollsBackRemovedAssignmentsAndConcurrentQueueRemainsSingle()=H().use{h->
-        val empty=PersonRolePlan(emptySet(),null);val a=PersonRolePlan(setOf("r0"),"r0")
+        val empty=PersonRolePlan(emptySet(),null, editRevision = 0);val a=PersonRolePlan(setOf("r0"),"r0", editRevision = 0)
         assertTrue(h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",empty),a)} is OperationsResult.Value)
-        h.exec("CREATE TRIGGER synthetic_plan_failure BEFORE INSERT ON person_role_plans BEGIN SELECT RAISE(ABORT,'SYNTHETIC_PLAN_FAILURE'); END")
+        h.exec("CREATE TRIGGER synthetic_plan_failure BEFORE UPDATE OF primaryRoleId ON person_role_plans BEGIN SELECT RAISE(ABORT,'SYNTHETIC_PLAN_FAILURE'); END")
         var calls=0
-        h.queue<OperationsResult<Unit>>(WorkspaceWriterFamily.OPERATIONS,{it is OperationsResult.Rejected},{null},{calls++}){OperationsStore(h.data,it){0}.plan("a","p0",ExpectedPersonRolePlan("a","p0",a),empty)}
+        h.queue<OperationsResult<Unit>>(WorkspaceWriterFamily.OPERATIONS,{it is OperationsResult.Rejected},{null},{calls++}){OperationsStore(h.data,it){0}.plan("a","p0",ExpectedPersonRolePlan("a","p0",a.copy(editRevision=1)),empty)}
         var busy:OperationsResult<Unit>?=null
         h.queue<OperationsResult<Unit>>(WorkspaceWriterFamily.OPERATIONS,{it is OperationsResult.Rejected},{OperationsResult.Rejected(OperationsFailure.STALE)},{busy=it}){error("Must not queue")}
         assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),busy);assertEquals(1,h.worker.jobs.size)
         h.worker.drain();h.main.drain();assertEquals(0,calls)
         val board=runBlocking{OperationsStore(h.data,h.context){0}.board("a")} as OperationsResult.Value
-        assertEquals(a,board.value.persons.single{it.person.id=="p0"}.plan)
+        assertEquals(a.copy(editRevision=1),board.value.persons.single{it.person.id=="p0"}.plan)
         assertEquals(WorkspaceWriteOutcome.UNKNOWN,h.completions.last().outcome)
-        assertEquals(1L,h.count("person_planned_roles"));assertEquals(1L,h.count("person_role_plans"))
+        assertEquals(1L,h.count("person_planned_roles"));assertEquals(2L,h.count("person_role_plans"))
     }
     @Test fun planForeignPersonAndDeletedRoleCannotChangeOtherData()=H().use{h->
-        h.exec("INSERT INTO persons VALUES('foreign-person','b','Foreign','foreign',0)")
-        val empty=PersonRolePlan(emptySet(),null);val chosen=PersonRolePlan(setOf("r0"),"r0")
+        h.exec("INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) VALUES('foreign-person','b','Foreign','foreign',0)")
+        val empty=PersonRolePlan(emptySet(),null, editRevision = 0);val chosen=PersonRolePlan(setOf("r0"),"r0", editRevision = 0)
         assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),h.ops{it.plan("a","foreign-person",ExpectedPersonRolePlan("a","foreign-person",empty),chosen)})
         h.exec("DELETE FROM roles WHERE id='r0'")
         assertEquals(OperationsResult.Rejected(OperationsFailure.NOT_FOUND),h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",empty),chosen)})
-        assertEquals(0L,h.count("person_planned_roles"));assertEquals(0L,h.count("person_role_plans"))
+        assertEquals(0L,h.count("person_planned_roles"));assertEquals(2L,h.count("person_role_plans"))
     }
     @Test fun roleRenameSecondOldEditorIsStale()=H().use{h->
         val original=h.roleRow()
@@ -368,7 +369,7 @@ class CoreWriterIntegrationTest {
     }
     @Test fun roleIdentityCaseWhitespaceAndCreateValidationAreExactBeforeWrites()=H().use{h->
         val original=h.roleRow()
-        h.exec("INSERT INTO roles VALUES('r1','a','Other','other',5),('foreign','b','Foreign','foreign',0)")
+        h.exec("INSERT INTO roles(id,actionId,name,normalizedName,createdAt) VALUES('r1','a','Other','other',5),('foreign','b','Foreign','foreign',0)")
         var writes=0
         h.db.beforePrepare={if(it.trimStart().startsWith("UPDATE roles",true) || it.trimStart().startsWith("DELETE FROM roles",true))writes++}
         for(expected in listOf(original.copy(name=original.name.lowercase()),original.copy(name=" ${original.name} "),original.copy(createdAt=99),original.copy(id="r1"),original.copy(actionId="b"))){
@@ -382,7 +383,7 @@ class CoreWriterIntegrationTest {
         assertEquals(OperationsResult.Rejected(OperationsFailure.INVALID),h.ops{it.role("a",original,"  ")})
         assertEquals(0,writes);assertEquals(original,h.roleRow())
         val renamed=value(h.ops{it.role("a",original," Mixed CASE ")})
-        assertEquals(original.copy(name=" Mixed CASE "),renamed)
+        assertEquals(original.copy(name=" Mixed CASE ",editRevision=1),renamed)
         val next=value(h.ops{it.role("a",renamed,"Next")})
         assertEquals(OperationsResult.Value(Unit),h.ops{it.deleteRole("a",next)})
         assertEquals(2L,h.count("roles"))
@@ -392,22 +393,22 @@ class CoreWriterIntegrationTest {
         for(kind in listOf("planned","live","task"))H().use{h->
             val role=h.roleRow()
             when(kind){
-                "planned"->assertTrue(h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",PersonRolePlan(emptySet(),null)),PersonRolePlan(setOf("r0"),"r0"))} is OperationsResult.Value)
-                "live"->h.exec("INSERT INTO person_operational_states VALUES('a','p0','r0','ON_SITE',NULL,1)")
-                else->h.exec("INSERT INTO tasks VALUES('t','a','Synthetic','NORMAL','OPEN',NULL,'r0',NULL,NULL,NULL,1,1,NULL)")
+                "planned"->assertTrue(h.ops{it.plan("a","p0",ExpectedPersonRolePlan("a","p0",PersonRolePlan(emptySet(),null, editRevision = 0)),PersonRolePlan(setOf("r0"),"r0", editRevision = 0))} is OperationsResult.Value)
+                "live"->h.exec("INSERT INTO person_operational_states(actionId,personId,currentRoleId,operationalStatus,currentPlaceLabel,updatedAt) VALUES('a','p0','r0','ON_SITE',NULL,1)")
+                else->h.exec("INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) VALUES('t','a','Synthetic','NORMAL','OPEN',NULL,'r0',NULL,NULL,NULL,1,1,NULL)")
             }
             assertEquals(OperationsResult.Rejected(OperationsFailure.IN_USE),h.ops{it.deleteRole("a",role)})
             assertEquals(role,h.roleRow());assertEquals(WorkspaceWriteOutcome.ROLLED_BACK,h.completions.last().outcome)
         }
     }
-    @Test fun roleFullValueCasStillCannotDetectSchema11Aba()=H().use{h->
+    @Test fun roleRevisionRejectsRenameAndDeleteAfterAba()=H().use{h->
         val a=h.roleRow();val b=value(h.ops{it.role("a",a,"B")})
         val again=value(h.ops{it.role("a",b,a.name)})
-        assertEquals(a,again)
-        assertTrue(h.ops{it.role("a",a,"Old editor after ABA")} is OperationsResult.Value)
+        assertEquals(a.copy(editRevision=2),again)
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.ops{it.role("a",a,"Old editor after ABA")})
         val current=h.roleRow();val changed=value(h.ops{it.role("a",current,"B again")})
-        assertEquals(current,value(h.ops{it.role("a",changed,current.name)}))
-        assertTrue(h.ops{it.deleteRole("a",current)} is OperationsResult.Value) // Negative ABA proof for delete too.
+        assertEquals(current.copy(editRevision=current.editRevision+2),value(h.ops{it.role("a",changed,current.name)}))
+        assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),h.ops{it.deleteRole("a",current)})
     }
     @Test fun renameAndDeleteKeepOuterCleanupAuthorityAndSingleDispatch(){
         for(delete in listOf(false,true))for(at in listOf("normal","stale","end-before","end-after","rollback","db-cleanup","key-cleanup","initial","queued","commit","after-commit","publication","permission","generation","action"))H().use{h->
@@ -431,7 +432,7 @@ class CoreWriterIntegrationTest {
             assertFalse(h.epoch.ramReuseEnabled)
         }
     }
-    @Test fun actionAndOperationalFullValuesCanRepeatWithoutPersistentRevision()=H().use{h->
+    @Test fun actionContentCanRepeatButOperationalRevisionCannot()=H().use{h->
         val a=h.actionRow()
         fun fields(title:String)=NewAction(title,a.description,a.startAt,a.expectedEndAt)
         fun change(expected:Action,title:String)=h.write<ActionChangeResult>(WorkspaceWriterFamily.ACTION_EDIT,{it is ActionChangeResult.Rejected},{null}){ActionWriterStore(h.data,it).change(expected,fields(title))}
@@ -444,7 +445,7 @@ class CoreWriterIntegrationTest {
             OperationsStore(h.data,c){original.updatedAt}.snapshot("a","p0",expected,status,null,"")
         }
         value(update(original,OperationalStatus.ON_SITE));value(update(h.state(),original.status))
-        assertEquals(original,h.state());assertTrue(update(original,OperationalStatus.LEFT) is OperationsResult.Value)
+        assertEquals(original.copy(editRevision=2),h.state());assertEquals(OperationsResult.Rejected(OperationsFailure.STALE),update(original,OperationalStatus.LEFT))
     }
     @Test fun crossFamilyPendingUsesOneEpochAndTaskProofCannotBypassIt()=H().use { h->
         var personCalls=0;var roleResult:OperationsResult<Role>?=null;var taskResult:OperationsResult<Task>?=null
@@ -478,7 +479,7 @@ class CoreWriterIntegrationTest {
             if(failure=="cleanup")h.dbCleanup={error("SYNTHETIC_CLEANUP")}
             var calls=0
             h.queue<OperationsResult<Unit>>(WorkspaceWriterFamily.OPERATIONS,{it is OperationsResult.Rejected},{null},{calls++;assertEquals(OperationsResult.Rejected(OperationsFailure.INVALID),it)}){
-                h.data.operations.insertRole(RoleRow("temporary","a","Synthetic temporary","synthetic temporary",1))
+                h.data.operations.insertRole(RoleRow("temporary","a","Synthetic temporary","synthetic temporary",1, editRevision = 0))
                 OperationsResult.Rejected(OperationsFailure.INVALID)
             }
             h.worker.drain();h.main.drain()
@@ -566,8 +567,8 @@ class CoreWriterIntegrationTest {
         assertEquals(0,writes);assertEquals(a,h.materialRow(a.id))
     }
     @Test fun materialInvalidMissingForeignReferencesAndActionsRollbackWithoutChanges()=H().use{h->
-        h.exec("INSERT INTO persons VALUES('foreign','b','Synthetic foreign','synthetic foreign',0)")
-        h.exec("INSERT INTO tasks VALUES('foreign-task','b','Synthetic','NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
+        h.exec("INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) VALUES('foreign','b','Synthetic foreign','synthetic foreign',0)")
+        h.exec("INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) VALUES('foreign-task','b','Synthetic','NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
         val a=value(h.material{it.create("a",MaterialInput("A"))})
         for(input in listOf(MaterialInput(" "),MaterialInput("x".repeat(121)),MaterialInput("A","x".repeat(41)),MaterialInput("A",placeLabel="x".repeat(81)))){
             assertEquals(OperationsResult.Rejected(OperationsFailure.INVALID),h.material{it.create("a",input)})

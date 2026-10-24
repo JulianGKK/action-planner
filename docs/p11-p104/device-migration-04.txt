@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P104,migration,MIGRATION,version=12,all_legacy_columns_SHA256_equal=true,revision_zero=true,headers_complete=true,foreign_keys=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P104,migration,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false,persisted_revisions=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P104 PASS migration
+INSTRUMENTATION_CODE: -1

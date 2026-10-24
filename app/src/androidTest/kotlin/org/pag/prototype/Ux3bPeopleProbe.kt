@@ -38,14 +38,14 @@ class Ux3bPeopleProbe : Instrumentation() {
     }
     private class People : PersonRepository {
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) = publish(PersonResult.Value(emptyList()))
-        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "Motte", 0)))
+        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "Motte", 0, editRevision = 0)))
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
         override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
     private class Ops : OperationsRepository {
-        val roles = listOf(Role("plan", "synthetic", "Blockierende", 0), Role("current", "synthetic", "Support", 0))
-        var person = OperationalPerson(Person("p", "synthetic", "Motte", 0), PersonRolePlan(setOf("plan"), "plan"),
-            PersonOperationalState("synthetic", "p", "current", OperationalStatus.ON_SITE, null, System.currentTimeMillis()))
+        val roles = listOf(Role("plan", "synthetic", "Blockierende", 0, editRevision = 0), Role("current", "synthetic", "Support", 0, editRevision = 0))
+        var person = OperationalPerson(Person("p", "synthetic", "Motte", 0, editRevision = 0), PersonRolePlan(setOf("plan"), "plan", editRevision = 0),
+            PersonOperationalState("synthetic", "p", "current", OperationalStatus.ON_SITE, null, System.currentTimeMillis(), editRevision = 0))
         var reads = 0
         override fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit) { reads++; publish(OperationsResult.Value(OperationalBoard(actionId, ActionStatus.ACTIVE, roles, listOf(person)))) }
         override fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit) {}

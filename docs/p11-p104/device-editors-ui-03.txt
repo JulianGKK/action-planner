@@ -1,0 +1,9 @@
+INSTRUMENTATION_STATUS: stream=P104,editors_ui,FAILURE,java.lang.IllegalStateException: P104 target not visible in bounded scroll
+	at org.pag.prototype.P104EditorCasProbe.sweep(P104EditorCasProbe.kt:82)
+	at org.pag.prototype.P104EditorCasProbe.onStart(P104EditorCasProbe.kt:128)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P104 FAIL editors_ui
+INSTRUMENTATION_CODE: 0

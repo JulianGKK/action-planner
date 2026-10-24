@@ -36,7 +36,8 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
 }
 @Composable internal fun ActionWorkspaceHeader(model: ProductViewModel) {
     val action = model.selected ?: return
-    FormOutlinedButton(model::back, enabled = !model.saving && !model.personSaving && !model.sensitiveBusy && !model.operations.busy && !model.tasks.busy && !model.protocol.busy && !model.material.busy && !model.expenses.busy && !model.memoryReports.busy && !model.documents.busy) { Text("‹ Aktionen") }
+    if(model.hasCasEditorDraft)Text("Ungespeicherter Entwurf: Beim Verlassen der Bearbeitung oder Bereichswechsel wird er verworfen.")
+    FormOutlinedButton(model::back, enabled = !model.saving && !model.personSaving && !model.sensitiveBusy && !model.operations.busy && !model.tasks.busy && !model.protocol.busy && !model.material.busy && !model.expenses.busy && !model.memoryReports.busy && !model.documents.busy) { Text(if(model.hasCasEditorDraft)"‹ Aktionen · Entwurf verwerfen" else "‹ Aktionen") }
     Text(action.title, Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineMedium)
     Text(statusLabel(action.status).uppercase(), style = MaterialTheme.typography.labelLarge)
 }

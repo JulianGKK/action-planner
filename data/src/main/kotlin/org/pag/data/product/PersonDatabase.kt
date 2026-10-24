@@ -10,11 +10,11 @@ import org.pag.domain.PersonRules
     parentColumns = ["id"], childColumns = ["actionId"], onDelete = ForeignKey.CASCADE)],
     indices = [Index(value = ["actionId"]), Index(value = ["actionId", "id"], unique = true), Index(value = ["actionId", "pseudonymNormalized"], unique = true)])
 internal data class PersonRow(@PrimaryKey val id: String, val actionId: String,
-    val pseudonym: String, val pseudonymNormalized: String, val createdAt: Long) {
+    val pseudonym: String, val pseudonymNormalized: String, val createdAt: Long, @ColumnInfo(defaultValue="0") val editRevision:Long) {
     fun model(): Person {
-        if (id.isBlank() || actionId.isBlank() || !PersonRules.valid(pseudonym) ||
+        if (editRevision<0 || id.isBlank() || actionId.isBlank() || !PersonRules.valid(pseudonym) ||
             pseudonymNormalized != PersonRules.normalized(pseudonym)) throw ProductStorageFailure()
-        return Person(id, actionId, pseudonym, createdAt)
+        return Person(id, actionId, pseudonym, createdAt, editRevision = editRevision)
     }
 }
 @Dao internal interface PersonDao {
@@ -25,8 +25,8 @@ internal data class PersonRow(@PrimaryKey val id: String, val actionId: String,
     @Query("SELECT * FROM persons WHERE actionId = :actionId AND pseudonymNormalized = :normalized")
     suspend fun samePseudonym(actionId: String, normalized: String): PersonRow?
     @Insert suspend fun insert(row: PersonRow)
-    @Query("UPDATE persons SET pseudonym = :pseudonym, pseudonymNormalized = :normalized WHERE actionId = :actionId AND id = :id")
-    suspend fun rename(actionId: String, id: String, pseudonym: String, normalized: String): Int
+    @Query("UPDATE persons SET pseudonym = :pseudonym, pseudonymNormalized = :normalized, editRevision=editRevision+1 WHERE actionId = :actionId AND id = :id AND editRevision=:expectedRevision AND typeof(editRevision)='integer' AND editRevision>=0 AND editRevision<9223372036854775807")
+    suspend fun rename(actionId: String, id: String, pseudonym: String, normalized: String, expectedRevision:Long): Int
 }
 internal val ACTION_MIGRATION_2_3 = object : Migration(2, 3) {
     override suspend fun migrate(connection: SQLiteConnection) {

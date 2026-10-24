@@ -212,6 +212,7 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
     }
 }
 private fun personErrorLabel(reason: PersonRejection) = when (reason) {
+    PersonRejection.REVISION_EXHAUSTED -> "Dieser Personenstand kann nicht weiter geändert werden (Revisionsgrenze)."
     PersonRejection.STALE -> "Die Person wurde inzwischen geändert. Dein Entwurf bleibt erhalten. Bitte den aktuellen Stand neu laden."
     PersonRejection.ACTION_NOT_FOUND -> "Die Aktion ist nicht mehr vorhanden."
     PersonRejection.NOT_FOUND -> "Die Person ist in dieser Aktion nicht vorhanden."

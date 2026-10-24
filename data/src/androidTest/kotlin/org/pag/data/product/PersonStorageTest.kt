@@ -109,7 +109,7 @@ class PersonStorageTest {
         r.createPerson("synthetic-missing","synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.ACTION_NOT_FOUND),it) }
         r.listPersons("synthetic-missing") { assertEquals(PersonResult.Rejected(PersonRejection.ACTION_NOT_FOUND),it) }
         r.getPerson("synthetic-missing","synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.ACTION_NOT_FOUND),it) }
-        r.updatePerson("synthetic-a",Person("synthetic-missing","synthetic-a","synthetic",0),"synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_FOUND),it) }
+        r.updatePerson("synthetic-a",Person("synthetic-missing","synthetic-a","synthetic",0, editRevision = 0),"synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_FOUND),it) }
         assertTrue(list(r).isEmpty())
     }
     @Test fun draftAndDeletionPendingDenyReadsAndWrites() {
@@ -119,7 +119,7 @@ class PersonStorageTest {
             r.listPersons("synthetic-a") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
             r.getPerson("synthetic-a","synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
             r.createPerson("synthetic-a","synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
-            r.updatePerson("synthetic-a",Person("synthetic","synthetic-a","synthetic",0),"synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
+            r.updatePerson("synthetic-a",Person("synthetic","synthetic-a","synthetic",0, editRevision = 0),"synthetic") { assertEquals(PersonResult.Rejected(PersonRejection.NOT_ALLOWED),it) }
         }
     }
     @Test fun activeAndCompletedRemainReadableButRejectWrites() {
@@ -183,18 +183,18 @@ class PersonStorageTest {
     @Test fun foreignKeyAndUniqueIndexAreEnforced() {
         val inv=initialized(); val r=repo(inv); create(r)
         assertThrows(RuntimeException::class.java) { ActionDatabaseAccess(app).use(inv.database,key,context()) { db ->
-            db.withWriteTransaction { db.persons().insert(PersonRow("synthetic-orphan","synthetic-missing","synthetic","synthetic",0)) }
+            db.withWriteTransaction { PersonRow("synthetic-orphan","synthetic-missing","synthetic","synthetic",0, editRevision = 0).let{seeded->db.persons().insert(seeded);db.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))} }
         } }
         assertThrows(RuntimeException::class.java) { ActionDatabaseAccess(app).use(inv.database,key,context()) { db ->
-            db.withWriteTransaction { db.persons().insert(PersonRow("synthetic-duplicate","synthetic-a","SYNTHETIC-01","synthetic-01",0)) }
+            db.withWriteTransaction { PersonRow("synthetic-duplicate","synthetic-a","SYNTHETIC-01","synthetic-01",0, editRevision = 0).let{seeded->db.persons().insert(seeded);db.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))} }
         } }
         assertEquals(1,list(r).size)
     }
     @Test fun inconsistentPersonIsBlockedNotRepairedByRename() {
-        val inv=initialized(); val row=PersonRow("synthetic-invalid","synthetic-a","synthetic-visible","synthetic-wrong",0)
+        val inv=initialized(); val row=PersonRow("synthetic-invalid","synthetic-a","synthetic-visible","synthetic-wrong",0, editRevision = 0)
         ActionDatabaseAccess(app).use(inv.database,key,context()) { db -> db.withWriteTransaction { db.persons().insert(row) } }
         var blocked=false
-        repo(inv,blocked={blocked=true}).updatePerson(row.actionId,Person(row.id,row.actionId,row.pseudonym,row.createdAt),"synthetic-repair") { fail("P3A-NO-INVALID-SUCCESS") }
+        repo(inv,blocked={blocked=true}).updatePerson(row.actionId,Person(row.id,row.actionId,row.pseudonym,row.createdAt, editRevision = 0),"synthetic-repair") { fail("P3A-NO-INVALID-SUCCESS") }
         assertTrue(blocked)
         ActionDatabaseAccess(app).use(inv.database,key,context()) { db -> assertEquals(row,db.persons().get(row.actionId,row.id)) }
     }
@@ -240,7 +240,7 @@ class PersonStorageTest {
         val inv=legacyV2()
         B2Native.open(inv.database,key,context(AccessScope.MAINTENANCE)).use { db ->
             db.execSQL("CREATE TABLE persons (id TEXT NOT NULL, actionId TEXT NOT NULL, pseudonym TEXT NOT NULL, pseudonymNormalized TEXT NOT NULL, createdAt INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(actionId) REFERENCES actions(id) ON UPDATE NO ACTION ON DELETE CASCADE)")
-            db.execSQL("INSERT INTO persons VALUES('synthetic-preserved','synthetic-a','synthetic-existing','synthetic-existing',0)")
+            db.execSQL("INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) VALUES('synthetic-preserved','synthetic-a','synthetic-existing','synthetic-existing',0)")
         }
         assertThrows(RuntimeException::class.java) { ActionDatabaseAccess(app).use(inv.database,key,context()) {} }
         B2Native.open(inv.database,key,context(AccessScope.MAINTENANCE),true).use { db ->

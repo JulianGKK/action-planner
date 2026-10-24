@@ -13,14 +13,14 @@ import org.pag.domain.*
     indices=[Index(value=["actionId","id"],unique=true),Index(value=["actionId","assigneePersonId"]),Index(value=["actionId","assigneeRoleId"]),Index(value=["actionId","affectedPersonId"])])
 internal data class TaskRow(@PrimaryKey val id:String,val actionId:String,val title:String,val priority:String,val status:String,
     val assigneePersonId:String?,val assigneeRoleId:String?,val affectedPersonId:String?,val dueAt:Long?,val sourceTemplateKey:String?,
-    val createdAt:Long,val updatedAt:Long,val completedAt:Long?) {
+    val createdAt:Long,val updatedAt:Long,val completedAt:Long?,@ColumnInfo(defaultValue="0") val editRevision:Long) {
     fun model():Task {
-        val t=Task(id,actionId,title,TaskPriority.valueOf(priority),TaskStatus.valueOf(status),assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt)
-        if(!TaskRules.valid(t.input()) || title!=title.trim() || (t.status==TaskStatus.DONE)!=(completedAt!=null))throw ProductStorageFailure()
+        val t=Task(id,actionId,title,TaskPriority.valueOf(priority),TaskStatus.valueOf(status),assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt, editRevision = editRevision)
+        if(editRevision<0 || !TaskRules.valid(t.input()) || title!=title.trim() || (t.status==TaskStatus.DONE)!=(completedAt!=null))throw ProductStorageFailure()
         return t
     }
 }
-internal fun Task.row()=TaskRow(id,actionId,title,priority.name,status.name,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt)
+internal fun Task.row()=TaskRow(id,actionId,title,priority.name,status.name,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt, editRevision = editRevision)
 @Entity(tableName="task_events",foreignKeys=[ForeignKey(entity=TaskRow::class,parentColumns=["actionId","id"],childColumns=["actionId","taskId"],onDelete=ForeignKey.CASCADE)],indices=[Index(value=["actionId","taskId"])])
 internal data class TaskEventRow(@PrimaryKey val id:String,val actionId:String,val taskId:String,val type:String,val occurredAt:Long) {
     fun model()=TaskEvent(id,actionId,taskId,TaskEventType.valueOf(type),occurredAt)
@@ -33,9 +33,12 @@ internal data class TaskEventRow(@PrimaryKey val id:String,val actionId:String,v
     @Query("SELECT COUNT(*) FROM task_events WHERE actionId=:actionId") suspend fun eventCount(actionId:String):Long
     @Query("SELECT COUNT(*) FROM tasks WHERE actionId=:actionId AND assigneeRoleId=:roleId") suspend fun roleReferences(actionId:String,roleId:String):Int
     @Insert suspend fun insert(row:TaskRow)
-    @Update suspend fun update(row:TaskRow):Int
+    @Query("UPDATE tasks SET title=:title,priority=:priority,status=:status,assigneePersonId=:person,assigneeRoleId=:role,affectedPersonId=:affected,dueAt=:due,updatedAt=:time,completedAt=:completed,editRevision=editRevision+1 WHERE actionId=:actionId AND id=:id AND editRevision=:expectedRevision AND typeof(editRevision)='integer' AND editRevision>=0 AND editRevision<9223372036854775807")
+    suspend fun change(actionId:String,id:String,expectedRevision:Long,title:String,priority:String,status:String,person:String?,role:String?,affected:String?,due:Long?,time:Long,completed:Long?):Int
+    @Query("UPDATE tasks SET editRevision=editRevision+1 WHERE actionId=:actionId AND id=:id AND editRevision=:expectedRevision AND editRevision>=0 AND editRevision<9223372036854775807")
+    suspend fun claimDelete(actionId:String,id:String,expectedRevision:Long):Int
     @Insert suspend fun event(row:TaskEventRow)
-    @Query("DELETE FROM tasks WHERE actionId=:actionId AND id=:id") suspend fun delete(actionId:String,id:String):Int
+    @Query("DELETE FROM tasks WHERE actionId=:actionId AND id=:id AND editRevision=:expectedRevision") suspend fun delete(actionId:String,id:String,expectedRevision:Long):Int
 }
 internal val ACTION_MIGRATION_5_6=object:Migration(5,6) {
     override suspend fun migrate(connection:SQLiteConnection) {

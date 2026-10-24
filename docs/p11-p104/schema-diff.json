@@ -1,0 +1,72 @@
+[
+  {
+    "table": "persons",
+    "added_fields": [
+      {
+        "fieldPath": "editRevision",
+        "columnName": "editRevision",
+        "affinity": "INTEGER",
+        "notNull": true,
+        "defaultValue": "0"
+      }
+    ],
+    "indices_equal": true,
+    "foreign_keys_equal": true
+  },
+  {
+    "table": "roles",
+    "added_fields": [
+      {
+        "fieldPath": "editRevision",
+        "columnName": "editRevision",
+        "affinity": "INTEGER",
+        "notNull": true,
+        "defaultValue": "0"
+      }
+    ],
+    "indices_equal": true,
+    "foreign_keys_equal": true
+  },
+  {
+    "table": "person_role_plans",
+    "added_fields": [
+      {
+        "fieldPath": "editRevision",
+        "columnName": "editRevision",
+        "affinity": "INTEGER",
+        "notNull": true,
+        "defaultValue": "0"
+      }
+    ],
+    "indices_equal": true,
+    "foreign_keys_equal": true
+  },
+  {
+    "table": "person_operational_states",
+    "added_fields": [
+      {
+        "fieldPath": "editRevision",
+        "columnName": "editRevision",
+        "affinity": "INTEGER",
+        "notNull": true,
+        "defaultValue": "0"
+      }
+    ],
+    "indices_equal": true,
+    "foreign_keys_equal": true
+  },
+  {
+    "table": "tasks",
+    "added_fields": [
+      {
+        "fieldPath": "editRevision",
+        "columnName": "editRevision",
+        "affinity": "INTEGER",
+        "notNull": true,
+        "defaultValue": "0"
+      }
+    ],
+    "indices_equal": true,
+    "foreign_keys_equal": true
+  }
+]

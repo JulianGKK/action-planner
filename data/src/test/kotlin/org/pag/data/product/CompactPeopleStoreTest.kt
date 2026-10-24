@@ -29,9 +29,9 @@ class CompactPeopleStoreTest {
         assertEquals(exactCount,result.size.toLong())
         return result
     }
-    private fun expectedPerson(i: Int,roles: Int)=OperationalPerson(Person("p$i","a","Synthetic person $i",i.toLong()),
-        PersonRolePlan(setOf("r${i%roles}","r${(i+1)%roles}"),"r${i%roles}"),
-        PersonOperationalState("a","p$i","r${i%roles}",OperationalStatus.ON_SITE,null,1))
+    private fun expectedPerson(i: Int,roles: Int)=OperationalPerson(Person("p$i","a","Synthetic person $i",i.toLong(), editRevision = 0),
+        PersonRolePlan(setOf("r${i%roles}","r${(i+1)%roles}"),"r${i%roles}", editRevision = 0),
+        PersonOperationalState("a","p$i","r${i%roles}",OperationalStatus.ON_SITE,null,1, editRevision = 0))
 
     @Test fun allRealisticSizesHaveCompletePagingDetailsAndSeparateMedianP95() {
         for((people,tasks,history) in listOf(Triple(20,40,12),Triple(100,250,20),Triple(200,1000,5))) ActiveCoreStoreTest.H(people,tasks,history).use { h ->
@@ -192,7 +192,7 @@ class CompactPeopleStoreTest {
         for(sql in listOf("UPDATE person_planned_roles SET roleId='foreign' WHERE roleId='r0'", "UPDATE person_role_plans SET primaryRoleId='foreign'", "UPDATE person_operational_states SET currentRoleId='foreign'")) ActiveCoreStoreTest.H().use { h ->
             h.exec("PRAGMA foreign_keys=OFF")
             h.exec("INSERT INTO actions VALUES('b','Synthetic','Synthetic',1,2,0,'ACTIVE','SENSITIVE',NULL)")
-            h.exec("INSERT INTO roles VALUES('foreign','b','Synthetic','synthetic',0)")
+            h.exec("INSERT INTO roles(id,actionId,name,normalizedName,createdAt) VALUES('foreign','b','Synthetic','synthetic',0)")
             h.exec(sql)
             denied(BoundedActiveStatus.INVALID_DATA,h.peopleRead());assertEquals(0,h.db.blobReads)
         }

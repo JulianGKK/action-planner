@@ -92,6 +92,7 @@ internal class BoundedActiveStore(private val sql: PooledConnection, private val
             val people = linkedMapOf<String, Person>()
             val roles = linkedMapOf<String, Pair<Role, String>>()
             val plans = HashMap<String, String?>()
+            val planRevisions=HashMap<String,Long>()
             val assignments = HashMap<String, MutableSet<String>>()
             val states = HashMap<String, PersonOperationalState>()
             for (size in sizes) scan(size, actionId) { t, texts, numbers ->
@@ -106,12 +107,12 @@ internal class BoundedActiveStore(private val sql: PooledConnection, private val
                         }
                         "persons" -> {
                             if (text(1) != actionId) invalid()
-                            val row = PersonRow(text(0), text(1), text(2), text(3), number(0))
+                            val row = PersonRow(text(0), text(1), text(2), text(3), number(0), editRevision = number(1))
                             if (people.put(row.id, row.model()) != null) invalid()
                         }
                         "roles" -> {
                             if (text(1) != actionId) invalid()
-                            val row = RoleRow(text(0), text(1), text(2), text(3), number(0))
+                            val row = RoleRow(text(0), text(1), text(2), text(3), number(0), editRevision = number(1))
                             if (roles.put(row.id, row.model() to row.normalizedName) != null) invalid()
                         }
                         "person_planned_roles" -> {
@@ -122,10 +123,12 @@ internal class BoundedActiveStore(private val sql: PooledConnection, private val
                             if (text(0) != actionId || text(1) !in people || plans.containsKey(text(1))) invalid()
                             if (texts[2] != null && texts[2] !in assignments[text(1)].orEmpty()) invalid()
                             plans[text(1)] = texts[2]
+                            if(number(0)<0)invalid()
+                            planRevisions[text(1)]=number(0)
                         }
                         "person_operational_states" -> {
                             if (text(0) != actionId || text(1) !in people || (texts[2] != null && texts[2] !in roles)) invalid()
-                            val row = OperationalRow(text(0), text(1), texts[2], text(3), texts[4], number(0))
+                            val row = OperationalRow(text(0), text(1), texts[2], text(3), texts[4], number(0), editRevision = number(1))
                             if (states.put(text(1), row.model()) != null) invalid()
                         }
                     }
@@ -136,7 +139,7 @@ internal class BoundedActiveStore(private val sql: PooledConnection, private val
             val persons = people.values.sortedWith(compareBy<Person> { it.createdAt }.thenBy { it.id }).map { p ->
                 gate()
                 val ids = assignments[p.id].orEmpty()
-                val plan = PersonRolePlan(ids, plans[p.id])
+                val plan = PersonRolePlan(ids, plans[p.id], editRevision = planRevisions[p.id]?:invalid())
                 if (!OperationalRules.validPlan(ids, plan.primaryRoleId)) invalid()
                 OperationalPerson(p, plan, states[p.id] ?: invalid())
             }
@@ -147,11 +150,11 @@ internal class BoundedActiveStore(private val sql: PooledConnection, private val
     }
 
     private fun units(rows: Long, fields: Long, bytes: Long, copies: Long): ActiveWorkspaceBudget.Units = checked {
-        ActiveWorkspaceBudget.Units(objects = Math.multiplyExact(rows, copies * 8),
+        ActiveWorkspaceBudget.Units(objects = Math.multiplyExact(rows, copies * 9),
             strings = Math.multiplyExact(fields, copies), utf16Units = Math.multiplyExact(bytes, copies),
-            arrays = Math.multiplyExact(fields, copies), arrayPayloadBytes = Math.multiplyExact(bytes, copies),
+            arrays = Math.multiplyExact(fields, copies), arrayPayloadBytes = Math.addExact(Math.multiplyExact(bytes,copies),Math.multiplyExact(rows,copies*8)),
             lists = 16, listCapacity = Math.multiplyExact(rows, copies),
-            maps = 8, mapCapacity = Math.multiplyExact(rows, copies),
+            maps = 9, mapCapacity = Math.multiplyExact(rows, copies),
             references = Math.multiplyExact(rows, copies * 16))
     }
     private fun <T> checked(work: () -> T): T = try { work() }
@@ -258,12 +261,12 @@ internal class BoundedActiveStore(private val sql: PooledConnection, private val
         private val tables = listOf(
             Table("actions", "id", listOf(Text("id"), Text("title"), Text("description"), Text("status"), Text("sensitivity")),
                 listOf(Number("startAt"), Number("expectedEndAt"), Number("createdAt"), Number("completedAt", true))),
-            Table("persons", "actionId", listOf(Text("id"), Text("actionId"), Text("pseudonym"), Text("pseudonymNormalized")), listOf(Number("createdAt"))),
-            Table("roles", "actionId", listOf(Text("id"), Text("actionId"), Text("name"), Text("normalizedName")), listOf(Number("createdAt"))),
+            Table("persons", "actionId", listOf(Text("id"), Text("actionId"), Text("pseudonym"), Text("pseudonymNormalized")), listOf(Number("createdAt"),Number("editRevision"))),
+            Table("roles", "actionId", listOf(Text("id"), Text("actionId"), Text("name"), Text("normalizedName")), listOf(Number("createdAt"),Number("editRevision"))),
             Table("person_planned_roles", "actionId", listOf(Text("actionId"), Text("personId"), Text("roleId")), emptyList()),
-            Table("person_role_plans", "actionId", listOf(Text("actionId"), Text("personId"), Text("primaryRoleId", true)), emptyList()),
+            Table("person_role_plans", "actionId", listOf(Text("actionId"), Text("personId"), Text("primaryRoleId", true)), listOf(Number("editRevision"))),
             Table("person_operational_states", "actionId", listOf(Text("actionId"), Text("personId"), Text("currentRoleId", true),
-                Text("operationalStatus"), Text("currentPlaceLabel", true)), listOf(Number("updatedAt")))
+                Text("operationalStatus"), Text("currentPlaceLabel", true)), listOf(Number("updatedAt"),Number("editRevision")))
         )
     }
 }

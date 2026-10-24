@@ -19,10 +19,10 @@ class OperationsRulesTest {
     @Test fun placeTrimsAndBlankMeansAbsent(){assertEquals("Gesa 1",OperationalRules.place(" Gesa 1 ",OperationalStatus.IN_CUSTODY));assertNull(OperationalRules.place(" ",OperationalStatus.IN_CUSTODY));assertNull(OperationalRules.place("Gesa 1",OperationalStatus.ON_SITE))}
     @Test fun placeBoundCountsUnicode(){assertTrue(OperationalRules.validPlace("😀".repeat(80)));assertFalse(OperationalRules.validPlace("😀".repeat(81)))}
     private fun board():OperationalBoard {
-        val role=Role("r","a","Blockierende",0)
-        fun p(id:String,status:OperationalStatus,place:String?,roleId:String?)=OperationalPerson(Person(id,"a",id,0),PersonRolePlan(setOf("r"),"r"),PersonOperationalState("a",id,roleId,status,place,1))
+        val role=Role("r","a","Blockierende",0, editRevision = 0)
+        fun p(id:String,status:OperationalStatus,place:String?,roleId:String?)=OperationalPerson(Person(id,"a",id,0, editRevision = 0),PersonRolePlan(setOf("r"),"r", editRevision = 0),PersonOperationalState("a",id,roleId,status,place,1, editRevision = 0))
         return OperationalBoard("a",ActionStatus.ACTIVE,listOf(role),listOf(p("Motte",OperationalStatus.IN_CUSTODY,"Gesa 1",null),p("Meise",OperationalStatus.IN_CUSTODY,"Gesa 2",null),p("Supporter",OperationalStatus.ON_SITE,null,"r")))
     }
     @Test fun countsDoNotCountCustodyAsCurrentFunction(){assertEquals(2,board().count(OperationalStatus.IN_CUSTODY));assertEquals(1,board().roleCount("r"));assertEquals(listOf("Gesa 1","Gesa 2"),board().placeSuggestions)}
-    @Test fun preferredRolesFirst(){val b=board();val other=Role("s","a","Andere",0);assertEquals(listOf(b.roles[0],other),b.copy(roles=listOf(other)+b.roles).preferredRoles("Motte"))}
+    @Test fun preferredRolesFirst(){val b=board();val other=Role("s","a","Andere",0, editRevision = 0);assertEquals(listOf(b.roles[0],other),b.copy(roles=listOf(other)+b.roles).preferredRoles("Motte"))}
 }

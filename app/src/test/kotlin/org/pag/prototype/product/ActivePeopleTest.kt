@@ -33,7 +33,7 @@ class ActivePeopleTest {
     private class People : PersonRepository {
         var lists = 0
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) { lists++ }
-        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0)))
+        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "synthetic", 0, editRevision = 0)))
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
         override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
@@ -78,9 +78,9 @@ class ActivePeopleTest {
     private val session = Session(); private val actions = Actions(); private val people = People()
     private val ops = Ops(); private val tasks = Tasks(); private val protection = Protection()
     private val model = ProductViewModel(session, actions, ProductStorageState.READY_TO_OPEN, people, protection, ops, tasks) {}
-    private val person = OperationalPerson(Person("p", "a", "synthetic", 0), PersonRolePlan(setOf("r"), "r"), null)
-    private var board = OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r", "a", "Support", 0)), listOf(person))
-    private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null)
+    private val person = OperationalPerson(Person("p", "a", "synthetic", 0, editRevision = 0), PersonRolePlan(setOf("r"), "r", editRevision = 0), null)
+    private var board = OperationalBoard("a", ActionStatus.ACTIVE, listOf(Role("r", "a", "Support", 0, editRevision = 0)), listOf(person))
+    private val task = Task("t", "a", "synthetic task", TaskPriority.HIGH, TaskStatus.OPEN, null, "r", null, null, null, 0, 0, null, editRevision = 0)
     private val taskBoard = TaskBoard("a", listOf(task), emptyList())
     private fun open() = model.detail("a")
     private fun complete() {
@@ -90,9 +90,9 @@ class ActivePeopleTest {
     private val zone = java.time.ZoneId.of("Europe/Berlin")
     private val now = java.time.ZonedDateTime.of(2026, 10, 13, 14, 0, 0, 0, zone).toInstant().toEpochMilli()
     private fun live(status: OperationalStatus = OperationalStatus.ON_SITE, time: Long = now, role: String? = "current", place: String? = null) =
-        person.copy(state = PersonOperationalState("a", "p", role, status, place, time))
+        person.copy(state = PersonOperationalState("a", "p", role, status, place, time, editRevision = 0))
     private fun openPeople() {
-        board = board.copy(roles = board.roles + Role("current", "a", "Hummel", 0), persons = listOf(live()))
+        board = board.copy(roles = board.roles + Role("current", "a", "Hummel", 0, editRevision = 0), persons = listOf(live()))
         open(); complete(); model.activeArea(ActiveArea.PERSONS); complete()
     }
     @Test fun summaryCountsExistingStatusesAndOmitsZeros() {
@@ -102,7 +102,7 @@ class ActivePeopleTest {
     }
     @Test fun emptySummaryIsHonest() { assertEquals(listOf("Noch keine Personen"), activePeopleSummary(board.copy(persons = emptyList()))) }
     @Test fun currentRoleIsNeverReplacedByPlannedRole() {
-        val b = board.copy(roles = board.roles + Role("current", "a", "Hummel", 0))
+        val b = board.copy(roles = board.roles + Role("current", "a", "Hummel", 0, editRevision = 0))
         assertEquals("Hummel", activePersonCard(live(), b, now, zone).function)
         assertEquals("Keine Funktion", activePersonCard(live(role = null), b, now, zone).function)
         assertEquals("Keine Funktion", activePersonCard(live(role = "unknown"), b, now, zone).function)

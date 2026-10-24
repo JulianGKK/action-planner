@@ -8,6 +8,8 @@ import org.pag.domain.*
 class CoreReadAdmissionBudgetTest {
     private val r=ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES
     private val t=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES
+    private val sr=ActiveWorkspaceBudget.estimateUnits(CoreReadAdmission.revisionScratch.retained).second
+    private val st=ActiveWorkspaceBudget.estimateUnits(CoreReadAdmission.revisionScratch.transition).second
     private fun units(bytes:Long)=ActiveWorkspaceBudget.Units(arrays=1,arrayPayloadBytes=bytes-71)
     private fun plan(retained:Long,transition:Long,work:suspend ()->Unit={})=
         PreparedCoreRead(ActiveCoreReservation(units(retained),units(transition)),work)
@@ -15,7 +17,7 @@ class CoreReadAdmissionBudgetTest {
     @Test fun exactSeparateLimitsAndEachNextByteAreCheckedBeforeMaterialization() = runBlocking {
         for((retained,transition) in listOf(r to t,(r+1) to t,r to (t+1))) {
             var materialized=0
-            val part=plan(retained,transition){materialized++}
+            val part=plan(retained-sr,transition-st){materialized++}
             try {
                 val receipt=CoreReadAdmission.admit(listOf(part))
                 assertEquals(r,receipt.retained);assertEquals(t,receipt.transition)
@@ -31,7 +33,7 @@ class CoreReadAdmissionBudgetTest {
 
     @Test fun oldNewBuilderAndFormOverheadShareOneAdmission() {
         // Each part fits alone; the third, disjoint owner-controlled overhead must still count.
-        val parts=listOf(plan(r/2,t/2),plan(r/2,t/2))
+        val parts=listOf(plan(r/2-sr,t/2-st),plan(r/2,t/2))
         val admitted=CoreReadAdmission.admit(parts)
         assertEquals(r,admitted.retained);assertEquals(t,admitted.transition)
         for(overhead in listOf(
@@ -71,11 +73,11 @@ class CoreReadAdmissionBudgetTest {
         assertEquals(136L,scopes) // One metadata object and its original-slot reference, no per-entry allocations.
         assertEquals(152L,handle);assertEquals(2136L,hub);assertEquals(handle*3+hub+scopes,extraR);assertEquals(handle*3+hub+scopes+shared,extraT)
         var work=0
-        val fitting=plan(r-extraR,t-extraT){work++}
+        val fitting=plan(r-extraR-sr,t-extraT-st){work++}
         val receipt=CoreReadAdmission.admit(listOf(fitting),extra)
         assertEquals(r,receipt.retained);assertEquals(t,receipt.transition)
         fitting.materialize(receipt);assertEquals(1,work)
-        for((retained,transition) in listOf((r-extraR+1) to (t-extraT),(r-extraR) to (t-extraT+1))) {
+        for((retained,transition) in listOf((r-extraR-sr+1) to (t-extraT-st),(r-extraR-sr) to (t-extraT-st+1))) {
             val overflowing=plan(retained,transition){work++}
             try {CoreReadAdmission.admit(listOf(overflowing),extra);fail("No free presentation handles/scratch")}
             catch(rejected:BoundedActiveRejected){assertEquals(BoundedActiveStatus.BUDGET_REFUSED,rejected.status)}
@@ -91,10 +93,10 @@ class CoreReadAdmissionBudgetTest {
         val er=ActiveWorkspaceBudget.estimateUnits(extra.retained).second
         val et=ActiveWorkspaceBudget.estimateUnits(extra.transition).second
         var work=0
-        val fitting=plan(r-er,t-et){work++}
+        val fitting=plan(r-er-sr,t-et-st){work++}
         val receipt=CoreReadAdmission.admit(listOf(fitting),extra)
         assertEquals(r,receipt.retained);assertEquals(t,receipt.transition);fitting.materialize(receipt)
-        for((retained,transition) in listOf((r-er+1) to (t-et),(r-er) to (t-et+1))) {
+        for((retained,transition) in listOf((r-er-sr+1) to (t-et-st),(r-er-sr) to (t-et-st+1))) {
             try {CoreReadAdmission.admit(listOf(plan(retained,transition){work++}),extra);fail("No free catalogue formatting")}
             catch(rejected:BoundedActiveRejected){assertEquals(BoundedActiveStatus.BUDGET_REFUSED,rejected.status)}
         }

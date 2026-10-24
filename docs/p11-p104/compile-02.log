@@ -1,0 +1,147 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:preDebugUnitTestBuild
+> Task :data:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeRFile UP-TO-DATE
+> Task :app:javaPreCompileP77runtime UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :security:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkP77runtimeAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeResources UP-TO-DATE
+> Task :app:createP77runtimeCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksP77runtime UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :security:extractDeepLinksDebug UP-TO-DATE
+> Task :security:processDebugManifest UP-TO-DATE
+> Task :app:processP77runtimeMainManifest UP-TO-DATE
+> Task :app:processP77runtimeManifest UP-TO-DATE
+> Task :app:processP77runtimeManifestForPackage UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :security:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processP77runtimeResources UP-TO-DATE
+> Task :app:preP77runtimeUnitTestBuild
+> Task :data:kspDebugKotlin
+> Task :data:compileDebugKotlin
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarDebug
+> Task :data:kspDebugUnitTestKotlin
+
+> Task :data:compileDebugUnitTestKotlin
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostCoreWriterData.kt:28:26 Class '<anonymous>' is not abstract and does not implement abstract member:
+suspend fun rename(actionId: String, id: String, pseudonym: String, normalized: String, expectedRevision: Long): Int
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostCoreWriterData.kt:33:9 'rename' overrides nothing. Potential signatures for overriding:
+suspend fun rename(actionId: String, id: String, pseudonym: String, normalized: String, expectedRevision: Long): Int
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostCoreWriterData.kt:35:29 Class '<anonymous>' is not abstract and does not implement abstract members:
+suspend fun removeRole(actionId: String, roleId: String, expectedRevision: Long): Int
+suspend fun renameRole(actionId: String, id: String, expectedRevision: Long, name: String, normalized: String): Int
+suspend fun claimRoleDelete(actionId: String, id: String, expectedRevision: Long): Int
+suspend fun claimPlan(actionId: String, personId: String, expectedRevision: Long): Int
+suspend fun finishPlan(actionId: String, personId: String, revision: Long, primaryRoleId: String?): Int
+suspend fun changeState(actionId: String, personId: String, expectedRevision: Long, roleId: String?, status: String, place: String?, time: Long): Int
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostCoreWriterData.kt:39:9 'updateRole' overrides nothing.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostCoreWriterData.kt:40:9 'removeRole' overrides nothing. Potential signatures for overriding:
+suspend fun removeRole(actionId: String, roleId: String, expectedRevision: Long): Int
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostCoreWriterData.kt:50:9 'removePlan' overrides nothing.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostCoreWriterData.kt:55:9 'updateState' overrides nothing.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostTaskData.kt:29:24 Class '<anonymous>' is not abstract and does not implement abstract members:
+suspend fun delete(actionId: String, id: String, expectedRevision: Long): Int
+suspend fun change(actionId: String, id: String, expectedRevision: Long, title: String, priority: String, status: String, person: String?, role: String?, affected: String?, due: Long?, time: Long, completed: Long?): Int
+suspend fun claimDelete(actionId: String, id: String, expectedRevision: Long): Int
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostTaskData.kt:36:9 'update' overrides nothing.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostTaskData.kt:38:9 'delete' overrides nothing. Potential signatures for overriding:
+suspend fun delete(actionId: String, id: String, expectedRevision: Long): Int
+
+> Task :data:compileDebugUnitTestKotlin FAILED
+> Task :app:compileP77runtimeKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/MainActivity.kt:66:15 'fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      with the appropriate {@link ActivityResultContract} and handling the result in the
+      {@link ActivityResultCallback#onActivityResult(Object) callback}.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/DocumentImageDecoder.kt:77:36 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Bitmap'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:41:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Bitmap'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:42:27 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Bitmap'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:44:47 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Bitmap'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:47:27 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Bitmap'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:47:71 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:49:42 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:50:69 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:50:99 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PreparationWorkspace.kt:147:42 Condition is always 'true'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:419:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:435:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:451:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:467:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:634:75 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:642:76 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/p77runtime/kotlin/org/pag/prototype/P86FullWorkspaceActivity.kt:76:15 'fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      with the appropriate {@link ActivityResultContract} and handling the result in the
+      {@link ActivityResultCallback#onActivityResult(Object) callback}.
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':data:compileDebugUnitTestKotlin' (registered by plugin 'com.android.internal.library').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Kotlin compiler: ABSTRACT_MEMBER_NOT_IMPLEMENTED
+       Kotlin compiler error
+         Class '<anonymous>' is not abstract and does not implement abstract member:
+         suspend fun rename(actionId: String, id: String, pseudonym: String, normalized: String, expectedRevision: Long): Int
+         Location: /home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/HostCoreWriterData.kt line 28
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1m
+51 actionable tasks: 7 executed, 44 up-to-date

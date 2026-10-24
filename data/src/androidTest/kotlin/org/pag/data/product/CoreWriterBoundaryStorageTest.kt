@@ -55,7 +55,7 @@ class CoreWriterBoundaryStorageTest {
             var person:Person?=null;persons.createPerson(a,"Synthetic person"){person=(it as PersonResult.Value).value};run()
             var role:Role?=null;ops.createRole(a,"Synthetic role"){role=(it as OperationsResult.Value).value};run()
             val selected=linkedSetOf(checkNotNull(role).id)
-            ops.planRoles(a,checkNotNull(person).id,ExpectedPersonRolePlan(a,checkNotNull(person).id,PersonRolePlan(emptySet(),null)),PersonRolePlan(selected,role!!.id)){assertTrue(it is OperationsResult.Value)}
+            ops.planRoles(a,checkNotNull(person).id,ExpectedPersonRolePlan(a,checkNotNull(person).id,PersonRolePlan(emptySet(),null, editRevision = 0)),PersonRolePlan(selected,role!!.id, editRevision = 0)){assertTrue(it is OperationsResult.Value)}
             selected.clear() // queued work must use its frozen plan, not this mutable source
             run()
             actions.advanceActionStatus(a,ActionStatus.PREPARATION){assertTrue(it is ActionChangeResult.Applied)};run()

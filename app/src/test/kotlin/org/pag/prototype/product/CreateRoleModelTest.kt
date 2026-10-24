@@ -11,8 +11,8 @@ class CreateRoleModelTest {
         var status=ActionStatus.ACTIVE
         var readFailure=false
         override fun board(actionId:String,publish:(OperationsResult<OperationalBoard>)->Unit){
-            val person=OperationalPerson(Person("p",actionId,"Synthetic",0),PersonRolePlan(emptySet(),null),PersonOperationalState(actionId,"p",null,OperationalStatus.ON_SITE,null,0))
-            publish(if(readFailure)OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED) else OperationsResult.Value(OperationalBoard(actionId,status,listOf(Role("r",actionId,"Synthetic role",0)),listOf(person))))
+            val person=OperationalPerson(Person("p",actionId,"Synthetic",0, editRevision = 0),PersonRolePlan(emptySet(),null, editRevision = 0),PersonOperationalState(actionId,"p",null,OperationalStatus.ON_SITE,null,0, editRevision = 0))
+            publish(if(readFailure)OperationsResult.Rejected(OperationsFailure.NOT_ALLOWED) else OperationsResult.Value(OperationalBoard(actionId,status,listOf(Role("r",actionId,"Synthetic role",0, editRevision = 0)),listOf(person))))
         }
         override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit){names.add(name);callbacks.add(publish)}
         override fun renameRole(actionId:String,expected:Role,name:String,publish:(OperationsResult<Role>)->Unit)=error("No rename")
@@ -26,7 +26,7 @@ class CreateRoleModelTest {
     private var onInteraction:()->Unit={}
     private val model=OperationsModel(repo,{session},{action},{onInteraction()},{},feedback={messages.add(it)})
     private fun open(){model.newFunction();model.changeNewFunctionName("Draft")}
-    private fun success(name:String="Draft")=OperationsResult.Value(Role("new","a",name,1))
+    private fun success(name:String="Draft")=OperationsResult.Value(Role("new","a",name,1, editRevision = 0))
     private fun surface(surface:RoleCreateSurface,active:Boolean=true){
         onInteraction={};model.clear();messages.clear();repo.names.clear();repo.callbacks.clear();repo.readFailure=false
         action=action.copy(id="a",status=if(surface==RoleCreateSurface.PREPARATION || !active)ActionStatus.PREPARATION else ActionStatus.ACTIVE)
@@ -97,7 +97,7 @@ class CreateRoleModelTest {
         assertEquals(OperationsFailure.DUPLICATE,model.templateCreateError)
         model.createRole("Another template");val callback=repo.callbacks.last();callback(success("Another template"));callback(success())
         assertEquals("Draft",model.createName);assertEquals(RoleCreateSurface.ROLES,model.createSurface);assertEquals(1,messages.size)
-        val role=Role("r","a","Synthetic role",0);model.editRole(role);model.changeRoleName("Rename draft")
+        val role=Role("r","a","Synthetic role",0, editRevision = 0);model.editRole(role);model.changeRoleName("Rename draft")
         model.createRole("Third template");repo.callbacks.last()(success("Third template"))
         assertEquals(role,model.editingRole);assertEquals("Rename draft",model.roleName)
     }
@@ -130,7 +130,7 @@ class CreateRoleModelTest {
         assertEquals("",model.createName);assertTrue(repo.names.isEmpty())
     }
     @Test fun aHiddenCreateFormCannotSubmitOverTheRenameEditor(){
-        surface(RoleCreateSurface.ROLES,active=false);val role=Role("r","a","Synthetic role",0)
+        surface(RoleCreateSurface.ROLES,active=false);val role=Role("r","a","Synthetic role",0, editRevision = 0)
         model.editRole(role);model.changeRoleName("Rename draft");model.saveRoleCreate()
         assertTrue(repo.names.isEmpty());assertEquals(role,model.editingRole);assertEquals("Rename draft",model.roleName)
         model.cancelRoleEditor();model.saveRoleCreate();assertEquals(listOf("Draft"),repo.names)

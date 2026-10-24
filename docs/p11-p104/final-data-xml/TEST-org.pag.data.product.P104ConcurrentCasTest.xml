@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P104ConcurrentCasTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-24T16:30:27.092Z" hostname="iuzjhtgvfc" time="5.836">
+  <properties/>
+  <testcase name="twoRealConnectionsRaceAllFiveOriginalRevisionsExactlyOneWins" classname="org.pag.data.product.P104ConcurrentCasTest" time="5.836"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

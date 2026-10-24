@@ -39,7 +39,7 @@ internal class CoreReadAdmission private constructor(val reservation: ActiveCore
                 cost(part.retained); cost(part.transition)
             }
             val combined = try {
-                parts.fold(overhead) { total, part -> ActiveCoreReservation(
+                parts.fold(ActiveCoreReservation(add(overhead.retained,revisionScratch.retained),add(overhead.transition,revisionScratch.transition))) { total, part -> ActiveCoreReservation(
                     add(total.retained, part.reservation.retained), add(total.transition, part.reservation.transition)) }
             } catch (_: ArithmeticException) { throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED) }
             val requestedRetained = cost(combined.retained)
@@ -85,6 +85,11 @@ internal class CoreReadAdmission private constructor(val reservation: ActiveCore
             maps = Math.addExact(a.maps,b.maps), mapCapacity = Math.addExact(a.mapCapacity,b.mapCapacity),
             indexes = Math.addExact(a.indexes,b.indexes), indexCapacity = Math.addExact(a.indexCapacity,b.indexCapacity),
             references = Math.addExact(a.references,b.references))
+        // Shared once across both prepared parts: schema12 integrity/header metadata, numeric
+        // builders and bindings; never an independent per-route allowance.
+        internal val revisionScratch=ActiveCoreReservation(
+            ActiveWorkspaceBudget.Units(objects=4,arrays=1,arrayPayloadBytes=64,references=8),
+            ActiveWorkspaceBudget.Units(objects=32,strings=16,utf16Units=2048,arrays=16,arrayPayloadBytes=4096,lists=4,listCapacity=64,references=128))
         private val empty = ActiveCoreReservation(ActiveWorkspaceBudget.Units(),ActiveWorkspaceBudget.Units())
     }
 }

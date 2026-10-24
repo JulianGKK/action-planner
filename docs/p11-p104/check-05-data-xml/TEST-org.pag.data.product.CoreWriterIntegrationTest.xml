@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.CoreWriterIntegrationTest" tests="39" skipped="0" failures="0" errors="0" timestamp="2026-10-24T16:19:38.448Z" hostname="iuzjhtgvfc" time="32.796">
+  <properties/>
+  <testcase name="renameAndDeleteKeepOuterCleanupAuthorityAndSingleDispatch" classname="org.pag.data.product.CoreWriterIntegrationTest" time="3.812"/>
+  <testcase name="roleDeleteOldConfirmationCannotDeleteRenamedRole" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.124"/>
+  <testcase name="roleIdentityCaseWhitespaceAndCreateValidationAreExactBeforeWrites" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.184"/>
+  <testcase name="materialLostMainDispatchStaysPendingAndNoRetryCanRun" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.137"/>
+  <testcase name="planWritesKeepOuterOutcomeCleanupAndAuthorityGates" classname="org.pag.data.product.CoreWriterIntegrationTest" time="1.483"/>
+  <testcase name="peopleAndOperationsPreservePoliciesLabelsPlansAndExactOnSiteGroups" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.464"/>
+  <testcase name="persistentPersonRevisionRejectsAba" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.125"/>
+  <testcase name="explicitRejectedWriteIsRolledBackOnlyAfterActualRollbackReturns" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.359"/>
+  <testcase name="materialInvalidMissingForeignReferencesAndActionsRollbackWithoutChanges" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.178"/>
+  <testcase name="materialFailedDispatchNeverPublishesSuccess" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.238"/>
+  <testcase name="materialExplicitRejectionAfterSideeffectsRequiresConfirmedRollback" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.48"/>
+  <testcase name="rolePlanExpectedIsImmutableAndRevisionRejectsAba" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.141"/>
+  <testcase name="materialCreateEditDeleteAreConfirmedOuterCommitsAndReadsDoNotAdvanceEpoch" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.142"/>
+  <testcase name="legacyBlankTaskScopeDenialDoesNotQueueOrAdvanceTheCommonEpoch" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.117"/>
+  <testcase name="competingPersonEditorsAndDuplicateDispatchCannotSilentlyOverwrite" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.128"/>
+  <testcase name="activationSqlFailureNeverPublishesPartialStateOrActionStatus" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.128"/>
+  <testcase name="materialAllWritesKeepCommitCleanupScopeAndOnceProofSeparate" classname="org.pag.data.product.CoreWriterIntegrationTest" time="5.401"/>
+  <testcase name="eachNewFamilyConsumesDuplicateWorkerAndMainDispatchExactlyOnce" classname="org.pag.data.product.CoreWriterIntegrationTest" time="1.212"/>
+  <testcase name="rolePlanOldEditorsConflictAndConfirmedFirstPlanSurvives" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.138"/>
+  <testcase name="planInsertFailureRollsBackRemovedAssignmentsAndConcurrentQueueRemainsSingle" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.143"/>
+  <testcase name="allFamiliesUnknownEndAndCleanupNeverBecomeValueSuccess" classname="org.pag.data.product.CoreWriterIntegrationTest" time="4.206"/>
+  <testcase name="materialAllLifecycleGatesKeepDomainRules" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.613"/>
+  <testcase name="roleRevisionRejectsRenameAndDeleteAfterAba" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.14"/>
+  <testcase name="planForeignPersonAndDeletedRoleCannotChangeOtherData" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.121"/>
+  <testcase name="materialValueWithoutOuterCommitEvidenceCannotPublish" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.115"/>
+  <testcase name="materialSqlFailureAfterInsertRollsBackActualSideeffects" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.119"/>
+  <testcase name="materialComparesEveryExpectedFieldBeforeWriting" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.16"/>
+  <testcase name="roleRenameSecondOldEditorIsStale" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.123"/>
+  <testcase name="crossFamilyPendingUsesOneEpochAndTaskProofCannotBypassIt" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.127"/>
+  <testcase name="revokeScopeAndLateCallbacksCannotPublishAcrossActionPermissionOrGeneration" classname="org.pag.data.product.CoreWriterIntegrationTest" time="9.194"/>
+  <testcase name="fullPersonIdentityAndActionAreComparedBeforeAnyRenameSql" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.129"/>
+  <testcase name="actionCreateEditAndBothStatusTransitionsAreOuterCommitsWithAtomicStates" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.149"/>
+  <testcase name="currentRoleDeletePreservesAllOperationsAndTaskReferenceGates" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.361"/>
+  <testcase name="materialStaleEditorsAndDeleteKeepFirstCommittedItem" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.133"/>
+  <testcase name="actionAndOperationalFullValuesCanRepeatWithoutPersistentRevision" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.145"/>
+  <testcase name="personRenameUnknownCleanupAndRevokeCannotPublishValue" classname="org.pag.data.product.CoreWriterIntegrationTest" time="1.155"/>
+  <testcase name="materialPendingCannotBeBypassedByMaterialTaskOrOperationsAndReverse" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.364"/>
+  <testcase name="rolePlanCasCoversWholeSetsPrimaryEmptyForeignAndMissingReferences" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.174"/>
+  <testcase name="stalePersonEditorIsRejectedAndFirstValueSurvives" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.124"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

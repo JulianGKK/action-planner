@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P104,migration_data,MIGRATION_DATA,version=12,all_legacy_columns_SHA256_equal=true,revision_zero=true,headers_complete=true,foreign_keys=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P104,migration_data,MIGRATION_DATA,sensitive_decrypted_equal=true,document_metadata_equal=true,synthetic_alias_deleted=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P104,migration_data,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false,persisted_revisions=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P104 PASS migration_data
+INSTRUMENTATION_CODE: -1

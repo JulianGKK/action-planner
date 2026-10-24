@@ -45,14 +45,14 @@ class Ux3cTasksProbe : Instrumentation() {
     }
     private class People : PersonRepository {
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) = publish(PersonResult.Value(emptyList()))
-        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "Motte", 0)))
+        override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) = publish(PersonResult.Value(Person(personId, actionId, "Motte", 0, editRevision = 0)))
         override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
         override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) {}
     }
     private class Ops : OperationsRepository {
-        val roles = listOf(Role("plan", "synthetic", "Blockierende", 0), Role("current", "synthetic", "Support", 0))
-        var person = OperationalPerson(Person("p", "synthetic", "Motte", 0), PersonRolePlan(setOf("plan"), "plan"),
-            PersonOperationalState("synthetic", "p", "current", OperationalStatus.ON_SITE, null, System.currentTimeMillis()))
+        val roles = listOf(Role("plan", "synthetic", "Blockierende", 0, editRevision = 0), Role("current", "synthetic", "Support", 0, editRevision = 0))
+        var person = OperationalPerson(Person("p", "synthetic", "Motte", 0, editRevision = 0), PersonRolePlan(setOf("plan"), "plan", editRevision = 0),
+            PersonOperationalState("synthetic", "p", "current", OperationalStatus.ON_SITE, null, System.currentTimeMillis(), editRevision = 0))
         var reads = 0
         override fun board(actionId: String, publish: (OperationsResult<OperationalBoard>) -> Unit) { reads++; publish(OperationsResult.Value(OperationalBoard(actionId, ActionStatus.ACTIVE, roles, listOf(person)))) }
         override fun createRole(actionId: String, name: String, publish: (OperationsResult<Role>) -> Unit) {}
@@ -67,15 +67,15 @@ class Ux3cTasksProbe : Instrumentation() {
     }
     private class Tasks : TaskRepository {
         var rows = listOf(
-            Task("t", "synthetic", "Übungsaufgabe A", TaskPriority.HIGH, TaskStatus.OPEN, null, "current", "p", null, null, 1, 1, null),
-            Task("other", "synthetic", "Übungsaufgabe B", TaskPriority.NORMAL, TaskStatus.IN_PROGRESS, "p", null, null, null, null, 2, 2, null),
-            Task("closed", "synthetic", "Übungsaufgabe erledigt", TaskPriority.LOW, TaskStatus.DONE, null, null, "p", null, null, 3, 3, 3))
+            Task("t", "synthetic", "Übungsaufgabe A", TaskPriority.HIGH, TaskStatus.OPEN, null, "current", "p", null, null, 1, 1, null, editRevision = 0),
+            Task("other", "synthetic", "Übungsaufgabe B", TaskPriority.NORMAL, TaskStatus.IN_PROGRESS, "p", null, null, null, null, 2, 2, null, editRevision = 0),
+            Task("closed", "synthetic", "Übungsaufgabe erledigt", TaskPriority.LOW, TaskStatus.DONE, null, null, "p", null, null, 3, 3, 3, editRevision = 0))
         var events = listOf(TaskEvent("created", "synthetic", "t", TaskEventType.CREATED, 1))
         private var serial = 0
         override fun board(actionId: String, publish: (OperationsResult<TaskBoard>) -> Unit) = publish(OperationsResult.Value(TaskBoard(actionId, rows, events)))
         override fun create(actionId: String, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) {
             val now = System.currentTimeMillis()
-            val t = Task("new-${++serial}", actionId, input.title, input.priority, TaskStatus.OPEN, input.assigneePersonId, input.assigneeRoleId, input.affectedPersonId, input.dueAt, input.sourceTemplateKey, now, now, null)
+            val t = Task("new-${++serial}", actionId, input.title, input.priority, TaskStatus.OPEN, input.assigneePersonId, input.assigneeRoleId, input.affectedPersonId, input.dueAt, input.sourceTemplateKey, now, now, null, editRevision = 0)
             rows = rows + t; events = events + TaskEvent("create-$serial", actionId, t.id, TaskEventType.CREATED, now); publish(OperationsResult.Value(t))
         }
         override fun edit(actionId: String, expected: Task, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) {

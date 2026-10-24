@@ -328,7 +328,7 @@ class ActiveCoreOwnerTest {
 
     private fun functionsFixture(size:Int,repetitions:Int=15):ActiveCoreResult.Value {
         val value=core()
-        val items=(0 until size).map{CompactFunction(Role("r$it","a","Ä界🦋".repeat(repetitions)+" function $it",it.toLong()),(it%7).toLong())}
+        val items=(0 until size).map{CompactFunction(Role("r$it","a","Ä界🦋".repeat(repetitions)+" function $it",it.toLong(), editRevision = 0),(it%7).toLong())}
         val sum=items.sumOf{it.onSiteCount}+7
         return value.copy(core=value.core.copy(functions=CompactFunctions(items,7,sum,items.count{it.onSiteCount>0}.toLong())))
     }

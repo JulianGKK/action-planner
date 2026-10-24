@@ -32,10 +32,10 @@ class BoundedTaskStoreTest {
         fun exec(sql: String) = runBlocking { db.execute(sql) }
         fun seed(tasks: Int = 1, events: Int = 1) {
             exec("INSERT INTO actions VALUES('a','Synthetic','Description',1,2,0,'ACTIVE','SENSITIVE',NULL)")
-            exec("INSERT INTO persons VALUES('p','a','Synthetic','synthetic',1)")
-            exec("INSERT INTO roles VALUES('r','a','Synthetic','synthetic',1)")
+            exec("INSERT INTO persons(id,actionId,pseudonym,pseudonymNormalized,createdAt) VALUES('p','a','Synthetic','synthetic',1)")
+            exec("INSERT INTO roles(id,actionId,name,normalizedName,createdAt) VALUES('r','a','Synthetic','synthetic',1)")
             if (tasks > 0) exec("WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i<$tasks) " +
-                "INSERT INTO tasks SELECT 't'||i,'a','Synthetic '||i,'NORMAL','OPEN','p',NULL,'p',NULL,NULL,i,i,NULL FROM n")
+                "INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) SELECT 't'||i,'a','Synthetic '||i,'NORMAL','OPEN','p',NULL,'p',NULL,NULL,i,i,NULL FROM n")
             if (events > 0) exec("WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i+1 FROM n WHERE i<$events) " +
                 "INSERT INTO task_events SELECT 'e'||i,'a','t1','CREATED',i FROM n")
         }
@@ -62,9 +62,9 @@ class BoundedTaskStoreTest {
         h.exec("INSERT INTO task_events VALUES('later','a','t3','COMPLETED',7),('first','a','t3','CREATED',1),('tie','a','t3','STARTED',1)")
         val v = h.read() as BoundedTaskResult.Value
         val expected = TaskBoard("a", listOf(
-            Task("t1","a","Synthetic 1",TaskPriority.NORMAL,TaskStatus.OPEN,"p",null,"p",null,null,1,1,null),
-            Task("t2","a","Synthetic 2",TaskPriority.HIGH,TaskStatus.OPEN,null,"r","p",8,"synthetic-key",2,2,null),
-            Task("t3","a","Synthetic 3",TaskPriority.NORMAL,TaskStatus.DONE,"p",null,"p",null,null,3,7,7)),
+            Task("t1","a","Synthetic 1",TaskPriority.NORMAL,TaskStatus.OPEN,"p",null,"p",null,null,1,1,null, editRevision = 0),
+            Task("t2","a","Synthetic 2",TaskPriority.HIGH,TaskStatus.OPEN,null,"r","p",8,"synthetic-key",2,2,null, editRevision = 0),
+            Task("t3","a","Synthetic 3",TaskPriority.NORMAL,TaskStatus.DONE,"p",null,"p",null,null,3,7,7, editRevision = 0)),
             listOf(TaskEvent("first","a","t3",TaskEventType.CREATED,1),TaskEvent("tie","a","t3",TaskEventType.STARTED,1),
                 TaskEvent("later","a","t3",TaskEventType.COMPLETED,7)))
         assertEquals(expected, v.board); assertEquals(expected.active,v.board.active)
@@ -83,7 +83,7 @@ class BoundedTaskStoreTest {
                     fun text(i:Int) = if(q.isNull(i))null else q.getText(i)
                     fun number(i:Int) = if(q.isNull(i))null else q.getLong(i)
                     add(TaskRow(q.getText(0),q.getText(1),q.getText(2),q.getText(3),q.getText(4),
-                        text(5),text(6),text(7),number(8),text(9),q.getLong(10),q.getLong(11),number(12)).model())
+                        text(5),text(6),text(7),number(8),text(9),q.getLong(10),q.getLong(11),number(12), editRevision = 0).model())
                 }
             }
         } }
@@ -132,7 +132,7 @@ class BoundedTaskStoreTest {
     }
     @Test fun foreignRowsAreNeitherChargedNorLoaded() = H().use { h ->
         h.seed();h.exec("INSERT INTO actions VALUES('b','Other','Other',1,2,0,'ACTIVE','SENSITIVE',NULL)")
-        h.exec("INSERT INTO tasks VALUES('foreign','b',printf('%01000000d',0),'NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
+        h.exec("INSERT INTO tasks(id,actionId,title,priority,status,assigneePersonId,assigneeRoleId,affectedPersonId,dueAt,sourceTemplateKey,createdAt,updatedAt,completedAt) VALUES('foreign','b',printf('%01000000d',0),'NORMAL','OPEN',NULL,NULL,NULL,NULL,NULL,1,1,NULL)")
         assertEquals(listOf("t1"),(h.read() as BoundedTaskResult.Value).board.tasks.map{it.id})
     }
     @Test fun manyTasksAndEventsTraverseAllKeysetBatchesWithoutTruncation() = H().use { h ->

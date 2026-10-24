@@ -35,7 +35,7 @@ class PersonViewModelTest {
         var writeResult: PersonResult<Person>? = null
         var deferWrite = false
         var pendingWrite: ((PersonResult<Person>) -> Unit)? = null
-        var row=Person("synthetic-person","synthetic-action","synthetic-01",1)
+        var row=Person("synthetic-person","synthetic-action","synthetic-01",1, editRevision = 0)
         var deferred: ((PersonResult<List<Person>>) -> Unit)?=null
         var defer=false
         override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) {

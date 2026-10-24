@@ -1,0 +1,161 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin UP-TO-DATE
+> Task :data:compileDebugKotlin UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:preDebugUnitTestBuild
+> Task :data:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :data:kspDebugUnitTestKotlin
+> Task :data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :data:compileDebugUnitTestKotlin
+> Task :data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :data:testDebugUnitTest
+
+BoundedActiveStoreTest > manyPeopleAreRefusedBeforeAnyFullRowOrTextMaterialization FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:103
+
+BoundedActiveStoreTest > malformedUtf8AndDomainInvalidRowsAreNotBudgetPressure FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:153
+
+BoundedActiveStoreTest > coroutineCanResumeOnDifferentThreadsWithoutReusingThreadConfinedLedger FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:262
+
+BoundedActiveStoreTest > preparationCompletedAndMissingOrForeignActionAreDeniedWithoutPayload FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:82
+
+BoundedActiveStoreTest > revokeAtEveryReadBoundaryReturnsNoPartialContentAndClosesStatements FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:210
+
+BoundedActiveStoreTest > wrongDatabaseEncodingIsNotGuessed FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:166
+
+BoundedActiveStoreTest > cleanupFailureOverridesSuccessfulReadAndBudgetRefusal FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:247
+
+BoundedActiveStoreTest > invalidRolePersonAndPrimaryRoleReferencesFailBeforeAdmission FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:96
+
+BoundedActiveStoreTest > longSingleActionPersonOrRoleTextIsRefusedBeforeBlobFetch FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:131
+
+BoundedActiveStoreTest > generationAndBindingChangesDuringMaterializationDenyResult FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:217
+
+BoundedActiveStoreTest > embeddedNulAndSupplementaryUnicodePreserveCompleteByteContent FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:138
+
+BoundedActiveStoreTest > nulCannotHideAnOversizedSuffixFromAdmission FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:171
+
+BoundedActiveStoreTest > manyRolesAndPlanningRelationsAreRefusedBeforeMaterialization FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:122
+
+BoundedActiveStoreTest > budgetRefusalDoesNotBlockStorageButInvalidDataDoes FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:255
+
+BoundedActiveStoreTest > batchesAreDeterministicAndDoNotMixSecondAction FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:199
+
+BoundedActiveStoreTest > validSmallActiveReadHasExactExpectedDomainProjection FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:65
+
+BoundedActiveStoreTest > noLatePublicationAfterCleanupLockGenerationOrActionChange FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:236
+
+BoundedActiveStoreTest > countAndMaximumGuardsDenyBeforePotentiallyLargeSqlSums FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:112
+
+BoundedActiveStoreTest > unicodeNormalizationExpansionAndContextKeepDomainRules FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:176
+
+BoundedActiveStoreTest > wrongSqlTypesFailBeforePayloadAndDbFailureStaysStorageFailure FAILED
+    java.lang.IllegalStateException at BoundedActiveStoreTest.kt:158
+
+CompactPeopleStoreTest > allStatusesWithoutFunctionUnusedRolesAndPlannedRolesRemainDistinct FAILED
+    java.lang.IllegalStateException at CompactPeopleStoreTest.kt:104
+
+CompactPeopleStoreTest > allRealisticSizesHaveCompletePagingDetailsAndSeparateMedianP95 FAILED
+    java.lang.IllegalStateException at CompactPeopleStoreTest.kt:37
+
+CompactPeopleStoreTest > selectedEditorLoadsAllPlannedRolesAcrossBatchesWithoutOtherPeopleGraphs FAILED
+    java.lang.IllegalStateException at CompactPeopleStoreTest.kt:160
+
+CompactPeopleStoreTest > invalidReferencesAndUnknownRevokeMutationsNeverReturnOldPagesOrDetails FAILED
+    java.lang.IllegalStateException at CompactPeopleStoreTest.kt:173
+
+CompactPeopleStoreTest > twoHundredMembersOfOneFunctionAndManyFunctionsHaveExactBoundedGroups FAILED
+    java.lang.IllegalStateException at CompactPeopleStoreTest.kt:88
+
+CompactPeopleStoreTest > utf16IdTiesNulUnicodeLongNamesAndFullDetailPreserveValues FAILED
+    java.lang.IllegalStateException at CompactPeopleStoreTest.kt:135
+
+CompactPeopleStoreTest > pageDetailBudgetsFailBeforePayloadAndAllLifecycleFailuresFailClosed FAILED
+    java.lang.IllegalStateException at CompactPeopleStoreTest.kt:202
+
+CoreReadAdmissionBudgetTest > fourPresentationHandlesAndHubMetadataShareOneScratchAtExactLimits FAILED
+    org.pag.data.product.BoundedActiveRejected at CoreReadAdmissionBudgetTest.kt:64
+
+CoreReadAdmissionBudgetTest > exactSeparateLimitsAndEachNextByteAreCheckedBeforeMaterialization FAILED
+    java.lang.AssertionError at CoreReadAdmissionBudgetTest.kt:17
+
+CoreReadAdmissionBudgetTest > oldNewBuilderAndFormOverheadShareOneAdmission FAILED
+    org.pag.data.product.BoundedActiveRejected at CoreReadAdmissionBudgetTest.kt:37
+
+CoreReadAdmissionBudgetTest > variableFunctionsFormattingIsJointlyAdmittedAtBothLimitsAndOverflowNeverWraps FAILED
+    org.pag.data.product.BoundedActiveRejected at CoreReadAdmissionBudgetTest.kt:88
+
+CoreWriterIntegrationTest > planForeignPersonAndDeletedRoleCannotChangeOtherData FAILED
+    java.lang.AssertionError at CoreWriterIntegrationTest.kt:354
+
+CoreWriterIntegrationTest > actionAndOperationalFullValuesCanRepeatWithoutPersistentRevision FAILED
+    java.lang.AssertionError at CoreWriterIntegrationTest.kt:448
+
+CoreWriterIntegrationTest > rolePlanCasCoversWholeSetsPrimaryEmptyForeignAndMissingReferences FAILED
+    java.lang.AssertionError at CoreWriterIntegrationTest.kt:289
+
+94 tests completed, 34 failed
+
+> Task :data:testDebugUnitTest FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':data:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 1m 2s
+30 actionable tasks: 4 executed, 26 up-to-date

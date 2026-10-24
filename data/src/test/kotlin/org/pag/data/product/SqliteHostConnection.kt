@@ -9,11 +9,11 @@ import java.util.Base64
  * An explicit synthetic shared file supports the two-connection contention test.
  * Not an Android driver proof.
  */
-internal class SqliteHostConnection(encoding: String = "UTF-8", sharedTestFile: File? = null) : PooledConnection, AutoCloseable {
+internal class SqliteHostConnection(encoding: String = "UTF-8", sharedTestFile: File? = null, schemaVersion:Int=12) : PooledConnection, AutoCloseable {
     private val script = checkNotNull(javaClass.getResourceAsStream("/bounded_active_sqlite.py"))
         .bufferedReader().use { it.readText() }
     private val process = ProcessBuilder("python3", "-u", "-c", script,
-        File("schemas/org.pag.data.product.ActionDatabase/11.json").absolutePath, encoding, sharedTestFile?.absolutePath ?: ":memory:").start()
+        File("schemas/org.pag.data.product.ActionDatabase/$schemaVersion.json").absolutePath, encoding, sharedTestFile?.absolutePath ?: ":memory:").start()
     private val input = process.inputStream.bufferedReader()
     private val output = process.outputStream.bufferedWriter()
     private var sequence = 0
@@ -31,6 +31,10 @@ internal class SqliteHostConnection(encoding: String = "UTF-8", sharedTestFile: 
         val reply = input.readLine() ?: error("SQLITE_HOST_EXIT")
         check(!reply.startsWith("ERROR:")) { reply }
         return reply
+    }
+    fun migrationConnection()=object:androidx.sqlite.SQLiteConnection {
+        override fun prepare(sql:String):SQLiteStatement=Statement(sql,++sequence)
+        override fun close()=Unit // Borrowed; the fixture owns the process.
     }
     override suspend fun <R> usePrepared(sql: String, block: suspend (SQLiteStatement) -> R): R {
         beforePrepare(sql)

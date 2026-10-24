@@ -295,6 +295,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     fun dismissFeedback(id: Long) { if (feedback?.id == id) feedback = null }
     private var personRequest = 0L // Navigation ordering only, never session authority.
     val personsVisible get() = snapshot.state == SessionState.READY && selected?.let { PersonRules.mayRead(it.status) } == true
+    internal val hasCasEditorDraft get() = personForm || tasks.form || operations.editingRole!=null ||
+        (operations.screen==OperationsScreen.PLAN || operations.screen==OperationsScreen.LIVE || operations.screen==OperationsScreen.FUNCTION)
     val personsEditable get() = snapshot.state == SessionState.READY && selected?.let { PersonRules.mayManage(it.status) } == true
     private var workspaceRequest = 0L
     private var workspaceTicket:WorkspaceReadTicket?=null

@@ -17,6 +17,7 @@ import java.time.format.FormatStyle
 internal fun taskFailureMessage(reason:OperationsFailure):String = when(reason) {
     OperationsFailure.TASK_EVENT_LIMIT_REACHED -> "Die Grenze von 5.000 Aufgabenereignissen je Aktion ist erreicht. Neue Aufgaben und Statuswechsel sind nicht möglich. Bestehende Aufgaben können weiter gelesen und bearbeitet werden."
     OperationsFailure.INVALID->"Bitte Titel (1–120 Zeichen), Zuständigkeit und Fälligkeit prüfen."
+    OperationsFailure.REVISION_EXHAUSTED->"Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
     OperationsFailure.STALE->"Die Aufgabe wurde inzwischen geändert. Dein Entwurf bleibt erhalten; bitte bewusst neu laden."
     OperationsFailure.NOT_ALLOWED->"Im aktuellen Aktionsstatus ist diese Änderung nicht möglich."
     else->"Die Aufgabe oder Zuordnung ist in dieser Aktion nicht verfügbar."

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveCoreOwnerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-24T16:29:34.825Z" hostname="iuzjhtgvfc" time="0.323">
+  <properties/>
+  <testcase name="fullViewReturnSurfacesAdmissionRefusalAndCannotReplayTheOldCore" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.316"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

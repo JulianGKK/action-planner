@@ -12,8 +12,7 @@ import org.pag.prototype.product.ProductViewModel
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
-/** Original productive repositories, confirmed transactions and SQLCipher. No production
- * schema change; ABA acceptance is an intentional NEGATIVE evidence result. P77 auth synthetic. */
+/** Original productive repositories, confirmed transactions and SQLCipher. Schema12 regression of the historical schema11 negative case. P77 auth synthetic. */
 class P103EditorCasProbe:Instrumentation() {
     private var scenario="cas_aba"
     private lateinit var h:P77ProductRuntimeHarness
@@ -96,23 +95,23 @@ class P103EditorCasProbe:Instrumentation() {
                     val p=person();val secondEditor=person(p.id);check(secondEditor==p)
                     val b=(rename(p,"Synthetic editor B") as PersonResult.Value).value
                     check(rename(secondEditor,"Synthetic editor C")==PersonResult.Rejected(PersonRejection.STALE))
-                    val restored=(rename(b,p.pseudonym) as PersonResult.Value).value;check(restored==p)
-                    check(rename(secondEditor,"Synthetic old A after ABA") is PersonResult.Value)
-                    emit("PERSON,two_open_editors_second_STALE=true,all_A_fields_restored=true,old_A_after_ABA=COMMITTED,BLOCKER=true")
+                    val restored=(rename(b,p.pseudonym) as PersonResult.Value).value;check(restored==p.copy(editRevision=p.editRevision+2))
+                    check(rename(secondEditor,"Synthetic old A after ABA")==PersonResult.Rejected(PersonRejection.STALE))
+                    emit("PERSON,two_open_editors_second_STALE=true,all_A_fields_restored=true,old_A_after_ABA=STALE,revision_increment=2")
                     val ops=h.runtime.operations
                     value(call<OperationsResult<Role>>{ops.createRole(action,"Synthetic editor role zero",it)})
                     value(call<OperationsResult<Role>>{ops.createRole(action,"Synthetic editor role one",it)})
                     val r0=board().roles.first()
                     val rb=value(call<OperationsResult<Role>>{ops.renameRole(action,r0,"Synthetic role B",it)})
                     check(call<OperationsResult<Role>>{ops.renameRole(action,r0,"Synthetic role C",it)}==OperationsResult.Rejected(OperationsFailure.STALE))
-                    val ra=value(call<OperationsResult<Role>>{ops.renameRole(action,rb,r0.name,it)});check(ra==r0)
-                    check(call<OperationsResult<Role>>{ops.renameRole(action,r0,"Synthetic role old A",it)} is OperationsResult.Value)
+                    val ra=value(call<OperationsResult<Role>>{ops.renameRole(action,rb,r0.name,it)});check(ra==r0.copy(editRevision=r0.editRevision+2))
+                    check(call<OperationsResult<Role>>{ops.renameRole(action,r0,"Synthetic role old A",it)}==OperationsResult.Rejected(OperationsFailure.STALE))
                     val ob=board();val op=ob.persons.first();val planA=op.plan
-                    val role=if(planA.roleIds==setOf(ob.roles.first().id))ob.roles[1] else ob.roles.first();val planB=PersonRolePlan(setOf(role.id),role.id)
+                    val role=if(planA.roleIds==setOf(ob.roles.first().id))ob.roles[1] else ob.roles.first();val planB=PersonRolePlan(setOf(role.id),role.id, editRevision = 0)
                     fun plan(expected:PersonRolePlan,next:PersonRolePlan)=call<OperationsResult<Unit>>{ops.planRoles(action,op.person.id,ExpectedPersonRolePlan(action,op.person.id,expected),next,it)}
                     check(plan(planA,planB) is OperationsResult.Value);check(plan(planA,planA)==OperationsResult.Rejected(OperationsFailure.STALE))
-                    check(plan(planB,planA) is OperationsResult.Value);check(plan(planA,planB) is OperationsResult.Value)
-                    emit("OPERATIONS,role_and_plan_changed_value_STALE=true,role_and_plan_ABA_accepted=true,BLOCKER=true")
+                    check(plan(planB.copy(editRevision=planA.editRevision+1),planA) is OperationsResult.Value);check(plan(planA,planB)==OperationsResult.Rejected(OperationsFailure.STALE))
+                    emit("OPERATIONS,role_and_plan_changed_value_STALE=true,role_and_plan_ABA_STALE=true,stable_header=true")
                     val tr=h.runtime.tasks
                     val t=value(call<OperationsResult<Task>>{tr.create(action,TaskInput("Synthetic concurrent task"),it)})
                     val edited=value(call<OperationsResult<Task>>{tr.edit(action,t,TaskInput("Synthetic changed task"),it)})
@@ -162,7 +161,7 @@ class P103EditorCasProbe:Instrumentation() {
             }
             main{model.lock();a.finish()};waitFor("fixture cleanup"){h.cleanupConfirmed.get()}
             check(targetContext.noBackupFilesDir.listFiles().orEmpty().none{it.name.startsWith("p11-fixture-")})
-            emit("CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false,ABA_safety_NOT_CLAIMED=true")
+            emit("CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false,persisted_revisions=true")
             finish(Activity.RESULT_OK,Bundle().apply{putString("result","P103 PASS $scenario")})
         }catch(t:Throwable){emit("FAILURE,${t.stackTraceToString()}");runCatching{main{activity?.finish()}}
             if(::h.isInitialized)runCatching{waitFor("failure cleanup"){h.cleanupConfirmed.get()}}

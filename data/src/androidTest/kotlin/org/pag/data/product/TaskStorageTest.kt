@@ -33,8 +33,8 @@ class TaskStorageTest {
         val i=ProductInventory(root,{true},{true})
         ActionDatabaseAccess(app).use(i.database,key,context(AccessScope.MAINTENANCE),true){d->d.withWriteTransaction {
             listOf("a","b").forEach{id->d.actions().insert(ActionRow(id,"synthetic","synthetic",1,2,0,"PREPARATION"))}
-            listOf("Motte","Meise","Supporter").forEach{id->d.persons().insert(PersonRow(id,"a",id,id.lowercase(),0))}
-            d.persons().insert(PersonRow("other","b","synthetic other","synthetic other",0))
+            listOf("Motte","Meise","Supporter").forEach{id->PersonRow(id,"a",id,id.lowercase(),0, editRevision = 0).let{seeded->d.persons().insert(seeded);d.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))}}
+            PersonRow("other","b","synthetic other","synthetic other",0, editRevision = 0).let{seeded->d.persons().insert(seeded);d.operations().insertPlan(RolePlanRow(seeded.actionId,seeded.id,null,0))}
         }}
         return i
     }
@@ -175,7 +175,7 @@ class TaskStorageTest {
         val bad=t.copy(assigneePersonId="Motte",assigneeRoleId=r.id)
         for(insert in listOf(true,false)){
             var denied=false
-            try{use(i){d->d.withWriteTransaction{if(insert)d.tasks().insert(bad.copy(id="both").row())else d.tasks().update(bad.row())}}}catch(_:Exception){denied=true}
+            try{use(i){d->d.withWriteTransaction{if(insert)d.tasks().insert(bad.copy(id="both").row())else d.tasks().change(bad.actionId,bad.id,bad.editRevision,bad.title,bad.priority.name,bad.status.name,bad.assigneePersonId,bad.assigneeRoleId,bad.affectedPersonId,bad.dueAt,bad.updatedAt,bad.completedAt)}}}catch(_:Exception){denied=true}
             assertTrue(denied)
         }
         assertEquals(t,board(i).tasks.single())

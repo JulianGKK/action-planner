@@ -71,9 +71,10 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
         // Same 4/16 overlap factors and weights as the bounded full reader. Rows/fields now
         // describe only actual selected objects. Includes decoder/arrays, page sort, role index,
         // metadata, cursors, lists/capacities and future UI/editor references. No second ledger.
+        val revisions=parts.sumOf{it.rows*it.numbers.count{n->n.contains("editRevision")}}
         val rows=parts.sumOf{it.rows};val fields=parts.sumOf{it.rows*it.texts.size};val bytes=parts.sumOf{it.bytes}
-        fun units(c: Long)=ActiveWorkspaceBudget.Units(objects=(rows+16)*c*8,
-            strings=(fields+16)*c,utf16Units=(bytes+16384)*c,arrays=(fields+16)*c,arrayPayloadBytes=(bytes+16384)*c,
+        fun units(c: Long)=ActiveWorkspaceBudget.Units(objects=(rows+16)*c*8+revisions*c,
+            strings=(fields+16)*c,utf16Units=(bytes+16384)*c,arrays=(fields+16)*c,arrayPayloadBytes=(bytes+16384)*c+revisions*c*8,
             lists=16,listCapacity=(rows+32)*c,maps=8,mapCapacity=rows*c,references=(rows+32)*c*16)
         return ActiveCoreReservation(units(4),units(16))
     }
@@ -145,14 +146,14 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
             args.add(after.createdAt);args.add(value)
         }
         val selected="id IN (SELECT id FROM persons WHERE $where ORDER BY createdAt,$key LIMIT 32)"
-        return PagePlan(size("persons",selected,args,cardTexts,listOf("createdAt",op("updatedAt"),affected)),counts(action),total,state,filter)
+        return PagePlan(size("persons",selected,args,cardTexts,listOf("createdAt",op("updatedAt"),affected,"editRevision",op("editRevision"))),counts(action),total,state,filter)
     }
     private suspend fun materializePage(plan: PagePlan): CompactPeoplePage {
         val cards=ArrayList<CompactPersonCard>(32)
         fetch(plan.selection) { t,n ->
-            val person=PersonRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),t[3]?:invalid(),n[0]?:invalid()).model()
+            val person=PersonRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),t[3]?:invalid(),n[0]?:invalid(), editRevision = n[3]?:invalid()).model()
             val status=OperationalStatus.valueOf(t[4]?:invalid())
-            val state=OperationalRow(person.actionId,person.id,t[5],status.name,t[8],n[1]?:invalid()).model()
+            val state=OperationalRow(person.actionId,person.id,t[5],status.name,t[8],n[1]?:invalid(), editRevision = n[4]?:invalid()).model()
             if(t[5]!=null && (t[6]==null || t[7]!=OperationalRules.normalizedName(t[6]!!) || !OperationalRules.validName(t[6]!!))) invalid()
             cards.add(CompactPersonCard(person.id,person.pseudonym,person.createdAt,state.status,state.currentRoleId,t[6],state.currentPlaceLabel,state.updatedAt,n[2]?:invalid()))
         }
@@ -166,7 +167,7 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
         val args=listOf(state.binding.actionId)
         val action=size("actions","id=?",args,listOf("id","title","description","status","sensitivity"),listOf("startAt","expectedEndAt","createdAt","completedAt"))
         val people=pagePlan(state,CompactPeopleQuery.All,null)
-        val roles=size("roles","actionId=?",args,listOf("id","actionId","name","normalizedName"),listOf("createdAt","(SELECT COUNT(*) FROM person_operational_states s WHERE s.actionId=roles.actionId AND s.currentRoleId=roles.id AND s.operationalStatus='ON_SITE')"))
+        val roles=size("roles","actionId=?",args,listOf("id","actionId","name","normalizedName"),listOf("createdAt","(SELECT COUNT(*) FROM person_operational_states s WHERE s.actionId=roles.actionId AND s.currentRoleId=roles.id AND s.operationalStatus='ON_SITE')","editRevision"))
         val without=scalar("SELECT COUNT(*) FROM person_operational_states WHERE actionId=? AND operationalStatus='ON_SITE' AND currentRoleId IS NULL",args)
         val base=reserve(listOf(action,people.selection,roles))
         val reservation=try {
@@ -179,7 +180,7 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
             fetch(action){t,n->a=ActionRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),n[0]?:invalid(),n[1]?:invalid(),n[2]?:invalid(),t[3]?:invalid(),t[4]?:invalid(),n[3]).model()}
             val page=materializePage(people)
             val functions=ArrayList<Pair<CompactFunction,String>>()
-            fetch(roles){t,n->functions.add(CompactFunction(RoleRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),t[3]?:invalid(),n[0]?:invalid()).model(),n[1]?:invalid()) to (t[3]?:invalid()))}
+            fetch(roles){t,n->functions.add(CompactFunction(RoleRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),t[3]?:invalid(),n[0]?:invalid(), editRevision = n[2]?:invalid()).model(),n[1]?:invalid()) to (t[3]?:invalid()))}
             functions.sortWith(compareBy<Pair<CompactFunction,String>>{it.second}.thenBy{it.first.role.id})
             val summary=CompactFunctions(functions.map{it.first},without,page.overall.onSite,functions.count{it.first.onSiteCount>0}.toLong())
             if(summary.items.sumOf{it.onSiteCount}+without!=page.overall.onSite) invalid()
@@ -195,22 +196,24 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
     suspend fun detail(state: CompactTaskState,personId: String): CompactPeopleResult.Value {
         input(personId);preflight(state)
         val args=listOf(state.binding.actionId,personId)
-        val person=size("persons","actionId=? AND id=?",args,cardTexts,listOf("createdAt",op("updatedAt")))
+        val person=size("persons","actionId=? AND id=?",args,cardTexts,listOf("createdAt",op("updatedAt"),"editRevision",op("editRevision")))
         if(person.rows!=1L) fail(BoundedActiveStatus.ACCESS_REVOKED)
         val planned=size("person_planned_roles","actionId=? AND personId=?",args,listOf("roleId"))
-        val primary=size("person_role_plans","actionId=? AND personId=?",args,listOf("primaryRoleId"))
+        val primary=size("person_role_plans","actionId=? AND personId=?",args,listOf("primaryRoleId"),listOf("editRevision"))
+        if(primary.rows!=1L)invalid()
         val prepared=PreparedCoreRead(reserve(listOf(person,planned,primary))) {
             observe(Phase.ADMITTED);gate()
             var p: Person?=null;var s: PersonOperationalState?=null
             fetch(person){t,n->
-                p=PersonRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),t[3]?:invalid(),n[0]?:invalid()).model()
-                s=OperationalRow(t[1]?:invalid(),t[0]?:invalid(),t[5],t[4]?:invalid(),t[8],n[1]?:invalid()).model()
+                p=PersonRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),t[3]?:invalid(),n[0]?:invalid(), editRevision = n[2]?:invalid()).model()
+                s=OperationalRow(t[1]?:invalid(),t[0]?:invalid(),t[5],t[4]?:invalid(),t[8],n[1]?:invalid(), editRevision = n[3]?:invalid()).model()
                 if(t[5]!=null && (t[6]==null || t[7]!=OperationalRules.normalizedName(t[6]!!) || !OperationalRules.validName(t[6]!!))) invalid()
             }
             val ids=linkedSetOf<String>();fetch(planned){t,_->if(!ids.add(t[0]?:invalid())) invalid()}
-            var main: String?=null;fetch(primary){t,_->main=t[0]}
+            var main: String?=null;var revision:Long?=null
+            fetch(primary){t,n->main=t[0];revision=n[0]?.takeIf{it>=0}?:invalid()}
             if(!OperationalRules.validPlan(ids,main)) invalid()
-            CompactPersonDetail(state,OperationalPerson(p?:invalid(),PersonRolePlan(ids,main),s?:invalid()))
+            CompactPersonDetail(state,OperationalPerson(p?:invalid(),PersonRolePlan(ids,main, editRevision = revision?:invalid()),s?:invalid()))
         }
         return finish(prepared)
     }

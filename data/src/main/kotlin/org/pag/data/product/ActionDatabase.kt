@@ -30,7 +30,7 @@ internal data class ActionRow(@PrimaryKey val id: String, val title: String, val
     @Insert suspend fun insert(row: ActionRow)
     @Update suspend fun update(row: ActionRow): Int
 }
-@Database(entities = [ActionRow::class, PersonRow::class, LeadershipRow::class, SensitiveRow::class, RoleRow::class, PlannedRoleRow::class, RolePlanRow::class, OperationalRow::class, TaskRow::class, TaskEventRow::class, ProtocolEntryRow::class, ProtocolRevisionRow::class, ProtocolAffectedRow::class, ProtocolIdentifierRow::class, ProtocolReportedRow::class, MaterialRow::class, ExpenseRow::class, ExpensePaymentRow::class, MemoryReportRow::class, MemoryAnswerRow::class, MemoryAddendumRow::class, DocumentRow::class, DocumentJobRow::class], version = 11, exportSchema = true)
+@Database(entities = [ActionRow::class, PersonRow::class, LeadershipRow::class, SensitiveRow::class, RoleRow::class, PlannedRoleRow::class, RolePlanRow::class, OperationalRow::class, TaskRow::class, TaskEventRow::class, ProtocolEntryRow::class, ProtocolRevisionRow::class, ProtocolAffectedRow::class, ProtocolIdentifierRow::class, ProtocolReportedRow::class, MaterialRow::class, ExpenseRow::class, ExpensePaymentRow::class, MemoryReportRow::class, MemoryAnswerRow::class, MemoryAddendumRow::class, DocumentRow::class, DocumentJobRow::class], version = 12, exportSchema = true)
 internal abstract class ActionDatabase : RoomDatabase() {
     abstract fun actions(): ActionDao
     abstract fun persons(): PersonDao
@@ -105,7 +105,8 @@ internal class ActionDatabaseAccess(private val app: Context,
                 preflight.completed(ActionPreflightStep.OPEN)
                 driverContext.requireB2(AccessPoint.STEP)
                 phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
-                if (native.version !in 1..11) throw ProductStorageFailure()
+                if (native.version !in 1..12) throw ProductStorageFailure()
+                if(native.version<12 && context.scope!=AccessScope.MAINTENANCE)throw ProductStorageFailure()
                 preflight.measured(ActionDatabasePhase.VERSION,phaseStarted)
                 preflight.completed(ActionPreflightStep.VERSION)
                 driverContext.requireB2(AccessPoint.STEP)
@@ -156,7 +157,7 @@ internal class ActionDatabaseAccess(private val app: Context,
                     phaseStarted=if(preflight.timing!=null)System.nanoTime() else 0L
                     room = Room.databaseBuilder(app, ActionDatabase::class.java, file.path).setDriver(driver)
                         .setQueryCoroutineContext(Dispatchers.IO + parent + lifecycle.handler { parent.cancel() })
-                        .addMigrations(ACTION_MIGRATION_1_2, ACTION_MIGRATION_2_3, ACTION_MIGRATION_3_4, ACTION_MIGRATION_4_5, ACTION_MIGRATION_5_6, ACTION_MIGRATION_6_7, ACTION_MIGRATION_7_8, ACTION_MIGRATION_8_9, ACTION_MIGRATION_9_10, ACTION_MIGRATION_10_11)
+                        .addMigrations(ACTION_MIGRATION_1_2, ACTION_MIGRATION_2_3, ACTION_MIGRATION_3_4, ACTION_MIGRATION_4_5, ACTION_MIGRATION_5_6, ACTION_MIGRATION_6_7, ACTION_MIGRATION_7_8, ACTION_MIGRATION_8_9, ACTION_MIGRATION_9_10, ACTION_MIGRATION_10_11, ACTION_MIGRATION_11_12)
                         .addCallback(TASK_DATABASE_CALLBACK)
                         .addCallback(PROTOCOL_DATABASE_CALLBACK)
                         .addCallback(MATERIAL_DATABASE_CALLBACK)
@@ -169,6 +170,7 @@ internal class ActionDatabaseAccess(private val app: Context,
                         // Force Room's generated schema validation even for a maintenance-only open.
                         val opening=if(preflight.timing!=null)System.nanoTime() else 0L
                         room.actions().get("")
+                        room.useReaderConnection { validateEditRevisions(it) }
                         preflight.measured(ActionDatabasePhase.ROOM_OPEN_SCHEMA,opening)
                         val querying=if(preflight.timing!=null)System.nanoTime() else 0L
                         work(room).also {preflight.measured(ActionDatabasePhase.QUERY_TRANSACTION,querying)}
