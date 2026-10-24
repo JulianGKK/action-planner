@@ -1,0 +1,32 @@
+INSTRUMENTATION_STATUS: stream=P101,leadership,CALL,label=open,once=true,epoch=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,leadership,CALL,label=save,once=true,epoch=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,leadership,CALL,label=open,once=true,epoch=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,leadership,CALL,label=delete_area,once=true,epoch=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,leadership,CALL,label=open,once=true,epoch=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,leadership,CALL,label=save_again,once=true,epoch=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,leadership,CALL,label=delete_person,once=true,epoch=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,leadership,CALL,label=delete_action,once=true,epoch=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,leadership,LEADERSHIP,setup_save_deletearea_deleteperson_deleteaction=true,read_open_epoch_unchanged=true,begin_before_queue=true,epochs=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,leadership,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 PASS leadership
+INSTRUMENTATION_CODE: -1

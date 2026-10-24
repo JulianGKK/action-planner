@@ -46,16 +46,19 @@ internal class WorkspaceWriteBoundary(private val access: StorageAccess, private
     private val main: Executor, private val mutations: WorkspaceMutationInvalidation,
     private val blocked: () -> Unit) {
     fun <R : Any> submit(mutation: WorkspaceMutation, publish: (R)->Unit, busy: ()->R?,
-        success: (R)->Boolean, work: (StorageContext,WorkspaceWriteProgress)->R) {
-        val context=access.acquire(AccessScope.READY)?:return
-        if(context.scope!=AccessScope.READY || !context.check(AccessPoint.OPERATION)) return
+        success: (R)->Boolean, work: (StorageContext,WorkspaceWriteProgress)->R) =
+        submit(mutation,publish,busy,success,{},work)
+    fun <R : Any> submit(mutation: WorkspaceMutation, publish: (R)->Unit, busy: ()->R?,
+        success: (R)->Boolean, notStarted:()->Unit, work: (StorageContext,WorkspaceWriteProgress)->R) {
+        val context=access.acquire(AccessScope.READY)?:run{notStarted();return}
+        if(context.scope!=AccessScope.READY || !context.check(AccessPoint.OPERATION)) {notStarted();return}
         val ticket=if(mutation.family==WorkspaceWriterFamily.TASK)
             mutations.beforeTaskQueue(mutation.actionId!!,context.generation)
             else mutations.beforeCoreQueue(mutation,context.generation)
         if(ticket==null) {
             // Action.create's legacy callback has no rejection variant: deny without callback,
             // like existing authority denial. Never fabricate an Action or a storage-corruption error.
-            busy()?.let { result -> context.publish{publish(result)} };return
+            notStarted();busy()?.let { result -> context.publish{publish(result)} };return
         }
         val started=AtomicBoolean();val delivered=AtomicBoolean();val progress=WorkspaceWriteProgress()
         fun complete(result:R?,failed:Boolean) {
@@ -79,8 +82,12 @@ internal class WorkspaceWriteBoundary(private val access: StorageAccess, private
                     if(success(result) && progress.outcome!=WorkspaceWriteOutcome.COMMITTED)throw ProductStorageFailure()
                     progress.cleaned()
                 }catch(_:Exception){failed=true}
-                main.execute{complete(result,failed)} // failed main dispatch stays Pending
+                ticket.recordWorkCompletion(progress.completion())
+                main.execute{complete(result,failed)} // UI loss stays Pending in this generation.
             }
-        }}catch(_:Exception){if(!started.get())complete(null,true)}
+        }}catch(_:Exception){
+            // Disarm a possibly accepted-but-not-yet-started runnable before declaring nonexecution.
+            if(started.compareAndSet(false,true)){notStarted();complete(null,true)}
+        }
     }
 }

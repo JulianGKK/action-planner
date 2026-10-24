@@ -38,6 +38,9 @@ class ProductRuntime private constructor(activity: Activity, private val worker:
     val session = SessionCoordinator(authentication, Maintenance { Subscription {} },
         MonotonicTime { SystemClock.elapsedRealtime() }, ProductSessionTiming.policy, foreground,
         authorizedMaintenance = { context, operation, done ->
+            // Maintenance/migration/file recovery have no READY writer ticket. End the original
+            // read authority before their worker can perform any side effect; Session owns rebinding.
+            workspaceMutations.revokeActiveRead()
             val cancelled = AtomicBoolean(false)
             worker.execute {
                 val probe = MaintenanceProbe(maintenanceProbeEnabled(activity.applicationInfo.flags)) {
@@ -110,7 +113,7 @@ class ProductRuntime private constructor(activity: Activity, private val worker:
     val operations: OperationsRepository = ProductOperationsRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, session::storageFailure, mutations = workspaceMutations)
     val leadership: LeadershipRepository = ProductLeadershipRepository(activity.applicationContext, session, inventory,
-        { owner.get() }, worker, main, MonotonicTime { SystemClock.elapsedRealtime() })
+        { owner.get() }, worker, main, MonotonicTime { SystemClock.elapsedRealtime() }, mutations=workspaceMutations, blocked=session::storageFailure)
     private val leadershipLifetime = session.observe { state ->
         if (state.state != SessionState.READY) leadership.revoke()
     }

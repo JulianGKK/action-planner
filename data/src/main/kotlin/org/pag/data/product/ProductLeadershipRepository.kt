@@ -2,7 +2,7 @@ package org.pag.data.product
 
 import android.content.Context
 import androidx.room3.withReadTransaction
-import androidx.room3.withWriteTransaction
+import androidx.room3.useWriterConnection
 import org.pag.domain.*
 import org.pag.security.*
 import java.util.UUID
@@ -13,7 +13,9 @@ import java.util.concurrent.atomic.AtomicLong
 class ProductLeadershipRepository(app:Context,private val access:StorageAccess,private val inventory:ProductInventory,
     private val owner:()->SessionDbKeyOwner?,private val worker:Executor,private val main:Executor,
     private val clock:MonotonicTime,private val device:LeadershipDeviceKey=AndroidLeadershipDeviceKey(),
-    internal val afterSensitiveWrite:()->Unit={}):LeadershipRepository {
+    internal val afterSensitiveWrite:()->Unit={},
+    private val mutations:WorkspaceMutationInvalidation=UncachedWorkspaceMutations(),
+    private val blocked:()->Unit={}):LeadershipRepository {
     private val database=ActionDatabaseAccess(app.applicationContext)
     private val active=AtomicReference<LeadershipGrant?>()
     private val request=AtomicLong()
@@ -65,10 +67,16 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
             !row.keyEnvelope.contentEquals(g.keyEnvelope) || g.expectedPayload==null ||
             !row.payload.contentEquals(g.expectedPayload))throw SensitiveProblem(SensitiveFailure.CONFLICT)
     }
-    private fun <T> db(c:StorageContext,work:suspend (ActionDatabase)->T):T {
+    private fun <T> db(c:StorageContext,progress:LeadershipWriteProgress?=null,work:suspend (ActionDatabase)->T):T {
         check(c)
         if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
-        return (owner() ?: throw SensitiveProblem(SensitiveFailure.DENIED)).withDbKey(c){key->database.use(inventory.database,key,c,work=work)}
+        progress?.opening()
+        var cleanup=false
+        try {
+            return (owner() ?: throw SensitiveProblem(SensitiveFailure.DENIED)).withDbKey(c){key->
+                database.use(inventory.database,key,c,cleanupConfirmed={cleanup=it},work=work)
+            }
+        } finally {progress?.closed(cleanup)}
     }
     private fun <T> run(publish:(SensitiveResult<T>)->Unit,cleanup:()->Unit={},publicationAllowed:()->Boolean={true},work:(StorageContext)->T){
         val cleaned=java.util.concurrent.atomic.AtomicBoolean(false)
@@ -87,6 +95,35 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
             catch(_:java.util.concurrent.RejectedExecutionException){(result as? SensitiveResult.Value)?.value.let{if(it is SensitiveOpened)it.grant.cancel()}}
         } } catch(_:java.util.concurrent.RejectedExecutionException){release.run()}
     }
+    private fun write(c:StorageContext,e:LeadershipWriteProgress,work:suspend(ActionDatabase)->Unit) =
+        db(c,e){d->d.useWriterConnection{tx->e.transaction(tx,c){work(d)}}}
+    /** Existing port and central publication, additionally bound to the original P3b request. */
+    private fun <T> runWrite(actionId:String,publish:(SensitiveResult<T>)->Unit,cleanup:()->Unit={},
+        publicationAllowed:()->Boolean={true},work:(StorageContext,LeadershipWriteProgress)->T) {
+        val original=request.get()
+        val cleaned=java.util.concurrent.atomic.AtomicBoolean(false)
+        lateinit var release:Runnable
+        release=Runnable{if(cleaned.compareAndSet(false,true)){cleanup();pendingCleanups.remove(release)}}
+        pendingCleanups.add(release)
+        val scoped=object:StorageAccess {
+            override fun acquire(scope:AccessScope)=access.acquire(scope)?.let{base->bounded(base){request.get()==original}}
+        }
+        try {
+            WorkspaceWriteBoundary(scoped,worker,main,mutations,blocked).submit<SensitiveResult<T>>(
+                WorkspaceMutation(WorkspaceWriterFamily.LEADERSHIP,actionId),
+                {result->if(publicationAllowed())publish(result)},
+                {SensitiveResult.Rejected(SensitiveFailure.DENIED)},{it is SensitiveResult.Value},
+                notStarted={release.run()}) {c,progress->
+                val e=LeadershipWriteProgress(progress)
+                try {
+                    try {val value=work(c,e);e.complete();SensitiveResult.Value(value)}
+                    catch(p:SensitiveProblem){if(p.suppressed.isNotEmpty())throw p;e.rejectedWithoutEffect();SensitiveResult.Rejected(p.reason)}
+                    catch(p:LeadershipCryptoFailure){e.rejectedWithoutEffect();SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE)}
+                } finally {release.run()}
+            }
+        } catch(t:Throwable){release.run();throw t}
+    }
+    private fun revokeGrantsOnly(){active.getAndSet(null)?.cancel()}
     override fun actionState(actionId:String,publish:(SensitiveResult<SensitiveState>)->Unit) {
         val ticket=request.get()
         // Recheck the request inside the existing generation-gated publication too.
@@ -101,20 +138,20 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
     }
     override fun setup(actionId:String,passphrase:CharArray,confirmation:CharArray,publish:(SensitiveResult<Unit>)->Unit) {
         val ticket=request.get()
-        run(publish,{passphrase.fill('\u0000');confirmation.fill('\u0000')}, {request.get()==ticket}){base->
+        runWrite(actionId,publish,{passphrase.fill('\u0000');confirmation.fill('\u0000')}, {request.get()==ticket}){base,e->
         val c=bounded(base){request.get()==ticket}
         if(!LeadershipRules.validPassphrase(passphrase)||!passphrase.contentEquals(confirmation))throw SensitiveProblem(SensitiveFailure.INVALID_PASSPHRASE)
         val root=LeadershipCrypto.random(32);var derived:ByteArray?=null;var inner:ByteArray?=null
         try{
             check(c);if(device.present(alias(actionId)))throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
             val row=LeadershipRow(actionId,"RESERVED",UUID.randomUUID().toString(),1,"Argon2id",19,65536,3,1,LeadershipCrypto.random(16),byteArrayOf())
-            db(c){d->d.withWriteTransaction{parent(d,c,actionId,write=true);check(c);if(sensitiveSnapshot(d,c,actionId).state!=SensitiveState.UNINITIALIZED)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE);check(c);d.leadership().insert(row);check(c,AccessPoint.COMMIT)}}
+            write(c,e){d->parent(d,c,actionId,write=true);check(c);if(sensitiveSnapshot(d,c,actionId).state!=SensitiveState.UNINITIALIZED)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE);check(c);d.leadership().insert(row);check(c,AccessPoint.COMMIT)}
             check(c);derived=LeadershipCrypto.derive(passphrase,row.salt,LeadershipKdfParameters())
             check(c);inner=LeadershipCrypto.encrypt(derived,root,rootAad(row))
-            check(c);device.create(alias(actionId))
+            check(c);e.external{device.create(alias(actionId))}
             check(c);val wrapped=device.encrypt(alias(actionId),inner,rootAad(row))
             val ready=row.copy(state="READY",envelope=wrapped)
-            db(c){d->d.withWriteTransaction{parent(d,c,actionId,write=true);check(c);val pending=sensitiveSnapshot(d,c,actionId);if(pending.root==null || !sameRoot(pending.root,row) || pending.rows.isNotEmpty() || classification(ready,pending.rows,pending.present,pending.usable)!=SensitiveState.READY)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE);check(c);d.leadership().update(ready);check(c,AccessPoint.COMMIT)}}
+            write(c,e){d->parent(d,c,actionId,write=true);check(c);val pending=sensitiveSnapshot(d,c,actionId);if(pending.root==null || !sameRoot(pending.root,row) || pending.rows.isNotEmpty() || classification(ready,pending.rows,pending.present,pending.usable)!=SensitiveState.READY)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE);check(c);d.leadership().update(ready);check(c,AccessPoint.COMMIT)}
         }finally{root.fill(0);derived?.fill(0);inner?.fill(0)}
         }
     }
@@ -154,7 +191,7 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
             }catch(e:Exception){grant?.cancel();throw e}finally{dek?.fill(0);plaintext?.fill(0)}
         }
     }
-    override fun save(grant:SensitiveGrant,data:SensitiveData,publish:(SensitiveResult<Unit>)->Unit)=mutate(grant,publish){g,c->
+    override fun save(grant:SensitiveGrant,data:SensitiveData,publish:(SensitiveResult<Unit>)->Unit)=mutate(grant,publish){g,c,e->
         if(!g.writable||LeadershipRules.area(data)!=g.area)throw SensitiveProblem(SensitiveFailure.DENIED)
         val plain=SensitiveCodec.encode(data);var cipher:ByteArray?=null;
         try{
@@ -163,30 +200,30 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
             if(next<=0)throw SensitiveProblem(SensitiveFailure.CONFLICT)
             // Bind the key envelope to owner/area/epoch, not changing row revision; payload includes revision.
             cipher=g.consume{key->LeadershipCrypto.encrypt(key,plain,payloadAad(g,next))}
-            db(c){d->d.withWriteTransaction{parent(d,c,g.actionId,g.personId,true);check(c);val snapshot=requireSensitiveReady(d,c,g.actionId);val r=snapshot.root!!;if(r.epoch!=g.epoch || g.expectedRoot==null || !sameRoot(r,g.expectedRoot))throw SensitiveProblem(SensitiveFailure.CONFLICT);check(c);val old=snapshot.rows.singleOrNull{it.personId==g.personId&&it.area==g.area.name};requireSelected(old,g);if(!g.valid())throw SensitiveProblem(SensitiveFailure.DENIED);val row=SensitiveRow(g.actionId,g.personId,g.area.name,1,next,g.keyEnvelope,cipher!!);check(c);if(!SensitiveCodec.hasData(data))d.leadership().removeArea(g.actionId,g.personId,g.area.name)else if(old==null)d.leadership().insertArea(row)else d.leadership().updateArea(row);afterSensitiveWrite();check(c,AccessPoint.COMMIT);if(!g.valid())throw SensitiveProblem(SensitiveFailure.DENIED)}}
+            write(c,e){d->parent(d,c,g.actionId,g.personId,true);check(c);val snapshot=requireSensitiveReady(d,c,g.actionId);val r=snapshot.root!!;if(r.epoch!=g.epoch || g.expectedRoot==null || !sameRoot(r,g.expectedRoot))throw SensitiveProblem(SensitiveFailure.CONFLICT);check(c);val old=snapshot.rows.singleOrNull{it.personId==g.personId&&it.area==g.area.name};requireSelected(old,g);if(!g.valid())throw SensitiveProblem(SensitiveFailure.DENIED);val row=SensitiveRow(g.actionId,g.personId,g.area.name,1,next,g.keyEnvelope,cipher!!);check(c);if(!SensitiveCodec.hasData(data))d.leadership().removeArea(g.actionId,g.personId,g.area.name)else if(old==null)d.leadership().insertArea(row)else d.leadership().updateArea(row);afterSensitiveWrite();check(c,AccessPoint.COMMIT);if(!g.valid())throw SensitiveProblem(SensitiveFailure.DENIED)}
         }finally{plain.fill(0);cipher?.fill(0)}
     }
     private fun payloadAad(g:LeadershipGrant,revision:Long)=SensitiveCodec.context("P3b-area",g.actionId,g.personId,g.area.name,"1",g.epoch,revision.toString())
-    private fun mutate(grant:SensitiveGrant,publish:(SensitiveResult<Unit>)->Unit,work:(LeadershipGrant,StorageContext)->Unit) {
+    private fun mutate(grant:SensitiveGrant,publish:(SensitiveResult<Unit>)->Unit,work:(LeadershipGrant,StorageContext,LeadershipWriteProgress)->Unit) {
         val ticket=request.get()
-        run(publish,publicationAllowed={request.get()==ticket && (grant as? LeadershipGrant)?.inLifetime()==true}){c->
+        runWrite(grant.actionId,publish,publicationAllowed={request.get()==ticket && (grant as? LeadershipGrant)?.inLifetime()==true}){c,e->
         val g=grant as? LeadershipGrant?:throw SensitiveProblem(SensitiveFailure.DENIED)
         if(active.get()!==g||c.generation!=g.context.generation||!g.valid())throw SensitiveProblem(SensitiveFailure.DENIED)
-        try{work(g,bounded(c){g.valid()})}finally{g.cancel();active.compareAndSet(g,null)}
+        try{work(g,bounded(c){g.valid()},e)}finally{g.cancel();active.compareAndSet(g,null)}
     }
     }
-    override fun deleteArea(grant:SensitiveGrant,publish:(SensitiveResult<Unit>)->Unit)=mutate(grant,publish){g,c->
+    override fun deleteArea(grant:SensitiveGrant,publish:(SensitiveResult<Unit>)->Unit)=mutate(grant,publish){g,c,e->
         if(!g.writable)throw SensitiveProblem(SensitiveFailure.DENIED)
-        db(c){d->d.withWriteTransaction{parent(d,c,g.actionId,g.personId,true);check(c);val snapshot=requireSensitiveReady(d,c,g.actionId);val r=snapshot.root!!;if(r.epoch!=g.epoch || g.expectedRoot==null || !sameRoot(r,g.expectedRoot))throw SensitiveProblem(SensitiveFailure.CONFLICT);check(c);val old=snapshot.rows.singleOrNull{it.personId==g.personId&&it.area==g.area.name};requireSelected(old,g);if(!g.valid())throw SensitiveProblem(SensitiveFailure.DENIED);check(c);d.leadership().removeArea(g.actionId,g.personId,g.area.name);check(c,AccessPoint.COMMIT);if(!g.valid())throw SensitiveProblem(SensitiveFailure.DENIED)}}
+        write(c,e){d->parent(d,c,g.actionId,g.personId,true);check(c);val snapshot=requireSensitiveReady(d,c,g.actionId);val r=snapshot.root!!;if(r.epoch!=g.epoch || g.expectedRoot==null || !sameRoot(r,g.expectedRoot))throw SensitiveProblem(SensitiveFailure.CONFLICT);check(c);val old=snapshot.rows.singleOrNull{it.personId==g.personId&&it.area==g.area.name};requireSelected(old,g);if(!g.valid())throw SensitiveProblem(SensitiveFailure.DENIED);check(c);d.leadership().removeArea(g.actionId,g.personId,g.area.name);check(c,AccessPoint.COMMIT);if(!g.valid())throw SensitiveProblem(SensitiveFailure.DENIED)}
     }
-    override fun deletePerson(actionId:String,personId:String,passphrase:CharArray,publish:(SensitiveResult<Unit>)->Unit)=run(publish,{passphrase.fill('\u0000')}){c->
-        val row=db(c){d->d.withReadTransaction{parent(d,c,actionId,personId,true);requireSensitiveReady(d,c,actionId).root!!}}
+    override fun deletePerson(actionId:String,personId:String,passphrase:CharArray,publish:(SensitiveResult<Unit>)->Unit)=runWrite(actionId,publish,{passphrase.fill('\u0000')}){c,e->
+        val row=db(c,e){d->d.withReadTransaction{parent(d,c,actionId,personId,true);requireSensitiveReady(d,c,actionId).root!!}}
         root(c,row,passphrase){}
-        revoke()
-        db(c){d->d.withWriteTransaction{parent(d,c,actionId,personId,true);check(c);if(!sameRoot(requireSensitiveReady(d,c,actionId).root!!,row))throw SensitiveProblem(SensitiveFailure.CONFLICT);check(c);d.leadership().removePerson(actionId,personId);check(c,AccessPoint.COMMIT)}}
+        revokeGrantsOnly()
+        write(c,e){d->parent(d,c,actionId,personId,true);check(c);if(!sameRoot(requireSensitiveReady(d,c,actionId).root!!,row))throw SensitiveProblem(SensitiveFailure.CONFLICT);check(c);d.leadership().removePerson(actionId,personId);check(c,AccessPoint.COMMIT)}
     }
-    override fun deleteAction(actionId:String,passphrase:CharArray,publish:(SensitiveResult<Unit>)->Unit)=run(publish,{passphrase.fill('\u0000')}){c->
-        val row=db(c){d->d.withReadTransaction{
+    override fun deleteAction(actionId:String,passphrase:CharArray,publish:(SensitiveResult<Unit>)->Unit)=runWrite(actionId,publish,{passphrase.fill('\u0000')}){c,e->
+        val row=db(c,e){d->d.withReadTransaction{
             parent(d,c,actionId,write=true);check(c)
             val row=d.leadership().get(actionId)?:throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
             // Explicit continuation of an already authorized delete intent is not a normal read/write.
@@ -195,10 +232,10 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
         }}
         if(row.state!="DELETE_PENDING"){
             root(c,row,passphrase){}
-            db(c){d->d.withWriteTransaction{parent(d,c,actionId,write=true);check(c);if(!sameRoot(requireSensitiveReady(d,c,actionId).root!!,row))throw SensitiveProblem(SensitiveFailure.CONFLICT);check(c);d.leadership().update(row.copy(state="DELETE_PENDING"));check(c,AccessPoint.COMMIT)}}
+            write(c,e){d->parent(d,c,actionId,write=true);check(c);if(!sameRoot(requireSensitiveReady(d,c,actionId).root!!,row))throw SensitiveProblem(SensitiveFailure.CONFLICT);check(c);d.leadership().update(row.copy(state="DELETE_PENDING"));check(c,AccessPoint.COMMIT)}
         }
-        revoke();check(c);device.delete(alias(actionId));check(c)
+        revokeGrantsOnly();check(c);e.external{device.delete(alias(actionId))};check(c)
         if(device.present(alias(actionId)))throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
-        db(c){d->d.withWriteTransaction{parent(d,c,actionId,write=true);check(c);val r=d.leadership().get(actionId);if(r?.epoch!=row.epoch||r.state!="DELETE_PENDING")throw SensitiveProblem(SensitiveFailure.CONFLICT);check(c);d.leadership().removeAction(actionId);check(c);d.leadership().remove(actionId);check(c,AccessPoint.COMMIT)}}
+        write(c,e){d->parent(d,c,actionId,write=true);check(c);val r=d.leadership().get(actionId);if(r?.epoch!=row.epoch||r.state!="DELETE_PENDING")throw SensitiveProblem(SensitiveFailure.CONFLICT);check(c);d.leadership().removeAction(actionId);check(c);d.leadership().remove(actionId);check(c,AccessPoint.COMMIT)}
     }
 }

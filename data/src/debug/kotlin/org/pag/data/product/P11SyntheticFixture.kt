@@ -122,6 +122,19 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
             }
         }}
     }
+    internal var p101SeededVersion=11;private set
+    /** Exact synthetic legacy seed, before Runtime/Session construction; never product data. */
+    internal fun p101LegacyTen() {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        org.pag.data.prototype.b2.B2Native.open(inventory.database,key,maintenance).use{db->
+            db.beginTransaction()
+            try {
+                db.execSQL("DROP TABLE document_jobs");db.execSQL("DROP TABLE documents")
+                db.version=10;check(db.version==10);db.setTransactionSuccessful()
+            }finally{db.endTransaction()}
+        }
+        p101SeededVersion=10
+    }
     private fun fail():Nothing=error("SYNTHETIC_STORAGE_FAILURE")
     val actions:ActionRepository=ProductActionRepository(wrapped,access,inventory,owner::get,worker,main,::fail)
     val workspace:WorkspaceRepository=ProductWorkspaceRepository(wrapped,access,inventory,owner::get,worker,main,::fail)

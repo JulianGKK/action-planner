@@ -1,0 +1,17 @@
+INSTRUMENTATION_STATUS: stream=P101,rollback,CALL,label=setup,once=true,epoch=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,rollback,CALL,label=open,once=true,epoch=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,rollback,ROLLBACK,lock_after_real_DAO_write=true,persisted_sensitive_rows=0,success_callbacks=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,rollback,CALL,label=cleanup_ready_leadership,once=true,epoch=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,rollback,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 PASS rollback
+INSTRUMENTATION_CODE: -1

@@ -1,0 +1,14 @@
+INSTRUMENTATION_STATUS: stream=P101,lost_main,COMPLETION,outcome=COMMITTED,cleanup=COMPLETE
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,lost_main,CALL,label=explicit_delete_after_late_main,once=true,epoch=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,lost_main,LOST_MAIN,persisted_commit=READY,callback_count=0,late_duplicate_inert=true,subsequent_explicit_mutation=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,lost_main,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 PASS lost_main
+INSTRUMENTATION_CODE: -1

@@ -1,0 +1,23 @@
+INSTRUMENTATION_STATUS: stream=P101,documents,CALL,label=import,once=true,epoch=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,documents,CALL,label=list,once=true,epoch=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,documents,CALL,label=p3b_denied_while_document_uncertain,once=true,epoch=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,documents,DOCUMENT_PARTIAL,phase=IMPORT_WRITING,source_calls=1,success_callbacks=0,common_port_denies=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,documents,CALL,label=delete_document,once=true,epoch=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,documents,DOCUMENT_RECOVERY,reauth_maintenance_before_READY=true,no_source_retry=true,import_delete_committed=true,jobs=0,documents=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,documents,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 PASS documents
+INSTRUMENTATION_CODE: -1

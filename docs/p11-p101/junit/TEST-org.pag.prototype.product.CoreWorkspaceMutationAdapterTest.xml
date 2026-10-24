@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.CoreWorkspaceMutationAdapterTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-24T05:33:57.710Z" hostname="iuzjhtgvfc" time="0.233">
+  <properties/>
+  <testcase name="everyCoreFamilyInvalidatesAllDependenciesBeforeQueueOnTheSameEpoch" classname="org.pag.prototype.product.CoreWorkspaceMutationAdapterTest" time="0.2"/>
+  <testcase name="taskOnlyAdaptersRefuseUnknownCoreFamiliesRatherThanBypassInvalidation" classname="org.pag.prototype.product.CoreWorkspaceMutationAdapterTest" time="0.002"/>
+  <testcase name="materialInvalidatesBoardSummaryAndOverviewCountWithoutInventedTaskChanges" classname="org.pag.prototype.product.CoreWorkspaceMutationAdapterTest" time="0.001"/>
+  <testcase name="protocolTracksDirtyMetadataWithoutGrantingSensitivePayloadRetention" classname="org.pag.prototype.product.CoreWorkspaceMutationAdapterTest" time="0.004"/>
+  <testcase name="actionSwitchStatusExitAndUnknownNeverResurrectAnActiveBinding" classname="org.pag.prototype.product.CoreWorkspaceMutationAdapterTest" time="0.006"/>
+  <testcase name="memoryReportReadLabelsAreDirtyMetadataOnlyAndFailClosed" classname="org.pag.prototype.product.CoreWorkspaceMutationAdapterTest" time="0.003"/>
+  <testcase name="expenseInvalidatesBoardCountAndTotalAndRemainsFailClosed" classname="org.pag.prototype.product.CoreWorkspaceMutationAdapterTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

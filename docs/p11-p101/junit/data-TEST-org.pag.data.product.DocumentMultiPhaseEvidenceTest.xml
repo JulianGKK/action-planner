@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.DocumentMultiPhaseEvidenceTest" tests="23" skipped="0" failures="0" errors="0" timestamp="2026-10-24T06:29:26.735Z" hostname="iuzjhtgvfc" time="2.651">
+  <properties/>
+  <testcase name="returnedUnlinkIsNotDirectorySyncOrJobRemoval" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.4"/>
+  <testcase name="missingRootAndUnknownLeafPreventRecoveryDespiteEarlierLocalCommits" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.021"/>
+  <testcase name="unconfirmedLeaseCleanupDoesNotEraseConfirmedLocalCommit" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.003"/>
+  <testcase name="rollbackOfLaterTransactionPreservesEarlierWritingCommit" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.001"/>
+  <testcase name="draftContainsOnlyBoundedEnumsBooleansAndFixedMetadataMaps" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.001"/>
+  <testcase name="successfulDeleteRequiresSeparateFinalCheckAndDoesNotReadSource" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.05"/>
+  <testcase name="contradictoryInventoryRemainsBlockedRegardlessOfPublication" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.002"/>
+  <testcase name="cipherCloseAndReturnedFileSyncBeforeClosedCommitStillLeaveWritingOnRevoke" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.012"/>
+  <testcase name="authorizedRecoveryAfterFailedFileSyncUsesFreshEvidenceAndDoesNotRepairOldValidity" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.026"/>
+  <testcase name="fileSyncFailureLeavesWritingAndRequiresAuthorizedRecovery" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.01"/>
+  <testcase name="realImportWorkerAndMainReplayHaveOnePhysicalChainAndOneAdmittedCallback" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.035"/>
+  <testcase name="failureAfterPublishedPreservesFourIndependentCommitsAndClosedSnapshots" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.024"/>
+  <testcase name="invalidBeforeReserveIsNonexecutionNotACommittedDocument" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.003"/>
+  <testcase name="realDeleteWithLostMainKeepsPhysicalCompletionAndUnknownDispatchSeparate" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.04"/>
+  <testcase name="deleteFailureBeforeUnlinkCannotUndoReturnedDetachOrEarlierReserve" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.037"/>
+  <testcase name="realImportCompletionDoesNotGrantCallbackAcrossMaintenanceFence" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.036"/>
+  <testcase name="tooLargeAfterCipherWritesIsRejectionAndNeverGlobalRollback" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="1.831"/>
+  <testcase name="revokeAfterDetachDoesNotRestoreParentOrUnlinkBlob" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.035"/>
+  <testcase name="unavailableSourceAfterWritingIsRejectionWithPersistedJob" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.007"/>
+  <testcase name="capacityRejectionCommitsNoInsertAndCreatesNoSourceOrNamespace" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.016"/>
+  <testcase name="successfulImportRequiresSeparateFinalCheckForDraftCompletion" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.029"/>
+  <testcase name="unknownDbEndCannotBeOverwrittenByLaterStepOrRejection" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.002"/>
+  <testcase name="renameThenSyncFailureKeepsOlderClosedPhaseAndPhysicalFinalBlob" classname="org.pag.data.product.DocumentMultiPhaseEvidenceTest" time="0.022"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,38 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin
+
+> Task :data:compileDebugKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:178:111 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:178:170 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:188:73 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:203:531 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 15s
+18 actionable tasks: 3 executed, 15 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html

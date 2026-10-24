@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P101,lost_main_recovery,LOST_MAIN_RECOVERY,fresh_actual_READY=true,B_admitted_before_A_UI=true,late_A_cannot_ack_B=true,A_callbacks=0,B_callbacks=1,no_retry=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,lost_main_recovery,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 PASS lost_main_recovery
+INSTRUMENTATION_CODE: -1

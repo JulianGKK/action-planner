@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P101,commit_receipt,COMPLETION,outcome=UNKNOWN,cleanup=COMPLETE,effect=REAL_COMMIT_RETURNED,injection_after_actual_return=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,commit_receipt,FAILURE,java.lang.IllegalStateException: Check failed.
+	at org.pag.prototype.P101WriterAcceptanceProbe.onStart(P101WriterAcceptanceProbe.kt:136)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 FAIL commit_receipt
+INSTRUMENTATION_CODE: 0

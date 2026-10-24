@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P101,commit_receipt,COMPLETION,outcome=UNKNOWN,cleanup=COMPLETE,effect=RESERVATION_END_STEP_RETURNED/native_transaction_live=true/key_creates=0,injection_after_actual_return=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,commit_receipt,DURABLE_AFTER_UNCERTAINTY,state=ABSENT,callback_count=0,no_retry=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,commit_receipt,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 PASS commit_receipt
+INSTRUMENTATION_CODE: -1

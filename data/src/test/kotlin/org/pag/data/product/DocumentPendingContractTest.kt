@@ -230,6 +230,6 @@ class DocumentPendingContractTest {
         val port=UncachedWorkspaceMutations();val ticket=port.beforeDocumentQueue("a",1)!!
         assertTrue(ticket.finishDocument(complete()));assertTrue(ticket.isCurrent());assertFalse(port.ramReuseEnabled)
         // No read/hit/clean or callback operation is introduced on the metadata port.
-        assertEquals(setOf("finish","finishDocument","isCurrent"),WorkspaceMutationInvalidation.Pending::class.java.declaredMethods.filterNot{it.isSynthetic}.map{it.name}.toSet())
+        assertEquals(setOf("finish","finishDocument","isCurrent","recordWorkCompletion"),WorkspaceMutationInvalidation.Pending::class.java.declaredMethods.filterNot{it.isSynthetic}.map{it.name}.toSet())
     }
 }

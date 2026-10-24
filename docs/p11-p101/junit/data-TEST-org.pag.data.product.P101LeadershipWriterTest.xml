@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P101LeadershipWriterTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-24T06:30:10.639Z" hostname="iuzjhtgvfc" time="1.626">
+  <properties/>
+  <testcase name="partialExternalEffectPreservesKnownCommitButWholeAttemptStaysUnknownAndNoRetry" classname="org.pag.data.product.P101LeadershipWriterTest" time="0.122"/>
+  <testcase name="laterControlledRollbackCannotRelabelEarlierCommitAsRollback" classname="org.pag.data.product.P101LeadershipWriterTest" time="0.118"/>
+  <testcase name="acceptedThenThrowingWorkerQueueCannotExecuteLaterAndReleasesResourcesOnce" classname="org.pag.data.product.P101LeadershipWriterTest" time="0.116"/>
+  <testcase name="latePatchAfterPermissionActionOrGenerationChangeOrNewMutationIsDenied" classname="org.pag.data.product.P101LeadershipWriterTest" time="0.452"/>
+  <testcase name="lockBeforeCommitAndCommitBeforeLockCannotPublishSaved" classname="org.pag.data.product.P101LeadershipWriterTest" time="0.228"/>
+  <testcase name="lostOuterEndReceiptIsUnknownEvenWhenRealSqliteCommitAlreadyHappened" classname="org.pag.data.product.P101LeadershipWriterTest" time="0.113"/>
+  <testcase name="lostMainKeepsSameGenerationPendingButCleanWorkRebindsOnlyOnNewReadyGeneration" classname="org.pag.data.product.P101LeadershipWriterTest" time="0.114"/>
+  <testcase name="beginRevokesOriginalReadBeforeQueueAndTwoCommitsPlusExternalStepPublishOnce" classname="org.pag.data.product.P101LeadershipWriterTest" time="0.118"/>
+  <testcase name="committedButCleanupFailureRetainsCommittedEvidenceAndSuppressesUi" classname="org.pag.data.product.P101LeadershipWriterTest" time="0.123"/>
+  <testcase name="controlledRejectionReturnsOnlyAfterOuterRollbackAndNeverInsertsRow" classname="org.pag.data.product.P101LeadershipWriterTest" time="0.116"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

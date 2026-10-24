@@ -42,6 +42,7 @@ class P77ProductRuntimeHarness private constructor(
         fun originalTicketLive()=originalTicket.get()?.isLive()==true
         fun hasSingleOriginalTicket() = tickets.get()==1 && originalTicket.get()?.isLive()==true
     }
+    fun p101SeededVersion()=fixture.p101SeededVersion
     fun outstandingState()=runtime.activeCore.outstandingState().toString()
     val cleanupConfirmed=java.util.concurrent.atomic.AtomicBoolean(false)
     override fun close() {
@@ -71,6 +72,7 @@ class P77ProductRuntimeHarness private constructor(
                 taskCountPerAction = tasks, personCountPerAction = people, baseDirectory = base)
             if(profile!="default")fixture.seedMemoryAcceptance(profile,
                 budgetRefusal=activity.intent.getBooleanExtra("p100Probe",false) && activity.intent.getBooleanExtra("p100BudgetRefused",false))
+            if(activity.intent.getBooleanExtra("p101Probe",false) && activity.intent.getBooleanExtra("p101Migration10",false))fixture.p101LegacyTen()
             return try {
                 val faults=P81RuntimeFaults()
                 val cleanupFaults=P82CleanupFaults()
@@ -80,6 +82,11 @@ class P77ProductRuntimeHarness private constructor(
                 val mutations=UncachedWorkspaceMutations()
                 val runtime = ProductRuntime(activity, faults.worker.wrap(worker), faults.main.wrap(main), mutations,
                     fixture.runtimeAuthority(reuseEnabled = reuseEnabled,observations,faults::wrap).copy(coreReadHooks=if(activity.intent.getBooleanExtra("p100Probe",false))p100.hooks else if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
+                if(activity.intent.getBooleanExtra("p101Probe",false)) {
+                    // Align the existing document repository with this already-authorized synthetic
+                    // runtime root. Normal product uses the same platform root for both already.
+                    runtime.documents.javaClass.getDeclaredField("noBackupRoot").let{it.isAccessible=true;it.set(runtime.documents,base)}
+                }
                 p100.bindDatabase(runtime.inventory.database)
                 P77ProductRuntimeHarness(runtime, fixture,observations,mutations,faults,cleanupFaults,memory,p100,profile)
             } catch (error: Throwable) {

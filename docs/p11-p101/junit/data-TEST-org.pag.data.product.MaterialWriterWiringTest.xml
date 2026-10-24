@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.MaterialWriterWiringTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-24T06:32:50.670Z" hostname="iuzjhtgvfc" time="0.104">
+  <properties/>
+  <testcase name="materialMustFenceBeforeQueueAndUseConfirmedOuterTransaction" classname="org.pag.data.product.MaterialWriterWiringTest" time="0.092"/>
+  <testcase name="runtimeMustPassTheSameMutationPortToMaterial" classname="org.pag.data.product.MaterialWriterWiringTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

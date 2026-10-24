@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.DocumentRecoveryDispatchContractTest" tests="28" skipped="0" failures="0" errors="0" timestamp="2026-10-24T05:26:08.681Z" hostname="iuzjhtgvfc" time="0.045">
+  <properties/>
+  <testcase name="exceptionAfterDurableStepBlocksWithoutFabricatingRollback" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.004"/>
+  <testcase name="fenceDuringContextPublicationSuppressesCallback" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.002"/>
+  <testcase name="callbackThenFalseDoesNotPermitReplay" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="duplicateMainPublishesOnce" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="lostMainDispatchDoesNotAutomaticallyRetryOrUndo" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="fenceAfterWorkerSuppressesQueuedMainPublication" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.001"/>
+  <testcase name="gapDocumentBeforeLaterCoreWriterStillPublishesWhileCommonPendingIsHeld" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="conservativePartialEvidenceKeepsCommonGenerationUncertainDespiteDocumentCallback" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.001"/>
+  <testcase name="duplicateWorkerExecutesWorkOnce" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="mainDoesNotWaitForLongRunningNamespaceWork" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.006"/>
+  <testcase name="concurrentMainExecutionPublishesOnlyOnce" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.004"/>
+  <testcase name="workerDispatchFailureEscapesWithoutMutationOrCallback" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.001"/>
+  <testcase name="deniedPublicationCannotBeReplayedAfterPermissionReturns" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.001"/>
+  <testcase name="duplicatedFailingWorkerAndMainBlockOnceWithoutRetry" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.001"/>
+  <testcase name="summaryReadExecutesAndPublishesOnceWithoutMutation" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.002"/>
+  <testcase name="concurrentWorkerExecutionStartsOnlyOneWorkclosure" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.005"/>
+  <testcase name="lockBeforeWorkerLeavesSimulatedLedgerUntouched" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="rejectionPublishesOnceAndDoesNotClaimMutation" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.002"/>
+  <testcase name="listReadKeepsResultAndDoesNotAddReadsOrFileWork" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.001"/>
+  <testcase name="fenceBeforeWorkerRejectsOldTicketWithoutStorageEffect" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="duplicateWorkerAndMainRemainOneShot" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="gapImportAndDeleteRunDuringTaskAndOperationsPendingWithoutEpochAdvance" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.002"/>
+  <testcase name="mainDispatchFailureCannotUndoAlreadyExecutedWork" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.002"/>
+  <testcase name="gapDocumentDispatchDoesNotConsultCommonPendingOrAdvanceItsEpoch" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="readAfterRevokeNeverPublishesEvenWhenMainIsReplayed" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.002"/>
+  <testcase name="blockedBeforeAcquisitionDoesNotDispatch" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="generationChangeAfterPhysicalStepSuppressesPublicationWithoutUndo" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.0"/>
+  <testcase name="completedPublicationIsNotUndoneByLaterFence" classname="org.pag.data.product.DocumentRecoveryDispatchContractTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

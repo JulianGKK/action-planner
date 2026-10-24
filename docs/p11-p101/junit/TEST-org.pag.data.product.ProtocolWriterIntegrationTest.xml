@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.ProtocolWriterIntegrationTest" tests="25" skipped="0" failures="0" errors="0" timestamp="2026-10-24T05:26:51.545Z" hostname="iuzjhtgvfc" time="16.881">
+  <properties/>
+  <testcase name="originalsAndPersonRelationsRemainMandatoryAndActionLocal" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.167"/>
+  <testcase name="sqliteFailureDuringSecondIdentifierOrAffectedInsertLeavesNoHalfProtocol" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.27"/>
+  <testcase name="appendMustNotExtendAHistoryWhoseOriginalWasDeleted" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.132"/>
+  <testcase name="newerFamilyMutationBeforeOldPublicationSuppressesOldWriterResponse" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.372"/>
+  <testcase name="queuedRevisionFreezesBothDraftAndNestedExpectedCollections" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.123"/>
+  <testcase name="revisionOverflowRejectsWithoutWrappingOrAppending" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.148"/>
+  <testcase name="allThreeWritersSeparatePhysicalSqlOutcomeCleanupAndPublicationAcrossRaces" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="6.442"/>
+  <testcase name="protocolAndOtherFamiliesSharePendingAndOneEpochInBothDirections" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.619"/>
+  <testcase name="mistakenAddendumAndCorrectionRetainExistingTransitionRules" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.203"/>
+  <testcase name="explicitRejectionAfterWritesNeedsReturnedOuterRollbackAndCompleteCleanup" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="1.715"/>
+  <testcase name="twoEditorsAndOldMistakenConfirmationCannotAppendTwice" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.161"/>
+  <testcase name="createFailureLeavesNoEntryNoRevisionNoChildRows" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.631"/>
+  <testcase name="createCorrectionAddendumAndMistakenPreserveOriginalAndEveryRelation" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.22"/>
+  <testcase name="invalidContentTemplatesKindsAndForeignPeopleAreConfirmedRollbacks" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.207"/>
+  <testcase name="legacyNormalizationIsolatesOriginalCollectionsButDoesNotMakeCopiesImmutable" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.0"/>
+  <testcase name="everyPartialInsertFailureRollsBackEntryRevisionAndAllRelations" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="2.118"/>
+  <testcase name="frozenQueuedDraftAndExpectedCannotBeChangedByOriginalsOrCollectionCasts" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.146"/>
+  <testcase name="lostOrFailedMainDispatchRemainsPendingWithoutReplay" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.85"/>
+  <testcase name="fullExpectedCasIncludesAllIdentityContentRelationsAndPhaseFields" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.287"/>
+  <testcase name="duplicateWorkerMainAndLateMainCannotDuplicateOrCrossPublishRevisions" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.137"/>
+  <testcase name="appendRevisionIdentityRejectsContentAbaWithSameTimestamp" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.166"/>
+  <testcase name="currentIdentifierPositionCannotWrapThroughRoomIntMapping" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.93"/>
+  <testcase name="expectedActionPhaseAndCompletedFlagsRemainAuthoritative" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.164"/>
+  <testcase name="failedWorkerAndBareValueNeverFabricateSuccess" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.537"/>
+  <testcase name="databaseTriggersKeepEveryExistingProtocolRowImmutable" classname="org.pag.data.product.ProtocolWriterIntegrationTest" time="0.133"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

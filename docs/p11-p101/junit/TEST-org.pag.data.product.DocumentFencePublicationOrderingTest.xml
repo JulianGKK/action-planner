@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.DocumentFencePublicationOrderingTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-24T05:26:05.621Z" hostname="iuzjhtgvfc" time="0.084">
+  <properties/>
+  <testcase name="maintenanceWaitingForSessionCannotBlockMainOnNamespaceOrdering" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.045"/>
+  <testcase name="callbackMayReenterSessionAndQueueFurtherUIRead" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.003"/>
+  <testcase name="admissionsDoNotIntroduceAnotherEpochOrRestoreFencedTicket" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.001"/>
+  <testcase name="storageBlockedStillOverridesCurrentLane" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.001"/>
+  <testcase name="callbackMayReentrantlyRevokeButCannotReplayOrStartNewWork" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.001"/>
+  <testcase name="realSessionMainDoesNotWaitForNamespaceIO" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.004"/>
+  <testcase name="fenceMakesProgressDespiteConcurrentAdmissionAttempts" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.007"/>
+  <testcase name="lastCheckThenEffectiveFenceMustSuppressOldCallback" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.004"/>
+  <testcase name="concurrentRevokeAndFenceRespectAlreadySessionAuthorizedAdmission" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.006"/>
+  <testcase name="revokeBeforeMainAndNewGenerationCannotResurrectOldResponse" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.001"/>
+  <testcase name="admissionBeforeFenceMayBeginCallbackAfterFenceAndFinishOnce" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.004"/>
+  <testcase name="freshMaintenanceFenceRejectsOldMainWithoutDuplicatingWork" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.002"/>
+  <testcase name="callbackExceptionConsumesDeliveryWithoutRollbackOrReplay" classname="org.pag.data.product.DocumentFencePublicationOrderingTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.LeadershipViewModelTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-24T05:33:57.981Z" hostname="iuzjhtgvfc" time="0.408">
+  <properties/>
+  <testcase name="explicitSetupAndCancellationDoNotAutomaticallyWrite" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.341"/>
+  <testcase name="personDetailRevealsOnlyWithItsInventoryMetadata" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.006"/>
+  <testcase name="expiredReleaseClearsWithoutAutomaticReauth" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.014"/>
+  <testcase name="activeAndCompletedDoNotWrite" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.008"/>
+  <testcase name="navigationCancelsAndDiscardsDelayedRelease" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.004"/>
+  <testcase name="lockDuringPersonInventoryCannotRevealPersonOrMetadata" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.003"/>
+  <testcase name="partialSensitiveStateDoesNotBlockBasicOrPermitSetup" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.005"/>
+  <testcase name="lockDropsSensitiveContent" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.004"/>
+  <testcase name="leavingPersonDetailDiscardsPendingInventory" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.002"/>
+  <testcase name="sessionRestartRevokesGrantAndNeverRestoresSensitiveAreaInNewGeneration" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.016"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,20 @@
+INSTRUMENTATION_STATUS: stream=P101,partial_delete,CALL,label=setup,once=true,epoch=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,partial_delete,COMPLETION,outcome=UNKNOWN,cleanup=FAILED_OR_UNCONFIRMED
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,partial_delete,PARTIAL,confirmed_db_state=DELETE_PENDING,real_key_effect_then_injected_exception=true,callback_count=0,state=BLOCKED
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,partial_delete,CALL,label=explicit_delete_pending_recovery,once=true,epoch=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,partial_delete,DELETE_PENDING_RECOVERY,explicit_reauth_and_request=true,result=COMPLETED
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,partial_delete,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 PASS partial_delete
+INSTRUMENTATION_CODE: -1

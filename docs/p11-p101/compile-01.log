@@ -1,0 +1,54 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:processResources NO-SOURCE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :domain:compileKotlin
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar
+> Task :data:kspDebugKotlin
+
+> Task :data:compileDebugKotlin
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/TaskMutationBoundary.kt:18:16 No value passed for parameter 'work'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/TaskMutationBoundary.kt:19:73 One type argument expected. Use 'OperationsResult.Value<*>' if you do not intend to pass type arguments.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/TaskMutationBoundary.kt:19:97 Argument type mismatch: actual type is '(StorageContext, WorkspaceWriteProgress) -> OperationsResult<T (of fun <T> submit)>', but '() -> Unit' was expected.
+
+> Task :data:compileDebugKotlin FAILED
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':data:compileDebugKotlin' (registered by plugin 'com.android.internal.library').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Kotlin compiler: NO_VALUE_FOR_PARAMETER
+       Kotlin compiler error
+         No value passed for parameter 'work'.
+         Location: /home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/TaskMutationBoundary.kt line 18
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 12s
+18 actionable tasks: 5 executed, 13 up-to-date

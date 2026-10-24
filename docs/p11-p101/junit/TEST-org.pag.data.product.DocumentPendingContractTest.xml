@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.DocumentPendingContractTest" tests="23" skipped="0" failures="0" errors="0" timestamp="2026-10-24T05:26:08.647Z" hostname="iuzjhtgvfc" time="0.021">
+  <properties/>
+  <testcase name="oldPendingDefaultDocumentCompletionCannotConsumeCoreWork" classname="org.pag.data.product.DocumentPendingContractTest" time="0.001"/>
+  <testcase name="ticketFromOtherPortCanOnlyFinishItsOwnPendingAndCannotReleaseThisOne" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="everyDocumentOutcomeOnCoreTicketIsRejectedWithoutConsumingIt" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="allTypedOutcomesAndCleanupCombinationsFollowConservativeReleaseRules" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="completeRequiresExplicitFinalInventoryAssertionBeforeItCanBeSubmitted" classname="org.pag.data.product.DocumentPendingContractTest" time="0.001"/>
+  <testcase name="documentPendingDeniesTaskOperationsAndSecondDocumentWithoutAdvancingEpoch" classname="org.pag.data.product.DocumentPendingContractTest" time="0.001"/>
+  <testcase name="blankActionsAndNegativeGenerationsCannotAdmitOrChangeEpoch" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="inventoryAssertionCannotOverrideUnknownRecoveryOrFailedCleanup" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="everyCoreOutcomeOnDocumentTicketIsRejectedWithoutConsumingIt" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="taskAndOperationsPendingDenyDocumentOnTheSamePort" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="completionHasOnlyOutcomeCleanupAndInventoryMetadataAndNoPublicationApi" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="notExecutedWithConfirmedCleanupEndsPendingWithoutBecomingMutationSuccess" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="wrongThreadCannotAdmitFinishObserveOrChangeOwnerPending" classname="org.pag.data.product.DocumentPendingContractTest" time="0.007"/>
+  <testcase name="pendingWithoutCompletionBlocksSameGenerationButNewReadyGenerationInvalidatesIt" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="newGenerationDoesNotChangeUnfinishedCoreTicketBlockingRule" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="duplicateDocumentFinishAndWrongCoreFinishCannotReleaseLaterPending" classname="org.pag.data.product.DocumentPendingContractTest" time="0.001"/>
+  <testcase name="dataClassCopyCannotRemoveRequiredFinalInventoryAssertion" classname="org.pag.data.product.DocumentPendingContractTest" time="0.001"/>
+  <testcase name="authorizedNewGenerationInvalidatesAnUnfinishedLostDispatchTicket" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="oldGenerationAndOldTicketsCannotFinishFreshDocumentOrCoreWork" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="coreUnknownAndCleanupFailuresAlsoBlockDocumentAdmissionInSameGeneration" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="alternatingDocumentAndCoreAdmissionsUseExactlyOneEpoch" classname="org.pag.data.product.DocumentPendingContractTest" time="0.0"/>
+  <testcase name="oldCompletedTicketNeverBecomesCurrentAgainAcrossGenerationChanges" classname="org.pag.data.product.DocumentPendingContractTest" time="0.001"/>
+  <testcase name="defaultTaskOnlyAndCoreCapableAdaptersDenyDocumentsWithoutFallback" classname="org.pag.data.product.DocumentPendingContractTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

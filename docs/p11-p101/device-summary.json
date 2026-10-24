@@ -1,0 +1,84 @@
+{
+  "final_tests": [
+    {
+      "scenario": "leadership",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/leadership.txt",
+      "test": "PASS",
+      "product_recovery": "see assessment scope"
+    },
+    {
+      "scenario": "lost_main",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/lost-main.txt",
+      "test": "PASS",
+      "product_recovery": "see assessment scope"
+    },
+    {
+      "scenario": "lost_main_recovery",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/lost-main-recovery.txt",
+      "test": "PASS",
+      "product_recovery": "see assessment scope"
+    },
+    {
+      "scenario": "partial_setup",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/partial-setup.txt",
+      "test": "PASS",
+      "product_recovery": "BLOCKED"
+    },
+    {
+      "scenario": "partial_delete",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/partial-delete.txt",
+      "test": "PASS",
+      "product_recovery": "see assessment scope"
+    },
+    {
+      "scenario": "rollback",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/rollback.txt",
+      "test": "PASS",
+      "product_recovery": "see assessment scope"
+    },
+    {
+      "scenario": "status_reject",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/status-reject.txt",
+      "test": "PASS",
+      "product_recovery": "see assessment scope"
+    },
+    {
+      "scenario": "commit_receipt",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/commit-receipt.txt",
+      "test": "PASS",
+      "product_recovery": "see assessment scope"
+    },
+    {
+      "scenario": "cleanup_receipt",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/cleanup-receipt.txt",
+      "test": "PASS",
+      "product_recovery": "see assessment scope"
+    },
+    {
+      "scenario": "documents",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/documents.txt",
+      "test": "PASS",
+      "product_recovery": "see assessment scope"
+    },
+    {
+      "scenario": "migration",
+      "raw": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/final-device/migration.txt",
+      "test": "PASS",
+      "product_recovery": "see assessment scope"
+    }
+  ],
+  "final_apks": "final-device/resume-apks.json",
+  "diagnostic_label_recheck": {
+    "raw": "label-device/commit-receipt.txt",
+    "apks": "label-device/resume-apks.json",
+    "test": "PASS"
+  },
+  "historical_attempts": {
+    "accepted": 11,
+    "harness_aborts": [
+      "commit-receipt-02.txt",
+      "commit-receipt-03.txt"
+    ]
+  },
+  "issue35": "BLOCKED"
+}

@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P101,migration,MIGRATION,seed_version=10,READY_denied_before_auth=true,version_after_authorized_maintenance=11,persons=20,tasks=40,ready_writer_epoch=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,migration,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 PASS migration
+INSTRUMENTATION_CODE: -1

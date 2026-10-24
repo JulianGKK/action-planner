@@ -28,7 +28,7 @@ data class DocumentWriteCompletion(val outcome: DocumentWriteOutcome, val cleanu
 }
 
 /** Fixed conservative impacts; no caller-supplied subset may omit dependent views. */
-enum class WorkspaceWriterFamily { TASK, ACTION_CREATE, ACTION_EDIT, ACTION_STATUS, PERSON, OPERATIONS, MATERIAL, EXPENSE, PROTOCOL, MEMORY_REPORT }
+enum class WorkspaceWriterFamily { TASK, ACTION_CREATE, ACTION_EDIT, ACTION_STATUS, PERSON, OPERATIONS, MATERIAL, EXPENSE, PROTOCOL, MEMORY_REPORT, LEADERSHIP }
 data class WorkspaceMutation(val family: WorkspaceWriterFamily, val actionId: String?) {
     init { require(if(family == WorkspaceWriterFamily.ACTION_CREATE) actionId == null else actionId != null) }
 }
@@ -76,6 +76,11 @@ interface WorkspaceMutationInvalidation {
     }
 
     interface Pending {
+        /** Worker-safe metadata receipt AFTER synchronous repository work/DB/key cleanup,
+         * BEFORE UI dispatch. Not a runnable/payload end receipt or current-generation release.
+         * Only a later trusted READY binding may recover an abandoned clean CORE dispatch.
+         */
+        fun recordWorkCompletion(completion:WorkspaceWriteCompletion) {}
         fun finish(completion: WorkspaceWriteCompletion): Boolean
         /** Only a document ticket may consume this completion; old adapters deny by default.
          * True means metadata completion consumed, not mutation success or UI authorization.
@@ -167,10 +172,17 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
         if (generation < 0) return false
         // Only a new READY generation supplied by the actual repository context may start
         // fresh UN-CACHED bookkeeping. It may supersede an abandoned DOCUMENT ticket after
-        // authorized recovery; an unfinished CORE ticket keeps its established blocking rule.
+        // authorized recovery; a CORE ticket without a confirmed clean work end remains blocking.
         // The port itself does not certify maintenance or restore ActiveWorkspaceValidity.
         if (this.generation != generation) {
-            if (pending?.kind == Kind.CORE) return false
+            val old=pending
+            if (old?.kind == Kind.CORE) {
+                val ended=old.workCompletion.get() ?: return false
+                if(ended.cleanup!=WorkspaceWriteCleanup.COMPLETE)return false
+                // Original synchronous work ended; production's serialized maintenance ran
+                // before this fresh READY context. Old UI finish/patch can never consume B.
+                pending=null;latest=null
+            }
             revokeActiveRead()
             this.generation = generation; uncertain = false; pending = null; latest = null
         }
@@ -190,9 +202,14 @@ class UncachedWorkspaceMutations : WorkspaceMutationInvalidation {
         }
     }
     private inner class Ticket(val kind: Kind, private val admittedGeneration: Long) : WorkspaceMutationInvalidation.Pending {
+        val workCompletion=AtomicReference<WorkspaceWriteCompletion?>(null)
+        override fun recordWorkCompletion(completion:WorkspaceWriteCompletion) {
+            if(kind==Kind.CORE)workCompletion.compareAndSet(null,completion)
+        }
         override fun finish(completion: WorkspaceWriteCompletion): Boolean {
             owner()
             if (kind != Kind.CORE || pending !== this || generation != admittedGeneration) return false
+            if(workCompletion.get()?.let{it!=completion}==true)return false
             return end(completion.outcome == WorkspaceWriteOutcome.UNKNOWN || completion.cleanup != WorkspaceWriteCleanup.COMPLETE)
         }
         override fun finishDocument(completion: DocumentWriteCompletion): Boolean {

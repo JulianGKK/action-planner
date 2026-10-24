@@ -1,0 +1,1784 @@
+{
+  "unique_testcases": 293,
+  "all_pass": true,
+  "classes": {
+    "org.pag.data.product.CoreWriterIntegrationTest": 39,
+    "org.pag.data.product.DocumentFencePublicationOrderingTest": 13,
+    "org.pag.data.product.DocumentMultiPhaseEvidenceTest": 23,
+    "org.pag.data.product.DocumentPendingContractTest": 23,
+    "org.pag.data.product.DocumentRecoveryDispatchContractTest": 28,
+    "org.pag.data.product.ExpenseWriterIntegrationTest": 25,
+    "org.pag.data.product.LeadershipSessionConcurrencyTest": 11,
+    "org.pag.data.product.MaterialWriterWiringTest": 2,
+    "org.pag.data.product.MemoryReportWriterIntegrationTest": 26,
+    "org.pag.data.product.OutstandingCoreReadTest": 16,
+    "org.pag.data.product.P101LeadershipWriterTest": 10,
+    "org.pag.data.product.P101WriterWiringTest": 4,
+    "org.pag.data.product.ProductActiveCoreLifetimeTest": 12,
+    "org.pag.data.product.ProtocolWriterIntegrationTest": 25,
+    "org.pag.data.product.TaskMutationSqliteTest": 19,
+    "org.pag.prototype.product.CoreWorkspaceMutationAdapterTest": 7,
+    "org.pag.prototype.product.LeadershipViewModelTest": 10
+  },
+  "method": "newest entire suite per classname (not union of renamed historical test methods)",
+  "testcases": [
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "renameAndDeleteKeepOuterCleanupAuthorityAndSingleDispatch",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "roleDeleteOldConfirmationCannotDeleteRenamedRole",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "roleIdentityCaseWhitespaceAndCreateValidationAreExactBeforeWrites",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialLostMainDispatchStaysPendingAndNoRetryCanRun",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "planWritesKeepOuterOutcomeCleanupAndAuthorityGates",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "peopleAndOperationsPreservePoliciesLabelsPlansAndExactOnSiteGroups",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "explicitRejectedWriteIsRolledBackOnlyAfterActualRollbackReturns",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialInvalidMissingForeignReferencesAndActionsRollbackWithoutChanges",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialFailedDispatchNeverPublishesSuccess",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialExplicitRejectionAfterSideeffectsRequiresConfirmedRollback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "roleFullValueCasStillCannotDetectSchema11Aba",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialCreateEditDeleteAreConfirmedOuterCommitsAndReadsDoNotAdvanceEpoch",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "legacyBlankTaskScopeDenialDoesNotQueueOrAdvanceTheCommonEpoch",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "competingPersonEditorsAndDuplicateDispatchCannotSilentlyOverwrite",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "activationSqlFailureNeverPublishesPartialStateOrActionStatus",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialAllWritesKeepCommitCleanupScopeAndOnceProofSeparate",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "eachNewFamilyConsumesDuplicateWorkerAndMainDispatchExactlyOnce",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "rolePlanOldEditorsConflictAndConfirmedFirstPlanSurvives",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "planInsertFailureRollsBackRemovedAssignmentsAndConcurrentQueueRemainsSingle",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "allFamiliesUnknownEndAndCleanupNeverBecomeValueSuccess",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialAllLifecycleGatesKeepDomainRules",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "planForeignPersonAndDeletedRoleCannotChangeOtherData",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialValueWithoutOuterCommitEvidenceCannotPublish",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialSqlFailureAfterInsertRollsBackActualSideeffects",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialComparesEveryExpectedFieldBeforeWriting",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "roleRenameSecondOldEditorIsStale",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "crossFamilyPendingUsesOneEpochAndTaskProofCannotBypassIt",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "revokeScopeAndLateCallbacksCannotPublishAcrossActionPermissionOrGeneration",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "schema11FullStateCasExplicitlyCannotDetectAba",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "fullPersonIdentityAndActionAreComparedBeforeAnyRenameSql",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "actionCreateEditAndBothStatusTransitionsAreOuterCommitsWithAtomicStates",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "currentRoleDeletePreservesAllOperationsAndTaskReferenceGates",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialStaleEditorsAndDeleteKeepFirstCommittedItem",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "actionAndOperationalFullValuesCanRepeatWithoutPersistentRevision",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "personRenameUnknownCleanupAndRevokeCannotPublishValue",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "rolePlanExpectedIsImmutableAndSchema11CannotDetectAba",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "materialPendingCannotBeBypassedByMaterialTaskOrOperationsAndReverse",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "rolePlanCasCoversWholeSetsPrimaryEmptyForeignAndMissingReferences",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.CoreWriterIntegrationTest",
+      "name": "stalePersonEditorIsRejectedAndFirstValueSurvives",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.CoreWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:28:54.033Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "maintenanceWaitingForSessionCannotBlockMainOnNamespaceOrdering",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "callbackMayReenterSessionAndQueueFurtherUIRead",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "admissionsDoNotIntroduceAnotherEpochOrRestoreFencedTicket",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "storageBlockedStillOverridesCurrentLane",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "callbackMayReentrantlyRevokeButCannotReplayOrStartNewWork",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "realSessionMainDoesNotWaitForNamespaceIO",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "fenceMakesProgressDespiteConcurrentAdmissionAttempts",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "lastCheckThenEffectiveFenceMustSuppressOldCallback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "concurrentRevokeAndFenceRespectAlreadySessionAuthorizedAdmission",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "revokeBeforeMainAndNewGenerationCannotResurrectOldResponse",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "admissionBeforeFenceMayBeginCallbackAfterFenceAndFinishOnce",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "freshMaintenanceFenceRejectsOldMainWithoutDuplicatingWork",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentFencePublicationOrderingTest",
+      "name": "callbackExceptionConsumesDeliveryWithoutRollbackOrReplay",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentFencePublicationOrderingTest.xml",
+      "timestamp": "2026-10-24T06:29:26.628Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "returnedUnlinkIsNotDirectorySyncOrJobRemoval",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "missingRootAndUnknownLeafPreventRecoveryDespiteEarlierLocalCommits",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "unconfirmedLeaseCleanupDoesNotEraseConfirmedLocalCommit",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "rollbackOfLaterTransactionPreservesEarlierWritingCommit",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "draftContainsOnlyBoundedEnumsBooleansAndFixedMetadataMaps",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "successfulDeleteRequiresSeparateFinalCheckAndDoesNotReadSource",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "contradictoryInventoryRemainsBlockedRegardlessOfPublication",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "cipherCloseAndReturnedFileSyncBeforeClosedCommitStillLeaveWritingOnRevoke",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "authorizedRecoveryAfterFailedFileSyncUsesFreshEvidenceAndDoesNotRepairOldValidity",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "fileSyncFailureLeavesWritingAndRequiresAuthorizedRecovery",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "realImportWorkerAndMainReplayHaveOnePhysicalChainAndOneAdmittedCallback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "failureAfterPublishedPreservesFourIndependentCommitsAndClosedSnapshots",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "invalidBeforeReserveIsNonexecutionNotACommittedDocument",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "realDeleteWithLostMainKeepsPhysicalCompletionAndUnknownDispatchSeparate",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "deleteFailureBeforeUnlinkCannotUndoReturnedDetachOrEarlierReserve",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "realImportCompletionDoesNotGrantCallbackAcrossMaintenanceFence",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "tooLargeAfterCipherWritesIsRejectionAndNeverGlobalRollback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "revokeAfterDetachDoesNotRestoreParentOrUnlinkBlob",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "unavailableSourceAfterWritingIsRejectionWithPersistedJob",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "capacityRejectionCommitsNoInsertAndCreatesNoSourceOrNamespace",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "successfulImportRequiresSeparateFinalCheckForDraftCompletion",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "unknownDbEndCannotBeOverwrittenByLaterStepOrRejection",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentMultiPhaseEvidenceTest",
+      "name": "renameThenSyncFailureKeepsOlderClosedPhaseAndPhysicalFinalBlob",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentMultiPhaseEvidenceTest.xml",
+      "timestamp": "2026-10-24T06:29:26.735Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "oldPendingDefaultDocumentCompletionCannotConsumeCoreWork",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "ticketFromOtherPortCanOnlyFinishItsOwnPendingAndCannotReleaseThisOne",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "everyDocumentOutcomeOnCoreTicketIsRejectedWithoutConsumingIt",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "allTypedOutcomesAndCleanupCombinationsFollowConservativeReleaseRules",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "completeRequiresExplicitFinalInventoryAssertionBeforeItCanBeSubmitted",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "documentPendingDeniesTaskOperationsAndSecondDocumentWithoutAdvancingEpoch",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "blankActionsAndNegativeGenerationsCannotAdmitOrChangeEpoch",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "inventoryAssertionCannotOverrideUnknownRecoveryOrFailedCleanup",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "everyCoreOutcomeOnDocumentTicketIsRejectedWithoutConsumingIt",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "taskAndOperationsPendingDenyDocumentOnTheSamePort",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "completionHasOnlyOutcomeCleanupAndInventoryMetadataAndNoPublicationApi",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "notExecutedWithConfirmedCleanupEndsPendingWithoutBecomingMutationSuccess",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "wrongThreadCannotAdmitFinishObserveOrChangeOwnerPending",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "pendingWithoutCompletionBlocksSameGenerationButNewReadyGenerationInvalidatesIt",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "newGenerationDoesNotChangeUnfinishedCoreTicketBlockingRule",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "duplicateDocumentFinishAndWrongCoreFinishCannotReleaseLaterPending",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "dataClassCopyCannotRemoveRequiredFinalInventoryAssertion",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "authorizedNewGenerationInvalidatesAnUnfinishedLostDispatchTicket",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "oldGenerationAndOldTicketsCannotFinishFreshDocumentOrCoreWork",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "coreUnknownAndCleanupFailuresAlsoBlockDocumentAdmissionInSameGeneration",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "alternatingDocumentAndCoreAdmissionsUseExactlyOneEpoch",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "oldCompletedTicketNeverBecomesCurrentAgainAcrossGenerationChanges",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentPendingContractTest",
+      "name": "defaultTaskOnlyAndCoreCapableAdaptersDenyDocumentsWithoutFallback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentPendingContractTest.xml",
+      "timestamp": "2026-10-24T06:28:53.825Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "exceptionAfterDurableStepBlocksWithoutFabricatingRollback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "fenceDuringContextPublicationSuppressesCallback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "callbackThenFalseDoesNotPermitReplay",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "duplicateMainPublishesOnce",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "lostMainDispatchDoesNotAutomaticallyRetryOrUndo",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "fenceAfterWorkerSuppressesQueuedMainPublication",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "gapDocumentBeforeLaterCoreWriterStillPublishesWhileCommonPendingIsHeld",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "conservativePartialEvidenceKeepsCommonGenerationUncertainDespiteDocumentCallback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "duplicateWorkerExecutesWorkOnce",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "mainDoesNotWaitForLongRunningNamespaceWork",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "concurrentMainExecutionPublishesOnlyOnce",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "workerDispatchFailureEscapesWithoutMutationOrCallback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "deniedPublicationCannotBeReplayedAfterPermissionReturns",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "duplicatedFailingWorkerAndMainBlockOnceWithoutRetry",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "summaryReadExecutesAndPublishesOnceWithoutMutation",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "concurrentWorkerExecutionStartsOnlyOneWorkclosure",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "lockBeforeWorkerLeavesSimulatedLedgerUntouched",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "rejectionPublishesOnceAndDoesNotClaimMutation",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "listReadKeepsResultAndDoesNotAddReadsOrFileWork",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "fenceBeforeWorkerRejectsOldTicketWithoutStorageEffect",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "duplicateWorkerAndMainRemainOneShot",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "gapImportAndDeleteRunDuringTaskAndOperationsPendingWithoutEpochAdvance",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "mainDispatchFailureCannotUndoAlreadyExecutedWork",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "gapDocumentDispatchDoesNotConsultCommonPendingOrAdvanceItsEpoch",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "readAfterRevokeNeverPublishesEvenWhenMainIsReplayed",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "blockedBeforeAcquisitionDoesNotDispatch",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "generationChangeAfterPhysicalStepSuppressesPublicationWithoutUndo",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.DocumentRecoveryDispatchContractTest",
+      "name": "completedPublicationIsNotUndoneByLaterFence",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.DocumentRecoveryDispatchContractTest.xml",
+      "timestamp": "2026-10-24T06:29:29.406Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "twoStaleEditorsAndOldDeleteKeepFirstCommittedPayments",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "callerOwnedMutableListsReallyAliasWithoutFreezing",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "explicitRejectionNeedsConfirmedRollbackAndFailedRollbackStaysUnknown",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "integerPaymentPositionsMustNotWrapIntoAValidIntIndex",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "allExpenseWritesSeparateSqlOutcomeCleanupAndPublicationAcrossRaces",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "aliasMutationCannotConvertStaleExpectedIntoCurrentSnapshot",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "draftDeletionPendingForeignMissingActionAndMissingExpenseAreIsolated",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "fullExpectedCasIncludesParentAllPaymentsOrderAndCount",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "everyParentChildWriteFailureRollsBackCompleteOldState",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "createEditDeleteAndExactSummaryKeepAllPaymentsAtomicAcrossAllowedPhases",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "actualSqlTriggerFailureAfterFirstPaymentRollsBackParentAndChildren",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "parentSqlTypesCannotBeHiddenByNativeStyleGetLongCoercion",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "invalidInputOverflowAndUnicodeLimitsRollbackWithoutChangingPayments",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "valueWithoutConfirmedOuterCommitCannotPublishSuccess",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "duplicateWorkerAndMainCannotDuplicateParentPaymentsOrCallback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "schema11ExpenseFullValueCasDoesNotDetectAba",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "summaryRejectsCorruptTotalsAndExactSqlSumOverflow",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "createFailureLeavesNeitherParentNorPayments",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "queuedEditAndDeleteUseFrozenExpectedAndDraftLists",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "failedWorkerDispatchIsNonexecutionWithoutSuccessOrFakeDbRollback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "paymentTypesPositionsAndFullMaterializationRemainStrict",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "schema11CompositeFkAndCascadeDoNotLeaveForeignOrOrphanPayments",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "lostOrFailedMainDispatchLeavesPendingWithoutRetry",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "queuedCreateUsesFrozenSubmittedPayments",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "name": "allFourFamiliesSharePendingEpochAndCannotBypassExpenseOrEachOther",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ExpenseWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:29.465Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "revokeDuringConsumerWorkRejectsResultAndWipesLease",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "lockWhileGrantExpires",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "grantAdmissionReadsCoordinatorOnlyWhenAlreadyOwned",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "lockWhileRealGrantChecksRealGeneration",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "grantCancelHeldDuringCoordinatorCleanupTerminates",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "backgroundLockWhileGrantChecks",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "synchronousCleanupBeforeRestartAuthentication",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "revokeBetweenContextCheckAndLocalKeyCopyDeniesConsumer",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "lockWhileSensitiveAreaCloses",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "lockWhileConsumerAcquiresLease",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "name": "generationChangeDuringGrantAccess",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.LeadershipSessionConcurrencyTest.xml",
+      "timestamp": "2026-10-24T06:29:42.572Z"
+    },
+    {
+      "classname": "org.pag.data.product.MaterialWriterWiringTest",
+      "name": "materialMustFenceBeforeQueueAndUseConfirmedOuterTransaction",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MaterialWriterWiringTest.xml",
+      "timestamp": "2026-10-24T06:32:50.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MaterialWriterWiringTest",
+      "name": "runtimeMustPassTheSameMutationPortToMaterial",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MaterialWriterWiringTest.xml",
+      "timestamp": "2026-10-24T06:32:50.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "persistedRevisionRejectsAnswerAbaEvenAtIdenticalTimestamp",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "lostOrFailedMainDispatchStaysPendingWithoutRetryForAllFourWrites",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "existingAddendumGuardsRejectSqlTypesWrapGapsAndInvalidContent",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "corruptCanonicalMultiAndCountCannotBeReadOrRewritten",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "inactiveActionPhasesKeepEveryWriteDenied",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "twoEditorsAndConcurrentAddendaCannotLoseConfirmedRevision",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "completeAndAddendumUsePersistedPhaseRevisionAndSequence",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "failedCreateLeavesNoHeaderOrAnswerResidue",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "inactiveDependentAnswersRequireExactConflictDecision",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "failedWorkerOrBareValueCannotFabricateSuccess",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "existingHeaderGuardsRejectRawTypeAndIntWrapBeforeHeaderMaterialization",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "everySqlBoundaryRollsBackTheCompleteHeaderAnswersAndAddendumState",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "createAndSectionReplacementKeepCompleteHeaderAndOtherAnswers",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "storePreservesStrictCountAndExclusiveMultiRules",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "newerMutationBeforeOldPublicationSuppressesOldCallbackForEveryOperation",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "duplicateWorkerMainAndLateCallbackHaveOneEffectForEveryOperation",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "fullExpectedHeaderCasRejectsEveryChangedFieldForAllFollowupWrites",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "actualSqlTriggerFailureAfterAnswerAndBeforeHeaderUpdateRollsBackEverything",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "explicitRollbackCleanupAndUnconfirmedRollbackStaySeparateForAllWrites",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "sharedPendingBlocksAllSixFamiliesInBothDirectionsWithoutBusyDbTransactions",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "queuedCreateAndSectionKeepOriginalMapSetAndNestedMultiSnapshot",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "revisionOverflowNeverWritesAnswersStatusOrAddenda",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "foreignMissingActionsAndReportsCannotModifyOtherData",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "invalidQuestionsOptionsCountsAuthorsAndSectionOrderAreRejectedBeforeMutation",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "allFourWritesSeparateSqlOutcomeCleanupAndPublicationAcrossRaces",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.MemoryReportWriterIntegrationTest",
+      "name": "corruptAnswerEncodingRejectsDetailAndWritesButNotContentFreeSummary",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.MemoryReportWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:29:42.670Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "disposedConsumerCanStillHoldRawValueAndCannotRegrantEvenWithoutComposeObservation",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "aPendingCandidateBlocksSecondAndThirdBeforeTicketsAndSqlWithoutReplacingAuthority",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "fullViewFencePreservesOldChargesAndCannotMintAnEditorFallbackCore",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "everyWriterSessionAndAuthorityRaceRevokesOnlyOriginalUndeliveredHandoff",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "discardDrainsOnlyKnownHandoffAndLateDuplicateCannotRevokeNewOriginalTicket",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "duplicateWorkerCannotAcknowledgeWhileOriginalWorkerStillMaterializes",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "uncertainQueueAcceptanceCannotFreeReservationBeforeTheQueuedShellAcknowledges",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "fullViewCancelsUnpublishedMainButItsAcknowledgementDoesNotClearFullViewFence",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "knownReaderFailureAndBudgetRefusalEndChargeButUnconfirmedCleanupStaysBooked",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "anActuallyLostMainRemainsBookedEvenAfterCancellationWithoutQueueAcknowledgement",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "vmClearAndComposeDisposalDoNotConfirmFrameRetirementOrNewGenerationBudget",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "fullViewWithoutAnyCoreIsAnIndependentStickyFenceAcrossGenerationAndAction",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "cancellationDuringMaterializationCannotRegrantBeforeWorkerScopeEnds",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "canceledQueuedWorkerMustAcknowledgeAndLateDuplicateCannotRetireNewRead",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "interruptedRevokedWorkerEndsWithoutLatePublication",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.OutstandingCoreReadTest",
+      "name": "disposeAloneDoesNotRevokeAuthorityAndRepeatedRevokeCannotRetireExposedValue",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.OutstandingCoreReadTest.xml",
+      "timestamp": "2026-10-24T06:32:11.427Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101LeadershipWriterTest",
+      "name": "partialExternalEffectPreservesKnownCommitButWholeAttemptStaysUnknownAndNoRetry",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101LeadershipWriterTest.xml",
+      "timestamp": "2026-10-24T06:30:10.639Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101LeadershipWriterTest",
+      "name": "laterControlledRollbackCannotRelabelEarlierCommitAsRollback",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101LeadershipWriterTest.xml",
+      "timestamp": "2026-10-24T06:30:10.639Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101LeadershipWriterTest",
+      "name": "acceptedThenThrowingWorkerQueueCannotExecuteLaterAndReleasesResourcesOnce",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101LeadershipWriterTest.xml",
+      "timestamp": "2026-10-24T06:30:10.639Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101LeadershipWriterTest",
+      "name": "latePatchAfterPermissionActionOrGenerationChangeOrNewMutationIsDenied",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101LeadershipWriterTest.xml",
+      "timestamp": "2026-10-24T06:30:10.639Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101LeadershipWriterTest",
+      "name": "lockBeforeCommitAndCommitBeforeLockCannotPublishSaved",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101LeadershipWriterTest.xml",
+      "timestamp": "2026-10-24T06:30:10.639Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101LeadershipWriterTest",
+      "name": "lostOuterEndReceiptIsUnknownEvenWhenRealSqliteCommitAlreadyHappened",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101LeadershipWriterTest.xml",
+      "timestamp": "2026-10-24T06:30:10.639Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101LeadershipWriterTest",
+      "name": "lostMainKeepsSameGenerationPendingButCleanWorkRebindsOnlyOnNewReadyGeneration",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101LeadershipWriterTest.xml",
+      "timestamp": "2026-10-24T06:30:10.639Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101LeadershipWriterTest",
+      "name": "beginRevokesOriginalReadBeforeQueueAndTwoCommitsPlusExternalStepPublishOnce",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101LeadershipWriterTest.xml",
+      "timestamp": "2026-10-24T06:30:10.639Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101LeadershipWriterTest",
+      "name": "committedButCleanupFailureRetainsCommittedEvidenceAndSuppressesUi",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101LeadershipWriterTest.xml",
+      "timestamp": "2026-10-24T06:30:10.639Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101LeadershipWriterTest",
+      "name": "controlledRejectionReturnsOnlyAfterOuterRollbackAndNeverInsertsRow",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101LeadershipWriterTest.xml",
+      "timestamp": "2026-10-24T06:30:10.639Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101WriterWiringTest",
+      "name": "originalRuntimePortIsInjectedAndMaintenanceRevokesBeforeWorkerQueue",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101WriterWiringTest.xml",
+      "timestamp": "2026-10-24T06:30:12.270Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101WriterWiringTest",
+      "name": "leadershipProgressContainsOnlyOriginalProgressAndPrimitiveMetadata",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101WriterWiringTest.xml",
+      "timestamp": "2026-10-24T06:30:12.270Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101WriterWiringTest",
+      "name": "absentOrUnconfirmedWorkEndNeverRebindsAndLateOldReceiptsCannotAcknowledgeB",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101WriterWiringTest.xml",
+      "timestamp": "2026-10-24T06:30:12.270Z"
+    },
+    {
+      "classname": "org.pag.data.product.P101WriterWiringTest",
+      "name": "leadershipAndDocumentUseOnePendingAndUnknownRequiresFreshGeneration",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.P101WriterWiringTest.xml",
+      "timestamp": "2026-10-24T06:30:12.270Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "eachHitAcquiresFreshReadyPublishesAndKeepsExactReadPayloadBudgetAndEpoch",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "wrongThreadDoesNotAcquireOrMutateOwnerAndDefaultLifetimeDenies",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "backpressureDoesNotReplaceRetainedTicketOrDestroyAnAuthorizedHit",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "coreDocumentAndUnknownBeforeOrInsidePublicationRevokeOriginalSlot",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "foreignActionAndPortOrReplacementTicketNeverAuthorizeOldData",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "lockDuringPublishAndWorkerRevokeAfterCallbackCannotAuthorizeHit",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "namespaceFenceBeforeOrAfterPublicationDeniesWithoutWaitingOnIo",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "repeatedHitsDoNotRenewThirtySecondIdleAndWorkerTimeoutIsSynchronous",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "oldLifetimeCloseCannotRevokeNewRead",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "falseAfterCallbackNoCallbackMissingReadyGenerationAndScopeAreTerminal",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "successfulHitFollowedByRevokeCloseOrNewLoadCannotRestoreSlot",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "name": "explicitLifetimeCloseMustRevokeOriginalReadTicket",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProductActiveCoreLifetimeTest.xml",
+      "timestamp": "2026-10-24T06:32:11.657Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "originalsAndPersonRelationsRemainMandatoryAndActionLocal",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "sqliteFailureDuringSecondIdentifierOrAffectedInsertLeavesNoHalfProtocol",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "appendMustNotExtendAHistoryWhoseOriginalWasDeleted",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "newerFamilyMutationBeforeOldPublicationSuppressesOldWriterResponse",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "queuedRevisionFreezesBothDraftAndNestedExpectedCollections",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "revisionOverflowRejectsWithoutWrappingOrAppending",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "allThreeWritersSeparatePhysicalSqlOutcomeCleanupAndPublicationAcrossRaces",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "protocolAndOtherFamiliesSharePendingAndOneEpochInBothDirections",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "mistakenAddendumAndCorrectionRetainExistingTransitionRules",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "explicitRejectionAfterWritesNeedsReturnedOuterRollbackAndCompleteCleanup",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "twoEditorsAndOldMistakenConfirmationCannotAppendTwice",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "createFailureLeavesNoEntryNoRevisionNoChildRows",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "createCorrectionAddendumAndMistakenPreserveOriginalAndEveryRelation",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "invalidContentTemplatesKindsAndForeignPeopleAreConfirmedRollbacks",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "legacyNormalizationIsolatesOriginalCollectionsButDoesNotMakeCopiesImmutable",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "everyPartialInsertFailureRollsBackEntryRevisionAndAllRelations",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "frozenQueuedDraftAndExpectedCannotBeChangedByOriginalsOrCollectionCasts",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "lostOrFailedMainDispatchRemainsPendingWithoutReplay",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "fullExpectedCasIncludesAllIdentityContentRelationsAndPhaseFields",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "duplicateWorkerMainAndLateMainCannotDuplicateOrCrossPublishRevisions",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "appendRevisionIdentityRejectsContentAbaWithSameTimestamp",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "currentIdentifierPositionCannotWrapThroughRoomIntMapping",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "expectedActionPhaseAndCompletedFlagsRemainAuthoritative",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "failedWorkerAndBareValueNeverFabricateSuccess",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.ProtocolWriterIntegrationTest",
+      "name": "databaseTriggersKeepEveryExistingProtocolRowImmutable",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.ProtocolWriterIntegrationTest.xml",
+      "timestamp": "2026-10-24T06:30:12.290Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "revokeBeforeQueueBeforeCommitAfterCommitAndBeforePublicationDenySuccess",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "successCallbackCannotInventCommitAndFreshGenerationNeverRestoresRamReuse",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "queueRejectionNestedTransactionAndMainQueueLossStayFailClosed",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "concurrentEditorsPendingAndLateDuplicateCallbacksCannotDuplicateWrites",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "generationChangeAfterCommitButBeforeMainDropsLateSuccess",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "overlappingQueueWritesCannotTakeTheLastSlotTwiceAndRetrySeesExactCount",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "editAndTransitionRacesUseFullExpectedAndEventsExactlyOnce",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "sameMillisecondTaskAbaIsNotAPersistentRevisionProof",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "cleanupFailureAfterRealCommitNeverPublishesAndCannotBeRetried",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "exact4999AllowsOneMoreBut5000And5001RejectCreateAndAllEventTransitions",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "twoRealSqliteConnectionsSerializeCountAndDependentWritesAtTheLastSlot",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "beforeQueuePendingCommitAndCleanupAreDistinctAndCallbackDoesNotCreateEvidence",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "cleanupFailureAfterConfirmedRollbackAndDeletedTaskCascadesEvents",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "capacityCheckDoesNotBypassCasRevokeOrCommitAndCleanupFences",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "definiteDomainRollbackHasNoRowsNoEventAndNoCorruptionSignal",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "lastSlotEventFailureRollsBackDependentTaskAndNeverReportsSuccess",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "createEditTransitionsAndConflictsPreserveAtomicSingleEvents",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "eventlessEditAndLegacyHistoryRemainCompleteAndActionCountsAreIndependent",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.data.product.TaskMutationSqliteTest",
+      "name": "taskAndEventBothRollbackOnFailureAndUnconfirmedOutcomeNeverSucceeds",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/data-TEST-org.pag.data.product.TaskMutationSqliteTest.xml",
+      "timestamp": "2026-10-24T06:30:29.224Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.CoreWorkspaceMutationAdapterTest",
+      "name": "everyCoreFamilyInvalidatesAllDependenciesBeforeQueueOnTheSameEpoch",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.CoreWorkspaceMutationAdapterTest.xml",
+      "timestamp": "2026-10-24T06:30:37.780Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.CoreWorkspaceMutationAdapterTest",
+      "name": "taskOnlyAdaptersRefuseUnknownCoreFamiliesRatherThanBypassInvalidation",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.CoreWorkspaceMutationAdapterTest.xml",
+      "timestamp": "2026-10-24T06:30:37.780Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.CoreWorkspaceMutationAdapterTest",
+      "name": "materialInvalidatesBoardSummaryAndOverviewCountWithoutInventedTaskChanges",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.CoreWorkspaceMutationAdapterTest.xml",
+      "timestamp": "2026-10-24T06:30:37.780Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.CoreWorkspaceMutationAdapterTest",
+      "name": "protocolTracksDirtyMetadataWithoutGrantingSensitivePayloadRetention",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.CoreWorkspaceMutationAdapterTest.xml",
+      "timestamp": "2026-10-24T06:30:37.780Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.CoreWorkspaceMutationAdapterTest",
+      "name": "actionSwitchStatusExitAndUnknownNeverResurrectAnActiveBinding",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.CoreWorkspaceMutationAdapterTest.xml",
+      "timestamp": "2026-10-24T06:30:37.780Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.CoreWorkspaceMutationAdapterTest",
+      "name": "memoryReportReadLabelsAreDirtyMetadataOnlyAndFailClosed",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.CoreWorkspaceMutationAdapterTest.xml",
+      "timestamp": "2026-10-24T06:30:37.780Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.CoreWorkspaceMutationAdapterTest",
+      "name": "expenseInvalidatesBoardCountAndTotalAndRemainsFailClosed",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.CoreWorkspaceMutationAdapterTest.xml",
+      "timestamp": "2026-10-24T06:30:37.780Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.LeadershipViewModelTest",
+      "name": "explicitSetupAndCancellationDoNotAutomaticallyWrite",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.LeadershipViewModelTest.xml",
+      "timestamp": "2026-10-24T06:30:37.945Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.LeadershipViewModelTest",
+      "name": "personDetailRevealsOnlyWithItsInventoryMetadata",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.LeadershipViewModelTest.xml",
+      "timestamp": "2026-10-24T06:30:37.945Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.LeadershipViewModelTest",
+      "name": "expiredReleaseClearsWithoutAutomaticReauth",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.LeadershipViewModelTest.xml",
+      "timestamp": "2026-10-24T06:30:37.945Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.LeadershipViewModelTest",
+      "name": "activeAndCompletedDoNotWrite",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.LeadershipViewModelTest.xml",
+      "timestamp": "2026-10-24T06:30:37.945Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.LeadershipViewModelTest",
+      "name": "navigationCancelsAndDiscardsDelayedRelease",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.LeadershipViewModelTest.xml",
+      "timestamp": "2026-10-24T06:30:37.945Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.LeadershipViewModelTest",
+      "name": "lockDuringPersonInventoryCannotRevealPersonOrMetadata",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.LeadershipViewModelTest.xml",
+      "timestamp": "2026-10-24T06:30:37.945Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.LeadershipViewModelTest",
+      "name": "partialSensitiveStateDoesNotBlockBasicOrPermitSetup",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.LeadershipViewModelTest.xml",
+      "timestamp": "2026-10-24T06:30:37.945Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.LeadershipViewModelTest",
+      "name": "lockDropsSensitiveContent",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.LeadershipViewModelTest.xml",
+      "timestamp": "2026-10-24T06:30:37.945Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.LeadershipViewModelTest",
+      "name": "leavingPersonDetailDiscardsPendingInventory",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.LeadershipViewModelTest.xml",
+      "timestamp": "2026-10-24T06:30:37.945Z"
+    },
+    {
+      "classname": "org.pag.prototype.product.LeadershipViewModelTest",
+      "name": "sessionRestartRevokesGrantAndNeverRestoresSensitiveAreaInNewGeneration",
+      "source": "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p101/junit/app-TEST-org.pag.prototype.product.LeadershipViewModelTest.xml",
+      "timestamp": "2026-10-24T06:30:37.945Z"
+    }
+  ]
+}

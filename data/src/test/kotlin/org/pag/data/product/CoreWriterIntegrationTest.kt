@@ -54,6 +54,7 @@ class CoreWriterIntegrationTest {
                 requests.add(mutation)
                 val a=action;val p=permission
                 return object:WorkspaceMutationInvalidation.Pending {
+                    override fun recordWorkCompletion(completion:WorkspaceWriteCompletion)=pending.recordWorkCompletion(completion)
                     override fun finish(completion:WorkspaceWriteCompletion):Boolean {completions.add(completion);return pending.finish(completion)}
                     override fun isCurrent()=pending.isCurrent() && a==action && p==permission && generation==this@H.generation
                 }

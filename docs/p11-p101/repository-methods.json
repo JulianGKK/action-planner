@@ -1,0 +1,416 @@
+[
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductActionRepository.kt",
+    "line": 21,
+    "method": "listActions",
+    "signature": "override fun listActions(publish: (List<Action>) -> Unit) = run(publish) { db, _ -> db.actions().list().map { row -> row.model() } }"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductActionRepository.kt",
+    "line": 22,
+    "method": "getAction",
+    "signature": "override fun getAction(id: String, publish: (Action?) -> Unit) = run(publish) { db, _ -> db.actions().get(id)?.model() }"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductActionRepository.kt",
+    "line": 23,
+    "method": "createAction",
+    "signature": "override fun createAction(action: NewAction, publish: (Action) -> Unit) {"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductActionRepository.kt",
+    "line": 27,
+    "method": "updateAction",
+    "signature": "override fun updateAction(expected:Action,changes:NewAction,publish:(ActionChangeResult)->Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductActionRepository.kt",
+    "line": 30,
+    "method": "advanceActionStatus",
+    "signature": "override fun advanceActionStatus(id:String,expected:ActionStatus,publish:(ActionChangeResult)->Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt",
+    "line": 27,
+    "method": "readPdf",
+    "signature": "override fun readPdf(actionId:String,expected:DocumentAsset,page:Int,request:DocumentPdfRequest,"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt",
+    "line": 46,
+    "method": "readText",
+    "signature": "override fun readText(actionId:String,expected:DocumentAsset,page:Int,request:DocumentTextRequest,"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt",
+    "line": 76,
+    "method": "readImage",
+    "signature": "override fun readImage(actionId:String, expected:DocumentAsset, request:DocumentImageRequest,"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt",
+    "line": 110,
+    "method": "summary",
+    "signature": "override fun summary(actionId: String, publish: (DocumentResult<DocumentSummary>) -> Unit) = run(publish) { c ->"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt",
+    "line": 119,
+    "method": "list",
+    "signature": "override fun list(actionId: String, publish: (DocumentResult<List<DocumentAsset>>) -> Unit) = run(publish) { c ->"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt",
+    "line": 128,
+    "method": "importDocument",
+    "signature": "override fun importDocument(actionId: String, name: String, format: DocumentFormat, source: DocumentSource,"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt",
+    "line": 151,
+    "method": "deleteDocument",
+    "signature": "override fun deleteDocument(actionId: String, expected: DocumentAsset, publish: (DocumentResult<Unit>) -> Unit) = runMutation(actionId,DocumentMutationEvidence.Operation.DELETE,publish) { c,evidence ->"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt",
+    "line": 281,
+    "method": "read",
+    "signature": "override fun read(): Int = try { super.read() } catch (_: IOException) { unavailable() }"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt",
+    "line": 282,
+    "method": "read",
+    "signature": "override fun read(b: ByteArray, off: Int, len: Int): Int = try { `in`.read(b,off,len) } catch (_: IOException) { unavailable() }"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductDocumentRepository.kt",
+    "line": 283,
+    "method": "close",
+    "signature": "override fun close() { try { super.close() } catch (_: IOException) { unavailable() } }"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductExpenseRepository.kt",
+    "line": 18,
+    "method": "summary",
+    "signature": "override fun summary(actionId: String, publish: (OperationsResult<ExpenseSummary>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductExpenseRepository.kt",
+    "line": 20,
+    "method": "board",
+    "signature": "override fun board(actionId: String, publish: (OperationsResult<ExpenseBoard>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductExpenseRepository.kt",
+    "line": 22,
+    "method": "create",
+    "signature": "override fun create(actionId: String, input: ExpenseInput, publish: (OperationsResult<Expense>) -> Unit) {"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductExpenseRepository.kt",
+    "line": 26,
+    "method": "edit",
+    "signature": "override fun edit(actionId: String, expected: Expense, input: ExpenseInput, publish: (OperationsResult<Expense>) -> Unit) {"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductExpenseRepository.kt",
+    "line": 31,
+    "method": "delete",
+    "signature": "override fun delete(actionId: String, expected: Expense, publish: (OperationsResult<Unit>) -> Unit) {"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 23,
+    "method": "revoke",
+    "signature": "override fun revoke(){request.incrementAndGet();active.getAndSet(null)?.cancel();pendingCleanups.toList().forEach{it.run()}}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 35,
+    "method": "check",
+    "signature": "override fun check(point:AccessPoint)=c.check(point)&&allowed()"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 36,
+    "method": "publish",
+    "signature": "override fun publish(result:()->Unit):Boolean { if(!allowed())return false; var delivered=false; c.publish{if(allowed()){result();delivered=true}}; return delivered }"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 37,
+    "method": "admitKey",
+    "signature": "override fun <T> admitKey(validUntilMillis:Long,acquire:(()->Boolean)->T?):T? ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 109,
+    "method": "acquire",
+    "signature": "override fun acquire(scope:AccessScope)=access.acquire(scope)?.let{base->bounded(base){request.get()==original}}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 127,
+    "method": "actionState",
+    "signature": "override fun actionState(actionId:String,publish:(SensitiveResult<SensitiveState>)->Unit) {"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 135,
+    "method": "inventory",
+    "signature": "override fun inventory(actionId:String,personId:String,publish:(SensitiveResult<SensitiveInventory>)->Unit)=run(publish){c->"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 139,
+    "method": "setup",
+    "signature": "override fun setup(actionId:String,passphrase:CharArray,confirmation:CharArray,publish:(SensitiveResult<Unit>)->Unit) {"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 164,
+    "method": "open",
+    "signature": "override fun open(actionId:String,personId:String,area:SensitiveArea,passphrase:CharArray,publish:(SensitiveResult<SensitiveOpened>)->Unit){"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 194,
+    "method": "save",
+    "signature": "override fun save(grant:SensitiveGrant,data:SensitiveData,publish:(SensitiveResult<Unit>)->Unit)=mutate(grant,publish){g,c,e->"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 215,
+    "method": "deleteArea",
+    "signature": "override fun deleteArea(grant:SensitiveGrant,publish:(SensitiveResult<Unit>)->Unit)=mutate(grant,publish){g,c,e->"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 219,
+    "method": "deletePerson",
+    "signature": "override fun deletePerson(actionId:String,personId:String,passphrase:CharArray,publish:(SensitiveResult<Unit>)->Unit)=runWrite(actionId,publish,{passphrase.fill('\\u0000')}){c,e->"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt",
+    "line": 225,
+    "method": "deleteAction",
+    "signature": "override fun deleteAction(actionId:String,passphrase:CharArray,publish:(SensitiveResult<Unit>)->Unit)=runWrite(actionId,publish,{passphrase.fill('\\u0000')}){c,e->"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMaterialRepository.kt",
+    "line": 17,
+    "method": "summary",
+    "signature": "override fun summary(actionId: String, publish: (OperationsResult<MaterialSummary>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMaterialRepository.kt",
+    "line": 19,
+    "method": "board",
+    "signature": "override fun board(actionId: String, publish: (OperationsResult<MaterialBoard>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMaterialRepository.kt",
+    "line": 21,
+    "method": "create",
+    "signature": "override fun create(actionId: String, input: MaterialInput, publish: (OperationsResult<MaterialItem>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMaterialRepository.kt",
+    "line": 23,
+    "method": "edit",
+    "signature": "override fun edit(actionId: String, expected: MaterialItem, input: MaterialInput, publish: (OperationsResult<MaterialItem>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMaterialRepository.kt",
+    "line": 25,
+    "method": "delete",
+    "signature": "override fun delete(actionId: String, expected: MaterialItem, publish: (OperationsResult<Unit>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMemoryReportRepository.kt",
+    "line": 18,
+    "method": "summary",
+    "signature": "override fun summary(actionId: String, publish: (OperationsResult<MemoryReportSummary>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMemoryReportRepository.kt",
+    "line": 20,
+    "method": "list",
+    "signature": "override fun list(actionId: String, publish: (OperationsResult<List<MemoryReportHeader>>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMemoryReportRepository.kt",
+    "line": 22,
+    "method": "detail",
+    "signature": "override fun detail(actionId: String, reportId: String, publish: (OperationsResult<MemoryReportDetail>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMemoryReportRepository.kt",
+    "line": 24,
+    "method": "create",
+    "signature": "override fun create(actionId: String, authorLabel: String, firstSection: MemorySectionSave, publish: (OperationsResult<MemoryReportHeader>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMemoryReportRepository.kt",
+    "line": 26,
+    "method": "saveSection",
+    "signature": "override fun saveSection(actionId: String, expected: MemoryReportHeader, section: MemorySectionSave, publish: (OperationsResult<MemoryReportHeader>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMemoryReportRepository.kt",
+    "line": 28,
+    "method": "complete",
+    "signature": "override fun complete(actionId: String, expected: MemoryReportHeader, publish: (OperationsResult<MemoryReportHeader>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductMemoryReportRepository.kt",
+    "line": 30,
+    "method": "addAddendum",
+    "signature": "override fun addAddendum(actionId: String, expected: MemoryReportHeader, content: String, publish: (OperationsResult<MemoryReportHeader>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductOperationsRepository.kt",
+    "line": 19,
+    "method": "board",
+    "signature": "override fun board(actionId:String,publish:(OperationsResult<OperationalBoard>)->Unit)=run(publish){d,c->d.withReadTransaction{OperationsStore(d,c,now).board(actionId)}}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductOperationsRepository.kt",
+    "line": 20,
+    "method": "createRole",
+    "signature": "override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,null,name)}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductOperationsRepository.kt",
+    "line": 21,
+    "method": "renameRole",
+    "signature": "override fun renameRole(actionId:String,expected:Role,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,expected,name)}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductOperationsRepository.kt",
+    "line": 22,
+    "method": "deleteRole",
+    "signature": "override fun deleteRole(actionId:String,expected:Role,publish:(OperationsResult<Unit>)->Unit)=write(actionId,publish){it.deleteRole(actionId,expected)}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductOperationsRepository.kt",
+    "line": 23,
+    "method": "planRoles",
+    "signature": "override fun planRoles(actionId:String,personId:String,expected:ExpectedPersonRolePlan,plan:PersonRolePlan,publish:(OperationsResult<Unit>)->Unit) {"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductOperationsRepository.kt",
+    "line": 27,
+    "method": "updateSnapshot",
+    "signature": "override fun updateSnapshot(actionId:String,personId:String,expected:PersonOperationalState,status:OperationalStatus,roleId:String?,place:String,publish:(OperationsResult<Unit>)->Unit)="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductPersonRepository.kt",
+    "line": 21,
+    "method": "listPersons",
+    "signature": "override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductPersonRepository.kt",
+    "line": 27,
+    "method": "getPerson",
+    "signature": "override fun getPerson(actionId: String, personId: String, publish: (PersonResult<Person?>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductPersonRepository.kt",
+    "line": 33,
+    "method": "createPerson",
+    "signature": "override fun createPerson(actionId: String, pseudonym: String, publish: (PersonResult<Person>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductPersonRepository.kt",
+    "line": 35,
+    "method": "updatePerson",
+    "signature": "override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductProtocolRepository.kt",
+    "line": 21,
+    "method": "summary",
+    "signature": "override fun summary(actionId: String, publish: (ProtocolResult<ProtocolSummary>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductProtocolRepository.kt",
+    "line": 23,
+    "method": "listTimeline",
+    "signature": "override fun listTimeline(actionId: String, publish: (ProtocolResult<List<ProtocolTimelineItem>>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductProtocolRepository.kt",
+    "line": 25,
+    "method": "getEntry",
+    "signature": "override fun getEntry(actionId: String, entryId: String, publish: (ProtocolResult<ProtocolEntryDetail>) -> Unit) ="
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductProtocolRepository.kt",
+    "line": 27,
+    "method": "createEntry",
+    "signature": "override fun createEntry(actionId: String, expectedActionStatus: ActionStatus, input: ProtocolInput,"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductProtocolRepository.kt",
+    "line": 32,
+    "method": "reviseEntry",
+    "signature": "override fun reviseEntry(actionId: String, expectedActionStatus: ActionStatus, expectedRevision: ProtocolExpectedRevision,"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductProtocolRepository.kt",
+    "line": 39,
+    "method": "markMistaken",
+    "signature": "override fun markMistaken(actionId: String, expectedActionStatus: ActionStatus, expectedRevision: ProtocolExpectedRevision,"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductTaskRepository.kt",
+    "line": 21,
+    "method": "board",
+    "signature": "override fun board(actionId:String,publish:(OperationsResult<TaskBoard>)->Unit)=run(publish){d,c->d.withReadTransaction{TaskStore(d,c,now).board(actionId)}}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductTaskRepository.kt",
+    "line": 24,
+    "method": "history",
+    "signature": "override fun history(expected:Task,after:CompactEventCursor?,publish:(CompactTaskResult)->Unit)=readHistory(expected,after,null,publish)"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductTaskRepository.kt",
+    "line": 25,
+    "method": "historyPage",
+    "signature": "override fun historyPage(expected:Task,page:Long,publish:(CompactTaskResult)->Unit)=readHistory(expected,null,page,publish)"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductTaskRepository.kt",
+    "line": 90,
+    "method": "create",
+    "signature": "override fun create(actionId:String,input:TaskInput,publish:(OperationsResult<Task>)->Unit)=write(actionId,publish){it.create(actionId,input)}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductTaskRepository.kt",
+    "line": 91,
+    "method": "edit",
+    "signature": "override fun edit(actionId:String,expected:Task,input:TaskInput,publish:(OperationsResult<Task>)->Unit)=write(actionId,publish){it.edit(actionId,expected,input)}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductTaskRepository.kt",
+    "line": 92,
+    "method": "transition",
+    "signature": "override fun transition(actionId:String,expected:Task,status:TaskStatus,publish:(OperationsResult<Task>)->Unit)=write(actionId,publish){it.transition(actionId,expected,status)}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductTaskRepository.kt",
+    "line": 93,
+    "method": "delete",
+    "signature": "override fun delete(actionId:String,expected:Task,publish:(OperationsResult<Unit>)->Unit)=write(actionId,publish){it.delete(actionId,expected)}"
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt",
+    "line": 15,
+    "method": "read",
+    "signature": "override fun read(request:WorkspaceReadRequest,publish:(WorkspaceResult)->Unit) {"
+  }
+]

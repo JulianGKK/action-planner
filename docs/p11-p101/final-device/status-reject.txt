@@ -1,0 +1,20 @@
+INSTRUMENTATION_STATUS: stream=P101,status_reject,CALL,label=setup,once=true,epoch=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,status_reject,CALL,label=open,once=true,epoch=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,status_reject,CALL,label=advance_action_status,once=true,epoch=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,status_reject,CALL,label=deny_after_status_change,once=true,epoch=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,status_reject,STATUS,confirmed_action_commit=ACTIVE,leadership_save=DENIED,persisted_sensitive_rows=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,status_reject,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 PASS status_reject
+INSTRUMENTATION_CODE: -1

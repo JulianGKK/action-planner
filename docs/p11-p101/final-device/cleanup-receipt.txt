@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P101,cleanup_receipt,COMPLETION,outcome=COMMITTED,cleanup=FAILED_OR_UNCONFIRMED,effect=FINAL_DRIVER_CLOSE_RETURNED,injection_after_actual_return=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,cleanup_receipt,DURABLE_AFTER_UNCERTAINTY,state=READY,callback_count=0,no_retry=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P101,cleanup_receipt,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P101 PASS cleanup_receipt
+INSTRUMENTATION_CODE: -1

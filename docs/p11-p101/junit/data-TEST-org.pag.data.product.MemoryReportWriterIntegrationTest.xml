@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.MemoryReportWriterIntegrationTest" tests="26" skipped="0" failures="0" errors="0" timestamp="2026-10-24T06:29:42.670Z" hostname="iuzjhtgvfc" time="27.958">
+  <properties/>
+  <testcase name="persistedRevisionRejectsAnswerAbaEvenAtIdenticalTimestamp" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.207"/>
+  <testcase name="lostOrFailedMainDispatchStaysPendingWithoutRetryForAllFourWrites" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="1.321"/>
+  <testcase name="existingAddendumGuardsRejectSqlTypesWrapGapsAndInvalidContent" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="2.477"/>
+  <testcase name="corruptCanonicalMultiAndCountCannotBeReadOrRewritten" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="1.626"/>
+  <testcase name="inactiveActionPhasesKeepEveryWriteDenied" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.517"/>
+  <testcase name="twoEditorsAndConcurrentAddendaCannotLoseConfirmedRevision" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.197"/>
+  <testcase name="completeAndAddendumUsePersistedPhaseRevisionAndSequence" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.225"/>
+  <testcase name="failedCreateLeavesNoHeaderOrAnswerResidue" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.25"/>
+  <testcase name="inactiveDependentAnswersRequireExactConflictDecision" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.159"/>
+  <testcase name="failedWorkerOrBareValueCannotFabricateSuccess" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.721"/>
+  <testcase name="existingHeaderGuardsRejectRawTypeAndIntWrapBeforeHeaderMaterialization" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="2.436"/>
+  <testcase name="everySqlBoundaryRollsBackTheCompleteHeaderAnswersAndAddendumState" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="1.447"/>
+  <testcase name="createAndSectionReplacementKeepCompleteHeaderAndOtherAnswers" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.147"/>
+  <testcase name="storePreservesStrictCountAndExclusiveMultiRules" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.209"/>
+  <testcase name="newerMutationBeforeOldPublicationSuppressesOldCallbackForEveryOperation" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.619"/>
+  <testcase name="duplicateWorkerMainAndLateCallbackHaveOneEffectForEveryOperation" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.611"/>
+  <testcase name="fullExpectedHeaderCasRejectsEveryChangedFieldForAllFollowupWrites" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.176"/>
+  <testcase name="actualSqlTriggerFailureAfterAnswerAndBeforeHeaderUpdateRollsBackEverything" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.596"/>
+  <testcase name="explicitRollbackCleanupAndUnconfirmedRollbackStaySeparateForAllWrites" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="2.468"/>
+  <testcase name="sharedPendingBlocksAllSixFamiliesInBothDirectionsWithoutBusyDbTransactions" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.768"/>
+  <testcase name="queuedCreateAndSectionKeepOriginalMapSetAndNestedMultiSnapshot" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.138"/>
+  <testcase name="revisionOverflowNeverWritesAnswersStatusOrAddenda" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.5"/>
+  <testcase name="foreignMissingActionsAndReportsCannotModifyOtherData" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.133"/>
+  <testcase name="invalidQuestionsOptionsCountsAuthorsAndSectionOrderAreRejectedBeforeMutation" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.155"/>
+  <testcase name="allFourWritesSeparateSqlOutcomeCleanupAndPublicationAcrossRaces" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="9.039"/>
+  <testcase name="corruptAnswerEncodingRejectsDetailAndWritesButNotContentFreeSummary" classname="org.pag.data.product.MemoryReportWriterIntegrationTest" time="0.807"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
