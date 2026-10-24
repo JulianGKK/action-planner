@@ -19,7 +19,7 @@ internal class OutstandingCoreRead {
         internal val product = OutstandingCoreRead()
     }
     /** Refusal only: false is NOT a fullview budget admission or owner-end receipt. */
-    @Synchronized internal fun fullviewOverlapUnconfirmed():Boolean = closed || current!=null
+    @Synchronized internal fun fullviewOverlapUnconfirmed():Boolean = closed || current!=null || fullviewObligation!=null
 
     enum class Phase { READER_ADMITTED, WORKER_MATERIALIZING, CANDIDATE_COMPLETE, MAIN_PENDING,
         MAIN_DELIVERED, RETAINED, COMPOSE_TRANSITION, RETIRED, DENIED, REVOKED, FAILED_OR_UNCONFIRMED }
@@ -29,9 +29,13 @@ internal class OutstandingCoreRead {
         val fullViewUnconfirmed:Boolean, val nativeFrameCalibration:String="UNCONFIRMED")
     private var current: Read?=null
     private var fullEntry:FullviewEntry?=null
+    private var fullviewObligation:FullviewEntry?=null
+    // Last scalar estimate only, NOT a reservation/payload or a retirement assertion.
+    private var lastFullviewRetained=0L
+    private var lastFullviewTransition=0L
     /** Overlap exclusion only. This is deliberately NOT a budget receipt. */
     @Synchronized internal fun beginFullview(actionId:String,generation:Long):FullviewEntry? {
-        if(closed || current!=null || fullEntry!=null)return null
+        if(closed || current!=null || fullEntry!=null || fullviewObligation!=null)return null
         return FullviewEntry(actionId,generation).also{fullEntry=it}
     }
     internal fun enterFullview(entry:FullviewEntry,request:WorkspaceReadRequest):Boolean =
@@ -44,6 +48,27 @@ internal class OutstandingCoreRead {
     }
     internal inner class FullviewEntry(val actionId:String,val generation:Long) {
         internal var started=false
+        private var receipt:ActiveCoreReservation?=null
+        internal var retainedCharge=0L;private set
+        internal var transitionCharge=0L;private set
+        private var consumed=false
+        /** Original-record booking, not a new ledger. No payload exists at this point. */
+        fun admit(reservation:ActiveCoreReservation):Boolean=synchronized(this@OutstandingCoreRead){
+            if(fullEntry!==this || !started || receipt!=null || consumed || closed || current!=null || fullviewObligation!=null)return false
+            val r=ActiveWorkspaceBudget.estimateUnits(reservation.retained)
+            val t=ActiveWorkspaceBudget.estimateUnits(reservation.transition)
+            if(r.first!=ActiveWorkspaceBudget.Decision.ADMITTED || t.first!=ActiveWorkspaceBudget.Decision.ADMITTED)return false
+            lastFullviewRetained=r.second;lastFullviewTransition=t.second
+            if(r.second !in 0..ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || t.second !in 0..ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES){
+                refusal="FULLVIEW_BUDGET_REFUSED";last=Phase.DENIED;return false
+            }
+            receipt=reservation;retainedCharge=r.second;transitionCharge=t.second;true
+        }
+        /** Conservatively bind BEFORE the first DTO. Neither failure nor Main ACK retires it. */
+        fun materialize():Boolean=synchronized(this@OutstandingCoreRead){
+            if(fullEntry!==this || !started || receipt==null || consumed || closed || current!=null || fullviewObligation!=null)return false
+            consumed=true;fullviewObligation=this;true
+        }
         private var workerEnded=false
         private var mainExpected=false
         private var mainEnded=false
@@ -58,20 +83,24 @@ internal class OutstandingCoreRead {
             OnceTask(work){synchronized(this@OutstandingCoreRead){mainEnded=true;finish()}}.also{mainTask=it}
         }
         fun workerRejected()=synchronized(this@OutstandingCoreRead){if(workerTask?.rejectUnqueued()!=false){workerEnded=true;finish()}}
-        fun mainRejected()=synchronized(this@OutstandingCoreRead){if(mainTask?.rejectUnqueued()!=false){mainEnded=true;finish()}}
+        fun mainRejected()=synchronized(this@OutstandingCoreRead){if(mainTask?.rejectUnqueued()==true){mainEnded=true;finish()}}
         private fun finish(){if(workerEnded && (!mainExpected || mainEnded) && fullEntry===this)fullEntry=null}
     }
-    private class OnceTask(work:Runnable,private val ended:()->Unit):Runnable {
+    private class OnceTask(work:Runnable,ended:()->Unit):Runnable {
+        // Replace the existing field, no new payload/cell object. Terminal shells must not
+        // reach the record through their end callback (including safe pre-DTO cancellation).
+        private var ended:(()->Unit)?=ended
         private val work=AtomicReference<Runnable?>(work)
         private val dispatched=AtomicBoolean()
         fun rejectUnqueued():Boolean {
             if(!dispatched.compareAndSet(false,true))return false
-            work.set(null);return true
+            work.set(null);synchronized(this){ended=null};return true
         }
         override fun run(){
             // No terminal shell field keeps the callback/result. ACK only after invocation.
             if(!dispatched.compareAndSet(false,true))return
-            try{work.getAndSet(null)?.run()}finally{ended()}
+            val acknowledge=synchronized(this){ended.also{ended=null}}
+            try{work.getAndSet(null)?.run()}finally{acknowledge?.invoke()}
         }
     }
 
@@ -91,10 +120,11 @@ internal class OutstandingCoreRead {
     @Synchronized fun close(){closed=true}
     @Synchronized fun state():State {
         val r=current
-        return State(r?.phase ?: last,if(r?.retainedReserved==true)r.retained else 0,
-            if(r!=null)ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES else 0,r?.retained ?: 0,r?.transition ?: 0,
+        val f=fullviewObligation ?: fullEntry
+        return State(r?.phase ?: if(fullviewObligation!=null)Phase.RETAINED else if(fullEntry!=null)Phase.READER_ADMITTED else last,if(r?.retainedReserved==true)r.retained else f?.retainedCharge ?: 0,
+            if(r!=null || f!=null)ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES else 0,r?.retained ?: f?.retainedCharge ?: lastFullviewRetained,r?.transition ?: f?.transitionCharge ?: lastFullviewTransition,
             if(r?.payload?.get() is ActiveCoreResult.Value || (r?.deliveringValue==true && !r.published))1 else 0,r?.observed==true,r?.disposed==true,
-            r==null,refusal,fullView)
+            r==null && fullviewObligation==null && fullEntry==null,refusal,fullView)
     }
     // Queue shells own their original Read only until the first actual invocation takes it.
     // The local original survives through dispatch's existing finally/ACK, not through a

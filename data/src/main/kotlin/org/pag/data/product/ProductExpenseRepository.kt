@@ -13,7 +13,7 @@ class ProductExpenseRepository(app: Context, private val access: StorageAccess, 
     private val owner: () -> SessionDbKeyOwner?, private val worker: Executor, private val main: Executor,
     private val blocked: () -> Unit,
     mutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(), private val now: () -> Long = System::currentTimeMillis) : ExpenseRepository {
-    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked)
+    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked,mutations,FullviewPreflight.expense)
     internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
     private val database = ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary = WorkspaceWriteBoundary(access, worker, main, mutations, blocked)
@@ -50,7 +50,7 @@ class ProductExpenseRepository(app: Context, private val access: StorageAccess, 
             }
         }
     private fun <T> run(actionId:String,publish: (OperationsResult<T>) -> Unit, work: suspend (ActionDatabase, StorageContext) -> OperationsResult<T>) {
-        readExclusion.read(actionId,publish,{OperationsResult.Rejected(OperationsFailure.OWNER_UNCONFIRMED)},work)
+        readExclusion.read(actionId,publish,{budget->OperationsResult.Rejected(if(budget)OperationsFailure.BUDGET_REFUSED else OperationsFailure.OWNER_UNCONFIRMED)},work)
     }
 }
 /** Payment leaves contain only immutable Strings/Longs. Copy and wrap the list before queue,

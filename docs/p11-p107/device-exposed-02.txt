@@ -1,0 +1,32 @@
+INSTRUMENTATION_STATUS: stream=P107,exposed,BEFORE_AFTER,previous_P105_full_boards=20/40,current_fullview_materializations=0,direct_repository=REFUSED,direct_boards=REFUSED,missing_store_entry=REFUSED,visible_refusal=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,exposed,RECONSTRUCTION_INITIAL,original=LOCKED,replacement=LOCKED,focus=true,record=State(phase=COMPOSE_TRANSITION, retained=0, transition=16777216, localRetained=1547575, localTransition=6266176, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=FULL_VIEW_UNCONFIRMED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,exposed,RECONSTRUCTION_STATE,state=LOCKED,generation=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,exposed,REPRODUCTION,start_without_foreground=LOCKED,authentication_not_started=true,original_record_unchanged=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,exposed,WORKER,queue_barrier_returned=true,original_runtime_LOCKED=true,old_pending_candidates=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,exposed,RECONSTRUCTION_STATE,state=AUTHENTICATING,generation=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,exposed,RECONSTRUCTION_STATE,state=MAINTENANCE,generation=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,exposed,RECONSTRUCTION_STATE,state=READY,generation=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,exposed,RECONSTRUCTION,new_Runtime_and_session_READY=true,original_memory_record_preserved=true,fullview_and_core=REFUSED,no_old_end_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,exposed,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P107 PASS exposed
+INSTRUMENTATION_CODE: -1

@@ -55,5 +55,6 @@
     <instrumentation android:name="org.pag.prototype.P103EditorCasProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P104EditorCasProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P105OwnerClosureProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P107FullviewAdmissionProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P106FullviewEntryProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

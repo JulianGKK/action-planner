@@ -51,7 +51,7 @@ data class ProtocolTimelineItem(
     val recordedAfterCompletion: Boolean, val createdAfterCompletion: Boolean,
     val mistaken: Boolean, val originalRecordedAt: Long
 ) { val hasRevisions: Boolean get() = revisionNumber > 1 }
-enum class ProtocolFailure { NOT_FOUND, WRONG_ACTION, INVALID_STATE, INVALID, STALE, OWNER_UNCONFIRMED }
+enum class ProtocolFailure { NOT_FOUND, WRONG_ACTION, INVALID_STATE, INVALID, STALE, OWNER_UNCONFIRMED, BUDGET_REFUSED }
 sealed interface ProtocolResult<out T> {
     data class Value<T>(val value: T) : ProtocolResult<T>
     data class Rejected(val reason: ProtocolFailure) : ProtocolResult<Nothing>

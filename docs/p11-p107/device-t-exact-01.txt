@@ -1,0 +1,17 @@
+INSTRUMENTATION_STATUS: stream=P107,t-exact,PREFLIGHT,ADMITTED,visible=true,persons=20,tasks=40,materializations=1,record=State(phase=RETAINED, retained=1212796, transition=16777216, localRetained=1212796, localTransition=16777216, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,t-exact,OLD_SNAPSHOT,TEST_alias_retained=true,next_workspace_and_direct_board=REFUSED,additional_materializations=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,t-exact,LOCK_REAUTH_ACTION,VM_cleared=true,original_TEST_snapshot_still_held=true,new_read=REFUSED,additional_materializations=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,t-exact,BOUNDARY,R=1212796,T=16777216,disjoint_TEST_scratch_plan=true,actual_extra_array=12094537,materializations=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,t-exact,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P107 PASS t-exact
+INSTRUMENTATION_CODE: -1

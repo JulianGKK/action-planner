@@ -31,6 +31,23 @@ class P77ProductRuntimeHarness private constructor(
         val tickets = AtomicInteger()
         val reads = AtomicInteger()
         val workspaceMaterializations=AtomicInteger()
+        // Explicit TEST-only real scratch allocation, planned in the original receipt.
+        var p107PaddingBytes=0
+        var p107Padding:ByteArray?=null
+        var p107Retained=0L;var p107Transition=0L
+        fun p107Plan(base:org.pag.domain.ActiveCoreReservation,mode:String):org.pag.domain.ActiveCoreReservation {
+            check(mode in setOf("r-exact","r-over","t-exact","t-over"))
+            val retained=mode.startsWith("r-")
+            val units=if(retained)base.retained else base.transition
+            val cost=org.pag.domain.ActiveWorkspaceBudget.estimateUnits(units).second
+            val target=(if(retained)org.pag.domain.ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES else org.pag.domain.ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)+(if(mode.endsWith("over"))1 else 0)
+            p107PaddingBytes=Math.subtractExact(Math.subtractExact(target,cost),71).toInt();check(p107PaddingBytes>=0)
+            val padded=CoreReadAdmission.add(units,org.pag.domain.ActiveWorkspaceBudget.Units(arrays=1,arrayPayloadBytes=p107PaddingBytes.toLong()))
+            val result=if(retained)base.copy(retained=padded) else base.copy(transition=padded)
+            p107Retained=org.pag.domain.ActiveWorkspaceBudget.estimateUnits(result.retained).second
+            p107Transition=org.pag.domain.ActiveWorkspaceBudget.estimateUnits(result.transition).second
+            return result
+        }
         val hitAttempts = AtomicInteger()
         val hitAccepted = AtomicInteger()
         val hitNanos=java.util.Collections.synchronizedList(mutableListOf<Long>())
@@ -95,7 +112,7 @@ class P77ProductRuntimeHarness private constructor(
                 val observations=Observations(faults)
                 val mutations=UncachedWorkspaceMutations()
                 val runtime = ProductRuntime(activity, faults.worker.wrap(worker), faults.main.wrap(main), mutations,
-                    fixture.runtimeAuthority(reuseEnabled = reuseEnabled,observations,faults::wrap).copy(workspaceMaterializing={observations.workspaceMaterializations.incrementAndGet()},coreReadHooks=if(activity.intent.getBooleanExtra("p100Probe",false))p100.hooks else if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
+                    fixture.runtimeAuthority(reuseEnabled = reuseEnabled,observations,faults::wrap).copy(workspaceMaterializing={observations.workspaceMaterializations.incrementAndGet();if(observations.p107PaddingBytes>0)observations.p107Padding=ByteArray(observations.p107PaddingBytes)},workspaceReservation=activity.intent.getStringExtra("p107Budget")?.let{mode->{base->observations.p107Plan(base,mode)}},coreReadHooks=if(activity.intent.getBooleanExtra("p100Probe",false))p100.hooks else if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
                 if(activity.intent.getBooleanExtra("p101Probe",false)) {
                     // Align the existing document repository with this already-authorized synthetic
                     // runtime root. Normal product uses the same platform root for both already.

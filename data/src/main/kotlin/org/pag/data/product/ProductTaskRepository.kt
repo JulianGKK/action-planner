@@ -16,7 +16,7 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
     private val worker:Executor,private val main:Executor,private val blocked:()->Unit,
     private val mutations:WorkspaceMutationInvalidation=UncachedWorkspaceMutations(),
     private val now:()->Long=System::currentTimeMillis):TaskRepository {
-    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked)
+    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked,mutations,FullviewPreflight.task)
     internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
     private val database=ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary=TaskMutationBoundary(access,worker,main,mutations,blocked)
@@ -57,12 +57,18 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
                     if(!current())throw StorageAccessRevoked()
                     (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c,cleanupConfirmed={scopeClosed=it}){d->
                         d.withReadTransaction {
-                            val status=d.actions().get(expected.actionId)?.model()?.status
-                            if(status==null || !TaskRules.mayRead(status) || d.tasks().get(expected.actionId,expected.id)?.model()!=expected)
-                                throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)
+                            val base=FullviewPreflight(this,c,::current).prepare(expected.actionId,FullviewPreflight.task)
+                            val admission:suspend (ActiveCoreReservation)->Unit={pageReservation->
+                                val combined=try{ActiveCoreReservation(CoreReadAdmission.add(base.retained,pageReservation.retained),CoreReadAdmission.add(base.transition,pageReservation.transition))}
+                                    catch(_:ArithmeticException){throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)}
+                                if(!admitCurrentFullview(entry,combined,::current))throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
+                                val status=d.actions().get(expected.actionId)?.model()?.status
+                                if(status==null || !TaskRules.mayRead(status) || d.tasks().get(expected.actionId,expected.id)?.model()!=expected)
+                                    throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)
+                            }
                             val store=CompactTaskStore(this,c,::current)
-                            if(page==null)store.events(state,expected.id,after,fullTaskRead=true)
-                            else store.eventsAtPage(state,expected.id,page,fullTaskRead=true)
+                            if(page==null)store.events(state,expected.id,after,fullTaskRead=true,admitScope=admission)
+                            else store.eventsAtPage(state,expected.id,page,fullTaskRead=true,admitScope=admission)
                         }
                     }}
                 }
@@ -106,7 +112,7 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
             }}
         }
     private fun <T> run(actionId:String,publish:(OperationsResult<T>)->Unit,work:suspend(ActionDatabase,StorageContext)->OperationsResult<T>) {
-        readExclusion.read(actionId,publish,{OperationsResult.Rejected(OperationsFailure.OWNER_UNCONFIRMED)},work)
+        readExclusion.read(actionId,publish,{budget->OperationsResult.Rejected(if(budget)OperationsFailure.BUDGET_REFUSED else OperationsFailure.OWNER_UNCONFIRMED)},work)
     }
 }
 internal interface TaskStoreData {

@@ -1,0 +1,112 @@
+[
+  {
+    "log": "device-active-01.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-active-02.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-completed-01.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-exposed-01.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-exposed-02.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-exposed-03.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-exposed-04.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-large-01.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-large-02.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-large-03.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-large-04.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-preparation-01.txt",
+    "passed": false,
+    "failed": true
+  },
+  {
+    "log": "device-preparation-02.txt",
+    "passed": false,
+    "failed": true
+  },
+  {
+    "log": "device-preparation-03.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-preparation-04.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-preparation-05.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-r-exact-01.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-r-over-01.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-r-over-02.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-t-exact-01.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-t-over-01.txt",
+    "passed": true,
+    "failed": false
+  },
+  {
+    "log": "device-t-over-02.txt",
+    "passed": true,
+    "failed": false
+  }
+]

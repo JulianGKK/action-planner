@@ -130,7 +130,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
     }
     if (model.personDetailLoading) { PagLoadingState(); return }
     val content = model.workspace
-    if (content == null && model.workspaceRefusal==WorkspaceFailure.OWNER_UNCONFIRMED) {
+    if (content == null && model.workspaceRefusal in setOf(WorkspaceFailure.OWNER_UNCONFIRMED,WorkspaceFailure.BUDGET_REFUSED)) {
         return
     }
     if (content == null) { if (model.workspaceError) PagErrorState() else PagLoadingState(); return }

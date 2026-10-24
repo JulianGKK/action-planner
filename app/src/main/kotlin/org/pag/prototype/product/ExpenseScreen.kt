@@ -15,6 +15,7 @@ import org.pag.domain.*
     model.error?.let { Text(when (it) {
         OperationsFailure.REVISION_EXHAUSTED -> "Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
     OperationsFailure.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
+    OperationsFailure.BUDGET_REFUSED->"Die Daten überschreiten das zulässige Speicherbudget."
     OperationsFailure.STALE -> "Der Kosteneintrag wurde inzwischen geändert. Die Eingaben wurden nicht gespeichert."
         OperationsFailure.INVALID -> "Bitte Bezeichnung, zahlende Bezeichnungen, positive Eurobeträge und die genaue Zahlungsaufteilung prüfen."
         OperationsFailure.NOT_ALLOWED -> "Kosten sind im aktuellen Aktionsstatus nicht verfügbar."

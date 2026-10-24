@@ -1,0 +1,7 @@
+{
+  "reason": "Failed PREPARATION probe finished without a fixture-cleanup acknowledgement; synthetic root remained. Not successful automatic cleanup.",
+  "force_stopped_only": "org.pag.prototype.a.p77runtime",
+  "exact_synthetic_roots_removed": [
+    "p11-fixture-9e2fda35-1c2b-4aaf-8864-2ea2b1ac7f15"
+  ]
+}

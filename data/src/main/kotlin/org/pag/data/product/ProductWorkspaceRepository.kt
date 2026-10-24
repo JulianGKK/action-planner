@@ -11,26 +11,33 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
     private val owner:()->SessionDbKeyOwner?,private val worker:Executor,private val main:Executor,
     private val blocked:()->Unit,
     private val memory:OutstandingCoreRead,
-    private val materializing:(()->Unit)?=null):WorkspaceRepository {
+    private val materializing:(()->Unit)?=null,
+    private val mutations:WorkspaceMutationInvalidation?=null,
+    private val testReservation:((ActiveCoreReservation)->ActiveCoreReservation)?=null):WorkspaceRepository {
     constructor(app:Context,access:StorageAccess,inventory:ProductInventory,owner:()->SessionDbKeyOwner?,
-        worker:Executor,main:Executor,blocked:()->Unit):this(app,access,inventory,owner,worker,main,blocked,OutstandingCoreRead.product)
+        worker:Executor,main:Executor,blocked:()->Unit):this(app,access,inventory,owner,worker,main,blocked,OutstandingCoreRead.product,null,null)
+    constructor(app:Context,access:StorageAccess,inventory:ProductInventory,owner:()->SessionDbKeyOwner?,
+        worker:Executor,main:Executor,blocked:()->Unit,mutations:WorkspaceMutationInvalidation):this(app,access,inventory,owner,worker,main,blocked,OutstandingCoreRead.product,null,mutations)
 
     private val database=ActionDatabaseAccess(app.applicationContext)
     private class ReadCancelled:RuntimeException()
     override fun read(request:WorkspaceReadRequest,publish:(WorkspaceResult)->Unit) {
         val c=access.acquire(AccessScope.READY) ?: return
         if(request.generation!=c.generation)return
+        fun refuse(){main.execute{c.publish{if(request.ticket?.active!=false)publish(WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))}}}
         if(memory.fullviewOverlapUnconfirmed()) {
-            main.execute{c.publish{publish(WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))}}
+            refuse()
             return
         }
         val entry=memory.beginFullview(request.actionId,request.generation) ?: run {
-            main.execute{c.publish{publish(WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))}}
+            refuse()
             return
         }
+        val original=mutations?.beforeActiveRead(request.actionId,c.generation)
+        if(original==null){entry.workerRejected();refuse();return}
         val frozen=request.copy(parts=request.parts.toSet())
         val ticket=DocumentNamespaceLane.ticket()
-        fun requireRequest(){if(frozen.ticket?.active==false)throw ReadCancelled()}
+        fun requireRequest(){if(frozen.ticket?.active==false || !original.isLive())throw ReadCancelled()}
         val work=entry.worker(Runnable {
             try {
                 requireRequest()
@@ -41,12 +48,12 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                     requireRequest()
                     (owner() ?: throw ProductStorageFailure()).withDbKey(c){key->
                         database.use(inventory.database,key,c){db->db.withReadTransaction {
-                            WorkspaceStore(db,c,memory,materializing).read(frozen,entry)
+                            WorkspaceStore(db,object:StorageContext by c { override fun check(point:AccessPoint)=original.isLive() && frozen.ticket?.active!=false && c.check(point) },memory,materializing,this,{original.isLive()},testReservation).read(frozen,entry)
                         }}
                     }.also{requireOperations(c)}
                 }
                 requireRequest()
-                val delivery=entry.main(Runnable{c.publish{if(frozen.ticket?.active!=false)publish(result)}})
+                val delivery=entry.main(Runnable{c.publish{if(frozen.ticket?.active!=false && mutations?.isCurrentActiveRead(original)==true)publish(result)}})
                 try{main.execute(delivery)}catch(_:java.util.concurrent.RejectedExecutionException){entry.mainRejected()}
 
             }catch(_:ReadCancelled){/* Superseded before key/DB admission or after full cleanup. */}
@@ -61,7 +68,9 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
 /** Same existing stores and permission checks, one atomic transaction. No LeadershipStore. */
 internal class WorkspaceStore(private val db:ActionDatabase,private val c:StorageContext,
     private val memory:OutstandingCoreRead=OutstandingCoreRead.product,
-    private val materializing:(()->Unit)?=null) {
+    private val materializing:(()->Unit)?=null,
+    private val sql:androidx.room3.PooledConnection?=null,private val original:()->Boolean={true},
+    private val testReservation:((ActiveCoreReservation)->ActiveCoreReservation)?=null) {
     private fun <T> value(result:OperationsResult<T>):T=when(result) {
         is OperationsResult.Value->result.value
         is OperationsResult.Rejected->throw Rejected(result.reason)
@@ -72,6 +81,17 @@ internal class WorkspaceStore(private val db:ActionDatabase,private val c:Storag
         if(request.generation!=c.generation)throw StorageAccessRevoked()
         if(request.ticket?.active==false)return WorkspaceResult.Rejected(WorkspaceFailure.STALE)
         if(entry==null || !memory.enterFullview(entry,request))return WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED)
+        val connection=sql ?: return WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED)
+        fun current()=original() && request.ticket?.active!=false && c.generation==request.generation && c.check(AccessPoint.STEP)
+        try {
+            val base=FullviewPreflight(connection,c,::current).prepare(request.actionId,FullviewPreflight.workspace(request.parts))
+            val reservation=testReservation?.invoke(base) ?: base
+            if(!admitCurrentFullview(entry,reservation,::current))return WorkspaceResult.Rejected(WorkspaceFailure.BUDGET_REFUSED)
+        }catch(f:BoundedActiveRejected){
+            if(f.status==BoundedActiveStatus.ACCESS_REVOKED)throw StorageAccessRevoked()
+            if(f.status!=BoundedActiveStatus.BUDGET_REFUSED)throw ProductStorageFailure()
+            return WorkspaceResult.Rejected(WorkspaceFailure.BUDGET_REFUSED)
+        }
         materializing?.invoke()
         val action=db.actions().get(request.actionId)?.model() ?: return WorkspaceResult.Rejected(WorkspaceFailure.NOT_FOUND)
         requireOperations(c)

@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P107,large,PREFLIGHT,BUDGET_REFUSED,materializations=0,no_EMPTY=true,record=State(phase=RETIRED, retained=0, transition=0, localRetained=0, localTransition=0, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=true, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,large,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P107 PASS large
+INSTRUMENTATION_CODE: -1

@@ -1,0 +1,17 @@
+INSTRUMENTATION_STATUS: stream=P107,active,PREFLIGHT,ADMITTED,visible=true,persons=20,tasks=40,materializations=1,record=State(phase=RETAINED, retained=1212796, transition=16777216, localRetained=1212796, localTransition=4682608, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,active,FORM,task_draft_visible=true,Expected_revision=0,draft_end_NOT_claimed=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,active,OLD_SNAPSHOT,TEST_alias_retained=true,next_workspace_and_direct_board=REFUSED,additional_materializations=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,active,LOCK_REAUTH_ACTION,VM_cleared=true,original_TEST_snapshot_still_held=true,new_read=REFUSED,additional_materializations=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,active,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P107 PASS active
+INSTRUMENTATION_CODE: -1

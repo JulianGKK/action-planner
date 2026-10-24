@@ -1,0 +1,86 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin UP-TO-DATE
+> Task :data:compileDebugKotlin UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:preDebugUnitTestBuild
+> Task :data:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :data:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :data:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :data:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :data:testDebugUnitTest
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeRFile UP-TO-DATE
+> Task :app:compileP77runtimeKotlin UP-TO-DATE
+> Task :app:javaPreCompileP77runtime UP-TO-DATE
+> Task :app:compileP77runtimeJavaWithJavac UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :security:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkP77runtimeAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeResources UP-TO-DATE
+> Task :app:createP77runtimeCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksP77runtime UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :security:extractDeepLinksDebug UP-TO-DATE
+> Task :security:processDebugManifest UP-TO-DATE
+> Task :app:processP77runtimeMainManifest UP-TO-DATE
+> Task :app:processP77runtimeManifest UP-TO-DATE
+> Task :app:processP77runtimeManifestForPackage UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :security:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processP77runtimeResources UP-TO-DATE
+> Task :app:bundleP77runtimeClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleP77runtimeClassesToCompileJar UP-TO-DATE
+> Task :app:preP77runtimeUnitTestBuild
+> Task :app:compileP77runtimeUnitTestKotlin UP-TO-DATE
+> Task :app:javaPreCompileP77runtimeUnitTest UP-TO-DATE
+> Task :app:compileP77runtimeUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processP77runtimeJavaRes UP-TO-DATE
+> Task :app:processP77runtimeUnitTestJavaRes UP-TO-DATE
+> Task :app:testP77runtimeUnitTest
+
+BUILD SUCCESSFUL in 58s
+66 actionable tasks: 3 executed, 63 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html

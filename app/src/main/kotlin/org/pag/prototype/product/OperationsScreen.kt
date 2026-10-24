@@ -122,6 +122,7 @@ internal fun createRoleError(reason:OperationsFailure)=when(reason){
     OperationsFailure.NOT_FOUND->"Die Aktion ist nicht mehr verfügbar."
     OperationsFailure.REVISION_EXHAUSTED->"Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
     OperationsFailure.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
+    OperationsFailure.BUDGET_REFUSED->"Die Daten überschreiten das zulässige Speicherbudget."
     OperationsFailure.STALE ->"Die Erstellung wurde nicht freigegeben. Der Entwurf bleibt erhalten."
     else->operationsError(reason)
 }
@@ -193,5 +194,6 @@ internal fun operationsError(failure:OperationsFailure)=when(failure){
     OperationsFailure.IN_USE->"Die Rolle wird noch von einer Person oder Aufgabe verwendet und kann nicht gelöscht werden."
     OperationsFailure.REVISION_EXHAUSTED->"Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
     OperationsFailure.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
+    OperationsFailure.BUDGET_REFUSED->"Die Daten überschreiten das zulässige Speicherbudget."
     OperationsFailure.STALE ->"Die Lage wurde inzwischen geändert. Bitte neu öffnen."
 }

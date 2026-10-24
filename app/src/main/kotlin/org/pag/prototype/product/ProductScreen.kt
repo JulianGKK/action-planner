@@ -79,6 +79,8 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                                 SessionState.AUTHENTICATING -> Text("Bitte bestätige den Gerätesperrcode im Android-Dialog.")
                                 SessionState.MAINTENANCE -> PagLoadingState("Geschützter Speicher wird geprüft")
                                 SessionState.READY -> {
+                                    if(model.workspaceRefusal==WorkspaceFailure.BUDGET_REFUSED)
+                                        Text("Die Vollansicht überschreitet das zulässige Speicherbudget.")
                                     if(model.workspaceRefusal==WorkspaceFailure.OWNER_UNCONFIRMED)
                                         Text("Die Vollansicht kann derzeit nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet.")
                                     when {
@@ -216,6 +218,7 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
 private fun personErrorLabel(reason: PersonRejection) = when (reason) {
     PersonRejection.REVISION_EXHAUSTED -> "Dieser Personenstand kann nicht weiter geändert werden (Revisionsgrenze)."
     PersonRejection.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
+    PersonRejection.BUDGET_REFUSED->"Die Daten überschreiten das zulässige Speicherbudget."
     PersonRejection.STALE -> "Die Person wurde inzwischen geändert. Dein Entwurf bleibt erhalten. Bitte den aktuellen Stand neu laden."
     PersonRejection.ACTION_NOT_FOUND -> "Die Aktion ist nicht mehr vorhanden."
     PersonRejection.NOT_FOUND -> "Die Person ist in dieser Aktion nicht vorhanden."

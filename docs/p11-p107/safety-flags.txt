@@ -1,0 +1,13 @@
+domain/src/main/kotlin/org/pag/domain/WorkspaceMutationInvalidation.kt:112:    val ramReuseEnabled: Boolean get() = false
+data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLoader.kt:30:    override val reuseEnabled get()=reuseForIsolatedTest
+data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLoader.kt:33:        reuseEnabled:Boolean,observation:ActiveCoreLoadObservation?,outstanding:OutstandingCoreRead=OutstandingCoreRead()):this(access,mutations,worker,main,readCandidate,outstanding) {
+data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLoader.kt:34:        reuseForIsolatedTest=reuseEnabled;this.observation=observation
+domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt:81:        val limit = if (allocation === retained) RETAINED_LIMIT_BYTES else TRANSITION_LIMIT_BYTES
+domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt:108:            allocation.chargedBytes > RETAINED_LIMIT_BYTES) return false
+domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt:117:        const val RETAINED_LIMIT_BYTES = 8L * 1024 * 1024
+domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt:118:        const val TRANSITION_LIMIT_BYTES = 16L * 1024 * 1024
+data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt:62:            if(r.second !in 0..ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || t.second !in 0..ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES){
+data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt:125:            if(r!=null || f!=null)ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES else 0,r?.retained ?: f?.retainedCharge ?: lastFullviewRetained,r?.transition ?: f?.transitionCharge ?: lastFullviewTransition,
+data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt:192:                r.second!=retained || t.second!=transition || retained !in 0..ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || transition !in 0..ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES) {
+data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt:236:            phase=if(exposed)Phase.COMPOSE_TRANSITION else Phase.REVOKED
+data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt:244:            if(exposed){phase=Phase.COMPOSE_TRANSITION;return} // No trustworthy frame-retirement producer yet.

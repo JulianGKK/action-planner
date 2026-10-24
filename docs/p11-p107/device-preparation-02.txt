@@ -1,0 +1,33 @@
+INSTRUMENTATION_STATUS: stream=P107,preparation,PREFLIGHT,ADMITTED,visible=true,persons=20,tasks=40,materializations=1,record=State(phase=RETAINED, retained=961932, transition=16777216, localRetained=961932, localTransition=3679152, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,preparation,OLD_SNAPSHOT,TEST_alias_retained=true,next_workspace_and_direct_board=REFUSED,additional_materializations=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,preparation,FUNCTIONAL_BLOCKER,person_detail_requires_another_read=REFUSED,first_overview_NOT_full_PREPARATION_acceptance=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,preparation,FAILURE,java.lang.RuntimeException: This method can not be called from the main application thread
+	at android.app.Instrumentation.validateNotAppThread(Instrumentation.java:2211)
+	at android.app.Instrumentation.runOnMainSync(Instrumentation.java:466)
+	at org.pag.prototype.P107FullviewAdmissionProbe.main(P107FullviewAdmissionProbe.kt:23)
+	at org.pag.prototype.P107FullviewAdmissionProbe.onStart$lambda$46(P107FullviewAdmissionProbe.kt:120)
+	at org.pag.prototype.P107FullviewAdmissionProbe$$ExternalSyntheticLambda46.invoke(D8$$SyntheticClass:0)
+	at org.pag.prototype.P107FullviewAdmissionProbe.call$lambda$0(P107FullviewAdmissionProbe.kt:28)
+	at org.pag.prototype.P107FullviewAdmissionProbe$$ExternalSyntheticLambda4.invoke(D8$$SyntheticClass:0)
+	at org.pag.prototype.P107FullviewAdmissionProbe.main$lambda$0(P107FullviewAdmissionProbe.kt:23)
+	at org.pag.prototype.P107FullviewAdmissionProbe$$ExternalSyntheticLambda6.run(D8$$SyntheticClass:0)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2353)
+	at android.os.Handler.handleCallback(Handler.java:942)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loopOnce(Looper.java:226)
+	at android.os.Looper.loop(Looper.java:313)
+	at android.app.ActivityThread.main(ActivityThread.java:8762)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:604)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1067)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P107 FAIL preparation
+INSTRUMENTATION_CODE: 0

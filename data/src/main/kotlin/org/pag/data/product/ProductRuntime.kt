@@ -96,7 +96,7 @@ class ProductRuntime private constructor(activity: Activity, private val worker:
     val actions: ActionRepository = ProductActionRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, workspaceMutations, session::storageFailure)
     val workspace:WorkspaceRepository=ProductWorkspaceRepository(activity.applicationContext,session,inventory,
-        {owner.get()},worker,main,session::storageFailure,workspaceMemory,testAuthority?.workspaceMaterializing)
+        {owner.get()},worker,main,session::storageFailure,workspaceMemory,testAuthority?.workspaceMaterializing,workspaceMutations,testAuthority?.workspaceReservation)
     val persons: PersonRepository = ProductPersonRepository(activity.applicationContext, session, inventory,
         { owner.get() }, worker, main, workspaceMutations, session::storageFailure).also{it.bindWorkspaceMemory(workspaceMemory)}
     val tasks: TaskRepository = ProductTaskRepository(activity.applicationContext, session, inventory,
@@ -141,7 +141,8 @@ internal data class ProductRuntimeTestAuthority(
     val coreAccess: ((StorageAccess) -> StorageAccess)? = null,
     val coreReadHooks: CoreReadTestHooks? = null,
     val workspaceMemory:OutstandingCoreRead?=null,
-    val workspaceMaterializing:(()->Unit)?=null
+    val workspaceMaterializing:(()->Unit)?=null,
+    val workspaceReservation:((ActiveCoreReservation)->ActiveCoreReservation)?=null
 )
 
 /** Runs as a secondary-constructor argument, before the primary constructor initializes resources. */

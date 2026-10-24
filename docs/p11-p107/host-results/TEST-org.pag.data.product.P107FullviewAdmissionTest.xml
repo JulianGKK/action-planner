@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P107FullviewAdmissionTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-24T21:54:37.689Z" hostname="iuzjhtgvfc" time="3.306">
+  <properties/>
+  <testcase name="failedPreflightAndLostMainHaveDifferentActualEndRequirements" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.003"/>
+  <testcase name="noPayloadBeforePreflightAndReceiptForAllReadableActionStatuses" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.795"/>
+  <testcase name="cancellationBeforeAndDuringMetadataNeverMaterializes" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.237"/>
+  <testcase name="originalIdentityChangeAfterMetadataOrAfterBookingCannotReachMaterializer" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.329"/>
+  <testcase name="terminalFullviewShellsCannotReachALaterReadThroughTheirEndCallback" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.005"/>
+  <testcase name="overlongMetadataAndMalformedRevisionRefuseBeforeDtoReads" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.332"/>
+  <testcase name="overflowNegativeAndMalformedUnitsFailClosed" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.003"/>
+  <testcase name="preflightAndMaterializerKeepOneRealSqliteSnapshotAcrossConcurrentCommit" classname="org.pag.data.product.P107FullviewAdmissionTest" time="1.092"/>
+  <testcase name="exactIndependentLimitsAndOneByteOver" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.001"/>
+  <testcase name="receiptMustBeOriginalStartedAndOnlyOneMaterializerMayConsumeIt" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.002"/>
+  <testcase name="boundedHistoryJoinsOriginalReceiptBeforeFirstEventText" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.503"/>
+  <testcase name="actualMaterializationFailureDoesNotEraseItsObligation" classname="org.pag.data.product.P107FullviewAdmissionTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

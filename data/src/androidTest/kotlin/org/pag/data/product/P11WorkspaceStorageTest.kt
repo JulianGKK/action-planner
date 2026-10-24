@@ -146,19 +146,21 @@ class P11WorkspaceStorageTest {
         val root=java.io.File(app.noBackupFilesDir,"p11-cancel-${java.util.UUID.randomUUID()}")
         // Deliberately absent inventory: touching it would fail closed and increment blocked.
         val inventory=ProductInventory(root,{false},{false})
-        val repo=ProductWorkspaceRepository(app,access,inventory,{leases++;null},Executor{queue.add(it)},Executor{it.run()},{blocked++})
+        val repo=ProductWorkspaceRepository(app,access,inventory,{leases++;null},Executor{queue.add(it)},Executor{it.run()},{blocked++},UncachedWorkspaceMutations())
         val ticket=WorkspaceReadTicket()
         repo.read(WorkspaceReadRequest("synthetic",ActionStatus.ACTIVE,1,emptySet(),ticket=ticket)){publications++}
         ticket.cancel();queue.removeFirst().run()
         assertEquals(0,leases);assertEquals(0,blocked);assertEquals(0,publications);assertFalse(root.exists())
     }
-    @Test fun cancelledQueuedPublicationDoesNotRevokeSessionOrPreventFreshRead() {
+    @Test fun cancelledQueuedRefusalDoesNotPublishOrAdmitAnUnboundFreshRead() {
         val queue=ArrayDeque<Runnable>()
         P11SyntheticFixture(app,main=Executor{queue.add(it)}).use{f->
             var publications=0;val ticket=WorkspaceReadTicket()
             f.workspace.read(WorkspaceReadRequest(f.activeId,ActionStatus.ACTIVE,1,emptySet(),ticket=ticket)){publications++}
             assertEquals(1,queue.size);ticket.cancel();queue.removeFirst().run();assertEquals(0,publications)
-            f.workspace.read(WorkspaceReadRequest(f.activeId,ActionStatus.ACTIVE,1,emptySet())){publications++}
+            f.workspace.read(WorkspaceReadRequest(f.activeId,ActionStatus.ACTIVE,1,emptySet())){
+                assertEquals(WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED),it);publications++
+            }
             assertEquals(1,queue.size);queue.removeFirst().run();assertEquals(1,publications)
         }
     }

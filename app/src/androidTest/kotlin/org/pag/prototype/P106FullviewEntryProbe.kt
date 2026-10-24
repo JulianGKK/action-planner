@@ -62,7 +62,19 @@ class P106FullviewEntryProbe:Instrumentation(){
                 main{h.runtime.close()}
                 val worker=(field(a,"worker\$delegate") as Lazy<*>).value as Executor
                 replacement=main{h.p106Replacement(a,worker,a.mainExecutor)}
-                val next=replacement!!;main{next.start(false)};await("replacement READY"){next.session.snapshot().state==SessionState.READY}
+                val next=replacement!!
+                emit("RECONSTRUCTION_INITIAL,original=${h.runtime.session.snapshot().state},replacement=${next.session.snapshot().state},focus=${main{a.hasWindowFocus()}},record=${h.outstandingState()}")
+                val observed=next.session.observe{emit("RECONSTRUCTION_STATE,state=${it.state},generation=${it.generation}")}
+                main{next.start(false)}
+                check(next.session.snapshot().state==SessionState.LOCKED && next.session.snapshot().generation==0L)
+                emit("REPRODUCTION,start_without_foreground=LOCKED,authentication_not_started=true,original_record_unchanged=true")
+                val drained=java.util.concurrent.CountDownLatch(1)
+                worker.execute{drained.countDown()};check(drained.await(10,java.util.concurrent.TimeUnit.SECONDS))
+                emit("WORKER,queue_barrier_returned=true,original_runtime_LOCKED=true,old_pending_candidates=0")
+                // Correct the omitted real lifecycle input, never force a READY state.
+                main{next.session.foreground(a.hasWindowFocus());next.start(false)}
+                await("replacement READY"){next.session.snapshot().state==SessionState.READY}
+                observed.cancel()
                 check(main{!next.activeCore.loadOwned("p11-active"){_,_->error("No readmission")}})
                 val r=request.copy(generation=next.session.snapshot().generation)
                 check(call<WorkspaceResult>{next.workspace.read(r,it)}==WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))
@@ -82,6 +94,6 @@ class P106FullviewEntryProbe:Instrumentation(){
             main{model.lock();a.finish()};await("cleanup"){h.cleanupConfirmed.get()};activity=null
             emit("CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false")
             finish(Activity.RESULT_OK,Bundle().apply{putString("result","P106 PASS $scenario")})
-        }catch(t:Throwable){emit("FAILURE,"+t.stackTraceToString());runCatching{main{replacement?.close();activity?.finish()}};finish(Activity.RESULT_CANCELED,Bundle().apply{putString("result","P106 FAIL $scenario")})}
+        }catch(t:Throwable){emit("FAILURE,"+t.stackTraceToString());runCatching{main{replacement?.close();activity?.finish()};if(::h.isInitialized)await("failure fixture cleanup"){h.cleanupConfirmed.get()}};finish(Activity.RESULT_CANCELED,Bundle().apply{putString("result","P106 FAIL $scenario")})}
     }
 }

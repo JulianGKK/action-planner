@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P104RevisionTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-24T21:15:33.047Z" hostname="iuzjhtgvfc" time="0.753">
+  <properties/>
+  <testcase name="lastRepresentableRevisionIsAcceptedOnceForEveryKind" classname="org.pag.data.product.P104RevisionTest" time="0.169"/>
+  <testcase name="identicalTargetsIncrementEveryRevisionExactlyOnceAndRollbackRestoresAll" classname="org.pag.data.product.P104RevisionTest" time="0.151"/>
+  <testcase name="taskNoopRollbackMaxAndTransitionKeepRevisionAndEventAtomic" classname="org.pag.data.product.P104RevisionTest" time="0.15"/>
+  <testcase name="maximumAndForeignIdentityRejectBeforeAnyRevisionOrEventWrite" classname="org.pag.data.product.P104RevisionTest" time="0.146"/>
+  <testcase name="finalPrimaryRoleFailureRollsBackHeaderRevisionAndAssignmentsTogether" classname="org.pag.data.product.P104RevisionTest" time="0.137"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

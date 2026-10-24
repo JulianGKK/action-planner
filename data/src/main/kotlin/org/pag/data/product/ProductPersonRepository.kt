@@ -17,7 +17,7 @@ class ProductPersonRepository(app: Context, private val access: StorageAccess,
     constructor(app:Context,access:StorageAccess,inventory:ProductInventory,owner:()->SessionDbKeyOwner?,
         worker:Executor,main:Executor,blocked:()->Unit):this(app,access,inventory,owner,worker,main,UncachedWorkspaceMutations(),blocked)
     private val mutationBoundary=WorkspaceWriteBoundary(access,worker,main,mutations,blocked)
-    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked)
+    private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked,mutations,FullviewPreflight.operations)
     internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
     private val database = ActionDatabaseAccess(app.applicationContext)
     override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) =
@@ -48,7 +48,7 @@ class ProductPersonRepository(app: Context, private val access: StorageAccess,
             }}
         }
     private fun <T> run(actionId:String,publish:(PersonResult<T>)->Unit,work:suspend(ActionDatabase,StorageContext)->PersonResult<T>) {
-        readExclusion.read(actionId,publish,{PersonResult.Rejected(PersonRejection.OWNER_UNCONFIRMED)},work)
+        readExclusion.read(actionId,publish,{budget->PersonResult.Rejected(if(budget)PersonRejection.BUDGET_REFUSED else PersonRejection.OWNER_UNCONFIRMED)},work)
     }
 
 }

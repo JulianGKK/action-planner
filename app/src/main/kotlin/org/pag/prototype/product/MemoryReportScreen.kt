@@ -22,6 +22,7 @@ import org.pag.domain.*
         Text(when (it) {
             OperationsFailure.REVISION_EXHAUSTED -> "Dieser Datensatz kann nicht weiter geändert werden (Revisionsgrenze)."
     OperationsFailure.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
+    OperationsFailure.BUDGET_REFUSED->"Die Daten überschreiten das zulässige Speicherbudget."
     OperationsFailure.STALE -> "Der gespeicherte Bericht wurde inzwischen geändert. Deine aktuellen Eingaben bleiben erhalten."
             OperationsFailure.INVALID -> "Bitte Eingabegrenzen und offene Detailentscheidungen prüfen."
             OperationsFailure.NOT_ALLOWED -> "Dieser Schritt ist im aktuellen Berichts- oder Aktionsstatus nicht möglich."

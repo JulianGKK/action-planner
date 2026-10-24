@@ -221,9 +221,9 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
     /** Direct entry reads ONE scalar anchor, never an OFFSET event payload list. The following
      * materializer is the same admitted keyset reader, in this SAME authorized transaction.
      * SQLite key sorting/temp allocation is still not a calibrated native-memory bound. */
-    suspend fun eventsAtPage(state:CompactTaskState,taskId:String,page:Long,fullTaskRead:Boolean=false):CompactTaskResult.Value {
+    suspend fun eventsAtPage(state:CompactTaskState,taskId:String,page:Long,fullTaskRead:Boolean=false,admitScope:(suspend (ActiveCoreReservation)->Unit)?=null):CompactTaskResult.Value {
         if(page<1)reject(BoundedActiveStatus.ACCESS_REVOKED)
-        if(page==1L)return events(state,taskId,null,fullTaskRead)
+        if(page==1L)return events(state,taskId,null,fullTaskRead,admitScope)
         checkInput(taskId);preflight(state,fullTaskRead)
         val args=listOf(state.binding.actionId,taskId)
         val offset=try{Math.multiplyExact(page-1,PAGE_SIZE.toLong())}catch(_:ArithmeticException){reject(BoundedActiveStatus.BUDGET_REFUSED)}
@@ -235,19 +235,19 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         }
         // The anchor and page share this read transaction. Reuse only its validated
         // preflight/count; all event/cursor checks and payload admission still follow.
-        return eventsAfterPreflight(state,taskId,anchor,total)
+        return eventsAfterPreflight(state,taskId,anchor,total,admitScope)
     }
 
-    suspend fun events(state: CompactTaskState, taskId: String, after: CompactEventCursor?, fullTaskRead:Boolean=false): CompactTaskResult.Value {
+    suspend fun events(state: CompactTaskState, taskId: String, after: CompactEventCursor?, fullTaskRead:Boolean=false,admitScope:(suspend (ActiveCoreReservation)->Unit)?=null): CompactTaskResult.Value {
         checkInput(taskId)
         if(after!=null && (after.state!=state || after.taskId!=taskId)) reject(BoundedActiveStatus.ACCESS_REVOKED)
         preflight(state,fullTaskRead)
-        return eventsAfterPreflight(state,taskId,after)
+        return eventsAfterPreflight(state,taskId,after,admitScope=admitScope)
     }
 
     /** Private to the two entry points above: no preflight result survives a request. */
     private suspend fun eventsAfterPreflight(state:CompactTaskState,taskId:String,after:CompactEventCursor?,
-        knownTotal:Long?=null):CompactTaskResult.Value {
+        knownTotal:Long?=null,admitScope:(suspend (ActiveCoreReservation)->Unit)?=null):CompactTaskResult.Value {
         gate()
         val args=listOf(state.binding.actionId,taskId)
         if(scalar("SELECT COUNT(*) FROM tasks WHERE actionId=? AND id=?",args)!=1L) reject(BoundedActiveStatus.ACCESS_REVOKED)
@@ -262,6 +262,7 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         val texts=listOf("id","actionId","taskId","type")
         val sized=size("task_events",where,bind,texts)
         val reservation=reserve(sized.first,texts.size,sized.second)
+        admitScope?.invoke(ActiveCoreReservation(reservation.units.retained,reservation.units.transition));gate()
         observe(Phase.ADMITTED);gate()
         val rows=ArrayList<Pair<Long,TaskEvent>>(PAGE_SIZE)
         fetch("task_events",where,bind,texts,listOf("occurredAt"),sized) { t,n,r ->
