@@ -41,11 +41,20 @@ internal class OutstandingCoreRead {
             if(r?.payload?.get() is ActiveCoreResult.Value || (r?.deliveringValue==true && !r.published))1 else 0,r?.observed==true,r?.disposed==true,
             r==null,refusal,fullView)
     }
-    private class WorkerHandoff(private val read:Read):Runnable {
-        override fun run()=read.dispatchWorker()
+    // Queue shells own their original Read only until the first actual invocation takes it.
+    // The local original survives through dispatch's existing finally/ACK, not through a
+    // persistent shell edge. Taking is NOT an acknowledgement or an admission signal.
+    private class WorkerHandoff(private var read:Read?):Runnable {
+        override fun run() {
+            val original=synchronized(this) { read.also { read=null } } ?: return
+            original.dispatchWorker()
+        }
     }
-    private class MainHandoff(private val read:Read):Runnable {
-        override fun run()=read.dispatchMain()
+    private class MainHandoff(private var read:Read?):Runnable {
+        override fun run() {
+            val original=synchronized(this) { read.also { read=null } } ?: return
+            original.dispatchMain()
+        }
     }
     inner class Read internal constructor() {
         internal var phase=Phase.READER_ADMITTED

@@ -1,0 +1,2 @@
+PASS: OutstandingCoreRead prefix before shells and entire Read body unchanged against base.
+Only WorkerHandoff/MainHandoff shell storage/run code and its comment changed.

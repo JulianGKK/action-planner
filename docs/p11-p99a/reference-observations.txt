@@ -1,0 +1,13 @@
+P97 fullview core-release BLOCKED; fullview/form/editor payload OUT_OF_SCOPE; fence unchanged
+P99 main duplicates during callback: shell empty, local original alive, no early ACK; exposed read still DENIED after actual return
+P97 discarded-main CONFIRMED original identity only; duplicate-old-shell cannot retire new-read
+P97 before-materialization CONFIRMED only-after-worker-ack; original-payload-created=false
+P99 loader callback exception: original main/end ACKs complete, shell detached, exposed admission remains DENIED
+P97 main-local BLOCKED during-callback; CONFIRMED cell/scoped-return/registration ends; exposure retirement BLOCKED
+P97 worker-local BLOCKED until-producer-return-and-worker-ack; then CONFIRMED named-chain
+P97 candidate BLOCKED while-main-pending; cleared-cells-not-enough; CONFIRMED after-discard-ack
+P99 direct real dispatch exceptions: original finally ACK preserved; no cancellation fabricated; duplicates inert for B
+P99 worker parallel take: one producer; shell detached while active; cancellation waits for actual worker ACK; old duplicate cannot affect B
+P99 terminal worker/main shells detached: no path to B; explicit TEST old-Read alias still reaches B via owner; broader isolation BLOCKED
+P99 parallel main first-take: one dispatch; cancel waits for actual main ACK; terminal shell inert for B
+P97 explicit-test-reference BLOCKED while-test-alias-held; dropping-it is no production-end-receipt
