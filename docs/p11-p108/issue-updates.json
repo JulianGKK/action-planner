@@ -1,0 +1,57 @@
+{
+  "repo": "JulianGKK/action-planner",
+  "product_commit": "c350c08",
+  "updates": [
+    {
+      "issue": 37,
+      "url": "https://github.com/JulianGKK/action-planner/issues/37#issuecomment-6390833172",
+      "body": "§108 WIP gepusht: c350c08. **BLOCKED – kein READY_FOR_INDEPENDENT_CLOSURE.**\n\nProduktiver Teilfix: bereits zugelassener Originalsnapshot für Personen-/Plan-/Bereichsnavigation; Material und Kosten je einmal als vorab kumulativ zugelassene Projektion am selben FullviewEntry. Taskhistory mit zwei getrennten 32er-Seiten an derselben Verpflichtung. P3b-State/Inventar-Metadaten vor Materialisierung berücksichtigt; keine Schlüssel/Klartexte im Snapshot. Benannte Formularproduzenten vor der Kopie gebucht, kein pauschaler Formbudgetnachweis.\n\n160 gezielte Hosttests grün; sechs abschließende isolierte P77-Fälle bestehen ihre Assertions. Ein früherer Material-Timeout bleibt separat FAIL. Echte SQLCipher-Speicherung: Taskrevision 0→1, kein zusätzliches Event beim Edit. STALE erhält das ursprüngliche Expected ohne Erfolg. Großfixture 200/1000/5000: sichtbare Budgetverweigerung vor Vollgraphaufbau. P77-Auth synthetisch, kein globaler Consumer-/Native-Endbeweis.\n\n**Restblocker reproduziert:** Commit invalidiert das Originalticket; vollständiger Refresh wird korrekt OWNER_UNCONFIRMED. Explizites Personen-Neuladen nach STALE ebenfalls verweigert. Kein vollständiges Endreceipt für Snapshot-/Form-/Writer-/UI-Halter; übrige Formatierungs-/Protokoll-/Callbackkopien nicht vollständig integriert.\n\n[Assessment mit vollständiger Funktions-/Abnahmematrix und A/B-Entscheidung](https://github.com/JulianGKK/action-planner/blob/c350c08/docs/p11-p108/assessment.md), [Rohbilanz](https://github.com/JulianGKK/action-planner/blob/c350c08/docs/p11-p108/run-summary.json). A: kontrollierter zusätzlicher Consumer-/Form-/Postcommit-Projektionsvertrag im bestehenden Owner. B: ausdrücklich zu beschließende erhebliche 1.0-Einschränkungen – **nicht aktiviert**. R8/T16, reuse=false, ramReuse=false, Expositionssperre unverändert. STOPP zum unabhängigen Review und Produktentscheidung. Kein Merge/Release.",
+      "response": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "id": 6390833172
+        },
+        "isError": false
+      }
+    },
+    {
+      "issue": 33,
+      "url": "https://github.com/JulianGKK/action-planner/issues/33#issuecomment-6390833310",
+      "body": "§108 WIP c350c08: zusätzliche endliche Modul-/Inventar-/History-/Inputrepräsentationen werden kumulativ am ursprünglichen FullviewEntry vor Materialisierung zugelassen. Kein unabhängiges Teilbudget; R8=8.388.608 / T16=16.777.216 bleiben unverändert. Child-/Main-Ende gibt keine Datenbuchung frei.\n\nP77 PREPARATION: ein Vollgraph plus je ein Material-/Kostenboard, Ledger R2.228.747/T7.967.087. ACTIVE mit zwei 32er-Historyseiten: R3.097.668/T11.654.928. Das sind **Ledgerwerte**, keine gemessenen ART-/Native-Obergrenzen. Großfixture 200 Personen/1.000 Tasks/5.000 Events/32 Rollen vor vollständiger Materialisierung wegen Budget verweigert.\n\n#33 bleibt offen: verbleibende Appformatierungs-/Form-/Writer-/Callbackproduzenten und Framework-/Native-/Renderkosten sind nicht vollständig integriert/kalibriert. Keine Kosten als null und keine physische Freigabe behauptet; keine neue PSS-/Native-Kalibrierung oder Performancefreigabe. [Größenformeln, Abgrenzung und A/B-Restentscheidung](https://github.com/JulianGKK/action-planner/blob/c350c08/docs/p11-p108/assessment.md). 160 Hosttests / sechs finale isolierte P77-Assertionsläufe; früherer Fehlversuch separat dokumentiert. STOPP Review, kein Merge/Release.",
+      "response": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "id": 6390833310
+        },
+        "isError": false
+      }
+    },
+    {
+      "issue": 44,
+      "url": "https://github.com/JulianGKK/action-planner/issues/44#issuecomment-6390833462",
+      "body": "§108 Abschlussstand: WIP c350c08 auf p11-performance-optimization gepusht; **#37 bleibt BLOCKED**, keine Releasefreigabe.\n\nProduktiver Fortschritt: Originalsnapshot-Navigation/Personendetails, vorab gemeinsam gebuchte Material-/Kostenprojektionen, zwei 32er-Historyseiten und benannte Inputkopien. 160 relevante Hosttests grün, sechs abschließende isolierte P77-Fälle mit echten Runtime-/Session-/SQLCipher-/Roompfaden bestanden; synthetische Auth. Ein früherer Material-Timeout als FAIL erhalten, Cleanup/Paketisolierung bestätigt.\n\nKonkrete Restblocker: Commit→Fullviewreload und STALE→bewusstes Personen-Neuladen wegen weiterhin unbestätigter Altgraphverpflichtung verweigert; vollständiger Consumer-/Form-/Writerkopienvertrag fehlt. A/B-Entscheidungsvorlage im [Assessment](https://github.com/JulianGKK/action-planner/blob/c350c08/docs/p11-p108/assessment.md), [sämtliche Geräteversuche](https://github.com/JulianGKK/action-planner/blob/c350c08/docs/p11-p108/run-summary.json). Option B wurde **nicht** aktiviert. #33 bleibt für vollständige Appdaten-/Nativebewertung offen. #35/#36-/Schema12-/Recoveryverträge unverändert; R8/T16, reuse=false, ramReuse=false, Core-Expositionssperre unverändert. STOPP unabhängiger Review/Produktentscheidung. Kein Merge/Release.",
+      "response": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Action completed."
+          }
+        ],
+        "structuredContent": {
+          "id": 6390833462
+        },
+        "isError": false
+      }
+    }
+  ]
+}
