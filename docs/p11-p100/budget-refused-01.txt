@@ -1,0 +1,26 @@
+INSTRUMENTATION_STATUS: stream=P100,budget_refused,SAMPLE,label=ready,art_used=48992320,native_heap=10877728,pss_kib=188917,fd=132,known_fixture_fd=0,unresolved_fd=1,gc=0,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,budget_refused,CORE_ADMISSION,retained=6957540,transition=27888176,decision=BUDGET_REFUSED
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,budget_refused,CORE_FAILURE,type=BUDGET_REFUSED,suppressed=0,injected_after_room=false,prepared=65,closed=65,reset=65,cursors=65,cursor_ends=65,windows=65,window_ends=65,preflights=1,rooms=1,drivers=1,transaction_ends=1,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=1,native_pool_ends=2,native_connection_ptr_zero=2,native_cache_empty=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,budget_refused,FAILURE_POLICY,state=READY,type=BUDGET_REFUSED,payload_row_seen=false,State(phase=RETIRED, retained=0, transition=0, localRetained=0, localTransition=0, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=true, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,budget_refused,FINAL,prepared=65,closed=65,reset=65,cursors=65,cursor_ends=65,windows=65,window_ends=65,preflights=1,rooms=1,drivers=1,transaction_ends=1,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=1,native_pool_ends=2,native_connection_ptr_zero=2,native_cache_empty=2,injected_vendor_close_failure=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,budget_refused,SAMPLE,label=before_finish,art_used=14644896,native_heap=10871712,pss_kib=154731,fd=135,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,budget_refused,SAMPLE,label=after_finish,art_used=14939952,native_heap=10766608,pss_kib=112009,fd=100,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,budget_refused,CASE,ANDROID_PASS,fixture_close_returned=true,fixture_absent=true,no_forced_gc=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P100 PASS budget_refused
+INSTRUMENTATION_CODE: -1

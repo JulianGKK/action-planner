@@ -24,6 +24,7 @@ class P77ProductRuntimeHarness private constructor(
     val faults:P81RuntimeFaults,
     val cleanupFaults:P82CleanupFaults,
     val memory:P83MemoryDiagnostics,
+    val p100:P100ResourceDiagnostics,
     val memoryFixture:String
 ) : AutoCloseable {
     class Observations internal constructor(private val faults:P81RuntimeFaults) : ActiveCoreLoadObservation {
@@ -68,16 +69,19 @@ class P77ProductRuntimeHarness private constructor(
             val tasks=when(profile){"small","p86-small","p87-4999","p87-5000","p87-5001"->40;"medium"->250;else->1000}
             val fixture = P11SyntheticFixture(activity, worker, main,
                 taskCountPerAction = tasks, personCountPerAction = people, baseDirectory = base)
-            if(profile!="default")fixture.seedMemoryAcceptance(profile)
+            if(profile!="default")fixture.seedMemoryAcceptance(profile,
+                budgetRefusal=activity.intent.getBooleanExtra("p100Probe",false) && activity.intent.getBooleanExtra("p100BudgetRefused",false))
             return try {
                 val faults=P81RuntimeFaults()
                 val cleanupFaults=P82CleanupFaults()
                 val memory=P83MemoryDiagnostics()
+                val p100=P100ResourceDiagnostics()
                 val observations=Observations(faults)
                 val mutations=UncachedWorkspaceMutations()
                 val runtime = ProductRuntime(activity, faults.worker.wrap(worker), faults.main.wrap(main), mutations,
-                    fixture.runtimeAuthority(reuseEnabled = reuseEnabled,observations,faults::wrap).copy(coreReadHooks=if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
-                P77ProductRuntimeHarness(runtime, fixture,observations,mutations,faults,cleanupFaults,memory,profile)
+                    fixture.runtimeAuthority(reuseEnabled = reuseEnabled,observations,faults::wrap).copy(coreReadHooks=if(activity.intent.getBooleanExtra("p100Probe",false))p100.hooks else if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
+                p100.bindDatabase(runtime.inventory.database)
+                P77ProductRuntimeHarness(runtime, fixture,observations,mutations,faults,cleanupFaults,memory,p100,profile)
             } catch (error: Throwable) {
                 fixture.close()
                 throw error

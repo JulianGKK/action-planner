@@ -1,0 +1,35 @@
+INSTRUMENTATION_STATUS: stream=P100,lock,SAMPLE,label=ready,art_used=48466640,native_heap=10960672,pss_kib=182971,fd=132,known_fixture_fd=0,unresolved_fd=1,gc=0,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,lock,CORE_ROW,prepared=65,closed=64,reset=64,cursors=65,cursor_ends=64,windows=65,window_ends=64,preflights=1,rooms=0,drivers=0,transaction_ends=0,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=0,native_pool_ends=1,native_connection_ptr_zero=1,native_cache_empty=1,lease_live=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,lock,SAMPLE,label=core_row_open,art_used=13725024,native_heap=12631152,pss_kib=150504,fd=136,known_fixture_fd=1,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,lock,SAMPLE,label=parked_operation,art_used=13823328,native_heap=12631536,pss_kib=150613,fd=136,known_fixture_fd=1,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,lock,PARKED_REVOKE,original_ticket_live=false,second_admission=DENIED,State(phase=REVOKED, retained=0, transition=16777216, localRetained=1957960, localTransition=7889856, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=OUTSTANDING_READ, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,lock,CORE_FAILURE,type=StorageAccessRevoked,suppressed=0,injected_after_room=false,prepared=66,closed=66,reset=66,cursors=66,cursor_ends=66,windows=66,window_ends=66,preflights=1,rooms=1,drivers=1,transaction_ends=1,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=1,native_pool_ends=2,native_connection_ptr_zero=2,native_cache_empty=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,lock,FAILURE_POLICY,state=LOCKED,type=StorageAccessRevoked,State(phase=RETIRED, retained=0, transition=0, localRetained=0, localTransition=0, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=true, refusal=OUTSTANDING_READ, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,lock,FINAL,prepared=66,closed=66,reset=66,cursors=66,cursor_ends=66,windows=66,window_ends=66,preflights=1,rooms=1,drivers=1,transaction_ends=1,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=1,native_pool_ends=2,native_connection_ptr_zero=2,native_cache_empty=2,injected_vendor_close_failure=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,lock,SAMPLE,label=before_finish,art_used=14101856,native_heap=10964768,pss_kib=150703,fd=134,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,lock,SAMPLE,label=after_finish,art_used=14258000,native_heap=10841040,pss_kib=108240,fd=100,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,lock,CASE,ANDROID_PASS,fixture_close_returned=true,fixture_absent=true,no_forced_gc=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P100 PASS lock
+INSTRUMENTATION_CODE: -1

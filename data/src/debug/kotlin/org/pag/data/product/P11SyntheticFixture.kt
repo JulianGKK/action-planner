@@ -88,7 +88,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         owner.set(SessionDbKeyOwner.bind(c,key))
     }
     /** Synthetic data only, before Runtime construction. No production writer bypass. */
-    internal fun seedMemoryAcceptance(profile:String) {
+    internal fun seedMemoryAcceptance(profile:String,budgetRefusal:Boolean=false) {
         check(app.packageName=="org.pag.prototype.a.p77runtime")
         val roles=when(profile){"roles32","p86-stress32"->32;"roles100","p86-stress100"->100;else->6}
         val stress=profile=="stress" || profile.startsWith("p86-stress")
@@ -116,6 +116,7 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
                     exec("WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<$extra) INSERT INTO task_events SELECT ?||'-limit-'||x,?,(SELECT id FROM tasks WHERE actionId=? ORDER BY id LIMIT 1),$type,x+100 FROM n",id,id,id)
                 }
             }
+            if(budgetRefusal)exec("UPDATE actions SET description=printf('%0250000d',0) WHERE id=?",activeId)
             if(stress)usePrepared("SELECT COUNT(*) FROM task_events WHERE actionId=?") { s ->
                 s.bindText(1,activeId);check(s.step() && s.getLong(0)==TaskRules.MAX_TASK_EVENTS_PER_ACTION && !s.step())
             }

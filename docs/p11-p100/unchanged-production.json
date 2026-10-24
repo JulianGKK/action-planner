@@ -1,0 +1,74 @@
+[
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreReader.kt",
+    "base": "ad4a1163e7232ea1cc3c0efede917691ea78f699",
+    "current": "ad4a1163e7232ea1cc3c0efede917691ea78f699",
+    "unchanged": true
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ActionDatabase.kt",
+    "base": "23cd9427d53215a7d5f85c0831e42dd06a4ecc74",
+    "current": "23cd9427d53215a7d5f85c0831e42dd06a4ecc74",
+    "unchanged": true
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/prototype/b2/B2Driver.kt",
+    "base": "41edb1765e583e63d464d14cc17f6370e93c0cf1",
+    "current": "41edb1765e583e63d464d14cc17f6370e93c0cf1",
+    "unchanged": true
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/prototype/b2/B2StatementCleanup.kt",
+    "base": "5ed82e0f29c2e93a7a96995d191c7a1062b38e29",
+    "current": "5ed82e0f29c2e93a7a96995d191c7a1062b38e29",
+    "unchanged": true
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/SessionDbKeyOwner.kt",
+    "base": "9665029992e1278f40f572017af95360d674a619",
+    "current": "9665029992e1278f40f572017af95360d674a619",
+    "unchanged": true
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt",
+    "base": "6509377198ce961c781cd9b2de5ba3adc503e75f",
+    "current": "6509377198ce961c781cd9b2de5ba3adc503e75f",
+    "unchanged": true
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLoader.kt",
+    "base": "31520fb1abe2b5099b9cd96c12aabe44c44b2e0f",
+    "current": "31520fb1abe2b5099b9cd96c12aabe44c44b2e0f",
+    "unchanged": true
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/product/CoreReadAdmission.kt",
+    "base": "44e8f4b8deb849ddb531f5de8bcb13926fe63154",
+    "current": "44e8f4b8deb849ddb531f5de8bcb13926fe63154",
+    "unchanged": true
+  },
+  {
+    "path": "domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt",
+    "base": "e4a2e2da40496bd71b46da39d2f83458e88e29e8",
+    "current": "e4a2e2da40496bd71b46da39d2f83458e88e29e8",
+    "unchanged": true
+  },
+  {
+    "path": "domain/src/main/kotlin/org/pag/domain/CompactPresentationBudget.kt",
+    "base": "b8a48add03690fe84c1a7bc0705c9cd12fba8b8e",
+    "current": "b8a48add03690fe84c1a7bc0705c9cd12fba8b8e",
+    "unchanged": true
+  },
+  {
+    "path": "data/src/main/kotlin/org/pag/data/SessionCoordinator.kt",
+    "base": "8958dda4813f64f75e083e1347faea181573f570",
+    "current": "8958dda4813f64f75e083e1347faea181573f570",
+    "unchanged": true
+  },
+  {
+    "path": "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt",
+    "base": "6cb84a121bd58e857477200d7be764630abdfa22",
+    "current": "6cb84a121bd58e857477200d7be764630abdfa22",
+    "unchanged": true
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "repeat-boundary-02.txt": {
+    "apk_record": "native-proof-apks.json",
+    "raw_sha256": "9d6ab48ef39bec19d75e2a44506c7171b7fb9edfb0751636d6b87f03572d96ad"
+  },
+  "lock-02.txt": {
+    "apk_record": "native-proof-apks.json",
+    "raw_sha256": "42320027890e29d2fddb9c9778918424d9e7cdc1c7fcb442474710090bdaf739"
+  },
+  "cancel-02.txt": {
+    "apk_record": "native-proof-apks.json",
+    "raw_sha256": "ec43712489ca7c5633c630d6cdfd9cc5b4d357128c80a80cf886a87c0f23998e"
+  },
+  "sql-error-02.txt": {
+    "apk_record": "native-proof-apks.json",
+    "raw_sha256": "3b925bef30a462b5b630b86f309571485d717ac2e1d5d266f76caadfec61e0b4"
+  },
+  "cleanup-unknown-02.txt": {
+    "apk_record": "native-proof-apks.json",
+    "raw_sha256": "808a824b76f72461610d8e660ca3bea12fa813900479ab22cdeeee4676e2a5dd"
+  },
+  "budget-refused-01.txt": {
+    "apk_record": "resume-apks.json",
+    "raw_sha256": "740251feb5b9c37ec6a243c4186cedd83e5babdb3eb38c75a7d2aae2a3b87fac"
+  }
+}

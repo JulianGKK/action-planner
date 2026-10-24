@@ -49,4 +49,5 @@
     <instrumentation android:name="org.pag.prototype.P94HubPresentationProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P95FunctionsPresentationProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P96CoreSurfaceProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P100ResourceAcceptanceProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

@@ -1,0 +1,331 @@
+
+### SQLiteDatabase
+
+  protected void onAllReferencesReleased();
+    Code:
+       0: aload_0
+       1: iconst_0
+       2: invokevirtual #55                 // Method dispose:(Z)V
+       5: return
+
+  private void dispose(boolean);
+    Code:
+       0: aload_0
+       1: getfield      #21                 // Field mLock:Ljava/lang/Object;
+       4: dup
+       5: astore_3
+       6: monitorenter
+       7: aload_0
+       8: getfield      #31                 // Field mCloseGuardLocked:Lnet/zetetic/database/sqlcipher/CloseGuard;
+      11: ifnull        32
+      14: iload_1
+      15: ifeq          25
+      18: aload_0
+      19: getfield      #31                 // Field mCloseGuardLocked:Lnet/zetetic/database/sqlcipher/CloseGuard;
+      22: invokevirtual #62                 // Method net/zetetic/database/sqlcipher/CloseGuard.warnIfOpen:()V
+      25: aload_0
+      26: getfield      #31                 // Field mCloseGuardLocked:Lnet/zetetic/database/sqlcipher/CloseGuard;
+      29: invokevirtual #65                 // Method net/zetetic/database/sqlcipher/CloseGuard.close:()V
+      32: aload_0
+      33: getfield      #68                 // Field mConnectionPoolLocked:Lnet/zetetic/database/sqlcipher/SQLiteConnectionPool;
+      36: astore_2
+      37: aload_0
+      38: aconst_null
+      39: putfield      #68                 // Field mConnectionPoolLocked:Lnet/zetetic/database/sqlcipher/SQLiteConnectionPool;
+      42: aload_3
+      43: monitorexit
+      44: goto          54
+      47: astore        4
+      49: aload_3
+      50: monitorexit
+      51: aload         4
+      53: athrow
+      54: iload_1
+      55: ifne          92
+      58: getstatic     #72                 // Field sActiveDatabases:Ljava/util/WeakHashMap;
+      61: dup
+      62: astore_3
+      63: monitorenter
+      64: getstatic     #72                 // Field sActiveDatabases:Ljava/util/WeakHashMap;
+      67: aload_0
+      68: invokevirtual #76                 // Method java/util/WeakHashMap.remove:(Ljava/lang/Object;)Ljava/lang/Object;
+      71: pop
+      72: aload_3
+      73: monitorexit
+      74: goto          84
+      77: astore        5
+      79: aload_3
+      80: monitorexit
+      81: aload         5
+      83: athrow
+      84: aload_2
+      85: ifnull        92
+      88: aload_2
+      89: invokevirtual #82                 // Method net/zetetic/database/sqlcipher/SQLiteConnectionPool.close:()V
+      92: return
+    Exception table:
+       from    to  target type
+           7    44    47   any
+          47    51    47   any
+          64    74    77   any
+          77    81    77   any
+
+  public boolean isOpen();
+    Code:
+       0: aload_0
+       1: getfield      #21                 // Field mLock:Ljava/lang/Object;
+       4: dup
+       5: astore_1
+       6: monitorenter
+       7: aload_0
+       8: getfield      #68                 // Field mConnectionPoolLocked:Lnet/zetetic/database/sqlcipher/SQLiteConnectionPool;
+      11: ifnull        18
+      14: iconst_1
+      15: goto          19
+      18: iconst_0
+      19: aload_1
+      20: monitorexit
+      21: ireturn
+      22: astore_2
+      23: aload_1
+      24: monitorexit
+      25: aload_2
+      26: athrow
+    Exception table:
+       from    to  target type
+           7    21    22   any
+          22    25    22   any
+
+
+### SQLiteConnectionPool
+
+  public void close();
+    Code:
+       0: aload_0
+       1: iconst_0
+       2: invokevirtual #56                 // Method dispose:(Z)V
+       5: return
+
+  private void dispose(boolean);
+    Code:
+       0: aload_0
+       1: getfield      #13                 // Field mCloseGuard:Lnet/zetetic/database/sqlcipher/CloseGuard;
+       4: ifnull        25
+       7: iload_1
+       8: ifeq          18
+      11: aload_0
+      12: getfield      #13                 // Field mCloseGuard:Lnet/zetetic/database/sqlcipher/CloseGuard;
+      15: invokevirtual #90                 // Method net/zetetic/database/sqlcipher/CloseGuard.warnIfOpen:()V
+      18: aload_0
+      19: getfield      #13                 // Field mCloseGuard:Lnet/zetetic/database/sqlcipher/CloseGuard;
+      22: invokevirtual #93                 // Method net/zetetic/database/sqlcipher/CloseGuard.close:()V
+      25: iload_1
+      26: ifne          121
+      29: aload_0
+      30: getfield      #19                 // Field mLock:Ljava/lang/Object;
+      33: dup
+      34: astore_2
+      35: monitorenter
+      36: aload_0
+      37: invokevirtual #95                 // Method throwIfClosedLocked:()V
+      40: aload_0
+      41: iconst_0
+      42: putfield      #82                 // Field mIsOpen:Z
+      45: aload_0
+      46: invokevirtual #98                 // Method closeAvailableConnectionsAndLogExceptionsLocked:()V
+      49: aload_0
+      50: getfield      #40                 // Field mAcquiredConnections:Ljava/util/WeakHashMap;
+      53: invokevirtual #101                // Method java/util/WeakHashMap.size:()I
+      56: istore_3
+      57: iload_3
+      58: ifeq          105
+      61: ldc           #105                // String SQLiteConnectionPool
+      63: new           #107                // class java/lang/StringBuilder
+      66: dup
+      67: invokespecial #109                // Method java/lang/StringBuilder."<init>":()V
+      70: ldc           #110                // String The connection pool for
+      72: invokevirtual #112                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      75: aload_0
+      76: getfield      #49                 // Field mConfiguration:Lnet/zetetic/database/sqlcipher/SQLiteDatabaseConfiguration;
+      79: getfield      #116                // Field net/zetetic/database/sqlcipher/SQLiteDatabaseConfiguration.label:Ljava/lang/String;
+      82: invokevirtual #112                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      85: ldc           #120                // String  has been closed but there are still
+      87: invokevirtual #112                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      90: iload_3
+      91: invokevirtual #122                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+      94: ldc           #125                // String  connections in use.  They will be closed as they are released back to the pool.
+      96: invokevirtual #112                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      99: invokevirtual #127                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+     102: invokestatic  #131                // Method net/zetetic/database/Logger.i:(Ljava/lang/String;Ljava/lang/String;)V
+     105: aload_0
+     106: invokevirtual #137                // Method wakeConnectionWaitersLocked:()V
+     109: aload_2
+     110: monitorexit
+     111: goto          121
+     114: astore        4
+     116: aload_2
+     117: monitorexit
+     118: aload         4
+     120: athrow
+     121: return
+    Exception table:
+       from    to  target type
+          36   111   114   any
+         114   118   114   any
+
+  private void closeAvailableConnectionsAndLogExceptionsLocked();
+    Code:
+       0: aload_0
+       1: invokevirtual #156                // Method closeAvailableNonPrimaryConnectionsAndLogExceptionsLocked:()V
+       4: aload_0
+       5: getfield      #78                 // Field mAvailablePrimaryConnection:Lnet/zetetic/database/sqlcipher/SQLiteConnection;
+       8: ifnull        24
+      11: aload_0
+      12: aload_0
+      13: getfield      #78                 // Field mAvailablePrimaryConnection:Lnet/zetetic/database/sqlcipher/SQLiteConnection;
+      16: invokevirtual #211                // Method closeConnectionAndLogExceptionsLocked:(Lnet/zetetic/database/sqlcipher/SQLiteConnection;)V
+      19: aload_0
+      20: aconst_null
+      21: putfield      #78                 // Field mAvailablePrimaryConnection:Lnet/zetetic/database/sqlcipher/SQLiteConnection;
+      24: return
+
+  private void discardAcquiredConnectionsLocked();
+    Code:
+       0: aload_0
+       1: getstatic     #248                // Field net/zetetic/database/sqlcipher/SQLiteConnectionPool$AcquiredConnectionStatus.DISCARD:Lnet/zetetic/database/sqlcipher/SQLiteConnectionPool$AcquiredConnectionStatus;
+       4: invokevirtual #312                // Method markAcquiredConnectionsLocked:(Lnet/zetetic/database/sqlcipher/SQLiteConnectionPool$AcquiredConnectionStatus;)V
+       7: return
+
+
+### SQLiteConnection
+
+  private void dispose(boolean);
+    Code:
+       0: aload_0
+       1: getfield      #19                 // Field mCloseGuard:Lnet/zetetic/database/sqlcipher/CloseGuard;
+       4: ifnull        25
+       7: iload_1
+       8: ifeq          18
+      11: aload_0
+      12: getfield      #19                 // Field mCloseGuard:Lnet/zetetic/database/sqlcipher/CloseGuard;
+      15: invokevirtual #214                // Method net/zetetic/database/sqlcipher/CloseGuard.warnIfOpen:()V
+      18: aload_0
+      19: getfield      #19                 // Field mCloseGuard:Lnet/zetetic/database/sqlcipher/CloseGuard;
+      22: invokevirtual #217                // Method net/zetetic/database/sqlcipher/CloseGuard.close:()V
+      25: aload_0
+      26: getfield      #77                 // Field mConnectionPtr:J
+      29: lconst_0
+      30: lcmp
+      31: ifeq          87
+      34: aload_0
+      35: getfield      #26                 // Field mRecentOperations:Lnet/zetetic/database/sqlcipher/SQLiteConnection$OperationLog;
+      38: ldc           #71                 // String close
+      40: aconst_null
+      41: aconst_null
+      42: invokevirtual #219                // Method net/zetetic/database/sqlcipher/SQLiteConnection$OperationLog.beginOperation:(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)I
+      45: istore_2
+      46: aload_0
+      47: getfield      #67                 // Field mPreparedStatementCache:Lnet/zetetic/database/sqlcipher/SQLiteConnection$PreparedStatementCache;
+      50: invokevirtual #223                // Method net/zetetic/database/sqlcipher/SQLiteConnection$PreparedStatementCache.evictAll:()V
+      53: aload_0
+      54: getfield      #77                 // Field mConnectionPtr:J
+      57: invokestatic  #226                // Method nativeClose:(J)V
+      60: aload_0
+      61: lconst_0
+      62: putfield      #77                 // Field mConnectionPtr:J
+      65: aload_0
+      66: getfield      #26                 // Field mRecentOperations:Lnet/zetetic/database/sqlcipher/SQLiteConnection$OperationLog;
+      69: iload_2
+      70: invokevirtual #230                // Method net/zetetic/database/sqlcipher/SQLiteConnection$OperationLog.endOperation:(I)V
+      73: goto          87
+      76: astore_3
+      77: aload_0
+      78: getfield      #26                 // Field mRecentOperations:Lnet/zetetic/database/sqlcipher/SQLiteConnection$OperationLog;
+      81: iload_2
+      82: invokevirtual #230                // Method net/zetetic/database/sqlcipher/SQLiteConnection$OperationLog.endOperation:(I)V
+      85: aload_3
+      86: athrow
+      87: return
+    Exception table:
+       from    to  target type
+          46    65    76   any
+
+  private void finalizePreparedStatement(net.zetetic.database.sqlcipher.SQLiteConnection$PreparedStatement);
+    Code:
+       0: aload_0
+       1: getfield      #77                 // Field mConnectionPtr:J
+       4: aload_1
+       5: getfield      #431                // Field net/zetetic/database/sqlcipher/SQLiteConnection$PreparedStatement.mStatementPtr:J
+       8: invokestatic  #602                // Method nativeFinalizeStatement:(JJ)V
+      11: aload_0
+      12: aload_1
+      13: invokevirtual #617                // Method recyclePreparedStatement:(Lnet/zetetic/database/sqlcipher/SQLiteConnection$PreparedStatement;)V
+      16: return
+
+
+### SQLiteClosable
+
+  protected abstract void onAllReferencesReleased();
+
+  public void close();
+    Code:
+       0: aload_0
+       1: invokevirtual #40                 // Method releaseReference:()V
+       4: return
+}
+
+### SQLiteCursor
+
+  public void close();
+    Code:
+       0: aload_0
+       1: invokespecial #196                // Method net/zetetic/database/AbstractWindowedCursor.close:()V
+       4: aload_0
+       5: dup
+       6: astore_1
+       7: monitorenter
+       8: aload_0
+       9: getfield      #35                 // Field mQuery:Lnet/zetetic/database/sqlcipher/SQLiteQuery;
+      12: invokevirtual #199                // Method net/zetetic/database/sqlcipher/SQLiteQuery.close:()V
+      15: aload_0
+      16: getfield      #23                 // Field mDriver:Lnet/zetetic/database/sqlcipher/SQLiteCursorDriver;
+      19: invokeinterface #200,  1          // InterfaceMethod net/zetetic/database/sqlcipher/SQLiteCursorDriver.cursorClosed:()V
+      24: aload_1
+      25: monitorexit
+      26: goto          34
+      29: astore_2
+      30: aload_1
+      31: monitorexit
+      32: aload_2
+      33: athrow
+      34: return
+    Exception table:
+       from    to  target type
+           8    26    29   any
+          29    32    29   any
+
+
+### SQLiteQuery
+
+### Pool close exception handling
+  private void closeConnectionAndLogExceptionsLocked(net.zetetic.database.sqlcipher.SQLiteConnection);
+    Code:
+       0: aload_1
+       1: invokevirtual #309                // Method net/zetetic/database/sqlcipher/SQLiteConnection.close:()V
+       4: goto          34
+       7: astore_2
+       8: ldc           #105                // String SQLiteConnectionPool
+      10: new           #107                // class java/lang/StringBuilder
+      13: dup
+      14: invokespecial #109                // Method java/lang/StringBuilder."<init>":()V
+      17: ldc_w         #310                // String Failed to close connection, its fate is now in the hands of the merciful GC:
+      20: invokevirtual #112                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      23: aload_1
+      24: invokevirtual #241                // Method java/lang/StringBuilder.append:(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+      27: invokevirtual #127                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+      30: aload_2
+      31: invokestatic  #244                // Method net/zetetic/database/Logger.e:(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+      34: return
+    Exception table:
+       from    to  target type
+           0     4     7   Class java/lang/RuntimeException

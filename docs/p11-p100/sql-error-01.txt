@@ -1,0 +1,23 @@
+INSTRUMENTATION_STATUS: stream=P100,sql_error,SAMPLE,label=ready,art_used=48484368,native_heap=11003760,pss_kib=183031,fd=136,known_fixture_fd=0,unresolved_fd=1,gc=0,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,sql_error,CORE_FAILURE,type=B2Exception,suppressed=0,injected_after_room=false,prepared=18,closed=18,reset=18,cursors=18,cursor_ends=18,windows=17,window_ends=17,preflights=1,rooms=1,drivers=1,transaction_ends=1,sql_step_errors=1,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,sql_error,FAILURE_POLICY,state=BLOCKED,type=B2Exception,State(phase=FAILED_OR_UNCONFIRMED, retained=0, transition=16777216, localRetained=0, localTransition=0, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=OUTSTANDING_READ, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,sql_error,FINAL,prepared=18,closed=18,reset=18,cursors=18,cursor_ends=18,windows=17,window_ends=17,preflights=1,rooms=1,drivers=1,transaction_ends=1,sql_step_errors=1,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=1,injected_vendor_close_failure=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,sql_error,SAMPLE,label=before_finish,art_used=49041424,native_heap=11101936,pss_kib=183904,fd=137,known_fixture_fd=0,unresolved_fd=8,gc=0,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,sql_error,SAMPLE,label=after_finish,art_used=49304808,native_heap=11022672,pss_kib=140936,fd=102,known_fixture_fd=0,unresolved_fd=1,gc=0,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,sql_error,CASE,ANDROID_PASS,fixture_close_returned=true,fixture_absent=true,no_forced_gc=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P100 PASS sql_error
+INSTRUMENTATION_CODE: -1

@@ -1,0 +1,110 @@
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=ready,art_used=48484416,native_heap=10872288,pss_kib=186464,fd=132,known_fixture_fd=0,unresolved_fd=1,gc=0,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=batch_0_before,art_used=48599104,native_heap=10942496,pss_kib=186814,fd=136,known_fixture_fd=0,unresolved_fd=1,gc=0,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,BATCH,table=persons,rows=200,batches=7,unicode=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,BATCH,table=tasks,rows=1000,batches=32,unicode=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,CONTROLLED_END,mode=batches,cleanup_confirmed=true,borrowed_java_key_zero=true,prepared=56,closed=56,reset=56,cursors=56,cursor_ends=56,windows=56,window_ends=56,preflights=1,rooms=1,drivers=1,transaction_ends=1,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=batch_0_after,art_used=13387128,native_heap=10855232,pss_kib=152517,fd=134,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=batch_1_before,art_used=13485432,native_heap=10855536,pss_kib=152612,fd=134,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,BATCH,table=persons,rows=200,batches=7,unicode=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,BATCH,table=tasks,rows=1000,batches=32,unicode=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,CONTROLLED_END,mode=batches,cleanup_confirmed=true,borrowed_java_key_zero=true,prepared=112,closed=112,reset=112,cursors=112,cursor_ends=112,windows=112,window_ends=112,preflights=2,rooms=2,drivers=2,transaction_ends=2,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=2
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=batch_1_after,art_used=14124408,native_heap=10847264,pss_kib=153371,fd=135,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=batch_2_before,art_used=14206328,native_heap=10843568,pss_kib=153463,fd=135,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,BATCH,table=persons,rows=200,batches=7,unicode=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,BATCH,table=tasks,rows=1000,batches=32,unicode=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,CONTROLLED_END,mode=batches,cleanup_confirmed=true,borrowed_java_key_zero=true,prepared=168,closed=168,reset=168,cursors=168,cursor_ends=168,windows=168,window_ends=168,preflights=3,rooms=3,drivers=3,transaction_ends=3,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=3
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=batch_2_after,art_used=14845304,native_heap=10838448,pss_kib=153919,fd=135,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,BOUNDARY,mode=R_exact,requested=8388608,materializers=2,refused=false,real_plans=true,test_padding=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,CONTROLLED_END,mode=R_exact,cleanup_confirmed=true,borrowed_java_key_zero=true,prepared=239,closed=239,reset=239,cursors=239,cursor_ends=239,windows=239,window_ends=239,preflights=4,rooms=4,drivers=4,transaction_ends=4,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=4
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=after_R_exact,art_used=17155448,native_heap=10998576,pss_kib=157554,fd=135,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,BOUNDARY,mode=R_plus1,requested=8388609,materializers=0,refused=true,real_plans=true,test_padding=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,CONTROLLED_END,mode=R_plus1,cleanup_confirmed=true,borrowed_java_key_zero=true,prepared=305,closed=305,reset=305,cursors=305,cursor_ends=305,windows=305,window_ends=305,preflights=5,rooms=5,drivers=5,transaction_ends=5,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=5
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=after_R_plus1,art_used=18728312,native_heap=10971440,pss_kib=159291,fd=135,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,BOUNDARY,mode=T_exact,requested=16777216,materializers=2,refused=false,real_plans=true,test_padding=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,CONTROLLED_END,mode=T_exact,cleanup_confirmed=true,borrowed_java_key_zero=true,prepared=376,closed=376,reset=376,cursors=376,cursor_ends=376,windows=376,window_ends=376,preflights=6,rooms=6,drivers=6,transaction_ends=6,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=6
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=after_T_exact,art_used=20891000,native_heap=11129312,pss_kib=161940,fd=135,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,BOUNDARY,mode=T_plus1,requested=16777217,materializers=0,refused=true,real_plans=true,test_padding=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,CONTROLLED_END,mode=T_plus1,cleanup_confirmed=true,borrowed_java_key_zero=true,prepared=442,closed=442,reset=442,cursors=442,cursor_ends=442,windows=442,window_ends=442,preflights=7,rooms=7,drivers=7,transaction_ends=7,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=7
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=after_T_plus1,art_used=22480248,native_heap=10910384,pss_kib=163580,fd=135,known_fixture_fd=0,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,CORE_ROW,prepared=507,closed=506,reset=506,cursors=507,cursor_ends=506,windows=507,window_ends=506,preflights=8,rooms=7,drivers=7,transaction_ends=7,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=7,lease_live=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=core_row_open,art_used=24348056,native_heap=12505904,pss_kib=167444,fd=136,known_fixture_fd=1,unresolved_fd=1,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,CORE_CANDIDATE,retained=1957900,transition=7889616,unicode=true,prepared=512,closed=512,reset=512,cursors=512,cursor_ends=512,windows=512,window_ends=512,preflights=8,rooms=8,drivers=8,transaction_ends=8,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=8
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,EXPOSED,second_admission=DENIED,State(phase=COMPOSE_TRANSITION, retained=0, transition=16777216, localRetained=1957900, localTransition=7889616, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=COMPOSE_OR_FRAME_UNCONFIRMED, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,FINAL,prepared=512,closed=512,reset=512,cursors=512,cursor_ends=512,windows=512,window_ends=512,preflights=8,rooms=8,drivers=8,transaction_ends=8,sql_step_errors=0,vendor_reset_errors=0,vendor_close_errors=0,lease_ends=8,injected_vendor_close_failure=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=before_finish,art_used=25626008,native_heap=11184000,pss_kib=168935,fd=135,known_fixture_fd=0,unresolved_fd=6,gc=1,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,SAMPLE,label=after_finish,art_used=14431848,native_heap=10430544,pss_kib=114881,fd=102,known_fixture_fd=0,unresolved_fd=1,gc=2,upper_bound=UNKNOWN
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P100,repeat_boundary,CASE,ANDROID_PASS,fixture_close_returned=true,fixture_absent=true,no_forced_gc=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P100 PASS repeat_boundary
+INSTRUMENTATION_CODE: -1

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.prototype.b2.B2StatementCleanupTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-24T04:57:04.256Z" hostname="iuzjhtgvfc" time="0.017">
+  <properties/>
+  <testcase name="bothFailuresPreserveFirstAndSuppressSecond" classname="org.pag.data.prototype.b2.B2StatementCleanupTest" time="0.011"/>
+  <testcase name="closeFailureIsNotSuccess" classname="org.pag.data.prototype.b2.B2StatementCleanupTest" time="0.002"/>
+  <testcase name="resetFailureStillClosesAndRemainsFailure" classname="org.pag.data.prototype.b2.B2StatementCleanupTest" time="0.003"/>
+  <testcase name="resetPrecedesCloseAndDoubleCloseDoesNothing" classname="org.pag.data.prototype.b2.B2StatementCleanupTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
