@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.CoreWriterIntegrationTest" tests="17" skipped="0" failures="0" errors="0" timestamp="2026-10-24T12:50:36.807Z" hostname="iuzjhtgvfc" time="14.704">
+  <properties/>
+  <testcase name="roleDeleteOldConfirmationCannotDeleteRenamedRole" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.388"/>
+  <testcase name="roleIdentityCaseWhitespaceAndCreateValidationAreExactBeforeWrites" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.249"/>
+  <testcase name="planWritesKeepOuterOutcomeCleanupAndAuthorityGates" classname="org.pag.data.product.CoreWriterIntegrationTest" time="1.549"/>
+  <testcase name="peopleAndOperationsPreservePoliciesLabelsPlansAndExactOnSiteGroups" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.544"/>
+  <testcase name="roleFullValueCasStillCannotDetectSchema11Aba" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.15"/>
+  <testcase name="competingPersonEditorsAndDuplicateDispatchCannotSilentlyOverwrite" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.131"/>
+  <testcase name="rolePlanOldEditorsConflictAndConfirmedFirstPlanSurvives" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.157"/>
+  <testcase name="planInsertFailureRollsBackRemovedAssignmentsAndConcurrentQueueRemainsSingle" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.162"/>
+  <testcase name="planForeignPersonAndDeletedRoleCannotChangeOtherData" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.128"/>
+  <testcase name="roleRenameSecondOldEditorIsStale" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.128"/>
+  <testcase name="revokeScopeAndLateCallbacksCannotPublishAcrossActionPermissionOrGeneration" classname="org.pag.data.product.CoreWriterIntegrationTest" time="9.039"/>
+  <testcase name="fullPersonIdentityAndActionAreComparedBeforeAnyRenameSql" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.127"/>
+  <testcase name="currentRoleDeletePreservesAllOperationsAndTaskReferenceGates" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.341"/>
+  <testcase name="personRenameUnknownCleanupAndRevokeCannotPublishValue" classname="org.pag.data.product.CoreWriterIntegrationTest" time="1.172"/>
+  <testcase name="rolePlanExpectedIsImmutableAndSchema11CannotDetectAba" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.136"/>
+  <testcase name="rolePlanCasCoversWholeSetsPrimaryEmptyForeignAndMissingReferences" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.169"/>
+  <testcase name="stalePersonEditorIsRejectedAndFirstValueSurvives" classname="org.pag.data.product.CoreWriterIntegrationTest" time="0.119"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

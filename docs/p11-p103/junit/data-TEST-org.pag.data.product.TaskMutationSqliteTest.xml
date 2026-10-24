@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.TaskMutationSqliteTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-24T12:50:51.708Z" hostname="iuzjhtgvfc" time="2.406">
+  <properties/>
+  <testcase name="revokeBeforeQueueBeforeCommitAfterCommitAndBeforePublicationDenySuccess" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.73"/>
+  <testcase name="queueRejectionNestedTransactionAndMainQueueLossStayFailClosed" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.344"/>
+  <testcase name="concurrentEditorsPendingAndLateDuplicateCallbacksCannotDuplicateWrites" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.139"/>
+  <testcase name="generationChangeAfterCommitButBeforeMainDropsLateSuccess" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.119"/>
+  <testcase name="editAndTransitionRacesUseFullExpectedAndEventsExactlyOnce" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.144"/>
+  <testcase name="sameMillisecondTaskAbaIsNotAPersistentRevisionProof" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.135"/>
+  <testcase name="createEditTransitionsAndConflictsPreserveAtomicSingleEvents" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.148"/>
+  <testcase name="taskAndEventBothRollbackOnFailureAndUnconfirmedOutcomeNeverSucceeds" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.643"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

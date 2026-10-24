@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P103,person_ui,UI,real_editable_draft_survives_refresh_and_STALE=true,no_saved=true,explicit_reload_replaces=true,lock_reauth_does_not_restore_editor=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P103,person_ui,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false,ABA_safety_NOT_CLAIMED=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P103 PASS person_ui
+INSTRUMENTATION_CODE: -1

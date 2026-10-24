@@ -1,0 +1,26 @@
+{
+  "base": "7e637c5d1569558c45cf84af75dff85b06cbe42a",
+  "checked_directories": [
+    "app/src/main",
+    "app/src/p77runtime",
+    "data/src/main",
+    "data/src/debug",
+    "domain/src/main",
+    "security/src/main",
+    "data/schemas",
+    "PRODUCT.md"
+  ],
+  "tracked_diff": "empty",
+  "untracked_production_files": [],
+  "sha256": {
+    "data/src/main/kotlin/org/pag/data/product/PersonDatabase.kt": "74c9ee9f4b36e5f7b57f89821b93882d272f3700ede309f7da9af8726a909102",
+    "data/src/main/kotlin/org/pag/data/product/ProductPersonRepository.kt": "1c3d97b14d24c0b04e3d1274cc23d51a4217262704886d1332bebfa55a0b3327",
+    "data/src/main/kotlin/org/pag/data/product/ProductOperationsRepository.kt": "fa2799d6cda1b97ddc97fd09dad34aae7f74124a30dcfe843cfe7f1949e055b4",
+    "data/src/main/kotlin/org/pag/data/product/ProductTaskRepository.kt": "d22bdbc6b8d22e2948c167b9ff2945c0fe1ef17dc46154cfd0994695926dbd47",
+    "data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt": "3ae941d84b4acdd2767a0ae299ae434f8c69e2aa5b60e7bbc94de6ba36ea44d3",
+    "domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt": "981f1f56d36f2d5f57acd83e5f808430b931b45a9b868b6f5a70725e41edb1a6",
+    "data/src/main/kotlin/org/pag/data/product/LeadershipRecovery.kt": "adfd0a7d636a0bcf03b33610b2d45689e1a2bd2047d66435ae70a2424c6d040a",
+    "data/src/main/kotlin/org/pag/data/SessionCoordinator.kt": "e2daa45d6b0c1fc877a7a688780cac27e4592c54823ac00f1cbd671bb293a0ea",
+    "data/schemas/org.pag.data.product.ActionDatabase/11.json": "ad12b4bf54eacc8c0c5c13f479d85023dff8e5e6a28feb3aa79e8ee7b5645c8d"
+  }
+}

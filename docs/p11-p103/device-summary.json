@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "scenario": "cas_aba",
+      "raw": "cas-aba-03.txt",
+      "test": "PASS",
+      "issue36": "BLOCKED_SCHEMA_APPROVAL"
+    },
+    {
+      "scenario": "person_ui",
+      "raw": "person-ui-01.txt",
+      "test": "PASS",
+      "issue36": "BLOCKED_SCHEMA_APPROVAL"
+    },
+    {
+      "scenario": "publication",
+      "raw": "publication-01.txt",
+      "test": "PASS",
+      "issue36": "BLOCKED_SCHEMA_APPROVAL"
+    }
+  ],
+  "apks": "resume-apks.json",
+  "excluded_whole_runs": [
+    "cas-aba-01.txt",
+    "cas-aba-02.txt"
+  ],
+  "issue36": "BLOCKED_SCHEMA_APPROVAL"
+}

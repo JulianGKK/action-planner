@@ -1,0 +1,14 @@
+{
+  "testcases": 97,
+  "classes": {
+    "org.pag.data.product.TaskMutationSqliteTest": 8,
+    "org.pag.prototype.product.OperationsModelTest": 18,
+    "org.pag.prototype.product.TaskModelTest": 28,
+    "org.pag.data.product.P103OperationalAbaTest": 1,
+    "org.pag.prototype.product.PersonViewModelTest": 19,
+    "org.pag.data.product.CoreWriterIntegrationTest": 17,
+    "org.pag.prototype.product.RoleEditorModelTest": 6
+  },
+  "failures": 0,
+  "skips": 0
+}

@@ -1,0 +1,17 @@
+INSTRUMENTATION_STATUS: stream=P103,cas_aba,PERSON,two_open_editors_second_STALE=true,all_A_fields_restored=true,old_A_after_ABA=COMMITTED,BLOCKER=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P103,cas_aba,OPERATIONS,role_and_plan_changed_value_STALE=true,role_and_plan_ABA_accepted=true,BLOCKER=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P103,cas_aba,TASK,stale_transition_no_event=true,successful_transition_exactly_one=true,duplicate_old_transition_STALE=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P103,cas_aba,CURRENT_STATE,changed_full_expected_STALE=true,timestamp_monotonicity_NOT_PROVEN=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P103,cas_aba,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ram_reuse=false,ABA_safety_NOT_CLAIMED=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P103 PASS cas_aba
+INSTRUMENTATION_CODE: -1

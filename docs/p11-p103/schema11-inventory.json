@@ -1,0 +1,206 @@
+{
+  "actions": [
+    "id",
+    "title",
+    "description",
+    "startAt",
+    "expectedEndAt",
+    "createdAt",
+    "status",
+    "sensitivity",
+    "completedAt"
+  ],
+  "persons": [
+    "id",
+    "actionId",
+    "pseudonym",
+    "pseudonymNormalized",
+    "createdAt"
+  ],
+  "leadership": [
+    "actionId",
+    "state",
+    "epoch",
+    "cryptoVersion",
+    "algorithm",
+    "kdfVersion",
+    "memoryKiB",
+    "iterations",
+    "parallelism",
+    "salt",
+    "envelope"
+  ],
+  "sensitive_person_areas": [
+    "actionId",
+    "personId",
+    "area",
+    "cryptoVersion",
+    "revision",
+    "keyEnvelope",
+    "payload"
+  ],
+  "roles": [
+    "id",
+    "actionId",
+    "name",
+    "normalizedName",
+    "createdAt"
+  ],
+  "person_planned_roles": [
+    "actionId",
+    "personId",
+    "roleId"
+  ],
+  "person_role_plans": [
+    "actionId",
+    "personId",
+    "primaryRoleId"
+  ],
+  "person_operational_states": [
+    "actionId",
+    "personId",
+    "currentRoleId",
+    "operationalStatus",
+    "currentPlaceLabel",
+    "updatedAt"
+  ],
+  "tasks": [
+    "id",
+    "actionId",
+    "title",
+    "priority",
+    "status",
+    "assigneePersonId",
+    "assigneeRoleId",
+    "affectedPersonId",
+    "dueAt",
+    "sourceTemplateKey",
+    "createdAt",
+    "updatedAt",
+    "completedAt"
+  ],
+  "task_events": [
+    "id",
+    "actionId",
+    "taskId",
+    "type",
+    "occurredAt"
+  ],
+  "protocol_entries": [
+    "id",
+    "actionId",
+    "createdAfterCompletion"
+  ],
+  "protocol_revisions": [
+    "id",
+    "actionId",
+    "entryId",
+    "revisionNumber",
+    "revisionType",
+    "classification",
+    "templateKey",
+    "title",
+    "description",
+    "occurredAt",
+    "occurredAtApproximate",
+    "recordedAt",
+    "recordedAfterCompletion",
+    "mistaken",
+    "sourceType",
+    "placeLabel",
+    "announcementText",
+    "announcementKind",
+    "statedLegalBasis"
+  ],
+  "protocol_affected_persons": [
+    "actionId",
+    "revisionId",
+    "personId"
+  ],
+  "protocol_official_identifiers": [
+    "actionId",
+    "revisionId",
+    "position",
+    "type",
+    "value"
+  ],
+  "protocol_reported_by_persons": [
+    "actionId",
+    "revisionId",
+    "personId"
+  ],
+  "materials": [
+    "id",
+    "actionId",
+    "name",
+    "quantityLabel",
+    "placeLabel",
+    "responsiblePersonId",
+    "linkedTaskId",
+    "sourceTemplateKey",
+    "createdAt"
+  ],
+  "expenses": [
+    "id",
+    "actionId",
+    "title",
+    "totalCents",
+    "createdAt"
+  ],
+  "expense_payments": [
+    "actionId",
+    "expenseId",
+    "position",
+    "payerLabel",
+    "amountCents"
+  ],
+  "memory_reports": [
+    "id",
+    "actionId",
+    "authorLabel",
+    "questionnaireVersion",
+    "status",
+    "revision",
+    "lastSavedSectionOrdinal",
+    "createdAt",
+    "updatedAt",
+    "completedAt"
+  ],
+  "memory_answers": [
+    "actionId",
+    "reportId",
+    "questionKey",
+    "valueKind",
+    "payload"
+  ],
+  "memory_addenda": [
+    "actionId",
+    "reportId",
+    "sequence",
+    "content",
+    "recordedAt"
+  ],
+  "documents": [
+    "id",
+    "actionId",
+    "displayName",
+    "format",
+    "plaintextSize",
+    "importedAt",
+    "blobName",
+    "fileKey"
+  ],
+  "document_jobs": [
+    "id",
+    "actionId",
+    "documentId",
+    "operation",
+    "phase",
+    "stagingName",
+    "blobName",
+    "displayName",
+    "format",
+    "plaintextSize",
+    "fileKey"
+  ]
+}

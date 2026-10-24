@@ -1,0 +1,12 @@
+INSTRUMENTATION_STATUS: stream=P103,cas_aba,PERSON,two_open_editors_second_STALE=true,all_A_fields_restored=true,old_A_after_ABA=COMMITTED,BLOCKER=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P103,cas_aba,FAILURE,java.util.NoSuchElementException: List is empty.
+	at kotlin.collections.CollectionsKt___CollectionsKt.first(_Collections.kt:222)
+	at org.pag.prototype.P103EditorCasProbe.onStart(P103EditorCasProbe.kt:98)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P103 FAIL cas_aba
+INSTRUMENTATION_CODE: 0
