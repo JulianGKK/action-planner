@@ -265,6 +265,21 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
         }
         return "five_kinds_ABA_STALE=true,plan_empty_repopulate_header=true,fixed_wallclock=42,task_event_exactly_once=true"
     }
+    /** P108 scalar TEST observation only: no board, DTO, readmission or owner reset. */
+    internal fun p108TaskScalars(runtime:ProductRuntime,action:String,id:String,title:String):String {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        val c=checkNotNull(runtime.session.acquire(AccessScope.READY))
+        @Suppress("UNCHECKED_CAST")
+        val ref=runtime.javaClass.getDeclaredField("owner").let{it.isAccessible=true;it.get(runtime)} as AtomicReference<SessionDbKeyOwner?>
+        return checkNotNull(ref.get()).withDbKey(c){borrowed->
+            ActionDatabaseAccess(wrapped).use(inventory.database,borrowed,c){db->db.withReadTransaction {
+                usePrepared("SELECT title=?, editRevision, (SELECT COUNT(*) FROM task_events WHERE actionId=? AND taskId=?) FROM tasks WHERE actionId=? AND id=?"){s->
+                    s.bindText(1,title);s.bindText(2,action);s.bindText(3,id);s.bindText(4,action);s.bindText(5,id)
+                    check(s.step());val result="title_match=${s.getLong(0)},revision=${s.getLong(1)},events=${s.getLong(2)}";check(!s.step());result
+                }
+            }}
+        }
+    }
     internal fun p106StoreWithoutEntry(runtime:ProductRuntime):WorkspaceResult {
         check(app.packageName=="org.pag.prototype.a.p77runtime")
         val c=checkNotNull(runtime.session.acquire(AccessScope.READY))

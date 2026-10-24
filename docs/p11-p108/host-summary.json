@@ -1,0 +1,78 @@
+{
+  "suites": [
+    {
+      "module": "data",
+      "name": "org.pag.data.product.OutstandingCoreReadTest",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "data",
+      "name": "org.pag.data.product.P107FullviewAdmissionTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "data",
+      "name": "org.pag.data.product.P108WorkspaceAccessTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "app",
+      "name": "org.pag.prototype.product.WorkspaceBatchTest",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "app",
+      "name": "org.pag.prototype.product.MaterialModelTest",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "app",
+      "name": "org.pag.prototype.product.OperationsModelTest",
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "app",
+      "name": "org.pag.prototype.product.PersonViewModelTest",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "app",
+      "name": "org.pag.prototype.product.ExpenseModelTest",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "module": "app",
+      "name": "org.pag.prototype.product.TaskModelTest",
+      "tests": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "total": 160,
+  "failures": 0
+}

@@ -31,24 +31,24 @@ import org.pag.domain.*
     val draft = model.draft
     if (draft != null) {
         PreparationHeading(if (model.expected == null) "Kosten eintragen" else "Kosten bearbeiten")
-        FormTextField(draft.title, { model.change(draft.copy(title = it)) }, label = { Text("Bezeichnung") },
+        FormTextField(draft.title, { model.title(it) }, label = { Text("Bezeichnung") },
             supportingText = { Text("1–120 Zeichen") }, autoFocus = model.expected == null, enabled = !model.busy, modifier = Modifier.fillMaxWidth())
-        FormTextField(draft.total, { model.change(draft.copy(total = it)) }, label = { Text("Gesamtbetrag") },
+        FormTextField(draft.total, { model.total(it) }, label = { Text("Gesamtbetrag") },
             supportingText = { Text("Euro · z. B. 120,50 · ohne Tausendertrennzeichen") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !model.busy, modifier = Modifier.fillMaxWidth())
         PreparationHeading("Zahlungen")
         Text("Pseudonym oder kurze Bezeichnung genügt. Es wird nur Text übernommen, keine Person verknüpft.")
         draft.payments.forEachIndexed { index, payment ->
             PreparationHeading("Zahlung ${index + 1}")
-            fun update(p: ExpensePaymentDraft) = model.change(draft.copy(payments = draft.payments.mapIndexed { i, old -> if (i == index) p else old }))
-            FormTextField(payment.payerLabel, { update(payment.copy(payerLabel = it)) }, label = { Text("Bezahlt von · Zahlung ${index + 1}") },
+            // Per-field producers below run only after the original owner books the copy.
+            FormTextField(payment.payerLabel, { model.payer(index,it) }, label = { Text("Bezahlt von · Zahlung ${index + 1}") },
                 supportingText = { Text("1–80 Zeichen") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth())
-            FormTextField(payment.amount, { update(payment.copy(amount = it)) }, label = { Text("Betrag · Zahlung ${index + 1}") },
+            FormTextField(payment.amount, { model.amount(index,it) }, label = { Text("Betrag · Zahlung ${index + 1}") },
                 supportingText = { Text("Euro") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !model.busy, modifier = Modifier.fillMaxWidth())
-            FormOutlinedButton({ model.change(draft.remove(index)) }, enabled = !model.busy) { Text("Zahlung ${index + 1} entfernen") }
+            FormOutlinedButton({ model.removePayment(index) }, enabled = !model.busy) { Text("Zahlung ${index + 1} entfernen") }
         }
-        FormOutlinedButton({ model.change(draft.add()) }, enabled = draft.canAdd && !model.busy) { Text("+ freie Person / Bezeichnung") }
+        FormOutlinedButton({ model.addPayment() }, enabled = draft.canAdd && !model.busy) { Text("+ freie Person / Bezeichnung") }
         PreparationHeading("Aktionsperson übernehmen")
-        persons.forEach { person -> FormOutlinedButton({ model.change(draft.add(person.pseudonym)) }, enabled = draft.canAdd && !model.busy) { Text(person.pseudonym) } }
+        persons.forEach { person -> FormOutlinedButton({ model.addPayment(person.pseudonym) }, enabled = draft.canAdd && !model.busy) { Text(person.pseudonym) } }
         Text("${draft.payments.size} von maximal 32 Zahlungen")
         Text(draft.feedback())
         FormButton(model::save, enabled = !model.busy && model.error != OperationsFailure.STALE && draft.input() != null) { Text(if (model.busy) "Wird gespeichert …" else "Speichern") }

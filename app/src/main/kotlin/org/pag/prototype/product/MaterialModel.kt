@@ -7,6 +7,12 @@ import org.pag.domain.*
 class MaterialModel(private val repository: MaterialRepository?, private val session: () -> SessionSnapshot,
     private val action: () -> Action?, private val interaction: () -> Unit, private val leaveSensitive: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit) {
+    private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
+    internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
+    private fun copyData(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
+        val failure=if(copyGate==null){producer();null}else copyGate!!.invoke(units,producer)
+        if(failure!=null){error=failure;return false};return true
+    }
     var board by mutableStateOf<MaterialBoard?>(null); private set
     var loading by mutableStateOf(false); private set
     var selected by mutableStateOf<MaterialItem?>(null); private set
@@ -85,17 +91,27 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
     fun create(template: MaterialTemplate? = null) = act { current ->
         if (!writable) return@act
         leaveSensitive()
-        if (current()) { readRequest++; loading = false; discard(); input = template?.input() ?: MaterialInput(""); error = null }
+        if (current()) { readRequest++; loading = false; discard(); copyData(ActiveWorkspaceBudget.Units(objects=1,references=10)){input = template?.input() ?: MaterialInput(""); error = null} }
     }
     fun edit(item: MaterialItem) = act { current ->
         if (!writable || board?.items?.contains(item) != true) return@act
         leaveSensitive()
-        if (current()) { readRequest++; loading = false; selected = item; expected = item; input = item.input(); confirmingDelete = false; error = null }
+        if (current()) { readRequest++; loading = false; selected = item; expected = item; copyData(ActiveWorkspaceBudget.Units(objects=1,references=10)){input = item.input(); confirmingDelete = false; error = null} }
     }
-    fun change(value: MaterialInput) = act {
+    internal fun change(value: MaterialInput) = act {
         val previous = input ?: return@act
         if (writable) { input = value.copy(sourceTemplateKey = previous.sourceTemplateKey); if (error == OperationsFailure.INVALID) error = null }
     }
+    private fun alter(text:String?=null,produce:(MaterialInput)->MaterialInput)=act {
+        val old=input?:return@act
+        if(writable)copyData(ActiveWorkspaceBudget.Units(objects=1,references=10,
+            strings=if(text==null)0 else 1,utf16Units=text?.length?.toLong()?:0)){input=produce(old)}
+    }
+    fun name(value:String)=alter(value){it.copy(name=value)}
+    fun quantity(value:String)=alter(value){it.copy(quantityLabel=value)}
+    fun place(value:String)=alter(value){it.copy(placeLabel=value)}
+    fun responsible(id:String?)=alter{it.copy(responsiblePersonId=id)}
+    fun linkedTask(id:String?)=alter{it.copy(linkedTaskId=id)}
     fun cancel() = act { val reload = error == OperationsFailure.STALE || board == null; discard(); error = null; if (reload) refresh() }
     fun requestDelete() = act { if (writable && expected != null && error != OperationsFailure.STALE) confirmingDelete = true }
     fun cancelDelete() = act { confirmingDelete = false }

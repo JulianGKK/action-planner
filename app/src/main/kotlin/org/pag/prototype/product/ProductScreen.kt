@@ -175,7 +175,7 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
             val existing = model.editingPerson
             var pseudonym by remember(existing?.id, model.personEditorRevision) { mutableStateOf(existing?.pseudonym ?: "") }
             PreparationHeading(if (existing == null) "Person hinzufügen" else "Person bearbeiten")
-            FormTextField(pseudonym, { model.interaction(); pseudonym = it },
+            FormTextField(pseudonym, { value -> model.acceptPersonDraft(value){pseudonym=it} },
                 label = { Text("Pseudonym") }, autoFocus=existing==null, keyboardOptions=productKeyboard(ProductTextKind.PERSON), modifier = Modifier.fillMaxWidth(), enabled = !model.personSaving)
             FormButton(onClick = { model.savePerson(pseudonym) }, enabled = !model.personSaving) { Text("Speichern") }
             if (model.personError == PersonRejection.STALE && existing != null) {

@@ -1,0 +1,18 @@
+INSTRUMENTATION_STATUS: stream=P108,preparation,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=965004, transition=16777216, localRetained=965004, localTransition=3682224, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P108,preparation,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P108,preparation,PLAN,opened=true,revision=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P108,preparation,FAILURE,java.lang.IllegalStateException: P108 timeout material supplement
+	at org.pag.prototype.P108FunctionalOwnerProbe.await(P108FunctionalOwnerProbe.kt:25)
+	at org.pag.prototype.P108FunctionalOwnerProbe.onStart(P108FunctionalOwnerProbe.kt:71)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P108 FAIL preparation
+INSTRUMENTATION_CODE: 0

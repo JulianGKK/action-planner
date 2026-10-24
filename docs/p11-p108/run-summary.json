@@ -1,0 +1,132 @@
+{
+  "final_build": "native-build-18.log",
+  "host": "host-17.log",
+  "final_host_tests": 160,
+  "host_failures": 0,
+  "final_device_cases": [
+    {
+      "log": "device-active-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-completed-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-exposed-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-large-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-preparation-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-stale-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    }
+  ],
+  "all_device_attempts": [
+    {
+      "log": "device-active-01.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-active-02.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-active-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-completed-01.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-completed-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-exposed-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-large-01.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-large-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-preparation-01.txt",
+      "assertions": "FAIL",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": false
+    },
+    {
+      "log": "device-preparation-02.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-preparation-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-stale-01.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-stale-02.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    },
+    {
+      "log": "device-stale-final.txt",
+      "assertions": "PASS",
+      "complete_product_flow": "BLOCKED",
+      "cleanup_reported": true
+    }
+  ],
+  "product_closure": "BLOCKED",
+  "synthetic_auth": true
+}

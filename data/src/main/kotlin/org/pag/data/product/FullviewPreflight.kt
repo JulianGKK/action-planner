@@ -11,17 +11,17 @@ import org.pag.domain.*
 internal class FullviewPreflight(private val sql:PooledConnection,private val c:StorageContext,
     private val current:()->Boolean) {
     private fun gate(){requireOperations(c);if(!current())throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)}
-    private suspend fun scalar(query:String,a:String):Long {
+    private suspend fun scalar(query:String,a:String,id:String?=null):Long {
         gate()
         return sql.usePrepared(query){s->
-            s.bindText(1,a);gate()
+            s.bindText(1,a);if(id!=null)s.bindText(2,id);gate()
             if(!s.step() || s.isNull(0) || s.getColumnType(0)!=1)throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
             val n=s.getLong(0)
             if(n<0 || s.step())throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
             gate();n
         }
     }
-    suspend fun prepare(a:String,names:Set<String>):ActiveCoreReservation {
+    suspend fun prepare(a:String,names:Set<String>,taskId:String?=null):ActiveCoreReservation {
         gate()
         sql.usePrepared("PRAGMA encoding"){s->
             if(!s.step() || s.getText(0)!="UTF-8" || s.step())throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
@@ -29,18 +29,19 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
         var rows=0L;var fields=0L;var bytes=0L
         for(t in tables.filter{it.name in names}) {
             gate()
-            val where=if(t.name=="actions")"id=?" else "actionId=?"
-            val n=scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where",a)
+            val id=if(t.name=="tasks")taskId else null
+            val where=if(t.name=="actions")"id=?" else if(id!=null)"actionId=? AND id=?" else "actionId=?"
+            val n=scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where",a,id)
             // Reject enormous counts BEFORE any SUM: each text SUM is then <= 2^39.
             if(n>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES/128)throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
-            if(t.revision && scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where AND (typeof(editRevision)!='integer' OR editRevision<0)",a)!=0L)
+            if(t.revision && scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where AND (typeof(editRevision)!='integer' OR editRevision<0)",a,id)!=0L)
                 throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
             rows=checked{Math.addExact(rows,n)}
             fields=checked{Math.addExact(fields,Math.multiplyExact(n,t.columns.toLong()))}
             for(f in t.text) {
-                val max=scalar("SELECT COALESCE(MAX(length(CAST($f AS BLOB))),0) FROM ${t.name} WHERE $where",a)
+                val max=scalar("SELECT COALESCE(MAX(length(CAST($f AS BLOB))),0) FROM ${t.name} WHERE $where",a,id)
                 if(max>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
-                val total=scalar("SELECT COALESCE(SUM(length(CAST($f AS BLOB))),0) FROM ${t.name} WHERE $where",a)
+                val total=scalar("SELECT COALESCE(SUM(length(CAST($f AS BLOB))),0) FROM ${t.name} WHERE $where",a,id)
                 bytes=checked{Math.addExact(bytes,total)}
             }
         }
@@ -53,6 +54,8 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
     private data class Table(val name:String,val text:List<String>,val columns:Int,val revision:Boolean)
     companion object {
         private val tables=listOf(
+            Table("leadership",listOf("actionId","state","epoch","algorithm","salt","envelope"),11,false),
+            Table("sensitive_person_areas",listOf("actionId","personId","area","keyEnvelope","payload"),7,false),
             Table("actions",listOf("id","title","description","status","sensitivity"),9,false),
             Table("persons",listOf("id","actionId","pseudonym","pseudonymNormalized"),6,true),
             Table("roles",listOf("id","actionId","name","normalizedName"),6,true),
@@ -85,6 +88,7 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
             if(WorkspacePart.MATERIAL_BOARD in parts)add("materials")
             if(WorkspacePart.EXPENSE_BOARD in parts)addAll(expense)
             if(WorkspacePart.MEMORY_HEADERS in parts)add("memory_reports")
+            if(WorkspacePart.LEADERSHIP_STATE in parts)addAll(setOf("leadership","sensitive_person_areas"))
             // Summary methods produce only fixed-size scalar results, included in fixed overhead.
         }
         private fun <T> checked(work:()->T):T=try{work()}catch(_:ArithmeticException){throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)}

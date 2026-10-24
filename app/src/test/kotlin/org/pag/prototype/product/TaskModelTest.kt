@@ -231,4 +231,15 @@ class TaskModelTest {
         model.save()
         assertEquals(0,repo.writes);assertNull(model.selected);assertFalse(model.form)
     }
+    @Test fun p108CopyGateRunsBeforeInputProducerAndPreservesDraftOnRefusal() {
+        var admitted=true;val costs=mutableListOf<ActiveWorkspaceBudget.Units>()
+        model.bindCopyGate { units,produce->costs.add(units);if(admitted){produce();null}else OperationsFailure.BUDGET_REFUSED }
+        model.refresh();model.open(repo.tasks.first());model.edit()
+        model.changeTitle("Synthetic Unicode \uD83D\uDE80 draft")
+        val held=model.input;assertTrue(held.title.endsWith("draft"))
+        assertEquals(held.title.length.toLong(),costs.last().utf16Units)
+        admitted=false;model.changeTitle("Must not replace original draft")
+        assertSame(held,model.input);assertEquals(OperationsFailure.BUDGET_REFUSED,model.error)
+        assertEquals(0,repo.writes)
+    }
 }

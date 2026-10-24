@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.WorkspaceBatchTest" tests="25" skipped="0" failures="0" errors="0" timestamp="2026-10-24T23:19:33.580Z" hostname="iuzjhtgvfc" time="0.147">
+  <properties/>
+  <testcase name="selectedMemoryListIsOneBatchWithoutTaskBoardOrSecondRead" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.032"/>
+  <testcase name="preparationMaterialAndCostsAreExplicitSingleBatchesWithoutProtocolPrefetch" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.008"/>
+  <testcase name="p108OriginalNavigationKeepsSameGraphAndOriginalReadTicket" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.006"/>
+  <testcase name="p108LateOriginalCallbackCannotRestoreAfterLock" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.004"/>
+  <testcase name="navigationAndAnotherActionFenceOldBatch" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="selectedMaterialAndExpenseEditorRefreshesDoNotReplaceDraftWithBatchPayload" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.005"/>
+  <testcase name="preparationStillWaitsForIndependentProtectionMetadata" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.008"/>
+  <testcase name="combinedInitialOpenCannotPublishOrAutoopenAfterGenerationChange" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
+  <testcase name="navigationKeySurvivesLoadCompletionAndContainsNoActionIdentifier" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.012"/>
+  <testcase name="staleInitialActionFallsBackWithoutAnotherInteractionOrOldPublication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.003"/>
+  <testcase name="staleOpeningStatusFallsBackToDraftWithoutAnotherWorkspaceRead" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="lockAndLateCompletionNeverRestoreContentAfterReauthentication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="wrongMemoryHeaderNeverPublishesPartialSnapshot" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.005"/>
+  <testcase name="areaPayloadsAreDiscardedOnRapidNavigationAndLockWithoutAutoopen" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.007"/>
+  <testcase name="memoryBatchLockAndLateResultsCannotAutoopenAfterReauthentication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="memoryEditorRefreshDoesNotReenterListOrFetchHeaders" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.006"/>
+  <testcase name="incorrectBindingsAndMissingRequiredPartFailWithoutPartialPublication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.01"/>
+  <testcase name="rapidNavigationDiscardsPendingBatchAndReturnRequestsFreshSnapshot" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.003"/>
+  <testcase name="refreshKeepsSameAuthorizedSnapshotUntilWholeBatchAndDropsOlderRequest" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.003"/>
+  <testcase name="explicitAreaPayloadsShareOneBatchWithoutIndependentReadsOrPrefetch" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.006"/>
+  <testcase name="p108RefusedCopyDoesNotRunProducerOrReplaceOriginalGraph" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="initialActionOpenUsesFreshBoundWorkspaceWithoutSeparateDetailRead" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="oneExplicitBatchReplacesLegacyReadsAndPublishesAtomically" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="malformedAreaBoardsCannotPublishPartialWorkspace" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.006"/>
+  <testcase name="p108InvalidOriginalScopeNeverFallsBackToNewFullBoardRead" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

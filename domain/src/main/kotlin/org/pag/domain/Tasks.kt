@@ -50,6 +50,10 @@ object TaskRules {
         TaskTemplate("ASSIGN_PRESS","Pressezuständigkeit klären"))
 }
 interface TaskRepository {
+    fun workspaceHistory(access:WorkspaceAccess,expected:Task,after:CompactEventCursor?,page:Long?,publish:(CompactTaskResult)->Unit) {
+        publish(CompactTaskResult.Rejected(BoundedActiveStatus.ACCESS_REVOKED))
+    }
+
     fun board(actionId:String,publish:(OperationsResult<TaskBoard>)->Unit)
     /** One <=32-event page replaces the previous page. Cursor is metadata, never authority. */
     fun history(expected:Task,after:CompactEventCursor?,publish:(CompactTaskResult)->Unit) {

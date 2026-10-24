@@ -13,6 +13,12 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     private val refreshWorkspace: (() -> Unit)? = null,
     private val feedback: (String) -> Unit = {},
     private val onEditFinished: (String?) -> Unit = {}) {
+    private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
+    internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
+    private fun copyData(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
+        val failure=if(copyGate==null){producer();null}else copyGate!!.invoke(units,producer)
+        if(failure!=null){error=failure;return false};return true
+    }
     private var ownBoard by mutableStateOf<OperationalBoard?>(null)
     val board: OperationalBoard? get() = if (suppliedBoard != null) suppliedBoard.invoke() else ownBoard
     internal var screen by mutableStateOf(OperationsScreen.OVERVIEW);private set
@@ -55,7 +61,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         interaction()
         val surface=createSurface?:return
         if(!busy && createSerial==serial && createGeneration==generation && session().generation==generation &&
-            createActionId==a && action()?.id==a && createAllowed(surface))createName=value
+            createActionId==a && action()?.id==a && createAllowed(surface))copyData(ActiveWorkspaceBudget.Units(strings=1,utf16Units=value.length.toLong(),references=1)){createName=value}
     }
     fun cancelRoleCreate(){
         val serial=createSerial;val generation=session().generation;val a=action()?.id
@@ -109,12 +115,15 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         interaction();if(!planning || busy)return
         val b=board?.takeIf{it.actionId==a}?:return
         val p=b.persons.singleOrNull{it.person.id==id && it.person.actionId==a}?:return
-        val frozen=ExpectedPersonRolePlan(a,id,p.plan)
         leaveSensitive()
         if(!planning || session().generation!=before.generation || action()?.id!=a || request!=token)return
-        dropCreate();planExpected=frozen;planRoles=b.roles;planGeneration=before.generation
-        personId=id;roleIds=frozen.plan.roleIds;primaryRoleId=frozen.plan.primaryRoleId
-        screen=OperationsScreen.PLAN;error=null
+        val n=p.plan.roleIds.size.toLong()
+        copyData(ActiveWorkspaceBudget.Units(objects=2,maps=1,mapCapacity=n,lists=1,listCapacity=n,references=n+8)){
+            val frozen=ExpectedPersonRolePlan(a,id,p.plan)
+            dropCreate();planExpected=frozen;planRoles=b.roles;planGeneration=before.generation
+            personId=id;roleIds=frozen.plan.roleIds;primaryRoleId=frozen.plan.primaryRoleId
+            screen=OperationsScreen.PLAN;error=null
+        }
     }
     /** Explicit confirmation button only: failed reads never replace expected or draft. */
     fun reloadPlan() {
@@ -232,7 +241,8 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         interaction()
         if(busy || before.state!=SessionState.READY || session().state!=SessionState.READY ||
             session().generation!=before.generation || action()?.id!=actionId || request!=token)return
-        finishForm();refresh()
+        val reload=error==OperationsFailure.STALE || board==null
+        finishForm();if(reload)refresh()
         if(session().state==SessionState.READY && session().generation==before.generation && action()?.id==actionId)
             onEditFinished(id)
     }
@@ -247,11 +257,11 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         return id
     }
     private fun finishForm(){dropCreate();dropRoleEditor();request++;screen=when {focusedPersonId!=null->OperationsScreen.PERSON;functionFocus!=null->OperationsScreen.FUNCTION_DETAIL;else->OperationsScreen.OVERVIEW};personId=focusedPersonId;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS;error=null}
-    fun toggleRole(id:String){interaction();if(!planning || busy)return;roleIds=if(id in roleIds)roleIds-id else roleIds+id;if(primaryRoleId !in roleIds)primaryRoleId=null}
+    fun toggleRole(id:String){interaction();if(!planning || busy)return;val n=roleIds.size.toLong()+1;copyData(ActiveWorkspaceBudget.Units(objects=1,maps=1,mapCapacity=n,strings=1,utf16Units=id.length.toLong(),references=n+4)){roleIds=if(id in roleIds)roleIds-id else roleIds+id;if(primaryRoleId !in roleIds)primaryRoleId=null}}
     fun primary(id:String?){interaction();if(planning && !busy && (id==null || id in roleIds))primaryRoleId=id}
     fun status(status:OperationalStatus){interaction();if(!live || busy)return;if(status!=liveStatus){if(createSurface==RoleCreateSurface.INLINE)dropCreate();livePlace="";if(!OperationalRules.roleAllowed(status) || status==OperationalStatus.RELEASED)liveRoleId=null};liveStatus=status}
     fun function(id:String?){interaction();if(live && !busy && liveStatus==OperationalStatus.ON_SITE)liveRoleId=id}
-    fun place(value:String){interaction();if(live && !busy)livePlace=value}
+    fun place(value:String){interaction();if(live && !busy)copyData(ActiveWorkspaceBudget.Units(strings=1,utf16Units=value.length.toLong(),references=1)){livePlace=value}}
     fun savePlan(){
         val a=action()?:return;val p=personId?:return;val old=planExpected?:return
         if(!planning || busy || screen!=OperationsScreen.PLAN || old.actionId!=a.id || old.personId!=p || session().generation!=planGeneration)return
@@ -306,7 +316,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         if(delete)deletingRole=role else {editingRole=role;roleName=role.name}
         error=null
     }
-    fun changeRoleName(value:String){interaction();if(!busy && roleEditorCurrent() && editingRole!=null)roleName=value}
+    fun changeRoleName(value:String){interaction();if(!busy && roleEditorCurrent() && editingRole!=null)copyData(ActiveWorkspaceBudget.Units(strings=1,utf16Units=value.length.toLong(),references=1)){roleName=value}}
     fun cancelRoleEditor(){interaction();if(!busy){dropRoleEditor();error=null}}
     fun saveRoleRename(){val old=editingRole?:return;if(roleEditorCurrent())renameRole(old,roleName)}
     fun confirmRoleDelete(){val old=deletingRole?:return;if(roleEditorCurrent())deleteRole(old)}

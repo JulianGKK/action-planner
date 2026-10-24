@@ -7,6 +7,12 @@ import org.pag.domain.*
 class ExpenseModel(private val repository: ExpenseRepository?, private val session: () -> SessionSnapshot,
     private val action: () -> Action?, private val interaction: () -> Unit, private val leaveSensitive: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit) {
+    private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
+    internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
+    private fun copyData(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
+        val failure=if(copyGate==null){producer();null}else copyGate!!.invoke(units,producer)
+        if(failure!=null){error=failure;return false};return true
+    }
     var board by mutableStateOf<ExpenseBoard?>(null); private set
     var loading by mutableStateOf(false); private set
     var selected by mutableStateOf<Expense?>(null); private set
@@ -85,17 +91,29 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
     fun create() = act { current ->
         if (!writable) return@act
         leaveSensitive()
-        if (current()) { readRequest++; loading = false; discard(); draft = ExpenseDraft(); error = null }
+        if (current()) { readRequest++; loading = false; discard(); copyData(ActiveWorkspaceBudget.Units(objects=1,references=4)){draft = ExpenseDraft(); error = null} }
     }
     fun edit(item: Expense) = act { current ->
         if (!writable || board?.expenses?.contains(item) != true) return@act
         leaveSensitive()
-        if (current()) { readRequest++; loading = false; selected = item; expected = item; draft = ExpenseDraft.from(item); confirmingDelete = false; error = null }
+        if (current()) { readRequest++; loading = false; selected = item; expected = item; copyData(ActiveWorkspaceBudget.Units(objects=1+item.payments.size.toLong(),strings=1+item.payments.size.toLong(),utf16Units=32L*(1+item.payments.size),lists=1,listCapacity=item.payments.size.toLong(),references=8+item.payments.size.toLong()*4)){draft = ExpenseDraft.from(item); confirmingDelete = false; error = null} }
     }
-    fun change(value: ExpenseDraft) = act {
+    internal fun change(value: ExpenseDraft) = act {
         if (draft == null) return@act
         if (writable) { draft = value; if (error == OperationsFailure.INVALID) error = null }
     }
+    private fun alter(text:String?=null,produce:(ExpenseDraft)->ExpenseDraft)=act {
+        val old=draft?:return@act
+        if(writable){val n=old.payments.size.toLong()+1
+            copyData(ActiveWorkspaceBudget.Units(objects=n+1,lists=1,listCapacity=n,references=n*4+8,
+                strings=if(text==null)0 else 1,utf16Units=text?.length?.toLong()?:0)){draft=produce(old)}}
+    }
+    fun title(value:String)=alter(value){it.copy(title=value)}
+    fun total(value:String)=alter(value){it.copy(total=value)}
+    fun payer(index:Int,value:String)=alter(value){d->d.copy(payments=d.payments.mapIndexed{n,p->if(n==index)p.copy(payerLabel=value) else p})}
+    fun amount(index:Int,value:String)=alter(value){d->d.copy(payments=d.payments.mapIndexed{n,p->if(n==index)p.copy(amount=value) else p})}
+    fun addPayment(label:String="")=alter(label){it.add(label)}
+    fun removePayment(index:Int)=alter{it.remove(index)}
     fun cancel() = act { val reload = error == OperationsFailure.STALE || board == null; discard(); error = null; if (reload) refresh() }
     fun requestDelete() = act { if (writable && expected != null && error != OperationsFailure.STALE) confirmingDelete = true }
     fun cancelDelete() = act { confirmingDelete = false }

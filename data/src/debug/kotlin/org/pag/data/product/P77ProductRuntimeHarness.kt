@@ -31,6 +31,8 @@ class P77ProductRuntimeHarness private constructor(
         val tickets = AtomicInteger()
         val reads = AtomicInteger()
         val workspaceMaterializations=AtomicInteger()
+        val materialSupplements=AtomicInteger()
+        val expenseSupplements=AtomicInteger()
         // Explicit TEST-only real scratch allocation, planned in the original receipt.
         var p107PaddingBytes=0
         var p107Padding:ByteArray?=null
@@ -70,6 +72,7 @@ class P77ProductRuntimeHarness private constructor(
     }
     fun p104NativeRevisions()=fixture.p104NativeRevisions()
     fun p104VerifyMigration()=fixture.p104VerifyMigration()
+    fun p108TaskScalars(action:String,id:String,title:String)=fixture.p108TaskScalars(runtime,action,id,title)
     fun p106StoreWithoutEntry()=fixture.p106StoreWithoutEntry(runtime)
     fun p106Replacement(activity:Activity,worker:Executor,main:Executor)=fixture.p106Replacement(activity,worker,main)
     fun p101SeededVersion()=fixture.p101SeededVersion
@@ -112,7 +115,7 @@ class P77ProductRuntimeHarness private constructor(
                 val observations=Observations(faults)
                 val mutations=UncachedWorkspaceMutations()
                 val runtime = ProductRuntime(activity, faults.worker.wrap(worker), faults.main.wrap(main), mutations,
-                    fixture.runtimeAuthority(reuseEnabled = reuseEnabled,observations,faults::wrap).copy(workspaceMaterializing={observations.workspaceMaterializations.incrementAndGet();if(observations.p107PaddingBytes>0)observations.p107Padding=ByteArray(observations.p107PaddingBytes)},workspaceReservation=activity.intent.getStringExtra("p107Budget")?.let{mode->{base->observations.p107Plan(base,mode)}},coreReadHooks=if(activity.intent.getBooleanExtra("p100Probe",false))p100.hooks else if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
+                    fixture.runtimeAuthority(reuseEnabled = reuseEnabled,observations,faults::wrap).copy(workspaceSupplementMaterializing={part->when(part){org.pag.domain.WorkspacePart.MATERIAL_BOARD->observations.materialSupplements.incrementAndGet();org.pag.domain.WorkspacePart.EXPENSE_BOARD->observations.expenseSupplements.incrementAndGet();else->error("SYNTHETIC_UNEXPECTED_SUPPLEMENT")}},workspaceMaterializing={observations.workspaceMaterializations.incrementAndGet();if(observations.p107PaddingBytes>0)observations.p107Padding=ByteArray(observations.p107PaddingBytes)},workspaceReservation=activity.intent.getStringExtra("p107Budget")?.let{mode->{base->observations.p107Plan(base,mode)}},coreReadHooks=if(activity.intent.getBooleanExtra("p100Probe",false))p100.hooks else if(profile=="default")cleanupFaults.hooks else memory.hooks), foreground)
                 if(activity.intent.getBooleanExtra("p101Probe",false)) {
                     // Align the existing document repository with this already-authorized synthetic
                     // runtime root. Normal product uses the same platform root for both already.

@@ -100,6 +100,45 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
         try{worker.execute(historyWork)} catch(_:RejectedExecutionException){finish();entry.workerRejected();denied(BoundedActiveStatus.STORAGE_FAILURE)}
         catch(_:Exception){mutations.revokeActiveRead(ticket)}
     }
+    /** Explicit extra page, same original budget/epoch; never full-board readmission. */
+    override fun workspaceHistory(access:WorkspaceAccess,expected:Task,after:CompactEventCursor?,page:Long?,publish:(CompactTaskResult)->Unit) {
+        val scope=access as? OriginalWorkspaceAccess ?: return
+        if(scope.source!==this.access || !historyPending.compareAndSet(false,true))return
+        val c=scope.original
+        var child:OutstandingCoreRead.FullviewEntry.FullviewSupplement?=null
+        if(!scope.publish(expected.actionId,scope.status,c.generation){child=scope.entry.supplement(WorkspacePart.TASKS)}){historyPending.set(false);return}
+        val transition=child ?: run {historyPending.set(false);scope.publish(expected.actionId,scope.status,c.generation){publish(CompactTaskResult.Rejected(BoundedActiveStatus.BUDGET_REFUSED))};return}
+        val state=CompactTaskState(P3bFreeActiveCoreBinding(expected.actionId,c.generation),scope.mutationEpoch)
+        fun current()=scope.liveOnWorker()
+        val task=transition.worker(Runnable {
+            try {
+                if(!current())throw StorageAccessRevoked()
+                if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
+                val result=DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()){(owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){d->d.withReadTransaction {
+                    val base=FullviewPreflight(this,c,::current).prepare(expected.actionId,FullviewPreflight.task,expected.id)
+                    val admit:suspend (ActiveCoreReservation)->Unit={part->
+                        val combined=try{ActiveCoreReservation(CoreReadAdmission.add(base.retained,part.retained),CoreReadAdmission.add(base.transition,part.transition))}
+                            catch(_:ArithmeticException){throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)}
+                        if(!current())throw StorageAccessRevoked()
+                        if(!transition.admit(combined))throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
+                        if(!current())throw StorageAccessRevoked()
+                        if(d.tasks().get(expected.actionId,expected.id)?.model()!=expected)throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)
+                    }
+                    val store=CompactTaskStore(this,c,::current)
+                    if(page==null)store.events(state,expected.id,after,fullTaskRead=true,admitScope=admit)
+                    else store.eventsAtPage(state,expected.id,page,fullTaskRead=true,admitScope=admit)
+                }}}}
+                val delivery=transition.main(Runnable{try{scope.publish(expected.actionId,scope.status,c.generation){publish(result)}}finally{historyPending.set(false)}})
+                try{main.execute(delivery)}catch(_:RejectedExecutionException){historyPending.set(false);transition.mainRejected()}
+            }catch(f:StorageAccessRevoked){if(f.suppressed.isNotEmpty())transition.unconfirmed();historyPending.set(false)}
+             catch(f:BoundedActiveRejected){
+                if(f.suppressed.isNotEmpty() || f.status==BoundedActiveStatus.INVALID_DATA){transition.unconfirmed();main.execute{if(c.check(AccessPoint.STEP))blocked()}}
+                val delivery=transition.main(Runnable{try{scope.publish(expected.actionId,scope.status,c.generation){publish(CompactTaskResult.Rejected(f.status))}}finally{historyPending.set(false)}})
+                try{main.execute(delivery)}catch(_:RejectedExecutionException){historyPending.set(false);transition.mainRejected()}
+             }catch(_:Exception){transition.unconfirmed();historyPending.set(false);main.execute{if(c.check(AccessPoint.STEP))blocked()}}
+        })
+        try{worker.execute(task)}catch(_:RejectedExecutionException){historyPending.set(false);transition.workerRejected()}
+    }
     override fun create(actionId:String,input:TaskInput,publish:(OperationsResult<Task>)->Unit)=write(actionId,publish){it.create(actionId,input)}
     override fun edit(actionId:String,expected:Task,input:TaskInput,publish:(OperationsResult<Task>)->Unit)=write(actionId,publish){it.edit(actionId,expected,input)}
     override fun transition(actionId:String,expected:Task,status:TaskStatus,publish:(OperationsResult<Task>)->Unit)=write(actionId,publish){it.transition(actionId,expected,status)}

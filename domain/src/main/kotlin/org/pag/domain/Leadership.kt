@@ -55,6 +55,9 @@ interface LeadershipRepository {
     fun actionState(actionId: String, publish: (SensitiveResult<SensitiveState>) -> Unit) {
         publish(SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE))
     }
+    fun workspaceInventory(actionId:String,personId:String,access:WorkspaceAccess,publish:(SensitiveResult<SensitiveInventory>)->Unit) {
+        publish(SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE))
+    }
     fun inventory(actionId: String, personId: String, publish: (SensitiveResult<SensitiveInventory>) -> Unit)
     /** Consumers take ownership of arrays and wipe them, including on refusal. */
     fun setup(actionId: String, passphrase: CharArray, confirmation: CharArray, publish: (SensitiveResult<Unit>) -> Unit)

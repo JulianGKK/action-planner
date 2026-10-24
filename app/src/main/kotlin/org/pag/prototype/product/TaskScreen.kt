@@ -80,25 +80,25 @@ internal fun taskFailureMessage(reason:OperationsFailure):String = when(reason) 
 }
 @Composable private fun TaskFormFields(model:TaskModel,people:OperationalBoard) {
     val i=model.input
-    FormTextField(i.title,{model.change(i.copy(title=it))},label={Text("Titel")},autoFocus=!model.editingExisting,keyboardOptions=productKeyboard(ProductTextKind.TASK_TITLE),singleLine=true,enabled=!model.busy,modifier=Modifier.fillMaxWidth(),supportingText={Text("Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · ${Character.codePointCount(i.title.trim(),0,i.title.trim().length)} / 120 Zeichen")})
+    FormTextField(i.title,{model.changeTitle(it)},label={Text("Titel")},autoFocus=!model.editingExisting,keyboardOptions=productKeyboard(ProductTextKind.TASK_TITLE),singleLine=true,enabled=!model.busy,modifier=Modifier.fillMaxWidth(),supportingText={Text("Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · ${Character.codePointCount(i.title.trim(),0,i.title.trim().length)} / 120 Zeichen")})
     Text("Priorität")
-    TaskPriority.entries.forEach{p->FormOutlinedButton({model.change(i.copy(priority=p))},enabled=!model.busy){Text((if(i.priority==p)"✓ " else "")+priorityLabel(p))}}
+    TaskPriority.entries.forEach{p->FormOutlinedButton({model.priority(p)},enabled=!model.busy){Text((if(i.priority==p)"✓ " else "")+priorityLabel(p))}}
     var assignments by remember{mutableStateOf(false)}
     FormTextButton({model.touch();assignments=!assignments}){Text("Zuständigkeit wählen (optional)")}
     if(assignments){
-        FormOutlinedButton({model.change(i.copy(assigneePersonId=null,assigneeRoleId=null))},enabled=!model.busy){Text(if(i.assigneePersonId==null && i.assigneeRoleId==null)"✓ Niemand" else "Niemand")}
-        people.roles.forEach{r->FormOutlinedButton({model.change(i.copy(assigneeRoleId=r.id,assigneePersonId=null))},enabled=!model.busy){Text((if(i.assigneeRoleId==r.id)"✓ " else "")+"Rolle: ${r.name}")}}
-        people.persons.forEach{p->FormOutlinedButton({model.change(i.copy(assigneePersonId=p.person.id,assigneeRoleId=null))},enabled=!model.busy){Text((if(i.assigneePersonId==p.person.id)"✓ " else "")+"Person: ${p.person.pseudonym}")}}
+        FormOutlinedButton({model.assigneePerson(null)},enabled=!model.busy){Text(if(i.assigneePersonId==null && i.assigneeRoleId==null)"✓ Niemand" else "Niemand")}
+        people.roles.forEach{r->FormOutlinedButton({model.assigneeRole(r.id)},enabled=!model.busy){Text((if(i.assigneeRoleId==r.id)"✓ " else "")+"Rolle: ${r.name}")}}
+        people.persons.forEach{p->FormOutlinedButton({model.assigneePerson(p.person.id)},enabled=!model.busy){Text((if(i.assigneePersonId==p.person.id)"✓ " else "")+"Person: ${p.person.pseudonym}")}}
     }
     val assignment=i.assigneeRoleId?.let{id->people.roles.find{it.id==id}?.name}?:i.assigneePersonId?.let{id->people.persons.find{it.person.id==id}?.person?.pseudonym}?:"Niemand"
     Text("Zuständig: $assignment")
     var affected by remember{mutableStateOf(false)}
     FormTextButton({model.touch();affected=!affected}){Text("Betroffene Person wählen (optional)")}
-    if(affected){FormOutlinedButton({model.change(i.copy(affectedPersonId=null))},enabled=!model.busy){Text("Keine betroffene Person")};people.persons.forEach{p->FormOutlinedButton({model.change(i.copy(affectedPersonId=p.person.id))},enabled=!model.busy){Text((if(i.affectedPersonId==p.person.id)"✓ " else "")+p.person.pseudonym)}}}
+    if(affected){FormOutlinedButton({model.affectedPerson(null)},enabled=!model.busy){Text("Keine betroffene Person")};people.persons.forEach{p->FormOutlinedButton({model.affectedPerson(p.person.id)},enabled=!model.busy){Text((if(i.affectedPersonId==p.person.id)"✓ " else "")+p.person.pseudonym)}}}
     Text("Betrifft: "+(people.persons.find{it.person.id==i.affectedPersonId}?.person?.pseudonym?:"Niemand"))
     var due by remember{mutableStateOf(i.dueAt?.let{Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))}.orEmpty())}
     val parsed=parseTaskDue(due)
-    FormTextField(due,{due=it;model.change(model.input.copy(dueAt=parseTaskDue(it)))},label={Text("Fällig (optional): TT.MM.JJJJ HH:MM")},keyboardOptions=productKeyboard(ProductTextKind.DATE),singleLine=true,enabled=!model.busy,supportingText={if(due.isNotBlank() && parsed==null)Text("Ungültiges Datum oder durch Zeitumstellung nicht eindeutige Uhrzeit. Bitte Datum oder Uhrzeit korrigieren.")})
+    FormTextField(due,{model.due(it){value->due=value}},label={Text("Fällig (optional): TT.MM.JJJJ HH:MM")},keyboardOptions=productKeyboard(ProductTextKind.DATE),singleLine=true,enabled=!model.busy,supportingText={if(due.isNotBlank() && parsed==null)Text("Ungültiges Datum oder durch Zeitumstellung nicht eindeutige Uhrzeit. Bitte Datum oder Uhrzeit korrigieren.")})
     if(model.error==OperationsFailure.STALE && model.editingExisting){
         Text("Beim Neuladen wird dein bisheriger Entwurf einschließlich Fälligkeit und Zuordnungen ersetzt.")
         FormOutlinedButton(model::reloadEditor,enabled=!model.busy){Text("Entwurf verwerfen und Aufgabe neu laden")}

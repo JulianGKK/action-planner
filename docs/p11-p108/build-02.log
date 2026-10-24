@@ -1,0 +1,111 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :verifyArchitecture
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeRFile UP-TO-DATE
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:kspDebugKotlin
+> Task :data:compileDebugKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/debug/kotlin/org/pag/data/product/P100ResourceDiagnostics.kt:224:45 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/debug/kotlin/org/pag/data/product/P88StatementDiagnostics.kt:91:82 Unnecessary non-null assertion (!!) on a non-null receiver of type 'SQLiteCursor'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/debug/kotlin/org/pag/data/product/P88StatementDiagnostics.kt:92:29 Unnecessary non-null assertion (!!) on a non-null receiver of type 'SQLiteCursor'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/debug/kotlin/org/pag/data/product/P88StatementDiagnostics.kt:92:45 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/debug/kotlin/org/pag/data/product/P88StatementDiagnostics.kt:101:58 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CursorWindow'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/debug/kotlin/org/pag/data/product/P88StatementDiagnostics.kt:154:61 Cast is redundant.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:277:111 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:277:170 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:287:73 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:302:531 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt:108:85 Unnecessary non-null assertion (!!) on a non-null receiver of type 'WorkspaceMutationInvalidation'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt:109:104 Unnecessary safe call on a non-null receiver of type 'WorkspaceMutationInvalidation'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/prototype/SqlCipherEngine.kt:114:18 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'File?'.
+
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarDebug
+
+> Task :app:compileP77runtimeKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/MainActivity.kt:66:15 'fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      with the appropriate {@link ActivityResultContract} and handling the result in the
+      {@link ActivityResultCallback#onActivityResult(Object) callback}.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:487:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:503:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:519:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:535:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:709:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:712:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:720:120 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/p77runtime/kotlin/org/pag/prototype/P86FullWorkspaceActivity.kt:76:15 'fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      with the appropriate {@link ActivityResultContract} and handling the result in the
+      {@link ActivityResultCallback#onActivityResult(Object) callback}.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/MainActivity.kt:66:15 'fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      with the appropriate {@link ActivityResultContract} and handling the result in the
+      {@link ActivityResultCallback#onActivityResult(Object) callback}.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PreparationWorkspace.kt:148:42 Condition is always 'true'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:487:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:503:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:519:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:535:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:709:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:712:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:720:120 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/p77runtime/kotlin/org/pag/prototype/P86FullWorkspaceActivity.kt:76:15 'fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      with the appropriate {@link ActivityResultContract} and handling the result in the
+      {@link ActivityResultCallback#onActivityResult(Object) callback}.
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 57s
+27 actionable tasks: 5 executed, 22 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html

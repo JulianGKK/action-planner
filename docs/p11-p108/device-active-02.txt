@@ -1,0 +1,23 @@
+INSTRUMENTATION_STATUS: stream=P108,active,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=1215964, transition=16777216, localRetained=1215964, localTransition=4686064, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P108,active,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P108,active,HISTORY,two_pages=32+32,old_TEST_page_held=true,distinct=true,full_graphs=1,record=State(phase=RETAINED, retained=3097668, transition=16777216, localRetained=3097668, localTransition=11654928, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P108,active,STORAGE,title_match=1,revision=1,events=4960,edit_has_no_new_TaskEvent=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P108,active,AFTER_COMMIT,old_scope_revoked=true,workspace_available=false,refusal=OWNER_UNCONFIRMED,task_error=null,global_reload=BLOCKED,no_retirement_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P108,active,NEGATIVE,held_TEST_snapshot=true,second_full_graph=REFUSED,lock_and_new_generation=REFUSED,record=State(phase=RETAINED, retained=3098303, transition=16777216, localRetained=3098303, localTransition=11655563, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P108,active,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false,closure=BLOCKED
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P108 PASS active
+INSTRUMENTATION_CODE: -1

@@ -29,21 +29,21 @@ import org.pag.domain.*
     val input = model.input
     if (input != null) {
         PreparationHeading(if (model.expected == null) "Material hinzufügen" else "Material bearbeiten")
-        FormTextField(input.name, { model.change(input.copy(name = it)) }, label = { Text("Bezeichnung") },
+        FormTextField(input.name, { model.name(it) }, label = { Text("Bezeichnung") },
             supportingText = { Text("1–120 Zeichen") }, autoFocus = model.expected == null,
             keyboardOptions = productKeyboard(ProductTextKind.ACTION_TITLE), enabled = !model.busy, modifier = Modifier.fillMaxWidth())
-        FormTextField(input.quantityLabel.orEmpty(), { model.change(input.copy(quantityLabel = it)) },
+        FormTextField(input.quantityLabel.orEmpty(), { model.quantity(it) },
             label = { Text("Menge / Anzahl · optional") }, supportingText = { Text("Maximal 40 Zeichen · z. B. 2 Rollen") },
             enabled = !model.busy, modifier = Modifier.fillMaxWidth())
-        FormTextField(input.placeLabel.orEmpty(), { model.change(input.copy(placeLabel = it)) },
+        FormTextField(input.placeLabel.orEmpty(), { model.place(it) },
             label = { Text("Ort · optional") }, supportingText = { Text("Maximal 80 Zeichen") },
             keyboardOptions = productKeyboard(ProductTextKind.PLACE), enabled = !model.busy, modifier = Modifier.fillMaxWidth())
         PreparationHeading("Verantwortliche Person · optional")
-        MaterialChoice("Keine verantwortliche Person", input.responsiblePersonId == null, !model.busy) { model.change(input.copy(responsiblePersonId = null)) }
-        persons.forEach { person -> MaterialChoice(person.pseudonym, input.responsiblePersonId == person.id, !model.busy) { model.change(input.copy(responsiblePersonId = person.id)) } }
+        MaterialChoice("Keine verantwortliche Person", input.responsiblePersonId == null, !model.busy) { model.responsible(null) }
+        persons.forEach { person -> MaterialChoice(person.pseudonym, input.responsiblePersonId == person.id, !model.busy) { model.responsible(person.id) } }
         PreparationHeading("Verknüpfte Aufgabe · optional")
-        MaterialChoice("Keine verknüpfte Aufgabe", input.linkedTaskId == null, !model.busy) { model.change(input.copy(linkedTaskId = null)) }
-        tasks.forEach { task -> MaterialChoice("${task.title} · ${taskStatusLabel(task.status)}", input.linkedTaskId == task.id, !model.busy) { model.change(input.copy(linkedTaskId = task.id)) } }
+        MaterialChoice("Keine verknüpfte Aufgabe", input.linkedTaskId == null, !model.busy) { model.linkedTask(null) }
+        tasks.forEach { task -> MaterialChoice("${task.title} · ${taskStatusLabel(task.status)}", input.linkedTaskId == task.id, !model.busy) { model.linkedTask(task.id) } }
         FormButton(model::save, enabled = !model.busy && model.error != OperationsFailure.STALE) { Text(if (model.busy) "Wird gespeichert …" else "Speichern") }
         FormOutlinedButton(model::cancel, enabled = !model.busy) { Text("Abbrechen") }
         if (model.expected != null) FormOutlinedButton(model::requestDelete, enabled = !model.busy && model.error != OperationsFailure.STALE) { Text("Material entfernen") }

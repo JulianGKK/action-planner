@@ -1,0 +1,67 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:processResources NO-SOURCE
+> Task :verifyArchitecture
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeRFile UP-TO-DATE
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :domain:compileKotlin
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar
+> Task :data:kspDebugKotlin
+
+> Task :data:compileDebugKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:280:111 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:280:170 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:290:73 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:305:531 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt:108:85 Unnecessary non-null assertion (!!) on a non-null receiver of type 'WorkspaceMutationInvalidation'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt:109:104 Unnecessary safe call on a non-null receiver of type 'WorkspaceMutationInvalidation'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:280:111 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:280:170 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:290:73 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:305:531 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt:108:85 Unnecessary non-null assertion (!!) on a non-null receiver of type 'WorkspaceMutationInvalidation'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt:109:104 Unnecessary safe call on a non-null receiver of type 'WorkspaceMutationInvalidation'.
+
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarDebug
+
+> Task :app:compileP77runtimeKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:504:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:520:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:536:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:552:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:726:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:729:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:737:120 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 20s
+27 actionable tasks: 7 executed, 20 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html

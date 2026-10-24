@@ -9,6 +9,15 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     private val suppliedBoard: (() -> TaskBoard?)? = null,
     private val refreshWorkspace: (() -> Unit)? = null,
     private val feedback: (String) -> Unit = {}) {
+    private var workspaceScope:(()->WorkspaceAccess?)?=null
+    internal fun bindWorkspaceScope(scope:()->WorkspaceAccess?){check(workspaceScope==null);workspaceScope=scope}
+    private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
+    internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
+    private fun copyData(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
+        val failure=if(copyGate==null){producer();null}else copyGate!!.invoke(units,producer)
+        if(failure!=null){error=failure;return false};return true
+    }
+    private val inputCost get()=ActiveWorkspaceBudget.Units(objects=1,references=12)
     private var ownBoard by mutableStateOf<TaskBoard?>(null)
     val board: TaskBoard? get() = if (suppliedBoard != null) suppliedBoard.invoke() else ownBoard
     var history by mutableStateOf<CompactTaskEvents?>(null);private set
@@ -49,7 +58,9 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
                     }
                 }
             }
-            if(targetPage==null)repository.history(task,after,publish) else repository.historyPage(task,targetPage,publish)
+            val scope=workspaceScope?.invoke()
+            if(scope!=null)repository.workspaceHistory(scope,task,after,targetPage,publish)
+            else if(targetPage==null)repository.history(task,after,publish) else repository.historyPage(task,targetPage,publish)
         }
     }
     var selected by mutableStateOf<Task?>(null);private set
@@ -99,13 +110,24 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
         if(current())publish(a.id,current)
     }
     fun add(personId:String?=null,template:TaskTemplate?=null)=guardedInteraction { _,current ->
-        if(writable && !busy){leaveSensitive();if(current()){clearHistory();bindEditor(null);createdSelectionId=null;selected=null;input=(template?.input()?:TaskInput("")).copy(affectedPersonId=personId);form=true;error=null}}
+        if(writable && !busy){leaveSensitive();if(current()){clearHistory();bindEditor(null);createdSelectionId=null;selected=null;copyData(ActiveWorkspaceBudget.Units(objects=2,references=24)){input=(template?.input()?:TaskInput("")).copy(affectedPersonId=personId);form=true;error=null}}}
     }
     fun open(t:Task)=guardedInteraction { id,current ->
         if(!busy && t.actionId==id){leaveSensitive();if(current()){clearHistory();dropEditor();createdSelectionId=null;selected=t;form=false;error=null}}
     }
-    fun edit()=guardedInteraction { _,_ -> if(writable && !busy){selected?.let{clearHistory();bindEditor(it);input=it.input();form=true;error=null}} }
-    fun change(i:TaskInput)=guardedInteraction { _,_ -> if(writable && !busy)input=i }
+    fun edit()=guardedInteraction { _,_ -> if(writable && !busy){selected?.let{clearHistory();bindEditor(it);copyData(inputCost){input=it.input();form=true;error=null}}} }
+    // Legacy/test input adapter. Product callbacks below create the DTO only INSIDE the gate.
+    internal fun change(i:TaskInput)=guardedInteraction { _,_ -> if(writable && !busy)copyData(inputCost){input=i} }
+    fun changeTitle(value:String)=guardedInteraction { _,_ ->if(writable && !busy)copyData(
+        ActiveWorkspaceBudget.Units(objects=1,references=12,strings=1,utf16Units=value.length.toLong())){input=input.copy(title=value)} }
+    private fun alterInput(produce:()->TaskInput)=guardedInteraction { _,_ ->if(writable && !busy)copyData(inputCost){input=produce()} }
+    fun priority(value:TaskPriority)=alterInput{input.copy(priority=value)}
+    fun assigneePerson(id:String?)=alterInput{input.copy(assigneePersonId=id,assigneeRoleId=null)}
+    fun assigneeRole(id:String?)=alterInput{input.copy(assigneeRoleId=id,assigneePersonId=null)}
+    fun affectedPerson(id:String?)=alterInput{input.copy(affectedPersonId=id)}
+    fun due(value:String,assign:(String)->Unit)=guardedInteraction { _,_ ->if(writable && !busy)copyData(
+        ActiveWorkspaceBudget.Units(objects=2,references=12,strings=1,utf16Units=value.length.toLong())){input=input.copy(dueAt=parseTaskDue(value));assign(value)} }
+
     fun showPerson(id:String?)=guardedInteraction { _,_ -> if(!busy){clearHistory();dropEditor();createdSelectionId=null;filter=id;closedExpanded=false;selected=null;form=false;input=TaskInput("")} }
     fun cancel() = guardedInteraction { _, _ ->
         if (!busy) {

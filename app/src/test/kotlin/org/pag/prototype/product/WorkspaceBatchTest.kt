@@ -257,4 +257,43 @@ class WorkspaceBatchTest {
         assertEquals(0,areaMaterial.boardReads);assertEquals(0,areaExpenses.boardReads)
     }
 
+    /** Fake capability tests VM routing only; real record tested in P108WorkspaceAccessTest. */
+    private class BoundAccess:WorkspaceAccess {
+        var live=true;var budget=true;var reservations=0
+        override fun publish(actionId:String,status:ActionStatus,generation:Long,work:()->Unit):Boolean {
+            if(!live || actionId!="a" || generation!=1L)return false
+            work();return live
+        }
+        override fun reserve(units:ActiveWorkspaceBudget.Units):Boolean {reservations++;return live && budget}
+    }
+    @Test fun p108OriginalNavigationKeepsSameGraphAndOriginalReadTicket() {
+        val scope=BoundAccess();model.detail("a");complete(change={it.copy(access=scope)})
+        val held=model.workspace!!;val original=pending.single().first.ticket!!
+        for(area in listOf(ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS,ActiveArea.HUB)) {
+            model.activeArea(area);assertSame(held,model.workspace);assertTrue(original.active)
+        }
+        assertEquals(1,pending.size);assertTrue(ops.loads.isEmpty());assertTrue(tasks.loads.isEmpty())
+        assertEquals(4,scope.reservations)
+    }
+    @Test fun p108RefusedCopyDoesNotRunProducerOrReplaceOriginalGraph() {
+        val scope=BoundAccess();model.detail("a");complete(change={it.copy(access=scope)})
+        val held=model.workspace;scope.budget=false
+        model.activeArea(ActiveArea.PERSONS)
+        assertSame(held,model.workspace);assertEquals(ActiveArea.HUB,model.activeArea)
+        assertEquals(WorkspaceFailure.BUDGET_REFUSED,model.workspaceRefusal);assertEquals(1,pending.size)
+    }
+    @Test fun p108InvalidOriginalScopeNeverFallsBackToNewFullBoardRead() {
+        val scope=BoundAccess();model.detail("a");complete(change={it.copy(access=scope)})
+        scope.live=false;model.activeArea(ActiveArea.TASKS)
+        assertNull(model.workspace);assertEquals(1,pending.size)
+        assertEquals(WorkspaceFailure.OWNER_UNCONFIRMED,model.workspaceRefusal)
+        assertTrue(ops.loads.isEmpty());assertTrue(tasks.loads.isEmpty())
+    }
+    @Test fun p108LateOriginalCallbackCannotRestoreAfterLock() {
+        val scope=BoundAccess();model.detail("a");complete(change={it.copy(access=scope)})
+        session.lock();complete(change={it.copy(access=scope)})
+        assertNull(model.workspace);assertNull(model.selected)
+        session.emit(SessionState.READY,3);complete(change={it.copy(access=scope)})
+        assertNull(model.workspace);assertNull(model.selected)
+    }
 }

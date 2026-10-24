@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P108,large,LARGE,fixture=200_persons_1000_tasks_5000_events_32_roles,full_graphs=0,budget_refused_before_DTO=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P108,large,CASE,ANDROID_PASS,fixture_cleanup=true,closure=BLOCKED
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P108 PASS large
+INSTRUMENTATION_CODE: -1

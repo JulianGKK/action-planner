@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room3.withReadTransaction
 import androidx.room3.useWriterConnection
 import org.pag.domain.*
+import org.pag.data.prototype.b2.StorageAccessRevoked
 import org.pag.security.*
 import java.util.UUID
 import java.util.concurrent.Executor
@@ -177,6 +178,13 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
             }
         }
     }
+    /** Same classifier/device API, same caller transaction. Preflight belongs to WorkspaceStore;
+     * only the state enum escapes, never ciphertext/root/area keys or person inventory lists. */
+    internal suspend fun workspaceState(db:ActionDatabase,c:StorageContext,actionId:String):SensitiveResult<SensitiveState> =
+        try{SensitiveResult.Value(sensitiveSnapshot(db,c,actionId).state)}
+        catch(e:SensitiveProblem){SensitiveResult.Rejected(e.reason)}
+        catch(e:StorageAccessRevoked){throw e}
+        catch(_:Exception){SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE)}
     override fun actionState(actionId:String,publish:(SensitiveResult<SensitiveState>)->Unit) {
         val ticket=request.get()
         // Recheck the request inside the existing generation-gated publication too.
@@ -184,6 +192,49 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
             val c=bounded(base){request.get()==ticket}
             db(c){d->d.withReadTransaction{parent(d,c,actionId);sensitiveSnapshot(d,c,actionId).state}}
         }
+    }
+    /** Inventory under the SAME original graph; old/new temporary ciphertext rows are booked
+     * BEFORE DAO materialization. No ciphertext/key/plaintext is put in the WorkspaceSnapshot. */
+    override fun workspaceInventory(actionId:String,personId:String,access:WorkspaceAccess,publish:(SensitiveResult<SensitiveInventory>)->Unit) {
+        val scope=access as? OriginalWorkspaceAccess ?: return
+        if(scope.source!==this.access)return
+        var child:OutstandingCoreRead.FullviewEntry.FullviewSupplement?=null
+        val c=scope.original
+        if(!scope.publish(actionId,scope.status,c.generation){child=scope.entry.supplement(WorkspacePart.LEADERSHIP_STATE)})return
+        val transition=child ?: run{scope.publish(actionId,scope.status,c.generation){publish(SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE))};return}
+        val serial=request.get()
+        fun current()=scope.liveOnWorker() && request.get()==serial
+        val task=transition.worker(Runnable {
+            try {
+                val result=DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()){db(c){d->d.withReadTransaction {
+                    val planned=FullviewPreflight(this,c,::current).prepare(actionId,setOf("actions","persons","leadership","sensitive_person_areas"))
+                    if(!current())throw StorageAccessRevoked()
+                    if(!transition.admit(planned))return@withReadTransaction SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE)
+                    if(!current())throw StorageAccessRevoked()
+                    val bound=bounded(c,::current)
+                    parent(d,bound,actionId,personId)
+                    val snapshot=sensitiveSnapshot(d,bound,actionId)
+                    SensitiveResult.Value(SensitiveInventory(snapshot.state,if(snapshot.state==SensitiveState.READY)
+                        snapshot.rows.filter{it.personId==personId}.map{SensitiveArea.valueOf(it.area)}.toSet() else emptySet()))
+                }}}
+                val delivery=transition.main(Runnable{scope.publish(actionId,scope.status,c.generation){if(current())publish(result)}})
+                try{main.execute(delivery)}catch(_:java.util.concurrent.RejectedExecutionException){transition.mainRejected()}
+            }catch(f:StorageAccessRevoked){if(f.suppressed.isNotEmpty())transition.unconfirmed()}
+             catch(f:BoundedActiveRejected){
+                if(f.suppressed.isNotEmpty()){transition.unconfirmed();main.execute{if(c.check(AccessPoint.STEP))blocked()}}
+                else if(f.status==BoundedActiveStatus.BUDGET_REFUSED){
+                    val delivery=transition.main(Runnable{scope.publish(actionId,scope.status,c.generation){if(current())publish(SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE))}})
+                    try{main.execute(delivery)}catch(_:java.util.concurrent.RejectedExecutionException){transition.mainRejected()}
+                }else if(f.status!=BoundedActiveStatus.ACCESS_REVOKED){transition.unconfirmed();main.execute{if(c.check(AccessPoint.STEP))blocked()}}
+             }
+             catch(f:SensitiveProblem){
+                if(f.suppressed.isNotEmpty()){transition.unconfirmed();main.execute{if(c.check(AccessPoint.STEP))blocked()};return@Runnable}
+                val delivery=transition.main(Runnable{scope.publish(actionId,scope.status,c.generation){if(current())publish(SensitiveResult.Rejected(f.reason))}})
+                try{main.execute(delivery)}catch(_:java.util.concurrent.RejectedExecutionException){transition.mainRejected()}
+             }
+             catch(_:Exception){transition.unconfirmed();main.execute{if(c.check(AccessPoint.STEP))blocked()}}
+        })
+        try{worker.execute(task)}catch(_:java.util.concurrent.RejectedExecutionException){transition.workerRejected()}
     }
     override fun inventory(actionId:String,personId:String,publish:(SensitiveResult<SensitiveInventory>)->Unit)=run(publish){c->
         val snapshot=db(c){d->d.withReadTransaction{parent(d,c,actionId,personId);sensitiveSnapshot(d,c,actionId)}}
