@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P102,lock_after,PARTIAL,reserved_durable=true,alias_present=true,injected_posteffect_fault=true,no_success=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,lock_after,LOCK,confirmed_commit_before_lock=true,late_duplicate_no_success=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,lock_after,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P102 PASS lock_after
+INSTRUMENTATION_CODE: -1

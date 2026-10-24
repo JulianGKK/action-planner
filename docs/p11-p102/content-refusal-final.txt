@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P102,content_refusal,PARTIAL,reserved_durable=true,alias_present=true,injected_posteffect_fault=true,no_success=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,content_refusal,REFUSAL,actual_root_and_alias_unchanged=true,keydelete_calls=0,synthetic_ambiguous_or_content_fixture=true,checked_after_preparation=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,content_refusal,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P102 PASS content_refusal
+INSTRUMENTATION_CODE: -1

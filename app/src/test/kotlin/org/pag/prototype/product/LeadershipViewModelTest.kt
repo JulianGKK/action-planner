@@ -13,7 +13,9 @@ class LeadershipViewModelTest {
         override fun observe(observer: (SessionSnapshot) -> Unit): Subscription {
             observers.add(observer); observer(current); return Subscription { observers.remove(observer) }
         }
-        override fun authenticate(experiment: Experiment) {}
+        var authentications=0
+        override fun authenticate(experiment: Experiment) {authentications++}
+        fun ready(generation:Long=3) {current=SessionSnapshot(SessionState.READY,generation);observers.toList().forEach{it(current)}}
         override fun remainingAbsoluteMillis() = 20_000L.takeIf { current.state == SessionState.READY }
         override fun testAccess() {}
         override fun userInteraction() {}
@@ -45,6 +47,18 @@ class LeadershipViewModelTest {
     }
     private class Sensitive : LeadershipRepository {
         var state=SensitiveState.UNINITIALIZED; var writes=0; var revokes=0
+        var prepares=0;var recoveries=0;var cancellations=0
+        var recovered:((SensitiveResult<Unit>)->Unit)?=null
+        override fun prepareRecovery(actionId:String,publish:(SensitiveResult<LeadershipRecoveryRequest>)->Unit) {
+            prepares++
+            if(state !in setOf(SensitiveState.INCOMPLETE_SETUP,SensitiveState.DELETE_PENDING)) {publish(SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE));return}
+            val kind=state
+            publish(SensitiveResult.Value(object:LeadershipRecoveryRequest {
+                override val actionId=actionId;override val state=kind
+                override fun cancel(){cancellations++}
+            }))
+        }
+        override fun recover(request:LeadershipRecoveryRequest,publish:(SensitiveResult<Unit>)->Unit){recoveries++;recovered=publish}
         var deferInventory=false
         var inventoryResult:((SensitiveResult<SensitiveInventory>)->Unit)?=null
         var deferred:((SensitiveResult<SensitiveOpened>)->Unit)?=null
@@ -62,8 +76,12 @@ class LeadershipViewModelTest {
         override fun revoke(){revokes++}
     }
     private val session=Session();private val actions=Actions();private val people=People();private val sensitive=Sensitive()
-    private val model=ProductViewModel(session,actions,ProductStorageState.READY_TO_OPEN,people,sensitive){}
+    private val model=ProductViewModel(session,actions,ProductStorageState.READY_TO_OPEN,people,sensitive){session.authenticate(if(it)Experiment.STORAGE_INITIALIZE else Experiment.STORAGE_UNWRAP)}
     private fun open(){model.detail(actions.row.id);model.personDetail(people.row.id)}
+    private var lastRecovery:LeadershipRecoveryRequest?=null // explicitly retained TEST metadata alias
+    private fun requestRecovery(){model.requestLeadershipRecovery(actions.row.id,model.snapshot.generation);lastRecovery=model.leadershipRecovery}
+    private fun authenticateRecovery(){model.authenticateLeadershipRecovery(checkNotNull(lastRecovery),model.snapshot.generation)}
+    private fun confirmRecovery(){model.confirmLeadershipRecovery(checkNotNull(lastRecovery),model.snapshot.generation)}
     private fun release(){sensitive.state=SensitiveState.READY;open();model.requestSensitive(SensitiveArea.IDENTITY);model.openSensitive("synthetic secret fixture".toCharArray());sensitive.deferred!!(SensitiveResult.Value(SensitiveOpened(sensitive.grant,SensitiveData.Identity("synthetic"))))}
     @Test fun personDetailRevealsOnlyWithItsInventoryMetadata() {
         model.detail(actions.row.id); sensitive.deferInventory=true;model.personDetail(people.row.id)
@@ -101,4 +119,58 @@ class LeadershipViewModelTest {
     }
     @Test fun expiredReleaseClearsWithoutAutomaticReauth(){release();sensitive.grant.cancel();model.checkSensitiveExpiry();assertNull(model.sensitiveOpened);assertEquals(SensitiveFailure.DENIED,model.sensitiveError);assertEquals(SessionState.READY,model.snapshot.state)}
     @Test fun activeAndCompletedDoNotWrite(){for(status in listOf(ActionStatus.ACTIVE,ActionStatus.COMPLETED)){actions.row=actions.row.copy(status=status);release();model.saveSensitive(SensitiveData.Identity("synthetic changed"));assertEquals(0,sensitive.writes);assertFalse(model.personsEditable)}}
+
+    @Test fun recoveryRequiresUserIntentFreshAuthenticationAndSecondConfirmation() {
+        sensitive.state=SensitiveState.INCOMPLETE_SETUP;open()
+        assertEquals(0,sensitive.prepares);assertEquals(0,sensitive.recoveries)
+        requestRecovery();assertEquals(LeadershipRecoveryPhase.CONFIRM_REAUTH,model.leadershipRecoveryPhase)
+        confirmRecovery();assertEquals(0,sensitive.recoveries)
+        authenticateRecovery();assertEquals(1,session.authentications)
+        assertEquals(LeadershipRecoveryPhase.AUTHENTICATING,model.leadershipRecoveryPhase);assertNull(model.selected)
+        session.ready();assertEquals(LeadershipRecoveryPhase.CONFIRM_RESET,model.leadershipRecoveryPhase)
+        assertEquals(0,sensitive.recoveries);assertNull(model.feedback)
+        confirmRecovery();assertEquals(1,sensitive.recoveries);assertNull(model.feedback)
+        val callback=sensitive.recovered!!;callback(SensitiveResult.Value(Unit))
+        assertEquals("Unvollständige Einrichtung zurückgesetzt",model.feedback?.text)
+        val id=model.feedback!!.id;callback(SensitiveResult.Value(Unit));assertEquals(id,model.feedback!!.id)
+    }
+    @Test fun cancelledReauthAndUnchangedGenerationCannotExecuteRecovery() {
+        sensitive.state=SensitiveState.INCOMPLETE_SETUP;open();requestRecovery()
+        authenticateRecovery();session.lock();session.ready();confirmRecovery()
+        assertEquals(0,sensitive.recoveries);assertNull(model.leadershipRecovery)
+        open();requestRecovery();authenticateRecovery();session.ready(3)
+        assertNull(model.leadershipRecovery);assertEquals(0,sensitive.recoveries)
+    }
+    @Test fun navigationLockAndLateRecoveryCallbackNeverPublishSuccess() {
+        sensitive.state=SensitiveState.INCOMPLETE_SETUP;open();requestRecovery()
+        authenticateRecovery();session.ready();confirmRecovery()
+        val callback=sensitive.recovered!!;model.lock();callback(SensitiveResult.Value(Unit))
+        assertNull(model.feedback);assertNull(model.leadershipRecovery)
+        session.ready(5);open();requestRecovery();model.back();assertNull(model.leadershipRecovery)
+        assertTrue(sensitive.cancellations>0)
+    }
+    @Test fun deletePendingHasExplicitSameReauthFlowAndRejectionIsNotSaved() {
+        sensitive.state=SensitiveState.DELETE_PENDING;open();requestRecovery()
+        assertEquals(SensitiveState.DELETE_PENDING,model.leadershipRecovery!!.state)
+        authenticateRecovery();session.ready();confirmRecovery()
+        sensitive.recovered!!(SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE))
+        assertTrue(model.leadershipRecoveryError);assertNull(model.feedback);assertNull(model.leadershipRecovery)
+    }
+
+    @Test fun oldButtonIdentityCannotAuthenticateConfirmOrCancelNewIntent() {
+        sensitive.state=SensitiveState.INCOMPLETE_SETUP;open();requestRecovery()
+        val a=checkNotNull(lastRecovery);val oldGeneration=model.snapshot.generation
+        model.cancelLeadershipRecovery();requestRecovery();val b=checkNotNull(lastRecovery)
+        assertNotSame(a,b)
+        model.authenticateLeadershipRecovery(a,oldGeneration)
+        model.cancelLeadershipRecovery(a)
+        assertSame(b,model.leadershipRecovery);assertEquals(0,session.authentications)
+        authenticateRecovery();session.ready()
+        model.confirmLeadershipRecovery(a,model.snapshot.generation)
+        model.confirmLeadershipRecovery(b,oldGeneration)
+        model.cancelLeadershipRecovery(a)
+        assertSame(b,model.leadershipRecovery);assertEquals(0,sensitive.recoveries)
+        confirmRecovery();assertEquals(1,sensitive.recoveries)
+        sensitive.recovered!!(SensitiveResult.Value(Unit))
+    }
 }

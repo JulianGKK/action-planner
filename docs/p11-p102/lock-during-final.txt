@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P102,lock_during,PARTIAL,reserved_durable=true,alias_present=true,injected_posteffect_fault=true,no_success=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,lock_during,RETRY,original_reserved_survived_actual_keydelete=true,new_explicit_intent_and_reauth=true,no_second_keydelete=true,old_intent_denied=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,lock_during,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P102 PASS lock_during
+INSTRUMENTATION_CODE: -1

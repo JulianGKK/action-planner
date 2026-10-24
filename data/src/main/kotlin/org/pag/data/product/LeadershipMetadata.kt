@@ -16,7 +16,9 @@ internal object LeadershipMetadata {
     }
     fun classification(row:LeadershipRow?,rows:List<SensitiveRow>,present:Boolean,usable:Boolean):SensitiveState {
         if(row==null)return if(rows.isEmpty()&&!present)SensitiveState.UNINITIALIZED else SensitiveState.PARTIAL_OR_INVALID
-        return try{validate(row);if(!present||!usable)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE);rows.forEach{validateArea(it,row.actionId)};SensitiveState.READY}
+        return try{
+            runCatching { LeadershipRecoveryChecks.state(row,rows,present,usable) }.getOrNull()?.let{return it}
+            validate(row);if(!present||!usable)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE);rows.forEach{validateArea(it,row.actionId)};SensitiveState.READY}
         catch(_:Exception){SensitiveState.PARTIAL_OR_INVALID}
     }
 }

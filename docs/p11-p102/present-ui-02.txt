@@ -1,0 +1,21 @@
+INSTRUMENTATION_STATUS: stream=P102,present_ui,PARTIAL,reserved_durable=true,alias_present=true,injected_posteffect_fault=true,no_success=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,present_ui,FAILURE,org.pag.data.prototype.b2.StorageAccessRevoked: B2-SESSION
+	at org.pag.data.prototype.b2.B2ContractKt.requireB2(B2Contract.kt:20)
+	at org.pag.data.product.ActionDatabaseAccess.use(ActionDatabase.kt:106)
+	at org.pag.data.product.ActionDatabaseAccess.use$default(ActionDatabase.kt:82)
+	at org.pag.data.product.P101WriterDiagnostics.read$lambda$0(P101WriterDiagnostics.kt:96)
+	at org.pag.data.product.P101WriterDiagnostics$$ExternalSyntheticLambda3.invoke(D8$$SyntheticClass:0)
+	at org.pag.data.product.SessionDbKeyOwner.withDbKey(SessionDbKeyOwner.kt:15)
+	at org.pag.data.product.P101WriterDiagnostics.read(P101WriterDiagnostics.kt:96)
+	at org.pag.data.product.P101WriterDiagnostics.leadershipState(P101WriterDiagnostics.kt:99)
+	at org.pag.prototype.P102LeadershipRecoveryProbe.uiRecovery(P102LeadershipRecoveryProbe.kt:103)
+	at org.pag.prototype.P102LeadershipRecoveryProbe.uiRecovery$default(P102LeadershipRecoveryProbe.kt:97)
+	at org.pag.prototype.P102LeadershipRecoveryProbe.onStart(P102LeadershipRecoveryProbe.kt:138)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P102 FAIL present_ui
+INSTRUMENTATION_CODE: 0

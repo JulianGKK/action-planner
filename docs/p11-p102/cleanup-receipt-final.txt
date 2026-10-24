@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P102,cleanup_receipt,PARTIAL,reserved_durable=true,alias_present=true,injected_posteffect_fault=true,no_success=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,cleanup_receipt,CLEANUP,outcome=COMMITTED,cleanup=FAILED_OR_UNCONFIRMED,injected_after_actual_driver_close=true,no_success=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,cleanup_receipt,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P102 PASS cleanup_receipt
+INSTRUMENTATION_CODE: -1

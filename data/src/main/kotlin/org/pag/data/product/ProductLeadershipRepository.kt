@@ -29,14 +29,7 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
         if(personId!=null){check(c);db.persons().get(actionId,personId)?.model() ?: throw SensitiveProblem(SensitiveFailure.DENIED)}
         return action
     }
-    private fun bounded(c:StorageContext,allowed:()->Boolean):StorageContext=object:StorageContext {
-        override val generation=c.generation
-        override val scope=c.scope
-        override fun check(point:AccessPoint)=c.check(point)&&allowed()
-        override fun publish(result:()->Unit):Boolean { if(!allowed())return false; var delivered=false; c.publish{if(allowed()){result();delivered=true}}; return delivered }
-        override fun <T> admitKey(validUntilMillis:Long,acquire:(()->Boolean)->T?):T? =
-            c.admitKey(validUntilMillis){authorize->acquire{authorize() && allowed()}}
-    }
+    private fun bounded(c:StorageContext,allowed:()->Boolean):StorageContext=restrictedLeadershipContext(c,allowed)
     private fun alias(actionId:String)="org.pag.product.leadership.aes.v1.$actionId"
     private fun rootAad(row:LeadershipRow)=SensitiveCodec.context("P3b-root",row.actionId,row.epoch,row.cryptoVersion.toString(),row.algorithm,row.kdfVersion.toString(),row.memoryKiB.toString(),row.iterations.toString(),row.parallelism.toString(),java.util.Base64.getEncoder().encodeToString(row.salt))
     private fun areaAad(row:LeadershipRow,personId:String,area:SensitiveArea,revision:Long)=SensitiveCodec.context("P3b-area",row.actionId,personId,area.name,row.cryptoVersion.toString(),row.epoch,revision.toString())
@@ -124,6 +117,66 @@ class ProductLeadershipRepository(app:Context,private val access:StorageAccess,p
         } catch(t:Throwable){release.run();throw t}
     }
     private fun revokeGrantsOnly(){active.getAndSet(null)?.cancel()}
+    private data class RecoverySnapshot(val root:LeadershipRow,val areaCount:Long,val present:Boolean,val usable:Boolean)
+    private suspend fun recoverySnapshot(d:ActionDatabase,c:StorageContext,actionId:String):RecoverySnapshot {
+        check(c);val row=d.leadership().get(actionId)?:throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
+        if(row.actionId!=actionId)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
+        check(c);val count=d.leadership().areaCount(actionId)
+        check(c);val present=device.present(alias(actionId))
+        check(c);val usable=present && device.usable(alias(actionId))
+        check(c);return RecoverySnapshot(row,count,present,usable)
+    }
+    override fun prepareRecovery(actionId:String,publish:(SensitiveResult<LeadershipRecoveryRequest>)->Unit) {
+        val original=request.get()
+        run(publish,publicationAllowed={request.get()==original}){base->
+            val c=bounded(base){request.get()==original}
+            db(c){d->d.withReadTransaction {
+                val action=parent(d,c,actionId,write=true)
+                val snapshot=recoverySnapshot(d,c,actionId)
+                val row=snapshot.root
+                if(row.actionId!=action.id)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
+                val state=LeadershipRecoveryChecks.stateForRecovery(row,snapshot.areaCount,snapshot.present,snapshot.usable)
+                LeadershipRecoveryIntent(this@ProductLeadershipRepository.request,action.status,c.generation,row,state)
+            }}
+        }
+    }
+    override fun recover(request:LeadershipRecoveryRequest,publish:(SensitiveResult<Unit>)->Unit) {
+        // Consume before admission/queue, even if authority has already gone. No retry of this intent.
+        val intent=(request as? LeadershipRecoveryIntent)?.take(this.request)
+        if(intent==null) {
+            access.acquire(AccessScope.READY)?.publish{publish(SensitiveResult.Rejected(SensitiveFailure.DENIED))}
+            return
+        }
+        runWrite(request.actionId,publish,publicationAllowed={intent.live()}){base,e->
+            val original=intent
+            val c=bounded(base){original.live()}
+            original.requireFresh(c)
+            // Real authorized OUTER transaction, no deletion or new key in this validation phase.
+            write(c,e){d->
+                val action=parent(d,c,original.actionId,write=true)
+                val snapshot=recoverySnapshot(d,c,original.actionId)
+                original.verify(action.status,snapshot.root,snapshot.areaCount,snapshot.present,snapshot.usable)
+            }
+            check(c)
+            val ownAlias=alias(original.actionId)
+            if(device.present(ownAlias)) {
+                if(!device.usable(ownAlias))throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
+                check(c);e.external{device.delete(ownAlias)}
+            }
+            check(c)
+            if(device.present(ownAlias))throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
+            // An exception is NEVER absence. RESERVED/DELETE_PENDING survives any interrupted
+            // external phase; only a NEW explicitly authorized intent may retry from that state.
+            write(c,e){d->
+                val action=parent(d,c,original.actionId,write=true)
+                val snapshot=recoverySnapshot(d,c,original.actionId)
+                original.verify(action.status,snapshot.root,snapshot.areaCount,snapshot.present,snapshot.usable)
+                if(snapshot.present)throw SensitiveProblem(SensitiveFailure.UNAVAILABLE)
+                if(original.state==SensitiveState.DELETE_PENDING)d.leadership().removeAction(original.actionId)
+                check(c);d.leadership().remove(original.actionId);check(c,AccessPoint.COMMIT)
+            }
+        }
+    }
     override fun actionState(actionId:String,publish:(SensitiveResult<SensitiveState>)->Unit) {
         val ticket=request.get()
         // Recheck the request inside the existing generation-gated publication too.

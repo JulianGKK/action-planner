@@ -1,0 +1,17 @@
+{
+  "base": "d355dd58b833b5e7949ef2a061a887bfcc4ddc3b",
+  "sha256": {
+    "domain/src/main/kotlin/org/pag/domain/ActiveWorkspaceBudget.kt": "981f1f56d36f2d5f57acd83e5f808430b931b45a9b868b6f5a70725e41edb1a6",
+    "domain/src/main/kotlin/org/pag/domain/WorkspaceMutationInvalidation.kt": "692f222e230155a11e7c4a064071c8aa80a45d4d4b99d847cf702c59595377ef",
+    "data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt": "3ae941d84b4acdd2767a0ae299ae434f8c69e2aa5b60e7bbc94de6ba36ea44d3",
+    "data/src/main/kotlin/org/pag/data/SessionCoordinator.kt": "e2daa45d6b0c1fc877a7a688780cac27e4592c54823ac00f1cbd671bb293a0ea",
+    "data/src/main/kotlin/org/pag/data/product/ProductRuntime.kt": "8a56c0d6c58066d4c2acc73be28e3ab2fd2848cd96531370e9077a213e573400",
+    "data/src/main/kotlin/org/pag/data/product/WorkspaceWriteBoundary.kt": "0e5b6945195cfc99967ad6819bad7f3d44549fd333d7b487dfb33f346054fa64",
+    "data/src/main/kotlin/org/pag/data/product/LeadershipWriteProgress.kt": "96fe83474aabaea1ab38e75952013f0416ba15484c00bde37ed198144d4eeb93",
+    "security/src/main/kotlin/org/pag/security/LeadershipCrypto.kt": "fe0a9ac204e53714c3159d127bb035a07dda383bac4d2a5eb4b198047ec38aa7",
+    "security/src/main/kotlin/org/pag/security/ProductDbEnvelope.kt": "596af3119b3e73a0a915112b099e127bf24ff25609998acc5db375d2c40d08b5",
+    "app/src/main/kotlin/org/pag/prototype/MainActivity.kt": "b96af894ea113258b16b052102f3f823369a468f97fbc8caa0bb418562c0a201",
+    "app/src/p77runtime/kotlin/org/pag/prototype/P86FullWorkspaceActivity.kt": "10a0bef8fb3d5d0b6780acfb5e0e6e1ab4ad23fd87310e3f45e3d7e431859559"
+  },
+  "exported_schema_diff": "empty"
+}

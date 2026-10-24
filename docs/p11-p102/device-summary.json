@@ -1,0 +1,91 @@
+{
+  "final_cases": [
+    {
+      "scenario": "present_ui",
+      "result": "PASS",
+      "raw": "present-ui-final.txt",
+      "apks": "resume-apks.json"
+    },
+    {
+      "scenario": "absent_ui",
+      "result": "PASS",
+      "raw": "absent-ui-final.txt",
+      "apks": "resume-apks.json"
+    },
+    {
+      "scenario": "normal_ready",
+      "result": "PASS",
+      "raw": "normal-ready-final.txt",
+      "apks": "before-callback-binding-apks.json"
+    },
+    {
+      "scenario": "unknown_alias",
+      "result": "PASS",
+      "raw": "unknown-alias-final.txt",
+      "apks": "before-callback-binding-apks.json"
+    },
+    {
+      "scenario": "content_refusal",
+      "result": "PASS",
+      "raw": "content-refusal-final.txt",
+      "apks": "before-callback-binding-apks.json"
+    },
+    {
+      "scenario": "crash_retry",
+      "result": "PASS",
+      "raw": "crash-retry-final.txt",
+      "apks": "before-callback-binding-apks.json"
+    },
+    {
+      "scenario": "lock_before",
+      "result": "PASS",
+      "raw": "lock-before-final.txt",
+      "apks": "before-callback-binding-apks.json"
+    },
+    {
+      "scenario": "lock_during",
+      "result": "PASS",
+      "raw": "lock-during-final.txt",
+      "apks": "before-callback-binding-apks.json"
+    },
+    {
+      "scenario": "lock_after",
+      "result": "PASS",
+      "raw": "lock-after-final.txt",
+      "apks": "before-callback-binding-apks.json"
+    },
+    {
+      "scenario": "status_change",
+      "result": "PASS",
+      "raw": "status-change-final.txt",
+      "apks": "before-callback-binding-apks.json"
+    },
+    {
+      "scenario": "delete_pending_ui",
+      "result": "PASS",
+      "raw": "delete-pending-ui-final.txt",
+      "apks": "resume-apks.json"
+    },
+    {
+      "scenario": "cleanup_receipt",
+      "result": "PASS",
+      "raw": "cleanup-receipt-final.txt",
+      "apks": "before-callback-binding-apks.json"
+    }
+  ],
+  "apks": "resume-apks.json",
+  "historical": {
+    "accepted_unrepeated_case": "normal-ready-01.txt",
+    "pre_callback_binding_UI": [
+      "present-ui-before-callback-binding.txt",
+      "absent-ui-before-callback-binding.txt",
+      "delete-pending-ui-before-callback-binding.txt"
+    ],
+    "excluded": [
+      "present-ui-01.txt",
+      "present-ui-02.txt"
+    ],
+    "explicit_test_fixture_cleanup": "recorded-crash-cleanup.txt"
+  },
+  "authentication": "P77 synthetic; original SessionCoordinator and product UI; real Keystore/Room/SQLCipher"
+}

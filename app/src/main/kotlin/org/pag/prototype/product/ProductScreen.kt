@@ -65,7 +65,11 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                         val listPositions=remember(model.snapshot.generation,model.selected?.id){ProductScrollPositions()}
                         key(model.selected?.id,model.selected?.status,model.activeArea,model.preparationArea,
                             model.compactActiveMode,productEntityListRoute(model)) {
-                        if(productEntityListRoute(model)) ProductEntityList(model,listPositions) else {
+                        if(model.snapshot.state==SessionState.READY && (model.leadershipRecovery!=null || model.leadershipRecoveryError)) {
+                            Column(Modifier.padding(24.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(16.dp)) {
+                                LeadershipRecoverySection(model)
+                            }
+                        } else if(productEntityListRoute(model)) ProductEntityList(model,listPositions) else {
                         val scroll=rememberScrollState()
                         val geometry=productScrollGeometry(model,scroll,viewport,listPositions)
                         Column(Modifier.padding(24.dp).verticalScroll(scroll).then(geometry), verticalArrangement = Arrangement.spacedBy(16.dp)) {

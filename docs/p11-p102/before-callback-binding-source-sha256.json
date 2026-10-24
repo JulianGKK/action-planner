@@ -1,0 +1,15 @@
+{
+  "app/src/androidTest/kotlin/org/pag/prototype/P102LeadershipRecoveryProbe.kt": "b1732e89a5508ec724c1abc13c9bfaf8c9a2310f73e047fc930ec04f59489407",
+  "app/src/main/kotlin/org/pag/prototype/product/PreparationWorkspace.kt": "17f62df2ad95961bf3b1e5dc516c94d5fcf045dff67382dc85000e79f7cf8eb4",
+  "app/src/main/kotlin/org/pag/prototype/product/ProductScreen.kt": "401d0e2e1d6579104a9b4a4887f54adc4cd284f7e9ef09e9d03b6b8fdc2a27ea",
+  "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt": "3a51c7735f8aaf230815ae8b82a5a45fe1bb8eda7118512bda4207e1151c6aab",
+  "app/src/main/kotlin/org/pag/prototype/product/SensitiveScreen.kt": "4418bd276db9f9edd1cc1d1bcfcb26b47cbdbc4abe1e6b14b448817397fcf6a1",
+  "app/src/test/kotlin/org/pag/prototype/product/LeadershipViewModelTest.kt": "75c00d07ce1530832bb266387850fdb84d8ee5ac891e974c7da3ed8a17e504ee",
+  "data/src/debug/kotlin/org/pag/data/product/P102RecoveryDiagnostics.kt": "b719b9745f31befe9e39284b2751285128242262876681981d9016f7168c8843",
+  "data/src/main/kotlin/org/pag/data/product/LeadershipDatabase.kt": "d3d11657c525392390ed81f18591de4b4887bb430f28e68a77fc124dc5c71dc2",
+  "data/src/main/kotlin/org/pag/data/product/LeadershipMetadata.kt": "62a32ddb2620e1e98b649c9ebe83aa030ea7c73405d44c8bb1387d721be2b879",
+  "data/src/main/kotlin/org/pag/data/product/LeadershipRecovery.kt": "adfd0a7d636a0bcf03b33610b2d45689e1a2bd2047d66435ae70a2424c6d040a",
+  "data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt": "e7695e4e53039734aba800e8a7ac6f4f197d661c18fd85bb9a4b01afc50f33bc",
+  "data/src/test/kotlin/org/pag/data/product/P102LeadershipRecoveryTest.kt": "7299f67c49d6167b6ca4c5b889fc36761d0bda5441930ba5de732e5c84b9bddd",
+  "domain/src/main/kotlin/org/pag/domain/Leadership.kt": "5e2d8f86911a7969022f284f6ef517fd700e5755b00c70d73b130408dd1b366a"
+}

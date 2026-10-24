@@ -124,6 +124,7 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
                 FormOutlinedButton(model::requestActionProtectionSetup) { Text("Leitungsschutz einrichten") }
             }
             SensitiveState.READY -> Text("Leitungsschutz eingerichtet")
+            SensitiveState.INCOMPLETE_SETUP, SensitiveState.DELETE_PENDING -> LeadershipRecoveryOffer(model,result.value)
             SensitiveState.PARTIAL_OR_INVALID -> Text("Leitungsschutz nicht verfügbar. Es erfolgt keine Reparatur oder Ersatzanlage.")
         }
         is SensitiveResult.Rejected, null -> Text("Leitungsschutzstatus nicht verfügbar.")

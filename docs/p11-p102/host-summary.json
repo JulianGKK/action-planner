@@ -1,0 +1,14 @@
+{
+  "testcases": 71,
+  "classes": {
+    "org.pag.data.product.P101WriterWiringTest": 4,
+    "org.pag.data.product.P102LeadershipRecoveryTest": 8,
+    "org.pag.data.product.P101LeadershipWriterTest": 10,
+    "org.pag.prototype.product.LeadershipViewModelTest": 15,
+    "org.pag.data.product.LeadershipMetadataTest": 7,
+    "org.pag.data.product.OutstandingCoreReadTest": 16,
+    "org.pag.data.product.LeadershipSessionConcurrencyTest": 11
+  },
+  "failures": 0,
+  "skips": 0
+}

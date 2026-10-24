@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P102,delete_pending_ui,UI,same_activity_focus=true,offer_visible=true,two_explicit_clicks_and_reauth=true,fresh_READY=true,no_reset_on_reauth=true,confirmed_feedback=true,visible_feedback=true,synthetic_auth_provider=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,delete_pending_ui,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P102 PASS delete_pending_ui
+INSTRUMENTATION_CODE: -1

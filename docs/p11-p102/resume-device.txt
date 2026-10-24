@@ -1,0 +1,2 @@
+List of devices attached
+RFCT1186YRJ            device usb:1-1 product:m52xqeea model:SM_M526BR device:m52xq transport_id:4

@@ -51,4 +51,5 @@
     <instrumentation android:name="org.pag.prototype.P96CoreSurfaceProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P100ResourceAcceptanceProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P101WriterAcceptanceProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P102LeadershipRecoveryProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P102LeadershipRecoveryTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-24T11:35:40.754Z" hostname="iuzjhtgvfc" time="0.033">
+  <properties/>
+  <testcase name="originalIssuerSingleUseAndCancellationNarrowButNeverGrantAuthority" classname="org.pag.data.product.P102LeadershipRecoveryTest" time="0.005"/>
+  <testcase name="actionStatusIdentityAndOriginalSaltAreRecheckedAfterExternalEffect" classname="org.pag.data.product.P102LeadershipRecoveryTest" time="0.005"/>
+  <testcase name="sameOldInvalidOrRevokedGenerationCannotRecover" classname="org.pag.data.product.P102LeadershipRecoveryTest" time="0.002"/>
+  <testcase name="delegateAndAdditionalRestrictionBothMustAcceptPublication" classname="org.pag.data.product.P102LeadershipRecoveryTest" time="0.007"/>
+  <testcase name="deletePendingIsDistinctAndRequiresOriginalEnvelopeAndValidAreas" classname="org.pag.data.product.P102LeadershipRecoveryTest" time="0.002"/>
+  <testcase name="exactlyEmptyReservedWithPresentUsableOrProvenAbsentAliasIsRecognized" classname="org.pag.data.product.P102LeadershipRecoveryTest" time="0.001"/>
+  <testcase name="readyCorruptionForeignFormatAndSensitiveRowsNeverBecomeResetCandidates" classname="org.pag.data.product.P102LeadershipRecoveryTest" time="0.007"/>
+  <testcase name="falseAfterCallbackReturnsFalseButAlreadyExecutedSideEffectIsNotUndone" classname="org.pag.data.product.P102LeadershipRecoveryTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -3,7 +3,7 @@ package org.pag.domain
 import java.time.LocalDate
 
 enum class SensitiveArea { IDENTITY, CONTACT, EMERGENCY_CONTACT }
-enum class SensitiveState { UNINITIALIZED, READY, PARTIAL_OR_INVALID }
+enum class SensitiveState { UNINITIALIZED, READY, PARTIAL_OR_INVALID, INCOMPLETE_SETUP, DELETE_PENDING }
 data class SensitiveInventory(val state: SensitiveState, val areas: Set<SensitiveArea> = emptySet())
 sealed interface SensitiveData {
     data class Identity(val fullName: String? = null, val birthDate: LocalDate? = null) : SensitiveData
@@ -35,7 +35,22 @@ sealed interface SensitiveResult<out T> {
     data class Rejected(val reason: SensitiveFailure) : SensitiveResult<Nothing>
 }
 data class SensitiveOpened(val grant: SensitiveGrant, val data: SensitiveData)
+/** Single-use command intent, not SessionAccess, a key or an authorization grant.
+ * Preparation precedes a fresh normal DeviceCredential session; execution additionally
+ * requires explicit confirmation. Unsupported providers deny both operations. */
+interface LeadershipRecoveryRequest {
+    val actionId: String
+    val state: SensitiveState
+    fun cancel()
+}
 interface LeadershipRepository {
+    fun prepareRecovery(actionId:String,publish:(SensitiveResult<LeadershipRecoveryRequest>)->Unit) {
+        publish(SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE))
+    }
+    fun recover(request:LeadershipRecoveryRequest,publish:(SensitiveResult<Unit>)->Unit) {
+        request.cancel();publish(SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE))
+    }
+
     /** Protected action metadata only: no person, payload or grant. Unsupported providers deny. */
     fun actionState(actionId: String, publish: (SensitiveResult<SensitiveState>) -> Unit) {
         publish(SensitiveResult.Rejected(SensitiveFailure.UNAVAILABLE))

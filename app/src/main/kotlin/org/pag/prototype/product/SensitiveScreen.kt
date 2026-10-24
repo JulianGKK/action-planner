@@ -52,6 +52,7 @@ import java.util.Locale
         }
         else -> when(model.sensitiveInventory?.state) {
             SensitiveState.UNINITIALIZED -> if(model.personsEditable) FormButton(onClick=model::requestSensitiveSetup){Text("Sensible Personendaten einrichten")}
+            SensitiveState.INCOMPLETE_SETUP, SensitiveState.DELETE_PENDING -> LeadershipRecoveryOffer(model,model.sensitiveInventory!!.state)
             SensitiveState.PARTIAL_OR_INVALID -> Text("Der sensible Speicher dieser Aktion ist nicht verfügbar. Pseudonyme bleiben nutzbar; es erfolgt keine Reparatur.")
             SensitiveState.READY -> SensitiveArea.entries.forEach { area ->
                 val present=area in model.sensitiveInventory!!.areas
@@ -108,5 +109,48 @@ private fun areaLabel(area:SensitiveArea)=when(area){SensitiveArea.IDENTITY->"Id
         DatePicker(state,showModeToggle=false)
         FormOutlinedButton(onClick={interaction();state.selectedDateMillis?.let{chosen(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate());expanded=false}},enabled=state.selectedDateMillis!=null){Text("Übernehmen")}
         FormOutlinedButton(onClick={interaction();expanded=false}){Text("Abbrechen")}
+    }
+}
+
+enum class LeadershipRecoveryPhase { CONFIRM_REAUTH, AUTHENTICATING, CONFIRM_RESET, WRITING }
+
+@Composable internal fun LeadershipRecoveryOffer(model:ProductViewModel,state:SensitiveState) {
+    Text(if(state==SensitiveState.INCOMPLETE_SETUP)
+        "Die Einrichtung des Leitungsschutzes wurde nicht abgeschlossen. Sensible Bereiche können derzeit nicht geöffnet werden."
+        else "Die Entfernung des Leitungsschutzes wurde nicht abgeschlossen. Sensible Bereiche können derzeit nicht geöffnet werden.")
+    if(model.personsEditable)model.selected?.id?.let { actionId ->
+        val generation=model.snapshot.generation
+        FormOutlinedButton({model.requestLeadershipRecovery(actionId,generation)},enabled=!model.sensitiveBusy) {
+            Text(if(state==SensitiveState.INCOMPLETE_SETUP) "Unvollständige Einrichtung zurücksetzen" else "Entfernung des Leitungsschutzes fortsetzen")
+        }
+    }
+}
+
+/** Same Activity window: an additional Dialog window would violate the ORIGINAL strict
+ * foreground gate. No special focus allowance or alternate session authorization. */
+@Composable internal fun LeadershipRecoverySection(model:ProductViewModel) {
+    val intent=model.leadershipRecovery
+    val phase=model.leadershipRecoveryPhase
+    val generation=model.snapshot.generation
+    if(intent!=null && model.snapshot.state==SessionState.READY && phase!=LeadershipRecoveryPhase.AUTHENTICATING) {
+        val reset=intent.state==SensitiveState.INCOMPLETE_SETUP
+        Text(if(reset) "Unvollständige Einrichtung zurücksetzen" else "Entfernung des Leitungsschutzes fortsetzen",style=MaterialTheme.typography.titleMedium)
+        Text("Aktion: ${model.leadershipRecoveryAction?.title ?: "wird geprüft …"}")
+        Text(when(phase) {
+            LeadershipRecoveryPhase.CONFIRM_REAUTH -> "Dafür ist eine erneute Bestätigung mit dem Gerätesperrcode nötig. Es wird noch nichts zurückgesetzt."
+            LeadershipRecoveryPhase.WRITING -> "Geschützter Vorgang läuft …"
+            else -> if(reset) "Nur die nachweislich leere, unvollständige Einrichtung wird zurückgesetzt. Jetzt ausdrücklich bestätigen."
+                else "Die bereits begonnene Entfernung wird abgeschlossen. Jetzt ausdrücklich bestätigen."
+        })
+        FormButton(onClick={if(phase==LeadershipRecoveryPhase.CONFIRM_REAUTH)model.authenticateLeadershipRecovery(intent,generation) else model.confirmLeadershipRecovery(intent,generation)},
+            enabled=phase==LeadershipRecoveryPhase.CONFIRM_REAUTH || (phase==LeadershipRecoveryPhase.CONFIRM_RESET && model.leadershipRecoveryAction?.status==ActionStatus.PREPARATION)) {
+            Text(if(phase==LeadershipRecoveryPhase.CONFIRM_REAUTH) "Mit Gerätesperrcode bestätigen" else "Jetzt bestätigen")
+        }
+        FormOutlinedButton({model.cancelLeadershipRecovery(intent)},enabled=phase!=LeadershipRecoveryPhase.WRITING){Text("Abbrechen")}
+    }
+    if(model.leadershipRecoveryError && model.snapshot.state==SessionState.READY) {
+        Text("Wiederherstellung nicht abgeschlossen",style=MaterialTheme.typography.titleMedium)
+        Text("Der Zustand konnte nicht sicher bestätigt werden. Es wurde kein erfolgreicher Abschluss gemeldet.")
+        FormButton(model::dismissLeadershipRecoveryError){Text("Schließen")}
     }
 }

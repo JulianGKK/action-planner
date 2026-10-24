@@ -817,6 +817,77 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     var sensitiveInventory by mutableStateOf<SensitiveInventory?>(null); private set
     var sensitiveInventoryLoading by mutableStateOf(false); private set
+    var leadershipRecovery by mutableStateOf<LeadershipRecoveryRequest?>(null); private set
+    var leadershipRecoveryPhase by mutableStateOf<LeadershipRecoveryPhase?>(null); private set
+    var leadershipRecoveryError by mutableStateOf(false); private set
+    private var recoveryStarting=false
+    private var recoveryBeforeGeneration=-1L
+    private var recoveryReadyGeneration=-1L
+    val leadershipRecoveryAction get()=actions.singleOrNull{it.id==leadershipRecovery?.actionId}
+    fun cancelLeadershipRecovery() {
+        leadershipRecovery?.cancel();leadershipRecovery=null;leadershipRecoveryPhase=null
+        recoveryBeforeGeneration=-1;recoveryReadyGeneration=-1
+    }
+    fun cancelLeadershipRecovery(expected:LeadershipRecoveryRequest) {
+        if(leadershipRecovery===expected)cancelLeadershipRecovery()
+    }
+    fun dismissLeadershipRecoveryError(){leadershipRecoveryError=false}
+    fun requestLeadershipRecovery(expectedActionId:String,generation:Long) {
+        if(selected?.id!=expectedActionId || snapshot.generation!=generation)return
+        interaction()
+        if(selected?.id!=expectedActionId || snapshot.generation!=generation)return
+        val action=selected?:return
+        val port=leadership?:return
+        if(!personsEditable || sensitiveBusy || leadershipRecovery!=null)return
+        val request=++sensitiveRequest
+        sensitiveBusy=true;leadershipRecoveryError=false
+        port.prepareRecovery(action.id){result->
+            if(request!=sensitiveRequest || snapshot.state!=SessionState.READY || snapshot.generation!=generation || selected?.id!=action.id) {
+                (result as? SensitiveResult.Value)?.value?.cancel();return@prepareRecovery
+            }
+            sensitiveBusy=false
+            when(result) {
+                is SensitiveResult.Value->{leadershipRecovery=result.value;leadershipRecoveryPhase=LeadershipRecoveryPhase.CONFIRM_REAUTH}
+                is SensitiveResult.Rejected->leadershipRecoveryError=true
+            }
+        }
+    }
+    fun authenticateLeadershipRecovery(expected:LeadershipRecoveryRequest,generation:Long) {
+        if(leadershipRecovery!==expected || snapshot.generation!=generation)return
+        interaction()
+        if(leadershipRecovery!==expected || snapshot.generation!=generation || snapshot.state!=SessionState.READY || leadershipRecoveryPhase!=LeadershipRecoveryPhase.CONFIRM_REAUTH ||
+            selected?.id!=leadershipRecovery?.actionId || !personsEditable)return
+        recoveryBeforeGeneration=snapshot.generation
+        leadershipRecoveryPhase=LeadershipRecoveryPhase.AUTHENTICATING
+        recoveryStarting=true
+        try {
+            documentPicker?.cancel();session.lock()
+            if(session.snapshot().state==SessionState.LOCKED)unlock()
+        }finally{recoveryStarting=false}
+    }
+    fun confirmLeadershipRecovery(expected:LeadershipRecoveryRequest,displayedGeneration:Long) {
+        if(leadershipRecovery!==expected || snapshot.generation!=displayedGeneration)return
+        interaction()
+        val intent=leadershipRecovery?.takeIf{it===expected}?:return
+        if(snapshot.generation!=displayedGeneration)return
+        val port=leadership?:return
+        if(snapshot.state!=SessionState.READY || snapshot.generation!=recoveryReadyGeneration ||
+            leadershipRecoveryPhase!=LeadershipRecoveryPhase.CONFIRM_RESET ||
+            leadershipRecoveryAction?.status!=ActionStatus.PREPARATION)return
+        val generation=snapshot.generation
+        leadershipRecoveryPhase=LeadershipRecoveryPhase.WRITING;sensitiveBusy=true
+        port.recover(intent){result->
+            if(leadershipRecovery!==intent || leadershipRecoveryPhase!=LeadershipRecoveryPhase.WRITING ||
+                snapshot.state!=SessionState.READY || snapshot.generation!=generation)return@recover
+            sensitiveBusy=false
+            cancelLeadershipRecovery()
+            when(result) {
+                is SensitiveResult.Value->showFeedback(if(intent.state==SensitiveState.INCOMPLETE_SETUP)
+                    "Unvollständige Einrichtung zurückgesetzt" else "Entfernung des Leitungsschutzes abgeschlossen")
+                is SensitiveResult.Rejected->leadershipRecoveryError=true
+            }
+        }
+    }
     var sensitiveSetup by mutableStateOf(false); private set
     var sensitiveArea by mutableStateOf<SensitiveArea?>(null); private set
     var sensitiveOpened by mutableStateOf<SensitiveOpened?>(null); private set
@@ -824,6 +895,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     var sensitiveError by mutableStateOf<SensitiveFailure?>(null); private set
     private var sensitiveRequest = 0L
     private fun clearSensitive() {
+        if(leadershipRecoveryPhase!=LeadershipRecoveryPhase.AUTHENTICATING)cancelLeadershipRecovery()
         sensitiveRequest++; leadership?.revoke(); sensitiveOpened?.grant?.cancel()
         sensitiveInventory = null; sensitiveInventoryLoading = false; sensitiveSetup = false; sensitiveArea = null
         sensitiveOpened = null; sensitiveBusy = false; sensitiveError = null
@@ -934,6 +1006,21 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         }
     }
     private fun acceptSession(next:SessionSnapshot) {
+        var recoveryAuthenticated=false
+        if(leadershipRecovery!=null) {
+            when {
+                next.state==SessionState.READY && leadershipRecoveryPhase==LeadershipRecoveryPhase.AUTHENTICATING -> {
+                    if(next.generation>recoveryBeforeGeneration) {
+                        recoveryReadyGeneration=next.generation
+                        recoveryAuthenticated=true
+                    }else cancelLeadershipRecovery()
+                }
+                next.state in setOf(SessionState.LOCKED,SessionState.BLOCKED) && !recoveryStarting -> cancelLeadershipRecovery()
+                next.state!=SessionState.READY && leadershipRecoveryPhase!=LeadershipRecoveryPhase.AUTHENTICATING -> cancelLeadershipRecovery()
+                next.state==SessionState.READY && snapshot.generation!=next.generation && leadershipRecoveryPhase!=LeadershipRecoveryPhase.AUTHENTICATING -> cancelLeadershipRecovery()
+            }
+        }
+
         val entered = next.state == SessionState.READY && (snapshot.state != SessionState.READY || snapshot.generation != next.generation)
         val generationChanged = snapshot.generation != next.generation
         snapshot = next
@@ -952,6 +1039,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             refreshCountdown()
             if (snapshot.state == SessionState.READY && snapshot.generation == next.generation) loadActions()
         }
+        if(recoveryAuthenticated && leadershipRecovery!=null && snapshot.state==SessionState.READY &&
+            snapshot.generation==recoveryReadyGeneration)leadershipRecoveryPhase=LeadershipRecoveryPhase.CONFIRM_RESET
     }
     private val subscription = session.observe { next ->
         // Preserve the existing synchronous unbound/test port contract. MainActivity always
@@ -975,10 +1064,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         // Lock observers complete all existing cleanup before entering the normal auth path.
         if (session.snapshot().state == SessionState.LOCKED) unlock()
     }
-    fun lock() { documentPicker?.cancel(); session.lock() }
+    fun lock() { cancelLeadershipRecovery();documentPicker?.cancel(); session.lock() }
     fun interaction() = session.userInteraction()
-    fun createScreen() { interaction(); if (snapshot.state == SessionState.READY) { clearPersons();selected = null; creating = true } }
-    fun back() { documentPicker?.cancel(); if (memoryReports.available && memoryReports.dirty) { memoryReports.requestLeave { back() }; return }; interaction(); selected = null; creating = false; editing = null; confirming = null; changeError = null; clearPersons() }
+    fun createScreen() { cancelLeadershipRecovery();interaction(); if (snapshot.state == SessionState.READY) { clearPersons();selected = null; creating = true } }
+    fun back() { cancelLeadershipRecovery();documentPicker?.cancel(); if (memoryReports.available && memoryReports.dirty) { memoryReports.requestLeave { back() }; return }; interaction(); selected = null; creating = false; editing = null; confirming = null; changeError = null; clearPersons() }
     fun edit() {
         interaction()
         selected?.takeIf { snapshot.state == SessionState.READY && ActionLifecycle.mayEdit(it.status) }?.let {
@@ -1012,6 +1101,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         }
     }
     fun detail(id: String) {
+        cancelLeadershipRecovery()
         interaction()
         if(snapshot.state==SessionState.READY)openAction(id,true)
     }
@@ -1050,5 +1140,5 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             loadActions()
         }
     }
-    override fun onCleared() { documentPicker?.cancel();clearPersons();selected=null;subscription.cancel();session.lock() }
+    override fun onCleared() { cancelLeadershipRecovery();documentPicker?.cancel();clearPersons();selected=null;subscription.cancel();session.lock() }
 }

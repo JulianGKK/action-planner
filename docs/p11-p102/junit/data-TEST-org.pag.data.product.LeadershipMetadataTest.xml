@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.LeadershipMetadataTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-24T11:35:38.520Z" hostname="iuzjhtgvfc" time="0.094">
+  <properties/>
+  <testcase name="unsupportedProviderDoesNotPretendUninitialized" classname="org.pag.data.product.LeadershipMetadataTest" time="0.009"/>
+  <testcase name="validRootWithoutPersonOrAreaIsReady" classname="org.pag.data.product.LeadershipMetadataTest" time="0.041"/>
+  <testcase name="everyAreaMustBeStructurallyValidForActionReady" classname="org.pag.data.product.LeadershipMetadataTest" time="0.032"/>
+  <testcase name="noRootNoAreasNoAliasIsUninitialized" classname="org.pag.data.product.LeadershipMetadataTest" time="0.0"/>
+  <testcase name="invalidRootMetadataRemainsPartial" classname="org.pag.data.product.LeadershipMetadataTest" time="0.001"/>
+  <testcase name="orphanAliasOrAreaIsPartial" classname="org.pag.data.product.LeadershipMetadataTest" time="0.001"/>
+  <testcase name="missingOrUnusableDeviceKeyIsPartial" classname="org.pag.data.product.LeadershipMetadataTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

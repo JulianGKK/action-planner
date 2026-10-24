@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P102,normal_ready,READY,no_downgrade=true,normal_setup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P102,normal_ready,CASE,ANDROID_PASS,fixture_cleanup=true,key_alias_absent=true,reuse=false,ram_reuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P102 PASS normal_ready
+INSTRUMENTATION_CODE: -1

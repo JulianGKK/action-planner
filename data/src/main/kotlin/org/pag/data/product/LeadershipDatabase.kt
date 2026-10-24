@@ -21,6 +21,7 @@ internal data class SensitiveRow(val actionId:String,val personId:String,val are
     @Insert suspend fun insert(row:LeadershipRow)
     @Update suspend fun update(row:LeadershipRow):Int
     @Query("DELETE FROM leadership WHERE actionId=:actionId") suspend fun remove(actionId:String)
+    @Query("SELECT COUNT(*) FROM sensitive_person_areas WHERE actionId=:actionId") suspend fun areaCount(actionId:String):Long
     @Query("SELECT * FROM sensitive_person_areas WHERE actionId=:actionId") suspend fun all(actionId:String):List<SensitiveRow>
     @Query("SELECT * FROM sensitive_person_areas WHERE actionId=:actionId AND personId=:personId") suspend fun person(actionId:String,personId:String):List<SensitiveRow>
     @Query("SELECT * FROM sensitive_person_areas WHERE actionId=:actionId AND personId=:personId AND area=:area") suspend fun area(actionId:String,personId:String,area:String):SensitiveRow?

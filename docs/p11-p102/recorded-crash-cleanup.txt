@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P102,cleanup_crash,RECORDED_CRASH_CLEANUP,root_absent=true,key_alias_absent=true,exact_inode_guard=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P102 PASS cleanup_crash
+INSTRUMENTATION_CODE: -1

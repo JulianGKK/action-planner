@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.LeadershipViewModelTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-10-24T12:03:31.764Z" hostname="iuzjhtgvfc" time="0.346">
+  <properties/>
+  <testcase name="explicitSetupAndCancellationDoNotAutomaticallyWrite" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.266"/>
+  <testcase name="personDetailRevealsOnlyWithItsInventoryMetadata" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.003"/>
+  <testcase name="expiredReleaseClearsWithoutAutomaticReauth" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.009"/>
+  <testcase name="activeAndCompletedDoNotWrite" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.005"/>
+  <testcase name="oldButtonIdentityCannotAuthenticateConfirmOrCancelNewIntent" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.018"/>
+  <testcase name="navigationCancelsAndDiscardsDelayedRelease" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.002"/>
+  <testcase name="lockDuringPersonInventoryCannotRevealPersonOrMetadata" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.001"/>
+  <testcase name="cancelledReauthAndUnchangedGenerationCannotExecuteRecovery" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.004"/>
+  <testcase name="recoveryRequiresUserIntentFreshAuthenticationAndSecondConfirmation" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.002"/>
+  <testcase name="deletePendingHasExplicitSameReauthFlowAndRejectionIsNotSaved" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.002"/>
+  <testcase name="partialSensitiveStateDoesNotBlockBasicOrPermitSetup" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.001"/>
+  <testcase name="lockDropsSensitiveContent" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.002"/>
+  <testcase name="leavingPersonDetailDiscardsPendingInventory" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.001"/>
+  <testcase name="sessionRestartRevokesGrantAndNeverRestoresSensitiveAreaInNewGeneration" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.009"/>
+  <testcase name="navigationLockAndLateRecoveryCallbackNeverPublishSuccess" classname="org.pag.prototype.product.LeadershipViewModelTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
