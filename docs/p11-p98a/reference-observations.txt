@@ -1,0 +1,22 @@
+P97 fullview core-release BLOCKED; fullview/form/editor payload OUT_OF_SCOPE; fence unchanged
+P97 discarded-main CONFIRMED original identity only; duplicate-old-shell cannot retire new-read
+P97 before-materialization CONFIRMED only-after-worker-ack; original-payload-created=false
+P97 main-local BLOCKED during-callback; CONFIRMED cell/scoped-return/registration ends; exposure retirement BLOCKED
+P97 worker-local BLOCKED until-producer-return-and-worker-ack; then CONFIRMED named-chain
+P97 candidate BLOCKED while-main-pending; cleared-cells-not-enough; CONFIRMED after-discard-ack
+P97 retired-shell original-chain CONFIRMED; future-root isolation BLOCKED Read->outer.current backlink; no authority bypass
+P97 explicit-test-reference BLOCKED while-test-alias-held; dropping-it is no production-end-receipt
+P98 pending A scope: B diagnosis independent before/after actual A callback return; fake replacement only
+P98 foreign invalidator: handles revoked synchronously; lock returned before foreign callback; quiescent only after return
+P98 original installation: revoke and rejected publication retain initial scope until callback finally
+P98 fault injection: overflow/duplicate end never wrap or reopen; broken diagnosis sticky; synchronous revoke still works
+P97 old-slot TEST reference BLOCKED while-held; fake-port replacement is not production readmission; fullview/form OUT_OF_SCOPE
+P97 VM fields/4 handle links CONFIRMED after-revoke; scalar-local BLOCKED until-call-return; no global retirement receipt
+P98 invalidation dispatch exception: existing runCatching policy unchanged; finally ends scope
+P98 resolver: detached+four-links-revoked while active=1 NOT_QUIESCENT; actual scope return => VM_SCOPES_QUIESCENT only
+P98 Compose observed/disposed cannot end publication; no OutstandingCoreRead release connection
+P98 identity: late duplicate A callbacks cannot detach/acknowledge/reopen B; no exposed receipt API
+P98 install exception: initial scope ended; published authority still requires revoke
+P98 resolver exception: finally acknowledged; published slot remains NOT_QUIESCENT until revoke
+P98 reference shape: scope object primitives only; invalidator captures original metadata identity/VM, no CoreSlot/Value/Payload
+P98 nesting: active=1/2/1/0; no transferable end token

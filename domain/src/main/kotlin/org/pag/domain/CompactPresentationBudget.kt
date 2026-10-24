@@ -16,11 +16,13 @@ object CompactPresentationBudget {
     // No resolved summaries in cards and no chunked/second card list. Both handle shapes
     // count in retained AND construction transition; common scratch counts only once.
     val hub = ActiveWorkspaceBudget.Units(objects=13, lists=1, listCapacity=3, references=40)
-    // Four disjoint handles; all constructions also count in transition.
+    // Four disjoint handles plus one metadata-only VM scope counter (no per-entry allocation).
+    // Counter object and slot reference charged in both representations before construction.
     // Common formatting/resolution scratch is charged once, not once per route.
+    val vmScopes = ActiveWorkspaceBudget.Units(objects=1, references=1)
     val reservation = ActiveCoreReservation(
-        ActiveWorkspaceBudget.Units(objects=16, lists=1, listCapacity=3, references=49),
-        sharedTransition.copy(objects=48, lists=1, listCapacity=3, references=177))
+        ActiveWorkspaceBudget.Units(objects=17, lists=1, listCapacity=3, references=50),
+        sharedTransition.copy(objects=49, lists=1, listCapacity=3, references=178))
     /** Additional FUNCTIONS row formatting, disjoint from shared fixed/header scratch.
      * Existing role metadata bytes (all text fields) conservatively bound UTF16 name units.
      * One complete catalogue pass; name + ': ' + Long + ' vor Ort' uses <=nameUnits+32 per row.

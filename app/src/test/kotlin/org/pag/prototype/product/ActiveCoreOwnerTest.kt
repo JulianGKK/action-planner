@@ -438,6 +438,178 @@ class ActiveCoreOwnerTest {
         println("P97 old-slot TEST reference BLOCKED while-held; fake-port replacement is not production readmission; fullview/form OUT_OF_SCOPE")
     }
 
+    // P98 test-only aliases inspect metadata. They are deliberately NOT owner-end evidence.
+    private fun p98Slot(model:ProductViewModel):Any =
+        checkNotNull((referenceField(model,"coreSlot") as java.util.concurrent.atomic.AtomicReference<*>).get())
+    private fun p98Scopes(slot:Any):Any=checkNotNull(referenceField(slot,"scopes"))
+    private fun p98Call(scopes:Any,name:String):Any?=scopes.javaClass.getDeclaredMethod(name).let{it.isAccessible=true;it.invoke(scopes)}
+    private fun p98Diagnosis(scopes:Any)=p98Call(scopes,"diagnosis")
+    private fun p98Count(scopes:Any)=referenceField(scopes,"active") as Long
+    private fun p98Captures(install:()->Unit,slot:Any)=install.javaClass.declaredFields
+        .filterNot{java.lang.reflect.Modifier.isStatic(it.modifiers)}.any{it.isAccessible=true;it.get(install)===slot}
+    private fun p98AssertDetached(model:ProductViewModel,slot:Any) {
+        assertNull((referenceField(model,"coreSlot") as java.util.concurrent.atomic.AtomicReference<*>).get())
+        for(name in listOf("hub","persons","tasks","functions"))assertNull(referenceField(referenceField(slot,name)!!,"owner"))
+    }
+    @Test fun p98LastResolverReturnOnlyAcknowledgesLocalScopes() {
+        val (h,life,view)=functionsOwner();val testSlot=p98Slot(h.model);val scopes=p98Scopes(testSlot)
+        assertEquals(0L,p98Count(scopes));assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes))
+        var witnessed=false
+        life.duringPublication={install->if(p98Captures(install,testSlot)) {
+            witnessed=true;life.close();p98AssertDetached(h.model,testSlot)
+            assertEquals(1L,p98Count(scopes));assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes))
+        }}
+        assertNull(view.line(0));assertTrue(witnessed)
+        assertEquals(0L,p98Count(scopes));assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopes))
+        assertNotNull(referenceField(testSlot,"value")) // Local quiescence is expressly NOT owner end.
+        println("P98 resolver: detached+four-links-revoked while active=1 NOT_QUIESCENT; actual scope return => VM_SCOPES_QUIESCENT only")
+    }
+    @Test fun p98NestedResolversEndExactlyOnceInReverseOrder() {
+        val (h,life,view)=functionsOwner();val slot=p98Slot(h.model);val scopes=p98Scopes(slot);var depth=0
+        life.duringPublication={install->if(p98Captures(install,slot)) {
+            depth++
+            if(depth==1) {
+                assertEquals(1L,p98Count(scopes));assertNull(view.line(1))
+                assertEquals(1L,p98Count(scopes));assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes))
+            } else {assertEquals(2L,p98Count(scopes));life.close();assertEquals(2L,p98Count(scopes))}
+            depth--
+        }}
+        assertNull(view.line(0));assertEquals(0,depth);assertEquals(0L,p98Count(scopes))
+        assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopes))
+        println("P98 nesting: active=1/2/1/0; no transferable end token")
+    }
+    @Test fun p98ForeignInvalidatorRemainsCountedAfterSynchronousRevoke() {
+        val (h,life,view)=functionsOwner();val slot=p98Slot(h.model);val scopes=p98Scopes(slot)
+        val reached=java.util.concurrent.CountDownLatch(1);val release=java.util.concurrent.CountDownLatch(1)
+        val failure=java.util.concurrent.atomic.AtomicReference<Throwable?>(null)
+        val dispatch:((()->Unit)->Unit)={reached.countDown();check(release.await(5,java.util.concurrent.TimeUnit.SECONDS))}
+        h.model.javaClass.getDeclaredField("ownerDispatch").let{it.isAccessible=true;it.set(h.model,dispatch)}
+        val worker=Thread {try{life.close()}catch(t:Throwable){failure.set(t)}}
+        worker.start()
+        try {
+            assertTrue(reached.await(5,java.util.concurrent.TimeUnit.SECONDS))
+            p98AssertDetached(h.model,slot);assertEquals(1L,p98Count(scopes))
+            assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes));assertNull(view.name(0))
+            h.session.lock() // Must return while foreign callback is deliberately paused.
+            assertEquals(SessionState.LOCKED,h.model.snapshot.state)
+            assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes))
+        } finally {release.countDown();worker.join(5000)}
+        assertFalse(worker.isAlive);assertNull(failure.get());assertEquals(0L,p98Count(scopes))
+        assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopes))
+        println("P98 foreign invalidator: handles revoked synchronously; lock returned before foreign callback; quiescent only after return")
+    }
+    @Test fun p98MissingOldInvalidatorEndCannotChangeNewSlotDiagnosis() {
+        val h=H();val lifeA=h.port.deliver();val slotA=p98Slot(h.model);val scopesA=p98Scopes(slotA)
+        val reached=java.util.concurrent.CountDownLatch(1);val release=java.util.concurrent.CountDownLatch(1)
+        val failure=java.util.concurrent.atomic.AtomicReference<Throwable?>(null)
+        val dispatch:((()->Unit)->Unit)={reached.countDown();check(release.await(5,java.util.concurrent.TimeUnit.SECONDS))}
+        val dispatchField=h.model.javaClass.getDeclaredField("ownerDispatch").apply{isAccessible=true}
+        dispatchField.set(h.model,dispatch)
+        val worker=Thread {try{lifeA.close()}catch(t:Throwable){failure.set(t)}}
+        worker.start();var scopesB:Any?=null
+        try {
+            assertTrue(reached.await(5,java.util.concurrent.TimeUnit.SECONDS))
+            assertEquals("NOT_QUIESCENT",p98Diagnosis(scopesA))
+            // Fake port permits replacement solely to test identity separation, NOT product readmission.
+            h.model.detail("a");h.port.deliver();scopesB=p98Scopes(p98Slot(h.model))
+            assertEquals(1L,p98Count(scopesA));assertEquals(0L,p98Count(scopesB))
+            assertEquals("NOT_QUIESCENT",p98Diagnosis(scopesB))
+        } finally {release.countDown();worker.join(5000)}
+        assertFalse(worker.isAlive);assertNull(failure.get())
+        assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopesA))
+        assertEquals(0L,p98Count(scopesB!!));assertEquals("NOT_QUIESCENT",p98Diagnosis(scopesB!!))
+        println("P98 pending A scope: B diagnosis independent before/after actual A callback return; fake replacement only")
+    }
+    @Test fun p98InvalidationDispatchExceptionStillAcknowledgesOriginalScope() {
+        val (h,life,_)=functionsOwner();val slot=p98Slot(h.model);val scopes=p98Scopes(slot)
+        var observedCount=-1L;var observedDiagnosis:Any?=null
+        val dispatch:((()->Unit)->Unit)={
+            observedCount=p98Count(scopes);observedDiagnosis=p98Diagnosis(scopes)
+            throw IllegalStateException("synthetic dispatch failure")
+        }
+        h.model.javaClass.getDeclaredField("ownerDispatch").let{it.isAccessible=true;it.set(h.model,dispatch)}
+        life.close();p98AssertDetached(h.model,slot)
+        assertEquals(1L,observedCount);assertEquals("NOT_QUIESCENT",observedDiagnosis)
+        assertEquals(0L,p98Count(scopes));assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopes))
+        println("P98 invalidation dispatch exception: existing runCatching policy unchanged; finally ends scope")
+    }
+    @Test fun p98ScopeMetadataAndInvalidatorAddNoPayloadCapture() {
+        val h=H();val life=h.port.deliver();val slot=p98Slot(h.model);val scopes=p98Scopes(slot)
+        assertTrue(scopes.javaClass.declaredFields.filterNot{java.lang.reflect.Modifier.isStatic(it.modifiers)}.all{it.type.isPrimitive})
+        val captures=life.invalidator!!.javaClass.declaredFields.filterNot{java.lang.reflect.Modifier.isStatic(it.modifiers)}
+            .map{it.isAccessible=true;it.get(life.invalidator)}
+        assertFalse(captures.any{it===slot || it is ActiveCoreResult.Value || it is ActiveCorePayload})
+        assertTrue(captures.any{it===h.model}) // Existing mutable VM owner edge is expressly NOT globally retired.
+        println("P98 reference shape: scope object primitives only; invalidator captures original metadata identity/VM, no CoreSlot/Value/Payload")
+    }
+    @Test fun p98ResolverExceptionEndsScopeWithoutEndingPublication() {
+        val (h,life,view)=functionsOwner();val slot=p98Slot(h.model);val scopes=p98Scopes(slot)
+        life.duringPublication={install->if(p98Captures(install,slot))throw IllegalStateException("synthetic scope failure")}
+        try{view.line(0);fail("Expected controlled exception")}catch(expected:IllegalStateException){assertEquals("synthetic scope failure",expected.message)}
+        assertEquals(0L,p98Count(scopes));assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes))
+        life.duringPublication=null;assertNotNull(view.name(0))
+        h.session.lock();assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopes))
+        println("P98 resolver exception: finally acknowledged; published slot remains NOT_QUIESCENT until revoke")
+    }
+    @Test fun p98OriginalInstallationPublicationAndRejectionAreCounted() {
+        for(reject in listOf(false,true)) {
+            val h=H();val life=Lifetime();life.falseAfter=reject
+            var slot:Any?=null;var scopes:Any?=null
+            life.duringPublication={
+                slot=p98Slot(h.model);scopes=p98Scopes(slot!!)
+                assertEquals(1L,p98Count(scopes!!));assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes!!))
+                if(!reject)life.close()
+                if(!reject){p98AssertDetached(h.model,slot!!);assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes!!))}
+            }
+            h.port.deliver(lifetime=life)
+            p98AssertDetached(h.model,slot!!);assertEquals(0L,p98Count(scopes!!))
+            assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopes!!))
+        }
+        println("P98 original installation: revoke and rejected publication retain initial scope until callback finally")
+    }
+    @Test fun p98InstallationExceptionAlsoAcknowledgesInitialScope() {
+        val h=H();val life=Lifetime();var slot:Any?=null
+        life.duringPublication={slot=p98Slot(h.model);throw IllegalStateException("synthetic install failure")}
+        try{h.port.deliver(lifetime=life);fail("Expected controlled exception")}catch(expected:IllegalStateException){assertEquals("synthetic install failure",expected.message)}
+        val scopes=p98Scopes(slot!!);assertEquals(0L,p98Count(scopes));assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes))
+        life.duringPublication=null;h.session.lock();p98AssertDetached(h.model,slot!!)
+        assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopes))
+        println("P98 install exception: initial scope ended; published authority still requires revoke")
+    }
+    @Test fun p98OldDuplicateCallbacksAndWrongIdentityCannotAcknowledgeNewSlot() {
+        val h=H();val callbackA=h.port.pending.first().second;val lifeA=h.port.deliver()
+        val slotA=p98Slot(h.model);val scopesA=p98Scopes(slotA);val lateInvalidator=checkNotNull(lifeA.invalidator)
+        h.model.detail("a");val lifeB=h.port.deliver();val slotB=p98Slot(h.model);val scopesB=p98Scopes(slotB)
+        assertNotSame(slotA,slotB);assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopesA))
+        repeat(3){lateInvalidator();callbackA(core(),lifeA)}
+        val oldIdentity=referenceField(slotA,"identity")!!
+        assertNull(h.model.compactHubValue(oldIdentity,0,0))
+        assertSame(slotB,p98Slot(h.model));assertEquals(0L,p98Count(scopesB));assertEquals("NOT_QUIESCENT",p98Diagnosis(scopesB))
+        assertEquals(0L,p98Count(scopesA));assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopesA))
+        assertNotNull(h.model.compactHubPresentation);lifeB.close()
+        assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopesB))
+        println("P98 identity: late duplicate A callbacks cannot detach/acknowledge/reopen B; no exposed receipt API")
+    }
+    @Test fun p98CounterCorruptionAndOverflowFailClosedWithoutBlockingRevoke() {
+        val (h,life,view)=functionsOwner();val slot=p98Slot(h.model);val scopes=p98Scopes(slot)
+        scopes.javaClass.getDeclaredField("active").let{it.isAccessible=true;it.setLong(scopes,Long.MAX_VALUE)} // TEST fault injection only.
+        assertNull(view.name(0));assertEquals(Long.MAX_VALUE,p98Count(scopes))
+        life.close();p98AssertDetached(h.model,slot)
+        assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes)) // Sticky broken metadata is never a receipt.
+        val type=scopes.javaClass;val fresh=type.getDeclaredConstructor().let{it.isAccessible=true;it.newInstance()}
+        p98Call(fresh,"end");assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(fresh))
+        p98Call(fresh,"end");assertEquals(0L,p98Count(fresh));assertEquals("NOT_QUIESCENT",p98Diagnosis(fresh))
+        assertEquals(false,p98Call(fresh,"enter"));assertEquals(0L,p98Count(fresh))
+        println("P98 fault injection: overflow/duplicate end never wrap or reopen; broken diagnosis sticky; synchronous revoke still works")
+    }
+    @Test fun p98ComposeSignalsDoNotEndPublicationOrGrantAnyReceipt() {
+        val (h,life,view)=functionsOwner();val scopes=p98Scopes(p98Slot(h.model))
+        repeat(3){view.compositionObserved();view.compositionDisposed()}
+        assertEquals(0L,p98Count(scopes));assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes))
+        assertNotNull(view.name(0));life.close();assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopes))
+        println("P98 Compose observed/disposed cannot end publication; no OutstandingCoreRead release connection")
+    }
+
     @Test fun oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse() {
         val h=H(true);h.port.deliver();val first=presentedIdentity(h.model)
         assertNotNull(first);assertNull(h.model.workspace)

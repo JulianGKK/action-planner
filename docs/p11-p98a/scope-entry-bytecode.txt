@@ -1,0 +1,215 @@
+private final <T> T withCoreScope(java.lang.Object, boolean, kotlin.jvm.functions.Function1<? super org.pag.prototype.product.ProductViewModel$CoreSlot, ? extends T>);
+    Code:
+       0: iconst_0
+       1: istore        4
+       3: iconst_0
+       4: istore        5
+       6: aload_0
+       7: invokestatic  #581                // Method access$getCoreSlot$p:(Lorg/pag/prototype/product/ProductViewModel;)Ljava/util/concurrent/atomic/AtomicReference;
+      10: astore        9
+      12: aload         9
+      14: monitorenter
+      15: nop
+      16: iconst_0
+      17: istore        10
+      19: aload_0
+      20: invokestatic  #581                // Method access$getCoreSlot$p:(Lorg/pag/prototype/product/ProductViewModel;)Ljava/util/concurrent/atomic/AtomicReference;
+      23: invokevirtual #545                // Method java/util/concurrent/atomic/AtomicReference.get:()Ljava/lang/Object;
+      26: checkcast     #547                // class org/pag/prototype/product/ProductViewModel$CoreSlot
+      29: dup
+      30: ifnonnull     38
+      33: pop
+      34: aconst_null
+      35: goto          82
+      38: astore        11
+      40: aload_1
+      41: ifnull        57
+      44: aload         11
+      46: invokevirtual #550                // Method org/pag/prototype/product/ProductViewModel$CoreSlot.getIdentity:()Ljava/lang/Object;
+      49: aload_1
+      50: if_acmpeq     57
+      53: aconst_null
+      54: goto          82
+      57: aload         11
+      59: invokevirtual #554                // Method org/pag/prototype/product/ProductViewModel$CoreSlot.getScopes:()Lorg/pag/prototype/product/ProductViewModel$VmCoreScopes;
+      62: invokevirtual #560                // Method org/pag/prototype/product/ProductViewModel$VmCoreScopes.enter:()Z
+      65: istore        5
+      67: iload         5
+      69: ifne          76
+      72: iload_2
+      73: ifeq          81
+      76: aload         11
+      78: goto          82
+      81: aconst_null
+      82: astore        10
+      84: iconst_1
+      85: invokestatic  #587                // Method kotlin/jvm/internal/InlineMarker.finallyStart:(I)V
+      88: aload         9
+      90: monitorexit
+      91: iconst_1
+      92: invokestatic  #590                // Method kotlin/jvm/internal/InlineMarker.finallyEnd:(I)V
+      95: aload         10
+      97: goto          116
+     100: astore        11
+     102: iconst_1
+     103: invokestatic  #587                // Method kotlin/jvm/internal/InlineMarker.finallyStart:(I)V
+     106: aload         9
+     108: monitorexit
+     109: iconst_1
+     110: invokestatic  #590                // Method kotlin/jvm/internal/InlineMarker.finallyEnd:(I)V
+     113: aload         11
+     115: athrow
+     116: dup
+     117: ifnonnull     123
+     120: pop
+     121: aconst_null
+     122: areturn
+     123: astore        6
+     125: nop
+     126: aload_3
+     127: aload         6
+     129: invokeinterface #592,  2          // InterfaceMethod kotlin/jvm/functions/Function1.invoke:(Ljava/lang/Object;)Ljava/lang/Object;
+     134: astore        7
+     136: iconst_1
+     137: invokestatic  #587                // Method kotlin/jvm/internal/InlineMarker.finallyStart:(I)V
+     140: iload         5
+     142: ifeq          153
+     145: aload         6
+     147: invokevirtual #554                // Method org/pag/prototype/product/ProductViewModel$CoreSlot.getScopes:()Lorg/pag/prototype/product/ProductViewModel$VmCoreScopes;
+     150: invokevirtual #595                // Method org/pag/prototype/product/ProductViewModel$VmCoreScopes.end:()V
+     153: iconst_1
+     154: invokestatic  #590                // Method kotlin/jvm/internal/InlineMarker.finallyEnd:(I)V
+     157: aload         7
+     159: areturn
+     160: astore        8
+     162: iconst_1
+     163: invokestatic  #587                // Method kotlin/jvm/internal/InlineMarker.finallyStart:(I)V
+     166: iload         5
+     168: ifeq          179
+     171: aload         6
+     173: invokevirtual #554                // Method org/pag/prototype/product/ProductViewModel$CoreSlot.getScopes:()Lorg/pag/prototype/product/ProductViewModel$VmCoreScopes;
+     176: invokevirtual #595                // Method org/pag/prototype/product/ProductViewModel$VmCoreScopes.end:()V
+     179: iconst_1
+     180: invokestatic  #590                // Method kotlin/jvm/internal/InlineMarker.finallyEnd:(I)V
+     183: aload         8
+     185: athrow
+    Exception table:
+       from    to  target type
+          15    84   100   any
+         100   102   100   any
+         125   136   160   any
+         160   162   160   any
+
+  static java.lang.Object withCoreScope$default(org.pag.prototype.product.ProductViewModel, java.lang.Object, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object);
+    Code:
+       0: iload         4
+       2: iconst_1
+       3: iand
+       4: ifeq          9
+       7: aconst_null
+       8: astore_1
+       9: iload         4
+      11: iconst_2
+      12: iand
+      13: ifeq          18
+      16: iconst_0
+      17: istore_2
+      18: iconst_0
+      19: istore        4
+      21: iconst_0
+      22: istore        5
+      24: aload_0
+      25: invokestatic  #581                // Method access$getCoreSlot$p:(Lorg/pag/prototype/product/ProductViewModel;)Ljava/util/concurrent/atomic/AtomicReference;
+      28: astore        9
+      30: aload         9
+      32: monitorenter
+      33: nop
+      34: iconst_0
+      35: istore        10
+      37: aload_0
+      38: invokestatic  #581                // Method access$getCoreSlot$p:(Lorg/pag/prototype/product/ProductViewModel;)Ljava/util/concurrent/atomic/AtomicReference;
+      41: invokevirtual #545                // Method java/util/concurrent/atomic/AtomicReference.get:()Ljava/lang/Object;
+      44: checkcast     #547                // class org/pag/prototype/product/ProductViewModel$CoreSlot
+      47: dup
+      48: ifnonnull     56
+      51: pop
+      52: aconst_null
+      53: goto          100
+      56: astore        11
+      58: aload_1
+      59: ifnull        75
+      62: aload         11
+      64: invokevirtual #550                // Method org/pag/prototype/product/ProductViewModel$CoreSlot.getIdentity:()Ljava/lang/Object;
+      67: aload_1
+      68: if_acmpeq     75
+      71: aconst_null
+      72: goto          100
+      75: aload         11
+      77: invokevirtual #554                // Method org/pag/prototype/product/ProductViewModel$CoreSlot.getScopes:()Lorg/pag/prototype/product/ProductViewModel$VmCoreScopes;
+      80: invokevirtual #560                // Method org/pag/prototype/product/ProductViewModel$VmCoreScopes.enter:()Z
+      83: istore        5
+      85: iload         5
+      87: ifne          94
+      90: iload_2
+      91: ifeq          99
+      94: aload         11
+      96: goto          100
+      99: aconst_null
+     100: astore        10
+     102: iconst_1
+     103: invokestatic  #587                // Method kotlin/jvm/internal/InlineMarker.finallyStart:(I)V
+     106: aload         9
+     108: monitorexit
+     109: iconst_1
+     110: invokestatic  #590                // Method kotlin/jvm/internal/InlineMarker.finallyEnd:(I)V
+     113: aload         10
+     115: goto          134
+     118: astore        11
+     120: iconst_1
+     121: invokestatic  #587                // Method kotlin/jvm/internal/InlineMarker.finallyStart:(I)V
+     124: aload         9
+     126: monitorexit
+     127: iconst_1
+     128: invokestatic  #590                // Method kotlin/jvm/internal/InlineMarker.finallyEnd:(I)V
+     131: aload         11
+     133: athrow
+     134: dup
+     135: ifnonnull     141
+     138: pop
+     139: aconst_null
+     140: areturn
+     141: astore        6
+     143: nop
+     144: aload_3
+     145: aload         6
+     147: invokeinterface #592,  2          // InterfaceMethod kotlin/jvm/functions/Function1.invoke:(Ljava/lang/Object;)Ljava/lang/Object;
+     152: astore        7
+     154: iconst_1
+     155: invokestatic  #587                // Method kotlin/jvm/internal/InlineMarker.finallyStart:(I)V
+     158: iload         5
+     160: ifeq          171
+     163: aload         6
+     165: invokevirtual #554                // Method org/pag/prototype/product/ProductViewModel$CoreSlot.getScopes:()Lorg/pag/prototype/product/ProductViewModel$VmCoreScopes;
+     168: invokevirtual #595                // Method org/pag/prototype/product/ProductViewModel$VmCoreScopes.end:()V
+     171: iconst_1
+     172: invokestatic  #590                // Method kotlin/jvm/internal/InlineMarker.finallyEnd:(I)V
+     175: aload         7
+     177: areturn
+     178: astore        8
+     180: iconst_1
+     181: invokestatic  #587                // Method kotlin/jvm/internal/InlineMarker.finallyStart:(I)V
+     184: iload         5
+     186: ifeq          197
+     189: aload         6
+     191: invokevirtual #554                // Method org/pag/prototype/product/ProductViewModel$CoreSlot.getScopes:()Lorg/pag/prototype/product/ProductViewModel$VmCoreScopes;
+     194: invokevirtual #595                // Method org/pag/prototype/product/ProductViewModel$VmCoreScopes.end:()V
+     197: iconst_1
+     198: invokestatic  #590                // Method kotlin/jvm/internal/InlineMarker.finallyEnd:(I)V
+     201: aload         8
+     203: athrow
+    Exception table:
+       from    to  target type
+          33   102   118   any
+         118   120   118   any
+         143   154   178   any
+         178   180   178   any

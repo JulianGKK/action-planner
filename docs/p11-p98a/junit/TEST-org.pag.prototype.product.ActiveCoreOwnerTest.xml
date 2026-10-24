@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveCoreOwnerTest" tests="53" skipped="0" failures="0" errors="0" timestamp="2026-10-24T04:13:43.640Z" hostname="iuzjhtgvfc" time="0.717">
+  <properties/>
+  <testcase name="fullViewReturnSurfacesAdmissionRefusalAndCannotReplayTheOldCore" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.296"/>
+  <testcase name="revokeBetweenFunctionLookupsLeavesPriorTextButDeniesLaterNamesCountsAndLines" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.053"/>
+  <testcase name="workerInvalidationDropsAuthorityBeforeOwnerNotificationAndLockClears" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.011"/>
+  <testcase name="p98MissingOldInvalidatorEndCannotChangeNewSlotDiagnosis" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.021"/>
+  <testcase name="oneCoreReplacesFullWorkspaceAndOnlyHostPortAllowsNavigationReuse" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.007"/>
+  <testcase name="productViewModelHasNoCoreBorrowOrCoreObservationSurface" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.009"/>
+  <testcase name="p98ForeignInvalidatorRemainsCountedAfterSynchronousRevoke" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.006"/>
+  <testcase name="hubHasExactlyThreeMetadataCardsCorrectScalarsAndOriginalNavigation" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.031"/>
+  <testcase name="inactiveForeignAndOverBudgetCandidatesNeverInstall" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.005"/>
+  <testcase name="actualProductRouterSelectsCompactRendererForEveryCompactActiveArea" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.013"/>
+  <testcase name="functionWriterPendingUnknownAndLateMainCannotRestoreOldCatalogue" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.019"/>
+  <testcase name="p98OriginalInstallationPublicationAndRejectionAreCounted" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.007"/>
+  <testcase name="tasksHandleResolvesOnlyThirtyTwoUnicodeTitlesAndExactExistingCounters" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.012"/>
+  <testcase name="hubOldIdentityCannotFollowReplacementAndPublicationRaceDeniesValuesAndCallbacks" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="personsAccessDeniesAuthorityRaceForeignThreadAndCannotFollowReplacementSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.009"/>
+  <testcase name="revokeBetweenHubScalarsDoesNotRecallEarlierValueAndDeniesFurtherResolutions" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="actionSwitchBackFullViewAndOldCallbacksCannotRestoreSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="workerSessionObserverDropsSlotBeforeComposeDispatchAndOnClearedClosesLifetime" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.005"/>
+  <testcase name="oldHubHandleAndCallbacksDenySessionActionGenerationLockAndRevoke" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.009"/>
+  <testcase name="oldPersonsAccessCannotResolveAfterLockRevokeGenerationActionOrStatusChange" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.008"/>
+  <testcase name="fullActiveAndPreparationEntityListsKeepTheirExistingRoute" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.01"/>
+  <testcase name="clearingSlotAndRepeatedDisposeCannotEraseAnAlreadyHeldProducerOrConsumerReference" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="hubWriterPendingUnknownLateMainAndForeignThreadCannotResolveOrNavigate" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.004"/>
+  <testcase name="functionsExposeCompleteSixThirtyTwoAndHundredCataloguesWithExactUnicodeNamesAndCounts" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.044"/>
+  <testcase name="revokeBetweenTaskScalarsPreservesAlreadyReturnedTextButDeniesEveryLaterLookup" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="hitPublicationHasNoEarlyNavigationAndLockDuringHitCannotRestoreSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="taskWriterPendingUnknownAndLateMainCannotRestoreOldHandleOrResolveSql" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="functionsDenyForeignThreadForeignIdentityPublicationRaceAndReplacement" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.005"/>
+  <testcase name="gapHostReuseHasNoPerHitPublicationAndReportsInteraction" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="p98CounterCorruptionAndOverflowFailClosedWithoutBlockingRevoke" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="p97SlotReplacementAndFullviewKeepExplicitOldTestReferenceUnconfirmed" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="p97OriginalFourHandleLinksEndButRunningScalarClosureStillHoldsOriginalSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.005"/>
+  <testcase name="duplicateCallbackCannotInstallSecondPayloadOrInvalidateTheConsumedSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="oversizedPersonsPageNeverCreatesPresentationHandle" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="p98InvalidationDispatchExceptionStillAcknowledgesOriginalScope" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.005"/>
+  <testcase name="preparationAlsoAnnouncesFullViewBeforeAnyCompactRead" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="p98LastResolverReturnOnlyAcknowledgesLocalScopes" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="p98ComposeSignalsDoNotEndPublicationOrGrantAnyReceipt" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="revokeImmediatelyAfterHitAndStatusChangeRemoveOriginalAuthority" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.004"/>
+  <testcase name="generationChangeRejectsOldPendingCallbackWithoutRevokingTheNewSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="personsPresentationIsOneIdentityOnlyHandleWithBoundedCorrectScalars" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.007"/>
+  <testcase name="p98OldDuplicateCallbacksAndWrongIdentityCannotAcknowledgeNewSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="functionsOldHandlesDenyLockRevokeGenerationActionAndContextWithoutNewRead" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.008"/>
+  <testcase name="falseReturnAndRevokeDuringInstallLeaveNoRetention" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <testcase name="p98InstallationExceptionAlsoAcknowledgesInitialScope" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="p98ResolverExceptionEndsScopeWithoutEndingPublication" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="p98ScopeMetadataAndInvalidatorAddNoPayloadCapture" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="oldTasksHandlesDenyLockRevokeGenerationActionStatusAndContextWithoutNewRead" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.008"/>
+  <testcase name="revokedCompactCoreDoesNotFallBackToFullEntityList" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.001"/>
+  <testcase name="compactCountsAndMoreAreExplicitAndLostCallbackHasNoSlot" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.015"/>
+  <testcase name="taskHandleRejectsForeignThreadPublicationRaceReplacementAndOversizedPage" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.005"/>
+  <testcase name="p98NestedResolversEndExactlyOnceInReverseOrder" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.003"/>
+  <testcase name="correctlyChargedCandidateUsesRetainedEightAndTransitionSixteenLimits" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.002"/>
+  <system-out><![CDATA[P98 pending A scope: B diagnosis independent before/after actual A callback return; fake replacement only
+P98 foreign invalidator: handles revoked synchronously; lock returned before foreign callback; quiescent only after return
+P98 original installation: revoke and rejected publication retain initial scope until callback finally
+P98 fault injection: overflow/duplicate end never wrap or reopen; broken diagnosis sticky; synchronous revoke still works
+P97 old-slot TEST reference BLOCKED while-held; fake-port replacement is not production readmission; fullview/form OUT_OF_SCOPE
+P97 VM fields/4 handle links CONFIRMED after-revoke; scalar-local BLOCKED until-call-return; no global retirement receipt
+P98 invalidation dispatch exception: existing runCatching policy unchanged; finally ends scope
+P98 resolver: detached+four-links-revoked while active=1 NOT_QUIESCENT; actual scope return => VM_SCOPES_QUIESCENT only
+P98 Compose observed/disposed cannot end publication; no OutstandingCoreRead release connection
+P98 identity: late duplicate A callbacks cannot detach/acknowledge/reopen B; no exposed receipt API
+P98 install exception: initial scope ended; published authority still requires revoke
+P98 resolver exception: finally acknowledged; published slot remains NOT_QUIESCENT until revoke
+P98 reference shape: scope object primitives only; invalidator captures original metadata identity/VM, no CoreSlot/Value/Payload
+P98 nesting: active=1/2/1/0; no transferable end token
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

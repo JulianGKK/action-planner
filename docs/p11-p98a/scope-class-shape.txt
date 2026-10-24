@@ -1,0 +1,11 @@
+Compiled from "ProductViewModel.kt"
+final class org.pag.prototype.product.ProductViewModel$VmCoreScopes {
+  private long active;
+  private boolean published;
+  private boolean broken;
+  public org.pag.prototype.product.ProductViewModel$VmCoreScopes();
+  public final synchronized boolean enter();
+  public final synchronized void end();
+  public final synchronized void publication(boolean);
+  public final synchronized java.lang.String diagnosis();
+}

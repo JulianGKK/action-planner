@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveWorkspaceBudgetTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-10-24T04:09:29.286Z" hostname="iuzjhtgvfc" time="0.019">
+  <properties/>
+  <testcase name="boundaryPlusOneByteCannotBeMaterializedOrSealed" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.002"/>
+  <testcase name="enormousSingleTextIsRefusedUsingOnlyItsLengthBeforeFetch" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.0"/>
+  <testcase name="negativeAggregatesAreInvalidDataEvenAfterBudgetRefusal" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.001"/>
+  <testcase name="multiplicationAndAdditionOverflowNeverWrapToSmallCharge" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.001"/>
+  <testcase name="transitionSixteenMiBBoundariesAndOversizedPromotionPreserveOldAccounting" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.001"/>
+  <testcase name="retainedAndExactlyOneTransitionHaveIndependentLimits" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.0"/>
+  <testcase name="objectsArraysCollectionsIndexesReferencesAndCopiesAreAllCharged" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.0"/>
+  <testcase name="budgetRefusalCannotConferValidityOrStorageRights" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.006"/>
+  <testcase name="exactEightMiBBoundaryIsAdmittedButNextAllocationIsRefused" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.001"/>
+  <testcase name="inconsistentPayloadWithoutAllocationCountIsInvalidData" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.0"/>
+  <testcase name="sealedOrForeignRepresentationCannotBeChargedAndCloseIsTerminal" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.001"/>
+  <testcase name="stickyRefusalStopsFurtherBoundedMaterializationAndDoesNotIncreaseBudget" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.0"/>
+  <testcase name="refusedTransitionCannotPromoteResetOrCreateAnotherTransition" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.0"/>
+  <testcase name="supplementaryUnicodeIsChargedInUtf16UnitsWithBackingAndAlignment" classname="org.pag.prototype.product.ActiveWorkspaceBudgetTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

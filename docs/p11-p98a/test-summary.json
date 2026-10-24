@@ -1,0 +1,52 @@
+{
+  "classes": [
+    {
+      "name": "org.pag.data.product.CoreReadAdmissionBudgetTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "org.pag.data.product.OutstandingCoreReadTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "org.pag.data.product.P97CoreReferenceLifetimeTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "org.pag.data.product.ProductActiveCoreLifetimeTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveCoreOwnerTest",
+      "tests": "53",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceBudgetTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "total": {
+    "tests": 109,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

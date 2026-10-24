@@ -63,11 +63,13 @@ class CoreReadAdmissionBudgetTest {
         val extra=CompactPresentationBudget.reservation
         val extraR=ActiveWorkspaceBudget.estimateUnits(extra.retained).second
         val extraT=ActiveWorkspaceBudget.estimateUnits(extra.transition).second
-        assertEquals(2592L,extraR);assertEquals(63680L,extraT)
+        assertEquals(2728L,extraR);assertEquals(63816L,extraT)
         val handle=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.handle).second
         val hub=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.hub).second
         val shared=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.sharedTransition).second
-        assertEquals(152L,handle);assertEquals(2136L,hub);assertEquals(handle*3+hub,extraR);assertEquals(handle*3+hub+shared,extraT)
+        val scopes=ActiveWorkspaceBudget.estimateUnits(CompactPresentationBudget.vmScopes).second
+        assertEquals(136L,scopes) // One metadata object and its original-slot reference, no per-entry allocations.
+        assertEquals(152L,handle);assertEquals(2136L,hub);assertEquals(handle*3+hub+scopes,extraR);assertEquals(handle*3+hub+scopes+shared,extraT)
         var work=0
         val fitting=plan(r-extraR,t-extraT){work++}
         val receipt=CoreReadAdmission.admit(listOf(fitting),extra)

@@ -20,11 +20,52 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private val ownerThread=Thread.currentThread()
     private var ownerDispatch: (() -> Unit) -> Unit = { work -> check(Thread.currentThread() === ownerThread);work() }
     private var activeCorePort:ActiveCoreLoadPort?=null
-    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any, val persons:CompactPersonsPresentation, val tasks:CompactTasksPresentation, val hub:CompactHubPresentation, val functions:CompactFunctionsPresentation) {
+    /** Metadata only. Lexical VM scopes, NOT an owner-end or reader-release receipt. */
+    private class VmCoreScopes {
+        private var active=1L // Original installation callback, before CoreSlot construction.
+        private var published=false
+        private var broken=false
+        @Synchronized fun enter():Boolean {
+            if(broken || active<0L || active==Long.MAX_VALUE || (active==0L && !published)) {
+                broken=true;return false // Sticky refusal, never wrap or reopen a retired scope.
+            }
+            active++;return true
+        }
+        @Synchronized fun end() {
+            if(broken || active<=0L) {broken=true;return}
+            active--
+        }
+        @Synchronized fun publication(value:Boolean) {
+            if(value && (broken || active==0L)) {broken=true;return}
+            published=value
+        }
+        @Synchronized fun diagnosis():String =
+            if(!broken && !published && active==0L) "VM_SCOPES_QUIESCENT" else "NOT_QUIESCENT"
+    }
+    private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any, val persons:CompactPersonsPresentation, val tasks:CompactTasksPresentation, val hub:CompactHubPresentation, val functions:CompactFunctionsPresentation, val scopes:VmCoreScopes) {
         var subscription:Subscription?=null
         fun close() { persons.invalidate();tasks.invalidate();hub.invalidate();functions.invalidate();subscription?.cancel();lifetime.close() }
     }
     private val coreSlot=AtomicReference<CoreSlot?>(null)
+    /** The short monitor covers acquisition+registration and detachment, never external work. */
+    private fun acquireCoreScope(identity:Any?=null):CoreSlot? = synchronized(coreSlot) {
+        val slot=coreSlot.get() ?: return@synchronized null
+        if(identity!=null && slot.identity!==identity)return@synchronized null
+        if(slot.scopes.enter())slot else null
+    }
+    private inline fun <T> withCoreScope(identity:Any?=null,revoking:Boolean=false,body:(CoreSlot)->T):T? {
+        var registered=false
+        val slot=synchronized(coreSlot) {
+            val held=coreSlot.get() ?: return@synchronized null
+            if(identity!=null && held.identity!==identity)return@synchronized null
+            registered=held.scopes.enter()
+            if(registered || revoking)held else null
+        } ?: return null
+        try { return body(slot) } finally { if(registered)slot.scopes.end() }
+    }
+    private fun detachCoreSlot(slot:CoreSlot):Boolean = synchronized(coreSlot) {
+        if(!coreSlot.compareAndSet(slot,null))false else {slot.scopes.publication(false);true}
+    }
     private var coreLoad:Any?=null
     private var coreSignal by mutableStateOf(0L)
     private var fullActiveView by mutableStateOf(false)
@@ -32,7 +73,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         check(activeCorePort==null && Thread.currentThread() === ownerThread)
         activeCorePort=port;ownerDispatch=dispatch
     }
-    private fun dropCoreAuthority() { coreSlot.getAndSet(null)?.close() }
+    private fun dropCoreAuthority() {
+        // Even corrupt/exhausted diagnostic metadata must never prevent synchronous revoke.
+        withCoreScope(revoking=true) { slot->if(detachCoreSlot(slot))slot.close() }
+    }
     private fun clearActiveCore() { coreLoad=null;activeCorePort?.cancelPending();dropCoreAuthority();coreSignal++ }
     val compactActiveMode get() = activeCorePort!=null && !fullActiveView && selected?.status==ActionStatus.ACTIVE &&
         activeArea in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS) &&
@@ -43,25 +87,25 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val core=slot.value.core
         if(snapshot.state!=SessionState.READY || selected?.status!=ActionStatus.ACTIVE || selected?.id!=core.action.id ||
             snapshot.generation!=core.state.binding.generation || !slot.lifetime.isCurrent()) {
-            if(coreSlot.compareAndSet(slot,null))slot.close()
+            if(detachCoreSlot(slot))slot.close()
             return false
         }
         return true
     }
     /** Pre-admitted metadata handles, never second page/payload roots. */
-    internal val compactPersonsPresentation:CompactPersonsPresentation? get() = presentationSlot(ActiveArea.PERSONS)?.persons
-    internal val compactTasksPresentation:CompactTasksPresentation? get() = presentationSlot(ActiveArea.TASKS)?.tasks
-    internal val compactHubPresentation:CompactHubPresentation? get() = presentationSlot(ActiveArea.HUB)?.hub
-    internal val compactFunctionsPresentation:CompactFunctionsPresentation? get() = presentationSlot(ActiveArea.FUNCTIONS)?.functions
-    private fun presentationSlot(area:ActiveArea):CoreSlot? {
+    internal val compactPersonsPresentation:CompactPersonsPresentation? get() = presentation(ActiveArea.PERSONS){it.persons}
+    internal val compactTasksPresentation:CompactTasksPresentation? get() = presentation(ActiveArea.TASKS){it.tasks}
+    internal val compactHubPresentation:CompactHubPresentation? get() = presentation(ActiveArea.HUB){it.hub}
+    internal val compactFunctionsPresentation:CompactFunctionsPresentation? get() = presentation(ActiveArea.FUNCTIONS){it.functions}
+    private inline fun <T> presentation(area:ActiveArea,read:(CoreSlot)->T):T? {
         coreSignal
         if(Thread.currentThread() !== ownerThread || activeArea!=area || !compactActiveMode)return null
-        val slot=coreSlot.get() ?: return null
-        if(!compactPresentationCurrent(slot,area)) {dropCompactPresentation(slot);return null}
-        return slot
+        return withCoreScope { slot->
+            if(!compactPresentationCurrent(slot,area)) {dropCompactPresentation(slot);null} else read(slot)
+        }
     }
     private fun dropCompactPresentation(slot:CoreSlot) {
-        if(coreSlot.compareAndSet(slot,null))slot.close() // No outstanding-read retirement.
+        if(detachCoreSlot(slot))slot.close() // No outstanding-read retirement.
     }
     private fun compactPresentationCurrent(slot:CoreSlot,area:ActiveArea):Boolean {
         val current=session.snapshot()
@@ -73,14 +117,15 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     private inline fun <T> resolveCompactPresentation(identity:Any,area:ActiveArea,crossinline read:(ActiveCorePayload)->T):T? {
         if(Thread.currentThread() !== ownerThread)return null
-        val slot=coreSlot.get()?.takeIf {it.identity===identity} ?: return null
-        if(!compactPresentationCurrent(slot,area) || !slot.lifetime.authorizeHit(slot.value.core.state.binding.actionId)) {
-            dropCompactPresentation(slot);return null
+        return withCoreScope(identity) { slot->
+            if(!compactPresentationCurrent(slot,area) || !slot.lifetime.authorizeHit(slot.value.core.state.binding.actionId)) {
+                dropCompactPresentation(slot);return null
+            }
+            var value:T?=null
+            val accepted=slot.lifetime.publish { if(compactPresentationCurrent(slot,area))value=read(slot.value.core) }
+            if(!accepted || !compactPresentationCurrent(slot,area)) {dropCompactPresentation(slot);return null}
+            value
         }
-        var value:T?=null
-        val accepted=slot.lifetime.publish { if(compactPresentationCurrent(slot,area))value=read(slot.value.core) }
-        if(!accepted || !compactPresentationCurrent(slot,area)) {dropCompactPresentation(slot);return null}
-        return value
     }
     internal fun compactPersonsShown(identity:Any):Int? = resolveCompactPresentation(identity,ActiveArea.PERSONS){it.people.items.size}
     internal fun compactPersonsTotal(identity:Any):Long? = resolveCompactPresentation(identity,ActiveArea.PERSONS){it.people.overall.total}
@@ -125,8 +170,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     internal fun compactPresentationComposition(identity:Any,observed:Boolean) {
         if(Thread.currentThread() !== ownerThread)return
-        val slot=coreSlot.get()?.takeIf {it.identity===identity} ?: return
-        if(observed)slot.lifetime.compositionObserved() else slot.lifetime.compositionDisposed()
+        withCoreScope(identity) { slot->
+            if(observed)slot.lifetime.compositionObserved() else slot.lifetime.compositionDisposed()
+        }
     }
     fun useFullActiveView() {
         if(!activeNavigationEnabled)return
@@ -143,37 +189,45 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         personsLoading=true;detailLoading=false;workspaceError=false
         var consumed=false
         val queued=port.loadOwned(action.id) { result,lifetime ->
-            if(consumed) {if(coreSlot.get()?.lifetime !== lifetime)lifetime?.close();return@loadOwned}
+            if(consumed) {if(withCoreScope {it.lifetime === lifetime}!=true)lifetime?.close();return@loadOwned}
             consumed=true
             if(coreLoad !== identity || snapshot.state!=SessionState.READY || snapshot.generation!=generation ||
                 selected?.id!=action.id || selected?.status!=ActionStatus.ACTIVE || !compactActiveMode) { lifetime?.close();return@loadOwned }
             if(result !is ActiveCoreResult.Value || lifetime==null) {
                 lifetime?.close();personsLoading=false;workspaceError=true;return@loadOwned
             }
-            val core=result.core
-            if(core.action.id!=action.id || core.action.status!=ActionStatus.ACTIVE || core.state.binding.actionId!=action.id ||
-                core.state.binding.generation!=generation || core.people.state!=core.state || core.tasks.state!=core.state ||
-                core.people.items.size>32 || core.tasks.items.size>32 ||
-                ActiveWorkspaceBudget.estimateUnits(result.reservation.retained).let { it.first!=ActiveWorkspaceBudget.Decision.ADMITTED || it.second!=result.retainedCharge } ||
-                ActiveWorkspaceBudget.estimateUnits(result.reservation.transition).let { it.first!=ActiveWorkspaceBudget.Decision.ADMITTED || it.second!=result.transitionCharge } ||
-                result.retainedCharge !in 0..ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || result.transitionCharge !in 0..ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES) {
-                lifetime.close();personsLoading=false;workspaceError=true;return@loadOwned
-            }
             val slotIdentity=Any()
-            val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity),CompactTasksPresentation(this,slotIdentity),CompactHubPresentation(this,slotIdentity),CompactFunctionsPresentation(this,slotIdentity,core.functions.items.size))
-            slot.subscription=lifetime.onInvalidated {
-                val held=coreSlot.get()
-                if(held?.identity === slotIdentity && coreSlot.compareAndSet(held,null)) {
-                    held.persons.invalidate();held.tasks.invalidate();held.hub.invalidate();held.functions.invalidate()
-                    // No Compose mutation on a session worker; authority/reference already gone.
-                    runCatching { ownerDispatch { coreSignal++ } }
+            val scopes=VmCoreScopes()
+            try {
+                val core=result.core
+                if(core.action.id!=action.id || core.action.status!=ActionStatus.ACTIVE || core.state.binding.actionId!=action.id ||
+                    core.state.binding.generation!=generation || core.people.state!=core.state || core.tasks.state!=core.state ||
+                    core.people.items.size>32 || core.tasks.items.size>32 ||
+                    ActiveWorkspaceBudget.estimateUnits(result.reservation.retained).let { it.first!=ActiveWorkspaceBudget.Decision.ADMITTED || it.second!=result.retainedCharge } ||
+                    ActiveWorkspaceBudget.estimateUnits(result.reservation.transition).let { it.first!=ActiveWorkspaceBudget.Decision.ADMITTED || it.second!=result.transitionCharge } ||
+                    result.retainedCharge !in 0..ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || result.transitionCharge !in 0..ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES) {
+                    lifetime.close();personsLoading=false;workspaceError=true;return@loadOwned
                 }
-            }
-            val installed=lifetime.publish { if(coreLoad === identity)coreSlot.set(slot) }
-            if(!installed || coreSlot.get() !== slot || !lifetime.isCurrent()) {
-                coreSlot.compareAndSet(slot,null);slot.close()
-            }
-            personsLoading=false;workspaceRefreshing=false;coreSignal++
+                val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity),CompactTasksPresentation(this,slotIdentity),CompactHubPresentation(this,slotIdentity),CompactFunctionsPresentation(this,slotIdentity,core.functions.items.size),scopes)
+                slot.subscription=lifetime.onInvalidated {
+                    withCoreScope(slotIdentity,revoking=true) { held->
+                        if(detachCoreSlot(held)) {
+                            held.persons.invalidate();held.tasks.invalidate();held.hub.invalidate();held.functions.invalidate()
+                            // No Compose mutation on a session worker; authority/reference already gone.
+                            runCatching { ownerDispatch { coreSignal++ } }
+                        }
+                    }
+                }
+                val installed=lifetime.publish {
+                    synchronized(coreSlot) {
+                        if(coreLoad === identity) {coreSlot.set(slot);scopes.publication(true)}
+                    }
+                }
+                if(!installed || coreSlot.get() !== slot || !lifetime.isCurrent()) {
+                    detachCoreSlot(slot);slot.close()
+                }
+                personsLoading=false;workspaceRefreshing=false;coreSignal++
+            } finally { scopes.end() }
         }
         if(!queued) {clearActiveCore();personsLoading=false;workspaceError=true}
     }
@@ -302,48 +356,50 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (!activeNavigationEnabled || (area == ActiveArea.MATERIAL && !materialAvailable) || (area == ActiveArea.COSTS && !expensesAvailable) || (area == ActiveArea.MEMORY_REPORTS && !memoryReportsAvailable)) return
         val hitNavigation=retained==null && activeCorePort?.reuseEnabled==true &&
             area in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS)
-        val candidate=coreSlot.get().takeIf { hitNavigation }
-        fun currentNavigation() = activeNavigationEnabled && snapshot.generation==before.generation &&
-            session.snapshot().let {it.state==SessionState.READY && it.generation==before.generation} &&
-            selected?.id==action.id && selected?.status==ActionStatus.ACTIVE
-        val reuse=if(candidate!=null) {
-            // Validate the original slot around the fresh central gate. Never renew idle
-            // for an attempted hit, including a denial that falls back to a fresh read.
-            val admitted=currentCoreSlot(candidate) && candidate.lifetime.authorizeHit(action.id)
-            val valid=admitted && currentNavigation() && coreSlot.get()===candidate &&
-                currentCoreSlot(candidate)
-            if(!valid) {if(coreSlot.compareAndSet(candidate,null))candidate.close()}
-            valid
-        } else {
-            // A synchronous revoke may already have removed the slot. This fallback
-            // must not turn a denied hit into an idle renewal either. Gate-off fresh
-            // reads and ordinary non-core/editor navigation retain their semantics.
-            if(!hitNavigation)interaction()
-            false
-        }
-        if (!currentNavigation()) return
-        clearPersons(preserveCore=reuse)
-        if (!currentNavigation()) return
-        activeArea = area
-        if(retained!=null)fullActiveView=true
-        confirming = null; changeError = null
-        if(reuse && coreSlot.get()===candidate && candidate!=null && currentCoreSlot(candidate)) {personsLoading=false;return}
-        // A person-task tap already has both boards. Keep that valid snapshot so
-        // its synchronous form opening needs no interaction from a load callback.
-        if (area == ActiveArea.TASKS && retained?.actionId == action.id && retained.generation == before.generation &&
-            retained.operations != null && retained.tasks != null) workspace = retained
-        if(area==ActiveArea.MEMORY_REPORTS && workspaceRepository!=null)memoryReports.enter(deferList=true)
-        if(workspaceRepository!=null)when(area) {
-            ActiveArea.PROTOCOL->protocol.prepareWorkspaceTimeline()
-            ActiveArea.MATERIAL->material.enter(deferRead=true)
-            ActiveArea.COSTS->expenses.enter(deferRead=true)
-            else->Unit
-        }
-        if (area != ActiveArea.DETAILS) loadWorkspace()
-        if (area == ActiveArea.PROTOCOL && workspaceRepository==null) protocol.refresh()
-        if (area == ActiveArea.MATERIAL && workspaceRepository==null) material.enter()
-        if (area == ActiveArea.COSTS && workspaceRepository==null) expenses.enter()
-        if (area == ActiveArea.MEMORY_REPORTS && workspaceRepository==null) memoryReports.enter()
+        val candidate=if(hitNavigation)acquireCoreScope() else null
+        try {
+            fun currentNavigation() = activeNavigationEnabled && snapshot.generation==before.generation &&
+                session.snapshot().let {it.state==SessionState.READY && it.generation==before.generation} &&
+                selected?.id==action.id && selected?.status==ActionStatus.ACTIVE
+            val reuse=if(candidate!=null) {
+                // Validate the original slot around the fresh central gate. Never renew idle
+                // for an attempted hit, including a denial that falls back to a fresh read.
+                val admitted=currentCoreSlot(candidate) && candidate.lifetime.authorizeHit(action.id)
+                val valid=admitted && currentNavigation() && coreSlot.get()===candidate &&
+                    currentCoreSlot(candidate)
+                if(!valid) {if(detachCoreSlot(candidate))candidate.close()}
+                valid
+            } else {
+                // A synchronous revoke may already have removed the slot. This fallback
+                // must not turn a denied hit into an idle renewal either. Gate-off fresh
+                // reads and ordinary non-core/editor navigation retain their semantics.
+                if(!hitNavigation)interaction()
+                false
+            }
+            if (!currentNavigation()) return
+            clearPersons(preserveCore=reuse)
+            if (!currentNavigation()) return
+            activeArea = area
+            if(retained!=null)fullActiveView=true
+            confirming = null; changeError = null
+            if(reuse && coreSlot.get()===candidate && candidate!=null && currentCoreSlot(candidate)) {personsLoading=false;return}
+            // A person-task tap already has both boards. Keep that valid snapshot so
+            // its synchronous form opening needs no interaction from a load callback.
+            if (area == ActiveArea.TASKS && retained?.actionId == action.id && retained.generation == before.generation &&
+                retained.operations != null && retained.tasks != null) workspace = retained
+            if(area==ActiveArea.MEMORY_REPORTS && workspaceRepository!=null)memoryReports.enter(deferList=true)
+            if(workspaceRepository!=null)when(area) {
+                ActiveArea.PROTOCOL->protocol.prepareWorkspaceTimeline()
+                ActiveArea.MATERIAL->material.enter(deferRead=true)
+                ActiveArea.COSTS->expenses.enter(deferRead=true)
+                else->Unit
+            }
+            if (area != ActiveArea.DETAILS) loadWorkspace()
+            if (area == ActiveArea.PROTOCOL && workspaceRepository==null) protocol.refresh()
+            if (area == ActiveArea.MATERIAL && workspaceRepository==null) material.enter()
+            if (area == ActiveArea.COSTS && workspaceRepository==null) expenses.enter()
+            if (area == ActiveArea.MEMORY_REPORTS && workspaceRepository==null) memoryReports.enter()
+        } finally { candidate?.scopes?.end() }
     }
     fun activePersonTasks(personId: String, create: Boolean) {
         val generation = snapshot.generation
