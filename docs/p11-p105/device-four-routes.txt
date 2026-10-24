@@ -1,0 +1,17 @@
+INSTRUMENTATION_STATUS: stream=P96_ROUTE,HUB,visible=PASS,oneCoreRead=true,oldHandle=DENIED,UNKNOWN=DENIED,lateMain=DENIED,readmission=DENIED,reuse=false,ramReuse=false,fixtureCleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P96_ROUTE,PERSONS,visible=PASS,oneCoreRead=true,oldHandle=DENIED,UNKNOWN=DENIED,lateMain=DENIED,readmission=DENIED,reuse=false,ramReuse=false,fixtureCleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P96_ROUTE,TASKS,visible=PASS,oneCoreRead=true,oldHandle=DENIED,UNKNOWN=DENIED,lateMain=DENIED,readmission=DENIED,reuse=false,ramReuse=false,fixtureCleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P96_ROUTE,FUNCTIONS,visible=PASS,oneCoreRead=true,oldHandle=DENIED,UNKNOWN=DENIED,lateMain=DENIED,readmission=DENIED,reuse=false,ramReuse=false,fixtureCleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P96_CASE,ANDROID-PASS,scopes=4,publicBorrowApi=ABSENT,physicalWipe=NOT_CLAIMED
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P96 PASS
+INSTRUMENTATION_CODE: -1

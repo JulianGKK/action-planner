@@ -1,0 +1,41 @@
+{
+  "app": [
+    {
+      "name": "org.pag.prototype.product.ActiveWorkspaceTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "org.pag.prototype.product.ActiveCoreOwnerTest",
+      "tests": "53",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "data": [
+    {
+      "name": "org.pag.data.product.CoreReadAdmissionBudgetTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "org.pag.data.product.P97CoreReferenceLifetimeTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "org.pag.data.product.OutstandingCoreReadTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ]
+}

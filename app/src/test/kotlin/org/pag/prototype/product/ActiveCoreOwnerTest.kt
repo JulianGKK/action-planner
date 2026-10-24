@@ -551,6 +551,22 @@ class ActiveCoreOwnerTest {
         h.session.lock();assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(scopes))
         println("P98 resolver exception: finally acknowledged; published slot remains NOT_QUIESCENT until revoke")
     }
+    @Test fun p105FullviewNavigationDuringOriginalPublicationCannotEndTheInstallingScope() {
+        val h=H();val life=Lifetime();var original:Any?=null
+        life.duringPublication={
+            original=p98Slot(h.model)
+            val scopes=p98Scopes(original!!)
+            assertEquals(1L,p98Count(scopes))
+            h.model.useFullActiveView()
+            p98AssertDetached(h.model,original!!)
+            assertEquals(1L,p98Count(scopes));assertEquals("NOT_QUIESCENT",p98Diagnosis(scopes))
+            assertTrue(h.port.fullViews>0)
+        }
+        h.port.deliver(lifetime=life)
+        assertEquals("VM_SCOPES_QUIESCENT",p98Diagnosis(p98Scopes(original!!)))
+        assertEquals(1,h.port.reads)
+        println("P105 navigation inside original installation publication: detached does not end installing scope; quiescent only after callback finally; host port, no global retirement")
+    }
     @Test fun p98OriginalInstallationPublicationAndRejectionAreCounted() {
         for(reject in listOf(false,true)) {
             val h=H();val life=Lifetime();life.falseAfter=reject

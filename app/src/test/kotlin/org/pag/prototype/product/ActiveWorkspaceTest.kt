@@ -87,6 +87,42 @@ class ActiveWorkspaceTest {
         if (model.activeArea != ActiveArea.FUNCTIONS) tasks.loads.last()(OperationsResult.Value(taskBoard))
         if (model.selected?.status == ActionStatus.ACTIVE && model.activeArea in setOf(ActiveArea.HUB, ActiveArea.PROTOCOL)) summaries.last()(ProtocolResult.Value(ProtocolSummary(3, 1000)))
     }
+    @Test fun p105CombinedWorkspaceCallbackRetainsOwnBoardAfterPublicationAndLock() {
+        var request:WorkspaceReadRequest?=null
+        var callback:((WorkspaceResult)->Unit)?=null
+        model.bindWorkspace(object:WorkspaceRepository {
+            override fun read(r:WorkspaceReadRequest,publish:(WorkspaceResult)->Unit){request=r;callback=publish}
+        })
+        open()
+        val r=request!!
+        val full=board.copy(persons=listOf(person.copy(state=PersonOperationalState("a","p",null,OperationalStatus.NO_STATUS,null,0,7))))
+        val delivered=WorkspaceResult.Value(WorkspaceRead("a",ActionStatus.ACTIVE,1,r.parts,full,taskBoard,ProtocolSummary(3,1000)))
+        val testCallback=callback!! // Explicit TEST alias to the real VM callback, not another product owner.
+        testCallback(delivered)
+        assertSame(full,model.workspace!!.operations)
+        fun capturesBoard():Boolean = testCallback.javaClass.declaredFields.any{f->
+            f.isAccessible=true;val v=f.get(testCallback)
+            v===full || (v is kotlin.jvm.internal.Ref.ObjectRef<*> && v.element===full)
+        }
+        assertTrue(capturesBoard())
+        session.lock();assertNull(model.workspace)
+        assertTrue(capturesBoard())
+        testCallback(delivered);assertNull(model.workspace)
+        println("P105 fullview: original VM callback contains board ObjectRef after return/lock; TEST alias retains callback; no late publication; no global end receipt")
+    }
+    @Test fun p105Schema12TaskExpectedAndDraftClearDoesNotInvalidateAnActiveCallersAlias() {
+        open();complete()
+        val versioned=task.copy(editRevision=7)
+        model.tasks.open(versioned);model.tasks.edit();model.tasks.change(model.tasks.input.copy(title="Synthetic unsaved draft"))
+        val field=model.tasks.javaClass.getDeclaredField("editorExpected").apply{isAccessible=true}
+        val testExpected=field.get(model.tasks) as Task // Explicit TEST alias representing an already started owner call.
+        val testDraft=model.tasks.input
+        assertSame(versioned,testExpected)
+        session.lock()
+        assertNull(field.get(model.tasks));assertFalse(model.tasks.form);assertNull(model.workspace)
+        assertEquals(7L,testExpected.editRevision);assertEquals("Synthetic unsaved draft",testDraft.title)
+        println("P105 form: lock revokes current state, does not erase pre-existing TEST Expected/draft aliases; no physical wipe or owner-end claim")
+    }
     @Test fun activeStartsAtHubAndPublishesAllRequiredSourcesTogetherWithoutProtectionReads() {
         open(); assertEquals(ActiveArea.HUB, model.activeArea); assertNull(model.workspace)
         ops.loads.last()(OperationsResult.Value(board)); assertNull(model.workspace)

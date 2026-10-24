@@ -1,0 +1,14 @@
+INSTRUMENTATION_STATUS: stream=P105,small,CORE,first_visible=true,navigation_after_exposure=DENIED,old_handle=DENIED,reads=1,state=State(phase=COMPOSE_TRANSITION, retained=0, transition=16777216, localRetained=1547555, localTransition=6266096, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=COMPOSE_OR_FRAME_UNCONFIRMED, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P105,small,FULLVIEW_FORM,actual_persons=20,actual_tasks=40,workspace_Main_retains_result_after_return=true,queued_writer_retains_Expected=true,Expected_revision=0,lock_clears_VM_not_callers=true,TEST_aliases_explicit=true,fullview_has_no_Core_admission_receipt=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P105,small,END,late_Main_no_restore=true,lock_before_writer_no_commit=true,reauth_readmission=DENIED,global_owner_end=BLOCKED
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P105,small,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P105 PASS small
+INSTRUMENTATION_CODE: -1

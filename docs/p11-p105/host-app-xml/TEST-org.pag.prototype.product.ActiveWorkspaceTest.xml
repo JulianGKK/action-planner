@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveWorkspaceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-24T17:30:01.237Z" hostname="iuzjhtgvfc" time="0.064">
+  <properties/>
+  <testcase name="p105Schema12TaskExpectedAndDraftClearDoesNotInvalidateAnActiveCallersAlias" classname="org.pag.prototype.product.ActiveWorkspaceTest" time="0.038"/>
+  <testcase name="p105CombinedWorkspaceCallbackRetainsOwnBoardAfterPublicationAndLock" classname="org.pag.prototype.product.ActiveWorkspaceTest" time="0.025"/>
+  <system-out><![CDATA[P105 form: lock revokes current state, does not erase pre-existing TEST Expected/draft aliases; no physical wipe or owner-end claim
+P105 fullview: original VM callback contains board ObjectRef after return/lock; TEST alias retains callback; no late publication; no global end receipt
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

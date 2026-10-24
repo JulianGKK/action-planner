@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveCoreOwnerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-24T17:45:27.331Z" hostname="iuzjhtgvfc" time="0.312">
+  <properties/>
+  <testcase name="p105FullviewNavigationDuringOriginalPublicationCannotEndTheInstallingScope" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.305"/>
+  <system-out><![CDATA[P105 navigation inside original installation publication: detached does not end installing scope; quiescent only after callback finally; host port, no global retirement
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

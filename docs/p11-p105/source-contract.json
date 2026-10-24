@@ -1,0 +1,16 @@
+{
+  "production_diff_empty": true,
+  "sha256": {
+    "data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt": "3ae941d84b4acdd2767a0ae299ae434f8c69e2aa5b60e7bbc94de6ba36ea44d3",
+    "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLoader.kt": "27a97d41f0fea163ca1923b8a9af66176fcb576486be8023bdb88eb5fc9b40f4",
+    "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLifetime.kt": "3166d6c0e8f579a334a7f8273d7f46da1b407e765bbc1d54c1b28550afdc3d6d",
+    "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreReader.kt": "d3654eb76a1cd088bf520b46d062128d72caf80058f3ec254e7387f995b6aead",
+    "data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt": "06e1883c27316907d7b487cc33ba9a31f920beacc165c3d80a1acfd9db09d9cb",
+    "data/src/main/kotlin/org/pag/data/product/CoreReadAdmission.kt": "4a17e526ce1472071d450eed594447143605eabe8b389d317b73c8ea230e98b0",
+    "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt": "586da35ac7c4f431d5f0ecfcb33bdb5eca96cbc8be71a66ffff15ce84eaf28ff",
+    "app/src/main/kotlin/org/pag/prototype/product/TaskModel.kt": "6d41286b257cc6d5acef547b4e676008438f26fe9df4d2bd54cb4b9096466eba",
+    "app/src/main/kotlin/org/pag/prototype/product/OperationsModel.kt": "ab0b26c5d3aa07a6d9e2b5b0a1a947074cf680866b0074e6748688787c9cb00f",
+    "app/src/main/kotlin/org/pag/prototype/product/ActiveWorkspace.kt": "ca89b78458638f66cf111b17e2243c26684c5bf39ffe8833605291dbdde7564e",
+    "app/src/main/kotlin/org/pag/prototype/MainActivity.kt": "b96af894ea113258b16b052102f3f823369a468f97fbc8caa0bb418562c0a201"
+  }
+}
