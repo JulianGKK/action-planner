@@ -1,0 +1,14 @@
+INSTRUMENTATION_STATUS: stream=P109,active,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=1215964, transition=16777216, localRetained=1215964, localTransition=4686064, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,active,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,active,HISTORY,two_pages=32+32,old_TEST_page_held=true,distinct=true,full_graphs=1,record=State(phase=RETAINED, retained=3097668, transition=16777216, localRetained=3097668, localTransition=11654928, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,active,STORAGE,title_match=1,revision=1,events=4960,edit_has_no_new_TaskEvent=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: shortMsg=Process crashed.
+INSTRUMENTATION_CODE: 0

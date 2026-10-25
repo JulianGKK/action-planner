@@ -57,6 +57,7 @@ internal fun activeTaskActions(status: TaskStatus): List<TaskStatus> = TaskStatu
     if (selected != null) {
         val card = activeTaskCard(selected, people, now, zone)
         PreparationHeading(card.title)
+        Text("Revision: ${selected.editRevision}")
         Text(card.status)
         Text("Zuständig: ${card.assignee}")
         card.affected?.let { Text("Betrifft: $it") }

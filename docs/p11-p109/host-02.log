@@ -1,0 +1,133 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:processResources NO-SOURCE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:preDebugUnitTestBuild
+> Task :data:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :app:preBuild
+> Task :app:preDebugBuild
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :security:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :security:extractDeepLinksDebug UP-TO-DATE
+> Task :security:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :security:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:preDebugUnitTestBuild
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :domain:compileKotlin
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar
+> Task :data:kspDebugKotlin
+
+> Task :data:compileDebugKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:282:111 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:282:170 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:292:73 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductLeadershipRepository.kt:307:531 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt:45:83 Unnecessary non-null assertion (!!) on a non-null receiver of type 'WorkspaceMutationInvalidation'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt:220:85 Unnecessary non-null assertion (!!) on a non-null receiver of type 'WorkspaceMutationInvalidation'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt:221:104 Unnecessary safe call on a non-null receiver of type 'WorkspaceMutationInvalidation'.
+
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :data:bundleLibRuntimeToJarDebug
+> Task :data:bundleLibCompileToJarDebug
+> Task :data:kspDebugUnitTestKotlin
+
+> Task :app:compileDebugKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PreparationWorkspace.kt:151:42 Condition is always 'true'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:348:12 Condition is always 'false'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:539:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:555:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:571:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:587:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:761:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:764:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:772:120 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:testDebugUnitTest
+> Task :data:compileDebugUnitTestKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/TimedSessionTest.kt:152:53 The corresponding parameter in the supertype 'AuthenticationExperiment' is named 'complete'. This may cause problems when calling this function with named arguments.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/TimedSessionTest.kt:173:53 The corresponding parameter in the supertype 'AuthenticationExperiment' is named 'complete'. This may cause problems when calling this function with named arguments.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/DocumentImportStagingTest.kt:104:182 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Long'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/DocumentReadKeyCancellationTest.kt:19:115 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/DocumentReadKeyCancellationTest.kt:33:146 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/P101LeadershipWriterTest.kt:117:51 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Runnable'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/P106FullviewOverlapTest.kt:24:76 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Runnable'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/P108WorkspaceAccessTest.kt:89:97 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Runnable'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/P11DiagnosticCleanupTest.kt:19:35 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/P83OverlapBudgetTest.kt:73:23 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ActiveCoreResult.Value'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/P83OverlapBudgetTest.kt:81:48 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ActiveCoreResult.Value'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/P83OverlapBudgetTest.kt:81:84 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ActiveCoreResult.Value'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/P83OverlapBudgetTest.kt:81:114 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ActiveCoreResult.Value'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/P83OverlapBudgetTest.kt:81:135 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ActiveCoreResult.Value'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/ProductActiveCoreLoaderTest.kt:76:29 Unnecessary non-null assertion (!!) on a non-null receiver of type 'WorkspaceMutationInvalidation.ActiveReadTicket'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/product/ProductActiveCoreLoaderTest.kt:79:46 Unnecessary non-null assertion (!!) on a non-null receiver of type 'WorkspaceMutationInvalidation.ActiveReadTicket'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/prototype/b2/B2KeyContractTest.kt:55:64 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/prototype/b2/B2KeyContractTest.kt:58:68 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/prototype/b2/B2KeyContractTest.kt:61:94 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/prototype/b2/B2KeyContractTest.kt:64:79 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/prototype/b2/B2KeyContractTest.kt:67:100 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/prototype/b2/B2KeyContractTest.kt:70:101 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/prototype/b2/B2KeyContractTest.kt:74:49 Expression is unused.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/data/src/test/kotlin/org/pag/data/prototype/b2/B2KeyContractTest.kt:77:92 Expression is unused.
+
+> Task :data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :data:testDebugUnitTest
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 1m 9s
+66 actionable tasks: 15 executed, 51 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html

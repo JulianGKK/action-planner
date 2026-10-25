@@ -21,6 +21,115 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
     constructor(app:Context,access:StorageAccess,inventory:ProductInventory,owner:()->SessionDbKeyOwner?,
         worker:Executor,main:Executor,blocked:()->Unit,mutations:WorkspaceMutationInvalidation):this(app,access,inventory,owner,worker,main,blocked,OutstandingCoreRead.product,null,mutations)
 
+    override fun detail(original:WorkspaceAccess,request:WorkspaceDetailRequest,publish:(WorkspaceDetailResult)->Unit) {
+        val scope=original as? OriginalWorkspaceAccess
+        fun reject(reason:WorkspaceFailure){publish(WorkspaceDetailResult.Rejected(reason))}
+        if(scope==null || scope.source!==access || Thread.currentThread()!==scope.thread ||
+            !memory.ownsFullview(scope.entry) || !scope.entry.readable() || !scope.original.check(AccessPoint.STEP) ||
+            scope.request.ticket?.active==false || !request.ticket.active || request.id.isBlank() ||
+            request.actionId!=scope.request.actionId || request.status!=scope.status || request.generation!=scope.original.generation) {
+            reject(WorkspaceFailure.OWNER_UNCONFIRMED);return
+        }
+        val baseline=request.baseline
+        if(baseline!=null && baseline.access!==scope){reject(WorkspaceFailure.STALE);return}
+        val control=try{if(baseline==null)OriginalWorkspaceAccess.cost else WorkspaceConsistency.cost(baseline)}catch(_:ArithmeticException){reject(WorkspaceFailure.BUDGET_REFUSED);return}
+        if(!scope.entry.reserve(control)){reject(WorkspaceFailure.BUDGET_REFUSED);return}
+        val c=access.acquire(AccessScope.READY) ?: return
+        if(c.generation!=request.generation || !c.check(AccessPoint.OPERATION))return
+        // This asks the existing writer owner. Pending/UNKNOWN/uncertain cleanup deny here.
+        val authority=mutations?.beforeActiveRead(request.actionId,c.generation)
+            ?: run{reject(WorkspaceFailure.OWNER_UNCONFIRMED);return}
+        val child=scope.entry.supplement(WorkspacePart.TASKS)
+            ?: run{reject(scope.entry.additionalFailure);return}
+        val read=WorkspaceReadRequest(request.actionId,request.status,request.generation,emptySet(),ticket=request.ticket)
+        val fresh=OriginalWorkspaceAccess(scope.entry,access,c,authority,mutations!!,read,scope.thread)
+        fun current()=fresh.liveOnWorker() && request.ticket.active
+        fun deliver(result:WorkspaceDetailResult) {
+            val handoff=child.main(Runnable{fresh.publish(request.actionId,request.status,request.generation){if(current())publish(result)}})
+            try{main.execute(handoff)}catch(_:java.util.concurrent.RejectedExecutionException){child.mainRejected()}
+        }
+        val work=child.worker(Runnable {
+            try {
+                val result=DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()) {
+                    if(!current())throw StorageAccessRevoked()
+                    (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->db.withReadTransaction {
+                        val names=when(request.kind){
+                            WorkspaceDetailKind.PERSON->setOf("actions","persons")
+                            WorkspaceDetailKind.TASK->FullviewPreflight.task
+                            WorkspaceDetailKind.PLAN->setOf("actions","persons","person_role_plans","person_planned_roles")
+                            WorkspaceDetailKind.MATERIAL->FullviewPreflight.material
+                            WorkspaceDetailKind.EXPENSE->FullviewPreflight.expense
+                        }
+                        // Validate held unrelated rows before the target DTO is materialized.
+                        if(baseline!=null && !WorkspaceConsistency(this,::current).matches(baseline,request))
+                            return@withReadTransaction WorkspaceDetailResult.Rejected(WorkspaceFailure.STALE)
+                        val allNames=if(baseline?.leadershipState!=null)names+setOf("leadership","sensitive_person_areas") else names
+                        val reservation=FullviewPreflight(this,c,::current).prepare(request.actionId,allNames,detail=request)
+                        if(!current())throw StorageAccessRevoked()
+                        if(!child.admit(reservation))return@withReadTransaction WorkspaceDetailResult.Rejected(WorkspaceFailure.BUDGET_REFUSED)
+                        if(!current())throw StorageAccessRevoked()
+                        val action=db.actions().get(request.actionId)?.model()
+                            ?: return@withReadTransaction WorkspaceDetailResult.Rejected(WorkspaceFailure.NOT_FOUND)
+                        if(action.status!=request.status || !OperationalRules.mayRead(action.status))
+                            return@withReadTransaction WorkspaceDetailResult.Rejected(WorkspaceFailure.NOT_ALLOWED)
+                        val a=request.actionId;val id=request.id
+                        val value=when(request.kind){
+                            WorkspaceDetailKind.PERSON->db.persons().get(a,id)?.model()?.let{WorkspaceDetail(fresh,person=it)}
+                            WorkspaceDetailKind.TASK->db.tasks().get(a,id)?.model()?.let{WorkspaceDetail(fresh,task=it)}
+                            WorkspaceDetailKind.MATERIAL->db.materials().get(a,id)?.model()?.let{WorkspaceDetail(fresh,material=it)}
+                            WorkspaceDetailKind.EXPENSE->{
+                                val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
+                                when(val r=ExpenseStore(db,guarded,System::currentTimeMillis).detail(a,id)){
+                                    is OperationsResult.Value->WorkspaceDetail(fresh,expense=r.value)
+                                    is OperationsResult.Rejected->null
+                                }
+                            }
+                            WorkspaceDetailKind.PLAN->{
+                                val person=db.persons().get(a,id)?.model()
+                                val header=db.operations().personPlan(a,id)
+                                if(person==null || header==null)null else {
+                                    if(header.editRevision<0)throw ProductStorageFailure()
+                                    val ids=db.operations().personAssignments(a,id).map{it.roleId}.toSet()
+                                    if(!OperationalRules.validPlan(ids,header.primaryRoleId))throw ProductStorageFailure()
+                                    WorkspaceDetail(fresh,person=person,plan=ExpectedPersonRolePlan(a,id,PersonRolePlan(ids,header.primaryRoleId,header.editRevision)))
+                                }
+                            }
+                        }
+                        if(!current())throw StorageAccessRevoked()
+                        if(value==null)WorkspaceDetailResult.Rejected(WorkspaceFailure.NOT_FOUND) else {
+                            val updated=baseline?.let{b->
+                                val people=if(value.person!=null || value.plan!=null)b.operations.persons.map{p->
+                                    if(p.person.id!=id)p else OperationalPerson(value.person?:p.person,value.plan?.plan?:p.plan,p.state)
+                                }else b.operations.persons
+                                val operations=if(people===b.operations.persons)b.operations else b.operations.copy(persons=people)
+                                val tasks=if(value.task!=null)b.tasks?.let{it.copy(tasks=it.tasks.map{t->if(t.id==id)checkNotNull(value.task) else t})} else b.tasks
+                                val materials=if(value.material!=null)b.materialBoard?.let{it.copy(items=it.items.map{m->if(m.id==id)checkNotNull(value.material) else m})} else b.materialBoard
+                                val expenses=if(value.expense!=null)b.expenseBoard?.let{it.copy(expenses=it.expenses.map{e->if(e.id==id)checkNotNull(value.expense) else e})} else b.expenseBoard
+                                val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
+                                val protection=if(b.leadershipState!=null)leadershipState?.invoke(db,guarded,a) else null
+                                val materialSummary=if(b.material!=null)when(val x=MaterialStore(db,guarded,System::currentTimeMillis).summary(a)){is OperationsResult.Value->x.value;else->throw ProductStorageFailure()} else null
+                                val expenseSummary=if(b.expenses!=null)when(val x=ExpenseStore(db,guarded,System::currentTimeMillis).summary(a)){is OperationsResult.Value->x.value;else->throw ProductStorageFailure()} else null
+                                val protocol=if(b.protocol!=null)when(val x=ProtocolStore(db,guarded,System::currentTimeMillis).summary(a)){is ProtocolResult.Value->x.value;else->throw ProductStorageFailure()} else null
+                                val memorySummary=if(b.memory!=null)when(val x=MemoryReportStore(db,guarded,System::currentTimeMillis).summary(a)){is OperationsResult.Value->x.value;else->throw ProductStorageFailure()} else null
+                                val documents=if(b.documents!=null)DocumentSummary(db.documents().count(a)) else null
+                                b.copy(operations=operations,tasks=tasks,materialBoard=materials,expenseBoard=expenses,
+                                    access=fresh,leadershipState=protection,material=materialSummary,expenses=expenseSummary,
+                                    protocol=protocol,memory=memorySummary,documents=documents)
+                            }
+                            WorkspaceDetailResult.Value(value.copy(workspace=updated))
+                        }
+                    }}}
+                }
+                deliver(result)
+            }catch(f:StorageAccessRevoked){if(f.suppressed.isNotEmpty())child.unconfirmed()}
+             catch(f:BoundedActiveRejected){
+                if(f.suppressed.isNotEmpty() || f.status!=BoundedActiveStatus.BUDGET_REFUSED){child.unconfirmed()}
+                else deliver(WorkspaceDetailResult.Rejected(WorkspaceFailure.BUDGET_REFUSED))
+             }catch(_:Exception){child.unconfirmed();main.execute{if(c.check(AccessPoint.STEP))blocked()}}
+        })
+        try{worker.execute(work)}catch(_:java.util.concurrent.RejectedExecutionException){child.workerRejected()}
+    }
+
     /** Missing modules only, never a second Operations/Task/Workspace board graph. */
     override fun supplement(access:WorkspaceAccess,request:WorkspaceReadRequest,publish:(WorkspaceSupplementResult)->Unit) {
         val scope=access as? OriginalWorkspaceAccess ?: return

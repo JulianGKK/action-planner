@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.P109RemainingConsumerContractTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-25T08:38:26.720Z" hostname="iuzjhtgvfc" time="0.949">
+  <properties/>
+  <testcase name="heldPresentationGenerationsHaveNoMarginalReservationAtTheExistingConsumerGate" classname="org.pag.prototype.product.P109RemainingConsumerContractTest" time="0.948"/>
+  <system-out><![CDATA[P109_KNOWN_BLOCKER,generations=32768,held_lists=32768,list_capacity=1310720,minimum_R_model_bytes=14680064,reservations=0,product_budget=UNPROVEN
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

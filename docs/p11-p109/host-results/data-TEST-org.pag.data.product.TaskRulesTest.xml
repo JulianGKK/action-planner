@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.TaskRulesTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-25T07:26:27.489Z" hostname="iuzjhtgvfc" time="0.004">
+  <properties/>
+  <testcase name="titleCodepointsAndDefaults" classname="org.pag.data.product.TaskRulesTest" time="0.0"/>
+  <testcase name="persistedStatusPolicy" classname="org.pag.data.product.TaskRulesTest" time="0.0"/>
+  <testcase name="templatesAreOnlyInputsAndKeysAreStable" classname="org.pag.data.product.TaskRulesTest" time="0.001"/>
+  <testcase name="allLifecyclePairsAndCompletionTimes" classname="org.pag.data.product.TaskRulesTest" time="0.0"/>
+  <testcase name="activeSortingAndAffectedCounts" classname="org.pag.data.product.TaskRulesTest" time="0.001"/>
+  <testcase name="assignmentAndAffectedPersonAreIndependent" classname="org.pag.data.product.TaskRulesTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

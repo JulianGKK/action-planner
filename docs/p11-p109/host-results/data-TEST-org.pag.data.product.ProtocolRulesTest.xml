@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.ProtocolRulesTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-25T07:26:21.258Z" hostname="iuzjhtgvfc" time="0.018">
+  <properties/>
+  <testcase name="expectedSnapshotIncludesChildrenButNotPseudonyms" classname="org.pag.data.product.ProtocolRulesTest" time="0.003"/>
+  <testcase name="freeTypesAndKnownKeys" classname="org.pag.data.product.ProtocolRulesTest" time="0.0"/>
+  <testcase name="allOptionalTextLimitsUseCodepoints" classname="org.pag.data.product.ProtocolRulesTest" time="0.005"/>
+  <testcase name="policyIsProtocolOnly" classname="org.pag.data.product.ProtocolRulesTest" time="0.0"/>
+  <testcase name="emptyOptionalFieldsBecomeNullWithoutUnicodeNormalization" classname="org.pag.data.product.ProtocolRulesTest" time="0.0"/>
+  <testcase name="identifiersAreBoundedOrderedAndNotDeduplicated" classname="org.pag.data.product.ProtocolRulesTest" time="0.001"/>
+  <testcase name="announcementRequiresItsKind" classname="org.pag.data.product.ProtocolRulesTest" time="0.001"/>
+  <testcase name="affectedPersonsAreASetWithNoSmallLimit" classname="org.pag.data.product.ProtocolRulesTest" time="0.001"/>
+  <testcase name="projectionsHaveNoSensitiveDetailFields" classname="org.pag.data.product.ProtocolRulesTest" time="0.003"/>
+  <testcase name="mistakenTransitionsNeedExplicitCorrection" classname="org.pag.data.product.ProtocolRulesTest" time="0.001"/>
+  <testcase name="nineteenExactTemplatesDoNotPersistOrInterpret" classname="org.pag.data.product.ProtocolRulesTest" time="0.0"/>
+  <testcase name="titleUsesTrimmedCodepoints" classname="org.pag.data.product.ProtocolRulesTest" time="0.0"/>
+  <testcase name="reportedPersonOnlyForReportedSourceAndAlwaysOptional" classname="org.pag.data.product.ProtocolRulesTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

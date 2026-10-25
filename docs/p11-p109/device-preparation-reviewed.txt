@@ -1,0 +1,23 @@
+INSTRUMENTATION_STATUS: stream=P109,preparation,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=965004, transition=16777216, localRetained=965004, localTransition=3682224, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,preparation,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,preparation,PLAN,opened=true,revision=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,preparation,MATERIAL_REQUEST,refreshing=true,refusal=null,materializations=0,record=State(phase=RETAINED, retained=1519609, transition=16777216, localRetained=1519609, localTransition=5441509, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,preparation,NAVIGATION,task_draft_open_change_cancel=true,material_same_board=true,expense_same_board=true,each_supplement=1,full_graphs=1,record=State(phase=RETAINED, retained=2876801, transition=16777216, localRetained=2876801, localTransition=8615141, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,preparation,NEGATIVE,held_TEST_snapshot=true,second_full_graph=REFUSED,lock_and_new_generation=REFUSED,record=State(phase=RETAINED, retained=2876801, transition=16777216, localRetained=2876801, localTransition=8615141, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,preparation,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false,closure=UNDER_TEST
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P109 PASS preparation
+INSTRUMENTATION_CODE: -1

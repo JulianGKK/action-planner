@@ -58,4 +58,5 @@
     <instrumentation android:name="org.pag.prototype.P107FullviewAdmissionProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P106FullviewEntryProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P108FunctionalOwnerProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P109FunctionalOwnerProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

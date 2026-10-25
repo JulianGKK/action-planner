@@ -26,6 +26,7 @@ internal class HostCoreWriterData(private val sql:SqliteHostConnection):CoreWrit
         override suspend fun update(row:ActionRow)=change("UPDATE actions SET title=?,description=?,startAt=?,expectedEndAt=?,createdAt=?,status=?,sensitivity=?,completedAt=? WHERE id=?",listOf(row.title,row.description,row.startAt,row.expectedEndAt,row.createdAt,row.status,row.sensitivity,row.completedAt,row.id))
     }
     override val persons=object:PersonDao {
+        override suspend fun exists(actionId:String,personId:String)=query("SELECT EXISTS(SELECT 1 FROM persons WHERE actionId=? AND id=?)",listOf(actionId,personId)){it.step();it.getLong(0)==1L}
         override suspend fun list(actionId:String)=rows("SELECT * FROM persons WHERE actionId=? ORDER BY createdAt,id",listOf(actionId),::person)
         override suspend fun get(actionId:String,id:String)=query("SELECT * FROM persons WHERE actionId=? AND id=?",listOf(actionId,id)){if(it.step())person(it)else null}
         override suspend fun samePseudonym(actionId:String,normalized:String)=query("SELECT * FROM persons WHERE actionId=? AND pseudonymNormalized=?",listOf(actionId,normalized)){if(it.step())person(it)else null}
@@ -33,6 +34,7 @@ internal class HostCoreWriterData(private val sql:SqliteHostConnection):CoreWrit
         override suspend fun rename(actionId:String,id:String,pseudonym:String,normalized:String,expectedRevision:Long)=change("UPDATE persons SET pseudonym=?,pseudonymNormalized=?,editRevision=editRevision+1 WHERE actionId=? AND id=? AND editRevision=? AND typeof(editRevision)='integer' AND editRevision>=0 AND editRevision<9223372036854775807",listOf(pseudonym,normalized,actionId,id,expectedRevision))
     }
     override val operations=object:OperationsDao {
+        override suspend fun exists(actionId:String,roleId:String)=query("SELECT EXISTS(SELECT 1 FROM roles WHERE actionId=? AND id=?)",listOf(actionId,roleId)){it.step();it.getLong(0)==1L}
         override suspend fun roles(actionId:String)=rows("SELECT * FROM roles WHERE actionId=? ORDER BY normalizedName,id",listOf(actionId),::role)
         override suspend fun role(actionId:String,roleId:String)=query("SELECT * FROM roles WHERE actionId=? AND id=?",listOf(actionId,roleId)){if(it.step())role(it)else null}
         override suspend fun insertRole(row:RoleRow){change("INSERT INTO roles VALUES(?,?,?,?,?,?)",listOf(row.id,row.actionId,row.name,row.normalizedName,row.createdAt,row.editRevision))}

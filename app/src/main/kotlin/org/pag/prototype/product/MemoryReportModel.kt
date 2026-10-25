@@ -8,6 +8,43 @@ enum class MemoryReportMode { LIST, SECTION, SUMMARY, DETAIL, ADDENDUM }
 class MemoryReportModel(private val repository: MemoryReportRepository?, private val session: () -> SessionSnapshot,
     private val action: () -> Action?, private val interaction: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit) {
+    private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
+    internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
+    private fun copyData(extra:String?=null,producer:()->Unit):Boolean {
+        val f=AppConsumerCopies.Footprint();f.text(authorLabel);f.text(addendum)
+        for((key,value) in answers){f.text(key);f.answer(value)}
+        for((key,value) in detail?.answers.orEmpty()){f.text(key);f.answer(value)}
+        for(value in detail?.addenda.orEmpty())f.text(value.content)
+        f.item(decisions.size.toLong())
+        val failure=if(copyGate==null){producer();null}else copyGate!!.invoke(f.units(extra),producer)
+        if(failure!=null){error=failure;return false};return true
+    }
+    private fun <T> copies(fallback:T,producer:()->T):T {var value=fallback;copyData{value=producer()};return value}
+    fun textAnswer(key:String,typed:String)=act {
+        copyData(typed){
+            val q=MemoryQuestionnaireV1.question(key)?:return@copyData
+            val count=if(q.type==MemoryAnswerType.OPTIONAL_COUNT && typed.isNotEmpty() && typed.all{it in '0'..'9'})typed.toIntOrNull() else null
+            applyAnswer(key,if(typed.isEmpty())null else if(count!=null)MemoryAnswerValue.Count(count) else MemoryAnswerValue.Text(typed))
+        }
+    }
+    fun optionAnswer(key:String,option:String)=act {
+        copyData(option){
+            val q=MemoryQuestionnaireV1.question(key)?:return@copyData
+            val old=answers[key]
+            if(q.type==MemoryAnswerType.MULTI_CHOICE){
+                val previous=(old as? MemoryAnswerValue.Multi)?.keys.orEmpty()
+                fun special(key:String)=key=="UNKNOWN" || key=="UNCLEAR" || key=="NO_ASSESSMENT"
+                val next=if(option in previous)previous-option else if(special(option))listOf(option) else previous.filterNot(::special)+option
+                applyAnswer(key,next.takeIf{it.isNotEmpty()}?.let{MemoryAnswerValue.Multi(it)})
+            }else applyAnswer(key,if((old as? MemoryAnswerValue.Option)?.key==option)null else MemoryAnswerValue.Option(option))
+        }
+    }
+    fun answerText(key:String):String=when(val value=answers[key]){
+        is MemoryAnswerValue.Text->value.text
+        is MemoryAnswerValue.Count->copies(""){value.count.toString()}
+        else->""
+    }
+    fun answerValid(key:String):Boolean {val value=answers[key]?:return true;return copies(false){MemoryAnswerCodec.encode(key,value)!=null}}
     var mode by mutableStateOf(MemoryReportMode.LIST); private set
     var headers by mutableStateOf<List<MemoryReportHeader>?>(null); private set
     var detail by mutableStateOf<MemoryReportDetail?>(null); private set
@@ -34,11 +71,11 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
     val completedView get() = available && boundStatus == ActionStatus.COMPLETED
     val expected get() = detail?.header
     val preFirstSave get() = mode == MemoryReportMode.SECTION && expected == null
-    val combinedAnswers get() = detail?.answers.orEmpty().filterKeys { MemoryQuestionnaireV1.question(it)?.sectionOrdinal != sectionOrdinal } + answers
-    val conflicts get() = answers.keys.filter { MemoryQuestionnaireV1.question(it)?.dependency?.active(combinedAnswers) == false }.toSet()
-    val unresolved get() = conflicts - decisions
-    val sectionValid get() = mode == MemoryReportMode.SECTION && (sectionOrdinal != 0 || MemoryReportRules.authorValid(authorLabel)) &&
-        answers.all { (key, value) -> MemoryAnswerCodec.encode(key, value) != null } && unresolved.isEmpty()
+    val combinedAnswers get() = copies(emptyMap<String,MemoryAnswerValue>()){detail?.answers.orEmpty().filterKeys { MemoryQuestionnaireV1.question(it)?.sectionOrdinal != sectionOrdinal } + answers}
+    val conflicts get():Set<String> {val combined=combinedAnswers;return copies(emptySet<String>()){answers.keys.filter { MemoryQuestionnaireV1.question(it)?.dependency?.active(combined) == false }.toSet()}}
+    val unresolved get():Set<String> {val conflicting=conflicts;return copies(emptySet<String>()){conflicting - decisions}}
+    val sectionValid get() = error!=OperationsFailure.BUDGET_REFUSED && error!=OperationsFailure.OWNER_UNCONFIRMED && mode == MemoryReportMode.SECTION && (sectionOrdinal != 0 || MemoryReportRules.authorValid(authorLabel)) &&
+        copies(false){answers.all { (key, value) -> MemoryAnswerCodec.encode(key, value) != null }} && unresolved.isEmpty()
     fun clear() {
         epoch++; request++; opened = false; boundAction = null; boundStatus = null; generation = null
         headers = null; resetEditor(); loading = false; busy = false; error = null
@@ -109,7 +146,7 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
     }
     private fun showSection(ordinal: Int) {
         sectionOrdinal = ordinal; mode = MemoryReportMode.SECTION
-        answers = detail?.answers.orEmpty().filterKeys { MemoryQuestionnaireV1.question(it)?.sectionOrdinal == ordinal }
+        if(!copyData{answers = detail?.answers.orEmpty().filterKeys { MemoryQuestionnaireV1.question(it)?.sectionOrdinal == ordinal }})return
         authorLabel = detail?.header?.authorLabel ?: authorLabel
         dirty = false; decisions = emptySet(); confirmingComplete = false
     }
@@ -117,18 +154,19 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
         val h = expected ?: return@act
         if (h.status == MemoryReportStatus.DRAFT && ordinal in 0..h.lastSavedSectionOrdinal) showSection(ordinal)
     }
-    fun changeAuthor(value: String) = act { if (mode == MemoryReportMode.SECTION && sectionOrdinal == 0) { authorLabel = value; dirty = true; invalidCleared() } }
-    fun changeAnswer(key: String, value: MemoryAnswerValue?) = act {
-        if (mode != MemoryReportMode.SECTION || MemoryQuestionnaireV1.question(key)?.sectionOrdinal != sectionOrdinal) return@act
-        request++; loading = false
-        answers = if (value == null) answers - key else answers + (key to value)
-        // Any edited parent/detail requires a fresh explicit keep decision.
-        decisions = decisions.filterNot { it == key || MemoryQuestionnaireV1.question(it)?.dependency?.parentKey == key }.toSet()
-        dirty = true; invalidCleared()
+    fun changeAuthor(value: String) = act { if (mode == MemoryReportMode.SECTION && sectionOrdinal == 0) { copyData(value){authorLabel = value; dirty = true; invalidCleared()} } }
+    fun removeAnswer(key:String)=act {copyData{applyAnswer(key,null)}}
+    internal fun changeAnswer(key:String,value:MemoryAnswerValue?)=act {copyData{applyAnswer(key,value)}}
+    private fun applyAnswer(key:String,value:MemoryAnswerValue?){
+        if(mode!=MemoryReportMode.SECTION || MemoryQuestionnaireV1.question(key)?.sectionOrdinal!=sectionOrdinal)return
+        request++;loading=false
+        answers=if(value==null)answers-key else answers+(key to value)
+        decisions=decisions.filterNot{it==key || MemoryQuestionnaireV1.question(it)?.dependency?.parentKey==key}.toSet()
+        dirty=true;invalidCleared()
     }
     private fun invalidCleared() { if (error == OperationsFailure.INVALID) error = null }
-    fun keepDetail(key: String) = act { if (key in conflicts) { decisions = decisions + key; dirty = true } }
-    fun removeDetail(key: String) = act { if (key in conflicts) { answers = answers - key; decisions = decisions - key; dirty = true } }
+    fun keepDetail(key: String) = act { if (key in conflicts) { copyData{decisions = decisions + key; dirty = true} } }
+    fun removeDetail(key: String) = act { if (key in conflicts) { copyData{answers = answers - key; decisions = decisions - key; dirty = true} } }
     fun requestLeave(recordInteraction: Boolean = true, leave: () -> Unit) {
         if (!available || busy) return
         val token = epoch
@@ -156,8 +194,10 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
         }
     }
     fun save() = act { current ->
-        if (error == OperationsFailure.STALE || !sectionValid) { if (error != OperationsFailure.STALE) error = OperationsFailure.INVALID; return@act }
-        val section = MemorySectionSave(sectionOrdinal, answers, conflicts.intersect(decisions), authorLabel.takeIf { sectionOrdinal == 0 })
+        if (error == OperationsFailure.STALE || !sectionValid) { if (error !in setOf(OperationsFailure.STALE,OperationsFailure.BUDGET_REFUSED,OperationsFailure.OWNER_UNCONFIRMED)) error = OperationsFailure.INVALID; return@act }
+        val conflicting=conflicts
+        if(!copyData{})return@act
+        val section = MemorySectionSave(sectionOrdinal, answers, conflicting.intersect(decisions), authorLabel.takeIf { sectionOrdinal == 0 })
         val h = expected; val next = sectionOrdinal + 1
         write(current, "Abschnitt gespeichert", next) { done ->
             if (h == null) repository?.create(boundAction!!, authorLabel, section, done)
@@ -172,7 +212,7 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
         write(current, "Gedächtnisprotokoll abgeschlossen") { repository?.complete(boundAction!!, h, it) }
     }
     fun startAddendum() = act { if (expected?.status == MemoryReportStatus.COMPLETED) { mode = MemoryReportMode.ADDENDUM; addendum = ""; dirty = false; error = null } }
-    fun changeAddendum(value: String) = act { if (mode == MemoryReportMode.ADDENDUM) { addendum = value; dirty = true; invalidCleared() } }
+    fun changeAddendum(value: String) = act { if (mode == MemoryReportMode.ADDENDUM) { copyData(value){addendum = value; dirty = true; invalidCleared()} } }
     fun saveAddendum() = act { current ->
         val h = expected ?: return@act
         if (mode != MemoryReportMode.ADDENDUM || !MemoryReportRules.addendumValid(addendum) || error == OperationsFailure.STALE) return@act

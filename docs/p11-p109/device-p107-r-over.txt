@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P107,r-over,PREFLIGHT,BUDGET_REFUSED,materializations=0,no_EMPTY=true,record=State(phase=DENIED, retained=0, transition=0, localRetained=8388609, localTransition=4685680, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=true, refusal=FULLVIEW_BUDGET_REFUSED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,r-over,BOUNDARY,R=8388609,T=4685680,disjoint_TEST_scratch_plan=true,actual_extra_array=0,materializations=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P107,r-over,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P107 PASS r-over
+INSTRUMENTATION_CODE: -1

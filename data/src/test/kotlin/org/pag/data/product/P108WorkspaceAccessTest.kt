@@ -143,4 +143,16 @@ class P108WorkspaceAccessTest {
         assertThrows(IllegalStateException::class.java){h.access.publish("a",ActionStatus.PREPARATION,1){error("Synthetic callback exception")}}
         assertTrue(h.access.publish("a",ActionStatus.PREPARATION,1){calls++});assertEquals(2,calls)
     }
+    @Test fun heldDraftCopiesRequireFreshSessionButNeverReviveReadOrGrantWriterAuthority(){
+        val h=H();val pending=h.mutations.beforeCoreQueue(WorkspaceMutation(WorkspaceWriterFamily.PERSON,"a"),1)!!
+        pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE))
+        var copies=0;val before=h.record.state()
+        assertTrue(h.access.consume(ActiveWorkspaceBudget.Units(objects=1)){copies++})
+        assertEquals(1,copies);assertTrue(h.record.state().localRetained>before.localRetained)
+        assertFalse(h.access.publish("a",ActionStatus.PREPARATION,1){fail("Old ticket")})
+        h.allowed=false
+        assertFalse(h.access.consume(ActiveWorkspaceBudget.Units(objects=1)){copies++})
+        assertEquals(1,copies);assertNull(h.record.beginFullview("a",1))
+    }
+
 }

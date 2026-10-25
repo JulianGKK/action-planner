@@ -1,0 +1,67 @@
+[
+  {
+    "scenario": "person",
+    "log": "device-person-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "stale",
+    "log": "device-stale-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "active",
+    "log": "device-active-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "plan",
+    "log": "device-plan-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "material",
+    "log": "device-material-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "expense",
+    "log": "device-expense-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "preparation",
+    "log": "device-preparation-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "completed",
+    "log": "device-completed-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "large",
+    "log": "device-large-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "lock-detail",
+    "log": "device-lock-detail-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "lost-detail-main",
+    "log": "device-lost-detail-main-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "duplicate-detail-main",
+    "log": "device-duplicate-detail-main-reviewed.txt",
+    "passed": true
+  },
+  {
+    "scenario": "unknown-detail",
+    "log": "device-unknown-detail-reviewed.txt",
+    "passed": true
+  }
+]

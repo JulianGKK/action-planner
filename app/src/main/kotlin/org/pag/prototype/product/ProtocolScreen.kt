@@ -138,43 +138,42 @@ internal fun protocolTimelinePhase(item: ProtocolTimelineItem) = protocolEntryPh
         })
         Text("Ereigniszeit und Erfassungszeit können voneinander abweichen.")
     }
-    fun change(value: ProtocolInput) = model.change(value)
     if (model.revisionType == ProtocolRevisionType.CORRECTION) {
-        ProtocolClassification.entries.forEach { c -> FormOutlinedButton({ change(input.copy(classification = c)) }, modifier = Modifier.semantics { selected = input.classification == c }, enabled = !model.busy) { Text((if (input.classification == c) "✓ " else "") + protocolClassification(c)) } }
+        ProtocolClassification.entries.forEach { c -> FormOutlinedButton({ model.classification(c) }, modifier = Modifier.semantics { selected = input.classification == c }, enabled = !model.busy) { Text((if (input.classification == c) "✓ " else "") + protocolClassification(c)) } }
         if (model.expected?.revision?.mistaken == true) ProtocolToggle("Irrtumsmarkierung zurücknehmen", model.clearMistaken, !model.busy, model::toggleClearMistaken)
     }
-    FormTextField(input.title, { change(input.copy(title = it)) }, label = { Text("Titel") }, modifier = Modifier.fillMaxWidth(), enabled = !model.busy,
+    FormTextField(input.title, { model.title(it) }, label = { Text("Titel") }, modifier = Modifier.fillMaxWidth(), enabled = !model.busy,
         autoFocus = model.revisionType == ProtocolRevisionType.ORIGINAL, keyboardOptions = productKeyboard(ProductTextKind.ACTION_TITLE),
         supportingText = { Text("Keine Namen oder Kennnummern im Titel. Maximal 120 Zeichen.") })
     key(model.expected?.revision?.id, model.revisionType) { DateTimeField("Ereigniszeit", model.eventTime, model.zone, model::touch, model::changeTime) }
-    ProtocolToggle("Zeitpunkt ungefähr", input.occurredAtApproximate, !model.busy) { change(input.copy(occurredAtApproximate = !input.occurredAtApproximate)) }
-    FormTextField(input.description.orEmpty(), { change(input.copy(description = it)) }, label = { Text("Beschreibung · optional (max. 2000 Zeichen)") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth(), keyboardOptions = productKeyboard(ProductTextKind.DESCRIPTION))
+    ProtocolToggle("Zeitpunkt ungefähr", input.occurredAtApproximate, !model.busy) { model.approximate() }
+    FormTextField(input.description.orEmpty(), { model.description(it) }, label = { Text("Beschreibung · optional (max. 2000 Zeichen)") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth(), keyboardOptions = productKeyboard(ProductTextKind.DESCRIPTION))
     ProtocolFormActions(model)
     if (model.error == ProtocolFailure.STALE) FormOutlinedButton(model::currentVersion, enabled = !model.busy) { Text("Zur aktuellen Fassung · Eingaben verwerfen") }
     FormOutlinedButton(model::toggleFields, modifier = Modifier.semantics { stateDescription = if (model.moreFields) "Ausgeklappt" else "Eingeklappt" }, enabled = !model.busy) { Text("Weitere Angaben") }
     if (!model.moreFields) return
-    FormTextField(input.placeLabel.orEmpty(), { change(input.copy(placeLabel = it)) }, label = { Text("Ort / lokale Bezeichnung · max. 80 Zeichen") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth(), keyboardOptions = productKeyboard(ProductTextKind.PLACE))
+    FormTextField(input.placeLabel.orEmpty(), { model.place(it) }, label = { Text("Ort / lokale Bezeichnung · max. 80 Zeichen") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth(), keyboardOptions = productKeyboard(ProductTextKind.PLACE))
     PreparationHeading("Quellenart")
-    (listOf<ProtocolSourceType?>(null) + ProtocolSourceType.entries).forEach { source -> FormOutlinedButton({ change(input.copy(sourceType = source)) }, modifier = Modifier.semantics { selected = input.sourceType == source }, enabled = !model.busy) { Text((if (input.sourceType == source) "✓ " else "") + protocolSource(source)) } }
+    (listOf<ProtocolSourceType?>(null) + ProtocolSourceType.entries).forEach { source -> FormOutlinedButton({ model.source(source) }, modifier = Modifier.semantics { selected = input.sourceType == source }, enabled = !model.busy) { Text((if (input.sourceType == source) "✓ " else "") + protocolSource(source)) } }
     if (input.sourceType == ProtocolSourceType.REPORTED) {
         PreparationHeading("Mitgeteilt von · optional")
-        FormOutlinedButton({ change(input.copy(reportedByPersonId = null)) }, enabled = !model.busy) { Text("Keine Person") }
-        persons.forEach { p -> FormOutlinedButton({ change(input.copy(reportedByPersonId = p.id)) }, modifier = Modifier.semantics { selected = input.reportedByPersonId == p.id }, enabled = !model.busy) { Text((if (input.reportedByPersonId == p.id) "✓ " else "") + p.pseudonym) } }
+        FormOutlinedButton({ model.reportedBy(null) }, enabled = !model.busy) { Text("Keine Person") }
+        persons.forEach { p -> FormOutlinedButton({ model.reportedBy(p.id) }, modifier = Modifier.semantics { selected = input.reportedByPersonId == p.id }, enabled = !model.busy) { Text((if (input.reportedByPersonId == p.id) "✓ " else "") + p.pseudonym) } }
     }
     PreparationHeading("Betroffene Personen · optional")
     persons.forEach { p -> ProtocolToggle(p.pseudonym, p.id in input.affectedPersonIds, !model.busy) {
-        change(input.copy(affectedPersonIds = if (p.id in input.affectedPersonIds) input.affectedPersonIds - p.id else input.affectedPersonIds + p.id))
+        model.affected(p.id)
     } }
     PreparationHeading("Ansage · optional")
-    FormOutlinedButton({ change(input.copy(announcementText = null, announcementKind = null)) }, enabled = !model.busy) { Text("Keine Ansage / Ansage entfernen") }
-    ProtocolAnnouncementKind.entries.forEach { kind -> FormOutlinedButton({ change(input.copy(announcementKind = kind, announcementText = input.announcementText.orEmpty())) }, enabled = !model.busy, modifier = Modifier.semantics { selected = input.announcementKind == kind }) { Text(if (kind == ProtocolAnnouncementKind.WORDING) "Wortlaut laut Wahrnehmung" else "Sinngemäß") } }
-    if (input.announcementKind != null) FormTextField(input.announcementText.orEmpty(), { change(input.copy(announcementText = it)) }, label = { Text("Ansagetext · max. 2000 Zeichen") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth(), keyboardOptions = productKeyboard(ProductTextKind.DESCRIPTION))
-    FormTextField(input.statedLegalBasis.orEmpty(), { change(input.copy(statedLegalBasis = it)) }, label = { Text("Begründung / Rechtsgrundlage laut Polizei") }, supportingText = { Text("Ungeprüfte Angabe; PaG nimmt keine rechtliche Bewertung vor. Maximal 1000 Zeichen.") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth(), keyboardOptions = productKeyboard(ProductTextKind.DESCRIPTION))
+    FormOutlinedButton({ model.removeAnnouncement() }, enabled = !model.busy) { Text("Keine Ansage / Ansage entfernen") }
+    ProtocolAnnouncementKind.entries.forEach { kind -> FormOutlinedButton({ model.announcementKind(kind) }, enabled = !model.busy, modifier = Modifier.semantics { selected = input.announcementKind == kind }) { Text(if (kind == ProtocolAnnouncementKind.WORDING) "Wortlaut laut Wahrnehmung" else "Sinngemäß") } }
+    if (input.announcementKind != null) FormTextField(input.announcementText.orEmpty(), { model.announcement(it) }, label = { Text("Ansagetext · max. 2000 Zeichen") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth(), keyboardOptions = productKeyboard(ProductTextKind.DESCRIPTION))
+    FormTextField(input.statedLegalBasis.orEmpty(), { model.legalBasis(it) }, label = { Text("Begründung / Rechtsgrundlage laut Polizei") }, supportingText = { Text("Ungeprüfte Angabe; PaG nimmt keine rechtliche Bewertung vor. Maximal 1000 Zeichen.") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth(), keyboardOptions = productKeyboard(ProductTextKind.DESCRIPTION))
     PreparationHeading("Beobachtete amtliche Kennungen")
     input.officialIdentifiers.forEachIndexed { index, identifier ->
         PreparationHeading("Kennung ${index + 1}")
-        ProtocolOfficialIdentifierType.entries.forEach { type -> FormOutlinedButton({ change(input.copy(officialIdentifiers = input.officialIdentifiers.mapIndexed { n, row -> if (n == index) row.copy(type = type) else row })) }, modifier = Modifier.semantics { selected = identifier.type == type }, enabled = !model.busy) { Text((if (identifier.type == type) "✓ " else "") + protocolIdentifier(type)) } }
-        FormTextField(identifier.value, { value -> change(input.copy(officialIdentifiers = input.officialIdentifiers.mapIndexed { n, row -> if (n == index) row.copy(value = value) else row })) }, label = { Text("Wert der Kennung ${index + 1} · max. 120 Zeichen") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth())
+        ProtocolOfficialIdentifierType.entries.forEach { type -> FormOutlinedButton({ model.identifierType(index,type) }, modifier = Modifier.semantics { selected = identifier.type == type }, enabled = !model.busy) { Text((if (identifier.type == type) "✓ " else "") + protocolIdentifier(type)) } }
+        FormTextField(identifier.value, { value -> model.identifierValue(index,value) }, label = { Text("Wert der Kennung ${index + 1} · max. 120 Zeichen") }, enabled = !model.busy, modifier = Modifier.fillMaxWidth())
         FormOutlinedButton({ model.removeIdentifier(index) }, enabled = !model.busy) { Text("Kennung ${index + 1} entfernen") }
     }
     FormOutlinedButton(model::addIdentifier, enabled = !model.busy && input.officialIdentifiers.size < 32) { Text("+ Kennung hinzufügen") }

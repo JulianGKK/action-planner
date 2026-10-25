@@ -23,6 +23,15 @@ internal class OutstandingCoreRead {
 
     @Synchronized internal fun ownsFullview(entry:FullviewEntry)=fullviewObligation===entry && !closed && current==null
 
+    /** Accounting only. Caller must separately acquire current storage/writer authority.
+     * null means no controlled fullview exists (legacy bootstrap, no new budget grant).
+     * An exposed compact record never falls back to an uncharged fullview writer. */
+    @Synchronized internal fun reserveHeld(actionId:String,generation:Long,reservation:ActiveCoreReservation):Boolean? {
+        val held=fullviewObligation
+        if(held==null)return if(closed || current!=null || fullEntry!=null || fullView)false else null
+        if(held.actionId!=actionId || held.generation!=generation)return false
+        return held.reserveReservation(reservation)
+    }
     enum class Phase { READER_ADMITTED, WORKER_MATERIALIZING, CANDIDATE_COMPLETE, MAIN_PENDING,
         MAIN_DELIVERED, RETAINED, COMPOSE_TRANSITION, RETIRED, DENIED, REVOKED, FAILED_OR_UNCONFIRMED }
     data class State(val phase:Phase, val retained:Long, val transition:Long, val localRetained:Long,
@@ -81,6 +90,16 @@ internal class OutstandingCoreRead {
             val t=try{Math.addExact(transitionCharge,cost.second)}catch(_:ArithmeticException){return false}
             if(r>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || t>ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)return false
             retainedCharge=r;transitionCharge=t;true
+        }
+        internal fun reserveReservation(reservation:ActiveCoreReservation):Boolean=synchronized(this@OutstandingCoreRead){
+            if(!readable())return false
+            val r=ActiveWorkspaceBudget.estimateUnits(reservation.retained)
+            val t=ActiveWorkspaceBudget.estimateUnits(reservation.transition)
+            if(r.first!=ActiveWorkspaceBudget.Decision.ADMITTED || t.first!=ActiveWorkspaceBudget.Decision.ADMITTED)return false
+            val nextR=try{Math.addExact(retainedCharge,r.second)}catch(_:ArithmeticException){return false}
+            val nextT=try{Math.addExact(transitionCharge,t.second)}catch(_:ArithmeticException){return false}
+            if(nextR>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || nextT>ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)return false
+            retainedCharge=nextR;transitionCharge=nextT;true
         }
         private var additional:FullviewSupplement?=null
         private var additionalUnconfirmed=false

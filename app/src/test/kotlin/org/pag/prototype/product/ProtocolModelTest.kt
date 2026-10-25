@@ -177,4 +177,15 @@ class ProtocolModelTest {
         }
     }
 
+    @Test fun deniedScalarAndIdentifierProducersPreserveDraftAndNeverWrite(){
+        model.create();val old=model.input
+        var reservations=0
+        model.bindCopyGate{_,_->reservations++;OperationsFailure.BUDGET_REFUSED}
+        model.title("Synthetic refused");assertSame(old,model.input)
+        model.addIdentifier();assertSame(old,model.input)
+        model.affected("p");assertSame(old,model.input)
+        model.save();assertEquals(0,port.writes);assertEquals(ProtocolFailure.BUDGET_REFUSED,model.error)
+        assertTrue(reservations>=3)
+    }
+
 }

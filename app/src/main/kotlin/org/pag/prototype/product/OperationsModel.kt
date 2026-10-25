@@ -13,6 +13,9 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     private val refreshWorkspace: (() -> Unit)? = null,
     private val feedback: (String) -> Unit = {},
     private val onEditFinished: (String?) -> Unit = {}) {
+    private var detailLoader:WorkspaceDetailLoader?=null
+    internal fun bindDetailLoader(loader:WorkspaceDetailLoader){check(detailLoader==null);detailLoader=loader}
+    var commitConfirmed by mutableStateOf(false);private set
     private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
     internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
     private fun copyData(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
@@ -77,6 +80,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     internal val hasPersonFocus get() = focusedPersonId != null
     var planRoles by mutableStateOf<List<Role>>(emptyList()); private set
     private var planExpected:ExpectedPersonRolePlan?=null
+    val planRevision get()=planExpected?.editRevision
     private var planGeneration=0L
     var editingRole by mutableStateOf<Role?>(null); private set
     var deletingRole by mutableStateOf<Role?>(null); private set
@@ -93,7 +97,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     val live get()=session().state==SessionState.READY && action()?.let{OperationalRules.mayUpdateSnapshot(it.status)}==true
     val person get()=board?.persons?.singleOrNull{it.person.id==personId}
     fun textInteraction() = interaction()
-    fun clear(){dropCreate();dropRoleEditor();functionFocus=null;moreFunctionsExpanded=false;focusedPersonId=null;request++;ownBoard=null;screen=OperationsScreen.OVERVIEW;personId=null;busy=false;error=null;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS}
+    fun clear(){commitConfirmed=false;dropCreate();dropRoleEditor();functionFocus=null;moreFunctionsExpanded=false;focusedPersonId=null;request++;ownBoard=null;screen=OperationsScreen.OVERVIEW;personId=null;busy=false;error=null;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS}
     fun refresh(){
         if (refreshWorkspace != null) { request++; refreshWorkspace.invoke(); return }
         val a=action()?.takeIf{session().state==SessionState.READY && OperationalRules.mayRead(it.status)}?:return
@@ -118,7 +122,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         leaveSensitive()
         if(!planning || session().generation!=before.generation || action()?.id!=a || request!=token)return
         val n=p.plan.roleIds.size.toLong()
-        copyData(ActiveWorkspaceBudget.Units(objects=2,maps=1,mapCapacity=n,lists=1,listCapacity=n,references=n+8)){
+        copyData(ActiveWorkspaceBudget.Units(objects=8,strings=2,utf16Units=64,maps=2,mapCapacity=n*2,lists=1,listCapacity=n,references=n*2+32)){
             val frozen=ExpectedPersonRolePlan(a,id,p.plan)
             dropCreate();planExpected=frozen;planRoles=b.roles;planGeneration=before.generation
             personId=id;roleIds=frozen.plan.roleIds;primaryRoleId=frozen.plan.primaryRoleId
@@ -135,6 +139,23 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         if(!planning || session().generation!=generation || action()?.id!=old.actionId || request!=token)return
         busy=true
         var delivered=false
+        val loader=detailLoader
+        if(loader!=null){
+            loader(WorkspaceDetailKind.PLAN,old.personId){result->
+                if(token!=request || !planning || session().generation!=generation || action()?.id!=old.actionId ||
+                    screen!=OperationsScreen.PLAN || planExpected!==old)return@loader
+                busy=false
+                when(result){
+                    is WorkspaceDetailResult.Rejected->error=result.reason.operationFailure()
+                    is WorkspaceDetailResult.Value->{val fresh=result.value.plan
+                        if(fresh==null)error=OperationsFailure.NOT_FOUND else {
+                            planExpected=fresh;planRoles=board?.roles.orEmpty();roleIds=fresh.plan.roleIds;primaryRoleId=fresh.plan.primaryRoleId;error=null
+                        }
+                    }
+                }
+            }
+            return
+        }
         repository?.board(old.actionId){result->
             if(delivered)return@board
             delivered=true
@@ -257,14 +278,16 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         return id
     }
     private fun finishForm(){dropCreate();dropRoleEditor();request++;screen=when {focusedPersonId!=null->OperationsScreen.PERSON;functionFocus!=null->OperationsScreen.FUNCTION_DETAIL;else->OperationsScreen.OVERVIEW};personId=focusedPersonId;roleIds=emptySet();primaryRoleId=null;planExpected=null;planRoles=emptyList();expected=null;livePlace="";liveRoleId=null;liveStatus=OperationalStatus.NO_STATUS;error=null}
-    fun toggleRole(id:String){interaction();if(!planning || busy)return;val n=roleIds.size.toLong()+1;copyData(ActiveWorkspaceBudget.Units(objects=1,maps=1,mapCapacity=n,strings=1,utf16Units=id.length.toLong(),references=n+4)){roleIds=if(id in roleIds)roleIds-id else roleIds+id;if(primaryRoleId !in roleIds)primaryRoleId=null}}
-    fun primary(id:String?){interaction();if(planning && !busy && (id==null || id in roleIds))primaryRoleId=id}
+    fun toggleRole(id:String){interaction();if(!planning || busy || commitConfirmed)return;val n=roleIds.size.toLong()+1;copyData(ActiveWorkspaceBudget.Units(objects=1,maps=1,mapCapacity=n,strings=1,utf16Units=id.length.toLong(),references=n+4)){roleIds=if(id in roleIds)roleIds-id else roleIds+id;if(primaryRoleId !in roleIds)primaryRoleId=null}}
+    fun primary(id:String?){interaction();if(planning && !busy && !commitConfirmed && (id==null || id in roleIds))primaryRoleId=id}
     fun status(status:OperationalStatus){interaction();if(!live || busy)return;if(status!=liveStatus){if(createSurface==RoleCreateSurface.INLINE)dropCreate();livePlace="";if(!OperationalRules.roleAllowed(status) || status==OperationalStatus.RELEASED)liveRoleId=null};liveStatus=status}
     fun function(id:String?){interaction();if(live && !busy && liveStatus==OperationalStatus.ON_SITE)liveRoleId=id}
     fun place(value:String){interaction();if(live && !busy)copyData(ActiveWorkspaceBudget.Units(strings=1,utf16Units=value.length.toLong(),references=1)){livePlace=value}}
     fun savePlan(){
         val a=action()?:return;val p=personId?:return;val old=planExpected?:return
         if(!planning || busy || screen!=OperationsScreen.PLAN || old.actionId!=a.id || old.personId!=p || session().generation!=planGeneration)return
+        val n=roleIds.size.toLong()
+        if(!copyData(ActiveWorkspaceBudget.Units(objects=4,maps=1,mapCapacity=n*2,references=32+n*2)){})return
         val draft=PersonRolePlan(roleIds.toSet(),primaryRoleId, editRevision = old.editRevision)
         write{publish->repository?.planRoles(a.id,p,old,draft,publish)}
     }
@@ -361,7 +384,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     }
     private fun write(close:Boolean=true,message:String?=null,applied:()->Unit={},work:((OperationsResult<Unit>)->Unit)->Unit){
         val token=request;val a=action()?.id;val before=session();val generation=before.generation
-        if(before.state!=SessionState.READY || repository==null || a==null)return
+        if(commitConfirmed || before.state!=SessionState.READY || repository==null || a==null)return
         interaction()
         if(token!=request || action()?.id!=a || session().state!=SessionState.READY || session().generation!=generation)return
         busy=true;error=null
@@ -370,6 +393,23 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
             busy=false
             when(result){is OperationsResult.Value->{
                 val finishedPerson=personId
+                val loader=detailLoader
+                if(loader!=null && finishedPerson!=null && screen==OperationsScreen.PLAN){
+                    commitConfirmed=true;busy=true
+                    loader(WorkspaceDetailKind.PLAN,finishedPerson){refreshed->
+                        if(token!=request || action()?.id!=a || session().state!=SessionState.READY || session().generation!=generation)return@loader
+                        busy=false
+                        when(refreshed){
+                            is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                            is WorkspaceDetailResult.Value->{
+                                commitConfirmed=false;applied();if(close)finishForm()
+                                if(close)onEditFinished(finishedPerson)
+                                if(message!=null)feedback(message)
+                            }
+                        }
+                    }
+                    return@work
+                }
                 applied()
                 if(close)finishForm();refresh()
                 if(close && session().state==SessionState.READY && session().generation==generation && action()?.id==a)

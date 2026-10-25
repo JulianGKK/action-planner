@@ -15,6 +15,32 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
     private val action: () -> Action?, private val interaction: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit,
     private val now: () -> Long = System::currentTimeMillis) {
+    private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
+    internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
+    private fun copyData(extra:String?=null,additional:ProtocolInput?=null,producer:()->Unit):Boolean {
+        val f=AppConsumerCopies.Footprint();input?.let(f::protocol);expected?.revision?.input?.let(f::protocol);additional?.let(f::protocol)
+        val failure=if(copyGate==null){producer();null}else copyGate!!.invoke(f.units(extra),producer)
+        if(failure!=null){error=if(failure==OperationsFailure.BUDGET_REFUSED)ProtocolFailure.BUDGET_REFUSED else ProtocolFailure.OWNER_UNCONFIRMED;return false}
+        return true
+    }
+    private fun alter(text:String?=null,produce:(ProtocolInput)->ProtocolInput)=act {
+        val old=input?:return@act
+        copyData(text){applyChange(produce(old))}
+    }
+    fun title(value:String)=alter(value){it.copy(title=value)}
+    fun description(value:String)=alter(value){it.copy(description=value)}
+    fun place(value:String)=alter(value){it.copy(placeLabel=value)}
+    fun classification(value:ProtocolClassification)=alter{it.copy(classification=value)}
+    fun approximate()=alter{it.copy(occurredAtApproximate=!it.occurredAtApproximate)}
+    fun source(value:ProtocolSourceType?)=alter{it.copy(sourceType=value)}
+    fun reportedBy(id:String?)=alter{it.copy(reportedByPersonId=id)}
+    fun affected(id:String)=alter{it.copy(affectedPersonIds=if(id in it.affectedPersonIds)it.affectedPersonIds-id else it.affectedPersonIds+id)}
+    fun removeAnnouncement()=alter{it.copy(announcementText=null,announcementKind=null)}
+    fun announcementKind(value:ProtocolAnnouncementKind)=alter{it.copy(announcementKind=value,announcementText=it.announcementText.orEmpty())}
+    fun announcement(value:String)=alter(value){it.copy(announcementText=value)}
+    fun legalBasis(value:String)=alter(value){it.copy(statedLegalBasis=value)}
+    fun identifierType(index:Int,value:ProtocolOfficialIdentifierType)=alter{it.copy(officialIdentifiers=it.officialIdentifiers.mapIndexed{n,row->if(n==index)row.copy(type=value) else row})}
+    fun identifierValue(index:Int,value:String)=alter(value){it.copy(officialIdentifiers=it.officialIdentifiers.mapIndexed{n,row->if(n==index)row.copy(value=value) else row})}
     var mode by mutableStateOf(ProtocolUiMode.ACTIVE); private set
     private var followUpActionId: String? = null
     private var followUpGeneration: Long? = null
@@ -123,26 +149,30 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
         moveContext(); detailRequest++; detail = null; entryId = null; detailLoading = false; beginDraft(draft, ProtocolRevisionType.ORIGINAL)
     }
     private fun beginDraft(value: ProtocolInput, type: ProtocolRevisionType) {
+        if(!copyData(additional=value){beginDraftAdmitted(value,type)})return
+    }
+    private fun beginDraftAdmitted(value:ProtocolInput,type:ProtocolRevisionType){
         draftStatus = modeStatus
         input = value.copy(affectedPersonIds = value.affectedPersonIds.toSet(), officialIdentifiers = value.officialIdentifiers.toList())
         zone = ZoneId.systemDefault(); eventTime = Instant.ofEpochMilli(value.occurredAt).atZone(zone).toLocalDateTime()
         revisionType = type; clearMistaken = false; error = null; validation = null; moreFields = false
         historical = null; confirmingMistaken = false
     }
-    fun change(value: ProtocolInput) = act {
-        val old = input ?: return@act
-        input = value.copy(templateKey = old.templateKey,
-            classification = if (revisionType == ProtocolRevisionType.CORRECTION) value.classification else old.classification,
-            reportedByPersonId = value.reportedByPersonId.takeIf { value.sourceType == ProtocolSourceType.REPORTED })
-        validation = null
+    internal fun change(value:ProtocolInput)=act {copyData{applyChange(value)}}
+    private fun applyChange(value:ProtocolInput){
+        val old=input?:return
+        input=value.copy(templateKey=old.templateKey,
+            classification=if(revisionType==ProtocolRevisionType.CORRECTION)value.classification else old.classification,
+            reportedByPersonId=value.reportedByPersonId.takeIf{value.sourceType==ProtocolSourceType.REPORTED})
+        validation=null
     }
     fun changeTime(value: LocalDateTime?) = act { eventTime = value; validation = null }
     fun toggleClearMistaken() = act {
         if (form && revisionType == ProtocolRevisionType.CORRECTION && expected?.revision?.mistaken == true) clearMistaken = !clearMistaken
     }
     fun addIdentifier() = act { val i = input ?: return@act
-        if (i.officialIdentifiers.size < 32) input = i.copy(officialIdentifiers = i.officialIdentifiers + ProtocolOfficialIdentifier(ProtocolOfficialIdentifierType.SERVICE_OR_ID_NUMBER, "")) }
-    fun removeIdentifier(index: Int) = act { input = input?.let { it.copy(officialIdentifiers = it.officialIdentifiers.filterIndexed { n, _ -> n != index }) } }
+        if (i.officialIdentifiers.size < 32) copyData { input = i.copy(officialIdentifiers = i.officialIdentifiers + ProtocolOfficialIdentifier(ProtocolOfficialIdentifierType.SERVICE_OR_ID_NUMBER, "")) } }
+    fun removeIdentifier(index:Int)=alter{it.copy(officialIdentifiers=it.officialIdentifiers.filterIndexed{n,_->n!=index})}
     fun open(entryId: String) = act { moveContext(); discardDraft(); historical = null; history = false; confirmingMistaken = false; loadDetail(entryId) }
     private fun loadDetail(entryId: String) {
         val current = binding() ?: return; val id = action()!!.id; val request = ++detailRequest
@@ -160,7 +190,8 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
         if (historical != null || detailLoading || error == ProtocolFailure.STALE) return@act
         if (type !in setOf(ProtocolRevisionType.CORRECTION, ProtocolRevisionType.ADDENDUM)) return@act
         val d = detail ?: return@act
-        moveContext(); expected = ProtocolExpectedRevision(d.entry, d.current.revision.copy(input = d.current.revision.input.copy(affectedPersonIds = d.current.revision.input.affectedPersonIds.toSet(), officialIdentifiers = d.current.revision.input.officialIdentifiers.toList())))
+        if(!copyData(additional=d.current.revision.input) { expected = ProtocolExpectedRevision(d.entry, d.current.revision.copy(input = d.current.revision.input.copy(affectedPersonIds = d.current.revision.input.affectedPersonIds.toSet(), officialIdentifiers = d.current.revision.input.officialIdentifiers.toList()))) })return@act
+        moveContext()
         beginDraft(d.current.revision.input, type)
     }
     fun back() = act {
@@ -188,6 +219,7 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
         val draft = input ?: return@act
         val instant = selectedInstant(eventTime, zone)
         if (instant == null) { validation = "Diese Uhrzeit ist durch eine Zeitumstellung nicht eindeutig. Bitte eine andere Uhrzeit wählen."; return@act }
+        if(!copyData{})return@act
         val value = draft.copy(occurredAt = instant)
         validation = protocolValidation(value)
         if (validation != null) return@act

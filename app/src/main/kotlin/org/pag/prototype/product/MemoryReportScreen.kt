@@ -82,7 +82,7 @@ import org.pag.domain.*
                             FormOutlinedButton({ model.keepDetail(q.key) }, enabled = enabled,
                                 modifier = Modifier.semantics { selected = q.key in model.decisions }) { Text("Detail behalten") }
                             FormOutlinedButton({ model.removeDetail(q.key) }, enabled = enabled) { Text("Detail entfernen") }
-                        } else MemoryQuestionInput(q, value, enabled) { model.changeAnswer(q.key, it) }
+                        } else MemoryQuestionInput(q,value,enabled,model)
                     }
                 }
             }
@@ -124,28 +124,19 @@ import org.pag.domain.*
     }
 }
 
-@Composable private fun MemoryQuestionInput(q: MemoryQuestion, value: MemoryAnswerValue?, enabled: Boolean, change: (MemoryAnswerValue?) -> Unit) {
+@Composable private fun MemoryQuestionInput(q: MemoryQuestion, value: MemoryAnswerValue?, enabled:Boolean,model:MemoryReportModel) {
     if (q.type in setOf(MemoryAnswerType.SHORT_TEXT, MemoryAnswerType.LONG_TEXT, MemoryAnswerType.APPROX_DURATION, MemoryAnswerType.APPROX_TIME, MemoryAnswerType.OPTIONAL_COUNT)) {
         // Count text is kept as text while editing; invalid/partial input never reaches the repository.
-        val text = when (value) { is MemoryAnswerValue.Text -> value.text; is MemoryAnswerValue.Count -> value.count.toString(); else -> "" }
-        FormTextField(text, { typed ->
-            val answer = if (typed.isEmpty()) null else if (q.type == MemoryAnswerType.OPTIONAL_COUNT && typed.matches(Regex("[0-9]+")) && typed.toIntOrNull() != null) MemoryAnswerValue.Count(typed.toInt()) else MemoryAnswerValue.Text(typed)
-            change(answer)
+        val text=model.answerText(q.key)
+        FormTextField(text, { typed -> model.textAnswer(q.key,typed)
         }, label = { Text(q.text) }, supportingText = { Text(if (q.type == MemoryAnswerType.OPTIONAL_COUNT) "0–99.999 oder keine Angabe" else "Maximal ${q.limit} Zeichen") },
             modifier = Modifier.fillMaxWidth(), enabled = enabled,
             keyboardOptions = KeyboardOptions(keyboardType = if (q.type == MemoryAnswerType.OPTIONAL_COUNT) KeyboardType.Number else KeyboardType.Text))
     }
-    if (value != null && MemoryAnswerCodec.encode(q.key, value) == null) Text("Bitte Eingabegrenze und Antwortformat prüfen.")
+    if (value != null && !model.answerValid(q.key)) Text("Bitte Eingabegrenze und Antwortformat prüfen.")
     q.options.forEach { option ->
         val chosen = when (value) { is MemoryAnswerValue.Option -> value.key == option.key; is MemoryAnswerValue.Multi -> option.key in value.keys; else -> false }
-        val select = {
-            if (q.type == MemoryAnswerType.MULTI_CHOICE) {
-                val previous = (value as? MemoryAnswerValue.Multi)?.keys.orEmpty()
-                val special = setOf("UNKNOWN", "UNCLEAR", "NO_ASSESSMENT")
-                val next = if (chosen) previous - option.key else if (option.key in special) listOf(option.key) else previous.filterNot { it in special } + option.key
-                change(next.takeIf { it.isNotEmpty() }?.let { MemoryAnswerValue.Multi(it) })
-            } else change(if (chosen) null else MemoryAnswerValue.Option(option.key))
-        }
+        val select = {model.optionAnswer(q.key,option.key)}
         if (q.type == MemoryAnswerType.MULTI_CHOICE) {
             FormCheckboxButton(option.label, chosen, select, enabled)
         } else FormOutlinedButton(select, enabled = enabled,
@@ -153,7 +144,7 @@ import org.pag.domain.*
             Text((if (chosen) "✓ " else "") + option.label)
         }
     }
-    if (value != null) FormOutlinedButton({ change(null) }, enabled = enabled) { Text("Angabe entfernen") }
+    if (value != null) FormOutlinedButton({ model.removeAnswer(q.key) }, enabled = enabled) { Text("Angabe entfernen") }
     else Text("Keine Angabe")
 }
 @Composable internal fun CompletedMemoryReportWorkspace(model: ProductViewModel) {

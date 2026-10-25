@@ -1,0 +1,322 @@
+{
+  "final_product_build": "p77-build-16.log",
+  "final_host": "host-17.log",
+  "final_device_matrix": "batch-reviewed.json",
+  "final_P109_cases": 13,
+  "final_P109_passed": 13,
+  "P107_regressions": [
+    "device-p107-exposed.txt",
+    "device-p107-r-exact.txt",
+    "device-p107-r-over.txt",
+    "device-p107-t-exact.txt",
+    "device-p107-t-over.txt"
+  ],
+  "all_device_attempts": [
+    {
+      "log": "device-active-01.txt",
+      "passed": false,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-active-02.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-active-final.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-active-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-active-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-completed-final.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-completed-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-completed-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-duplicate-detail-main-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-duplicate-detail-main-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-expense-01.txt",
+      "passed": false,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-expense-final.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-expense-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-expense-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-large-final.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-large-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-large-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-lock-detail-final.txt",
+      "passed": false,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-lock-detail-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-lock-detail-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-lost-detail-main-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-lost-detail-main-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-material-01.txt",
+      "passed": false,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-material-02.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-material-final.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-material-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-material-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-p107-exposed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-p107-r-exact.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-p107-r-over.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-p107-t-exact.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-p107-t-over.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-person-01.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-person-final.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-person-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-person-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-plan-01.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-plan-final.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-plan-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-plan-revision.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-plan-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-preparation-final.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-preparation-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-preparation-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-stale-01.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-stale-final.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-stale-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-stale-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-unknown-detail-reviewed.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    },
+    {
+      "log": "device-unknown-detail-verified.txt",
+      "passed": true,
+      "closure": "BLOCKED_GLOBAL_CONSUMER_CONTRACT",
+      "synthetic_auth": true
+    }
+  ],
+  "known_consumer_counterexample": {
+    "generations": 32768,
+    "minimum_extra_list_model_bytes": 14680064,
+    "reservation_calls": 0,
+    "closure": "BLOCKED"
+  }
+}

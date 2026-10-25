@@ -1,0 +1,67 @@
+[
+  {
+    "scenario": "person",
+    "log": "device-person-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "stale",
+    "log": "device-stale-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "active",
+    "log": "device-active-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "plan",
+    "log": "device-plan-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "material",
+    "log": "device-material-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "expense",
+    "log": "device-expense-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "preparation",
+    "log": "device-preparation-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "completed",
+    "log": "device-completed-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "large",
+    "log": "device-large-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "lock-detail",
+    "log": "device-lock-detail-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "lost-detail-main",
+    "log": "device-lost-detail-main-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "duplicate-detail-main",
+    "log": "device-duplicate-detail-main-verified.txt",
+    "passed": true
+  },
+  {
+    "scenario": "unknown-detail",
+    "log": "device-unknown-detail-verified.txt",
+    "passed": true
+  }
+]

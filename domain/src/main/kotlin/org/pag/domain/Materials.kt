@@ -18,10 +18,8 @@ object MaterialRules {
     fun normalized(input: MaterialInput) = input.copy(name = input.name.trim(),
         quantityLabel = optional(input.quantityLabel), placeLabel = optional(input.placeLabel))
     private fun length(value: String?) = value?.let { Character.codePointCount(it, 0, it.length) } ?: 0
-    fun valid(input: MaterialInput): Boolean {
-        val i = normalized(input)
-        return i.name.isNotEmpty() && length(i.name) <= 120 && length(i.quantityLabel) <= 40 && length(i.placeLabel) <= 80
-    }
+    fun valid(input: MaterialInput): Boolean = trimmedCodePoints(input.name) in 1..120 &&
+        (input.quantityLabel?.let(::trimmedCodePoints)?:0)<=40 && (input.placeLabel?.let(::trimmedCodePoints)?:0)<=80
     fun mayRead(status: ActionStatus) = status in setOf(ActionStatus.PREPARATION, ActionStatus.ACTIVE, ActionStatus.COMPLETED)
     fun mayWrite(status: ActionStatus) = status == ActionStatus.PREPARATION || status == ActionStatus.ACTIVE
     fun mayDelete(status: ActionStatus) = mayWrite(status)

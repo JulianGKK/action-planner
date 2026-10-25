@@ -21,7 +21,7 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
             gate();n
         }
     }
-    suspend fun prepare(a:String,names:Set<String>,taskId:String?=null):ActiveCoreReservation {
+    suspend fun prepare(a:String,names:Set<String>,taskId:String?=null,detail:WorkspaceDetailRequest?=null):ActiveCoreReservation {
         gate()
         sql.usePrepared("PRAGMA encoding"){s->
             if(!s.step() || s.getText(0)!="UTF-8" || s.step())throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
@@ -29,8 +29,14 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
         var rows=0L;var fields=0L;var bytes=0L
         for(t in tables.filter{it.name in names}) {
             gate()
-            val id=if(t.name=="tasks")taskId else null
-            val where=if(t.name=="actions")"id=?" else if(id!=null)"actionId=? AND id=?" else "actionId=?"
+            val column=when(t.name) {
+                "persons","tasks","materials","expenses"->"id"
+                "person_role_plans","person_planned_roles"->"personId"
+                "expense_payments"->"expenseId"
+                else->null
+            }
+            val id=if(detail!=null && column!=null)detail.id else if(t.name=="tasks")taskId else null
+            val where=if(t.name=="actions")"id=?" else if(id!=null)"actionId=? AND ${column ?: "id"}=?" else "actionId=?"
             val n=scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where",a,id)
             // Reject enormous counts BEFORE any SUM: each text SUM is then <= 2^39.
             if(n>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES/128)throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)

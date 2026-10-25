@@ -19,6 +19,7 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
     private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked,mutations,FullviewPreflight.task)
     internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
     private val database=ActionDatabaseAccess(app.applicationContext)
+    private val writerBudget=OriginalWriterBudget(access,readExclusion::record)
     private val mutationBoundary=TaskMutationBoundary(access,worker,main,mutations,blocked)
     override fun board(actionId:String,publish:(OperationsResult<TaskBoard>)->Unit)=run(actionId,publish){d,c->d.withReadTransaction{TaskStore(d,c,now).board(actionId)}}
     // One bounded page in flight, including the Main callback; never a history cache/queue.
@@ -139,15 +140,34 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
         })
         try{worker.execute(task)}catch(_:RejectedExecutionException){historyPending.set(false);transition.workerRejected()}
     }
-    override fun create(actionId:String,input:TaskInput,publish:(OperationsResult<Task>)->Unit)=write(actionId,publish){it.create(actionId,input)}
-    override fun edit(actionId:String,expected:Task,input:TaskInput,publish:(OperationsResult<Task>)->Unit)=write(actionId,publish){it.edit(actionId,expected,input)}
-    override fun transition(actionId:String,expected:Task,status:TaskStatus,publish:(OperationsResult<Task>)->Unit)=write(actionId,publish){it.transition(actionId,expected,status)}
-    override fun delete(actionId:String,expected:Task,publish:(OperationsResult<Unit>)->Unit)=write(actionId,publish){it.delete(actionId,expected)}
-    private fun <T> write(actionId:String,publish:(OperationsResult<T>)->Unit,work:suspend(TaskStore)->OperationsResult<T>)=
+    override fun create(actionId:String,input:TaskInput,publish:(OperationsResult<Task>)->Unit) {
+        if(!reserveWrite(actionId,input.title.length.toLong(),publish))return
+        write(actionId,null,publish){it.create(actionId,input)}
+    }
+    override fun edit(actionId:String,expected:Task,input:TaskInput,publish:(OperationsResult<Task>)->Unit) {
+        if(!reserveWrite(actionId,input.title.length.toLong()+expected.title.length,publish))return
+        write(actionId,expected.id,publish){it.edit(actionId,expected,input)}
+    }
+    override fun transition(actionId:String,expected:Task,status:TaskStatus,publish:(OperationsResult<Task>)->Unit) {
+        if(!reserveWrite(actionId,expected.title.length.toLong(),publish))return
+        write(actionId,expected.id,publish){it.transition(actionId,expected,status)}
+    }
+    override fun delete(actionId:String,expected:Task,publish:(OperationsResult<Unit>)->Unit) {
+        if(!reserveWrite(actionId,expected.title.length.toLong(),publish))return
+        write(actionId,expected.id,publish){it.delete(actionId,expected)}
+    }
+    private fun <T> reserveWrite(a:String,chars:Long,publish:(OperationsResult<T>)->Unit):Boolean {
+        if(writerBudget.reserve(a,chars,4))return true
+        access.acquire(AccessScope.READY)?.publish{publish(OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED))};return false
+    }
+    private fun <T> write(actionId:String,id:String?,publish:(OperationsResult<T>)->Unit,work:suspend(TaskStore)->OperationsResult<T>)=
         mutationBoundary.submit(actionId,publish) { c,progress ->
             if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
             (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){d->
-                d.useWriterConnection { tx -> confirmedTaskTransaction(tx,c,progress){work(TaskStore(d,c,now))} }
+                d.useWriterConnection { tx -> confirmedTaskTransaction(tx,c,progress){
+                    if(!writerBudget.preflight(tx,c,actionId,FullviewPreflight.task,id))OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED)
+                    else work(TaskStore(d,c,now))
+                } }
             }}
         }
     private fun <T> run(actionId:String,publish:(OperationsResult<T>)->Unit,work:suspend(ActionDatabase,StorageContext)->OperationsResult<T>) {
@@ -163,8 +183,8 @@ internal interface TaskStoreData {
 internal class RoomTaskStoreData(private val db:ActionDatabase):TaskStoreData {
     override val tasks get()=db.tasks()
     override suspend fun action(id:String)=db.actions().get(id)?.model()
-    override suspend fun personExists(action:String,id:String)=db.persons().get(action,id)!=null
-    override suspend fun roleExists(action:String,id:String)=db.operations().role(action,id)!=null
+    override suspend fun personExists(action:String,id:String)=db.persons().exists(action,id)
+    override suspend fun roleExists(action:String,id:String)=db.operations().exists(action,id)
 }
 internal class TaskStore(private val data:TaskStoreData,private val c:StorageContext,private val now:()->Long) {
     constructor(db:ActionDatabase,c:StorageContext,now:()->Long):this(RoomTaskStoreData(db),c,now)

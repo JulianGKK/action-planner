@@ -25,7 +25,7 @@ object TaskRules {
      * Legacy excess remains readable; this limits new events, never trims history.
      */
     const val MAX_TASK_EVENTS_PER_ACTION = 5_000L
-    fun valid(input:TaskInput)=input.title.trim().let{it.isNotEmpty() && Character.codePointCount(it,0,it.length)<=120} &&
+    fun valid(input:TaskInput)=trimmedCodePoints(input.title) in 1..120 &&
         (input.assigneePersonId==null || input.assigneeRoleId==null)
     fun mayRead(status:ActionStatus)=status in setOf(ActionStatus.PREPARATION,ActionStatus.ACTIVE,ActionStatus.COMPLETED)
     fun mayWrite(status:ActionStatus)=status==ActionStatus.PREPARATION || status==ActionStatus.ACTIVE

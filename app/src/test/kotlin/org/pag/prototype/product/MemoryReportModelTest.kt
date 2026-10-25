@@ -51,4 +51,14 @@ class MemoryReportModelTest {
         assertEquals(0,port.writes);assertNull(model.detail);assertEquals("",model.authorLabel);assertFalse(model.available)
     }
     @Test fun forbiddenPhasesHaveNoPath(){for(s in listOf(ActionStatus.DRAFT,ActionStatus.PREPARATION,ActionStatus.DELETION_PENDING)){action=action.copy(status=s);model.enter();model.create();model.save();assertFalse(model.available)};assertEquals(0,port.lists);assertEquals(0,port.writes)}
+    @Test fun deniedAnswerAuthorAndDerivedCopiesPreserveDraftAndNeverWrite(){
+        begin();model.textAnswer("A_FREE_NARRATIVE","Synthetic held")
+        val held=model.answers;val author=model.authorLabel
+        model.bindCopyGate{_,_->OperationsFailure.BUDGET_REFUSED}
+        model.textAnswer("A_FREE_NARRATIVE","Synthetic refused");assertSame(held,model.answers)
+        model.changeAuthor("Synthetic refused");assertEquals(author,model.authorLabel)
+        model.removeAnswer("A_FREE_NARRATIVE");assertSame(held,model.answers)
+        model.save();assertEquals(0,port.writes);assertEquals(OperationsFailure.BUDGET_REFUSED,model.error)
+    }
+
 }

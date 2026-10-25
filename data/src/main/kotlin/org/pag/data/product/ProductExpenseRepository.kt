@@ -15,6 +15,7 @@ class ProductExpenseRepository(app: Context, private val access: StorageAccess, 
     mutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(), private val now: () -> Long = System::currentTimeMillis) : ExpenseRepository {
     private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked,mutations,FullviewPreflight.expense)
     internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
+    private val writerBudget=OriginalWriterBudget(access,readExclusion::record)
     private val database = ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary = WorkspaceWriteBoundary(access, worker, main, mutations, blocked)
     override fun summary(actionId: String, publish: (OperationsResult<ExpenseSummary>) -> Unit) =
@@ -22,19 +23,30 @@ class ProductExpenseRepository(app: Context, private val access: StorageAccess, 
     override fun board(actionId: String, publish: (OperationsResult<ExpenseBoard>) -> Unit) =
         run(actionId,publish) { d, c -> d.withReadTransaction { ExpenseStore(d, c, now).board(actionId) } }
     override fun create(actionId: String, input: ExpenseInput, publish: (OperationsResult<Expense>) -> Unit) {
+        if(!reserveWrite(actionId,input,null,publish))return
         val submitted = freezeExpenseInput(input)
-        write(actionId, publish) { it.create(actionId, submitted) }
+        write(actionId,null,publish) { it.create(actionId, submitted) }
     }
     override fun edit(actionId: String, expected: Expense, input: ExpenseInput, publish: (OperationsResult<Expense>) -> Unit) {
+        if(!reserveWrite(actionId,input,expected,publish))return
         val original = freezeExpenseExpected(expected)
         val submitted = freezeExpenseInput(input)
-        write(actionId, publish) { it.edit(actionId, original, submitted) }
+        write(actionId,expected.id,publish) { it.edit(actionId, original, submitted) }
     }
     override fun delete(actionId: String, expected: Expense, publish: (OperationsResult<Unit>) -> Unit) {
+        if(!reserveWrite(actionId,null,expected,publish))return
         val original = freezeExpenseExpected(expected)
-        write(actionId, publish) { it.delete(actionId, original) }
+        write(actionId,expected.id,publish) { it.delete(actionId, original) }
     }
-    private fun <T> write(actionId: String, publish: (OperationsResult<T>) -> Unit,
+    private fun <T> reserveWrite(a:String,input:ExpenseInput?,expected:Expense?,publish:(OperationsResult<T>)->Unit):Boolean {
+        var chars=(input?.title?.length?.toLong()?:0)+(expected?.title?.length?:0)
+        var items=4L
+        for(p in input?.payments.orEmpty()){chars+=p.payerLabel.length;items++}
+        for(p in expected?.payments.orEmpty()){chars+=p.payerLabel.length;items++}
+        if(writerBudget.reserve(a,chars,items))return true
+        access.acquire(AccessScope.READY)?.publish{publish(OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED))};return false
+    }
+    private fun <T> write(actionId: String,id:String?, publish: (OperationsResult<T>) -> Unit,
         work: suspend (ExpenseStore) -> OperationsResult<T>) =
         mutationBoundary.submit<OperationsResult<T>>(WorkspaceMutation(WorkspaceWriterFamily.EXPENSE, actionId), publish,
             { OperationsResult.Rejected(OperationsFailure.STALE) }, { it is OperationsResult.Value }) { c, progress ->
@@ -43,7 +55,8 @@ class ProductExpenseRepository(app: Context, private val access: StorageAccess, 
                 database.use(inventory.database, key, c) { db ->
                     db.useWriterConnection { tx ->
                         confirmedWorkspaceTransaction(tx, c, progress, { it is OperationsResult.Rejected }) {
-                            work(ExpenseStore(db, c, now))
+                            if(!writerBudget.preflight(tx,c,actionId,FullviewPreflight.expense,id))OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED)
+                            else work(ExpenseStore(db, c, now))
                         }
                     }
                 }
@@ -75,6 +88,11 @@ internal class ExpenseStore(private val data: CoreWriterData, private val c: Sto
         val m = Expense(row.id, row.actionId, row.title, row.totalCents, children.map { ExpensePayment(it.payerLabel, it.amountCents) }, row.createdAt)
         if (!ExpenseRules.valid(m.input()) || ExpenseRules.normalized(m.input()) != m.input()) throw ProductStorageFailure()
         return m
+    }
+    suspend fun detail(a:String,id:String):OperationsResult<Expense> {
+        permission(a,false)?.let{return OperationsResult.Rejected(it)}
+        val row=step{data.expenses.get(a,id)} ?: return OperationsResult.Rejected(OperationsFailure.NOT_FOUND)
+        return OperationsResult.Value(materialize(row))
     }
     suspend fun summary(a: String): OperationsResult<ExpenseSummary> {
         permission(a, false)?.let { return denied(it) }

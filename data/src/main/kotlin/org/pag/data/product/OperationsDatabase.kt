@@ -32,6 +32,9 @@ internal data class OperationalRow(val actionId:String,val personId:String,val c
     }
 }
 @Dao internal interface OperationsDao {
+    @Query("SELECT EXISTS(SELECT 1 FROM roles WHERE actionId=:actionId AND id=:roleId)")
+    suspend fun exists(actionId:String,roleId:String):Boolean
+
     @Query("SELECT * FROM roles WHERE actionId=:actionId ORDER BY normalizedName,id") suspend fun roles(actionId:String):List<RoleRow>
     @Query("SELECT * FROM roles WHERE actionId=:actionId AND id=:roleId") suspend fun role(actionId:String,roleId:String):RoleRow?
     @Insert suspend fun insertRole(row:RoleRow)

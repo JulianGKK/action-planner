@@ -7,11 +7,40 @@ import org.pag.domain.*
 class ExpenseModel(private val repository: ExpenseRepository?, private val session: () -> SessionSnapshot,
     private val action: () -> Action?, private val interaction: () -> Unit, private val leaveSensitive: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit) {
+    private var detailLoader:WorkspaceDetailLoader?=null
+    internal fun bindDetailLoader(loader:WorkspaceDetailLoader){check(detailLoader==null);detailLoader=loader}
+    var commitConfirmed by mutableStateOf(false);private set
+    private var committedId:String?=null
     private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
     internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
     private fun copyData(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
         val failure=if(copyGate==null){producer();null}else copyGate!!.invoke(units,producer)
         if(failure!=null){error=failure;return false};return true
+    }
+    var draftFeedback by mutableStateOf("");private set
+    var canSave by mutableStateOf(false);private set
+    private fun derive(){val d=draft;draftFeedback=d?.feedback().orEmpty();canSave=d?.input()!=null}
+    private fun deriveCost(d:ExpenseDraft):ActiveWorkspaceBudget.Units {
+        val n=d.payments.size.toLong()
+        var text=d.title.length.toLong()+d.total.length
+        for(p in d.payments)text+=p.payerLabel.length+p.amount.length
+        return ActiveWorkspaceBudget.Units(objects=64+n*8,strings=32+n*4,utf16Units=text*4+2048,
+            lists=8,listCapacity=n*8,references=128+n*16)
+    }
+    fun totalCents():Long? {var sum=0L;for(e in board?.expenses.orEmpty()){sum=try{Math.addExact(sum,e.totalCents)}catch(_:ArithmeticException){return null}};return sum}
+    fun moneyLabel(cents:Long,prefix:String=""):String {
+        var value="Betrag derzeit nicht verfügbar."
+        copyData(ActiveWorkspaceBudget.Units(objects=32,strings=16,utf16Units=512+prefix.length.toLong()*4,references=32)){
+            value=prefix+EuroMoney.format(cents)
+        }
+        return value
+    }
+    fun paymentLabel(payment:ExpensePayment):String {
+        var value="Zahlung derzeit nicht verfügbar."
+        copyData(ActiveWorkspaceBudget.Units(objects=32,strings=16,utf16Units=512+payment.payerLabel.length.toLong()*4,references=32)){
+            value="${payment.payerLabel} · ${EuroMoney.format(payment.amountCents)}"
+        }
+        return value
     }
     var board by mutableStateOf<ExpenseBoard?>(null); private set
     var loading by mutableStateOf(false); private set
@@ -34,6 +63,7 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
     val writable get() = available && action()?.let { ExpenseRules.mayWrite(it.status) } == true
     val completedView get() = available && boundStatus == ActionStatus.COMPLETED
     fun clear() {
+        commitConfirmed=false;committedId=null
         epoch++; readRequest++; writeRequest++; opened = false
         boundAction = null; boundStatus = null; boundGeneration = null
         board = null; loading = false; discard(); busy = false; error = null
@@ -89,24 +119,25 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
     }
     fun reload() = act { discard(); error = null; refresh() }
     fun create() = act { current ->
-        if (!writable) return@act
+        if (!writable || commitConfirmed) return@act
         leaveSensitive()
-        if (current()) { readRequest++; loading = false; discard(); copyData(ActiveWorkspaceBudget.Units(objects=1,references=4)){draft = ExpenseDraft(); error = null} }
+        if (current()) { readRequest++; loading = false; discard(); copyData(ActiveWorkspaceBudget.Units(objects=128,references=256,strings=64,utf16Units=4096,lists=16,listCapacity=256)){draft = ExpenseDraft();derive(); error = null} }
     }
     fun edit(item: Expense) = act { current ->
-        if (!writable || board?.expenses?.contains(item) != true) return@act
+        if (commitConfirmed || !writable || board?.expenses?.contains(item) != true) return@act
         leaveSensitive()
-        if (current()) { readRequest++; loading = false; selected = item; expected = item; copyData(ActiveWorkspaceBudget.Units(objects=1+item.payments.size.toLong(),strings=1+item.payments.size.toLong(),utf16Units=32L*(1+item.payments.size),lists=1,listCapacity=item.payments.size.toLong(),references=8+item.payments.size.toLong()*4)){draft = ExpenseDraft.from(item); confirmingDelete = false; error = null} }
+        if (current()) { readRequest++; loading = false; selected = item; expected = item; copyData(ActiveWorkspaceBudget.Units(objects=128+item.payments.size.toLong()*16,strings=64+item.payments.size.toLong()*8,utf16Units=4096+item.title.length.toLong()*4+item.payments.sumOf{it.payerLabel.length.toLong()*4+256},lists=16,listCapacity=item.payments.size.toLong()*16,references=256+item.payments.size.toLong()*32)){draft = ExpenseDraft.from(item);derive(); confirmingDelete = false; error = null} }
     }
     internal fun change(value: ExpenseDraft) = act {
         if (draft == null) return@act
-        if (writable) { draft = value; if (error == OperationsFailure.INVALID) error = null }
+        if (writable) { copyData(deriveCost(value)){draft = value;derive()}; if (error == OperationsFailure.INVALID) error = null }
     }
     private fun alter(text:String?=null,produce:(ExpenseDraft)->ExpenseDraft)=act {
         val old=draft?:return@act
-        if(writable){val n=old.payments.size.toLong()+1
-            copyData(ActiveWorkspaceBudget.Units(objects=n+1,lists=1,listCapacity=n,references=n*4+8,
-                strings=if(text==null)0 else 1,utf16Units=text?.length?.toLong()?:0)){draft=produce(old)}}
+        if(writable && !commitConfirmed){val n=old.payments.size.toLong()+1
+            val base=deriveCost(old)
+            copyData(base.copy(objects=base.objects+n+1,lists=base.lists+1,listCapacity=base.listCapacity+n,
+                strings=base.strings+1,utf16Units=base.utf16Units+(text?.length?.toLong()?:0)*4)){draft=produce(old);derive()}}
     }
     fun title(value:String)=alter(value){it.copy(title=value)}
     fun total(value:String)=alter(value){it.copy(total=value)}
@@ -118,14 +149,17 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
     fun requestDelete() = act { if (writable && expected != null && error != OperationsFailure.STALE) confirmingDelete = true }
     fun cancelDelete() = act { confirmingDelete = false }
     fun save() = act { current ->
-        if (!writable || confirmingDelete || error == OperationsFailure.STALE) return@act
-        val input = draft?.input()
-        if (input == null) { error = OperationsFailure.INVALID; return@act }
-        if (!ExpenseRules.valid(input)) { error = OperationsFailure.INVALID; return@act }
+        if (commitConfirmed || !writable || confirmingDelete || error == OperationsFailure.STALE) return@act
+        val d=draft?:return@act
+        var input:ExpenseInput?=null
+        if(!copyData(deriveCost(d)){input=d.input()})return@act
+        val accepted=input
+        if (accepted == null) { error = OperationsFailure.INVALID; return@act }
+        if (!ExpenseRules.valid(accepted)) { error = OperationsFailure.INVALID; return@act }
         val old = expected
         write(current, if (old == null) "Kosten eingetragen" else "Kosten gespeichert") { done ->
-            if (old == null) repository?.create(boundAction!!, input) { done(unit(it)) }
-            else repository?.edit(boundAction!!, old, input) { done(unit(it)) }
+            if (old == null) repository?.create(boundAction!!, accepted) { done(unit(it)) }
+            else repository?.edit(boundAction!!, old, accepted) { done(unit(it)) }
         }
     }
     fun delete() = act { current ->
@@ -133,8 +167,9 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
         if (!confirmingDelete || !writable || !ExpenseRules.mayDelete(action()!!.status) || error == OperationsFailure.STALE) return@act
         write(current, "Kostenposition entfernt") { repository?.delete(boundAction!!, old, it) }
     }
+    private fun draftClearAfterCommit() {draft = null;expected=null;confirmingDelete=false}
     private fun unit(result: OperationsResult<Expense>): OperationsResult<Unit> = when (result) {
-        is OperationsResult.Value -> OperationsResult.Value(Unit)
+        is OperationsResult.Value -> {committedId=result.value.id;OperationsResult.Value(Unit)}
         is OperationsResult.Rejected -> result
     }
     private fun write(current: () -> Boolean, message: String, work: ((OperationsResult<Unit>) -> Unit) -> Unit) {
@@ -145,6 +180,24 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
             when (result) {
                 is OperationsResult.Rejected -> error = result.reason
                 is OperationsResult.Value -> {
+                    val loader=detailLoader
+                    val id=committedId ?: expected?.id
+                    if(loader!=null && id!=null && !confirmingDelete){
+                        commitConfirmed=true;busy=true
+                        loader(WorkspaceDetailKind.EXPENSE,id){refreshed->
+                            if(!current())return@loader
+                            busy=false
+                            when(refreshed){
+                                is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                                is WorkspaceDetailResult.Value->{
+                                    board=refreshed.value.workspace?.expenseBoard ?: board
+                                    selected=refreshed.value.expense;draftClearAfterCommit()
+                                    commitConfirmed=false;error=null;feedback(message)
+                                }
+                            }
+                        }
+                        return@work
+                    }
                     discard(); refresh()
                     if (current()) refreshWorkspace()
                     if (current()) feedback(message)
@@ -167,8 +220,10 @@ data class ExpenseDraft(val title: String = "", val total: String = "", val paym
     fun feedback(): String {
         val totalCents = EuroMoney.parse(total) ?: return "Bitte einen positiven Gesamtbetrag in Euro eingeben."
         if (payments.isEmpty()) return "Mindestens eine Zahlung erforderlich."
-        val values = payments.map { EuroMoney.parse(it.amount) ?: return "Bitte alle Zahlungsbeträge in Euro eingeben." }
-        val sum = ExpenseRules.sum(values) ?: return "Die Zahlungssumme ist zu groß."
+        var sum=0L
+        for(p in payments){val amount=EuroMoney.parse(p.amount)?:return "Bitte alle Zahlungsbeträge in Euro eingeben."
+            sum=try{Math.addExact(sum,amount)}catch(_:ArithmeticException){return "Die Zahlungssumme ist zu groß."}}
+
         return if (sum > totalCents) "Zahlungen überschreiten den Gesamtbetrag um ${EuroMoney.format(sum - totalCents)}"
         else "Zahlungen: ${EuroMoney.format(sum)} von ${EuroMoney.format(totalCents)}"
     }

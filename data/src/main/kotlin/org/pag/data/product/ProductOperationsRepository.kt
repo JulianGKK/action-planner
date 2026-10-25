@@ -16,26 +16,37 @@ class ProductOperationsRepository(app:Context,private val access:StorageAccess,
     private val now:()->Long=System::currentTimeMillis):OperationsRepository {
     private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked,mutations,FullviewPreflight.operations)
     internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
+    private val writerBudget=OriginalWriterBudget(access,readExclusion::record)
     private val database=ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary=WorkspaceWriteBoundary(access,worker,main,mutations,blocked)
     override fun board(actionId:String,publish:(OperationsResult<OperationalBoard>)->Unit)=run(actionId,publish){d,c->d.withReadTransaction{OperationsStore(d,c,now).board(actionId)}}
-    override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,null,name)}
-    override fun renameRole(actionId:String,expected:Role,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish){it.role(actionId,expected,name)}
+    override fun createRole(actionId:String,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish,name.length.toLong()){it.role(actionId,null,name)}
+    override fun renameRole(actionId:String,expected:Role,name:String,publish:(OperationsResult<Role>)->Unit)=write(actionId,publish,name.length.toLong()){it.role(actionId,expected,name)}
     override fun deleteRole(actionId:String,expected:Role,publish:(OperationsResult<Unit>)->Unit)=write(actionId,publish){it.deleteRole(actionId,expected)}
     override fun planRoles(actionId:String,personId:String,expected:ExpectedPersonRolePlan,plan:PersonRolePlan,publish:(OperationsResult<Unit>)->Unit) {
+        if(!writerBudget.reserve(actionId,0,plan.roleIds.size.toLong()+expected.plan.roleIds.size+8)){
+            access.acquire(AccessScope.READY)?.publish{publish(OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED))};return
+        }
         val frozen=plan.copy(roleIds=plan.roleIds.toSet())
         write(actionId,publish){it.plan(actionId,personId,expected,frozen)}
     }
     override fun updateSnapshot(actionId:String,personId:String,expected:PersonOperationalState,status:OperationalStatus,roleId:String?,place:String,publish:(OperationsResult<Unit>)->Unit)=
-        write(actionId,publish){it.snapshot(actionId,personId,expected,status,roleId,place)}
-    private fun <T> write(actionId:String,publish:(OperationsResult<T>)->Unit,work:suspend(OperationsStore)->OperationsResult<T>) =
+        write(actionId,publish,place.length.toLong()){it.snapshot(actionId,personId,expected,status,roleId,place)}
+    private fun <T> write(actionId:String,publish:(OperationsResult<T>)->Unit,chars:Long=0,work:suspend(OperationsStore)->OperationsResult<T>) {
+        if(!writerBudget.reserve(actionId,chars,8)){
+            access.acquire(AccessScope.READY)?.publish{publish(OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED))};return
+        }
         mutationBoundary.submit<OperationsResult<T>>(WorkspaceMutation(WorkspaceWriterFamily.OPERATIONS,actionId),publish,
             {OperationsResult.Rejected(OperationsFailure.STALE)},{it is OperationsResult.Value}) { c,p ->
             if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
             (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->
-                db.useWriterConnection { tx -> confirmedWorkspaceTransaction(tx,c,p,{it is OperationsResult.Rejected}) {work(OperationsStore(db,c,now))} }
+                db.useWriterConnection { tx -> confirmedWorkspaceTransaction(tx,c,p,{it is OperationsResult.Rejected}) {
+                    if(!writerBudget.preflight(tx,c,actionId,FullviewPreflight.operations))OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED)
+                    else work(OperationsStore(db,c,now))
+                } }
             }}
         }
+    }
     private fun <T> run(actionId:String,publish:(OperationsResult<T>)->Unit,work:suspend(ActionDatabase,StorageContext)->OperationsResult<T>) {
         readExclusion.read(actionId,publish,{budget->OperationsResult.Rejected(if(budget)OperationsFailure.BUDGET_REFUSED else OperationsFailure.OWNER_UNCONFIRMED)},work)
     }

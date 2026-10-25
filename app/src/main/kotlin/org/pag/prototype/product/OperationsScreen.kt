@@ -20,6 +20,7 @@ import java.time.format.FormatStyle
         OperationsScreen.ROLES->RoleManagement(ops,board)
         OperationsScreen.PLAN->{
             Text("Rollen planen",style=MaterialTheme.typography.titleLarge)
+            Text("Revision: ${ops.planRevision}")
             Text(ops.person?.person?.pseudonym.orEmpty(),style=MaterialTheme.typography.headlineMedium)
             if(ops.planRoles.isEmpty())Text("Noch keine Rollen vorhanden. Rollen können in der Aktionsübersicht angelegt werden.")
             ops.planRoles.forEach{role->
@@ -31,7 +32,7 @@ import java.time.format.FormatStyle
                 Text("Beim Neuladen wird dein bisheriger Entwurf ersetzt.")
                 FormOutlinedButton(ops::reloadPlan,enabled=!ops.busy){Text("Entwurf verwerfen und aktuellen Plan laden")}
             }
-            FormButton(ops::savePlan,enabled=!ops.busy){Text("Speichern")}
+            FormButton(ops::savePlan,enabled=!ops.busy && !ops.commitConfirmed){Text("Speichern")}
             FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Abbrechen")}
         }
         OperationsScreen.LIVE, OperationsScreen.FUNCTION->LiveForm(model,ops,board)
@@ -63,7 +64,7 @@ import java.time.format.FormatStyle
     val ops = model.operations
     if (board.status == ActionStatus.ACTIVE) { ActivePeopleList(model, board); return }
     board.persons.forEach{p->
-        val planned=p.plan.roleIds.mapNotNull{id->board.roles.find{it.id==id}?.name}.joinToString().ifEmpty{"Keine geplanten Rollen"}
+        val planned=model.formatPlannedRoles(p,board)?:"Keine geplanten Rollen"
         FormOutlinedButton(onClick={if(board.status==ActionStatus.ACTIVE)ops.update(p.person.id) else model.personDetail(p.person.id)},modifier=Modifier.fillMaxWidth(),enabled=!ops.busy){
             Column(Modifier.fillMaxWidth()){
                 Text(p.person.pseudonym,style=MaterialTheme.typography.titleLarge)

@@ -1,0 +1,19 @@
+INSTRUMENTATION_STATUS: stream=P109,lock-detail,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=965004, transition=16777216, localRetained=965004, localTransition=3682224, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,lock-detail,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,lock-detail,NEGATIVE_DETAIL,lock_before_worker=true,callbacks=0,old_snapshot_held=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,lock-detail,FAILURE,java.lang.IllegalStateException: P109 timeout one callback
+	at org.pag.prototype.P109FunctionalOwnerProbe.await(P109FunctionalOwnerProbe.kt:25)
+	at org.pag.prototype.P109FunctionalOwnerProbe.call(P109FunctionalOwnerProbe.kt:28)
+	at org.pag.prototype.P109FunctionalOwnerProbe.onStart(P109FunctionalOwnerProbe.kt:231)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P109 FAIL lock-detail
+INSTRUMENTATION_CODE: 0

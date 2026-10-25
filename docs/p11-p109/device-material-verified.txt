@@ -1,0 +1,17 @@
+INSTRUMENTATION_STATUS: stream=P109,material,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=965004, transition=16777216, localRetained=965004, localTransition=3682224, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,MODULE_COMMITTED,kind=material,new_value_visible=true,full_graphs=1,record=State(phase=RETAINED, retained=4422115, transition=16777216, localRetained=4422115, localTransition=8571295, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,NEGATIVE,held_TEST_snapshot=true,second_full_graph=REFUSED,lock_and_new_generation=REFUSED,record=State(phase=RETAINED, retained=4422115, transition=16777216, localRetained=4422115, localTransition=8571295, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false,closure=UNDER_TEST
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P109 PASS material
+INSTRUMENTATION_CODE: -1

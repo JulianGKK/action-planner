@@ -242,4 +242,29 @@ class TaskModelTest {
         assertSame(held,model.input);assertEquals(OperationsFailure.BUDGET_REFUSED,model.error)
         assertEquals(0,repo.writes)
     }
+    @Test fun committedDraftWaitsForDetailBindingAndRefusalNeverRepeatsWrite(){
+        val feedback=mutableListOf<String>()
+        val m=TaskModel(repo,{session},{action},{},{},feedback={feedback.add(it)})
+        var deliver:((WorkspaceDetailResult)->Unit)?=null
+        m.bindDetailLoader{kind,id,callback->assertEquals(WorkspaceDetailKind.TASK,kind);assertEquals("t",id);deliver=callback}
+        m.refresh();val old=repo.tasks.first();m.open(old);m.edit();m.changeTitle("Confirmed new")
+        m.save();assertEquals(1,repo.writes);assertTrue(m.busy);assertTrue(m.form);assertTrue(m.commitConfirmed);assertTrue(feedback.isEmpty())
+        deliver!!(WorkspaceDetailResult.Rejected(WorkspaceFailure.BUDGET_REFUSED))
+        assertFalse(m.busy);assertTrue(m.form);assertEquals("Confirmed new",m.input.title)
+        assertEquals(listOf("Gespeichert – Ansicht konnte noch nicht aktualisiert werden."),feedback)
+        m.changeTitle("Unconfirmed second draft");assertEquals("Confirmed new",m.input.title)
+        m.save();assertEquals(1,repo.writes)
+    }
+    @Test fun committedSelectionOnlyChangesWhenFreshDetailArrives(){
+        val m=TaskModel(repo,{session},{action},{},{})
+        var deliver:((WorkspaceDetailResult)->Unit)?=null
+        m.bindDetailLoader{_,_,callback->deliver=callback}
+        m.refresh();val old=repo.tasks.first();m.open(old);m.edit();m.changeTitle("Confirmed new");m.save()
+        assertSame(old,m.selected)
+        val fresh=old.copy(title="Confirmed new",editRevision=old.editRevision+1)
+        val access=object:WorkspaceAccess{override fun publish(actionId:String,status:ActionStatus,generation:Long,work:()->Unit):Boolean{work();return true};override fun reserve(units:ActiveWorkspaceBudget.Units)=true}
+        deliver!!(WorkspaceDetailResult.Value(WorkspaceDetail(access,task=fresh)))
+        assertSame(fresh,m.selected);assertFalse(m.form);assertFalse(m.commitConfirmed);assertFalse(m.busy)
+    }
+
 }

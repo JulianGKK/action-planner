@@ -9,6 +9,10 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     private val suppliedBoard: (() -> TaskBoard?)? = null,
     private val refreshWorkspace: (() -> Unit)? = null,
     private val feedback: (String) -> Unit = {}) {
+    private var detailLoader:WorkspaceDetailLoader?=null
+    internal fun bindDetailLoader(loader:WorkspaceDetailLoader){check(detailLoader==null);detailLoader=loader}
+    var commitConfirmed by mutableStateOf(false);private set
+    private var committedId:String?=null
     private var workspaceScope:(()->WorkspaceAccess?)?=null
     internal fun bindWorkspaceScope(scope:()->WorkspaceAccess?){check(workspaceScope==null);workspaceScope=scope}
     private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
@@ -17,7 +21,15 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
         val failure=if(copyGate==null){producer();null}else copyGate!!.invoke(units,producer)
         if(failure!=null){error=failure;return false};return true
     }
-    private val inputCost get()=ActiveWorkspaceBudget.Units(objects=1,references=12)
+    private val inputCost get()=ActiveWorkspaceBudget.Units(objects=128,references=64,strings=16,utf16Units=512)
+    var dueText by mutableStateOf("");private set
+    var dueValid by mutableStateOf(true);private set
+    private fun initialDue(){
+        dueText=input.dueAt?.let{java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"))}.orEmpty()
+        dueValid=true
+    }
+    fun changeDue(value:String)=due(value){dueText=it}
+
     private var ownBoard by mutableStateOf<TaskBoard?>(null)
     val board: TaskBoard? get() = if (suppliedBoard != null) suppliedBoard.invoke() else ownBoard
     var history by mutableStateOf<CompactTaskEvents?>(null);private set
@@ -84,7 +96,7 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     val writable get()=session().state==SessionState.READY && action()?.let{TaskRules.mayWrite(it.status)}==true
     val deletable get()=writable && action()?.status==ActionStatus.PREPARATION
     fun touch()=interaction()
-    fun clear(){clearHistory();dropEditor();createdSelectionId=null;request++;ownBoard=null;selected=null;form=false;input=TaskInput("");filter=null;closedExpanded=false;busy=false;error=null}
+    fun clear(){commitConfirmed=false;committedId=null;clearHistory();dropEditor();createdSelectionId=null;request++;ownBoard=null;selected=null;form=false;input=TaskInput("");filter=null;closedExpanded=false;busy=false;error=null}
     fun refresh(){
         clearHistory()
         if (refreshWorkspace != null) { request++; refreshWorkspace.invoke(); return }
@@ -110,23 +122,23 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
         if(current())publish(a.id,current)
     }
     fun add(personId:String?=null,template:TaskTemplate?=null)=guardedInteraction { _,current ->
-        if(writable && !busy){leaveSensitive();if(current()){clearHistory();bindEditor(null);createdSelectionId=null;selected=null;copyData(ActiveWorkspaceBudget.Units(objects=2,references=24)){input=(template?.input()?:TaskInput("")).copy(affectedPersonId=personId);form=true;error=null}}}
+        if(writable && !busy){leaveSensitive();if(current()){clearHistory();bindEditor(null);createdSelectionId=null;selected=null;copyData(ActiveWorkspaceBudget.Units(objects=2,references=24)){input=(template?.input()?:TaskInput("")).copy(affectedPersonId=personId);initialDue();form=true;error=null}}}
     }
     fun open(t:Task)=guardedInteraction { id,current ->
         if(!busy && t.actionId==id){leaveSensitive();if(current()){clearHistory();dropEditor();createdSelectionId=null;selected=t;form=false;error=null}}
     }
-    fun edit()=guardedInteraction { _,_ -> if(writable && !busy){selected?.let{clearHistory();bindEditor(it);copyData(inputCost){input=it.input();form=true;error=null}}} }
+    fun edit()=guardedInteraction { _,_ -> if(writable && !busy){selected?.let{clearHistory();bindEditor(it);copyData(inputCost){input=it.input();initialDue();form=true;error=null}}} }
     // Legacy/test input adapter. Product callbacks below create the DTO only INSIDE the gate.
-    internal fun change(i:TaskInput)=guardedInteraction { _,_ -> if(writable && !busy)copyData(inputCost){input=i} }
-    fun changeTitle(value:String)=guardedInteraction { _,_ ->if(writable && !busy)copyData(
+    internal fun change(i:TaskInput)=guardedInteraction { _,_ -> if(writable && !busy && !commitConfirmed)copyData(inputCost){input=i} }
+    fun changeTitle(value:String)=guardedInteraction { _,_ ->if(writable && !busy && !commitConfirmed)copyData(
         ActiveWorkspaceBudget.Units(objects=1,references=12,strings=1,utf16Units=value.length.toLong())){input=input.copy(title=value)} }
-    private fun alterInput(produce:()->TaskInput)=guardedInteraction { _,_ ->if(writable && !busy)copyData(inputCost){input=produce()} }
+    private fun alterInput(produce:()->TaskInput)=guardedInteraction { _,_ ->if(writable && !busy && !commitConfirmed)copyData(inputCost){input=produce()} }
     fun priority(value:TaskPriority)=alterInput{input.copy(priority=value)}
     fun assigneePerson(id:String?)=alterInput{input.copy(assigneePersonId=id,assigneeRoleId=null)}
     fun assigneeRole(id:String?)=alterInput{input.copy(assigneeRoleId=id,assigneePersonId=null)}
     fun affectedPerson(id:String?)=alterInput{input.copy(affectedPersonId=id)}
-    fun due(value:String,assign:(String)->Unit)=guardedInteraction { _,_ ->if(writable && !busy)copyData(
-        ActiveWorkspaceBudget.Units(objects=2,references=12,strings=1,utf16Units=value.length.toLong())){input=input.copy(dueAt=parseTaskDue(value));assign(value)} }
+    fun due(value:String,assign:(String)->Unit)=guardedInteraction { _,_ ->if(writable && !busy && !commitConfirmed)copyData(
+        ActiveWorkspaceBudget.Units(objects=128,references=64,strings=8,utf16Units=value.length.toLong()*8)){val parsed=parseTaskDue(value);dueValid=value.isBlank() || parsed!=null;input=input.copy(dueAt=parsed);assign(value)} }
 
     fun showPerson(id:String?)=guardedInteraction { _,_ -> if(!busy){clearHistory();dropEditor();createdSelectionId=null;filter=id;closedExpanded=false;selected=null;form=false;input=TaskInput("")} }
     fun cancel() = guardedInteraction { _, _ ->
@@ -143,21 +155,23 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     fun toggleClosed() = guardedInteraction { _, _ -> if (!busy) closedExpanded = !closedExpanded }
     fun save() {
         val a = action() ?: return
-        if (!writable || busy || !form || editorGeneration!=session().generation || editorActionId!=a.id) return
-        if (!TaskRules.valid(input)) { error = OperationsFailure.INVALID; return }
+        if (commitConfirmed || !writable || busy || !form || editorGeneration!=session().generation || editorActionId!=a.id) return
+        if (!dueValid || !TaskRules.valid(input)) { error = OperationsFailure.INVALID; return }
         val old = editorExpected
         val draft = input
         var createdId: String? = null
+        committedId=old?.id
         write(message = if (old == null) "Aufgabe angelegt" else "Aufgabe gespeichert",
             createdFocus = { if (old == null && action()?.status == ActionStatus.ACTIVE) createdId else null }) { done ->
             if (old == null) repository?.create(a.id, draft) { result ->
                 createdId = (result as? OperationsResult.Value)?.value?.id
+                committedId=createdId
                 done(unit(result))
             } else repository?.edit(a.id, old, draft) { done(unit(it)) }
         }
     }
-    fun transition(status:TaskStatus){val a=action()?:return;val t=(if(form)editorExpected else selected)?:return;if(!writable || busy)return;write(message=if(status==TaskStatus.OPEN)"Aufgabe wieder geöffnet" else null){done->repository?.transition(a.id,t,status){done(unit(it))}}}
-    fun delete(){val a=action()?:return;val t=(if(form)editorExpected else selected)?:return;if(!deletable || busy)return;write{done->repository?.delete(a.id,t,done)}}
+    fun transition(status:TaskStatus){val a=action()?:return;val t=(if(form)editorExpected else selected)?:return;if(!writable || busy)return;committedId=t.id;write(message=if(status==TaskStatus.OPEN)"Aufgabe wieder geöffnet" else null){done->repository?.transition(a.id,t,status){done(unit(it))}}}
+    fun delete(){val a=action()?:return;val t=(if(form)editorExpected else selected)?:return;if(!deletable || busy)return;committedId=t.id;write{done->repository?.delete(a.id,t,done)}}
     /** Explicit discard-and-reload only. A normal board/workspace refresh never calls this. */
     fun reloadEditor()=guardedInteraction { a,_ ->
         val old=editorExpected
@@ -165,6 +179,22 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
             editorGeneration==session().generation && editorActionId==a){
             val revision=formRevision;val generation=session().generation
             busy=true;var delivered=false
+            val loader=detailLoader
+            if(loader!=null){
+                loader(WorkspaceDetailKind.TASK,old.id){result->
+                    if(session().state!=SessionState.READY || session().generation!=generation || action()?.id!=a ||
+                        !form || revision!=formRevision || editorExpected!==old)return@loader
+                    busy=false
+                    when(result){
+                        is WorkspaceDetailResult.Rejected->error=result.reason.operationFailure()
+                        is WorkspaceDetailResult.Value->{val fresh=result.value.task
+                            if(fresh==null)error=OperationsFailure.NOT_FOUND
+                            else {bindEditor(fresh);selected=fresh;input=fresh.input();initialDue();error=null}
+                        }
+                    }
+                }
+                return@guardedInteraction
+            }
             repository.board(a){result->
                 if(!delivered){
                     delivered=true
@@ -176,7 +206,7 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
                             is OperationsResult.Value->{
                                 val fresh=result.value.tasks.singleOrNull{it.id==old.id && it.actionId==a}
                                 if(result.value.actionId!=a || fresh==null)error=OperationsFailure.NOT_FOUND
-                                else {bindEditor(fresh);selected=fresh;input=fresh.input();error=null}
+                                else {bindEditor(fresh);selected=fresh;input=fresh.input();initialDue();error=null}
                             }
                         }
                     }
@@ -186,7 +216,7 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     }
     private fun unit(r:OperationsResult<Task>):OperationsResult<Unit> = when(r){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->r}
     private fun write(message:String?=null,createdFocus:()->String?={null},work:((OperationsResult<Unit>)->Unit)->Unit)=guardedInteraction { _,_ ->
-        if(repository!=null && writable && !busy){
+        if(repository!=null && writable && !busy && !commitConfirmed){
             val revision=formRevision;val generation=session().generation;val actionId=action()?.id
             clearHistory();busy=true;error=null;var delivered=false
             work{r->if(!delivered && session().state==SessionState.READY && session().generation==generation &&
@@ -194,6 +224,23 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
                 delivered=true
                 busy=false;when(r){is OperationsResult.Value->{
                     createdSelectionId = createdFocus()
+                    val loader=detailLoader
+                    val id=committedId ?: selected?.id
+                    if(loader!=null && id!=null){
+                        commitConfirmed=true;busy=true
+                        loader(WorkspaceDetailKind.TASK,id){refreshed->
+                            if(session().state!=SessionState.READY || session().generation!=generation || action()?.id!=actionId || formRevision!=revision)return@loader
+                            busy=false
+                            when(refreshed){
+                                is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                                is WorkspaceDetailResult.Value->{
+                                    selected=refreshed.value.task;dropEditor();form=false;input=TaskInput("");commitConfirmed=false;error=null
+                                    if(message!=null)feedback(message)
+                                }
+                            }
+                        }
+                        return@work
+                    }
                     dropEditor();form=false;input=TaskInput("")
                     val generation=session().generation;val actionId=action()?.id
                     refresh()

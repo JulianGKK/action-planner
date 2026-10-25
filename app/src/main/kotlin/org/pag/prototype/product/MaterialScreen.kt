@@ -19,11 +19,11 @@ import org.pag.domain.*
         OperationsFailure.NOT_ALLOWED -> "Im aktuellen Aktionsstatus ist diese Änderung nicht möglich."
         else -> "Das Material oder die Zuordnung ist in dieser Aktion nicht verfügbar."
     }) }
-    if (model.error == OperationsFailure.STALE) FormOutlinedButton(model::reload, enabled = !model.busy) { Text("Zur Materialliste · Eingaben verwerfen") }
+    if (model.error == OperationsFailure.STALE) FormOutlinedButton(model::reload, enabled = !model.busy && !model.commitConfirmed) { Text("Zur Materialliste · Eingaben verwerfen") }
     if (model.confirmingDelete) {
         Text("Der Materialeintrag wird entfernt. Verknüpfte Person und Aufgabe bleiben bestehen.")
-        FormButton(model::delete, enabled = !model.busy && model.error != OperationsFailure.STALE) { Text("Entfernen bestätigen") }
-        FormOutlinedButton(model::cancelDelete, enabled = !model.busy) { Text("Eintrag behalten") }
+        FormButton(model::delete, enabled = !model.busy && !model.commitConfirmed && model.error != OperationsFailure.STALE) { Text("Entfernen bestätigen") }
+        FormOutlinedButton(model::cancelDelete, enabled = !model.busy && !model.commitConfirmed) { Text("Eintrag behalten") }
         return
     }
     val input = model.input
@@ -31,22 +31,22 @@ import org.pag.domain.*
         PreparationHeading(if (model.expected == null) "Material hinzufügen" else "Material bearbeiten")
         FormTextField(input.name, { model.name(it) }, label = { Text("Bezeichnung") },
             supportingText = { Text("1–120 Zeichen") }, autoFocus = model.expected == null,
-            keyboardOptions = productKeyboard(ProductTextKind.ACTION_TITLE), enabled = !model.busy, modifier = Modifier.fillMaxWidth())
+            keyboardOptions = productKeyboard(ProductTextKind.ACTION_TITLE), enabled = !model.busy && !model.commitConfirmed, modifier = Modifier.fillMaxWidth())
         FormTextField(input.quantityLabel.orEmpty(), { model.quantity(it) },
             label = { Text("Menge / Anzahl · optional") }, supportingText = { Text("Maximal 40 Zeichen · z. B. 2 Rollen") },
-            enabled = !model.busy, modifier = Modifier.fillMaxWidth())
+            enabled = !model.busy && !model.commitConfirmed, modifier = Modifier.fillMaxWidth())
         FormTextField(input.placeLabel.orEmpty(), { model.place(it) },
             label = { Text("Ort · optional") }, supportingText = { Text("Maximal 80 Zeichen") },
-            keyboardOptions = productKeyboard(ProductTextKind.PLACE), enabled = !model.busy, modifier = Modifier.fillMaxWidth())
+            keyboardOptions = productKeyboard(ProductTextKind.PLACE), enabled = !model.busy && !model.commitConfirmed, modifier = Modifier.fillMaxWidth())
         PreparationHeading("Verantwortliche Person · optional")
         MaterialChoice("Keine verantwortliche Person", input.responsiblePersonId == null, !model.busy) { model.responsible(null) }
         persons.forEach { person -> MaterialChoice(person.pseudonym, input.responsiblePersonId == person.id, !model.busy) { model.responsible(person.id) } }
         PreparationHeading("Verknüpfte Aufgabe · optional")
         MaterialChoice("Keine verknüpfte Aufgabe", input.linkedTaskId == null, !model.busy) { model.linkedTask(null) }
         tasks.forEach { task -> MaterialChoice("${task.title} · ${taskStatusLabel(task.status)}", input.linkedTaskId == task.id, !model.busy) { model.linkedTask(task.id) } }
-        FormButton(model::save, enabled = !model.busy && model.error != OperationsFailure.STALE) { Text(if (model.busy) "Wird gespeichert …" else "Speichern") }
-        FormOutlinedButton(model::cancel, enabled = !model.busy) { Text("Abbrechen") }
-        if (model.expected != null) FormOutlinedButton(model::requestDelete, enabled = !model.busy && model.error != OperationsFailure.STALE) { Text("Material entfernen") }
+        FormButton(model::save, enabled = !model.busy && !model.commitConfirmed && model.error != OperationsFailure.STALE) { Text(if (model.busy) "Wird gespeichert …" else "Speichern") }
+        FormOutlinedButton(model::cancel, enabled = !model.busy && !model.commitConfirmed) { Text("Abbrechen") }
+        if (model.expected != null) FormOutlinedButton(model::requestDelete, enabled = !model.busy && !model.commitConfirmed && model.error != OperationsFailure.STALE) { Text("Material entfernen") }
         return
     }
     if (model.writable) {

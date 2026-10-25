@@ -84,7 +84,7 @@ internal fun entityRowKey(kind:String,id:String)="$kind:$id"
                 FormOutlinedButton({model.personDetail(person.id)},modifier=Modifier.fillMaxWidth()) {
                     Column(Modifier.fillMaxWidth()) {
                         Text(person.pseudonym,style=MaterialTheme.typography.titleLarge)
-                        Text(plan?.let{plannedRoles(it,board)}?:"Noch keine Rolle")
+                        Text(plan?.let{model.formatPlannedRoles(it,board)}?:"Noch keine Rolle")
                     }
                 }
             }

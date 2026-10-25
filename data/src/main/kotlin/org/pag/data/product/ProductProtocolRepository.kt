@@ -18,6 +18,7 @@ class ProductProtocolRepository(
 ) : ProtocolRepository {
     private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked,mutations,FullviewPreflight.protocol)
     internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
+    private val writerBudget=OriginalWriterBudget(access,readExclusion::record)
     private val database = ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary = WorkspaceWriteBoundary(access, worker, main, mutations, blocked)
     override fun summary(actionId: String, publish: (ProtocolResult<ProtocolSummary>) -> Unit) =
@@ -28,20 +29,29 @@ class ProductProtocolRepository(
         read(actionId,publish) { it.detail(actionId, entryId) }
     override fun createEntry(actionId: String, expectedActionStatus: ActionStatus, input: ProtocolInput,
         publish: (ProtocolResult<ProtocolSaved>) -> Unit) {
+        if(!reserveWrite(actionId,input,null,publish))return
         val copy = freezeProtocolInput(ProtocolRules.normalized(input))
         write(actionId, publish) { it.create(actionId, expectedActionStatus, copy) }
     }
     override fun reviseEntry(actionId: String, expectedActionStatus: ActionStatus, expectedRevision: ProtocolExpectedRevision,
         revisionType: ProtocolRevisionType, input: ProtocolInput, clearMistaken: Boolean,
         publish: (ProtocolResult<ProtocolSaved>) -> Unit) {
+        if(!reserveWrite(actionId,input,expectedRevision,publish))return
         val copy = freezeProtocolInput(ProtocolRules.normalized(input))
         val expected = freezeProtocolExpected(expectedRevision)
         write(actionId, publish) { it.revise(actionId, expectedActionStatus, expected, revisionType, copy, clearMistaken) }
     }
     override fun markMistaken(actionId: String, expectedActionStatus: ActionStatus, expectedRevision: ProtocolExpectedRevision,
         publish: (ProtocolResult<ProtocolSaved>) -> Unit) {
+        if(!reserveWrite(actionId,null,expectedRevision,publish))return
         val expected = freezeProtocolExpected(expectedRevision)
         write(actionId, publish) { it.markMistaken(actionId, expectedActionStatus, expected) }
+    }
+    private fun <T> reserveWrite(a:String,input:ProtocolInput?,expected:ProtocolExpectedRevision?,publish:(ProtocolResult<T>)->Unit):Boolean {
+        val f=AppConsumerCopies.Footprint()
+        input?.let(f::protocol);expected?.revision?.input?.let(f::protocol)
+        if(writerBudget.reserve(a,f.chars,f.items))return true
+        access.acquire(AccessScope.READY)?.publish{publish(ProtocolResult.Rejected(ProtocolFailure.BUDGET_REFUSED))};return false
     }
     private fun <T> read(actionId:String,publish: (ProtocolResult<T>) -> Unit, work: suspend (ProtocolStore) -> ProtocolResult<T>) =
         run(actionId,publish) { d, c -> d.withReadTransaction { work(ProtocolStore(d, c, now)) } }
@@ -54,7 +64,8 @@ class ProductProtocolRepository(
                 database.use(inventory.database, key, c) { db ->
                     db.useWriterConnection { tx ->
                         confirmedWorkspaceTransaction(tx, c, progress, { it is ProtocolResult.Rejected }) {
-                            work(ProtocolStore(db, c, now))
+                            if(!writerBudget.preflight(tx,c,actionId,FullviewPreflight.protocol))ProtocolResult.Rejected(ProtocolFailure.BUDGET_REFUSED)
+                            else work(ProtocolStore(db, c, now))
                         }
                     }
                 }

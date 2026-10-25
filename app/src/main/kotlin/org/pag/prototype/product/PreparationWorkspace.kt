@@ -27,9 +27,14 @@ internal fun preparationSummary(snapshot: WorkspaceSnapshot): PreparationSummary
     activeTasks?.count { it.priority == TaskPriority.HIGH })
 }
 internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): String? {
-    val roles = board.roles.filter { it.id in person.plan.roleIds }
-        .sortedBy { it.id != person.plan.primaryRoleId }
-    return roles.joinToString { it.name }.takeIf { it.isNotEmpty() }
+    var count=0
+    for(role in board.roles)if(role.id in person.plan.roleIds)count++
+    if(count==0)return null
+    val text=StringBuilder()
+    fun append(role:org.pag.domain.Role){if(text.isNotEmpty())text.append(", ");text.append(role.name)}
+    for(role in board.roles)if(role.id==person.plan.primaryRoleId && role.id in person.plan.roleIds)append(role)
+    for(role in board.roles)if(role.id!=person.plan.primaryRoleId && role.id in person.plan.roleIds)append(role)
+    return text.toString()
 }
 @Composable internal fun PreparationHeading(text: String) {
     Text(text, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleLarge)
@@ -70,6 +75,9 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     PreparationNavigation(model)
     if(!renderContent)return
     if (model.personDetailLoading) { PagLoadingState(); return }
+    if(model.personForm) {
+        PersonsSection(model);return
+    }
     when (model.preparationContentState) {
         PreparationContentState.LOADING -> { PagLoadingState(); return }
         PreparationContentState.ERROR -> { PagErrorState(); return }
@@ -145,7 +153,7 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
         FormOutlinedButton({ model.personDetail(person.id) }, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth()) {
                 Text(person.pseudonym, style = MaterialTheme.typography.titleLarge)
-                Text(if (plan != null && board != null) plannedRoles(plan, board) ?: "Noch keine Rolle" else "Noch keine Rolle")
+                Text(if (plan != null && board != null) model.formatPlannedRoles(plan, board) ?: "Noch keine Rolle" else "Noch keine Rolle")
             }
         }
     }

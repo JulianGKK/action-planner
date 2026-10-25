@@ -14,9 +14,13 @@ object ExpenseRules {
     fun sum(values: List<Long>): Long? = try { values.fold(0L) { a, b -> Math.addExact(a, b) } } catch (_: ArithmeticException) { null }
     private fun bounded(s: String, max: Int) = s.isNotEmpty() && Character.codePointCount(s, 0, s.length) <= max
     fun valid(input: ExpenseInput): Boolean {
-        val i = normalized(input)
-        return bounded(i.title, 120) && i.totalCents > 0 && i.payments.size in 1..32 &&
-            i.payments.all { bounded(it.payerLabel, 80) && it.amountCents > 0 } && sum(i.payments.map { it.amountCents }) == i.totalCents
+        if(trimmedCodePoints(input.title) !in 1..120 || input.totalCents<=0 || input.payments.size !in 1..32)return false
+        var sum=0L
+        for(p in input.payments){
+            if(trimmedCodePoints(p.payerLabel) !in 1..80 || p.amountCents<=0)return false
+            sum=try{Math.addExact(sum,p.amountCents)}catch(_:ArithmeticException){return false}
+        }
+        return sum==input.totalCents
     }
     fun mayRead(s: ActionStatus) = s in setOf(ActionStatus.PREPARATION, ActionStatus.ACTIVE, ActionStatus.COMPLETED)
     fun mayWrite(s: ActionStatus) = mayRead(s)
@@ -26,14 +30,23 @@ object ExpenseRules {
 /** EUR only. No floating point, grouping, rounding or ambiguous partial input. */
 object EuroMoney {
     fun parse(text: String): Long? {
-        val s = text.trim()
-        if (!s.matches(Regex("[0-9]+([,.][0-9]{1,2})?"))) return null
-        val parts = s.split(',', '.')
-        return try {
-            val euros = parts[0].toLong()
-            val cents = if (parts.size == 1) 0L else parts[1].padEnd(2, '0').toLong()
-            Math.addExact(Math.multiplyExact(euros, 100), cents).takeIf { it > 0 }
-        } catch (_: NumberFormatException) { null } catch (_: ArithmeticException) { null }
+        var start=0;var end=text.length
+        while(start<end && text[start].isWhitespace())start++
+        while(end>start && text[end-1].isWhitespace())end--
+        if(start==end)return null
+        var euros=0L;var cents=0L;var decimals=-1;var digits=0
+        try {
+            for(i in start until end){val c=text[i]
+                if(c in '0'..'9'){
+                    val n=(c-'0').toLong()
+                    if(decimals<0){euros=Math.addExact(Math.multiplyExact(euros,10),n);digits++}
+                    else {if(decimals==2)return null;cents=cents*10+n;decimals++}
+                }else if((c==',' || c=='.') && decimals<0 && digits>0)decimals=0 else return null
+            }
+            if(digits==0 || decimals==0)return null
+            if(decimals==1)cents*=10
+            return Math.addExact(Math.multiplyExact(euros,100),cents).takeIf{it>0}
+        }catch(_:ArithmeticException){return null}
     }
     fun input(cents: Long): String { require(cents >= 0); return "${cents / 100},${(cents % 100).toString().padStart(2, '0')}" }
     fun format(cents: Long) = "${input(cents)} €"

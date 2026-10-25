@@ -1,0 +1,47 @@
+[
+  {
+    "scenario": "person",
+    "log": "device-person-final.txt",
+    "passed": true
+  },
+  {
+    "scenario": "stale",
+    "log": "device-stale-final.txt",
+    "passed": true
+  },
+  {
+    "scenario": "active",
+    "log": "device-active-final.txt",
+    "passed": true
+  },
+  {
+    "scenario": "plan",
+    "log": "device-plan-final.txt",
+    "passed": true
+  },
+  {
+    "scenario": "material",
+    "log": "device-material-final.txt",
+    "passed": true
+  },
+  {
+    "scenario": "preparation",
+    "log": "device-preparation-final.txt",
+    "passed": true
+  },
+  {
+    "scenario": "completed",
+    "log": "device-completed-final.txt",
+    "passed": true
+  },
+  {
+    "scenario": "large",
+    "log": "device-large-final.txt",
+    "passed": true
+  },
+  {
+    "scenario": "lock-detail",
+    "log": "device-lock-detail-final.txt",
+    "passed": false
+  }
+]

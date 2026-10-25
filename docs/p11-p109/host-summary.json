@@ -1,0 +1,253 @@
+{
+  "suites": [
+    {
+      "name": "org.pag.prototype.product.ProtocolModelTest",
+      "tests": "24",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "app"
+    },
+    {
+      "name": "org.pag.prototype.product.WorkspaceBatchTest",
+      "tests": "25",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "app"
+    },
+    {
+      "name": "org.pag.prototype.product.MaterialModelTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "app"
+    },
+    {
+      "name": "org.pag.prototype.product.MemoryReportModelTest",
+      "tests": "16",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "app"
+    },
+    {
+      "name": "org.pag.prototype.product.PreparationWorkspaceTest",
+      "tests": "30",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "app"
+    },
+    {
+      "name": "org.pag.prototype.product.OperationsModelTest",
+      "tests": "20",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "app"
+    },
+    {
+      "name": "org.pag.prototype.product.P109RemainingConsumerContractTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "app"
+    },
+    {
+      "name": "org.pag.prototype.product.PersonViewModelTest",
+      "tests": "19",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "app"
+    },
+    {
+      "name": "org.pag.prototype.product.ExpenseModelTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "app"
+    },
+    {
+      "name": "org.pag.prototype.product.TaskModelTest",
+      "tests": "31",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "app"
+    },
+    {
+      "name": "org.pag.data.product.MemoryReportRulesTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.P104RevisionTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.P103OperationalAbaTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.OperationsRulesTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.ExpenseRulesTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.P109WorkspaceConsistencyTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.LeadershipRulesTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.P104ConcurrentCasTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.MaterialRulesTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.P104ReaderRevisionTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.PersonRulesTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.EuroMoneyTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.TaskRulesTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.P104MigrationTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.P109WriterBudgetTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.CoreWriterIntegrationTest",
+      "tests": "39",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.P108WorkspaceAccessTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.ExpenseWriterIntegrationTest",
+      "tests": "25",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.TaskMutationSqliteTest",
+      "tests": "19",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    },
+    {
+      "name": "org.pag.data.product.ProtocolRulesTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "module": "data"
+    }
+  ],
+  "totals": {
+    "tests": 383,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "final_host_log": "host-17.log",
+  "p77_product_build": "p77-build-16.log",
+  "known_blocker_test": "P109RemainingConsumerContractTest is a counterexample witness, NOT a product-budget PASS"
+}

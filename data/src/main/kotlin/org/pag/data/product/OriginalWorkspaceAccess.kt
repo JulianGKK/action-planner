@@ -10,7 +10,7 @@ internal class OriginalWorkspaceAccess(
     internal val source:StorageAccess,internal val original:StorageContext,
     private val ticket:WorkspaceMutationInvalidation.ActiveReadTicket,
     private val mutations:WorkspaceMutationInvalidation,
-    private val request:WorkspaceReadRequest,private val thread:Thread
+    internal val request:WorkspaceReadRequest,internal val thread:Thread
 ):WorkspaceAccess {
     internal val status get()=request.status
     internal val mutationEpoch get()=ticket.mutationEpoch
@@ -26,6 +26,25 @@ internal class OriginalWorkspaceAccess(
         try {
             var ran=false
             val accepted=fresh.publish{if(current()){work();ran=true}}
+            return accepted && ran && current()
+        }finally{publishing--}
+    }
+    override fun heldAllowed():Boolean {
+        if(Thread.currentThread()!==thread || publishing>=2)return false
+        val fresh=source.acquire(AccessScope.READY)?:return false
+        return fresh.scope==AccessScope.READY && fresh.generation==original.generation && entry.readable() &&
+            request.ticket?.active!=false && original.check(AccessPoint.STEP) && fresh.check(AccessPoint.PUBLICATION)
+    }
+    override fun consume(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
+        if(Thread.currentThread()!==thread || publishing>=2)return false
+        val fresh=source.acquire(AccessScope.READY)?:return false
+        fun current()=fresh.scope==AccessScope.READY && fresh.generation==original.generation &&
+            entry.readable() && request.ticket?.active!=false && original.check(AccessPoint.STEP) && fresh.check(AccessPoint.PUBLICATION)
+        if(!current())return false
+        if(!entry.reserve(units))return false
+        publishing++
+        try{var ran=false
+            val accepted=fresh.publish{if(current()){producer();ran=true}}
             return accepted && ran && current()
         }finally{publishing--}
     }

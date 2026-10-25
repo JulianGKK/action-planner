@@ -14,19 +14,30 @@ class ProductMaterialRepository(app: Context, private val access: StorageAccess,
     mutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(), private val now: () -> Long = System::currentTimeMillis) : MaterialRepository {
     private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked,mutations,FullviewPreflight.material)
     internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
+    private val writerBudget=OriginalWriterBudget(access,readExclusion::record)
     private val database = ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary = WorkspaceWriteBoundary(access, worker, main, mutations, blocked)
     override fun summary(actionId: String, publish: (OperationsResult<MaterialSummary>) -> Unit) =
         run(actionId,publish) { d, c -> d.withReadTransaction { MaterialStore(d, c, now).summary(actionId) } }
     override fun board(actionId: String, publish: (OperationsResult<MaterialBoard>) -> Unit) =
         run(actionId,publish) { d, c -> d.withReadTransaction { MaterialStore(d, c, now).board(actionId) } }
-    override fun create(actionId: String, input: MaterialInput, publish: (OperationsResult<MaterialItem>) -> Unit) =
-        write(actionId, publish) { it.create(actionId, input) }
-    override fun edit(actionId: String, expected: MaterialItem, input: MaterialInput, publish: (OperationsResult<MaterialItem>) -> Unit) =
-        write(actionId, publish) { it.edit(actionId, expected, input) }
-    override fun delete(actionId: String, expected: MaterialItem, publish: (OperationsResult<Unit>) -> Unit) =
-        write(actionId, publish) { it.delete(actionId, expected) }
-    private fun <T> write(actionId: String, publish: (OperationsResult<T>) -> Unit,
+    override fun create(actionId:String,input:MaterialInput,publish:(OperationsResult<MaterialItem>)->Unit) {
+        if(!reserveWrite(actionId,input.name.length.toLong()+(input.quantityLabel?.length?:0)+(input.placeLabel?.length?:0),publish))return
+        write(actionId,null,publish) { it.create(actionId,input) }
+    }
+    override fun edit(actionId:String,expected:MaterialItem,input:MaterialInput,publish:(OperationsResult<MaterialItem>)->Unit) {
+        if(!reserveWrite(actionId,input.name.length.toLong()+(input.quantityLabel?.length?:0)+(input.placeLabel?.length?:0)+expected.name.length,publish))return
+        write(actionId,expected.id,publish) { it.edit(actionId,expected,input) }
+    }
+    override fun delete(actionId:String,expected:MaterialItem,publish:(OperationsResult<Unit>)->Unit) {
+        if(!reserveWrite(actionId,expected.name.length.toLong(),publish))return
+        write(actionId,expected.id,publish) { it.delete(actionId,expected) }
+    }
+    private fun <T> reserveWrite(a:String,chars:Long,publish:(OperationsResult<T>)->Unit):Boolean {
+        if(writerBudget.reserve(a,chars,4))return true
+        access.acquire(AccessScope.READY)?.publish{publish(OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED))};return false
+    }
+    private fun <T> write(actionId: String,id:String?, publish: (OperationsResult<T>) -> Unit,
         work: suspend (MaterialStore) -> OperationsResult<T>) =
         mutationBoundary.submit<OperationsResult<T>>(WorkspaceMutation(WorkspaceWriterFamily.MATERIAL, actionId), publish,
             { OperationsResult.Rejected(OperationsFailure.STALE) }, { it is OperationsResult.Value }) { c, progress ->
@@ -35,7 +46,8 @@ class ProductMaterialRepository(app: Context, private val access: StorageAccess,
                 database.use(inventory.database, key, c) { db ->
                     db.useWriterConnection { tx ->
                         confirmedWorkspaceTransaction(tx, c, progress, { it is OperationsResult.Rejected }) {
-                            work(MaterialStore(db, c, now))
+                            if(!writerBudget.preflight(tx,c,actionId,FullviewPreflight.material,id))OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED)
+                            else work(MaterialStore(db, c, now))
                         }
                     }
                 }
@@ -63,8 +75,8 @@ internal class MaterialStore(private val data: CoreWriterData, private val c: St
     }
     private suspend fun references(a: String, i: MaterialInput): Boolean {
         val person = i.responsiblePersonId; val task = i.linkedTaskId
-        if (person != null && step { data.persons.get(a, person) } == null) return false
-        if (task != null && step { data.tasks.get(a, task) } == null) return false
+        if (person != null && !step { data.persons.exists(a, person) }) return false
+        if (task != null && !step { data.tasks.exists(a, task) }) return false
         return true
     }
     suspend fun create(a: String, input: MaterialInput): OperationsResult<MaterialItem> {

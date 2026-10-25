@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P109WorkspaceConsistencyTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-25T07:26:20.172Z" hostname="iuzjhtgvfc" time="0.673">
+  <properties/>
+  <testcase name="validationAndReplacementScratchIsAdditionalAndNeverRetiresHeldGraph" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.008"/>
+  <testcase name="insertedUnrelatedRowAndUnchangedRevisionWithDifferentValueRefuse" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.137"/>
+  <testcase name="targetedPersonCanChangeButUnrelatedTaskMustRemainExactlyEqual" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.138"/>
+  <testcase name="sameTransactionMetadataFiltersOnlyOneTargetPersonOrPlan" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.138"/>
+  <testcase name="revocationStopsScalarValidationWithoutDtoReads" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.126"/>
+  <testcase name="unplannedMembershipDeltaCannotBePublishedAsACompleteUpdatedBoard" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.125"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

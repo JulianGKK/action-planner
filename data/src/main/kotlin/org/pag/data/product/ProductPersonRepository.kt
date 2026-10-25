@@ -19,6 +19,7 @@ class ProductPersonRepository(app: Context, private val access: StorageAccess,
     private val mutationBoundary=WorkspaceWriteBoundary(access,worker,main,mutations,blocked)
     private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked,mutations,FullviewPreflight.operations)
     internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
+    private val writerBudget=OriginalWriterBudget(access,readExclusion::record)
     private val database = ActionDatabaseAccess(app.applicationContext)
     override fun listPersons(actionId: String, publish: (PersonResult<List<Person>>) -> Unit) =
         run(actionId,publish) { db, context -> db.withReadTransaction {
@@ -37,16 +38,21 @@ class ProductPersonRepository(app: Context, private val access: StorageAccess,
     override fun updatePerson(actionId: String, expected: Person, pseudonym: String, publish: (PersonResult<Person>) -> Unit) =
         write(actionId,expected,pseudonym,publish)
 
-    private fun write(actionId:String,expected:Person?,pseudonym:String,publish:(PersonResult<Person>)->Unit) =
+    private fun write(actionId:String,expected:Person?,pseudonym:String,publish:(PersonResult<Person>)->Unit) {
+        if(!writerBudget.reserve(actionId,pseudonym.length.toLong()+(expected?.pseudonym?.length?:0),4)){
+            access.acquire(AccessScope.READY)?.publish{publish(PersonResult.Rejected(PersonRejection.BUDGET_REFUSED))};return
+        }
         mutationBoundary.submit<PersonResult<Person>>(WorkspaceMutation(WorkspaceWriterFamily.PERSON,actionId),publish,
             {PersonResult.Rejected(PersonRejection.NOT_ALLOWED)},{it is PersonResult.Value}) { c,p ->
             if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
             (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->
                 db.useWriterConnection { tx -> confirmedWorkspaceTransaction(tx,c,p,{it is PersonResult.Rejected}) {
-                    PersonWriterStore(RoomCoreWriterData(db),c).change(actionId,expected,pseudonym)
+                    if(!writerBudget.preflight(tx,c,actionId,setOf("actions","persons")))PersonResult.Rejected(PersonRejection.BUDGET_REFUSED)
+                    else PersonWriterStore(RoomCoreWriterData(db),c).change(actionId,expected,pseudonym)
                 } }
             }}
         }
+    }
     private fun <T> run(actionId:String,publish:(PersonResult<T>)->Unit,work:suspend(ActionDatabase,StorageContext)->PersonResult<T>) {
         readExclusion.read(actionId,publish,{budget->PersonResult.Rejected(if(budget)PersonRejection.BUDGET_REFUSED else PersonRejection.OWNER_UNCONFIRMED)},work)
     }

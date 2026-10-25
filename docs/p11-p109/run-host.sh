@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -euo pipefail
+./gradlew :data:testDebugUnitTest --tests "*P109*" --tests "*P108WorkspaceAccessTest" --tests "*CoreWriterIntegrationTest" --tests "*ExpenseWriterIntegrationTest" --tests "*RulesTest" --tests "*EuroMoneyTest" --tests "*P104*" --tests "*P103OperationalAbaTest" --tests "*TaskMutationSqliteTest" :app:testDebugUnitTest --tests "*P109RemainingConsumerContractTest" --tests "*TaskModelTest" --tests "*WorkspaceBatchTest" --tests "*ExpenseModelTest" --tests "*ProtocolModelTest" --tests "*MemoryReportModelTest" --tests "*MaterialModelTest" --tests "*OperationsModelTest" --tests "*PersonViewModelTest" --tests "*PreparationWorkspaceTest" --offline

@@ -6,7 +6,7 @@ data class Person(val id: String, val actionId: String, val pseudonym: String, v
 
 /** Access rules for the P3a basis, not a new authentication or sensitivity system. */
 object PersonRules {
-    fun valid(pseudonym: String) = pseudonym.trim().isNotEmpty()
+    fun valid(pseudonym: String) = trimmedCodePoints(pseudonym)>0
     fun normalized(pseudonym: String) = pseudonym.trim().lowercase(Locale.ROOT)
     fun mayRead(status: ActionStatus) = status in setOf(ActionStatus.PREPARATION, ActionStatus.ACTIVE, ActionStatus.COMPLETED)
     fun mayManage(status: ActionStatus) = status == ActionStatus.PREPARATION

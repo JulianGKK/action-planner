@@ -18,6 +18,9 @@ internal data class PersonRow(@PrimaryKey val id: String, val actionId: String,
     }
 }
 @Dao internal interface PersonDao {
+    @Query("SELECT EXISTS(SELECT 1 FROM persons WHERE actionId=:actionId AND id=:personId)")
+    suspend fun exists(actionId:String,personId:String):Boolean
+
     @Query("SELECT * FROM persons WHERE actionId = :actionId ORDER BY createdAt, id")
     suspend fun list(actionId: String): List<PersonRow>
     @Query("SELECT * FROM persons WHERE actionId = :actionId AND id = :id")

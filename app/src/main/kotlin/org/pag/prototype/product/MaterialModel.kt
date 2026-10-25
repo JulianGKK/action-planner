@@ -7,6 +7,10 @@ import org.pag.domain.*
 class MaterialModel(private val repository: MaterialRepository?, private val session: () -> SessionSnapshot,
     private val action: () -> Action?, private val interaction: () -> Unit, private val leaveSensitive: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit) {
+    private var detailLoader:WorkspaceDetailLoader?=null
+    internal fun bindDetailLoader(loader:WorkspaceDetailLoader){check(detailLoader==null);detailLoader=loader}
+    var commitConfirmed by mutableStateOf(false);private set
+    private var committedId:String?=null
     private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
     internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
     private fun copyData(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
@@ -34,6 +38,7 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
     val writable get() = available && action()?.let { MaterialRules.mayWrite(it.status) } == true
     val completedView get() = available && boundStatus == ActionStatus.COMPLETED
     fun clear() {
+        commitConfirmed=false;committedId=null
         epoch++; readRequest++; writeRequest++; opened = false
         boundAction = null; boundStatus = null; boundGeneration = null
         board = null; loading = false; discard(); busy = false; error = null
@@ -89,12 +94,12 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
     }
     fun reload() = act { discard(); error = null; refresh() }
     fun create(template: MaterialTemplate? = null) = act { current ->
-        if (!writable) return@act
+        if (!writable || commitConfirmed) return@act
         leaveSensitive()
         if (current()) { readRequest++; loading = false; discard(); copyData(ActiveWorkspaceBudget.Units(objects=1,references=10)){input = template?.input() ?: MaterialInput(""); error = null} }
     }
     fun edit(item: MaterialItem) = act { current ->
-        if (!writable || board?.items?.contains(item) != true) return@act
+        if (commitConfirmed || !writable || board?.items?.contains(item) != true) return@act
         leaveSensitive()
         if (current()) { readRequest++; loading = false; selected = item; expected = item; copyData(ActiveWorkspaceBudget.Units(objects=1,references=10)){input = item.input(); confirmingDelete = false; error = null} }
     }
@@ -117,7 +122,7 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
     fun cancelDelete() = act { confirmingDelete = false }
     fun save() = act { current ->
         val draft = input ?: return@act
-        if (!writable || confirmingDelete || error == OperationsFailure.STALE) return@act
+        if (commitConfirmed || !writable || confirmingDelete || error == OperationsFailure.STALE) return@act
         if (!MaterialRules.valid(draft)) { error = OperationsFailure.INVALID; return@act }
         val old = expected
         write(current, if (old == null) "Material angelegt" else "Material gespeichert") { done ->
@@ -130,8 +135,9 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
         if (!confirmingDelete || !writable || !MaterialRules.mayDelete(action()!!.status) || error == OperationsFailure.STALE) return@act
         write(current, "Material entfernt") { repository?.delete(boundAction!!, old, it) }
     }
+    private fun draftClearAfterCommit() {input = null;expected=null;confirmingDelete=false}
     private fun unit(result: OperationsResult<MaterialItem>): OperationsResult<Unit> = when (result) {
-        is OperationsResult.Value -> OperationsResult.Value(Unit)
+        is OperationsResult.Value -> {committedId=result.value.id;OperationsResult.Value(Unit)}
         is OperationsResult.Rejected -> result
     }
     private fun write(current: () -> Boolean, message: String, work: ((OperationsResult<Unit>) -> Unit) -> Unit) {
@@ -142,6 +148,24 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
             when (result) {
                 is OperationsResult.Rejected -> error = result.reason
                 is OperationsResult.Value -> {
+                    val loader=detailLoader
+                    val id=committedId ?: expected?.id
+                    if(loader!=null && id!=null && !confirmingDelete){
+                        commitConfirmed=true;busy=true
+                        loader(WorkspaceDetailKind.MATERIAL,id){refreshed->
+                            if(!current())return@loader
+                            busy=false
+                            when(refreshed){
+                                is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                                is WorkspaceDetailResult.Value->{
+                                    board=refreshed.value.workspace?.materialBoard ?: board
+                                    selected=refreshed.value.material;draftClearAfterCommit()
+                                    commitConfirmed=false;error=null;feedback(message)
+                                }
+                            }
+                        }
+                        return@work
+                    }
                     discard(); refresh()
                     if (current()) refreshWorkspace()
                     if (current()) feedback(message)

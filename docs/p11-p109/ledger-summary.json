@@ -1,0 +1,342 @@
+{
+  "retained_limit": 8388608,
+  "transition_limit": 16777216,
+  "model_only_not_ART_size": true,
+  "runs": [
+    {
+      "log": "device-active-reviewed.txt",
+      "states": [
+        {
+          "retained": 1215964,
+          "transition": 4686064,
+          "retained_remaining": 7172644,
+          "transition_remaining": 12091152
+        },
+        {
+          "retained": 3099040,
+          "transition": 11656300,
+          "retained_remaining": 5289568,
+          "transition_remaining": 5120916
+        },
+        {
+          "retained": 5810971,
+          "transition": 14515279,
+          "retained_remaining": 2577637,
+          "transition_remaining": 2261937
+        },
+        {
+          "retained": 5810971,
+          "transition": 14515279,
+          "retained_remaining": 2577637,
+          "transition_remaining": 2261937
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-completed-reviewed.txt",
+      "states": [
+        {
+          "retained": 641708,
+          "transition": 2306720,
+          "retained_remaining": 7746900,
+          "transition_remaining": 14470496
+        },
+        {
+          "retained": 899864,
+          "transition": 3163088,
+          "retained_remaining": 7488744,
+          "transition_remaining": 13614128
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-duplicate-detail-main-reviewed.txt",
+      "states": [
+        {
+          "retained": 965004,
+          "transition": 3682224,
+          "retained_remaining": 7423604,
+          "transition_remaining": 13094992
+        },
+        {
+          "retained": 1308216,
+          "transition": 4689228,
+          "retained_remaining": 7080392,
+          "transition_remaining": 12087988
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-expense-reviewed.txt",
+      "states": [
+        {
+          "retained": 965004,
+          "transition": 3682224,
+          "retained_remaining": 7423604,
+          "transition_remaining": 13094992
+        },
+        {
+          "retained": 5619199,
+          "transition": 10233859,
+          "retained_remaining": 2769409,
+          "transition_remaining": 6543357
+        },
+        {
+          "retained": 5619199,
+          "transition": 10233859,
+          "retained_remaining": 2769409,
+          "transition_remaining": 6543357
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-large-reviewed.txt",
+      "states": [],
+      "passed": true
+    },
+    {
+      "log": "device-lock-detail-reviewed.txt",
+      "states": [
+        {
+          "retained": 965004,
+          "transition": 3682224,
+          "retained_remaining": 7423604,
+          "transition_remaining": 13094992
+        },
+        {
+          "retained": 1231540,
+          "transition": 4551100,
+          "retained_remaining": 7157068,
+          "transition_remaining": 12226116
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-lost-detail-main-reviewed.txt",
+      "states": [
+        {
+          "retained": 965004,
+          "transition": 3682224,
+          "retained_remaining": 7423604,
+          "transition_remaining": 13094992
+        },
+        {
+          "retained": 1311288,
+          "transition": 4692300,
+          "retained_remaining": 7077320,
+          "transition_remaining": 12084916
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-material-reviewed.txt",
+      "states": [
+        {
+          "retained": 965004,
+          "transition": 3682224,
+          "retained_remaining": 7423604,
+          "transition_remaining": 13094992
+        },
+        {
+          "retained": 4422259,
+          "transition": 8571487,
+          "retained_remaining": 3966349,
+          "transition_remaining": 8205729
+        },
+        {
+          "retained": 4422259,
+          "transition": 8571487,
+          "retained_remaining": 3966349,
+          "transition_remaining": 8205729
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-p107-exposed.txt",
+      "states": [
+        {
+          "retained": 1547615,
+          "transition": 6266336,
+          "retained_remaining": 6840993,
+          "transition_remaining": 10510880
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-p107-r-exact.txt",
+      "states": [
+        {
+          "retained": 8388608,
+          "transition": 4685680,
+          "retained_remaining": 0,
+          "transition_remaining": 12091536
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-p107-r-over.txt",
+      "states": [
+        {
+          "retained": 8388609,
+          "transition": 4685680,
+          "retained_remaining": -1,
+          "transition_remaining": 12091536
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-p107-t-exact.txt",
+      "states": [
+        {
+          "retained": 1215868,
+          "transition": 16777216,
+          "retained_remaining": 7172740,
+          "transition_remaining": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-p107-t-over.txt",
+      "states": [
+        {
+          "retained": 1215868,
+          "transition": 16777217,
+          "retained_remaining": 7172740,
+          "transition_remaining": -1
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-person-reviewed.txt",
+      "states": [
+        {
+          "retained": 965004,
+          "transition": 3682224,
+          "retained_remaining": 7423604,
+          "transition_remaining": 13094992
+        },
+        {
+          "retained": 4002203,
+          "transition": 7987091,
+          "retained_remaining": 4386405,
+          "transition_remaining": 8790125
+        },
+        {
+          "retained": 4002203,
+          "transition": 7987091,
+          "retained_remaining": 4386405,
+          "transition_remaining": 8790125
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-plan-reviewed.txt",
+      "states": [
+        {
+          "retained": 974916,
+          "transition": 3721872,
+          "retained_remaining": 7413692,
+          "transition_remaining": 13055344
+        },
+        {
+          "retained": 4422031,
+          "transition": 9005923,
+          "retained_remaining": 3966577,
+          "transition_remaining": 7771293
+        },
+        {
+          "retained": 4422031,
+          "transition": 9005923,
+          "retained_remaining": 3966577,
+          "transition_remaining": 7771293
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-preparation-reviewed.txt",
+      "states": [
+        {
+          "retained": 965004,
+          "transition": 3682224,
+          "retained_remaining": 7423604,
+          "transition_remaining": 13094992
+        },
+        {
+          "retained": 1519609,
+          "transition": 5441509,
+          "retained_remaining": 6868999,
+          "transition_remaining": 11335707
+        },
+        {
+          "retained": 2876801,
+          "transition": 8615141,
+          "retained_remaining": 5511807,
+          "transition_remaining": 8162075
+        },
+        {
+          "retained": 2876801,
+          "transition": 8615141,
+          "retained_remaining": 5511807,
+          "transition_remaining": 8162075
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-stale-reviewed.txt",
+      "states": [
+        {
+          "retained": 965004,
+          "transition": 3682224,
+          "retained_remaining": 7423604,
+          "transition_remaining": 13094992
+        },
+        {
+          "retained": 4379879,
+          "transition": 8969219,
+          "retained_remaining": 4008729,
+          "transition_remaining": 7807997
+        },
+        {
+          "retained": 4379879,
+          "transition": 8969219,
+          "retained_remaining": 4008729,
+          "transition_remaining": 7807997
+        }
+      ],
+      "passed": true
+    },
+    {
+      "log": "device-unknown-detail-reviewed.txt",
+      "states": [
+        {
+          "retained": 965004,
+          "transition": 3682224,
+          "retained_remaining": 7423604,
+          "transition_remaining": 13094992
+        },
+        {
+          "retained": 1228980,
+          "transition": 4548540,
+          "retained_remaining": 7159628,
+          "transition_remaining": 12228676
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

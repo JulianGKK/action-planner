@@ -15,6 +15,7 @@ class ProductMemoryReportRepository(app: Context, private val access: StorageAcc
     mutations: WorkspaceMutationInvalidation = UncachedWorkspaceMutations(), private val now: () -> Long = System::currentTimeMillis) : MemoryReportRepository {
     private val readExclusion=FullviewReadExclusion(app,access,inventory,owner,worker,main,blocked,mutations,FullviewPreflight.memory)
     internal fun bindWorkspaceMemory(memory:OutstandingCoreRead){readExclusion.bind(memory)}
+    private val writerBudget=OriginalWriterBudget(access,readExclusion::record)
     private val database = ActionDatabaseAccess(app.applicationContext)
     private val mutationBoundary = WorkspaceWriteBoundary(access, worker, main, mutations, blocked)
     override fun summary(actionId: String, publish: (OperationsResult<MemoryReportSummary>) -> Unit) =
@@ -24,20 +25,27 @@ class ProductMemoryReportRepository(app: Context, private val access: StorageAcc
     override fun detail(actionId: String, reportId: String, publish: (OperationsResult<MemoryReportDetail>) -> Unit) =
         run(actionId,publish) { d, c -> d.withReadTransaction { MemoryReportStore(d, c, now).detail(actionId, reportId) } }
     override fun create(actionId: String, authorLabel: String, firstSection: MemorySectionSave, publish: (OperationsResult<MemoryReportHeader>) -> Unit) =
-        frozenWrite(actionId, publish, firstSection) { store, section -> store.create(actionId, authorLabel, section) }
+        frozenWrite(actionId, publish, firstSection,authorLabel.length.toLong()) { store, section -> store.create(actionId, authorLabel, section) }
     override fun saveSection(actionId: String, expected: MemoryReportHeader, section: MemorySectionSave, publish: (OperationsResult<MemoryReportHeader>) -> Unit) =
         frozenWrite(actionId, publish, section) { store, snapshot -> store.saveSection(actionId, expected, snapshot) }
     override fun complete(actionId: String, expected: MemoryReportHeader, publish: (OperationsResult<MemoryReportHeader>) -> Unit) =
         write(actionId, publish) { it.complete(actionId, expected) }
     override fun addAddendum(actionId: String, expected: MemoryReportHeader, content: String, publish: (OperationsResult<MemoryReportHeader>) -> Unit) =
-        write(actionId, publish) { it.addAddendum(actionId, expected, content) }
-    private fun frozenWrite(actionId: String, publish: (OperationsResult<MemoryReportHeader>) -> Unit, section: MemorySectionSave,
+        write(actionId, publish,content.length.toLong()) { it.addAddendum(actionId, expected, content) }
+    private fun frozenWrite(actionId: String, publish: (OperationsResult<MemoryReportHeader>) -> Unit, section: MemorySectionSave,extraChars:Long=0,
         work: suspend (MemoryReportStore, MemorySectionSave) -> OperationsResult<MemoryReportHeader>) {
+        val f=AppConsumerCopies.Footprint();f.memory(section)
+        if(!writerBudget.reserve(actionId,Math.addExact(f.chars,extraChars),f.items)){
+            access.acquire(AccessScope.READY)?.publish{publish(OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED))};return
+        }
         val frozen = freezeMemorySection(section)
         write(actionId, publish) { work(it, frozen) }
     }
-    private fun <T> write(actionId: String, publish: (OperationsResult<T>) -> Unit,
-        work: suspend (MemoryReportStore) -> OperationsResult<T>) =
+    private fun <T> write(actionId: String, publish: (OperationsResult<T>) -> Unit,chars:Long=0,
+        work: suspend (MemoryReportStore) -> OperationsResult<T>) {
+        if(!writerBudget.reserve(actionId,chars,8)){
+            access.acquire(AccessScope.READY)?.publish{publish(OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED))};return
+        }
         mutationBoundary.submit<OperationsResult<T>>(WorkspaceMutation(WorkspaceWriterFamily.MEMORY_REPORT, actionId), publish,
             { OperationsResult.Rejected(OperationsFailure.STALE) }, { it is OperationsResult.Value }) { c, progress ->
             if (inventory.state() != ProductStorageState.READY_TO_OPEN) throw ProductStorageFailure()
@@ -45,12 +53,14 @@ class ProductMemoryReportRepository(app: Context, private val access: StorageAcc
                 database.use(inventory.database, key, c) { db ->
                     db.useWriterConnection { tx ->
                         confirmedWorkspaceTransaction(tx, c, progress, { it is OperationsResult.Rejected }) {
-                            work(MemoryReportStore(db, c, now))
+                            if(!writerBudget.preflight(tx,c,actionId,FullviewPreflight.memory))OperationsResult.Rejected(OperationsFailure.BUDGET_REFUSED)
+                            else work(MemoryReportStore(db, c, now))
                         }
                     }
                 }
             }
         }
+    }
     private fun <T> run(actionId:String,publish: (OperationsResult<T>) -> Unit, work: suspend (ActionDatabase, StorageContext) -> OperationsResult<T>) {
         readExclusion.read(actionId,publish,{budget->OperationsResult.Rejected(if(budget)OperationsFailure.BUDGET_REFUSED else OperationsFailure.OWNER_UNCONFIRMED)},work)
     }

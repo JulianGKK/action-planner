@@ -79,6 +79,7 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                                 SessionState.AUTHENTICATING -> Text("Bitte bestätige den Gerätesperrcode im Android-Dialog.")
                                 SessionState.MAINTENANCE -> PagLoadingState("Geschützter Speicher wird geprüft")
                                 SessionState.READY -> {
+                                    model.savedRefreshMessage?.let{Text(it)}
                                     if(model.workspaceRefusal==WorkspaceFailure.BUDGET_REFUSED)
                                         Text("Die Vollansicht überschreitet das zulässige Speicherbudget.")
                                     if(model.workspaceRefusal==WorkspaceFailure.OWNER_UNCONFIRMED)
@@ -176,26 +177,27 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
             var pseudonym by remember(existing?.id, model.personEditorRevision) { mutableStateOf(existing?.pseudonym ?: "") }
             PreparationHeading(if (existing == null) "Person hinzufügen" else "Person bearbeiten")
             FormTextField(pseudonym, { value -> model.acceptPersonDraft(value){pseudonym=it} },
-                label = { Text("Pseudonym") }, autoFocus=existing==null, keyboardOptions=productKeyboard(ProductTextKind.PERSON), modifier = Modifier.fillMaxWidth(), enabled = !model.personSaving)
-            FormButton(onClick = { model.savePerson(pseudonym) }, enabled = !model.personSaving) { Text("Speichern") }
+                label = { Text("Pseudonym") }, autoFocus=existing==null, keyboardOptions=productKeyboard(ProductTextKind.PERSON), modifier = Modifier.fillMaxWidth(), enabled = !model.personSaving && !model.personCommitConfirmed)
+            FormButton(onClick = { model.savePerson(pseudonym) }, enabled = !model.personSaving && !model.personCommitConfirmed) { Text("Speichern") }
             if (model.personError == PersonRejection.STALE && existing != null) {
                 Text("Beim Neuladen wird dein Entwurf durch den aktuellen Stand ersetzt.")
-                FormOutlinedButton(onClick = model::reloadPersonEditor, enabled = !model.personSaving) { Text("Aktuellen Stand neu laden") }
+                FormOutlinedButton(onClick = model::reloadPersonEditor, enabled = !model.personSaving && !model.personCommitConfirmed) { Text("Aktuellen Stand neu laden") }
             }
-            FormOutlinedButton(onClick = model::cancelPerson, enabled = !model.personSaving) { Text("Abbrechen") }
+            FormOutlinedButton(onClick = model::cancelPerson, enabled = !model.personSaving && !model.personCommitConfirmed) { Text("Abbrechen") }
         }
         model.selectedPerson != null -> {
             PreparationHeading(model.selectedPerson!!.pseudonym)
+            Text("Revision: ${model.selectedPerson!!.editRevision}")
             if (model.selected?.status == ActionStatus.PREPARATION) model.workspace?.operations?.let { board ->
                 board.persons.find { it.person.id == model.selectedPerson!!.id }?.let { person ->
-                    Text(plannedRoles(person, board) ?: "Noch keine Rolle")
+                    Text(model.formatPlannedRoles(person, board) ?: "Noch keine Rolle")
                 }
             }
             if (model.personsEditable) FormOutlinedButton(onClick = model::editPerson) { Text("Bearbeiten") }
             if (model.personsEditable) FormOutlinedButton({ model.operations.plan(model.selectedPerson!!.id) }) { Text("Rollen planen") }
             if (model.selected?.status == ActionStatus.ACTIVE) model.workspace?.operations?.let { board ->
                 board.persons.find { it.person.id == model.selectedPerson!!.id }?.let { person ->
-                    plannedRoles(person, board)?.let { Text("Geplante Rollen: $it") }
+                    model.formatPlannedRoles(person, board)?.let { Text("Geplante Rollen: $it") }
                 }
             }
             SensitiveSection(model)

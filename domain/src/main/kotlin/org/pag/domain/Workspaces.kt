@@ -23,6 +23,13 @@ data class WorkspaceRead(val actionId:String,val status:ActionStatus,val generat
 interface WorkspaceAccess {
     fun publish(actionId:String,status:ActionStatus,generation:Long,work:()->Unit):Boolean
     fun reserve(units:ActiveWorkspaceBudget.Units):Boolean
+    /** Existing held draft/callback copies only. Grants no DB read, fresh snapshot or write.
+     * Production reacquires the original session binding even after its read epoch ended. */
+    fun heldAllowed():Boolean=true
+    fun consume(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
+        if(!reserve(units))return false
+        producer();return true
+    }
 }
 data class WorkspaceSupplement(val actionId:String,val generation:Long,
     val material:MaterialBoard?=null,val expenses:ExpenseBoard?=null)
@@ -35,10 +42,29 @@ sealed interface WorkspaceResult {
     data class Value(val value:WorkspaceRead):WorkspaceResult
     data class Rejected(val reason:WorkspaceFailure):WorkspaceResult
 }
+enum class WorkspaceDetailKind { PERSON, TASK, PLAN, MATERIAL, EXPENSE }
+data class WorkspaceDetailRequest(val actionId:String,val status:ActionStatus,val generation:Long,
+    val kind:WorkspaceDetailKind,val id:String,val ticket:WorkspaceReadTicket,
+    val baseline:WorkspaceRead?=null,val expectedAction:Action?=null)
+data class WorkspaceDetail(val access:WorkspaceAccess,val person:Person?=null,val task:Task?=null,
+    val plan:ExpectedPersonRolePlan?=null,val material:MaterialItem?=null,val expense:Expense?=null,
+    val workspace:WorkspaceRead?=null)
+sealed interface WorkspaceDetailResult {
+    data class Value(val value:WorkspaceDetail):WorkspaceDetailResult
+    data class Rejected(val reason:WorkspaceFailure):WorkspaceDetailResult
+}
 interface WorkspaceRepository {
+    /** Explicit single-detail reprojection; old access is provenance, never renewed authority. */
+    fun detail(original:WorkspaceAccess,request:WorkspaceDetailRequest,publish:(WorkspaceDetailResult)->Unit) {
+        publish(WorkspaceDetailResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))
+    }
+
     /** One short, fully preflighted operation; no P3b payload or document content. */
     fun read(request:WorkspaceReadRequest,publish:(WorkspaceResult)->Unit)
     fun supplement(access:WorkspaceAccess,request:WorkspaceReadRequest,publish:(WorkspaceSupplementResult)->Unit) {
         publish(WorkspaceSupplementResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))
     }
 }
+
+/** App bridge; repository still supplies all storage/publication authority. */
+typealias WorkspaceDetailLoader = (WorkspaceDetailKind,String,(WorkspaceDetailResult)->Unit)->Unit
