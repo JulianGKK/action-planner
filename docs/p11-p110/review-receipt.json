@@ -1,0 +1,28 @@
+{
+  "base": "10db674002cbd196f8357c0ba0ccb4ab1d067663",
+  "implementation_commit": "0896863ce9bfdce58147be48d85ace726999f715",
+  "remote_implementation_verified": "0896863ce9bfdce58147be48d85ace726999f715",
+  "branch": "p11-performance-optimization",
+  "source_fingerprints_verified": 45,
+  "host": {
+    "tests": 458,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "final_device_matrix_passed": 30,
+  "legacy_device_passed": 5,
+  "issue_readbacks_verified": [
+    37,
+    33,
+    44
+  ],
+  "pending_only_this_review_receipt": [
+    "?? docs/p11-p110/issue-updates.json"
+  ],
+  "closure": "INCOMPLETE_WIP",
+  "reuseEnabled": false,
+  "ramReuseEnabled": false,
+  "merge": false,
+  "release": false
+}
