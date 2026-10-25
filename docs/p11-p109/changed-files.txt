@@ -150,6 +150,7 @@ docs/p11-p109/host-summary.json
 docs/p11-p109/issue-33-before.json
 docs/p11-p109/issue-37-before.json
 docs/p11-p109/issue-44-before.json
+docs/p11-p109/issue-updates.json
 docs/p11-p109/ledger-summary.json
 docs/p11-p109/p77-build-01.log
 docs/p11-p109/p77-build-02.log

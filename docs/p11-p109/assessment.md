@@ -144,6 +144,6 @@ Die neuen Reservationsfaktoren sind nachprüfbare Engineeringansätze, keine ver
 
 ## Sicherung und Reviewhalt
 
-Produktdiff, Tests und Rohbelege werden als WIP auf dem verlangten Branch gesichert. Issues #37/#33/#44 erhalten den tatsächlichen Funktionsfortschritt und den konkreten verbleibenden Consumervertrag; keine Issues werden als abgeschlossen markiert. Commit-/Push- und Kommentarquittierungen werden im Sicherungsnachtrag ergänzt.
+Produktdiff, Tests und Rohbelege sind als WIP [`89c171f7b6fff7aad6eb163f088dd178445ba2cb`](https://github.com/JulianGKK/action-planner/commit/89c171f7b6fff7aad6eb163f088dd178445ba2cb) auf `p11-performance-optimization` gepusht. Issues aktualisiert und die exakten Texte zurückgelesen: [#37](https://github.com/JulianGKK/action-planner/issues/37#issuecomment-6395606626), [#33](https://github.com/JulianGKK/action-planner/issues/33#issuecomment-6395606772), [#44](https://github.com/JulianGKK/action-planner/issues/44#issuecomment-6395606948). [Exakte Kommentare und Tool-/Readbackquittierungen](issue-updates.json). Keine Issues geschlossen. Dieser reine Dokumentationsnachtrag sichert die Quittierungen; Produktcode und getesteter Stand ändern sich nicht. Vollständige Dateiliste: [changed-files.txt](changed-files.txt), geprüfte Sourcehashes: [source-sha256.txt](source-sha256.txt).
 
 **STOPP zum unabhängigen Review. Kein Merge, kein Release.**
