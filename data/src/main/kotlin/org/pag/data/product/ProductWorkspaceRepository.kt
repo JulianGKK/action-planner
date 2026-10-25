@@ -54,17 +54,18 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                     if(!current())throw StorageAccessRevoked()
                     (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->db.withReadTransaction {
                         val names=when(request.kind){
-                            WorkspaceDetailKind.PERSON->setOf("actions","persons")
+                            WorkspaceDetailKind.PERSON->if(request.membership)setOf("actions","persons","person_role_plans","person_planned_roles","person_operational_states") else setOf("actions","persons")
                             WorkspaceDetailKind.TASK->FullviewPreflight.task
                             WorkspaceDetailKind.PLAN->setOf("actions","persons","person_role_plans","person_planned_roles")
                             WorkspaceDetailKind.MATERIAL->FullviewPreflight.material
                             WorkspaceDetailKind.EXPENSE->FullviewPreflight.expense
+                            WorkspaceDetailKind.ROLE->setOf("actions","roles")
                         }
                         // Validate held unrelated rows before the target DTO is materialized.
                         if(baseline!=null && !WorkspaceConsistency(this,::current).matches(baseline,request))
                             return@withReadTransaction WorkspaceDetailResult.Rejected(WorkspaceFailure.STALE)
                         val allNames=if(baseline?.leadershipState!=null)names+setOf("leadership","sensitive_person_areas") else names
-                        val reservation=FullviewPreflight(this,c,::current).prepare(request.actionId,allNames,detail=request)
+                        val reservation=FullviewPreflight(this,c,::current).prepare(request.actionId,allNames,detail=request,presentations=false)
                         if(!current())throw StorageAccessRevoked()
                         if(!child.admit(reservation))return@withReadTransaction WorkspaceDetailResult.Rejected(WorkspaceFailure.BUDGET_REFUSED)
                         if(!current())throw StorageAccessRevoked()
@@ -73,9 +74,19 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                         if(action.status!=request.status || !OperationalRules.mayRead(action.status))
                             return@withReadTransaction WorkspaceDetailResult.Rejected(WorkspaceFailure.NOT_ALLOWED)
                         val a=request.actionId;val id=request.id
-                        val value=when(request.kind){
-                            WorkspaceDetailKind.PERSON->db.persons().get(a,id)?.model()?.let{WorkspaceDetail(fresh,person=it)}
+                        val found=when(request.kind){
+                            WorkspaceDetailKind.PERSON->db.persons().get(a,id)?.model()?.let{person->
+                                if(!request.membership)WorkspaceDetail(fresh,person=person) else {
+                                    val header=db.operations().personPlan(a,id)?:throw ProductStorageFailure()
+                                    if(header.editRevision<0)throw ProductStorageFailure()
+                                    val ids=db.operations().personAssignments(a,id).map{it.roleId}.toSet()
+                                    if(!OperationalRules.validPlan(ids,header.primaryRoleId))throw ProductStorageFailure()
+                                    val plan=PersonRolePlan(ids,header.primaryRoleId,header.editRevision)
+                                    WorkspaceDetail(fresh,person=person,operationalPerson=OperationalPerson(person,plan,db.operations().state(a,id)?.model()))
+                                }
+                            }
                             WorkspaceDetailKind.TASK->db.tasks().get(a,id)?.model()?.let{WorkspaceDetail(fresh,task=it)}
+                            WorkspaceDetailKind.ROLE->db.operations().role(a,id)?.model()?.let{WorkspaceDetail(fresh,role=it)}
                             WorkspaceDetailKind.MATERIAL->db.materials().get(a,id)?.model()?.let{WorkspaceDetail(fresh,material=it)}
                             WorkspaceDetailKind.EXPENSE->{
                                 val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
@@ -96,15 +107,36 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                             }
                         }
                         if(!current())throw StorageAccessRevoked()
+                        val value=found ?: if(request.membership)WorkspaceDetail(fresh,removed=true) else null
                         if(value==null)WorkspaceDetailResult.Rejected(WorkspaceFailure.NOT_FOUND) else {
                             val updated=baseline?.let{b->
-                                val people=if(value.person!=null || value.plan!=null)b.operations.persons.map{p->
+                                // Explicit single-identity membership delta. Every unrelated row was
+                                // compared above in this same transaction; never re-read a board.
+                                fun <T> patch(old:List<T>,fresh:T?,key:(T)->String,order:Comparator<T>?):List<T> {
+                                    if(!request.membership)return old.map{if(key(it)==id)fresh?:it else it}
+                                    val changed=buildList{for(v in old)if(key(v)!=id)add(v);if(fresh!=null)add(fresh)}
+                                    return if(order==null)changed else changed.sortedWith(order)
+                                }
+                                val people=if(request.kind==WorkspaceDetailKind.PERSON && request.membership)
+                                    patch(b.operations.persons,value.operationalPerson,{it.person.id},compareBy<OperationalPerson>{it.person.createdAt}.thenBy{it.person.id})
+                                else if(value.person!=null || value.plan!=null)b.operations.persons.map{p->
                                     if(p.person.id!=id)p else OperationalPerson(value.person?:p.person,value.plan?.plan?:p.plan,p.state)
                                 }else b.operations.persons
-                                val operations=if(people===b.operations.persons)b.operations else b.operations.copy(persons=people)
-                                val tasks=if(value.task!=null)b.tasks?.let{it.copy(tasks=it.tasks.map{t->if(t.id==id)checkNotNull(value.task) else t})} else b.tasks
-                                val materials=if(value.material!=null)b.materialBoard?.let{it.copy(items=it.items.map{m->if(m.id==id)checkNotNull(value.material) else m})} else b.materialBoard
-                                val expenses=if(value.expense!=null)b.expenseBoard?.let{it.copy(expenses=it.expenses.map{e->if(e.id==id)checkNotNull(value.expense) else e})} else b.expenseBoard
+                                val roles=if(request.kind==WorkspaceDetailKind.ROLE){
+                                    val position=if(value.role==null)-1 else db.operations().rolePosition(a,id)
+                                    buildList{
+                                        var index=0
+                                        for(role in b.operations.roles)if(role.id!=id){
+                                            if(index==position)add(checkNotNull(value.role))
+                                            add(role);index++
+                                        }
+                                        if(index==position)add(checkNotNull(value.role))
+                                    }
+                                }else b.operations.roles
+                                val operations=if(people===b.operations.persons && roles===b.operations.roles)b.operations else b.operations.copy(persons=people,roles=roles)
+                                val tasks=if(request.kind==WorkspaceDetailKind.TASK)b.tasks?.let{it.copy(tasks=patch(it.tasks,value.task,{t->t.id},null))} else b.tasks
+                                val materials=if(request.kind==WorkspaceDetailKind.MATERIAL)b.materialBoard?.let{it.copy(items=patch(it.items,value.material,{m->m.id},compareBy<MaterialItem>{m->m.createdAt}.thenBy{m->m.id}))} else b.materialBoard
+                                val expenses=if(request.kind==WorkspaceDetailKind.EXPENSE)b.expenseBoard?.let{it.copy(expenses=patch(it.expenses,value.expense,{e->e.id},compareBy<Expense>{e->e.createdAt}.thenBy{e->e.id}))} else b.expenseBoard
                                 val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
                                 val protection=if(b.leadershipState!=null)leadershipState?.invoke(db,guarded,a) else null
                                 val materialSummary=if(b.material!=null)when(val x=MaterialStore(db,guarded,System::currentTimeMillis).summary(a)){is OperationsResult.Value->x.value;else->throw ProductStorageFailure()} else null

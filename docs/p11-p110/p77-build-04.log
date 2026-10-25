@@ -1,0 +1,327 @@
+Starting a Gradle Daemon, 1 busy Daemon could not be reused, use --status for details
+> Task :verifyArchitecture
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:mergeP77runtimeNativeDebugMetadata NO-SOURCE
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeRFile UP-TO-DATE
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin UP-TO-DATE
+> Task :data:compileDebugKotlin UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:javaPreCompileP77runtime UP-TO-DATE
+> Task :app:generateP77runtimeAssets UP-TO-DATE
+> Task :data:generateDebugAssets UP-TO-DATE
+> Task :data:mergeDebugAssets UP-TO-DATE
+> Task :security:generateDebugAssets UP-TO-DATE
+> Task :security:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeP77runtimeAssets UP-TO-DATE
+> Task :app:compressP77runtimeAssets UP-TO-DATE
+> Task :app:generateP77runtimeGlobalSynthetics UP-TO-DATE
+> Task :app:checkP77runtimeDuplicateClasses UP-TO-DATE
+> Task :app:desugarP77runtimeFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexP77runtime UP-TO-DATE
+> Task :security:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :security:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkP77runtimeAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeResources UP-TO-DATE
+> Task :app:createP77runtimeCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksP77runtime UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :security:extractDeepLinksDebug UP-TO-DATE
+> Task :security:processDebugManifest UP-TO-DATE
+> Task :data:bundleLibRuntimeToDirDebug
+> Task :app:processP77runtimeMainManifest UP-TO-DATE
+> Task :app:processP77runtimeManifest UP-TO-DATE
+> Task :app:processP77runtimeManifestForPackage UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :security:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processP77runtimeResources UP-TO-DATE
+> Task :app:mergeP77runtimeJniLibFolders UP-TO-DATE
+> Task :data:configureNdkBuildDebug[arm64-v8a]
+> Task :data:buildNdkBuildDebug[arm64-v8a]
+> Task :data:configureNdkBuildDebug[armeabi-v7a]
+> Task :data:buildNdkBuildDebug[armeabi-v7a]
+> Task :data:configureNdkBuildDebug[x86]
+> Task :data:buildNdkBuildDebug[x86]
+> Task :data:configureNdkBuildDebug[x86_64]
+> Task :data:buildNdkBuildDebug[x86_64]
+> Task :data:mergeDebugJniLibFolders UP-TO-DATE
+> Task :data:mergeDebugNativeLibs UP-TO-DATE
+> Task :data:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :security:mergeDebugJniLibFolders UP-TO-DATE
+> Task :security:mergeDebugNativeLibs NO-SOURCE
+> Task :security:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeP77runtimeNativeLibs UP-TO-DATE
+> Task :app:stripP77runtimeDebugSymbols UP-TO-DATE
+> Task :app:preparePrototypeDebugKeystore UP-TO-DATE
+> Task :app:validateSigningP77runtime UP-TO-DATE
+> Task :app:writeP77runtimeAppMetadata UP-TO-DATE
+> Task :app:writeP77runtimeSigningConfigVersions UP-TO-DATE
+> Task :app:preP77runtimeAndroidTestBuild SKIPPED
+> Task :app:mergeP77runtimeAndroidTestManifest UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestManifest UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:packageP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeAndroidTestLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestRFile UP-TO-DATE
+> Task :app:javaPreCompileP77runtimeAndroidTest UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:compressP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestGlobalSynthetics UP-TO-DATE
+> Task :app:checkP77runtimeAndroidTestDuplicateClasses UP-TO-DATE
+> Task :app:desugarP77runtimeAndroidTestFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexP77runtimeAndroidTest UP-TO-DATE
+> Task :app:checkP77runtimeAndroidTestAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeAndroidTestSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeAndroidTestNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestJniLibFolders UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestNativeLibs NO-SOURCE
+> Task :app:stripP77runtimeAndroidTestDebugSymbols NO-SOURCE
+> Task :app:validateSigningP77runtimeAndroidTest UP-TO-DATE
+> Task :app:writeP77runtimeAndroidTestSigningConfigVersions UP-TO-DATE
+
+> Task :app:compileP77runtimeKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:632:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:648:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:664:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:680:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:854:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:857:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:865:120 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+
+> Task :app:mergeLibDexP77runtimeAndroidTest UP-TO-DATE
+> Task :app:mergeLibDexP77runtime
+
+> Task :app:compileP77runtimeKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PreparationWorkspace.kt:156:42 Condition is always 'true'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:632:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:648:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:664:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:680:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:854:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:857:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:865:120 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+
+> Task :app:compileP77runtimeJavaWithJavac UP-TO-DATE
+> Task :app:processP77runtimeJavaRes UP-TO-DATE
+> Task :app:mergeP77runtimeJavaResource
+> Task :app:dexBuilderP77runtime
+> Task :app:bundleP77runtimeClassesToCompileJar
+> Task :app:mergeProjectDexP77runtime
+> Task :app:packageP77runtime
+> Task :app:createP77runtimeApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleP77runtime
+
+> Task :app:compileP77runtimeAndroidTestKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P102LeadershipRecoveryProbe.kt:68:73 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P102LeadershipRecoveryProbe.kt:73:59 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P102LeadershipRecoveryProbe.kt:75:34 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P102LeadershipRecoveryProbe.kt:79:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P102LeadershipRecoveryProbe.kt:82:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P103EditorCasProbe.kt:58:73 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P103EditorCasProbe.kt:61:47 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P103EditorCasProbe.kt:62:33 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P103EditorCasProbe.kt:66:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P103EditorCasProbe.kt:69:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:61:73 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:64:47 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:65:33 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:69:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P104EditorCasProbe.kt:72:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P105OwnerClosureProbe.kt:30:111 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P105OwnerClosureProbe.kt:33:103 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P105OwnerClosureProbe.kt:85:38 Unnecessary non-null assertion (!!) on a non-null receiver of type 'TaskBoard'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P105OwnerClosureProbe.kt:96:61 Unnecessary non-null assertion (!!) on a non-null receiver of type 'OperationalBoard'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P106FullviewEntryProbe.kt:33:111 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P106FullviewEntryProbe.kt:36:103 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P106FullviewEntryProbe.kt:65:37 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProductRuntime'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P107FullviewAdmissionProbe.kt:33:111 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P107FullviewAdmissionProbe.kt:36:103 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P107FullviewAdmissionProbe.kt:65:37 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ProductRuntime'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P107FullviewAdmissionProbe.kt:117:49 Unnecessary non-null assertion (!!) on a non-null receiver of type 'TaskBoard'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P108FunctionalOwnerProbe.kt:33:111 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P108FunctionalOwnerProbe.kt:36:103 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P108FunctionalOwnerProbe.kt:42:124 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P108FunctionalOwnerProbe.kt:45:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P109FunctionalOwnerProbe.kt:33:111 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P109FunctionalOwnerProbe.kt:36:103 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P109FunctionalOwnerProbe.kt:43:125 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P109FunctionalOwnerProbe.kt:46:98 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P109FunctionalOwnerProbe.kt:53:124 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P109FunctionalOwnerProbe.kt:56:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P110ConsumerProbe.kt:25:112 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P110ConsumerProbe.kt:28:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P110ConsumerProbe.kt:34:112 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P110ConsumerProbe.kt:37:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P11UnlockProbe.kt:29:34 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MainActivity'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c2ProtocolProbe.kt:80:20 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c2ProtocolProbe.kt:81:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c3ProtocolProbe.kt:72:20 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c3ProtocolProbe.kt:73:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:77:20 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:79:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:231:58 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:232:199 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:266:62 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:269:92 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:345:440 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P6c4ProtocolIntegrationProbe.kt:345:571 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt:67:67 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MainActivity'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt:68:63 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MainActivity'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt:71:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MainActivity'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P74RuntimeLifecycleProbe.kt:73:80 Unnecessary non-null assertion (!!) on a non-null receiver of type 'MainActivity'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:238:124 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:241:25 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:253:117 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:257:25 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:271:124 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P77RuntimeE2EProbe.kt:276:18 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P7MaterialProbe.kt:144:23 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P7MaterialProbe.kt:145:36 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:44:97 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:46:25 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:55:69 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P81ActiveRevokeProbe.kt:58:24 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt:166:74 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt:172:111 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt:174:70 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt:191:92 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt:205:74 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt:208:126 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85TaskHistoryProbe.kt:211:45 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:98:130 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:100:119 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:103:36 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:168:74 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:169:58 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:173:108 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:175:73 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:197:23 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:206:23 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:210:116 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:215:26 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:224:147 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:228:172 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:229:189 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:230:132 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:233:92 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:256:74 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:262:111 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:264:70 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:281:92 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:295:74 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:299:126 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P85bTaskHistoryProbe.kt:302:45 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:207:74 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:208:58 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:212:108 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:214:73 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:236:23 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:245:23 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:249:116 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:254:26 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:263:147 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:267:172 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:268:189 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:269:132 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:272:92 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:279:74 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:285:111 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:287:70 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:307:92 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:321:74 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:325:126 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P86FullWorkspaceProbe.kt:328:45 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:118:74 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:120:161 'static fun obtain(p0: AccessibilityNodeInfo!): AccessibilityNodeInfo!' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:121:125 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:124:45 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:126:57 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P87TaskEventLimitProbe.kt:142:20 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P8ExpenseProbe.kt:143:23 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P8ExpenseProbe.kt:144:60 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:35:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:39:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:69:115 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P92PersonsPresentationProbe.kt:72:24 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:35:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:39:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:69:115 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P93TasksPresentationProbe.kt:72:24 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:33:71 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:40:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:43:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:72:115 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P94HubPresentationProbe.kt:75:24 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:35:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:39:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:69:115 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P95FunctionsPresentationProbe.kt:72:24 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P96CoreSurfaceProbe.kt:35:63 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P96CoreSurfaceProbe.kt:39:104 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P96CoreSurfaceProbe.kt:69:115 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P96CoreSurfaceProbe.kt:72:24 'fun recycle(): Unit' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/P9MemoryReportProbe.kt:184:180 'var isChecked: Boolean' is deprecated. Deprecated in Java.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/Ux3ActiveIntegrationProbe.kt:96:20 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/Ux3ActiveIntegrationProbe.kt:101:14 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/Ux3cTasksProbe.kt:108:20 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/Ux3dFunctionsProbe.kt:44:20 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/androidTest/kotlin/org/pag/prototype/Ux3dFunctionsProbe.kt:45:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'AccessibilityNodeInfo'.
+
+> Task :app:compileP77runtimeAndroidTestJavaWithJavac UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestJavaRes UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestJavaResource UP-TO-DATE
+> Task :app:dexBuilderP77runtimeAndroidTest
+> Task :app:mergeProjectDexP77runtimeAndroidTest
+> Task :app:packageP77runtimeAndroidTest
+> Task :app:createP77runtimeAndroidTestApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleP77runtimeAndroidTest
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 31s
+121 actionable tasks: 21 executed, 100 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html

@@ -1,0 +1,14 @@
+INSTRUMENTATION_STATUS: stream=P110,task-delete,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=2640884, transition=16777216, localRetained=2640884, localTransition=5358104, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,task-delete,TASK_SUBMITTED,form=false,busy=true,commit=false,session=SessionSnapshot(state=READY, generation=1, experiment=STORAGE_UNWRAP, platformAuthorization=NOT_TESTED, keyOperation=NOT_TESTED, technicalId=A-READY, marker=null, keyProperties=P77 ISOLATED SYNTHETIC TEST KEY),record=State(phase=RETAINED, retained=2788300, transition=16777216, localRetained=2788300, localTransition=5505520, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,task-delete,SINGLE_MEMBERSHIP,case=task-delete,new_membership_bound=true,visible_positive=false,old_snapshot_held=true,record=State(phase=RETAINED, retained=4122824, transition=16777216, localRetained=4122824, localTransition=6946748, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,task-delete,PASS,full_graphs=1,fixture_cleanup=true,no_physical_memory_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 PASS task-delete
+INSTRUMENTATION_CODE: -1

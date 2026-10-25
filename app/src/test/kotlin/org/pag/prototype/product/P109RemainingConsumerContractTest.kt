@@ -5,9 +5,9 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.pag.domain.*
 
-/** Known blocker witness, NOT a product budget PASS. The production ACTIVE screen calls
- * this same helper without a producer gate. TEST aliases deliberately retain generations.
- * No Compose/GC/worker return is offered as an owner-end receipt. */
+/** Original 32,768-generation / 40-row witness retained as a production regression.
+ * TEST aliases still retain every result. The producer now borrows the board's single
+ * admitted immutable projection; there is no per-recomposition payload generation. */
 class P109RemainingConsumerContractTest {
     @Test fun heldPresentationGenerationsHaveNoMarginalReservationAtTheExistingConsumerGate(){
         val task=Task("t","a","Synthetic",TaskPriority.NORMAL,TaskStatus.OPEN,null,null,null,null,null,0,0,null,0)
@@ -19,15 +19,18 @@ class P109RemainingConsumerContractTest {
         val held=List(32_768){activeTaskContent(model.board!!,null)}
         val identities=IdentityHashMap<List<Task>,Boolean>()
         for(value in held){assertEquals(40,value.active.size);identities[value.active]=true}
-        assertEquals(held.size,identities.size)
+        assertEquals(1,identities.size)
+        assertSame(board.active,held.first().active)
+        for(value in held)assertSame(held.first(),value)
         assertEquals(0,reservations)
-        // Only one actually held 40-reference list per generation. Excludes ALL old graph,
+        // Historical counterfactual: if every invocation allocated the former 40-reference list.
+        // Preserve the original red-case size calculation, excluding ALL old graph,
         // scratch sorts/filter lists, summaries/strings, DTOs and callback/Compose resources.
         val units=ActiveWorkspaceBudget.Units(lists=held.size.toLong(),listCapacity=held.size.toLong()*40)
         val required=ActiveWorkspaceBudget.estimateUnits(units)
         assertEquals(ActiveWorkspaceBudget.Decision.ADMITTED,required.first)
         assertEquals(14_680_064L,required.second)
-        println("P109_KNOWN_BLOCKER,generations=32768,held_lists=32768,list_capacity=1310720,minimum_R_model_bytes=14680064,reservations=0,product_budget=UNPROVEN")
+        println("P110_REGRESSION,generations=32768,held_aliases=32768,distinct_payload_lists=1,old_counterexample_bytes=14680064,marginal_payload_copies=0")
         assertTrue(required.second>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
         assertSame(task.javaClass,held.first().active.first().javaClass)
     }

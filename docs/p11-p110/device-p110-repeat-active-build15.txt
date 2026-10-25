@@ -1,0 +1,17 @@
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=4120580, transition=16777216, localRetained=4120580, localTransition=7590392, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,REPEAT,frames=100,rows=400,same_list=true,same_row=true,record=State(phase=RETAINED, retained=4150332, transition=16777216, localRetained=4150332, localTransition=7620144, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,REPEAT,frames=1000,rows=4004,same_list=true,same_row=true,record=State(phase=RETAINED, retained=4162648, transition=16777216, localRetained=4162648, localTransition=7632460, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,REVOKE,held_old_snapshot_and_row=true,late_click_no_publish=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,PASS,full_graphs=1,fixture_cleanup=true,no_physical_memory_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 PASS repeat-active
+INSTRUMENTATION_CODE: -1

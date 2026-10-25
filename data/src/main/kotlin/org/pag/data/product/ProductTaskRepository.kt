@@ -58,7 +58,7 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
                     if(!current())throw StorageAccessRevoked()
                     (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c,cleanupConfirmed={scopeClosed=it}){d->
                         d.withReadTransaction {
-                            val base=FullviewPreflight(this,c,::current).prepare(expected.actionId,FullviewPreflight.task)
+                            val base=FullviewPreflight(this,c,::current).prepare(expected.actionId,FullviewPreflight.task,presentations=false)
                             val admission:suspend (ActiveCoreReservation)->Unit={pageReservation->
                                 val combined=try{ActiveCoreReservation(CoreReadAdmission.add(base.retained,pageReservation.retained),CoreReadAdmission.add(base.transition,pageReservation.transition))}
                                     catch(_:ArithmeticException){throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)}
@@ -116,7 +116,7 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
                 if(!current())throw StorageAccessRevoked()
                 if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
                 val result=DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()){(owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){d->d.withReadTransaction {
-                    val base=FullviewPreflight(this,c,::current).prepare(expected.actionId,FullviewPreflight.task,expected.id)
+                    val base=FullviewPreflight(this,c,::current).prepare(expected.actionId,FullviewPreflight.task,expected.id,presentations=false)
                     val admit:suspend (ActiveCoreReservation)->Unit={part->
                         val combined=try{ActiveCoreReservation(CoreReadAdmission.add(base.retained,part.retained),CoreReadAdmission.add(base.transition,part.transition))}
                             catch(_:ArithmeticException){throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)}

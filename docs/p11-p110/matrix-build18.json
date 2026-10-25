@@ -1,0 +1,182 @@
+[
+  {
+    "mode": "run",
+    "case": "active",
+    "passed": true,
+    "log": "run-active-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "person",
+    "passed": true,
+    "log": "run-person-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "plan",
+    "passed": true,
+    "log": "run-plan-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "stale",
+    "passed": true,
+    "log": "run-stale-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "material",
+    "passed": true,
+    "log": "run-material-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "expense",
+    "passed": true,
+    "log": "run-expense-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "preparation",
+    "passed": true,
+    "log": "run-preparation-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "completed",
+    "passed": true,
+    "log": "run-completed-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "large",
+    "passed": true,
+    "log": "run-large-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "lock-detail",
+    "passed": true,
+    "log": "run-lock-detail-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "lost-detail-main",
+    "passed": true,
+    "log": "run-lost-detail-main-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "duplicate-detail-main",
+    "passed": true,
+    "log": "run-duplicate-detail-main-build18.log"
+  },
+  {
+    "mode": "run",
+    "case": "unknown-detail",
+    "passed": true,
+    "log": "run-unknown-detail-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "person-create",
+    "passed": true,
+    "log": "run-person-create-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "task-create",
+    "passed": true,
+    "log": "run-task-create-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "task-delete",
+    "passed": true,
+    "log": "run-task-delete-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "material-create",
+    "passed": true,
+    "log": "run-material-create-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "material-delete",
+    "passed": true,
+    "log": "run-material-delete-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "expense-create",
+    "passed": true,
+    "log": "run-expense-create-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "expense-delete",
+    "passed": true,
+    "log": "run-expense-delete-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "role-create",
+    "passed": true,
+    "log": "run-role-create-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "role-rename",
+    "passed": true,
+    "log": "run-role-rename-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "role-delete",
+    "passed": true,
+    "log": "run-role-delete-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "ui-r-exact",
+    "passed": true,
+    "log": "run-ui-r-exact-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "ui-r-over",
+    "passed": true,
+    "log": "run-ui-r-over-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "ui-t-exact",
+    "passed": true,
+    "log": "run-ui-t-exact-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "ui-t-over",
+    "passed": true,
+    "log": "run-ui-t-over-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "repeat-active",
+    "passed": true,
+    "log": "run-repeat-active-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "repeat-preparation",
+    "passed": true,
+    "log": "run-repeat-preparation-build18.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "repeat-completed",
+    "passed": true,
+    "log": "run-repeat-completed-build18.log"
+  }
+]

@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P107,r-exact,DATA_BOUNDARY,exact=ADMITTED,held_TEST_alias=true,additional_UI_producer=REFUSED_before_construction,full_UI_claim=false,record=State(phase=RETAINED, retained=8388608, transition=16777216, localRetained=8388608, localTransition=4779680, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P107 PASS r-exact
+INSTRUMENTATION_CODE: -1

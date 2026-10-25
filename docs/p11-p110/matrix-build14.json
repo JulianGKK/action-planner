@@ -1,0 +1,80 @@
+[
+  {
+    "mode": "consumer",
+    "case": "person-create",
+    "passed": true,
+    "log": "run-person-create-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "task-create",
+    "passed": true,
+    "log": "run-task-create-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "task-delete",
+    "passed": true,
+    "log": "run-task-delete-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "material-create",
+    "passed": true,
+    "log": "run-material-create-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "material-delete",
+    "passed": true,
+    "log": "run-material-delete-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "expense-create",
+    "passed": true,
+    "log": "run-expense-create-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "expense-delete",
+    "passed": true,
+    "log": "run-expense-delete-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "role-create",
+    "passed": true,
+    "log": "run-role-create-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "role-rename",
+    "passed": true,
+    "log": "run-role-rename-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "role-delete",
+    "passed": true,
+    "log": "run-role-delete-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "repeat-active",
+    "passed": true,
+    "log": "run-repeat-active-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "repeat-preparation",
+    "passed": true,
+    "log": "run-repeat-preparation-build14.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "repeat-completed",
+    "passed": false,
+    "log": "run-repeat-completed-build14.log"
+  }
+]

@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P110,material-create,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=2640884, transition=16777216, localRetained=2640884, localTransition=5358104, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,material-create,SINGLE_MEMBERSHIP,case=material-create,new_membership_bound=true,visible_positive=true,old_snapshot_held=true,record=State(phase=RETAINED, retained=5128623, transition=16777216, localRetained=5128623, localTransition=9305859, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,material-create,PASS,full_graphs=1,fixture_cleanup=true,no_physical_memory_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 PASS material-create
+INSTRUMENTATION_CODE: -1

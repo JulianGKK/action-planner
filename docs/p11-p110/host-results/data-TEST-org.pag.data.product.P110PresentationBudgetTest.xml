@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P110PresentationBudgetTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:21.072Z" hostname="iuzjhtgvfc" time="0.01">
+  <properties/>
+  <testcase name="noFreeTextLimitAndCheckedOverflow" classname="org.pag.data.product.P110PresentationBudgetTest" time="0.0"/>
+  <testcase name="t16ExactAndOneByteOverCannotConstructAnotherProjection" classname="org.pag.data.product.P110PresentationBudgetTest" time="0.009"/>
+  <testcase name="r8ExactAndOneByteOverBeforePresentationConstruction" classname="org.pag.data.product.P110PresentationBudgetTest" time="0.001"/>
+  <system-out><![CDATA[P110_T16,over=0,display_bytes=44368,produced=1,state=State(phase=RETAINED, retained=46928, transition=16777216, localRetained=46928, localTransition=16777216, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+P110_T16,over=1,display_bytes=44368,produced=0,state=State(phase=RETAINED, retained=2560, transition=16777216, localRetained=2560, localTransition=16732849, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+P110_R8,over=0,display_bytes=474704,produced=1,state=State(phase=RETAINED, retained=8388608, transition=16777216, localRetained=8388608, localTransition=8388608, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+P110_R8,over=1,display_bytes=474704,produced=0,state=State(phase=RETAINED, retained=7913905, transition=16777216, localRetained=7913905, localTransition=7913905, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

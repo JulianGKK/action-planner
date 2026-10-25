@@ -39,12 +39,20 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
             }else applyAnswer(key,if((old as? MemoryAnswerValue.Option)?.key==option)null else MemoryAnswerValue.Option(option))
         }
     }
-    fun answerText(key:String):String=when(val value=answers[key]){
-        is MemoryAnswerValue.Text->value.text
-        is MemoryAnswerValue.Count->copies(""){value.count.toString()}
-        else->""
+    private var draftPresentation:MemoryDraftPresentation?=null
+    private fun presentation():MemoryDraftPresentation? {
+        val s=session()
+        if(!opened || s.state!=SessionState.READY || s.generation!=generation || action()?.id!=boundAction || action()?.status!=boundStatus)return null
+        if(copyGate?.invoke(ActiveWorkspaceBudget.Units()){}!=null)return null
+        val saved=detail?.answers.orEmpty()
+        draftPresentation?.let{if(it.matches(saved,answers,decisions,sectionOrdinal))return it}
+        var result:MemoryDraftPresentation?=null
+        if(copyData{result=MemoryDraftPresentation(saved,answers,decisions,sectionOrdinal)})draftPresentation=result
+        return result
     }
-    fun answerValid(key:String):Boolean {val value=answers[key]?:return true;return copies(false){MemoryAnswerCodec.encode(key,value)!=null}}
+    fun answerText(key:String):String=presentation()?.texts?.get(key).orEmpty()
+    fun answerValid(key:String):Boolean=if(answers[key]==null)true else presentation()?.valid?.get(key)==true
+    fun answerLabel(key:String):String=presentation()?.labels?.get(key)?:"Keine Angabe"
     var mode by mutableStateOf(MemoryReportMode.LIST); private set
     var headers by mutableStateOf<List<MemoryReportHeader>?>(null); private set
     var detail by mutableStateOf<MemoryReportDetail?>(null); private set
@@ -71,14 +79,14 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
     val completedView get() = available && boundStatus == ActionStatus.COMPLETED
     val expected get() = detail?.header
     val preFirstSave get() = mode == MemoryReportMode.SECTION && expected == null
-    val combinedAnswers get() = copies(emptyMap<String,MemoryAnswerValue>()){detail?.answers.orEmpty().filterKeys { MemoryQuestionnaireV1.question(it)?.sectionOrdinal != sectionOrdinal } + answers}
-    val conflicts get():Set<String> {val combined=combinedAnswers;return copies(emptySet<String>()){answers.keys.filter { MemoryQuestionnaireV1.question(it)?.dependency?.active(combined) == false }.toSet()}}
-    val unresolved get():Set<String> {val conflicting=conflicts;return copies(emptySet<String>()){conflicting - decisions}}
+    val combinedAnswers get() = presentation()?.combined.orEmpty()
+    val conflicts get():Set<String> = presentation()?.conflicts.orEmpty()
+    val unresolved get():Set<String> = presentation()?.unresolved.orEmpty()
     val sectionValid get() = error!=OperationsFailure.BUDGET_REFUSED && error!=OperationsFailure.OWNER_UNCONFIRMED && mode == MemoryReportMode.SECTION && (sectionOrdinal != 0 || MemoryReportRules.authorValid(authorLabel)) &&
-        copies(false){answers.all { (key, value) -> MemoryAnswerCodec.encode(key, value) != null }} && unresolved.isEmpty()
+        presentation()?.valid?.values?.all{it}==true && unresolved.isEmpty()
     fun clear() {
         epoch++; request++; opened = false; boundAction = null; boundStatus = null; generation = null
-        headers = null; resetEditor(); loading = false; busy = false; error = null
+        headers = null; draftPresentation=null; resetEditor(); loading = false; busy = false; error = null
     }
     private fun resetEditor() {
         mode = MemoryReportMode.LIST; detail = null; sectionOrdinal = 0; answers = emptyMap(); authorLabel = ""

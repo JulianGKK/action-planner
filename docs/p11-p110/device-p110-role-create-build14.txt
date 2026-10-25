@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P110,role-create,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=3568916, transition=16777216, localRetained=3568916, localTransition=6286136, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,role-create,SINGLE_MEMBERSHIP,case=role-create,new_membership_bound=true,visible_positive=true,old_snapshot_held=true,record=State(phase=RETAINED, retained=5860856, transition=16777216, localRetained=5860856, localTransition=9733964, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,role-create,PASS,full_graphs=1,fixture_cleanup=true,no_physical_memory_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 PASS role-create
+INSTRUMENTATION_CODE: -1

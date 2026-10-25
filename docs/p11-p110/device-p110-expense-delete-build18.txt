@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P110,expense-delete,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=2640884, transition=16777216, localRetained=2640884, localTransition=5358104, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,expense-delete,SINGLE_MEMBERSHIP,case=expense-delete,new_membership_bound=true,visible_positive=false,old_snapshot_held=true,record=State(phase=RETAINED, retained=5793156, transition=16777216, localRetained=5793156, localTransition=9750588, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,expense-delete,PASS,full_graphs=1,fixture_cleanup=true,no_physical_memory_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 PASS expense-delete
+INSTRUMENTATION_CODE: -1

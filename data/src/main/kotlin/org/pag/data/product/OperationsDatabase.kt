@@ -37,6 +37,8 @@ internal data class OperationalRow(val actionId:String,val personId:String,val c
 
     @Query("SELECT * FROM roles WHERE actionId=:actionId ORDER BY normalizedName,id") suspend fun roles(actionId:String):List<RoleRow>
     @Query("SELECT * FROM roles WHERE actionId=:actionId AND id=:roleId") suspend fun role(actionId:String,roleId:String):RoleRow?
+    @Query("SELECT COUNT(*) FROM roles r JOIN roles target ON target.actionId=r.actionId AND target.id=:roleId WHERE r.actionId=:actionId AND (r.normalizedName<target.normalizedName OR (r.normalizedName=target.normalizedName AND r.id<target.id))")
+    suspend fun rolePosition(actionId:String,roleId:String):Int
     @Insert suspend fun insertRole(row:RoleRow)
     @Query("UPDATE roles SET name=:name,normalizedName=:normalized,editRevision=editRevision+1 WHERE actionId=:actionId AND id=:id AND editRevision=:expectedRevision AND typeof(editRevision)='integer' AND editRevision>=0 AND editRevision<9223372036854775807")
     suspend fun renameRole(actionId:String,id:String,expectedRevision:Long,name:String,normalized:String):Int

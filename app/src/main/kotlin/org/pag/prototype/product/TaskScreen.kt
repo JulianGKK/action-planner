@@ -33,7 +33,7 @@ internal fun taskFailureMessage(reason:OperationsFailure):String = when(reason) 
     if(model.form){TaskForm(model,people);return}
     val selected=model.selected
     if(selected!=null){
-        TaskSummary(selected,people)
+        TaskSummary(model.uiRow(selected)?:return)
         if(model.writable){
             if(selected.status==TaskStatus.OPEN)FormButton({model.transition(TaskStatus.IN_PROGRESS)},enabled=!model.busy && !model.commitConfirmed){Text("In Arbeit")}
             if(TaskRules.active(selected.status)){
@@ -52,28 +52,30 @@ internal fun taskFailureMessage(reason:OperationsFailure):String = when(reason) 
     Text("Dringende / offene Aufgaben",style=MaterialTheme.typography.titleMedium)
     val activeTasks=board.active
     val closedTasks=board.closed
-    Text("Hoch offen / in Arbeit: ${activeTasks.count{it.priority==TaskPriority.HIGH}} · Offen: ${activeTasks.count{it.status==TaskStatus.OPEN}} · In Arbeit: ${activeTasks.count{it.status==TaskStatus.IN_PROGRESS}}")
+    Text(board.presentation.all.preparationSummary)
     model.filter?.let{id->Text("Betrifft: ${people.persons.find{it.person.id==id}?.person?.pseudonym.orEmpty()}");FormOutlinedButton({model.showPerson(null)}){Text("Alle Aufgaben")}}
-    val active=activeTasks.filter{model.filter==null || it.affectedPersonId==model.filter}
-    active.forEach{t->FormOutlinedButton({model.open(t)},modifier=Modifier.fillMaxWidth(),enabled=!model.busy && !model.commitConfirmed){TaskSummary(t,people)}}
+    val presentation=activeTaskContent(board,model.filter)
+    val active=presentation.active
+    active.forEach{t->val row=model.uiRow(t)?:return@forEach;FormOutlinedButton(row.click,modifier=Modifier.fillMaxWidth(),enabled=!model.busy && !model.commitConfirmed){TaskSummary(row)}}
     if(active.isEmpty())Text(if(board.tasks.isEmpty() && people.status==ActionStatus.PREPARATION)"Noch keine Aufgaben." else "Keine offenen Aufgaben.")
     var closed by remember{mutableStateOf(false)}
     FormTextButton({model.touch();closed=!closed}){Text("Erledigt / Entfällt (${closedTasks.size}) ${if(closed)"▴" else "▾"}")}
-    if(closed)closedTasks.filter{model.filter==null || it.affectedPersonId==model.filter}.forEach{t->FormOutlinedButton({model.open(t)},modifier=Modifier.fillMaxWidth()){TaskSummary(t,people)}}
+    if(closed)presentation.closed.forEach{t->val row=model.uiRow(t)?:return@forEach;FormOutlinedButton(row.click,modifier=Modifier.fillMaxWidth()){TaskSummary(row)}}
     if(people.status==ActionStatus.PREPARATION){
         var templates by remember{mutableStateOf(false)}
         FormTextButton({model.touch();templates=!templates}){Text("Aufgaben aus Vorlagen")}
         if(templates){Text("Organisatorische Vorschläge · Die Leitung entscheidet selbst.");TaskRules.templates.forEach{t->FormOutlinedButton({model.add(template=t)},enabled=!model.busy && !model.commitConfirmed){Text(t.title)}}}
     }
 }
-@Composable internal fun TaskSummary(t:Task,people:OperationalBoard) {
+@Composable internal fun TaskSummary(row:TaskUiRow) {
+    if(!row.click.live())return
+    LocalProductObservation.current?.let{observer->androidx.compose.runtime.SideEffect{observer("TASK_ROW")}}
     Column {
-        Text("Revision: ${t.editRevision}")
-        Text("${priorityLabel(t.priority)} · ${t.title}",style=MaterialTheme.typography.titleMedium)
-        t.affectedPersonId?.let{id->Text("Betrifft: ${people.persons.find{it.person.id==id}?.person?.pseudonym.orEmpty()}")}
-        val assignee=t.assigneeRoleId?.let{id->people.roles.find{it.id==id}?.name}?:t.assigneePersonId?.let{id->people.persons.find{it.person.id==id}?.person?.pseudonym}?:"Niemand zugeordnet"
-        Text("$assignee · ${taskStatusLabel(t.status)}")
-        t.dueAt?.let{Text("Fällig: ${taskTime(it)}")}
+        Text(row.revision)
+        Text(row.heading,style=MaterialTheme.typography.titleMedium)
+        row.preparationAffected?.let{Text(it)}
+        Text(row.preparationAssignee)
+        row.preparationDue?.let{Text(it)}
     }
 }
 @Composable internal fun TaskForm(model:TaskModel,people:OperationalBoard) {
@@ -127,18 +129,15 @@ internal fun taskTime(time:Long)=Instant.ofEpochMilli(time).atZone(ZoneId.system
         model.history==null->FormOutlinedButton({model.loadHistory(true)}){Text("Chronik laden")}
         else->{
             val page=model.history!!
-            if(page.total==0L)Text("Noch keine Ereignisse.")
-            else Text("Ereignisse ${model.historyOffset+1}–${model.historyOffset+page.events.size} von ${page.total}")
-            val lastPage=if(page.total==0L)1L else (page.total-1)/32+1
-            if(lastPage>1) {
-                var number by remember(page.state,page.taskId,model.historyOffset){mutableStateOf((model.historyOffset/32+1).toString())}
-                val chosen=number.toLongOrNull()?.takeIf{it in 1..lastPage}
-                FormTextField(number,{if(it.length<=19 && it.all{c->c in '0'..'9'})number=it},label={Text("Seite (1–$lastPage)")},singleLine=true,
+            val display=model.historyUi?:return
+            if(page.total==0L)Text("Noch keine Ereignisse.") else Text(display.range)
+            if(display.lastPage>1){
+                FormTextField(model.historyPageText,model::changeHistoryPageText,label={Text(display.pageLabel)},singleLine=true,
                     keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(keyboardType=androidx.compose.ui.text.input.KeyboardType.Number))
-                FormOutlinedButton({chosen?.let(model::loadHistoryPage)},enabled=chosen!=null){Text("Seite öffnen")}
-                FormTextButton({model.loadHistoryPage(lastPage)}){Text("Letzte Seite")}
+                FormOutlinedButton(model::openHistoryPage,enabled=model.historyPageChoice!=null){Text("Seite öffnen")}
+                FormTextButton(model::lastHistoryPage){Text("Letzte Seite")}
             }
-            page.events.forEach{Text("${taskTime(it.occurredAt)} · ${eventLabel(it.type)}")}
+            display.events.forEach{Text(it)}
             if(page.next!=null)FormOutlinedButton({model.loadHistory()}){Text("Weitere Ereignisse")}
             FormTextButton({model.loadHistory(true)}){Text("Chronik von Anfang an")}
         }

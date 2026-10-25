@@ -146,7 +146,7 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             ActiveArea.HUB -> {
                 val tasks = content.tasks
                 if (tasks == null) { PagErrorState(); return }
-                val cards = activeHubCards(model.selected ?: return, board, tasks, content.protocolSummary, content.materialSummary, content.expenseSummary, content.memoryReportSummary, content.documentSummary)
+                val cards = content.uiRows?.hub?:return
                 ActiveHubGrid(cards, model.activeNavigationEnabled, onDocuments = model::openDocuments) { model.activeArea(it) }
                 model.changeError?.let { Text(changeErrorLabel(it)) }
                 if (model.confirming != null) {

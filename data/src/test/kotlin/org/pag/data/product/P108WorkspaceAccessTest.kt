@@ -155,4 +155,16 @@ class P108WorkspaceAccessTest {
         assertEquals(1,copies);assertNull(h.record.beginFullview("a",1))
     }
 
+    @Test fun p110CapabilityKeepsCancellationIdentityButNoOpeningActionPayload(){
+        val h=H()
+        val enriched=h.request.copy(expectedAction=Action("a","Synthetic title","Synthetic description",1,2,0,ActionStatus.PREPARATION))
+        assertTrue(h.access.reserve(OriginalWorkspaceAccess.cost))
+        val scope=OriginalWorkspaceAccess(h.entry,h.source,h.context,h.ticket,h.mutations,enriched,Thread.currentThread())
+        assertNull(scope.request.expectedAction)
+        assertSame(enriched.ticket,scope.request.ticket);assertSame(enriched.parts,scope.request.parts)
+        assertTrue(scope.publish("a",ActionStatus.PREPARATION,1){})
+        enriched.ticket!!.cancel()
+        assertFalse(scope.publish("a",ActionStatus.PREPARATION,1){fail("Cancelled")})
+    }
+
 }

@@ -1,0 +1,26 @@
+[
+  {
+    "mode": "consumer",
+    "case": "person-create",
+    "passed": true,
+    "log": "run-person-create-build11.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "task-create",
+    "passed": true,
+    "log": "run-task-create-build11.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "task-delete",
+    "passed": true,
+    "log": "run-task-delete-build11.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "material-create",
+    "passed": false,
+    "log": "run-material-create-build11.log"
+  }
+]

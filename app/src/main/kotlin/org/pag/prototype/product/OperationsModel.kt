@@ -13,6 +13,8 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     private val refreshWorkspace: (() -> Unit)? = null,
     private val feedback: (String) -> Unit = {},
     private val onEditFinished: (String?) -> Unit = {}) {
+    private var membershipLoader:WorkspaceDetailLoader?=null
+    internal fun bindMembershipLoader(loader:WorkspaceDetailLoader){check(membershipLoader==null);membershipLoader=loader}
     private var detailLoader:WorkspaceDetailLoader?=null
     internal fun bindDetailLoader(loader:WorkspaceDetailLoader){check(detailLoader==null);detailLoader=loader}
     var commitConfirmed by mutableStateOf(false);private set
@@ -297,7 +299,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     private fun createRoleWrite(name:String,owner:RoleCreateSurface?){
         val a=action()?.id?:return;val generation=session().generation
         val serial=createSerial;val roleSerial=roleEditorSerial;val targetScreen=screen;val targetPerson=personId
-        if(session().state!=SessionState.READY || (!planning && !live) || busy || repository==null)return
+        if(session().state!=SessionState.READY || (!planning && !live) || busy || commitConfirmed || repository==null)return
         fun current()=session().state==SessionState.READY && session().generation==generation && action()?.id==a &&
             createSerial==serial && roleEditorSerial==roleSerial && screen==targetScreen && personId==targetPerson &&
             (planning || live) && (owner==null || (createSurface==owner && createAllowed(owner)))
@@ -318,15 +320,29 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
                 }
                 is OperationsResult.Value->{
                     if(result.value.actionId!=a){if(owner!=null){createError=OperationsFailure.NOT_ALLOWED;error=OperationsFailure.NOT_ALLOWED}else templateCreateError=OperationsFailure.NOT_ALLOWED;return@createRole}
+                    fun accepted(){
                     if(owner==RoleCreateSurface.NEW_FUNCTION)finishForm()
                     else if(owner==RoleCreateSurface.ROLES)bindCreate(RoleCreateSurface.ROLES)
                     else if(owner!=null)dropCreate()
                     val completedSerial=createSerial;val completedRoleSerial=roleEditorSerial;val completedScreen=screen
                     fun completedCurrent()=session().state==SessionState.READY && session().generation==generation && action()?.id==a &&
                         createSerial==completedSerial && roleEditorSerial==completedRoleSerial && screen==completedScreen
-                    refresh()
+                    if(membershipLoader==null)refresh()
                     if(completedCurrent() && owner==RoleCreateSurface.NEW_FUNCTION)onEditFinished(targetPerson)
                     if(completedCurrent())feedback("${if(owner==RoleCreateSurface.NEW_FUNCTION) "Funktion" else "Rolle"} „${submitted.trim()}“ angelegt")
+                    }
+                    val projection=membershipLoader
+                    if(projection==null)accepted() else {
+                        commitConfirmed=true;busy=true
+                        projection(WorkspaceDetailKind.ROLE,result.value.id){fresh->
+                            if(!current())return@projection
+                            busy=false
+                            when(fresh){
+                                is WorkspaceDetailResult.Rejected->{error=fresh.reason.operationFailure();createError=error;feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                                is WorkspaceDetailResult.Value->{commitConfirmed=false;accepted()}
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -346,7 +362,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     fun renameRole(expected:Role,name:String){
         val a=action()?:return;if(!planning || busy || expected.actionId!=a.id)return
         val serial=roleEditorSerial;var delivered=false
-        write(close=false,applied={if(serial==roleEditorSerial)dropRoleEditor()}){publish->
+        write(roleId=expected.id,close=false,applied={if(serial==roleEditorSerial)dropRoleEditor()}){publish->
             repository?.renameRole(a.id,expected,name){result->
                 if(!delivered){delivered=true;if(serial==roleEditorSerial)publish(when(result){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->result})}
             }
@@ -355,7 +371,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     fun deleteRole(expected:Role){
         val a=action()?:return;if(!planning || busy || expected.actionId!=a.id)return
         val serial=roleEditorSerial;var delivered=false
-        write(close=false,applied={if(serial==roleEditorSerial)dropRoleEditor()}){publish->
+        write(roleId=expected.id,close=false,applied={if(serial==roleEditorSerial)dropRoleEditor()}){publish->
             repository?.deleteRole(a.id,expected){if(!delivered){delivered=true;if(serial==roleEditorSerial)publish(it)}}
         }
     }
@@ -367,6 +383,23 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         interaction()
         if(!roleEditorCurrent() || serial!=roleEditorSerial || token!=request)return
         busy=true;var delivered=false
+        val loader=detailLoader
+        if(loader!=null){
+            loader(WorkspaceDetailKind.ROLE,old.id){result->
+                if(delivered)return@loader
+                delivered=true
+                if(!roleEditorCurrent() || session().generation!=generation || serial!=roleEditorSerial || token!=request)return@loader
+                busy=false
+                when(result){
+                    is WorkspaceDetailResult.Rejected->error=result.reason.operationFailure()
+                    is WorkspaceDetailResult.Value->{
+                        val fresh=result.value.role
+                        if(fresh==null || fresh.id!=old.id || fresh.actionId!=old.actionId)error=OperationsFailure.NOT_FOUND
+                        else {dropRoleEditor();if(deleting)deletingRole=fresh else {editingRole=fresh;roleName=fresh.name};error=null}
+                    }
+                }
+            };return
+        }
         repository?.board(old.actionId){result->
             if(delivered)return@board
             delivered=true
@@ -382,7 +415,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
             }
         }
     }
-    private fun write(close:Boolean=true,message:String?=null,applied:()->Unit={},work:((OperationsResult<Unit>)->Unit)->Unit){
+    private fun write(roleId:String?=null,close:Boolean=true,message:String?=null,applied:()->Unit={},work:((OperationsResult<Unit>)->Unit)->Unit){
         val token=request;val a=action()?.id;val before=session();val generation=before.generation
         if(commitConfirmed || before.state!=SessionState.READY || repository==null || a==null)return
         interaction()
@@ -409,6 +442,17 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
                         }
                     }
                     return@work
+                }
+                if(roleId!=null && membershipLoader!=null){
+                    commitConfirmed=true;busy=true
+                    membershipLoader!!.invoke(WorkspaceDetailKind.ROLE,roleId){fresh->
+                        if(token!=request || action()?.id!=a || session().state!=SessionState.READY || session().generation!=generation)return@invoke
+                        busy=false
+                        when(fresh){
+                            is WorkspaceDetailResult.Rejected->{error=fresh.reason.operationFailure();feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                            is WorkspaceDetailResult.Value->{commitConfirmed=false;applied();if(close)finishForm();if(message!=null)feedback(message)}
+                        }
+                    };return@work
                 }
                 applied()
                 if(close)finishForm();refresh()

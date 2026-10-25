@@ -14,6 +14,8 @@ import org.pag.domain.*
 enum class PreparationArea(val label: String) {
     OVERVIEW("Übersicht"), PERSONS("Personen"), TASKS("Aufgaben"), ROLES("Rollen"), MATERIAL("Material"), COSTS("Kosten")
 }
+private val preparationAreaLabels=PreparationArea.entries.associateWith{it.label to "✓ ${it.label}"} // code-only finite table
+internal fun preparationAreaLabel(area:PreparationArea,selected:Boolean)=preparationAreaLabels.getValue(area).let{if(selected)it.second else it.first}
 enum class PreparationContentState { LOADING, CONTENT, EMPTY, ERROR }
 internal data class PreparationSummary(val persons: Int, val roles: Int?, val withoutPrimaryRole: Int?,
     val open: Int?, val inProgress: Int?, val high: Int?)
@@ -61,11 +63,12 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     FlowRow(Modifier.fillMaxWidth().semantics { selectableGroup() },
         horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (model.documentsAvailable) FormOutlinedButton(model::openDocuments, enabled=model.preparationNavigationEnabled) { Text("Dokumente") }
-        PreparationArea.entries.filter { (it != PreparationArea.MATERIAL || model.materialAvailable) && (it != PreparationArea.COSTS || model.expensesAvailable) }.forEach { area ->
+        PreparationArea.entries.forEach { area ->
+            if((area==PreparationArea.MATERIAL && !model.materialAvailable) || (area==PreparationArea.COSTS && !model.expensesAvailable))return@forEach
             val chosen = model.preparationArea == area
             FormOutlinedButton({ model.preparationArea(area) }, enabled = model.preparationNavigationEnabled,
                 modifier = Modifier.heightIn(min = 48.dp).semantics { selected = chosen; role = androidx.compose.ui.semantics.Role.Tab }) {
-                Text((if (chosen) "✓ " else "") + area.label)
+                Text(preparationAreaLabel(area,chosen))
             }
         }
     }
@@ -150,10 +153,12 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     content.persons.forEach { person ->
         val board = content.operations
         val plan = board?.persons?.find { it.person.id == person.id }
-        FormOutlinedButton({ model.personDetail(person.id) }, modifier = Modifier.fillMaxWidth()) {
+        val name=person.pseudonym
+        val planLabel=if(plan!=null && board!=null)model.formatPlannedRoles(plan,board)?:"Noch keine Rolle" else "Noch keine Rolle"
+        FormOutlinedButton(model.personRow(person.id)?.detail?:return@forEach, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth()) {
-                Text(person.pseudonym, style = MaterialTheme.typography.titleLarge)
-                Text(if (plan != null && board != null) model.formatPlannedRoles(plan, board) ?: "Noch keine Rolle" else "Noch keine Rolle")
+                Text(name, style = MaterialTheme.typography.titleLarge)
+                Text(planLabel)
             }
         }
     }
@@ -185,12 +190,13 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     }
     if (board.roles.isEmpty()) Text("Noch keine Rollen angelegt.")
     board.roles.forEach { role ->
+        val row=model.roleRow(role.id)?:return@forEach
         Text(role.name, style = MaterialTheme.typography.titleMedium)
         val planned = board.persons.count { role.id in it.plan.roleIds }
         Text("$planned geplant · ${board.persons.count { it.plan.primaryRoleId == role.id }} als Hauptrolle")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FormOutlinedButton({ ops.editRole(role) }, enabled = !ops.busy) { Text("Umbenennen") }
-            FormOutlinedButton({ ops.editRole(role,delete=true) }, enabled = !ops.busy) { Text("Löschen") }
+            FormOutlinedButton(row.edit, enabled = !ops.busy) { Text("Umbenennen") }
+            FormOutlinedButton(row.delete, enabled = !ops.busy) { Text("Löschen") }
         }
     }
 }

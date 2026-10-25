@@ -42,13 +42,14 @@ sealed interface WorkspaceResult {
     data class Value(val value:WorkspaceRead):WorkspaceResult
     data class Rejected(val reason:WorkspaceFailure):WorkspaceResult
 }
-enum class WorkspaceDetailKind { PERSON, TASK, PLAN, MATERIAL, EXPENSE }
+enum class WorkspaceDetailKind { PERSON, TASK, PLAN, MATERIAL, EXPENSE, ROLE }
 data class WorkspaceDetailRequest(val actionId:String,val status:ActionStatus,val generation:Long,
     val kind:WorkspaceDetailKind,val id:String,val ticket:WorkspaceReadTicket,
-    val baseline:WorkspaceRead?=null,val expectedAction:Action?=null)
+    val baseline:WorkspaceRead?=null,val expectedAction:Action?=null,
+    val membership:Boolean=false)
 data class WorkspaceDetail(val access:WorkspaceAccess,val person:Person?=null,val task:Task?=null,
     val plan:ExpectedPersonRolePlan?=null,val material:MaterialItem?=null,val expense:Expense?=null,
-    val workspace:WorkspaceRead?=null)
+    val workspace:WorkspaceRead?=null,val removed:Boolean=false,val operationalPerson:OperationalPerson?=null,val role:Role?=null)
 sealed interface WorkspaceDetailResult {
     data class Value(val value:WorkspaceDetail):WorkspaceDetailResult
     data class Rejected(val reason:WorkspaceFailure):WorkspaceDetailResult

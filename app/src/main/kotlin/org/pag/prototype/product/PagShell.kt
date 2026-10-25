@@ -30,7 +30,10 @@ data class WorkspaceSnapshot(val actionId: String, val generation: Long, val per
     val memoryReportSummary: org.pag.domain.MemoryReportSummary? = null,
     val documentSummary: org.pag.domain.DocumentSummary? = null,
     val access:org.pag.domain.WorkspaceAccess?=null,
-    val materialBoard:org.pag.domain.MaterialBoard?=null,val expenseBoard:org.pag.domain.ExpenseBoard?=null)
+    val materialBoard:org.pag.domain.MaterialBoard?=null,val expenseBoard:org.pag.domain.ExpenseBoard?=null) {
+    internal var uiRows:WorkspaceUiRows?=null; private set
+    internal fun bindRows(rows:WorkspaceUiRows){check(uiRows==null);uiRows=rows}
+}
 
 sealed interface ActionListState {
     data object Loading : ActionListState

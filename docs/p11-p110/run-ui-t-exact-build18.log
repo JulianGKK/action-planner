@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P110,ui-t-exact,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=3186148, transition=16777216, localRetained=3186148, localTransition=6655960, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,ui-t-exact,UI_BOUNDARY,stage=original_VM_UI_representation,over=0,planning=337856,display=172792,constructed=true,full_graphs=1,full_consumer_claim=false,record=State(phase=RETAINED, retained=3696796, transition=16777216, localRetained=3696796, localTransition=16777216, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,ui-t-exact,PASS,full_graphs=1,fixture_cleanup=true,no_physical_memory_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 PASS ui-t-exact
+INSTRUMENTATION_CODE: -1

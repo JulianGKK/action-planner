@@ -76,6 +76,18 @@ class P77ProductRuntimeHarness private constructor(
     fun p106StoreWithoutEntry()=fixture.p106StoreWithoutEntry(runtime)
     fun p106Replacement(activity:Activity,worker:Executor,main:Executor)=fixture.p106Replacement(activity,worker,main)
     fun p101SeededVersion()=fixture.p101SeededVersion
+    /** Isolated fault-probe accounting only, no payload, release or authority. Books on the
+     * already authorized ORIGINAL record; never allocates another ledger or clears one. */
+    fun p110PadUiBoundary(scope:org.pag.domain.WorkspaceAccess,retainedBytes:Long,transitionBytes:Long):Boolean {
+        val original=scope as? OriginalWorkspaceAccess?:return false
+        fun units(bytes:Long):org.pag.domain.ActiveWorkspaceBudget.Units {
+            require(bytes==0L || bytes>=71)
+            return if(bytes==0L)org.pag.domain.ActiveWorkspaceBudget.Units() else org.pag.domain.ActiveWorkspaceBudget.Units(arrays=1,arrayPayloadBytes=bytes-71)
+        }
+        val reservation=org.pag.domain.ActiveCoreReservation(units(retainedBytes),units(transitionBytes))
+        var booked=false
+        return original.publish(original.request.actionId,original.status,original.original.generation){booked=original.entry.reserveReservation(reservation)} && booked
+    }
     fun outstandingState()=runtime.activeCore.outstandingState().toString()
     val cleanupConfirmed=java.util.concurrent.atomic.AtomicBoolean(false)
     override fun close() {

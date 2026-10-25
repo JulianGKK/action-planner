@@ -49,7 +49,10 @@ class WorkspaceBatchTest {
     private class Tasks : TaskRepository {
         val loads = mutableListOf<(OperationsResult<TaskBoard>) -> Unit>()
         override fun board(actionId: String, publish: (OperationsResult<TaskBoard>) -> Unit) { loads.add(publish) }
-        override fun create(actionId: String, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) {}
+        var creates=0
+        override fun create(actionId: String, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) {
+            creates++;publish(OperationsResult.Value(Task("new",actionId,input.title,input.priority,TaskStatus.OPEN,input.assigneePersonId,input.assigneeRoleId,input.affectedPersonId,input.dueAt,input.sourceTemplateKey,1,1,null,0)))
+        }
         override fun edit(actionId: String, expected: Task, input: TaskInput, publish: (OperationsResult<Task>) -> Unit) {}
         override fun transition(actionId: String, expected: Task, status: TaskStatus, publish: (OperationsResult<Task>) -> Unit) {}
         override fun delete(actionId: String, expected: Task, publish: (OperationsResult<Unit>) -> Unit) {}
@@ -78,7 +81,9 @@ class WorkspaceBatchTest {
     }
     private val model = ProductViewModel(session, actions, ProductStorageState.READY_TO_OPEN, people, protection, ops, tasks, protocolPort) {}
     private val pending=mutableListOf<Pair<WorkspaceReadRequest,(WorkspaceResult)->Unit>>()
+    private var details=0
     init { model.bindWorkspace(object:WorkspaceRepository {
+        override fun detail(original:WorkspaceAccess,request:WorkspaceDetailRequest,publish:(WorkspaceDetailResult)->Unit){details++;publish(WorkspaceDetailResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))}
         override fun read(request:WorkspaceReadRequest,publish:(WorkspaceResult)->Unit){pending.add(request to publish)}
     }) }
     private fun result(request:WorkspaceReadRequest)=WorkspaceRead(request.actionId,request.status,request.generation,request.parts,
@@ -273,7 +278,7 @@ class WorkspaceBatchTest {
             model.activeArea(area);assertSame(held,model.workspace);assertTrue(original.active)
         }
         assertEquals(1,pending.size);assertTrue(ops.loads.isEmpty());assertTrue(tasks.loads.isEmpty())
-        assertEquals(4,scope.reservations)
+        assertEquals(6,scope.reservations) // UI planning + representation and four navigations.
     }
     @Test fun p108RefusedCopyDoesNotRunProducerOrReplaceOriginalGraph() {
         val scope=BoundAccess();model.detail("a");complete(change={it.copy(access=scope)})
@@ -296,4 +301,45 @@ class WorkspaceBatchTest {
         session.emit(SessionState.READY,3);complete(change={it.copy(access=scope)})
         assertNull(model.workspace);assertNull(model.selected)
     }
+    @Test fun p110HeldPresentationsBorrowRowsAndIdentityOnlyCallbacks(){
+        val scope=BoundAccess();model.detail("a");complete(change={it.copy(access=scope,tasks=TaskBoard("a",listOf(Task("p110-task","a","Synthetic P110 task",TaskPriority.NORMAL,TaskStatus.OPEN,null,null,null,null,null,0,0,null,0)),emptyList(),false))})
+        val held=model.workspace!!;val task=held.tasks!!.tasks.first();val row=model.taskRow(task)!!
+        val initial=scope.reservations
+        val aliases=List(32_768){model.taskRow(task)!!}
+        for(alias in aliases){assertSame(row,alias);assertSame(row.click,alias.click);assertSame(row.card(0),alias.card(0))}
+        assertEquals(initial,scope.reservations)
+        val prohibited=setOf(Task::class.java,TaskBoard::class.java,OperationalBoard::class.java,WorkspaceSnapshot::class.java,TaskUiRow::class.java)
+        assertTrue(OriginalRowAction::class.java.declaredFields.none{it.type in prohibited})
+        row.click();assertEquals(task,model.tasks.selected)
+        session.lock();row.click();assertNull(model.tasks.selected);assertNull(model.workspace)
+    }
+    @Test fun p110CallbackRechecksAfterInteractionAndCannotCrossOriginalRoot(){
+        val scope=BoundAccess();model.detail("a");complete(change={it.copy(access=scope,tasks=TaskBoard("a",listOf(Task("p110-task","a","Synthetic P110 task",TaskPriority.NORMAL,TaskStatus.OPEN,null,null,null,null,null,0,0,null,0)),emptyList(),false))})
+        val task=model.workspace!!.tasks!!.tasks.first();val click=model.taskRow(task)!!.click
+        session.onInteraction={session.lock()}
+        click();assertNull(model.tasks.selected);assertNull(model.workspace)
+        session.onInteraction={};session.emit(SessionState.READY,3);click();assertNull(model.tasks.selected)
+    }
+    @Test fun p110BudgetRefusalDoesNotPublishUiRowsOrRunAnyProducer(){
+        val scope=BoundAccess();scope.budget=false
+        var constructed=0
+        val refused=admitOriginalUi(scope,"a",ActionStatus.ACTIVE,1,ActiveWorkspaceBudget.Units(objects=1)){constructed++;Any()}
+        assertNull(refused);assertEquals(0,constructed)
+        model.detail("a");complete(change={it.copy(access=scope)})
+        assertNull(model.workspace);assertEquals(WorkspaceFailure.BUDGET_REFUSED,model.workspaceRefusal)
+        scope.budget=true;scope.live=false
+        assertNull(admitOriginalUi(scope,"a",ActionStatus.ACTIVE,1,ActiveWorkspaceBudget.Units()){constructed++;Any()})
+        assertEquals(0,constructed)
+    }
+
+    @Test fun p110RepositoryBindingAfterConstructionActivatesProjectionAndNeverRepeatsCommittedCreate(){
+        val scope=BoundAccess();model.detail("a");complete(change={it.copy(access=scope)})
+        model.activeArea(ActiveArea.TASKS)
+        model.tasks.add();model.tasks.changeTitle("Synthetic new");model.tasks.save()
+        assertEquals(1,tasks.creates);assertEquals(1,details);assertEquals(1,pending.size)
+        assertTrue(model.tasks.commitConfirmed);assertEquals(OperationsFailure.OWNER_UNCONFIRMED,model.tasks.error)
+        assertTrue(model.tasks.form)
+        model.tasks.save();assertEquals(1,tasks.creates);assertEquals(1,details)
+    }
+
 }

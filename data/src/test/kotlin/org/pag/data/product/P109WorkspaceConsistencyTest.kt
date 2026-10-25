@@ -75,4 +75,43 @@ class P109WorkspaceConsistencyTest {
         assertEquals(before.localRetained+n,after.localRetained);assertEquals(before.localTransition+n,after.localTransition)
         assertNull(memory.beginFullview("a",1));assertFalse(after.retirementConfirmed)
     }
+    @Test fun p110ExplicitMembershipAdmitsOnlyOneKnownDeltaAndStillRejectsUnrelatedChange()=runBlocking {
+        SqliteHostConnection().use{db->db.seed();val held=baseline();val checker=WorkspaceConsistency(db){true}
+            db.execute("INSERT INTO tasks(id,actionId,title,priority,status,createdAt,updatedAt) VALUES('new','a','Synthetic new','NORMAL','OPEN',0,0)")
+            val create=request(WorkspaceDetailKind.TASK,"new").copy(membership=true)
+            assertTrue(checker.matches(held,create))
+            assertFalse(checker.matches(held,create.copy(membership=false)))
+            db.execute("UPDATE persons SET pseudonym='Other' WHERE id='p'")
+            assertFalse(checker.matches(held,create))
+            assertEquals(0,db.textReads);assertEquals(0,db.blobReads)
+        }
+    }
+    @Test fun p110ExplicitPersonMembershipIncludesItsPlanAndStateAndNoUnrelatedMember()=runBlocking {
+        SqliteHostConnection().use{db->db.seed();val held=baseline();val checker=WorkspaceConsistency(db){true}
+            db.execute("INSERT INTO persons VALUES('new','a','New','new',1,0)")
+            db.execute("INSERT INTO person_role_plans VALUES('a','new',NULL,0)")
+            assertTrue(checker.matches(held,request(WorkspaceDetailKind.PERSON,"new").copy(membership=true)))
+            db.execute("DELETE FROM persons WHERE id='new'")
+            db.execute("DELETE FROM tasks WHERE id='t'")
+            assertTrue(checker.matches(held,request(WorkspaceDetailKind.TASK,"t").copy(membership=true)))
+            assertEquals(0,db.textReads)
+        }
+    }
+
+    @Test fun p110OnlyActualBoardConstructionAddsBoardPresentationReceipt()=runBlocking {
+        SqliteHostConnection().use{db->db.seed()
+            val access=object:StorageContext{override val scope=AccessScope.READY;override val generation=1L;override fun check(point:AccessPoint)=true;override fun publish(result:()->Unit):Boolean{result();return true}}
+            val metadata=FullviewPreflight(db,access){true}
+            val scalarTask=metadata.prepare("a",FullviewPreflight.task,presentations=false)
+            val board=metadata.prepare("a",FullviewPreflight.task)
+            assertEquals(CoreReadAdmission.add(scalarTask.retained,TaskPresentation.cost(1,filters=0)),board.retained)
+            assertEquals(CoreReadAdmission.add(scalarTask.transition,TaskPresentation.cost(1,filters=0)),board.transition)
+            db.execute("UPDATE tasks SET affectedPersonId='p' WHERE id='t'")
+            val scalarFiltered=metadata.prepare("a",FullviewPreflight.task,presentations=false)
+            val filtered=metadata.prepare("a",FullviewPreflight.task)
+            assertEquals(CoreReadAdmission.add(scalarFiltered.retained,TaskPresentation.cost(1,filters=1)),filtered.retained)
+            assertEquals(0,db.blobReads)
+        }
+    }
+
 }

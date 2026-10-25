@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P110,role-rename,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=2660492, transition=16777216, localRetained=2660492, localTransition=5408312, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,role-rename,SINGLE_MEMBERSHIP,case=role-rename,new_membership_bound=true,visible_positive=true,old_snapshot_held=true,record=State(phase=RETAINED, retained=4526215, transition=16777216, localRetained=4526215, localTransition=8460523, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,role-rename,PASS,full_graphs=1,fixture_cleanup=true,no_physical_memory_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 PASS role-rename
+INSTRUMENTATION_CODE: -1

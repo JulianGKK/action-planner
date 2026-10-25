@@ -41,7 +41,8 @@ import org.pag.domain.*
             if (headers.isEmpty()) Text("Noch keine Gedächtnisprotokolle")
             listOf(MemoryReportStatus.DRAFT to "Entwürfe", MemoryReportStatus.COMPLETED to "Abgeschlossen").forEach { (status, label) ->
                 PreparationHeading(label)
-                headers.filter { it.status == status }.forEach { h ->
+                headers.forEach { h ->
+                    if(h.status!=status)return@forEach
                     FormOutlinedButton({ model.open(h.id) }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
                         Column(Modifier.fillMaxWidth()) {
                             Text(h.authorLabel)
@@ -77,8 +78,8 @@ import org.pag.domain.*
                         q.dependency?.contextHint?.let { Text(it) }
                         if (!active && value != null) {
                             Text("Diese Detailangabe passt nicht mehr zur aktuellen Auswahl.")
-                            Text("Aktuelle Auswahl: ${MemoryAnswerCodec.label(q.dependency!!.parentKey, model.combinedAnswers[q.dependency!!.parentKey])}")
-                            Text(MemoryAnswerCodec.label(q.key, value))
+                            Text("Aktuelle Auswahl: ${model.answerLabel(q.dependency!!.parentKey)}")
+                            Text(model.answerLabel(q.key))
                             FormOutlinedButton({ model.keepDetail(q.key) }, enabled = enabled,
                                 modifier = Modifier.semantics { selected = q.key in model.decisions }) { Text("Detail behalten") }
                             FormOutlinedButton({ model.removeDetail(q.key) }, enabled = enabled) { Text("Detail entfernen") }

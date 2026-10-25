@@ -1,6 +1,7 @@
 package org.pag.prototype.product
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -231,7 +232,16 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         }
         if(!queued) {clearActiveCore();personsLoading=false;workspaceError=true}
     }
-    fun bindWorkspace(repository:WorkspaceRepository) {check(workspaceRepository==null);workspaceRepository=repository}
+    fun bindWorkspace(repository:WorkspaceRepository) {
+        check(workspaceRepository==null)
+        workspaceRepository=repository
+        // Product Runtime binds the repository AFTER ViewModel construction. Legacy ports
+        // keep their existing refresh path; productive models must never fall back to it.
+        tasks.bindDetailLoader(::projectDetail);tasks.bindMembershipLoader(::projectMembership)
+        operations.bindDetailLoader(::projectDetail);operations.bindMembershipLoader(::projectMembership)
+        material.bindDetailLoader(::projectDetail);material.bindMembershipLoader(::projectMembership)
+        expenses.bindDetailLoader(::projectDetail);expenses.bindMembershipLoader(::projectMembership)
+    }
     val documentsAvailable get() = documentRepository != null
     /** Composition-time optional port, preserving all existing test/demo constructors. */
     fun bindDocuments(repository: DocumentRepository, picker: DocumentPicker) {
@@ -302,7 +312,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     private var workspaceTicket:WorkspaceReadTicket?=null
     var detailLoading by mutableStateOf(false); private set
     var personDetailLoading by mutableStateOf(false); private set
-    private var workspaceValue by mutableStateOf<WorkspaceSnapshot?>(null)
+    private var workspaceValue by mutableStateOf<WorkspaceSnapshot?>(null,referentialEqualityPolicy())
     var workspace:WorkspaceSnapshot?
         get() {
             if(Thread.currentThread()!==ownerThread)return null
@@ -315,7 +325,78 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             }
             return if(accepted)allowed else null
         }
-        private set(value){workspaceValue=value}
+        private set(value){
+            if(value==null){workspaceValue=null;return}
+            if(value.uiRows==null && value.operations!=null){
+                val access=value.access
+                if(access!=null && !access.publish(value.actionId,value.status,value.generation){}){
+                    workspaceRefusal=WorkspaceFailure.NOT_ALLOWED;workspaceError=true;return
+                }
+                val previous=workspaceValue?.uiRows
+                val planning=try{WorkspaceUiRows.planningCost(value)}catch(_:ArithmeticException){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return}
+                if(access!=null && !access.reserve(planning)){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return}
+                val formats=UiDateFormats(java.time.ZoneId.systemDefault())
+                val units=try{WorkspaceUiRows.cost(value,previous,formats,selected)}catch(_:ArithmeticException){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return}
+                // Legacy/test ports have no capability; production read grants always do.
+                val rows=if(access==null)WorkspaceUiRows(value,rowPort,previous,selected,formats) else
+                    admitOriginalUi(access,value.actionId,value.status,value.generation,units){WorkspaceUiRows(value,rowPort,previous,selected,formats)}
+                if(rows==null){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return}
+                value.bindRows(rows)
+            }
+            workspaceValue=value
+        }
+    private val rowPort=object:RowActionPort {
+        override fun live(root:Any,access:WorkspaceAccess?):Boolean {
+            if(Thread.currentThread()!==ownerThread)return false
+            val held=workspaceValue?:return false
+            if(held.uiRows?.identity!==root || held.access!==access || snapshot.state!=SessionState.READY ||
+                snapshot.generation!=held.generation || selected?.id!=held.actionId || selected?.status!=held.status)return false
+            return access?.publish(held.actionId,held.status,held.generation){} ?: (workspaceRepository==null)
+        }
+        override fun reserve(root:Any,access:WorkspaceAccess?,units:ActiveWorkspaceBudget.Units):Boolean {
+            if(!live(root,access))return false
+            val admitted=access?.reserve(units)?:true
+            if(!admitted){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true}
+            return admitted && live(root,access)
+        }
+        override fun invoke(root:Any,access:WorkspaceAccess?,operation:RowOperation,id:String){
+            if(!live(root,access))return
+            interaction()
+            if(!live(root,access))return
+            when(operation){
+                RowOperation.TASK->workspaceValue?.tasks?.tasks?.find{it.id==id}?.let{tasks.open(it)}
+                RowOperation.PERSON_DETAIL->personDetail(id)
+                RowOperation.PERSON_FOCUS->operations.focus(id)
+                RowOperation.ROLE_EDIT,RowOperation.ROLE_DELETE->workspaceValue?.operations?.roles?.find{it.id==id}?.let{operations.editRole(it,delete=operation==RowOperation.ROLE_DELETE)}
+            }
+        }
+    }
+    internal fun taskRow(task:Task):TaskUiRow? {
+        val held=workspace?:return null
+        if(held.tasks?.tasks?.none{it===task}!=false)return null
+        return held.uiRows?.tasks?.get(task.id)
+    }
+    internal fun personRow(person:OperationalPerson):PersonUiRow? {
+        val held=workspace?:return null
+        if(held.operations?.persons?.none{it===person}!=false)return null
+        return held.uiRows?.persons?.get(person.person.id)
+    }
+    internal fun personRow(id:String):PersonUiRow?=workspace?.uiRows?.persons?.get(id)
+    internal fun roleRow(id:String):RoleUiRow?=workspace?.uiRows?.roles?.get(id)
+    internal fun uiRoot():Any?=workspace?.uiRows?.identity
+    internal fun liveUi(root:Any):Boolean=workspaceValue?.let{rowPort.live(root,it.access)}?:false
+    internal fun reserveListUi(root:Any):Boolean=workspaceValue?.let{rowPort.reserve(root,it.access,
+        ActiveWorkspaceBudget.Units(objects=64,strings=4,utf16Units=256,lists=4,listCapacity=32,references=256))}?:false
+    internal fun listTask(root:Any,index:Int,closed:Boolean):Task? {
+        if(!liveUi(root))return null
+        val board=workspaceValue?.tasks?:return null
+        val content=activeTaskContent(board,tasks.filter)
+        return (if(closed)content.closed else content.active).getOrNull(index)
+    }
+    internal fun listPerson(root:Any,index:Int):OperationalPerson? {
+        if(!liveUi(root))return null
+        return workspaceValue?.operations?.persons?.getOrNull(index)
+    }
     var workspaceError by mutableStateOf(false); private set
     var workspaceRefusal by mutableStateOf<WorkspaceFailure?>(null); private set
     var preparationArea by mutableStateOf(PreparationArea.OVERVIEW); private set
@@ -352,14 +433,13 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     internal fun formatPlannedRoles(person:OperationalPerson,board:OperationalBoard):String? {
         if(workspaceRepository!=null && workspaceValue?.operations!==board)return "Rollenanzeige derzeit nicht verfügbar."
-        var chars=0L
-        for(role in board.roles)if(role.id in person.plan.roleIds)chars+=role.name.length.toLong()+2
-        var value:String?=null
-        val failure=applyWorkspaceCopy(ActiveWorkspaceBudget.Units(objects=6,strings=3,utf16Units=chars*4+64,
-            arrays=1,arrayPayloadBytes=chars*2,references=8)){value=plannedRoles(person,board)}
-        if(failure!=null)return "Rollenanzeige derzeit nicht verfügbar."
-        return value
+        if(board.persons.none{it===person})return "Rollenanzeige derzeit nicht verfügbar."
+        val held=workspaceValue
+        val access=held?.access
+        if(access!=null && !access.publish(held.actionId,held.status,held.generation){})return "Rollenanzeige derzeit nicht verfügbar."
+        return board.presentation.plannedRoles(person.person.id)
     }
+
     fun acceptPersonDraft(value:String,assign:(String)->Unit) {
         interaction()
         if(!personsEditable || !personForm || personSaving || personCommitConfirmed)return
@@ -381,7 +461,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         WorkspaceFailure.NOT_ALLOWED->PersonRejection.NOT_ALLOWED
         WorkspaceFailure.OWNER_UNCONFIRMED->PersonRejection.OWNER_UNCONFIRMED
     }
-    private fun projectDetail(kind:WorkspaceDetailKind,id:String,done:(WorkspaceDetailResult)->Unit) {
+    private fun projectDetail(kind:WorkspaceDetailKind,id:String,done:(WorkspaceDetailResult)->Unit)=projectSingle(kind,id,false,done)
+    private fun projectMembership(kind:WorkspaceDetailKind,id:String,done:(WorkspaceDetailResult)->Unit)=projectSingle(kind,id,true,done)
+    private fun projectSingle(kind:WorkspaceDetailKind,id:String,membership:Boolean,done:(WorkspaceDetailResult)->Unit) {
         val original=workspaceValue?.access ?: return
         val action=selected?:return
         val generation=snapshot.generation;val serial=workspaceRequest
@@ -393,15 +475,19 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             held.protocolSummary,held.materialSummary,held.expenseSummary,held.memoryReportSummary,held.documentSummary,
             materialBoard=held.materialBoard,expenseBoard=held.expenseBoard,access=held.access,leadershipState=held.leadershipState)
         var delivered=false
-        workspaceRepository?.detail(original,WorkspaceDetailRequest(action.id,action.status,generation,kind,id,ticket,baseline,action)){result->
+        workspaceRepository?.detail(original,WorkspaceDetailRequest(action.id,action.status,generation,kind,id,ticket,baseline,action,membership)){result->
             if(delivered || serial!=workspaceRequest || selected?.id!=action.id || snapshot.state!=SessionState.READY || snapshot.generation!=generation)return@detail
             delivered=true
             when(result){
-                is WorkspaceDetailResult.Value->result.value.access.publish(action.id,action.status,generation){
+                is WorkspaceDetailResult.Value->{
                     val w=result.value.workspace
-                    if(w!=null)workspace=WorkspaceSnapshot(w.actionId,w.generation,w.operations.persons.map{it.person},w.operations,w.tasks,w.status,
-                        w.leadershipState,w.protocol,w.material,w.expenses,w.memory,w.documents,w.access,w.materialBoard,w.expenseBoard)
-                    done(result)
+                    if(w!=null){
+                        val updated=WorkspaceSnapshot(w.actionId,w.generation,w.operations.persons.map{it.person},w.operations,w.tasks,w.status,
+                            w.leadershipState,w.protocol,w.material,w.expenses,w.memory,w.documents,w.access,w.materialBoard,w.expenseBoard)
+                        workspace=updated
+                        if(workspaceValue!==updated){done(WorkspaceDetailResult.Rejected(workspaceRefusal?:WorkspaceFailure.NOT_ALLOWED));return@detail}
+                    }
+                    result.value.access.publish(action.id,action.status,generation){done(result)}
                 }
                 is WorkspaceDetailResult.Rejected->done(result)
             }
@@ -443,16 +529,17 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         workspaceRefreshing=true
         workspaceRepository?.supplement(access,WorkspaceReadRequest(held.actionId,held.status,held.generation,setOf(part),ticket=workspaceTicket)){result->
             if(serial!=workspaceRequest || workspaceValue!==held)return@supplement
-            access.publish(held.actionId,held.status,held.generation){
+            if(!access.publish(held.actionId,held.status,held.generation){})return@supplement
+            run {
                 workspaceRefreshing=false
                 when(result){
                     is WorkspaceSupplementResult.Rejected->{workspaceRefusal=result.reason;workspaceError=true}
                     is WorkspaceSupplementResult.Value->{
                         val v=result.value
-                        if(v.actionId!=held.actionId || v.generation!=held.generation){workspaceRefusal=WorkspaceFailure.STALE;workspaceError=true;return@publish}
+                        if(v.actionId!=held.actionId || v.generation!=held.generation){workspaceRefusal=WorkspaceFailure.STALE;workspaceError=true;return@run}
                         // This header is included in the supplement's PRE-admitted finite builder/envelope costs.
                         val updated=held.copy(materialBoard=v.material?:held.materialBoard,expenseBoard=v.expenses?:held.expenseBoard)
-                        workspace=updated;accept(updated)
+                        workspace=updated;if(workspaceValue===updated)accept(updated)
                     }
                 }
             }
@@ -612,11 +699,11 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     val memoryReports = MemoryReportModel(memoryReportRepository, { snapshot }, { selected }, ::interaction, ::loadWorkspace, ::showFeedback).also{it.bindCopyGate(::applyWorkspaceCopy)}
     val protocol = ProtocolModel(protocolRepository, { snapshot }, { selected }, ::interaction, ::loadWorkspace, ::showFeedback).also{it.bindCopyGate(::applyWorkspaceCopy)}
     val tasks = TaskModel(taskRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
-        { workspace?.tasks }, ::loadWorkspace, ::showFeedback).also{it.bindCopyGate(::applyWorkspaceCopy);it.bindWorkspaceScope{workspaceValue?.access};it.bindDetailLoader(::projectDetail)}
+        { workspace?.tasks }, ::loadWorkspace, ::showFeedback).also{it.bindCopyGate(::applyWorkspaceCopy);it.bindWorkspaceScope{workspaceValue?.access};it.bindUiRows(::taskRow)}
     val operations = OperationsModel(operationsRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive,
-        { workspace?.operations }, ::loadWorkspace, ::showFeedback, ::returnedFromOperationalEdit).also{it.bindCopyGate(::applyWorkspaceCopy);it.bindDetailLoader(::projectDetail)}
-    val material = MaterialModel(materialRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive, ::loadWorkspace, ::showFeedback).also{it.bindCopyGate(::applyWorkspaceCopy);it.bindDetailLoader(::projectDetail)}
-    val expenses = ExpenseModel(expenseRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive, ::loadWorkspace, ::showFeedback).also{it.bindCopyGate(::applyWorkspaceCopy);it.bindDetailLoader(::projectDetail)}
+        { workspace?.operations }, ::loadWorkspace, ::showFeedback, ::returnedFromOperationalEdit).also{it.bindCopyGate(::applyWorkspaceCopy)}
+    val material = MaterialModel(materialRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive, ::loadWorkspace, ::showFeedback).also{it.bindCopyGate(::applyWorkspaceCopy)}
+    val expenses = ExpenseModel(expenseRepository, { snapshot }, { selected }, ::interaction, ::clearSensitive, ::loadWorkspace, ::showFeedback).also{it.bindCopyGate(::applyWorkspaceCopy)}
     private fun returnedFromOperationalEdit(personId: String?) {
         if (personId != null && selectedPerson?.id == personId && personsVisible) refreshSensitive()
     }
@@ -715,12 +802,17 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         fun publish() {
             if ((workspaceRepository!=null && published) || !current() || !peopleDone || !tasksDone || !metadataDone || !protocolDone || !materialDone || !expensesDone || !memoryDone || !documentsDone) return
             androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
-                if(needMemoryHeaders && !memoryReports.acceptWorkspaceHeaders(action.id,generation,loadedMemoryHeaders!!)){failed();return@withMutableSnapshot}
-                if(needTimeline && !protocol.acceptWorkspaceTimeline(action.id,generation,loadedTimeline!!)){failed();return@withMutableSnapshot}
-                if(needMaterialBoard && !material.acceptWorkspaceBoard(action.id,generation,loadedMaterial!!)){failed();return@withMutableSnapshot}
-                if(needExpenseBoard && !expenses.acceptWorkspaceBoard(action.id,generation,loadedExpenses!!)){failed();return@withMutableSnapshot}
+                val candidate=WorkspaceSnapshot(action.id,generation,people.orEmpty(),ops,taskBoard,action.status,metadata,protocolSummary,materialSummary,expenseSummary,memorySummary,documentSummary,workspaceAccess,loadedMaterial,loadedExpenses)
+                workspace=candidate
+                if(workspaceValue!==candidate){failed();return@withMutableSnapshot}
+                // Dependent model presentations consume the SAME just-bound original grant.
+                // The mutable Snapshot is committed only after all acceptances succeed.
+                fun rejected(){workspace=previous;failed()}
+                if(needMemoryHeaders && !memoryReports.acceptWorkspaceHeaders(action.id,generation,loadedMemoryHeaders!!)){rejected();return@withMutableSnapshot}
+                if(needTimeline && !protocol.acceptWorkspaceTimeline(action.id,generation,loadedTimeline!!)){rejected();return@withMutableSnapshot}
+                if(needMaterialBoard && !material.acceptWorkspaceBoard(action.id,generation,loadedMaterial!!)){rejected();return@withMutableSnapshot}
+                if(needExpenseBoard && !expenses.acceptWorkspaceBoard(action.id,generation,loadedExpenses!!)){rejected();return@withMutableSnapshot}
                 if(expectedAction!=null)detailLoading=false
-                workspace = WorkspaceSnapshot(action.id, generation, people.orEmpty(), ops, taskBoard, action.status, metadata, protocolSummary, materialSummary, expenseSummary, memorySummary, documentSummary,workspaceAccess,loadedMaterial,loadedExpenses)
                 personsLoading = false; workspaceRefreshing = false
                 published=workspaceRepository!=null
                 tasks.reconcileSelection()
@@ -990,7 +1082,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                         if(workspaceRepository!=null && workspaceValue?.access!=null){
                             personCommitConfirmed=true;personSaving=true
                             val id=result.value.id
-                            projectDetail(WorkspaceDetailKind.PERSON,id){refreshed->
+                            projectSingle(WorkspaceDetailKind.PERSON,id,editingPerson==null){refreshed->
                                 personSaving=false
                                 when(refreshed){
                                     is WorkspaceDetailResult.Value->{selectedPerson=refreshed.value.person;editingPerson=null;personForm=false;personError=null;personCommitConfirmed=false;showFeedback("Person gespeichert")}

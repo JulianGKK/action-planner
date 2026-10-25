@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P110,material-create,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=3568916, transition=16777216, localRetained=3568916, localTransition=6286136, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,material-create,FAILURE,java.lang.IllegalStateException: Check failed.
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:99)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL material-create
+INSTRUMENTATION_CODE: 0

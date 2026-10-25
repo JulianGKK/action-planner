@@ -1,0 +1,11 @@
+{
+  "base": "10db674002cbd196f8357c0ba0ccb4ab1d067663",
+  "source_sha256": "d56e3ca041d8d2a620c137bda33122f5671f2fbd223a4c93e1040227dc66d0c1",
+  "generations": 32768,
+  "references_per_list": 40,
+  "distinct_lists_before": 32768,
+  "additional_minimum_bytes": 14680064,
+  "consumer_reservations": 0,
+  "baseline_evidence": "../p11-p109/host-results",
+  "after_evidence": "host-results/app-TEST-org.pag.prototype.product.P109RemainingConsumerContractTest.xml"
+}

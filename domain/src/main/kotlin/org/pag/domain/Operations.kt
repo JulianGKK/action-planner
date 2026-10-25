@@ -21,11 +21,10 @@ data class OperationalPerson(val person: Person, val plan: PersonRolePlan, val s
 data class OperationalBoard(val actionId: String, val status: ActionStatus, val roles: List<Role>, val persons: List<OperationalPerson>) {
     fun count(status: OperationalStatus) = persons.count { it.state?.status == status }
     fun roleCount(roleId: String?) = persons.count { it.state?.status == OperationalStatus.ON_SITE && it.state.currentRoleId == roleId }
-    val placeSuggestions get() = persons.mapNotNull { it.state?.currentPlaceLabel }.distinct().sorted()
-    fun preferredRoles(personId: String): List<Role> {
-        val ids = persons.singleOrNull { it.person.id == personId }?.plan?.roleIds.orEmpty()
-        return roles.filter { it.id in ids } + roles.filter { it.id !in ids }
-    }
+    val presentation=OperationalPresentation(roles,persons)
+    val placeSuggestions get()=presentation.places
+    fun preferredRoles(personId:String):List<Role> = presentation.preferredRoles(personId)
+
 }
 object OperationalRules {
     val templates = listOf("Blockierende", "Support", "Hummel", "Gesa-Support", "Presse", "Aktionsleitung")

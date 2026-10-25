@@ -1,0 +1,21 @@
+consumer person-create PASS
+consumer task-create FAIL
+INSTRUMENTATION_STATUS: stream=P110,task-create,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=3762772, transition=16777216, localRetained=3762772, localTransition=6479992, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,task-create,FAILURE,java.lang.IllegalStateException: P110 timeout task membership
+	at org.pag.prototype.P110ConsumerProbe.await(P110ConsumerProbe.kt:20)
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:75)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL task-create
+INSTRUMENTATION_CODE: 0
+
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 28, in <module>
+    assert 'P110 PASS '+scenario in output,'Consumer device assertions failed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Consumer device assertions failed
+

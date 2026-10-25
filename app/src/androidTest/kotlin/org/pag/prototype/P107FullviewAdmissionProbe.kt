@@ -43,6 +43,31 @@ class P107FullviewAdmissionProbe:Instrumentation(){
                 .putExtra("p83Fixture",if(scenario=="large")"p86-stress32" else "p86-small").putExtra("p107Budget",scenario.takeIf{it.startsWith("r-") || it.startsWith("t-")}).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));activity=a
             h=field(a,"p77Harness") as P77ProductRuntimeHarness;model=field(a,"model") as ProductViewModel
             await("focus"){main{a.hasWindowFocus()}};main{model.unlock()};await("READY"){main{model.snapshot.state==SessionState.READY && model.actions.isNotEmpty()}}
+            if(scenario in setOf("r-exact","r-over","t-exact","t-over")){
+                // Data admission and a later UI representation are DISTINCT producers. An
+                // exact-full data ledger has no headroom for the new §110 UI rows. Exercise
+                // the real Room/SQLCipher admission directly; never claim a full UI PASS.
+                val request=WorkspaceReadRequest("p11-active",ActionStatus.ACTIVE,main{model.snapshot.generation},setOf(WorkspacePart.TASKS),ticket=WorkspaceReadTicket())
+                val result=call<WorkspaceResult>{h.runtime.workspace.read(request,it)}
+                if(scenario.endsWith("over")){
+                    check(result==WorkspaceResult.Rejected(WorkspaceFailure.BUDGET_REFUSED))
+                    check(h.observations.workspaceMaterializations.get()==0)
+                    emit("DATA_BOUNDARY,+1_byte=REFUSED,before_DTO=true,full_UI_claim=false,record=${h.outstandingState()}")
+                }else{
+                    check(result is WorkspaceResult.Value)
+                    check(result.value.operations.persons.size==20 && result.value.tasks!!.tasks.size==40)
+                    check(h.observations.workspaceMaterializations.get()==1)
+                    val state=h.outstandingState()
+                    if(scenario=="r-exact")check(state.contains("localRetained=${ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES},"))
+                    else check(state.contains("localTransition=${ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES},"))
+                    var constructed=0
+                    main{if(result.value.access!!.reserve(ActiveWorkspaceBudget.Units(objects=1)))constructed++}
+                    check(constructed==0 && main{model.workspace==null})
+                    emit("DATA_BOUNDARY,exact=ADMITTED,held_TEST_alias=true,additional_UI_producer=REFUSED_before_construction,full_UI_claim=false,record=$state")
+                }
+                main{model.lock();a.finish()};await("cleanup"){h.cleanupConfirmed.get()};activity=null
+                finish(Activity.RESULT_OK,Bundle().apply{putString("result","P107 PASS $scenario")});return
+            }
             if(scenario=="exposed"){
                 main{model.bindActiveCore(h.runtime.activeCore){a.runOnUiThread(it)};model.detail("p11-active")}
                 await("visible core"){visible("20 insgesamt")}

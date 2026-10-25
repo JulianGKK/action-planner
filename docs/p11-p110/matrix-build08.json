@@ -1,0 +1,14 @@
+[
+  {
+    "mode": "consumer",
+    "case": "person-create",
+    "passed": true,
+    "log": "run-person-create-build08.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "task-create",
+    "passed": false,
+    "log": "run-task-create-build08.log"
+  }
+]

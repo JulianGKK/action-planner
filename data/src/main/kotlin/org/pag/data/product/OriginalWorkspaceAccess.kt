@@ -10,8 +10,11 @@ internal class OriginalWorkspaceAccess(
     internal val source:StorageAccess,internal val original:StorageContext,
     private val ticket:WorkspaceMutationInvalidation.ActiveReadTicket,
     private val mutations:WorkspaceMutationInvalidation,
-    internal val request:WorkspaceReadRequest,internal val thread:Thread
+    request:WorkspaceReadRequest,internal val thread:Thread
 ):WorkspaceAccess {
+    // The capability needs identity/cancellation metadata, never the opener's Action payload.
+    // SQL still validates the caller's expectedAction in the repository transaction.
+    internal val request=WorkspaceReadRequest(request.actionId,request.status,request.generation,request.parts,ticket=request.ticket)
     internal val status get()=request.status
     internal val mutationEpoch get()=ticket.mutationEpoch
     private var publishing=0
@@ -56,6 +59,6 @@ internal class OriginalWorkspaceAccess(
         // Disjoint, once per original preflight: capability + bounded synchronous control
         // scratch. These functions cannot queue/retain the fresh context or caller closure.
         // This is NOT an allowance for data copies, formatting or form/Compose callbacks.
-        val cost=ActiveWorkspaceBudget.Units(objects=20,references=64)
+        val cost=ActiveWorkspaceBudget.Units(objects=21,references=72)
     }
 }

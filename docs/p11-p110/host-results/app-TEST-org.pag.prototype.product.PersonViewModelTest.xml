@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.PersonViewModelTest" tests="19" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:00.045Z" hostname="iuzjhtgvfc" time="5.035">
+  <properties/>
+  <testcase name="lockClearsAllPersonState" classname="org.pag.prototype.product.PersonViewModelTest" time="0.002"/>
+  <testcase name="cancelNewOrEditedPseudonymDoesNotWrite" classname="org.pag.prototype.product.PersonViewModelTest" time="0.001"/>
+  <testcase name="blankDoesNotReachRepository" classname="org.pag.prototype.product.PersonViewModelTest" time="0.0"/>
+  <testcase name="failedOrRevokedWriteNeverPublishesSuccessBanner" classname="org.pag.prototype.product.PersonViewModelTest" time="0.001"/>
+  <testcase name="delayedEditorReloadCannotCrossLockOrActionChange" classname="org.pag.prototype.product.PersonViewModelTest" time="0.003"/>
+  <testcase name="staleSaveUsesEditorOpenSnapshotAndOnlyExplicitReloadReplacesIt" classname="org.pag.prototype.product.PersonViewModelTest" time="0.0"/>
+  <testcase name="bannerAppearsOnlyAfterConfirmedSuccessAndDismissDoesNotInteract" classname="org.pag.prototype.product.PersonViewModelTest" time="0.001"/>
+  <testcase name="failedExplicitReloadKeepsOriginalEditorSnapshot" classname="org.pag.prototype.product.PersonViewModelTest" time="0.0"/>
+  <testcase name="synchronousRevokeDuringPersonRefreshCannotRepublishBanner" classname="org.pag.prototype.product.PersonViewModelTest" time="0.0"/>
+  <testcase name="personRefreshRetainsValidListUntilCompleteNewResult" classname="org.pag.prototype.product.PersonViewModelTest" time="0.001"/>
+  <testcase name="lockClearsSuccessBanner" classname="org.pag.prototype.product.PersonViewModelTest" time="0.0"/>
+  <testcase name="activeAndCompletedAreReadOnly" classname="org.pag.prototype.product.PersonViewModelTest" time="0.001"/>
+  <testcase name="preparationListsPersonsAndPermitsAdd" classname="org.pag.prototype.product.PersonViewModelTest" time="0.0"/>
+  <testcase name="oldNavigationResultCannotPopulateAnotherAction" classname="org.pag.prototype.product.PersonViewModelTest" time="0.0"/>
+  <testcase name="enteringAnotherPersonFormDoesNotDiscardValidWorkspaceRefresh" classname="org.pag.prototype.product.PersonViewModelTest" time="0.0"/>
+  <testcase name="staleSaveCannotLeaveAnEarlierSuccessBannerVisible" classname="org.pag.prototype.product.PersonViewModelTest" time="0.001"/>
+  <testcase name="draftHasNoPersonPath" classname="org.pag.prototype.product.PersonViewModelTest" time="0.0"/>
+  <testcase name="explicitReloadConsumesCallbackOnceAndIgnoresForeignIdentity" classname="org.pag.prototype.product.PersonViewModelTest" time="0.0"/>
+  <testcase name="bannerTimerExpiresWithoutUserInteraction" classname="org.pag.prototype.product.PersonViewModelTest" time="5.024"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,174 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :verifyArchitecture
+> Task :app:preBuild
+> Task :app:preDebugBuild
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin UP-TO-DATE
+> Task :data:compileDebugKotlin UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :security:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :security:extractDeepLinksDebug UP-TO-DATE
+> Task :security:processDebugManifest UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :security:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:preDebugUnitTestBuild
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+
+> Task :app:compileDebugKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/MainActivity.kt:66:15 'fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Unit' is deprecated. This method has been deprecated in favor of using the Activity Result API
+      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt
+      contracts for common intents available in
+      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for
+      testing, and allow receiving results in separate, testable classes independent from your
+      activity. Use
+      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}
+      with the appropriate {@link ActivityResultContract} and handling the result in the
+      {@link ActivityResultCallback#onActivityResult(Object) callback}.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/DocumentImageDecoder.kt:77:36 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Bitmap'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:41:33 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Bitmap'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:42:27 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Bitmap'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:44:47 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Bitmap'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:47:27 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Bitmap'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:47:71 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:49:42 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:50:69 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PdfRenderService.kt:50:99 Unnecessary non-null assertion (!!) on a non-null receiver of type 'ByteArray'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/PreparationWorkspace.kt:156:42 Condition is always 'true'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:608:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:624:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:640:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:656:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:830:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:833:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:841:120 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:processDebugJavaRes
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+
+> Task :app:compileDebugUnitTestKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:272:176 This class is not recommended for use in Kotlin. Use 'kotlin.Function0' instead.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:437:55 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:520:41 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:520:95 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:558:42 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:561:47 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:575:60 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:576:48 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:576:101 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:578:59 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:578:111 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:582:67 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt:591:84 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Any'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/ActiveWorkspaceTest.kt:94:31 The corresponding parameter in the supertype 'WorkspaceRepository' is named 'request'. This may cause problems when calling this function with named arguments.
+
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :app:testDebugUnitTest FAILED
+
+WorkspaceBatchTest > selectedMemoryListIsOneBatchWithoutTaskBoardOrSecondRead FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:145
+
+WorkspaceBatchTest > preparationMaterialAndCostsAreExplicitSingleBatchesWithoutProtocolPrefetch FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:254
+
+WorkspaceBatchTest > p108OriginalNavigationKeepsSameGraphAndOriginalReadTicket FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:276
+
+WorkspaceBatchTest > navigationAndAnotherActionFenceOldBatch FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:111
+
+WorkspaceBatchTest > selectedMaterialAndExpenseEditorRefreshesDoNotReplaceDraftWithBatchPayload FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:245
+
+WorkspaceBatchTest > preparationStillWaitsForIndependentProtectionMetadata FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:130
+
+WorkspaceBatchTest > navigationKeySurvivesLoadCompletionAndContainsNoActionIdentifier FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:167
+
+WorkspaceBatchTest > staleInitialActionFallsBackWithoutAnotherInteractionOrOldPublication FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:190
+
+WorkspaceBatchTest > rapidNavigationDiscardsPendingBatchAndReturnRequestsFreshSnapshot FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:172
+
+WorkspaceBatchTest > refreshKeepsSameAuthorizedSnapshotUntilWholeBatchAndDropsOlderRequest FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:124
+
+WorkspaceBatchTest > explicitAreaPayloadsShareOneBatchWithoutIndependentReadsOrPrefetch FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:225
+
+WorkspaceBatchTest > initialActionOpenUsesFreshBoundWorkspaceWithoutSeparateDetailRead FAILED
+    java.lang.AssertionError at WorkspaceBatchTest.kt:181
+
+WorkspaceBatchTest > oneExplicitBatchReplacesLegacyReadsAndPublishesAtomically FAILED
+    java.lang.NullPointerException at WorkspaceBatchTest.kt:102
+
+110 tests completed, 13 failed
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 20s
+60 actionable tasks: 7 executed, 53 up-to-date

@@ -12,19 +12,11 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-internal data class ActiveTaskContent(val active: List<Task>, val closed: List<Task>, val summary: List<String>)
+internal typealias ActiveTaskContent = TaskListPresentation
 internal data class ActiveTaskCard(val title: String, val status: String, val assignee: String, val affected: String?, val due: String?)
 
 /** Keep the domain order, including tie-breakers. Filtering never becomes a new sort. */
-internal fun activeTaskContent(board: TaskBoard, personId: String?): ActiveTaskContent {
-    val active = board.active.filter { personId == null || it.affectedPersonId == personId }
-    val closed = board.closed.filter { personId == null || it.affectedPersonId == personId }
-    val summary = if (active.isEmpty()) listOf("Keine offenen Aufgaben") else buildList {
-        add("${active.count { it.status == TaskStatus.OPEN }} offen · ${active.count { it.status == TaskStatus.IN_PROGRESS }} in Arbeit")
-        active.count { it.priority == TaskPriority.HIGH }.takeIf { it > 0 }?.let { add("$it hohe Priorität") }
-    }
-    return ActiveTaskContent(active, closed, summary)
-}
+internal fun activeTaskContent(board:TaskBoard,personId:String?):ActiveTaskContent = board.presentation.forPerson(personId)
 
 internal fun activeTaskCard(task: Task, people: OperationalBoard, now: Long, zone: ZoneId): ActiveTaskCard {
     val assignee = task.assigneePersonId?.let { id -> people.persons.find { it.person.id == id }?.person?.pseudonym }
@@ -38,7 +30,10 @@ internal fun activeTaskCard(task: Task, people: OperationalBoard, now: Long, zon
     return ActiveTaskCard(task.title, "${priorityLabel(task.priority)} · ${taskStatusLabel(task.status)}", assignee, affected, due)
 }
 
-internal fun activeTaskActions(status: TaskStatus): List<TaskStatus> = TaskStatus.entries.filter { TaskRules.event(status, it) != null }
+private val taskActions = TaskStatus.entries.associateWith { status ->
+    java.util.Collections.unmodifiableList(TaskStatus.entries.filter { TaskRules.event(status,it)!=null })
+} // Code-only finite enum table; no action data or source authority.
+internal fun activeTaskActions(status:TaskStatus):List<TaskStatus> = taskActions.getValue(status)
 
 @Composable internal fun ActiveTaskSection(model: TaskModel, people: OperationalBoard, board: TaskBoard) {
     model.error?.let { Text(taskFailureMessage(it)) }
@@ -55,13 +50,14 @@ internal fun activeTaskActions(status: TaskStatus): List<TaskStatus> = TaskStatu
     }
     val selected = model.selected
     if (selected != null) {
-        val card = activeTaskCard(selected, people, now, zone)
+        val row=model.uiRow(selected)?:return
+        val card=row.card(now)
         PreparationHeading(card.title)
-        Text("Revision: ${selected.editRevision}")
+        Text(row.revision)
         Text(card.status)
-        Text("Zuständig: ${card.assignee}")
-        card.affected?.let { Text("Betrifft: $it") }
-        card.due?.let { Text("Fällig: $it") }
+        Text(row.assignee)
+        row.affected?.let { Text(it) }
+        row.due(now)?.let { Text(it) }
         if (model.writable) {
             activeTaskActions(selected.status).forEach { status ->
                 FormButton({ model.transition(status) }, enabled = !model.busy) {
@@ -88,15 +84,18 @@ internal fun activeTaskActions(status: TaskStatus): List<TaskStatus> = TaskStatu
 }
 
 @Composable internal fun ActiveTaskListCard(task: Task, people: OperationalBoard, now: Long, zone: ZoneId, model: TaskModel) {
-    val card = activeTaskCard(task, people, now, zone)
-    FormOutlinedButton({ model.open(task) }, enabled = !model.busy,
-        modifier = Modifier.fillMaxWidth().semantics { onClick(label = "Aufgabe ${card.title} öffnen", action = null) }) {
+    val row=model.uiRow(task)?:return
+    LocalProductObservation.current?.let{observer->androidx.compose.runtime.SideEffect{observer("TASK_ROW")}}
+    val card=row.card(now)
+    val semanticsLabel=row.semantics
+    FormOutlinedButton(row.click, enabled = !model.busy,
+        modifier = Modifier.fillMaxWidth().semantics { onClick(label = semanticsLabel, action = null) }) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(card.title, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleLarge)
             Text(card.status)
             Text(card.assignee)
-            card.affected?.let { Text("Betrifft: $it") }
-            card.due?.let { Text("Fällig: $it") }
+            row.affected?.let { Text(it) }
+            row.due(now)?.let { Text(it) }
         }
     }
 }

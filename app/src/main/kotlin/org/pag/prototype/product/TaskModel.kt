@@ -9,6 +9,11 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     private val suppliedBoard: (() -> TaskBoard?)? = null,
     private val refreshWorkspace: (() -> Unit)? = null,
     private val feedback: (String) -> Unit = {}) {
+    private var uiRows:((Task)->TaskUiRow?)?=null
+    internal fun bindUiRows(source:(Task)->TaskUiRow?){check(uiRows==null);uiRows=source}
+    internal fun uiRow(task:Task):TaskUiRow?=uiRows?.invoke(task)
+    private var membershipLoader:WorkspaceDetailLoader?=null
+    internal fun bindMembershipLoader(loader:WorkspaceDetailLoader){check(membershipLoader==null);membershipLoader=loader}
     private var detailLoader:WorkspaceDetailLoader?=null
     internal fun bindDetailLoader(loader:WorkspaceDetailLoader){check(detailLoader==null);detailLoader=loader}
     var commitConfirmed by mutableStateOf(false);private set
@@ -33,11 +38,20 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     private var ownBoard by mutableStateOf<TaskBoard?>(null)
     val board: TaskBoard? get() = if (suppliedBoard != null) suppliedBoard.invoke() else ownBoard
     var history by mutableStateOf<CompactTaskEvents?>(null);private set
+    internal var historyUi by mutableStateOf<TaskHistoryUi?>(null);private set
+    var historyPageText by mutableStateOf("");private set
+    val historyPageChoice get()=historyPageText.toLongOrNull()?.takeIf{it in 1..(historyUi?.lastPage?:0)}
+    fun changeHistoryPageText(value:String)=guardedInteraction{_,_->
+        if(history!=null && !historyBusy && value.length<=19 && value.all{it in '0'..'9'})
+            copyData(ActiveWorkspaceBudget.Units(strings=1,utf16Units=value.length.toLong(),references=1)){historyPageText=value}
+    }
+    fun openHistoryPage(){historyPageChoice?.let(::loadHistoryPage)}
+    fun lastHistoryPage(){historyUi?.lastPage?.let(::loadHistoryPage)}
     var historyBusy by mutableStateOf(false);private set
     var historyError by mutableStateOf<BoundedActiveStatus?>(null);private set
     var historyOffset by mutableStateOf(0L);private set
     private var historyRequest=0L
-    private fun clearHistory(){historyRequest++;history=null;historyBusy=false;historyError=null;historyOffset=0}
+    private fun clearHistory(){historyRequest++;history=null;historyUi=null;historyPageText="";historyBusy=false;historyError=null;historyOffset=0}
     /** Replace one page; never accumulate a full chronicle in the model or Compose. */
     fun loadHistory(restart:Boolean=false)=requestHistory(restart,null)
     fun loadHistoryPage(page:Long)=requestHistory(true,page)
@@ -64,7 +78,10 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
                                 val page=result.payload as? CompactTaskEvents
                                 if(page==null || page.total<offset+page.events.size || page.taskId!=task.id || page.state.binding.actionId!=task.actionId || page.state.binding.generation!=generation || page.events.size>32 || page.events.any{it.taskId!=task.id || it.actionId!=task.actionId})
                                     historyError=BoundedActiveStatus.INVALID_DATA
-                                else {history=page;historyOffset=offset}
+                                else if(copyData(TaskHistoryUi.cost(page.events.size)){
+                                    val ui=TaskHistoryUi(page,offset)
+                                    history=page;historyUi=ui;historyPageText=ui.currentPage;historyOffset=offset
+                                })Unit else historyError=BoundedActiveStatus.BUDGET_REFUSED
                             }
                         }
                     }
@@ -161,7 +178,7 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
         val draft = input
         var createdId: String? = null
         committedId=old?.id
-        write(message = if (old == null) "Aufgabe angelegt" else "Aufgabe gespeichert",
+        write(membership=old==null,message = if (old == null) "Aufgabe angelegt" else "Aufgabe gespeichert",
             createdFocus = { if (old == null && action()?.status == ActionStatus.ACTIVE) createdId else null }) { done ->
             if (old == null) repository?.create(a.id, draft) { result ->
                 createdId = (result as? OperationsResult.Value)?.value?.id
@@ -171,7 +188,7 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
         }
     }
     fun transition(status:TaskStatus){val a=action()?:return;val t=(if(form)editorExpected else selected)?:return;if(!writable || busy)return;committedId=t.id;write(message=if(status==TaskStatus.OPEN)"Aufgabe wieder geöffnet" else null){done->repository?.transition(a.id,t,status){done(unit(it))}}}
-    fun delete(){val a=action()?:return;val t=(if(form)editorExpected else selected)?:return;if(!deletable || busy)return;committedId=t.id;write{done->repository?.delete(a.id,t,done)}}
+    fun delete(){val a=action()?:return;val t=(if(form)editorExpected else selected)?:return;if(!deletable || busy)return;committedId=t.id;write(membership=true){done->repository?.delete(a.id,t,done)}}
     /** Explicit discard-and-reload only. A normal board/workspace refresh never calls this. */
     fun reloadEditor()=guardedInteraction { a,_ ->
         val old=editorExpected
@@ -215,7 +232,7 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
         }
     }
     private fun unit(r:OperationsResult<Task>):OperationsResult<Unit> = when(r){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->r}
-    private fun write(message:String?=null,createdFocus:()->String?={null},work:((OperationsResult<Unit>)->Unit)->Unit)=guardedInteraction { _,_ ->
+    private fun write(membership:Boolean=false,message:String?=null,createdFocus:()->String?={null},work:((OperationsResult<Unit>)->Unit)->Unit)=guardedInteraction { _,_ ->
         if(repository!=null && writable && !busy && !commitConfirmed){
             val revision=formRevision;val generation=session().generation;val actionId=action()?.id
             clearHistory();busy=true;error=null;var delivered=false
@@ -224,7 +241,7 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
                 delivered=true
                 busy=false;when(r){is OperationsResult.Value->{
                     createdSelectionId = createdFocus()
-                    val loader=detailLoader
+                    val loader=if(membership)membershipLoader else detailLoader
                     val id=committedId ?: selected?.id
                     if(loader!=null && id!=null){
                         commitConfirmed=true;busy=true

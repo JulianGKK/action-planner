@@ -7,6 +7,8 @@ import org.pag.domain.*
 class ExpenseModel(private val repository: ExpenseRepository?, private val session: () -> SessionSnapshot,
     private val action: () -> Action?, private val interaction: () -> Unit, private val leaveSensitive: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit) {
+    private var membershipLoader:WorkspaceDetailLoader?=null
+    internal fun bindMembershipLoader(loader:WorkspaceDetailLoader){check(membershipLoader==null);membershipLoader=loader}
     private var detailLoader:WorkspaceDetailLoader?=null
     internal fun bindDetailLoader(loader:WorkspaceDetailLoader){check(detailLoader==null);detailLoader=loader}
     var commitConfirmed by mutableStateOf(false);private set
@@ -180,9 +182,9 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
             when (result) {
                 is OperationsResult.Rejected -> error = result.reason
                 is OperationsResult.Value -> {
-                    val loader=detailLoader
+                    val loader=if(confirmingDelete || expected==null)membershipLoader else detailLoader
                     val id=committedId ?: expected?.id
-                    if(loader!=null && id!=null && !confirmingDelete){
+                    if(loader!=null && id!=null){
                         commitConfirmed=true;busy=true
                         loader(WorkspaceDetailKind.EXPENSE,id){refreshed->
                             if(!current())return@loader

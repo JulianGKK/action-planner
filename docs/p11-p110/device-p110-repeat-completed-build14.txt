@@ -1,0 +1,12 @@
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=1397380, transition=16777216, localRetained=1397380, localTransition=3062392, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed,FAILURE,java.util.NoSuchElementException: List is empty.
+	at kotlin.collections.CollectionsKt___CollectionsKt.first(_Collections.kt:222)
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:157)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL repeat-completed
+INSTRUMENTATION_CODE: 0

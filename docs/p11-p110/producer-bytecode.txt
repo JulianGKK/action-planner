@@ -1,0 +1,41 @@
+Compiled from "WorkspaceUiRows.kt"
+public final class org.pag.prototype.product.OriginalRowAction implements kotlin.jvm.functions.Function0<kotlin.Unit> {
+  private final java.lang.Object root;
+  private final org.pag.domain.WorkspaceAccess access;
+  private final org.pag.prototype.product.RowActionPort port;
+  private final org.pag.prototype.product.RowOperation operation;
+  private final java.lang.String id;
+  public static final int $stable;
+  public org.pag.prototype.product.OriginalRowAction(java.lang.Object, org.pag.domain.WorkspaceAccess, org.pag.prototype.product.RowActionPort, org.pag.prototype.product.RowOperation, java.lang.String);
+  public final boolean live();
+  public final boolean reserve(org.pag.domain.ActiveWorkspaceBudget$Units);
+  public void invoke();
+  public java.lang.Object invoke();
+  static {};
+}
+
+Compiled from "ProductInputs.kt"
+final class org.pag.prototype.product.FinishedRowClick implements kotlin.jvm.functions.Function0<kotlin.Unit> {
+  private final org.pag.prototype.product.FormInput input;
+  private final org.pag.prototype.product.OriginalRowAction action;
+  public org.pag.prototype.product.FinishedRowClick(org.pag.prototype.product.FormInput, org.pag.prototype.product.OriginalRowAction);
+  public void invoke();
+  public java.lang.Object invoke();
+}
+
+  public static final void ProductEntityList(org.pag.prototype.product.ProductViewModel, org.pag.prototype.product.ProductScrollPositions, androidx.compose.runtime.Composer, int);
+  private static final kotlin.Unit ProductEntityList$lambda$11$0$0(org.pag.prototype.product.ProductViewModel, java.lang.Object, boolean, androidx.compose.foundation.lazy.LazyItemScope, androidx.compose.runtime.Composer, int);
+  private static final kotlin.Unit ProductEntityList$lambda$11$0$1(org.pag.prototype.product.ProductViewModel, java.lang.Object, boolean, boolean, androidx.compose.foundation.lazy.LazyItemScope, androidx.compose.runtime.Composer, int);
+  private static final java.lang.Object ProductEntityList$lambda$11$0$2(boolean, org.pag.prototype.product.ProductViewModel, java.lang.Object, int);
+  private static final java.lang.Object ProductEntityList$lambda$11$0$3(boolean, int);
+  private static final kotlin.Unit ProductEntityList$lambda$11$0$4(boolean, org.pag.prototype.product.ProductViewModel, java.lang.Object, boolean, long, java.time.ZoneId, androidx.compose.foundation.lazy.LazyItemScope, int, androidx.compose.runtime.Composer, int);
+  private static final kotlin.Unit ProductEntityList$lambda$11$0$5(org.pag.prototype.product.ProductViewModel, java.lang.Object, boolean, androidx.compose.foundation.lazy.LazyItemScope, androidx.compose.runtime.Composer, int);
+  private static final java.lang.Object ProductEntityList$lambda$11$0$6(org.pag.prototype.product.ProductViewModel, java.lang.Object, int);
+  private static final java.lang.Object ProductEntityList$lambda$11$0$7(int);
+  private static final kotlin.Unit ProductEntityList$lambda$11$0$8(org.pag.prototype.product.ProductViewModel, java.lang.Object, boolean, long, java.time.ZoneId, androidx.compose.foundation.lazy.LazyItemScope, int, androidx.compose.runtime.Composer, int);
+  private static final kotlin.Unit ProductEntityList$lambda$11$0$9$0$0(org.pag.prototype.product.ProductViewModel, java.lang.Object, androidx.compose.runtime.MutableState);
+  private static final kotlin.Unit ProductEntityList$lambda$11$0$9(org.pag.prototype.product.ProductViewModel, java.lang.Object, androidx.compose.runtime.MutableState, androidx.compose.foundation.lazy.LazyItemScope, androidx.compose.runtime.Composer, int);
+  private static final kotlin.Unit ProductEntityList$lambda$11$0$10(org.pag.prototype.product.ProductViewModel, java.lang.Object, androidx.compose.foundation.lazy.LazyItemScope, androidx.compose.runtime.Composer, int);
+  private static final java.lang.Object ProductEntityList$lambda$11$0$11(org.pag.domain.TaskTemplate);
+  private static final java.lang.Object ProductEntityList$lambda$11$0$12(org.pag.domain.TaskTemplate);
+  private static final kotlin.Unit ProductEntityList$lambda$11$0(org.pag.prototype.product.ProductViewModel, java.lang.Object, int, boolean, int, boolean, boolean, long, java.time.ZoneId, androidx.compose.runtime.MutableState, androidx.compose.foundation.lazy.LazyListScope);

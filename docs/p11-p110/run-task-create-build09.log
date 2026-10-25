@@ -1,0 +1,35 @@
+INSTRUMENTATION_STATUS: stream=P110,task-create,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=3762772, transition=16777216, localRetained=3762772, localTransition=6479992, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,task-create,TASK_SUBMITTED,form=true,busy=true,commit=false,session=SessionSnapshot(state=READY, generation=1, experiment=STORAGE_UNWRAP, platformAuthorization=NOT_TESTED, keyOperation=NOT_TESTED, technicalId=A-READY, marker=null, keyProperties=P77 ISOLATED SYNTHETIC TEST KEY),record=State(phase=RETAINED, retained=3912315, transition=16777216, localRetained=3912315, localTransition=6629535, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,task-create,TASK_PENDING,form=false,busy=false,commit=false,error=null,session=SessionSnapshot(state=READY, generation=1, experiment=STORAGE_UNWRAP, platformAuthorization=NOT_TESTED, keyOperation=NOT_TESTED, technicalId=A-READY, marker=null, keyProperties=P77 ISOLATED SYNTHETIC TEST KEY),record=State(phase=RETAINED, retained=4974487, transition=16777216, localRetained=4974487, localTransition=9349567, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,task-create,FAILURE,java.lang.IllegalStateException: task session revoked: SessionSnapshot(state=LOCKED, generation=2, experiment=null, platformAuthorization=NOT_TESTED, keyOperation=NOT_TESTED, technicalId=B0-IDLE-EXPIRED, marker=null, keyProperties=NOT_TESTED),error=null,commit=false,record=State(phase=RETAINED, retained=4974487, transition=16777216, localRetained=4974487, localTransition=9349567, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+	at org.pag.prototype.P110ConsumerProbe.onStart$lambda$19$0(P110ConsumerProbe.kt:79)
+	at org.pag.prototype.P110ConsumerProbe.$r8$lambda$wucNafZ53NtA017k-U6nzp1sN_g(Unknown Source:0)
+	at org.pag.prototype.P110ConsumerProbe$$ExternalSyntheticLambda83.invoke(D8$$SyntheticClass:0)
+	at org.pag.prototype.P110ConsumerProbe.main$lambda$0(P110ConsumerProbe.kt:19)
+	at org.pag.prototype.P110ConsumerProbe$$ExternalSyntheticLambda93.run(D8$$SyntheticClass:0)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2353)
+	at android.os.Handler.handleCallback(Handler.java:942)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loopOnce(Looper.java:226)
+	at android.os.Looper.loop(Looper.java:313)
+	at android.app.ActivityThread.main(ActivityThread.java:8762)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:604)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1067)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL task-create
+INSTRUMENTATION_CODE: 0
+
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 28, in <module>
+    assert 'P110 PASS '+scenario in output,'Consumer device assertions failed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Consumer device assertions failed

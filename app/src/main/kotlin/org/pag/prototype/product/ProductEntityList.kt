@@ -28,107 +28,142 @@ internal val LocalProductListObservation=staticCompositionLocalOf<((String,LazyL
 
 internal fun entityRowKey(kind:String,id:String)="$kind:$id"
 
-/** A bounded root scrolling container, never nested in verticalScroll.
- * Derived lists are the same display projections as before, unremembered and UI-scoped.
- * No workspace/result cache; dispose on loading, navigation, revoke or context change. */
+/** Lazy callbacks hold the VM service, original identity and scalar metadata only. Each
+ * actual builder construction is admitted before construction; remember is an allocation
+ * optimization, never an end receipt. Revoked builders cannot resolve another payload. */
 @Composable internal fun ProductEntityList(model:ProductViewModel,positions:ProductScrollPositions) {
     val active=model.selected?.status==ActionStatus.ACTIVE
     val persons=if(active)model.activeArea==ActiveArea.PERSONS else model.preparationArea==PreparationArea.PERSONS
-    @Composable fun header(){Column(verticalArrangement=Arrangement.spacedBy(16.dp)){
-        if(active)ActiveWorkspace(model,renderContent=false) else PreparationWorkspace(model,renderContent=false)
-    }}
-    val content=model.workspace
-    val board=content?.operations
-    if(content==null || board==null || (!persons && content.tasks==null)) {
-        Column(Modifier.fillMaxSize().padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-            header();if(model.workspaceError)PagErrorState() else PagLoadingState()
-        }
-        return
+    val source=model.workspace
+    val root=source?.uiRows?.identity
+    if(root==null || source.operations==null || (!persons && source.tasks==null)){
+        Column(Modifier.fillMaxSize().padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)){
+            ProductListHeader(model,active)
+            if(model.workspaceError)PagErrorState() else PagLoadingState()
+        };return
     }
-    val destination=productNavigationKey(model)
+    val destination=remember(root,persons,active){if(model.reserveListUi(root))productNavigationKey(model) else null}?:return
     val anchor=positions.at(destination)
-    // No rememberSaveable: only this current generation/action's display metadata survives a return.
     val state=remember(destination){LazyListState(anchor.index,anchor.offset)}
     val observer=LocalProductListObservation.current
-    if(observer!=null){
-        SideEffect{observer(destination,state)}
-        DisposableEffect(state){onDispose{observer(destination,null)}}
-    }
+    if(observer!=null){SideEffect{observer(destination,state)};DisposableEffect(state){onDispose{observer(destination,null)}}}
     DisposableEffect(state){onDispose{anchor.index=state.firstVisibleItemIndex;anchor.offset=state.firstVisibleItemScrollOffset}}
-    LaunchedEffect(state){snapshotFlow{state.firstVisibleItemIndex to state.firstVisibleItemScrollOffset}.collect{(index,offset)->anchor.index=index;anchor.offset=offset}}
-    val now=if(persons && active)peopleDisplayTime() else System.currentTimeMillis()
-    val zone=ZoneId.systemDefault()
-    val tasks=content.tasks
-    // Deliberately no remembered index/map or longer-lived payload projection.
-    val taskContent=if(!persons && tasks!=null)activeTaskContent(tasks,model.tasks.filter) else null
+    val now=peopleDisplayTime()/60_000*60_000
+    val zone=source.uiRows!!.zone
+    val projection=if(!persons)source.tasks?.presentation?.forPerson(model.tasks.filter) else null
+    val count=if(persons)source.operations.persons.size else projection?.active?.size?:0
+    val closedCount=projection?.closed?.size?:0
     var templates by remember(destination){mutableStateOf(false)}
-    LazyColumn(Modifier.fillMaxSize(),state=state,contentPadding=PaddingValues(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        item(key="header",contentType="header"){header()}
-        if(model.workspaceError)item(key="refresh-error"){Text("Die Aktualisierung ist fehlgeschlagen. Die bisherige Ansicht bleibt erhalten.")}
-        if(persons) {
-            item(key="people-summary"){
-                Column(verticalArrangement=Arrangement.spacedBy(16.dp)) {
-                    if(active)activePeopleSummary(board).forEach{Text(it)} else {
-                        PreparationHeading("Personen")
-                        val summary=preparationSummary(content)
-                        Text("${summary.persons} insgesamt"+(summary.withoutPrimaryRole?.let{" · $it ohne geplante Hauptrolle"}?:""))
-                        FormButton(model::addPerson){Text("Person hinzufügen")}
+    val expanded=model.tasks.closedExpanded
+    // No DTO, source, board or projection is captured by the retained Lazy DSL closure.
+    val renderKey=now/60_000*8+(if(persons)4 else 0)+(if(expanded)2 else 0)+(if(templates)1 else 0)
+    val builder=remember(root,model.tasks.filter,renderKey){
+        if(!model.reserveListUi(root))null else {
+            val build:LazyListScope.()->Unit = {
+                if(model.liveUi(root)){
+                    item(key="header",contentType="header"){if(model.liveUi(root))ProductListHeader(model,active)}
+                    item(key="summary",contentType="summary"){
+                        if(model.liveUi(root))ProductListSummary(model,active,persons)
                     }
-                    if(!active && content.persons.isEmpty())Text("Noch keine Personen angelegt.")
+                    items(count=count,key={index->
+                        if(persons)model.listPerson(root,index)?.let{model.personRow(it)?.key}?:index
+                        else model.listTask(root,index,false)?.let{model.taskRow(it)?.key}?:index
+                    },contentType={if(persons)"person" else "task"}){index->
+                        if(persons){
+                            val person=model.listPerson(root,index)
+                            val board=if(person!=null)model.workspace?.operations else null
+                            if(person!=null && board!=null){
+                                if(active)ActivePersonListRow(model,board,person,now,zone)
+                                else PreparationPersonRow(model,person,board)
+                            }
+                        }else ProductTaskRow(model,root,index,false,active,now,zone)
+                    }
+                    if(!persons && (closedCount>0 || !active))item(key="closed-toggle"){
+                        if(model.liveUi(root))ProductClosedToggle(model,active)
+                    }
+                    if(!persons && expanded)items(count=closedCount,key={index->model.listTask(root,index,true)?.let{model.taskRow(it)?.key}?:index},contentType={"task"}){index->
+                        ProductTaskRow(model,root,index,true,active,now,zone)
+                    }
+                    if(!active && !persons){
+                        item(key="templates-toggle"){if(model.liveUi(root))FormTextButton({if(model.liveUi(root)){model.tasks.touch();templates=!templates}}){Text("Aufgaben aus Vorlagen")}}
+                        if(templates){
+                            item(key="templates-label"){if(model.liveUi(root))Text("Organisatorische Vorschläge · Die Leitung entscheidet selbst.")}
+                            items(TaskRules.templates,key={it.key},contentType={"template"}){template->
+                                if(model.liveUi(root))FormOutlinedButton({if(model.liveUi(root))model.tasks.add(template=template)},enabled=!model.tasks.busy){Text(template.title)}
+                            }
+                        }
+                    }
                 }
             }
-            if(active)items(board.persons,key={entityRowKey("person",it.person.id)},contentType={"person"}) { person ->
-                ActivePersonListRow(model,board,person,now,zone)
-            } else items(content.persons,key={entityRowKey("person",it.id)},contentType={"person"}) { person ->
-                val plan=board.persons.find{it.person.id==person.id}
-                FormOutlinedButton({model.personDetail(person.id)},modifier=Modifier.fillMaxWidth()) {
-                    Column(Modifier.fillMaxWidth()) {
-                        Text(person.pseudonym,style=MaterialTheme.typography.titleLarge)
-                        Text(plan?.let{model.formatPlannedRoles(it,board)}?:"Noch keine Rolle")
-                    }
-                }
-            }
-            if(model.personError!=null)item(key="person-error"){Text("Die Person ist nicht verfügbar. Bitte erneut aus der Übersicht öffnen.")}
-        } else if(taskContent!=null && tasks!=null) {
-            item(key="task-summary"){
-                Column(verticalArrangement=Arrangement.spacedBy(16.dp)) {
-                    if(!active)PreparationHeading("Aufgaben")
-                    model.tasks.error?.let{Text(taskListError(it))}
-                    model.tasks.filter?.let{id->
-                        Text((if(active)"Filter · Betrifft: " else "Betrifft: ")+(board.persons.find{it.person.id==id}?.person?.pseudonym?:"Person nicht verfügbar"))
-                        FormOutlinedButton({model.tasks.showPerson(null)},enabled=!model.tasks.busy){Text(if(active)"Alle Aufgaben anzeigen" else "Alle Aufgaben")}
-                    }
-                    if(active)taskContent.summary.forEach{Text(it)} else {
-                        Text("Dringende / offene Aufgaben",style=MaterialTheme.typography.titleMedium)
-                        // Single per-composition projection, never inside a person/row loop.
-                        val open=tasks.active
-                        Text("Hoch offen / in Arbeit: ${open.count{it.priority==TaskPriority.HIGH}} · Offen: ${open.count{it.status==TaskStatus.OPEN}} · In Arbeit: ${open.count{it.status==TaskStatus.IN_PROGRESS}}")
-                    }
-                    if(model.tasks.writable)FormButton({if(active)model.tasks.add(model.tasks.filter) else model.tasks.add()},enabled=!model.tasks.busy){Text("+ Aufgabe")}
-                    if(!active && taskContent.active.isEmpty())Text(if(tasks.tasks.isEmpty())"Noch keine Aufgaben." else "Keine offenen Aufgaben.")
-                }
-            }
-            items(taskContent.active,key={entityRowKey("task",it.id)},contentType={"task"}){task->
-                if(active)ActiveTaskListCard(task,board,now,zone,model.tasks) else FormOutlinedButton({model.tasks.open(task)},modifier=Modifier.fillMaxWidth(),enabled=!model.tasks.busy){TaskSummary(task,board)}
-            }
-            if(taskContent.closed.isNotEmpty() || !active)item(key="closed-toggle") {
-                // Read Snapshot state in composition, not from a semantics observer that can
-                // outlive this Lazy item's attachment. Preserve the same accessibility state.
-                val closedStateDescription=if(model.tasks.closedExpanded)"Ausgeklappt" else "Eingeklappt"
-                FormOutlinedButton(model.tasks::toggleClosed,enabled=!model.tasks.busy,modifier=Modifier.fillMaxWidth().semantics{stateDescription=closedStateDescription}) {
-                    Text((if(active)"Erledigt / Entfallen" else "Erledigt / Entfällt")+" (${if(active)taskContent.closed.size else tasks.tasks.count{!TaskRules.active(it.status)}}) ${if(model.tasks.closedExpanded)"▴" else "▾"}")
-                }
-            }
-            if(model.tasks.closedExpanded)items(taskContent.closed,key={entityRowKey("task",it.id)},contentType={"task"}){task->
-                if(active)ActiveTaskListCard(task,board,now,zone,model.tasks) else FormOutlinedButton({model.tasks.open(task)},modifier=Modifier.fillMaxWidth()){TaskSummary(task,board)}
-            }
-            if(!active)item(key="templates-toggle"){FormTextButton({model.tasks.touch();templates=!templates}){Text("Aufgaben aus Vorlagen")}}
-            if(!active && templates){
-                item(key="templates-label"){Text("Organisatorische Vorschläge · Die Leitung entscheidet selbst.")}
-                items(TaskRules.templates,key={"template:${it.key}"},contentType={"template"}){t->FormOutlinedButton({model.tasks.add(template=t)},enabled=!model.tasks.busy){Text(t.title)}}
-            }
+            build
+        }
+    }?:return
+    LazyColumn(Modifier.fillMaxSize(),state=state,contentPadding=PaddingValues(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp),content=builder)
+}
+@Composable private fun ProductListHeader(model:ProductViewModel,active:Boolean){
+    Column(verticalArrangement=Arrangement.spacedBy(16.dp)){
+        if(active)ActiveWorkspace(model,renderContent=false) else PreparationWorkspace(model,renderContent=false)
+    }
+}
+@Composable private fun PreparationPersonRow(model:ProductViewModel,person:OperationalPerson,board:OperationalBoard){
+    val row=model.personRow(person)?:return
+    val name=row.card.name
+    val plan=model.formatPlannedRoles(person,board)?:"Noch keine Rolle"
+    FormOutlinedButton(row.detail,modifier=Modifier.fillMaxWidth()){
+        Column(Modifier.fillMaxWidth()){
+            Text(name,style=MaterialTheme.typography.titleLarge)
+            Text(plan)
         }
     }
+}
+@Composable private fun ProductTaskRow(model:ProductViewModel,root:Any,index:Int,closed:Boolean,active:Boolean,now:Long,zone:ZoneId){
+    val task=model.listTask(root,index,closed)?:return
+    val board=model.workspace?.operations?:return
+    if(active)ActiveTaskListCard(task,board,now,zone,model.tasks)
+    else {
+        val row=model.taskRow(task)?:return
+        FormOutlinedButton(row.click,modifier=Modifier.fillMaxWidth(),enabled=!model.tasks.busy){TaskSummary(row)}
+    }
+}
+@Composable private fun ProductListSummary(model:ProductViewModel,active:Boolean,persons:Boolean){
+    val content=model.workspace?:return
+    val board=content.operations?:return
+    Column(verticalArrangement=Arrangement.spacedBy(16.dp)){
+        if(model.workspaceError)Text("Die Aktualisierung ist fehlgeschlagen. Die bisherige Ansicht bleibt erhalten.")
+        if(persons){
+            if(active)activePeopleSummary(board).forEach{Text(it)} else {
+                PreparationHeading("Personen");Text(content.uiRows?.personSummary?:return@Column)
+                FormButton(model::addPerson){Text("Person hinzufügen")}
+                if(content.persons.isEmpty())Text("Noch keine Personen angelegt.")
+            }
+            if(model.personError!=null)Text("Die Person ist nicht verfügbar. Bitte erneut aus der Übersicht öffnen.")
+        }else{
+            val tasks=content.tasks?:return@Column
+            val list=activeTaskContent(tasks,model.tasks.filter)
+            if(!active)PreparationHeading("Aufgaben")
+            model.tasks.error?.let{Text(taskListError(it))}
+            model.tasks.filter?.let{id->
+                val row=model.personRow(id)
+                Text((if(active)row?.activeFilter else row?.preparationFilter)?:"Person nicht verfügbar")
+                FormOutlinedButton({model.tasks.showPerson(null)},enabled=!model.tasks.busy){Text(if(active)"Alle Aufgaben anzeigen" else "Alle Aufgaben")}
+            }
+            if(active)list.summary.forEach{Text(it)} else {
+                Text("Dringende / offene Aufgaben",style=MaterialTheme.typography.titleMedium)
+                Text(tasks.presentation.all.preparationSummary)
+            }
+            if(model.tasks.writable)FormButton({if(active)model.tasks.add(model.tasks.filter) else model.tasks.add()},enabled=!model.tasks.busy){Text("+ Aufgabe")}
+            if(!active && list.active.isEmpty())Text(if(tasks.tasks.isEmpty())"Noch keine Aufgaben." else "Keine offenen Aufgaben.")
+        }
+    }
+}
+@Composable private fun ProductClosedToggle(model:ProductViewModel,active:Boolean){
+    val board=model.tasks.board?:return
+    val list=if(active)activeTaskContent(board,model.tasks.filter) else board.presentation.all
+    val expanded=model.tasks.closedExpanded
+    val label=if(active){if(expanded)list.activeClosedExpanded else list.activeClosedCollapsed}
+        else if(expanded)list.preparationClosedExpanded else list.preparationClosedCollapsed
+    val description=if(expanded)"Ausgeklappt" else "Eingeklappt"
+    FormOutlinedButton(model.tasks::toggleClosed,enabled=!model.tasks.busy,modifier=Modifier.fillMaxWidth().semantics{stateDescription=description}){Text(label)}
 }
 
 private fun taskListError(f:OperationsFailure)=when(f){

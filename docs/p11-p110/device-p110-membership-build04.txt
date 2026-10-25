@@ -1,0 +1,12 @@
+INSTRUMENTATION_STATUS: stream=P110,membership,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=3251796, transition=16777216, localRetained=3251796, localTransition=5969016, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,membership,FAILURE,java.lang.IllegalStateException: P110 timeout task membership
+	at org.pag.prototype.P110ConsumerProbe.await(P110ConsumerProbe.kt:19)
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:60)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL membership
+INSTRUMENTATION_CODE: 0

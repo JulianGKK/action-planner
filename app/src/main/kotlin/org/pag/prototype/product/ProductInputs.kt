@@ -89,9 +89,19 @@ private val LocalFormInput=staticCompositionLocalOf<FormInput>{error("PRODUCT-FO
     val input=LocalFormInput.current
     TextButton(onClick={input.finish();onClick()},enabled=enabled,modifier=modifier.heightIn(min=48.dp),content=content)
 }
+private class FinishedRowClick(private val input:FormInput,private val action:OriginalRowAction):()->Unit {
+    override fun invoke(){if(action.live()){input.finish();action()}}
+}
+@Composable private fun rowClick(input:FormInput,action:OriginalRowAction):FinishedRowClick? = remember(input,action){
+    if(action.reserve(org.pag.domain.ActiveWorkspaceBudget.Units(objects=4,references=16)))FinishedRowClick(input,action) else null
+} // remember avoids allocation; EVERY actual construction is booked, no disposal refund.
 @Composable internal fun FormOutlinedButton(onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,shape:androidx.compose.ui.graphics.Shape=androidx.compose.foundation.shape.RoundedCornerShape(4.dp),content:@Composable RowScope.()->Unit) {
     val input=LocalFormInput.current
-    OutlinedButton(onClick={input.finish();onClick()},modifier=modifier.heightIn(min=48.dp),enabled=enabled,shape=shape,content=content)
+    if(onClick is OriginalRowAction){
+        val click=rowClick(input,onClick)?:return
+        if(!onClick.live())return
+        OutlinedButton(onClick=click,modifier=modifier.heightIn(min=48.dp),enabled=enabled,shape=shape,content=content)
+    }else OutlinedButton(onClick={input.finish();onClick()},modifier=modifier.heightIn(min=48.dp),enabled=enabled,shape=shape,content=content)
 }
 /** One accessible checkbox action with the same input cleanup as other form controls. */
 @Composable internal fun FormCheckboxButton(label: String, checked: Boolean, onClick: () -> Unit, enabled: Boolean = true) {

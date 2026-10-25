@@ -16,8 +16,9 @@ data class TaskTemplate(val key:String,val title:String) { fun input()=TaskInput
 data class TaskBoard(val actionId:String,val tasks:List<Task>,val events:List<TaskEvent>,
     /** False means history was not requested; an empty list is NOT an empty chronicle. */
     val eventsComplete:Boolean=true) {
-    val active get()=tasks.filter{TaskRules.active(it.status)}.sortedWith(TaskRules.order)
-    val closed get()=tasks.filterNot{TaskRules.active(it.status)}.sortedByDescending{it.updatedAt}
+    val presentation=TaskPresentation(tasks)
+    val active get()=presentation.all.active
+    val closed get()=presentation.all.closed
     fun affectedCount(personId:String)=tasks.count{TaskRules.active(it.status) && it.affectedPersonId==personId}
 }
 object TaskRules {
@@ -41,7 +42,15 @@ object TaskRules {
     fun transition(task:Task,to:TaskStatus,now:Long):Task?=event(task.status,to)?.let {
         task.copy(status=to,updatedAt=now,completedAt=now.takeIf{to==TaskStatus.DONE})
     }
-    val order=compareByDescending<Task>{it.priority.ordinal}.thenBy{it.dueAt==null}.thenBy{it.dueAt}.thenBy{it.createdAt}.thenBy{it.id}
+    // Primitive comparisons avoid a new boxed timestamp at every sort comparison.
+    val order=Comparator<Task>{a,b->
+        var result=b.priority.ordinal.compareTo(a.priority.ordinal)
+        if(result==0){val ad=a.dueAt;val bd=b.dueAt;result=when{ad==null && bd==null->0;ad==null->1;bd==null->-1;else->ad.compareTo(bd)}}
+        if(result==0)result=a.createdAt.compareTo(b.createdAt)
+        if(result==0)result=a.id.compareTo(b.id)
+        result
+    }
+    val closedOrder=Comparator<Task>{a,b->b.updatedAt.compareTo(a.updatedAt)}
     val templates=listOf(
         TaskTemplate("RALLY_AT_ACTION","Eilkundgebung gegenüber der Aktion vorbereiten/anmelden"),
         TaskTemplate("RALLY_AT_CUSTODY_SUPPORT","Eilkundgebung für Gesa-Support vorbereiten/anmelden"),

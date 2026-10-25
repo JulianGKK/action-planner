@@ -1,0 +1,27 @@
+INSTRUMENTATION_STATUS: stream=P109,active,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=3614180, transition=16777216, localRetained=3614180, localTransition=7084280, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,active,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,active,HISTORY,two_pages=32+32,old_TEST_page_held=true,distinct=true,full_graphs=1,record=State(phase=RETAINED, retained=5975396, transition=16777216, localRetained=5975396, localTransition=14532656, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,active,STORAGE,title_match=1,revision=1,events=4960,edit_has_no_new_TaskEvent=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,active,FAILURE,java.lang.IllegalStateException: P109 timeout new task bound
+	at org.pag.prototype.P109FunctionalOwnerProbe.await(P109FunctionalOwnerProbe.kt:25)
+	at org.pag.prototype.P109FunctionalOwnerProbe.onStart(P109FunctionalOwnerProbe.kt:226)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P109 FAIL active
+INSTRUMENTATION_CODE: 0
+
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 23, in <module>
+    assert 'P109 PASS '+scenario in output, 'Device assertions failed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Device assertions failed

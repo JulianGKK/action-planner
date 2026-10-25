@@ -17,7 +17,7 @@ import java.time.format.FormatStyle
     if(ops.editingRole==null && ops.deletingRole==null && ops.createError==null)ops.error?.let{Text(if(ops.screen==OperationsScreen.PLAN && it==OperationsFailure.STALE)
         "Die Rollenplanung wurde inzwischen geändert. Dein Entwurf bleibt erhalten." else operationsError(it))}
     when(ops.screen) {
-        OperationsScreen.ROLES->RoleManagement(ops,board)
+        OperationsScreen.ROLES->RoleManagement(model,ops,board)
         OperationsScreen.PLAN->{
             Text("Rollen planen",style=MaterialTheme.typography.titleLarge)
             Text("Revision: ${ops.planRevision}")
@@ -88,7 +88,7 @@ import java.time.format.FormatStyle
     }
     if(board.persons.isEmpty())Text("Noch keine Personen erfasst.")
 }
-@Composable private fun RoleManagement(ops:OperationsModel,board:OperationalBoard) {
+@Composable private fun RoleManagement(model:ProductViewModel,ops:OperationsModel,board:OperationalBoard) {
     Text(if(ops.planning)"Rollen" else "Neue Funktion",style=MaterialTheme.typography.titleLarge)
     if(ops.planning){
         Text("Vorlagen · Auswahl legt eine Rolle für diese Aktion an")
@@ -102,10 +102,11 @@ import java.time.format.FormatStyle
         if(ops.planning)"Rollenname" else "Funktionsname",if(ops.planning)"Eigene Rolle hinzufügen" else "Neue Funktion hinzufügen")
     else FormButton({ops.beginRoleCreate(RoleCreateSurface.ROLES)},enabled=!ops.busy){Text("Rolle oder Funktion anlegen")}
     if(ops.planning)board.roles.forEach{r->
+        val row=model.roleRow(r.id)?:return@forEach
         Text(r.name)
         FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)){
-            FormOutlinedButton({ops.editRole(r)},enabled=!ops.busy){Text("Umbenennen")}
-            FormOutlinedButton({ops.editRole(r,delete=true)},enabled=!ops.busy){Text("Löschen")}
+            FormOutlinedButton(row.edit,enabled=!ops.busy){Text("Umbenennen")}
+            FormOutlinedButton(row.delete,enabled=!ops.busy){Text("Löschen")}
         }
     }
     FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Zurück")}

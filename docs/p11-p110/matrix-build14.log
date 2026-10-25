@@ -1,0 +1,31 @@
+consumer person-create PASS
+consumer task-create PASS
+consumer task-delete PASS
+consumer material-create PASS
+consumer material-delete PASS
+consumer expense-create PASS
+consumer expense-delete PASS
+consumer role-create PASS
+consumer role-rename PASS
+consumer role-delete PASS
+consumer repeat-active PASS
+consumer repeat-preparation PASS
+consumer repeat-completed FAIL
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=1397380, transition=16777216, localRetained=1397380, localTransition=3062392, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed,FAILURE,java.util.NoSuchElementException: List is empty.
+	at kotlin.collections.CollectionsKt___CollectionsKt.first(_Collections.kt:222)
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:157)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL repeat-completed
+INSTRUMENTATION_CODE: 0
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 34, in <module>
+    assert 'P110 PASS '+scenario in output,'Consumer device assertions failed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Consumer device assertions failed
+

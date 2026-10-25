@@ -43,6 +43,11 @@ class P86FullWorkspaceActivity : ComponentActivity() {
     private lateinit var model: ProductViewModel
     // Diagnostic IDs only; no payload retained and never used for authority or retirement.
     var p86Committed = ""; private set
+    // Isolated diagnostic invalidation only: no session, lifetime or release authority.
+    private val p110Pulse=androidx.compose.runtime.mutableIntStateOf(0)
+    var p110Composed=0; private set
+    var p110RowRenders=0; private set
+    fun p110Invalidate(){p110Pulse.intValue++}
     fun p86StateToken() = listOf(System.identityHashCode(model.workspace),
         System.identityHashCode(model.tasks.history), model.tasks.form, model.tasks.selected?.id,
         model.tasks.historyBusy, model.snapshot, model.activeArea, model.preparationArea,
@@ -182,7 +187,14 @@ class P86FullWorkspaceActivity : ComponentActivity() {
         else registerReceiver(screenOff, filter)
         setContent {
             val token = p86StateToken()
-            ProductScreen(model, testAuthorityBanner = testAuthorityBanner, contentFrames = contentFrames)
+            val pulse=p110Pulse.intValue
+            val observation=androidx.compose.runtime.remember(pulse){ {event:String->
+                if(event=="COMPOSITION")p110Composed=pulse
+                if(event=="TASK_ROW" || event=="PERSON_ROW")p110RowRenders++
+            }}
+            androidx.compose.runtime.CompositionLocalProvider(org.pag.prototype.product.LocalProductObservation provides observation){
+                ProductScreen(model, testAuthorityBanner = testAuthorityBanner, contentFrames = contentFrames)
+            }
             androidx.compose.runtime.SideEffect { p86Committed = token }
         }
     }

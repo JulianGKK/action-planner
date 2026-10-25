@@ -210,7 +210,9 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                 if (model.persons.isEmpty()) Text("Noch keine Personen erfasst.")
                 if (model.operations.board != null) OperationsSection(model)
                 else model.persons.forEach { person ->
-                    FormOutlinedButton(onClick = { model.personDetail(person.id) }, enabled = !model.saving) { Text(person.pseudonym) }
+                    val row=model.personRow(person.id)?:return@forEach
+                    LocalProductObservation.current?.let{observer->SideEffect{observer("PERSON_ROW")}}
+                    FormOutlinedButton(onClick = row.detail, enabled = !model.saving) { Text(row.card.name) }
                 }
                 if (model.personsEditable && !model.tasks.form && model.tasks.selected==null) FormButton(onClick = model::addPerson, enabled = !model.saving) { Text("Person hinzufügen") }
             }

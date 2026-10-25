@@ -16,7 +16,7 @@ internal class OriginalWriterBudget(private val access:StorageAccess,private val
         requireOperations(c)
         // Only the metadata descriptor is constructed here; submission control costs cover it.
         val request=id?.let{WorkspaceDetailRequest(actionId,ActionStatus.PREPARATION,c.generation,WorkspaceDetailKind.TASK,it,WorkspaceReadTicket())}
-        val reservation=try{FullviewPreflight(sql,c,{c.check(AccessPoint.STEP)}).prepare(actionId,names,detail=request)}
+        val reservation=try{FullviewPreflight(sql,c,{c.check(AccessPoint.STEP)}).prepare(actionId,names,detail=request,presentations=false)}
             catch(f:BoundedActiveRejected){if(f.status==BoundedActiveStatus.BUDGET_REFUSED)return false else throw f}
         requireOperations(c)
         return memory().reserveHeld(actionId,c.generation,reservation)!=false

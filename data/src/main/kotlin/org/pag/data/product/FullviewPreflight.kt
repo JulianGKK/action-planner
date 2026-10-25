@@ -21,17 +21,17 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
             gate();n
         }
     }
-    suspend fun prepare(a:String,names:Set<String>,taskId:String?=null,detail:WorkspaceDetailRequest?=null):ActiveCoreReservation {
+    suspend fun prepare(a:String,names:Set<String>,taskId:String?=null,detail:WorkspaceDetailRequest?=null,presentations:Boolean=true):ActiveCoreReservation {
         gate()
         sql.usePrepared("PRAGMA encoding"){s->
             if(!s.step() || s.getText(0)!="UTF-8" || s.step())throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
         }
-        var rows=0L;var fields=0L;var bytes=0L
+        var rows=0L;var fields=0L;var bytes=0L;var taskRows=0L;var personRows=0L;var roleRows=0L
         for(t in tables.filter{it.name in names}) {
             gate()
             val column=when(t.name) {
-                "persons","tasks","materials","expenses"->"id"
-                "person_role_plans","person_planned_roles"->"personId"
+                "persons","tasks","materials","expenses","roles"->"id"
+                "person_role_plans","person_planned_roles","person_operational_states"->"personId"
                 "expense_payments"->"expenseId"
                 else->null
             }
@@ -42,6 +42,9 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
             if(n>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES/128)throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
             if(t.revision && scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where AND (typeof(editRevision)!='integer' OR editRevision<0)",a,id)!=0L)
                 throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
+            if(t.name=="tasks")taskRows=n
+            if(t.name=="persons")personRows=n
+            if(t.name=="roles")roleRows=n
             rows=checked{Math.addExact(rows,n)}
             fields=checked{Math.addExact(fields,Math.multiplyExact(n,t.columns.toLong()))}
             for(f in t.text) {
@@ -55,8 +58,29 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
         // MemoryAnswerCodec may split payload tokens into additional objects. No zero-cost
         // decoder assumption: one extra logical row allowance per byte (conservative).
         val chargedRows=if("memory_answers" in names)checked{Math.addExact(rows,bytes)} else rows
-        return reservation(chargedRows,fields,bytes)
+        var base=reservation(chargedRows,fields,bytes)
+        fun add(units:ActiveWorkspaceBudget.Units){base=ActiveCoreReservation(
+            CoreReadAdmission.add(base.retained,units),CoreReadAdmission.add(base.transition,units))}
+        if(presentations && "tasks" in names){
+            val target=detail?.id?:taskId
+            val where=if(target==null)"actionId=?" else "actionId=? AND id=?"
+            val filters=scalar("SELECT COUNT(DISTINCT affectedPersonId) FROM tasks WHERE $where",a,target)
+            if(filters>taskRows)throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
+            add(checked{TaskPresentation.cost(taskRows,filters=filters)})
+        }
+        if(presentations && "roles" in names && "persons" in names && "person_planned_roles" in names){
+            val joined=scalar("SELECT COALESCE(SUM(length(CAST(r.name AS BLOB))),0) FROM person_planned_roles p JOIN roles r ON r.actionId=p.actionId AND r.id=p.roleId WHERE p.actionId=?",a)
+            add(checked{OperationalPresentation.cost(personRows,roleRows,joined)})
+        }
+        if(detail?.kind==WorkspaceDetailKind.ROLE){
+            val dependents=scalar("SELECT COUNT(*) FROM person_planned_roles WHERE actionId=? AND roleId=?",a,detail.id)
+            if(dependents>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES/128)throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
+            val joined=scalar("SELECT COALESCE(SUM(length(CAST(r.name AS BLOB))),0) FROM person_planned_roles p JOIN roles r ON r.actionId=p.actionId AND r.id=p.roleId WHERE p.actionId=? AND p.roleId=?",a,detail.id)
+            add(checked{OperationalPresentation.cost(dependents,roleRows,joined)})
+        }
+        return base
     }
+
     private data class Table(val name:String,val text:List<String>,val columns:Int,val revision:Boolean)
     companion object {
         private val tables=listOf(

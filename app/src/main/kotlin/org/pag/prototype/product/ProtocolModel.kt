@@ -90,12 +90,28 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
     val nested get() = form || entryId != null
     val writable get() = session().state == SessionState.READY && action()?.status == modeStatus &&
         (mode == ProtocolUiMode.ACTIVE || (action()?.id == followUpActionId && session().generation == followUpGeneration))
-    val filtered get() = timeline?.filter { filter == ProtocolFilter.ALL || it.classification == ProtocolClassification.KEY_EVENT }
+    private class KeyEvents(private val original:List<ProtocolTimelineItem>):AbstractList<ProtocolTimelineItem>() {
+        override val size=original.count{it.classification==ProtocolClassification.KEY_EVENT}
+        override fun get(index:Int):ProtocolTimelineItem {
+            if(index<0 || index>=size)throw IndexOutOfBoundsException()
+            var seen=0;var i=0
+            while(i<original.size){val v=original[i++];if(v.classification==ProtocolClassification.KEY_EVENT && seen++==index)return v}
+            throw IndexOutOfBoundsException()
+        }
+    }
+    private var keyEvents:List<ProtocolTimelineItem>?=null
+    private fun acceptTimeline(value:List<ProtocolTimelineItem>):Boolean {
+        val units=ActiveWorkspaceBudget.Units(objects=4,lists=1,references=8)
+        val failure=if(copyGate==null){keyEvents=KeyEvents(value);null}else copyGate!!.invoke(units){keyEvents=KeyEvents(value)}
+        if(failure!=null){error=when(failure){OperationsFailure.BUDGET_REFUSED->ProtocolFailure.BUDGET_REFUSED;else->ProtocolFailure.NOT_FOUND};return false}
+        timeline=value;return true
+    }
+    val filtered get() = if(filter==ProtocolFilter.ALL)timeline else keyEvents
     private fun moveContext() { epoch++; loading = false }
     fun clear() {
         moveContext(); timelineRequest++; detailRequest++
         mode = ProtocolUiMode.ACTIVE; followUpActionId = null; followUpGeneration = null
-        timeline = null; loading = false; detail = null; entryId = null; detailLoading = false; filter = ProtocolFilter.ALL
+        timeline = null; keyEvents=null; loading = false; detail = null; entryId = null; detailLoading = false; filter = ProtocolFilter.ALL
         discardDraft(); busy = false; error = null; moreTemplates = false; history = false
         historical = null; confirmingMistaken = false
     }
@@ -120,7 +136,7 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
     internal fun acceptWorkspaceTimeline(actionId:String,generation:Long,value:List<ProtocolTimelineItem>):Boolean {
         if(binding()==null || action()?.id!=actionId || session().generation!=generation ||
             mode!=ProtocolUiMode.ACTIVE || !loading || timeline!=null || nested)return false
-        timelineRequest++;timeline=value;loading=false;error=null
+        timelineRequest++;if(!acceptTimeline(value))return false;loading=false;error=null
         return true
     }
     fun refresh() {
@@ -129,7 +145,7 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
         repository?.listTimeline(id) { result ->
             if (!current() || request != timelineRequest) return@listTimeline
             loading = false
-            when (result) { is ProtocolResult.Value -> { timeline = result.value; error = null }
+            when (result) { is ProtocolResult.Value -> { if(acceptTimeline(result.value))error = null }
                 is ProtocolResult.Rejected -> reject(result.reason) }
         }
     }
