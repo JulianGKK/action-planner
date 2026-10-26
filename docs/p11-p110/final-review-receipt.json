@@ -1,0 +1,45 @@
+{
+  "product_commit": "dd998f487cc5d8eb7f048d457129c64a330b74e4",
+  "branch": "p11-performance-optimization",
+  "product_push_verified_by_ls_remote": true,
+  "host": {
+    "log": "host-78.log",
+    "tests": 509,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "device": {
+    "status": "46_PASS",
+    "evidence": "device-final.json",
+    "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+    "synthetic_authentication": true,
+    "completed_scope": "100 visible overview compositions; 1000 read-only person-detail compositions; full overview 1000 stress is not a positive performance result"
+  },
+  "issues": [
+    {
+      "issue": 33,
+      "state": "open"
+    },
+    {
+      "issue": 37,
+      "state": "open"
+    },
+    {
+      "issue": 44,
+      "state": "open"
+    }
+  ],
+  "issue_comments": "final-issue-updates.json",
+  "source_fingerprints": "build41-source-sha256.txt",
+  "source_check": "final-source-check.txt",
+  "protected_packages_unchanged": true,
+  "synthetic_fixture_roots_remaining": [],
+  "physical_memory_or_wipe_claim": false,
+  "source_document_check": "git diff --cached --check -- *.kt *.md *.py *.json passed; raw logs retained byte-for-byte",
+  "independent_review_required": true,
+  "merge": false,
+  "release": false,
+  "status": "READY_FOR_INDEPENDENT_CLOSURE",
+  "receipt_scope": "Product/evidence commit and issue readbacks. Documentation-only receipt commit and final clean-tree/remote equality are verified afterward, avoiding self-referential hashes."
+}
