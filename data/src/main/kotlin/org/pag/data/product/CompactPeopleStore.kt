@@ -107,7 +107,7 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
         } while(batch==32)
         if(rows!=part.rows || bytes!=part.bytes) invalid()
     }
-    private suspend fun counts(action: String): CompactPeopleCounts = query("SELECT ${OperationalStatus.entries.joinToString { "COALESCE(SUM(operationalStatus='${it.name}'),0)" }} FROM person_operational_states WHERE actionId=?",listOf(action)) { s ->
+    internal suspend fun counts(action: String): CompactPeopleCounts = query("SELECT ${OperationalStatus.entries.joinToString { "COALESCE(SUM(operationalStatus='${it.name}'),0)" }} FROM person_operational_states WHERE actionId=?",listOf(action)) { s ->
         if(!s.step()) invalid(); val n=LongArray(8){number(s,it).also { v->if(v<0) invalid() }};if(s.step()) invalid()
         CompactPeopleCounts(n[0],n[1],n[2],n[3],n[4],n[5],n[6],n[7])
     }
@@ -189,9 +189,11 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
         }
     }
     suspend fun page(state: CompactTaskState,filter: CompactPeopleQuery,after: CompactPeopleCursor?): CompactPeopleResult.Value {
+        return finish(preparePage(state,filter,after))
+    }
+    suspend fun preparePage(state:CompactTaskState,filter:CompactPeopleQuery,after:CompactPeopleCursor?):PreparedCoreRead<CompactPeoplePage> {
         preflight(state);val plan=pagePlan(state,filter,after)
-        val prepared=PreparedCoreRead(reserve(listOf(plan.selection))) { observe(Phase.ADMITTED);gate();materializePage(plan) }
-        return finish(prepared)
+        return PreparedCoreRead(reserve(listOf(plan.selection))) { observe(Phase.ADMITTED);gate();materializePage(plan) }
     }
     suspend fun detail(state: CompactTaskState,personId: String): CompactPeopleResult.Value {
         input(personId);preflight(state)

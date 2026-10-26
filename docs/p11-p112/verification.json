@@ -1,0 +1,35 @@
+{
+  "host": {
+    "tests": 65,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0
+  },
+  "device": {
+    "tasks": {
+      "passed": true,
+      "log": "tasks-final.txt",
+      "apk_sha256": [
+        "5f1fa9644447376b7c8e84b55715ac81fb057a691b9213554d2c539a2322bd0c",
+        "ad3d1bdac77b9ac40b6e1c0fa25a681c4e51e038724214ab4fb4e3cdb40a9941"
+      ]
+    },
+    "people": {
+      "passed": true,
+      "log": "people-final.txt",
+      "apk_sha256": [
+        "5f1fa9644447376b7c8e84b55715ac81fb057a691b9213554d2c539a2322bd0c",
+        "ad3d1bdac77b9ac40b6e1c0fa25a681c4e51e038724214ab4fb4e3cdb40a9941"
+      ]
+    },
+    "tight": {
+      "passed": true,
+      "log": "tight-final.txt",
+      "apk_sha256": [
+        "5f1fa9644447376b7c8e84b55715ac81fb057a691b9213554d2c539a2322bd0c",
+        "ad3d1bdac77b9ac40b6e1c0fa25a681c4e51e038724214ab4fb4e3cdb40a9941"
+      ]
+    }
+  },
+  "all_recorded_protected_inventories_equal": true
+}

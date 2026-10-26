@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P109WorkspaceConsistencyTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-26T22:02:04.976Z" hostname="iuzjhtgvfc" time="0.392">
+  <properties/>
+  <testcase name="p112CompactPeersAreCheckedInSameTransactionAndChooserCannotSkipExpectedTask" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.062"/>
+  <testcase name="validationAndReplacementScratchIsAdditionalAndNeverRetiresHeldGraph" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.001"/>
+  <testcase name="p112SelectedMetadataDoesNotSizeUnrelatedPayloadAndNeverReadsIt" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.04"/>
+  <testcase name="insertedUnrelatedRowAndUnchangedRevisionWithDifferentValueRefuse" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.03"/>
+  <testcase name="targetedPersonCanChangeButUnrelatedTaskMustRemainExactlyEqual" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.031"/>
+  <testcase name="p112PageChecksRepresentedRowsAndPlanMembershipWithoutClaimingGlobalCompleteness" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.031"/>
+  <testcase name="p110ExplicitMembershipAdmitsOnlyOneKnownDeltaAndStillRejectsUnrelatedChange" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.031"/>
+  <testcase name="sameTransactionMetadataFiltersOnlyOneTargetPersonOrPlan" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.033"/>
+  <testcase name="revocationStopsScalarValidationWithoutDtoReads" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.03"/>
+  <testcase name="p110ExplicitPersonMembershipIncludesItsPlanAndStateAndNoUnrelatedMember" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.032"/>
+  <testcase name="unplannedMembershipDeltaCannotBePublishedAsACompleteUpdatedBoard" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.03"/>
+  <testcase name="p110OnlyActualBoardConstructionAddsBoardPresentationReceipt" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.039"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

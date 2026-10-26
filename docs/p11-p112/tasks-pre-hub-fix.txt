@@ -1,0 +1,14 @@
+INSTRUMENTATION_STATUS: stream=P112,tasks,CORE,fixture=p111-large32,ledger=State(phase=RETAINED, retained=2039307, transition=16777216, localRetained=2039307, localTransition=8399768, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,tasks,PAGE,32+32,distinct=true,old_page_TEST_held=true,ledger=State(phase=COMPOSE_TRANSITION, retained=3335182, transition=16777216, localRetained=3335182, localTransition=12097744, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=797051, lastChildTransitionRequested=3199152)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,tasks,COMMITTED,new_title_and_revision_visible=true,back_to_page=true,ledger=State(phase=COMPOSE_TRANSITION, retained=6391533, transition=16777216, localRetained=6391533, localTransition=15710211, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=81236, lastChildTransitionRequested=156368)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,tasks,PASS,full_graphs=0,core_reads=1,reuse=false,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P112 PASS tasks
+INSTRUMENTATION_CODE: -1

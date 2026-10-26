@@ -26,7 +26,7 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
         if(column==null)scalar(queries.getValue(table).count,a)==n
         else scalar(queries.getValue(table).except.getValue(column),a,id)==n
 
-    suspend fun matches(b:WorkspaceRead,r:WorkspaceDetailRequest):Boolean {
+    suspend fun matches(b:WorkspaceRead,r:WorkspaceDetailRequest,bounded:Boolean=false,validateAllHeld:Boolean=false):Boolean {
         if(b.actionId!=r.actionId || b.generation!=r.generation || b.status!=r.status ||
             b.tasks?.events?.isNotEmpty()==true)return false
         // Ordinary details replace an existing member. Only the explicit membership
@@ -44,8 +44,8 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
             WorkspaceDetailKind.MATERIAL_BOARD->b.materialBoard!=null
             WorkspaceDetailKind.EXPENSE_BOARD->b.expenseBoard!=null
         }
-        if(!represented && !r.membership)return false
-        if(r.membership && when(r.kind){
+        if(!validateAllHeld && !represented && !r.membership)return false
+        if(!validateAllHeld && r.membership && when(r.kind){
             WorkspaceDetailKind.PERSON,WorkspaceDetailKind.ROLE->false
             WorkspaceDetailKind.TASK->b.tasks==null
             WorkspaceDetailKind.MATERIAL->b.materialBoard==null
@@ -64,34 +64,36 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
         if(action!=null && !row("actions","id=? AND title IS ? AND description IS ? AND startAt IS ? AND expectedEndAt IS ? AND createdAt IS ? AND status IS ? AND completedAt IS ?",
             a,action.title,action.description,action.startAt,action.expectedEndAt,action.createdAt,action.status.name,action.completedAt))return false
         val ops=b.operations
-        val personTarget=k==WorkspaceDetailKind.PERSON
-        val planTarget=k==WorkspaceDetailKind.PLAN || (personTarget && r.membership)
-        if(!count("persons",a,ops.persons.count{!personTarget || it.person.id!=id}.toLong(),if(personTarget)"id" else null,id))return false
+        val personTarget=!validateAllHeld && k==WorkspaceDetailKind.PERSON
+        val planTarget=(!validateAllHeld && k==WorkspaceDetailKind.PLAN) || (personTarget && r.membership)
+        if(!bounded && !count("persons",a,ops.persons.count{!personTarget || it.person.id!=id}.toLong(),if(personTarget)"id" else null,id))return false
         for(p in ops.persons){val v=p.person
             if(personTarget && v.id==id)continue
             if(!row("persons","actionId=? AND id=? AND pseudonym IS ? AND createdAt IS ? AND typeof(editRevision)='integer' AND editRevision IS ?",a,v.id,v.pseudonym,v.createdAt,v.editRevision))return false
         }
-        val roleTarget=k==WorkspaceDetailKind.ROLE
+        val roleTarget=!validateAllHeld && k==WorkspaceDetailKind.ROLE
         if(!count("roles",a,ops.roles.count{!roleTarget || it.id!=id}.toLong(),if(roleTarget)"id" else null,id))return false
         for(v in ops.roles){if(roleTarget && v.id==id)continue;if(!row("roles","actionId=? AND id=? AND name IS ? AND createdAt IS ? AND typeof(editRevision)='integer' AND editRevision IS ?",a,v.id,v.name,v.createdAt,v.editRevision))return false}
-        if(!count("person_role_plans",a,ops.persons.count{!planTarget || it.person.id!=id}.toLong(),if(planTarget)"personId" else null,id))return false
+        if(!bounded && !count("person_role_plans",a,ops.persons.count{!planTarget || it.person.id!=id}.toLong(),if(planTarget)"personId" else null,id))return false
         var assignments=0L
         for(p in ops.persons){
             if(planTarget && p.person.id==id)continue
             val v=p.plan
             if(!row("person_role_plans","actionId=? AND personId=? AND primaryRoleId IS ? AND typeof(editRevision)='integer' AND editRevision IS ?",a,p.person.id,v.primaryRoleId,v.editRevision))return false
+            if(bounded && scalar("SELECT COUNT(*) FROM person_planned_roles WHERE actionId=? AND personId=?",a,p.person.id)!=v.roleIds.size.toLong())return false
             assignments+=v.roleIds.size
             for(role in v.roleIds)if(!row("person_planned_roles","actionId=? AND personId=? AND roleId=?",a,p.person.id,role))return false
         }
-        if(!count("person_planned_roles",a,assignments,if(planTarget)"personId" else null,id))return false
-        val stateTarget=(personTarget && r.membership) || k==WorkspaceDetailKind.STATE
-        if(!count("person_operational_states",a,ops.persons.count{it.state!=null && (!stateTarget || it.person.id!=id)}.toLong(),if(stateTarget)"personId" else null,id))return false
-        for(p in ops.persons){if(stateTarget && p.person.id==id)continue;val v=p.state?:continue
+        if(!bounded && !count("person_planned_roles",a,assignments,if(planTarget)"personId" else null,id))return false
+        val stateTarget=(personTarget && r.membership) || (!validateAllHeld && k==WorkspaceDetailKind.STATE)
+        if(!bounded && !count("person_operational_states",a,ops.persons.count{it.state!=null && (!stateTarget || it.person.id!=id)}.toLong(),if(stateTarget)"personId" else null,id))return false
+        for(p in ops.persons){if(stateTarget && p.person.id==id)continue;val v=p.state
+            if(v==null){if(bounded && scalar("SELECT COUNT(*) FROM person_operational_states WHERE actionId=? AND personId=?",a,p.person.id)!=0L)return false;continue}
             if(!row("person_operational_states","actionId=? AND personId=? AND currentRoleId IS ? AND operationalStatus IS ? AND currentPlaceLabel IS ? AND updatedAt IS ? AND typeof(editRevision)='integer' AND editRevision IS ?",a,v.personId,v.currentRoleId,v.status.name,v.currentPlaceLabel,v.updatedAt,v.editRevision))return false
         }
         b.tasks?.let{board->
-            val target=k==WorkspaceDetailKind.TASK
-            if(!count("tasks",a,board.tasks.count{!target || it.id!=id}.toLong(),if(target)"id" else null,id))return false
+            val target=!validateAllHeld && k==WorkspaceDetailKind.TASK
+            if(!bounded && !count("tasks",a,board.tasks.count{!target || it.id!=id}.toLong(),if(target)"id" else null,id))return false
             for(v in board.tasks){if(target && v.id==id)continue
                 if(!row("tasks","actionId=? AND id=? AND title IS ? AND priority IS ? AND status IS ? AND assigneePersonId IS ? AND assigneeRoleId IS ? AND affectedPersonId IS ? AND dueAt IS ? AND sourceTemplateKey IS ? AND createdAt IS ? AND updatedAt IS ? AND completedAt IS ? AND typeof(editRevision)='integer' AND editRevision IS ?",a,v.id,v.title,v.priority.name,v.status.name,v.assigneePersonId,v.assigneeRoleId,v.affectedPersonId,v.dueAt,v.sourceTemplateKey,v.createdAt,v.updatedAt,v.completedAt,v.editRevision))return false
             }
@@ -131,6 +133,24 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
             }
         }
         gate();return true
+    }
+    /** Compact page baselines carry display fields only, never editor Expected revisions. */
+    suspend fun compactMatches(r:WorkspaceDetailRequest):Boolean {
+        r.taskPage?.let{page->
+            if(page.state.binding.actionId!=r.actionId || page.state.binding.generation!=r.generation || page.items.size>32)return false
+            for(v in page.items){if(r.kind==WorkspaceDetailKind.TASK && v.id==r.id)continue
+                if(scalar("SELECT COUNT(*) FROM tasks WHERE actionId=? AND id=? AND title IS ? AND priority IS ? AND status IS ? AND assigneePersonId IS ? AND assigneeRoleId IS ? AND affectedPersonId IS ? AND dueAt IS ? AND createdAt IS ? AND updatedAt IS ?",
+                    r.actionId,v.id,v.title,v.priority.name,v.status.name,v.assigneePersonId,v.assigneeRoleId,v.affectedPersonId,v.dueAt,v.createdAt,v.updatedAt)!=1L)return false
+            }
+        }
+        r.peoplePage?.let{page->
+            if(page.state.binding.actionId!=r.actionId || page.state.binding.generation!=r.generation || page.items.size>32)return false
+            for(v in page.items){if((r.kind==WorkspaceDetailKind.PERSON || r.kind==WorkspaceDetailKind.PLAN || r.kind==WorkspaceDetailKind.STATE) && v.id==r.id)continue
+                if(scalar("SELECT COUNT(*) FROM persons p JOIN person_operational_states s ON s.actionId=p.actionId AND s.personId=p.id LEFT JOIN roles x ON x.actionId=s.actionId AND x.id=s.currentRoleId WHERE p.actionId=? AND p.id=? AND p.pseudonym IS ? AND p.createdAt IS ? AND s.operationalStatus IS ? AND s.currentRoleId IS ? AND x.name IS ? AND s.currentPlaceLabel IS ? AND s.updatedAt IS ? AND (SELECT COUNT(*) FROM tasks t WHERE t.actionId=p.actionId AND t.affectedPersonId=p.id AND t.status IN ('OPEN','IN_PROGRESS'))=?",
+                    r.actionId,v.id,v.pseudonym,v.createdAt,v.status.name,v.currentRoleId,v.currentRoleName,v.currentPlaceLabel,v.updatedAt,v.affectedActiveTasks)!=1L)return false
+            }
+        }
+        return true
     }
     companion object {
         private const val MEMORY_COUNT="SELECT COUNT(*) FROM memory_reports WHERE actionId=?"

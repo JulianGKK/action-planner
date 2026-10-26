@@ -24,6 +24,12 @@ internal class ProductActiveCoreLifetime(
         registration.set(subscription)
         if(closed.get()) registration.getAndSet(null)?.cancel()
     }
+    override fun childAccess(cancellation:WorkspaceReadTicket):WorkspaceAccess? {
+        if(!isCurrent())return null
+        val entry=memory?.children(ticket.actionId,ticket.generation) ?: return null
+        return OriginalWorkspaceAccess(entry,access,context,ticket,mutations,
+            WorkspaceReadRequest(ticket.actionId,ActionStatus.ACTIVE,ticket.generation,emptySet(),ticket=cancellation),owner)
+    }
     override fun isCurrent(): Boolean {
         if(Thread.currentThread() !== owner || closed.get() || !ticket.isLive()) return false
         return loadCurrent() && mutations.isCurrentActiveRead(ticket) &&

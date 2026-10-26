@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.CompactPeopleStoreTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-26T22:01:38.157Z" hostname="iuzjhtgvfc" time="8.468">
+  <properties/>
+  <testcase name="allStatusesWithoutFunctionUnusedRolesAndPlannedRolesRemainDistinct" classname="org.pag.data.product.CompactPeopleStoreTest" time="0.676"/>
+  <testcase name="allRealisticSizesHaveCompletePagingDetailsAndSeparateMedianP95" classname="org.pag.data.product.CompactPeopleStoreTest" time="5.574"/>
+  <testcase name="selectedEditorLoadsAllPlannedRolesAcrossBatchesWithoutOtherPeopleGraphs" classname="org.pag.data.product.CompactPeopleStoreTest" time="0.067"/>
+  <testcase name="invalidReferencesAndUnknownRevokeMutationsNeverReturnOldPagesOrDetails" classname="org.pag.data.product.CompactPeopleStoreTest" time="0.483"/>
+  <testcase name="twoHundredMembersOfOneFunctionAndManyFunctionsHaveExactBoundedGroups" classname="org.pag.data.product.CompactPeopleStoreTest" time="0.801"/>
+  <testcase name="utf16IdTiesNulUnicodeLongNamesAndFullDetailPreserveValues" classname="org.pag.data.product.CompactPeopleStoreTest" time="0.25"/>
+  <testcase name="pageDetailBudgetsFailBeforePayloadAndAllLifecycleFailuresFailClosed" classname="org.pag.data.product.CompactPeopleStoreTest" time="0.613"/>
+  <system-out><![CDATA[PEOPLE_CORE people=20 tasks=40 storedEvents=480 retained=1339803 transition=5431056 CORE-ms-median/p95=8.0424675/10.109762, METADATA-ms-median/p95=5.2550345/6.869469, ADMISSION-ms-median/p95=0.0264965/0.030505, MATERIALIZATION-ms-median/p95=2.5525425/3.30421, PEOPLE_NEXT-ms-median/p95=3.9725645/4.704335, MEMBERS_NEXT-ms-median/p95=3.9795565/5.512267, DETAIL-ms-median/p95=3.917152/5.411313
+PEOPLE_CHARGES people=20 first=683135/2741184 next=423495/1702624 membersNext=423495/1702624 detail=454271/1825728
+PEOPLE_CORE people=100 tasks=250 storedEvents=5000 retained=1663499 transition=6725840 CORE-ms-median/p95=12.5912915/13.115028, METADATA-ms-median/p95=8.3347085/8.824028, ADMISSION-ms-median/p95=0.0171585/0.019603, MATERIALIZATION-ms-median/p95=3.965174/4.133751, PEOPLE_NEXT-ms-median/p95=7.886942/8.268474, MEMBERS_NEXT-ms-median/p95=5.7139555/6.499398, DETAIL-ms-median/p95=5.5998145/6.413764
+PEOPLE_CHARGES people=100 first=839279/3365760 next=839879/3368160 membersNext=423495/1702624 detail=454271/1825728
+PEOPLE_CORE people=200 tasks=1000 storedEvents=5000 retained=1663959 transition=6727680 CORE-ms-median/p95=20.4065685/21.531642, METADATA-ms-median/p95=16.2853825/16.729622, ADMISSION-ms-median/p95=0.008032/0.021987, MATERIALIZATION-ms-median/p95=3.8939605/4.502382, PEOPLE_NEXT-ms-median/p95=11.5274195/12.277973, MEMBERS_NEXT-ms-median/p95=9.9240295/10.029235, DETAIL-ms-median/p95=9.1695165/9.275806
+PEOPLE_CHARGES people=200 first=839279/3365760 next=839879/3368160 membersNext=449639/1807200 detail=454271/1825728
+PEOPLE_CATALOG roles=6 retained=1663959 transition=6727680 admitted
+PEOPLE_CATALOG roles=32 retained=1890927 transition=7745512 admitted
+PEOPLE_CATALOG roles=100 retained=2484531 transition=10408520 admitted
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

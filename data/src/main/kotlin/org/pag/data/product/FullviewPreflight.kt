@@ -11,21 +11,22 @@ import org.pag.domain.*
 internal class FullviewPreflight(private val sql:PooledConnection,private val c:StorageContext,
     private val current:()->Boolean) {
     private fun gate(){requireOperations(c);if(!current())throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)}
-    private suspend fun scalar(query:String,a:String,id:String?=null):Long {
+    private suspend fun scalar(query:String,a:String,id:String?=null,ids:List<String>?=null):Long {
         gate()
         return sql.usePrepared(query){s->
-            s.bindText(1,a);if(id!=null)s.bindText(2,id);gate()
+            s.bindText(1,a);if(id!=null)s.bindText(2,id);ids?.forEachIndexed{i,v->s.bindText(i+2,v)};gate()
             if(!s.step() || s.isNull(0) || s.getColumnType(0)!=1)throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
             val n=s.getLong(0)
             if(n<0 || s.step())throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
             gate();n
         }
     }
-    suspend fun prepare(a:String,names:Set<String>,taskId:String?=null,detail:WorkspaceDetailRequest?=null,presentations:Boolean=true):ActiveCoreReservation {
+    suspend fun prepare(a:String,names:Set<String>,taskId:String?=null,detail:WorkspaceDetailRequest?=null,presentations:Boolean=true,selectedIds:List<String>?=null):ActiveCoreReservation {
         gate()
         sql.usePrepared("PRAGMA encoding"){s->
             if(!s.step() || s.getText(0)!="UTF-8" || s.step())throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
         }
+        if(selectedIds!=null && selectedIds.size>32)throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
         var rows=0L;var fields=0L;var bytes=0L;var taskRows=0L;var personRows=0L;var roleRows=0L;var personNameBytes=0L;var roleNameBytes=0L;var decoderBytes=0L
         for(t in tables.filter{it.name in names}) {
             gate()
@@ -49,30 +50,31 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
             val referencedPerson=protocolTarget && t.name=="persons"
             val relation=protocolTarget && t.name in setOf("protocol_affected_persons","protocol_official_identifiers","protocol_reported_by_persons")
             val id=if(referencedPerson || relation || (detail!=null && targetColumn!=null))detail?.id else if(t.name=="tasks")taskId else null
-            val where=if(t.name=="actions")"id=?" else if(referencedPerson)
+            val selected=selectedIds?.takeIf{column!=null && t.name!="roles"}
+            val where=if(selected!=null) "actionId=? AND $column IN (${selected.joinToString{"?"}})" else if(t.name=="actions")"id=?" else if(referencedPerson)
                 "actionId=?1 AND id IN (SELECT p.personId FROM protocol_affected_persons p JOIN protocol_revisions r ON r.actionId=p.actionId AND r.id=p.revisionId WHERE r.actionId=?1 AND r.entryId=?2 UNION SELECT p.personId FROM protocol_reported_by_persons p JOIN protocol_revisions r ON r.actionId=p.actionId AND r.id=p.revisionId WHERE r.actionId=?1 AND r.entryId=?2)"
                 else if(relation)
                 "actionId=? AND revisionId IN (SELECT id FROM protocol_revisions WHERE entryId=? AND actionId="+t.name+".actionId)"
                 else if(id!=null)"actionId=? AND $targetColumn=?" else "actionId=?"
-            val n=scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where",a,id)
+            val n=scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where",a,id,selected)
             // Reject enormous counts BEFORE any SUM: each text SUM is then <= 2^39.
             if(n>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES/128)throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
-            if(t.revision && scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where AND (typeof(editRevision)!='integer' OR editRevision<0)",a,id)!=0L)
+            if(t.revision && scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where AND (typeof(editRevision)!='integer' OR editRevision<0)",a,id,selected)!=0L)
                 throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
             if(t.name=="tasks")taskRows=n
             if(t.name=="persons")personRows=n
             if(t.name=="roles")roleRows=n
             if(t.name=="memory_answers"){
-                if(scalar("SELECT COUNT(*) FROM memory_answers WHERE $where AND valueKind NOT IN ('TEXT','OPTION','MULTI','COUNT')",a,id)!=0L)
+                if(scalar("SELECT COUNT(*) FROM memory_answers WHERE $where AND valueKind NOT IN ('TEXT','OPTION','MULTI','COUNT')",a,id,selected)!=0L)
                     throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
-                decoderBytes=scalar("SELECT COALESCE(SUM(length(CAST(payload AS BLOB))),0) FROM memory_answers WHERE $where AND valueKind='MULTI'",a,id)
+                decoderBytes=scalar("SELECT COALESCE(SUM(length(CAST(payload AS BLOB))),0) FROM memory_answers WHERE $where AND valueKind='MULTI'",a,id,selected)
             }
             rows=checked{Math.addExact(rows,n)}
             fields=checked{Math.addExact(fields,Math.multiplyExact(n,t.columns.toLong()))}
             for(f in t.text) {
-                val max=scalar("SELECT COALESCE(MAX(length(CAST($f AS BLOB))),0) FROM ${t.name} WHERE $where",a,id)
+                val max=scalar("SELECT COALESCE(MAX(length(CAST($f AS BLOB))),0) FROM ${t.name} WHERE $where",a,id,selected)
                 if(max>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
-                val total=scalar("SELECT COALESCE(SUM(length(CAST($f AS BLOB))),0) FROM ${t.name} WHERE $where",a,id)
+                val total=scalar("SELECT COALESCE(SUM(length(CAST($f AS BLOB))),0) FROM ${t.name} WHERE $where",a,id,selected)
                 if(t.name=="persons" && f=="pseudonym")personNameBytes=total
                 if(t.name=="roles" && f=="name")roleNameBytes=total
                 bytes=checked{Math.addExact(bytes,total)}
@@ -87,8 +89,8 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
             CoreReadAdmission.add(base.retained,units),CoreReadAdmission.add(base.transition,units))}
         if(presentations && "tasks" in names){
             val target=detail?.id?:taskId
-            val where=if(target==null)"actionId=?" else "actionId=? AND id=?"
-            val filters=scalar("SELECT COUNT(DISTINCT affectedPersonId) FROM tasks WHERE $where",a,target)
+            val where=if(selectedIds!=null)"actionId=? AND id IN (${selectedIds.joinToString{"?"}})" else if(target==null)"actionId=?" else "actionId=? AND id=?"
+            val filters=scalar("SELECT COUNT(DISTINCT affectedPersonId) FROM tasks WHERE $where",a,target,selectedIds)
             if(filters>taskRows)throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
             add(checked{TaskPresentation.cost(taskRows,filters=filters)})
         }

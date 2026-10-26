@@ -96,7 +96,11 @@ internal class ProductInputScreenKey(m:ProductViewModel):OriginalUiFence {
     private val p84=m.workspaceRefusal
     private val p85=m.protocol.formStructureEpoch
     private val p86=m.memoryReports.formStructureEpoch
+    private val pageEpoch=m.pageEpoch
+    private val boundedList=m.boundedListVisible
+    private val choiceEpoch=m.choiceEpoch
     fun matches(m:ProductViewModel):Boolean=
+        pageEpoch==m.pageEpoch && boundedList==m.boundedListVisible && choiceEpoch==m.choiceEpoch &&
         p85==m.protocol.formStructureEpoch && p86==m.memoryReports.formStructureEpoch &&
         p0==m.snapshot.state &&
         p1==m.snapshot.generation &&

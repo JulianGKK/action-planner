@@ -20,6 +20,8 @@ class ActiveCoreOwnerTest {
         override fun lock(){change(SessionSnapshot(SessionState.LOCKED,state.generation+1))}
     }
     private class Lifetime:ActiveCoreLifetime {
+        var child:((WorkspaceReadTicket)->WorkspaceAccess?)?=null
+        override fun childAccess(ticket:WorkspaceReadTicket)=child?.invoke(ticket)
         val live=AtomicBoolean(true);var invalidator:(()->Unit)?=null
         var current=true;var falseAfter=false;var duringInstall:(()->Unit)?=null
         var duringPublication:((()->Unit)->Unit)?=null
@@ -828,4 +830,39 @@ class ActiveCoreOwnerTest {
         repeat(3){oldCallback(core(),stale);stale.close();stale.compositionDisposed()}
         assertSame(value,presentedIdentity(h.model));assertTrue(current.isCurrent())
     }
+    @Test fun p112ExplicitChildPagesKeepOneCoreAndDenyOldCallbacksAndLockedLateDelivery() {
+        val h=H();var ticket:WorkspaceReadTicket?=null
+        val access=object:WorkspaceAccess{
+            override fun publish(actionId:String,status:ActionStatus,generation:Long,work:()->Unit):Boolean {
+                if(h.session.state.state!=SessionState.READY || generation!=h.session.state.generation || ticket?.active!=true)return false
+                work();return true
+            }
+            override fun reserve(units:ActiveWorkspaceBudget.Units)=true
+            override fun heldAllowed()=h.session.state.state==SessionState.READY && ticket?.active==true
+        }
+        var pending:((WorkspacePageResult)->Unit)?=null;var request:WorkspacePageRequest?=null
+        h.model.bindWorkspace(object:WorkspaceRepository{
+            override fun read(request:WorkspaceReadRequest,publish:(WorkspaceResult)->Unit)=error("No second workspace")
+            override fun page(original:WorkspaceAccess,r:WorkspacePageRequest,publish:(WorkspacePageResult)->Unit){assertSame(access,original);request=r;pending=publish}
+        })
+        val base=core();val items=(0 until 32).map{CompactTaskItem("t$it","Synthetic $it",TaskPriority.NORMAL,TaskStatus.OPEN,null,null,null,null,it.toLong(),0)}
+        val life=Lifetime().also{it.child={t->ticket=t;access}}
+        h.port.deliver(base.copy(core=base.core.copy(tasks=base.core.tasks.copy(items=items))),life)
+        h.model.activeArea(ActiveArea.TASKS)
+        assertTrue(h.model.boundedPage);assertEquals(1,h.port.reads);assertEquals(32,h.model.pageShown)
+        val old=h.model.pageEpoch;assertEquals("Synthetic 0",h.model.boundedPageLabel(old,0))
+        h.model.nextBoundedPage();assertEquals("t31",request!!.tasksAfter!!.id)
+        val state=request!!.tasksAfter!!.state
+        val page=CompactTaskPage(state,CompactTaskQuery(),base.core.tasks.overall,base.core.tasks.filtered,
+            items.map{it.copy(id="next-${it.id}",title="Next ${it.title}")},null)
+        pending!!(WorkspacePageResult.Value(WorkspacePage(access,tasks=page)))
+        assertEquals(2,h.model.pageNumber);assertNull(h.model.boundedPageLabel(old,0));assertEquals(1,h.port.reads)
+        h.model.activeArea(ActiveArea.HUB)
+        assertTrue(h.model.boundedPage);assertFalse(h.model.compactActiveMode)
+        h.model.activeArea(ActiveArea.TASKS);val late=pending!!
+        h.session.lock();assertFalse(ticket!!.active)
+        late(WorkspacePageResult.Value(WorkspacePage(access,tasks=page)))
+        assertFalse(h.model.boundedPage);assertNull(h.model.boundedPageLabel(h.model.pageEpoch,0));assertEquals(1,h.port.reads)
+    }
+
 }

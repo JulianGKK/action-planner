@@ -35,6 +35,8 @@ interface ActiveCoreReader {
 
 /** Original-read lifetime only. No key, replacement ticket, or independent authorization. */
 interface ActiveCoreLifetime {
+    /** Explicit child provenance on the original exposed owner; no second admission. */
+    fun childAccess(ticket:WorkspaceReadTicket=WorkspaceReadTicket()):WorkspaceAccess? = null
     /** Owner-thread hit authorization using a fresh central READY context and the original
      * read identity. No UI side effects, new read/ticket, or idle renewal. Default deny.
      */

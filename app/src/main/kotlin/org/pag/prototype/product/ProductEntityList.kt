@@ -22,7 +22,7 @@ internal class ProductScrollPositions {
     fun at(destination:String):Anchor=positions.getOrPut(destination){if(positions.size>=64)positions.clear();Anchor()}
 }
 internal fun productEntityListRoute(m:ProductViewModel):Boolean =
-    m.snapshot.state==SessionState.READY && !m.documents.available && !m.creating && m.editing==null &&
+    !m.boundedPage && m.snapshot.state==SessionState.READY && !m.documents.available && !m.creating && m.editing==null &&
     !m.detailLoading && !m.personDetailLoading && m.selectedPerson==null && !m.personForm && !m.sensitiveSetup &&
     m.operations.screen==OperationsScreen.OVERVIEW && !m.tasks.form && m.tasks.selected==null &&
     ((m.selected?.status==ActionStatus.ACTIVE && !m.compactActiveMode && m.activeArea in supportedActiveAreaGroup1) ||

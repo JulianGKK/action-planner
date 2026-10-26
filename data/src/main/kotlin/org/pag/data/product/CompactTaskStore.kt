@@ -95,7 +95,7 @@ internal class CompactTaskStore(private val sql: PooledConnection, private val c
         observe(Phase.METADATA);gate()
     }
 
-    private suspend fun counts(action: String, person: String?): CompactTaskCounts = query(
+    internal suspend fun counts(action: String, person: String?): CompactTaskCounts = query(
         "SELECT COALESCE(SUM(status='OPEN'),0),COALESCE(SUM(status='IN_PROGRESS'),0),"+
             "COALESCE(SUM(status IN ('OPEN','IN_PROGRESS') AND priority='HIGH'),0),"+
             "COALESCE(SUM(status='DONE'),0),COALESCE(SUM(status='CANCELLED'),0) FROM tasks WHERE actionId=?"+

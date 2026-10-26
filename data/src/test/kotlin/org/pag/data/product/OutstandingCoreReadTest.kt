@@ -222,4 +222,35 @@ class OutstandingCoreReadTest {
         }
     }
 
+    @Test fun p112ChildrenAccumulateOnExposedOriginalAndNeverPermitSecondCore() {
+        val h=H();h.pending();h.main.remove().run()
+        val access=h.life!!.childAccess() as OriginalWorkspaceAccess
+        val entry=access.entry
+        val before=h.loader.outstandingState()
+        val a=ActiveWorkspaceBudget.Units(objects=100)
+        repeat(2){
+            val child=entry.supplement(WorkspacePart.TASKS)!!
+            assertNull(entry.supplement(WorkspacePart.TASKS))
+            val work=child.worker(Runnable{assertTrue(child.admit(ActiveCoreReservation(a,a)))
+                child.main(Runnable{}).run()})
+            work.run();work.run()
+        }
+        assertEquals(before.localRetained+25600+2*ActiveWorkspaceBudget.estimateUnits(ActiveWorkspaceBudget.Units(objects=16,references=64)).second,h.loader.outstandingState().localRetained)
+        assertEquals(before.localTransition+25600+2*ActiveWorkspaceBudget.estimateUnits(ActiveWorkspaceBudget.Units(objects=16,references=64)).second,h.loader.outstandingState().localTransition)
+        val charged=h.loader.outstandingState().localTransition
+        h.life!!.close();h.life!!.compositionDisposed()
+        assertEquals(charged,h.loader.outstandingState().localTransition)
+        assertFalse(h.load());assertFalse(h.loader.outstandingState().retirementConfirmed)
+        assertFalse(entry.reserve(ActiveWorkspaceBudget.Units(arrayPayloadBytes=ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)))
+        assertEquals(charged,h.loader.outstandingState().localTransition)
+    }
+    @Test fun p112OriginalChildAccessRejectsLockActionAndGenerationBeforeBooking() {
+        for(mode in listOf("lock","action","generation")){
+            val h=H();h.pending();h.main.remove().run()
+            when(mode){"lock"->h.ready=false;"action"->h.mutations.beforeActiveRead("b",1);else->h.generation++}
+            assertNull(h.life!!.childAccess())
+            assertFalse(h.load())
+        }
+    }
+
 }

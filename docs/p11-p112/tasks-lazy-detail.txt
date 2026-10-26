@@ -1,0 +1,14 @@
+INSTRUMENTATION_STATUS: stream=P112,tasks,CORE,fixture=p111-large32,ledger=State(phase=RETAINED, retained=2039307, transition=16777216, localRetained=2039307, localTransition=8399768, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,tasks,PAGE,32+32,distinct=true,old_page_TEST_held=true,ledger=State(phase=COMPOSE_TRANSITION, retained=3319182, transition=16777216, localRetained=3319182, localTransition=12081744, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,tasks,COMMITTED,new_title_and_revision_visible=true,back_to_page=true,ledger=State(phase=COMPOSE_TRANSITION, retained=6156213, transition=16777216, localRetained=6156213, localTransition=15474891, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,tasks,PASS,full_graphs=0,core_reads=1,reuse=false,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P112 PASS tasks
+INSTRUMENTATION_CODE: -1

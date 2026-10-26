@@ -47,18 +47,31 @@ enum class WorkspaceDetailKind { PERSON, TASK, PLAN, MATERIAL, EXPENSE, ROLE, PR
 data class WorkspaceDetailRequest(val actionId:String,val status:ActionStatus,val generation:Long,
     val kind:WorkspaceDetailKind,val id:String,val ticket:WorkspaceReadTicket,
     val baseline:WorkspaceRead?=null,val expectedAction:Action?=null,
-    val membership:Boolean=false)
+    val membership:Boolean=false,val taskPage:CompactTaskPage?=null,val peoplePage:CompactPeoplePage?=null)
 data class WorkspaceDetail(val access:WorkspaceAccess,val person:Person?=null,val task:Task?=null,
     val plan:ExpectedPersonRolePlan?=null,val material:MaterialItem?=null,val expense:Expense?=null,
     val workspace:WorkspaceRead?=null,val removed:Boolean=false,val operationalPerson:OperationalPerson?=null,val role:Role?=null,
     val protocolDetail:ProtocolEntryDetail?=null,val memoryDetail:MemoryReportDetail?=null,val operationalState:PersonOperationalState?=null,
     val protocolTimeline:List<ProtocolTimelineItem>?=null,val memoryHeaders:List<MemoryReportHeader>?=null,
-    val materialBoard:MaterialBoard?=null,val expenseBoard:ExpenseBoard?=null)
+    val materialBoard:MaterialBoard?=null,val expenseBoard:ExpenseBoard?=null,val linkedPersons:List<OperationalPerson>?=null,val taskCounts:CompactTaskCounts?=null,val peopleCounts:CompactPeopleCounts?=null)
 sealed interface WorkspaceDetailResult {
     data class Value(val value:WorkspaceDetail):WorkspaceDetailResult
     data class Rejected(val reason:WorkspaceFailure):WorkspaceDetailResult
 }
+data class WorkspacePageRequest(val actionId:String,val generation:Long,val people:Boolean,
+    val ticket:WorkspaceReadTicket,val tasksAfter:CompactTaskCursor?=null,val peopleAfter:CompactPeopleCursor?=null,
+    val baseline:WorkspaceRead?=null,val expectedAction:Action?=null,val lane:CompactTaskLane=CompactTaskLane.ACTIVE,
+    val taskPage:CompactTaskPage?=null,val peoplePage:CompactPeoplePage?=null)
+data class WorkspacePage(val access:WorkspaceAccess,val tasks:CompactTaskPage?=null,val people:CompactPeoplePage?=null,val taskCounts:CompactTaskCounts?=null)
+sealed interface WorkspacePageResult {
+    data class Value(val page:WorkspacePage):WorkspacePageResult
+    data class Rejected(val reason:WorkspaceFailure):WorkspacePageResult
+}
 interface WorkspaceRepository {
+    fun page(original:WorkspaceAccess,request:WorkspacePageRequest,publish:(WorkspacePageResult)->Unit) {
+        publish(WorkspacePageResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))
+    }
+
     /** Explicit single-detail reprojection; old access is provenance, never renewed authority. */
     fun detail(original:WorkspaceAccess,request:WorkspaceDetailRequest,publish:(WorkspaceDetailResult)->Unit) {
         publish(WorkspaceDetailResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))

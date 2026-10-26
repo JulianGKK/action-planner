@@ -128,7 +128,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             selected?.id==core.state.binding.actionId && selected?.status==ActionStatus.ACTIVE && slot.lifetime.isCurrent()
     }
     private inline fun <T> resolveCompactPresentation(identity:Any,area:ActiveArea,crossinline read:(ActiveCorePayload)->T):T? {
-        if(Thread.currentThread() !== ownerThread)return null
+        if(Thread.currentThread() !== ownerThread || boundedPage)return null
         return withCoreScope(identity) { slot->
             if(!compactPresentationCurrent(slot,area) || !slot.lifetime.authorizeHit(slot.value.core.state.binding.actionId)) {
                 dropCompactPresentation(slot);return null
@@ -185,6 +185,201 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         withCoreScope(identity) { slot->
             if(observed)slot.lifetime.compositionObserved() else slot.lifetime.compositionDisposed()
         }
+    }
+    private var pageAccess:WorkspaceAccess?=null
+    private var pageRows:WorkspacePage?=null
+    private var pageRoles:List<Role> = emptyList()
+    private var pageInput:ProductInputScreenKey?=null
+    internal val boundedListVisible get()=boundedPage && activeArea in supportedActiveAreaGroup2 && activeArea!=ActiveArea.HUB && activeArea!=ActiveArea.MATERIAL && tasks.selected==null && !tasks.form && selectedPerson==null && operations.screen==OperationsScreen.OVERVIEW
+    var boundedPage by mutableStateOf(false);private set
+    var pageTotal by mutableLongStateOf(0);private set
+    var pageNumber by mutableStateOf(1);private set
+    var pageEpoch by mutableLongStateOf(0);private set
+    private var tasksNext:CompactTaskCursor?=null
+    private var peopleNext:CompactPeopleCursor?=null
+    val pageHasMore get()=if(activeArea==ActiveArea.PERSONS)peopleNext!=null else tasksNext!=null
+    val pageShown get()=pageRows?.let{it.people?.items?.size ?: it.tasks?.items?.size} ?: 0
+    private fun pageCurrent(epoch:Long):Boolean {
+        val action=selected?:return false
+        return boundedPage && epoch==pageEpoch && snapshot.state==SessionState.READY &&
+            !personsLoading && !workspaceRefreshing && !workspaceError &&
+            pageAccess?.publish(action.id,action.status,snapshot.generation){}==true
+    }
+    fun boundedPageLabel(epoch:Long,index:Int):String? {
+        if(!pageCurrent(epoch) || index !in 0 until 32)return null
+        return pageRows?.let{it.people?.items?.getOrNull(index)?.pseudonym ?: it.tasks?.items?.getOrNull(index)?.title}
+    }
+    fun openBoundedRow(epoch:Long,index:Int) {
+        if(detailLoading || !pageCurrent(epoch) || !activeNavigationEnabled || index !in 0 until 32)return
+        val rows=pageRows?:return
+        val id=rows.people?.items?.getOrNull(index)?.id ?: rows.tasks?.items?.getOrNull(index)?.id ?: return
+        val source=pageAccess?:return
+        val action=selected?:return
+        val ticket=workspaceTicket?:return
+        val serial=workspaceRequest;val generation=snapshot.generation
+        var baseline:WorkspaceRead?=null
+        val names=pageRoles.sumOf{it.name.length.toLong()}
+        val presentation=OperationalPresentation.cost(0,pageRoles.size.toLong(),names)
+        val controls=ActiveWorkspaceBudget.Units(objects=128,lists=16,listCapacity=128,references=1024)
+        if(!source.consume(addPageUnits(controls,presentation)){
+            baseline=WorkspaceRead(action.id,action.status,generation,emptySet(),
+                OperationalBoard(action.id,action.status,pageRoles,emptyList()),
+                if(rows.tasks!=null)TaskBoard(action.id,emptyList(),emptyList(),false) else null,access=source)
+        }){workspaceError=true;workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;return}
+        detailLoading=true;choiceRows=null;choiceFailure=null;choiceEpoch++
+        workspaceRepository?.detail(source,WorkspaceDetailRequest(action.id,action.status,generation,
+            if(rows.people!=null)WorkspaceDetailKind.PERSON else WorkspaceDetailKind.TASK,id,ticket,baseline,action,membership=true,taskPage=rows.tasks,peoplePage=rows.people)){result->
+            if(serial!=workspaceRequest || !ticket.active || selected?.id!=action.id || snapshot.state!=SessionState.READY || snapshot.generation!=generation)return@detail
+            detailLoading=false
+            when(result){
+                is WorkspaceDetailResult.Rejected->{workspaceRefusal=result.reason;workspaceError=true}
+                is WorkspaceDetailResult.Value->{
+                    val w=result.value.workspace?:return@detail
+                    pageAccess=w.access
+                    val value=WorkspaceSnapshot(w.actionId,w.generation,w.operations.persons.map{it.person},w.operations,w.tasks,w.status,access=w.access)
+                    workspace=value
+                    if(workspaceValue===value){
+                        if(rows.people!=null)personDetail(id) else result.value.task?.let{tasks.open(it)}
+                    }
+                }
+            }
+        }
+        interaction()
+    }
+    var pageLane by mutableStateOf(CompactTaskLane.ACTIVE);private set
+    fun toggleBoundedTaskLane(){if(!workspaceRefreshing && !detailLoading && activeNavigationEnabled){pageLane=if(pageLane==CompactTaskLane.ACTIVE)CompactTaskLane.CLOSED else CompactTaskLane.ACTIVE;loadBoundedPage(ActiveArea.TASKS,false)}}
+    var pageNeedsReload by mutableStateOf(false);private set
+    private fun patchBoundedPage(detail:WorkspaceDetail,id:String){
+        val page=pageRows?:return
+        val access=detail.access
+        val task=detail.task
+        val person=detail.workspace?.operations?.persons?.find{it.person.id==id}
+        val taskPage=page.tasks;val peoplePage=page.people
+        val cost=ActiveWorkspaceBudget.Units(objects=64,arrays=8,arrayPayloadBytes=512,lists=8,listCapacity=128,references=512)
+        if(!access.consume(cost){
+            if(taskPage!=null && task!=null){
+                val items=taskPage.items.map{old->if(old.id!=id)old else CompactTaskItem(task.id,task.title,task.priority,task.status,task.assigneePersonId,task.assigneeRoleId,task.affectedPersonId,task.dueAt,task.createdAt,task.updatedAt)}
+                    .filter{TaskRules.active(it.status)==(taskPage.query.lane==CompactTaskLane.ACTIVE)}
+                val counts=detail.taskCounts?:taskPage.overall
+                pageRows=page.copy(access=access,tasks=taskPage.copy(items=items,overall=counts,filtered=counts))
+                pageTotal=if(taskPage.query.lane==CompactTaskLane.ACTIVE)counts.open+counts.inProgress else counts.done+counts.cancelled
+            }else if(peoplePage!=null && person!=null){
+                val items=peoplePage.items.map{old->if(old.id!=id)old else old.copy(pseudonym=person.person.pseudonym,
+                    status=person.state?.status?:old.status,currentRoleId=person.state?.currentRoleId,
+                    currentRoleName=detail.workspace?.operations?.roles?.find{it.id==person.state?.currentRoleId}?.name,
+                    currentPlaceLabel=person.state?.currentPlaceLabel,updatedAt=person.state?.updatedAt?:old.updatedAt)}
+                pageRows=page.copy(access=access,people=peoplePage.copy(items=items,overall=detail.peopleCounts?:peoplePage.overall))
+            }
+            pageEpoch++;pageNeedsReload=true
+        }){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true}
+    }
+    private var choiceRows:CompactPeoplePage?=null
+    private var choiceLoading by mutableStateOf(false)
+    private var choiceFailure by mutableStateOf<WorkspaceFailure?>(null)
+    internal var choiceEpoch by mutableLongStateOf(0);private set
+    private val taskPersonChoices=object:TaskPersonChoices {
+        override val active get()=boundedPage
+        override val loading get()=choiceLoading
+        override val count get()=if(workspace!=null)choiceRows?.items?.size?:0 else 0
+        override val more get()=choiceRows?.next!=null
+        override val failure get()=choiceFailure
+        override fun label(index:Int)=if(workspace!=null && index in 0 until 32)choiceRows?.items?.getOrNull(index)?.pseudonym else null
+        override fun labelFor(id:String)=if(workspace!=null)choiceRows?.items?.find{it.id==id}?.pseudonym else null
+        override fun choose(index:Int,affected:Boolean){
+            if(workspace==null || !tasks.form || choiceLoading || index !in 0 until 32)return
+            val id=choiceRows?.items?.getOrNull(index)?.id?:return
+            if(affected)tasks.affectedPerson(id) else tasks.assigneePerson(id)
+        }
+        override fun load(next:Boolean)=loadTaskPersonChoices(next)
+    }
+    private fun loadTaskPersonChoices(next:Boolean){
+        if(!boundedPage || !tasks.form || tasks.busy || choiceLoading)return
+        val held=workspaceValue?:return
+        val access=held.access?:return
+        val action=selected?:return
+        val expected=tasks.selected?:return
+        val ticket=workspaceTicket?:return
+        val serial=workspaceRequest
+        var baseline:WorkspaceRead?=null
+        if(!access.consume(ActiveWorkspaceBudget.Units(objects=32,references=256)){
+            baseline=WorkspaceRead(held.actionId,held.status,held.generation,emptySet(),checkNotNull(held.operations),held.tasks,access=access)
+        }){choiceFailure=WorkspaceFailure.BUDGET_REFUSED;return}
+        val after=if(next)choiceRows?.next else null
+        choiceLoading=true;choiceFailure=null
+        workspaceRepository?.page(access,WorkspacePageRequest(action.id,held.generation,true,ticket,peopleAfter=after,baseline=baseline,expectedAction=action,taskPage=pageRows?.tasks,peoplePage=pageRows?.people)){result->
+            if(serial!=workspaceRequest || !ticket.active || selected?.id!=action.id || snapshot.state!=SessionState.READY || snapshot.generation!=held.generation)return@page
+            choiceLoading=false
+            when(result){
+                is WorkspacePageResult.Rejected->choiceFailure=result.reason
+                is WorkspacePageResult.Value->{
+                    // SAME references, every held row validated in the page transaction.
+                    val fresh=result.page.access
+                    val updated=held.copy(access=fresh)
+                    workspace=updated;pageAccess=fresh
+                    if(workspaceValue===updated){
+                        pageNeedsReload=true
+                        if(tasks.form && tasks.selected===expected){choiceRows=result.page.people;choiceEpoch++}
+                    }
+                }
+            }
+        }
+        interaction()
+    }
+    private fun addPageUnits(a:ActiveWorkspaceBudget.Units,b:ActiveWorkspaceBudget.Units)=ActiveWorkspaceBudget.Units(
+        objects=Math.addExact(a.objects,b.objects),strings=Math.addExact(a.strings,b.strings),utf16Units=Math.addExact(a.utf16Units,b.utf16Units),
+        arrays=Math.addExact(a.arrays,b.arrays),arrayPayloadBytes=Math.addExact(a.arrayPayloadBytes,b.arrayPayloadBytes),
+        lists=Math.addExact(a.lists,b.lists),listCapacity=Math.addExact(a.listCapacity,b.listCapacity),maps=Math.addExact(a.maps,b.maps),
+        mapCapacity=Math.addExact(a.mapCapacity,b.mapCapacity),indexes=Math.addExact(a.indexes,b.indexes),indexCapacity=Math.addExact(a.indexCapacity,b.indexCapacity),references=Math.addExact(a.references,b.references))
+    fun nextBoundedPage(){if(pageHasMore && !pageNeedsReload && activeNavigationEnabled && !detailLoading && !workspaceRefreshing)loadBoundedPage(activeArea,true)}
+    fun firstBoundedPage(){if(activeNavigationEnabled && !detailLoading && !workspaceRefreshing)loadBoundedPage(activeArea,false)}
+    private fun loadBoundedPage(area:ActiveArea,next:Boolean):Boolean {
+        if(area!=ActiveArea.TASKS && area!=ActiveArea.PERSONS)return false
+        val action=selected?:return false
+        val initial=if(!boundedPage)acquireCoreScope() else null
+        val ticket=workspaceTicket ?: WorkspaceReadTicket().also{workspaceTicket=it}
+        val source=pageAccess ?: initial?.lifetime?.childAccess(ticket)
+        if(source==null){initial?.scopes?.end();return false}
+        val generation=snapshot.generation
+        if(initial!=null)try{
+            val core=initial.value.core
+            val cost=ActiveWorkspaceBudget.Units(objects=256,strings=64,utf16Units=8192,lists=16,listCapacity=256,references=2048)
+            var installed=false
+            if(source.consume(cost){
+                pageRoles=core.functions.items.map{it.role}
+                val t=core.tasks;val p=core.people
+                val q=CompactTaskQuery()
+                val last=t.items.lastOrNull()
+                val tc=last?.takeIf{t.hasMore}?.let{CompactTaskCursor(core.state,q,it.id,it.priority,it.dueAt,it.createdAt,it.updatedAt)}
+                val pc=p.items.lastOrNull()?.takeIf{p.hasMore}?.let{CompactPeopleCursor(core.state,CompactPeopleQuery.All,it.createdAt,it.id)}
+                pageRows=if(area==ActiveArea.PERSONS)WorkspacePage(source,people=CompactPeoplePage(core.state,CompactPeopleQuery.All,p.overall,p.filteredCount,p.items,pc))
+                    else WorkspacePage(source,tasks=CompactTaskPage(core.state,q,t.overall,t.filtered,t.items,tc))
+                tasksNext=tc;peopleNext=pc;pageAccess=source;pageNumber=1;pageEpoch++;pageNeedsReload=false
+                pageTotal=if(area==ActiveArea.PERSONS)p.overall.total else t.overall.open+t.overall.inProgress
+                boundedPage=true;fullActiveView=true;activeArea=area;pageLane=CompactTaskLane.ACTIVE;personsLoading=false;installed=true
+            } && installed){interaction();return true}
+            workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return true
+        }finally{initial.scopes.end()}
+        val afterTasks=if(next)tasksNext else null
+        val afterPeople=if(next)peopleNext else null
+        val number=if(next)pageNumber+1 else 1
+        val serial=++workspaceRequest
+        boundedPage=true;fullActiveView=true;activeArea=area
+        personsLoading=true;workspaceRefreshing=true;workspaceError=false;workspaceRefusal=null
+        tasks.clear();operations.clear();selectedPerson=null;personForm=false;workspace=null
+        workspaceRepository?.page(source,WorkspacePageRequest(action.id,generation,area==ActiveArea.PERSONS,ticket,afterTasks,afterPeople,lane=pageLane)){result->
+            if(serial!=workspaceRequest || !ticket.active || selected?.id!=action.id || snapshot.state!=SessionState.READY || snapshot.generation!=generation)return@page
+            personsLoading=false;workspaceRefreshing=false
+            when(result){
+                is WorkspacePageResult.Rejected->{workspaceRefusal=result.reason;workspaceError=true}
+                is WorkspacePageResult.Value->{
+                    val page=result.page
+                    pageAccess=page.access;pageRows=page;pageEpoch++
+                    pageTotal=page.people?.overall?.total ?: page.tasks!!.overall.let{if(pageLane==CompactTaskLane.ACTIVE)it.open+it.inProgress else it.done+it.cancelled}
+                    pageNumber=number;pageNeedsReload=false;tasksNext=page.tasks?.next;peopleNext=page.people?.next
+                }
+            }
+        }
+        interaction();return true
     }
     fun useFullActiveView() {
         if(!activeNavigationEnabled)return
@@ -248,7 +443,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         workspaceRepository=repository
         // Product Runtime binds the repository AFTER ViewModel construction. Legacy ports
         // keep their existing refresh path; productive models must never fall back to it.
-        tasks.bindDetailLoader(::projectDetail);tasks.bindMembershipLoader(::projectMembership)
+        tasks.bindDetailLoader(::projectDetail);tasks.bindMembershipLoader(::projectMembership);tasks.personChoices=taskPersonChoices
         operations.bindDetailLoader(::projectDetail);operations.bindMembershipLoader(::projectMembership)
         material.bindDetailLoader(::projectDetail);material.bindMembershipLoader(::projectMembership)
         expenses.bindDetailLoader(::projectDetail);expenses.bindMembershipLoader(::projectMembership)
@@ -420,6 +615,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             selected?.id==held.actionId && selected?.status==held.status && held.access?.heldAllowed()==true
     }
     internal fun inputScreenLive(key:ProductInputScreenKey):Boolean {
+        if(boundedListVisible)return Thread.currentThread()===ownerThread && pageInput===key && key.matches(this) && snapshot.state==SessionState.READY && pageAccess?.heldAllowed()==true
         val held=workspaceValue?:return false
         return Thread.currentThread()===ownerThread && held.uiRows?.inputScreen===key && key.matches(this) &&
             snapshot.state==SessionState.READY && snapshot.generation==held.generation && selected?.id==held.actionId &&
@@ -427,11 +623,21 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     internal fun reserveInput(key:ProductInputScreenKey,units:ActiveWorkspaceBudget.Units):Boolean {
         if(!inputScreenLive(key))return false
+        if(boundedListVisible){
+            if(pageAccess?.consume(units){}!=true){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return false}
+            return inputScreenLive(key)
+        }
         val failure=applyWorkspaceCopy(units){}
         if(failure!=null){workspaceRefusal=if(failure==OperationsFailure.BUDGET_REFUSED)WorkspaceFailure.BUDGET_REFUSED else WorkspaceFailure.NOT_ALLOWED;workspaceError=true;return false}
         return inputScreenLive(key)
     }
     internal fun inputScreenKey(@Suppress("UNUSED_PARAMETER") revision:Long=uiPresentationRevision):Any? {
+        if(boundedListVisible){
+            pageInput?.takeIf{it.matches(this)}?.let{return it}
+            var key:ProductInputScreenKey?=null
+            if(pageAccess?.consume(ActiveWorkspaceBudget.Units(objects=16,references=256)){key=ProductInputScreenKey(this)}!=true)return DeniedProductInputScope
+            pageInput=key;return key
+        }
         val rows=workspaceValue?.uiRows
         val old=rows?.inputScreen
         if(old?.matches(this)==true)return old
@@ -539,7 +745,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             memoryHeaders=held.memoryHeaders,protocolTimeline=held.protocolTimeline,
             materialBoard=held.materialBoard,expenseBoard=held.expenseBoard,access=held.access,leadershipState=held.leadershipState)
         var delivered=false
-        workspaceRepository?.detail(original,WorkspaceDetailRequest(action.id,action.status,generation,kind,id,ticket,baseline,action,membership)){result->
+        workspaceRepository?.detail(original,WorkspaceDetailRequest(action.id,action.status,generation,kind,id,ticket,baseline,action,membership,taskPage=if(boundedPage)pageRows?.tasks else null,peoplePage=if(boundedPage)pageRows?.people else null)){result->
             if(delivered || serial!=workspaceRequest || selected?.id!=action.id || snapshot.state!=SessionState.READY || snapshot.generation!=generation)return@detail
             delivered=true
             when(result){
@@ -549,6 +755,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                         val updated=WorkspaceSnapshot(w.actionId,w.generation,if(w.operations===held.operations)held.persons else w.operations.persons.map{it.person},w.operations,w.tasks,w.status,
                             w.leadershipState,w.protocol,w.material,w.expenses,w.memory,w.documents,w.access,w.materialBoard,w.expenseBoard,w.protocolTimeline,w.memoryHeaders)
                         workspace=updated
+                        if(boundedPage && workspaceValue===updated){
+                            pageAccess=w.access;pageRoles=w.operations.roles
+                            patchBoundedPage(result.value,id)
+                        }
                         if(workspaceValue!==updated){done(WorkspaceDetailResult.Rejected(workspaceRefusal?:WorkspaceFailure.NOT_ALLOWED));return@detail}
                     }
                     if(result.value.access.publish(action.id,action.status,generation){})done(result)
@@ -648,6 +858,13 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val before = snapshot
         val action = selected ?: return
         if (!activeNavigationEnabled || (area == ActiveArea.MATERIAL && !materialAvailable) || (area == ActiveArea.COSTS && !expensesAvailable) || (area == ActiveArea.MEMORY_REPORTS && !memoryReportsAvailable)) return
+        if((boundedPage || coreSlot.get()!=null) && (area==ActiveArea.TASKS || area==ActiveArea.PERSONS) && loadBoundedPage(area,false))return
+        if(boundedPage){
+            // A selected detail is not a complete workspace or a global hub projection.
+            clearPersons(preserveWorkspace=true);fullActiveView=true;activeArea=area;workspace=null
+            if(area!=ActiveArea.HUB){workspaceError=true;workspaceRefusal=WorkspaceFailure.OWNER_UNCONFIRMED}
+            return
+        }
         if(navigateOriginal(active=area))return
         val hitNavigation=retained==null && activeCorePort?.reuseEnabled==true &&
             area in supportedActiveAreaGroup1
@@ -833,6 +1050,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     private fun clearPersons(preserveCore:Boolean=false,preserveWorkspace:Boolean=false) {
         if(!preserveCore && !preserveWorkspace)clearActiveCore()
+        if(!preserveWorkspace){pageAccess=null;pageRows=null;pageRoles=emptyList();pageInput=null;choiceRows=null;choiceLoading=false;choiceFailure=null;choiceEpoch++;boundedPage=false;pageEpoch++;tasksNext=null;peopleNext=null}
         fullActiveView=preserveWorkspace && workspaceValue?.status==ActionStatus.ACTIVE
         if(!preserveWorkspace){workspaceTicket?.cancel();workspaceTicket=null}
         preparationArea = PreparationArea.OVERVIEW; activeArea = ActiveArea.HUB; workspaceRefreshing = false

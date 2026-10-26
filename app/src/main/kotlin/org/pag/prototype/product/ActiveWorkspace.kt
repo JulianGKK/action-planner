@@ -108,6 +108,18 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
         model.workspace?.uiRows?.header?.let{Text(it.start);Text(it.end)}
         return
     }
+    if(model.boundedListVisible) {
+        Text("Seite ${model.pageNumber} · ${model.pageTotal} Einträge insgesamt")
+        if(model.activeArea==ActiveArea.TASKS)FormOutlinedButton({model.toggleBoundedTaskLane()},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing && !model.detailLoading){Text(if(model.pageLane==CompactTaskLane.ACTIVE)"Abgeschlossene Aufgaben anzeigen" else "Offene Aufgaben anzeigen")}
+        FormOutlinedButton({model.firstBoundedPage()},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing){Text("Erste Seite neu laden")}
+        FormOutlinedButton({model.nextBoundedPage()},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing && model.pageHasMore && !model.pageNeedsReload){Text("Nächste Seite (32)")}
+        if(model.pageNeedsReload)Text("Daten geändert. Für weitere Seiten bitte die erste Seite neu laden.")
+    }
+    if(model.boundedPage && model.workspaceRefusal!=null)Text(when(model.workspaceRefusal){
+        WorkspaceFailure.BUDGET_REFUSED->"Die Seite überschreitet das verbleibende Speicherbudget."
+        WorkspaceFailure.STALE->"Die Daten wurden geändert. Bitte die erste Seite neu laden."
+        else->"Die Seite ist derzeit nicht verfügbar."
+    })
     if(!renderContent)return
     if(model.compactActiveMode) {
         if(model.activeArea==ActiveArea.HUB) {
@@ -138,6 +150,21 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
         FormOutlinedButton({model.useFullActiveView()},enabled=model.activeNavigationEnabled) { Text("Alle anzeigen und bearbeiten") }
         if(model.activeArea==ActiveArea.HUB && model.documentsAvailable)
             FormOutlinedButton({model.openDocuments()},enabled=model.activeNavigationEnabled) { Text("Dokumente öffnen") }
+        return
+    }
+    if(model.boundedPage && model.activeArea==ActiveArea.HUB){
+        FormOutlinedButton({model.activeArea(ActiveArea.TASKS)},enabled=model.activeNavigationEnabled){Text("Aufgaben öffnen")}
+        FormOutlinedButton({model.activeArea(ActiveArea.PERSONS)},enabled=model.activeNavigationEnabled){Text("Personen öffnen")}
+        return
+    }
+    if(model.boundedListVisible){
+        if(model.workspaceError){PagErrorState();return}
+        if(model.personsLoading || model.workspaceRefreshing){PagLoadingState();return}
+        val epoch=model.pageEpoch
+        repeat(model.pageShown){index->model.boundedPageLabel(epoch,index)?.let{label->
+            FormOutlinedButton({model.openBoundedRow(epoch,index)},enabled=model.activeNavigationEnabled,modifier=Modifier.fillMaxWidth()){Text(label)}
+        }}
+        if(model.pageShown==0)Text("Keine weiteren Einträge auf dieser Seite.")
         return
     }
     if (model.personDetailLoading) { PagLoadingState(); return }

@@ -3,12 +3,25 @@ package org.pag.prototype.product
 import androidx.compose.runtime.*
 import org.pag.domain.*
 
+internal interface TaskPersonChoices {
+    val active:Boolean
+    val loading:Boolean
+    val count:Int
+    val more:Boolean
+    val failure:WorkspaceFailure?
+    fun label(index:Int):String?
+    fun labelFor(id:String):String?
+    fun choose(index:Int,affected:Boolean)
+    fun load(next:Boolean)
+}
+
 /** Ephemeral drafts; persisted status and session authority remain in the repository. */
 class TaskModel(private val repository:TaskRepository?,private val session:()->SessionSnapshot,
     private val action:()->Action?,private val interaction:()->Unit,private val leaveSensitive:()->Unit,
     private val suppliedBoard: (() -> TaskBoard?)? = null,
     private val refreshWorkspace: (() -> Unit)? = null,
     private val feedback: (String) -> Unit = {}) {
+    internal var personChoices:TaskPersonChoices?=null
     private var feedbackFactory:WorkspaceFeedbackFactory?=null
     internal fun bindFeedbackFactory(factory:WorkspaceFeedbackFactory){check(feedbackFactory==null);feedbackFactory=factory}
     private var uiRows:((Task)->TaskUiRow?)?=null

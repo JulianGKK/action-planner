@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P112,tight,CORE,fixture=p111-large100-128k,ledger=State(phase=RETAINED, retained=3626571, transition=16777216, localRetained=3626571, localTransition=15978280, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,tight,REFUSED,base_transition=15978280,initial_remaining=798936,no_false_empty=true,ledger=State(phase=COMPOSE_TRANSITION, retained=3789435, transition=16777216, localRetained=3789435, localTransition=16141144, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,tight,PASS,full_graphs=0,core_reads=1,reuse=false,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P112 PASS tight
+INSTRUMENTATION_CODE: -1

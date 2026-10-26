@@ -91,21 +91,21 @@ internal fun taskFailureMessage(reason:OperationsFailure):String = when(reason) 
     FormTextField(i.title,{model.changeTitle(it)},label={Text("Titel")},autoFocus=!model.editingExisting,keyboardOptions=productKeyboard(ProductTextKind.TASK_TITLE),singleLine=true,enabled=!model.busy && !model.commitConfirmed,modifier=Modifier.fillMaxWidth(),supportingText=originalContent{Text("Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · maximal 120 Zeichen")})
     Text("Priorität")
     TaskPriority.entries.forOriginal{p->FormOutlinedButton({model.priority(p)},enabled=!model.busy && !model.commitConfirmed){Text(originalText{(if(i.priority==p)"✓ " else "")+priorityLabel(p)})}}
-    if(people==null){Text("Zuordnungen werden nach dem bewussten Neuladen wieder verfügbar. Dein Entwurf bleibt erhalten.")}
+    if(people==null){Text("Zuordnungen werden nach dem bewussten Neuladen wieder verfügbar. Dein Entwurf bleibt erhalten.");if(model.personChoices?.active==true)TaskPeoplePage(model,false)}
     else {
     var assignments by remember{mutableStateOf(false)}
     FormTextButton({model.touch();assignments=!assignments}){Text("Zuständigkeit wählen (optional)")}
     if(assignments){
         FormOutlinedButton({model.assigneePerson(null)},enabled=!model.busy && !model.commitConfirmed){Text(if(i.assigneePersonId==null && i.assigneeRoleId==null)"✓ Niemand" else "Niemand")}
         people.roles.forOriginal{r->val id=r.id;FormOutlinedButton({model.assigneeRole(id)},enabled=!model.busy && !model.commitConfirmed){Text(originalText(r.name.length.toLong()){(if(i.assigneeRoleId==r.id)"✓ " else "")+"Rolle: ${r.name}"})}}
-        people.persons.forOriginal{p->val id=p.person.id;FormOutlinedButton({model.assigneePerson(id)},enabled=!model.busy && !model.commitConfirmed){Text(originalText(p.person.pseudonym.length.toLong()){(if(i.assigneePersonId==p.person.id)"✓ " else "")+"Person: ${p.person.pseudonym}"})}}
+        if(model.personChoices?.active==true)TaskPeoplePage(model,false) else people.persons.forOriginal{p->val id=p.person.id;FormOutlinedButton({model.assigneePerson(id)},enabled=!model.busy && !model.commitConfirmed){Text(originalText(p.person.pseudonym.length.toLong()){(if(i.assigneePersonId==p.person.id)"✓ " else "")+"Person: ${p.person.pseudonym}"})}}
     }
-    val assignment=i.assigneeRoleId?.let{id->people.roles.findOriginal{it.id==id}?.name}?:i.assigneePersonId?.let{id->people.persons.findOriginal{it.person.id==id}?.person?.pseudonym}?:"Niemand"
+    val assignment=i.assigneeRoleId?.let{id->people.roles.findOriginal{it.id==id}?.name}?:i.assigneePersonId?.let{id->people.persons.findOriginal{it.person.id==id}?.person?.pseudonym ?: model.personChoices?.labelFor(id) ?: "Person ausgewählt"}?:"Niemand"
     Text(originalText(assignment.length.toLong()){"Zuständig: $assignment"})
     var affected by remember{mutableStateOf(false)}
     FormTextButton({model.touch();affected=!affected}){Text("Betroffene Person wählen (optional)")}
-    if(affected){FormOutlinedButton({model.affectedPerson(null)},enabled=!model.busy && !model.commitConfirmed){Text("Keine betroffene Person")};people.persons.forOriginal{p->val id=p.person.id;FormOutlinedButton({model.affectedPerson(id)},enabled=!model.busy && !model.commitConfirmed){Text(originalText(p.person.pseudonym.length.toLong()){(if(i.affectedPersonId==id)"✓ " else "")+p.person.pseudonym})}}}
-    val affectedName=people.persons.findOriginal{it.person.id==i.affectedPersonId}?.person?.pseudonym?:"Niemand"
+    if(affected){FormOutlinedButton({model.affectedPerson(null)},enabled=!model.busy && !model.commitConfirmed){Text("Keine betroffene Person")};if(model.personChoices?.active==true)TaskPeoplePage(model,true) else people.persons.forOriginal{p->val id=p.person.id;FormOutlinedButton({model.affectedPerson(id)},enabled=!model.busy && !model.commitConfirmed){Text(originalText(p.person.pseudonym.length.toLong()){(if(i.affectedPersonId==id)"✓ " else "")+p.person.pseudonym})}}}
+    val affectedName=i.affectedPersonId?.let{id->people.persons.findOriginal{it.person.id==id}?.person?.pseudonym ?: model.personChoices?.labelFor(id) ?: "Person ausgewählt"}?:"Niemand"
     Text(originalText(affectedName.length.toLong()){"Betrifft: $affectedName"})
     }
     val due=model.dueText
@@ -152,4 +152,17 @@ internal fun taskTime(time:Long)=Instant.ofEpochMilli(time).atZone(ZoneId.system
             FormTextButton({model.loadHistory(true)}){Text("Chronik von Anfang an")}
         }
     }
+}
+
+/** A chooser page is an explicit original-owner child read; never an incomplete all-people list. */
+@androidx.compose.runtime.NonRestartableComposable
+@Composable private fun TaskPeoplePage(model:TaskModel,affected:Boolean){
+    val choices=model.personChoices?:return
+    FormOutlinedButton({choices.load(false)},enabled=!model.busy && !choices.loading && !model.commitConfirmed){Text("Personenauswahl öffnen / erste Seite")}
+    if(choices.loading)PagLoadingState()
+    choices.failure?.let{Text(if(it==WorkspaceFailure.BUDGET_REFUSED)"Die Personenseite überschreitet das verbleibende Speicherbudget." else "Die Personenauswahl ist derzeit nicht verfügbar. Bitte neu laden.")}
+    repeat(choices.count){index->choices.label(index)?.let{label->
+        FormOutlinedButton({choices.choose(index,affected)},enabled=!model.busy && !choices.loading && !model.commitConfirmed){Text(label)}
+    }}
+    if(choices.more)FormOutlinedButton({choices.load(true)},enabled=!model.busy && !choices.loading && !model.commitConfirmed){Text("Weitere Personen (32)")}
 }

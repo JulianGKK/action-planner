@@ -1,0 +1,14 @@
+INSTRUMENTATION_STATUS: stream=P112,people,CORE,fixture=p111-large32,ledger=State(phase=RETAINED, retained=2039307, transition=16777216, localRetained=2039307, localTransition=8399768, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,people,PAGE,32+32,distinct=true,old_page_TEST_held=true,ledger=State(phase=COMPOSE_TRANSITION, retained=3435570, transition=16777216, localRetained=3435570, localTransition=12544992, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,people,PERSON,detail_visible=true,back_to_second_page=true,ledger=State(phase=COMPOSE_TRANSITION, retained=4365494, transition=16777216, localRetained=4365494, localTransition=13639988, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,people,PASS,full_graphs=0,core_reads=1,reuse=false,fixture_cleanup=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P112 PASS people
+INSTRUMENTATION_CODE: -1

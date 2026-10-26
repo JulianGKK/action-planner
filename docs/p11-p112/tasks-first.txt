@@ -1,0 +1,22 @@
+INSTRUMENTATION_STATUS: stream=P112,tasks,CORE,fixture=p111-large32,ledger=State(phase=RETAINED, retained=2039307, transition=16777216, localRetained=2039307, localTransition=8399768, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P112,tasks,FAIL,java.lang.IllegalStateException: page=OWNER_UNCONFIRMED,State(phase=RETAINED, retained=2042571, transition=16777216, localRetained=2042571, localTransition=8403032, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED)
+	at org.pag.prototype.P112PagesProbe.onStart$lambda$10(P112PagesProbe.kt:52)
+	at org.pag.prototype.P112PagesProbe$$ExternalSyntheticLambda6.invoke(D8$$SyntheticClass:0)
+	at org.pag.prototype.P112PagesProbe.main$lambda$0(P112PagesProbe.kt:17)
+	at org.pag.prototype.P112PagesProbe$$ExternalSyntheticLambda4.run(D8$$SyntheticClass:0)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2353)
+	at android.os.Handler.handleCallback(Handler.java:942)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loopOnce(Looper.java:226)
+	at android.os.Looper.loop(Looper.java:313)
+	at android.app.ActivityThread.main(ActivityThread.java:8762)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:604)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1067)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P112 FAIL tasks
+INSTRUMENTATION_CODE: 0

@@ -114,4 +114,44 @@ class P109WorkspaceConsistencyTest {
         }
     }
 
+    @Test fun p112PageChecksRepresentedRowsAndPlanMembershipWithoutClaimingGlobalCompleteness()=runBlocking {
+        SqliteHostConnection().use{db->db.seed();val held=baseline();val r=request(WorkspaceDetailKind.TASK,"t")
+            db.execute("INSERT INTO persons VALUES('extra','a','Extra','extra',0,0)")
+            db.execute("INSERT INTO person_role_plans VALUES('a','extra',NULL,0)")
+            db.execute("INSERT INTO tasks(id,actionId,title,priority,status,createdAt,updatedAt) VALUES('other','a','Other','NORMAL','OPEN',0,0)")
+            val check=WorkspaceConsistency(db){true}
+            assertTrue(check.matches(held,r,bounded=true));assertFalse(check.matches(held,r))
+            db.execute("UPDATE persons SET editRevision=1 WHERE id='p'")
+            assertFalse(check.matches(held,r,bounded=true))
+            assertEquals(0,db.textReads);assertEquals(0,db.blobReads)
+        }
+    }
+    @Test fun p112SelectedMetadataDoesNotSizeUnrelatedPayloadAndNeverReadsIt()=runBlocking {
+        SqliteHostConnection().use{db->db.seed()
+            val c=object:StorageContext{override val scope=AccessScope.READY;override val generation=1L;override fun check(point:AccessPoint)=true;override fun publish(result:()->Unit):Boolean{result();return true}}
+            val preflight=FullviewPreflight(db,c){true}
+            val original=preflight.prepare("a",FullviewPreflight.task,selectedIds=listOf("t"))
+            db.execute("INSERT INTO tasks(id,actionId,title,priority,status,createdAt,updatedAt) VALUES('other','a','Other','NORMAL','OPEN',0,0)")
+            assertEquals(original,preflight.prepare("a",FullviewPreflight.task,selectedIds=listOf("t")))
+            assertEquals(0,db.blobReads)
+        }
+    }
+
+    @Test fun p112CompactPeersAreCheckedInSameTransactionAndChooserCannotSkipExpectedTask()=runBlocking {
+        SqliteHostConnection().use{db->db.seed()
+            val state=CompactTaskState(P3bFreeActiveCoreBinding("a",1),0)
+            val item=CompactTaskItem("t","Synthetic task",TaskPriority.NORMAL,TaskStatus.OPEN,null,null,null,null,0,0)
+            val counts=CompactTaskCounts(1,0,0,0,0)
+            val page=CompactTaskPage(state,CompactTaskQuery(),counts,counts,listOf(item),null)
+            val request=request(WorkspaceDetailKind.PERSON,"p").copy(taskPage=page)
+            val checker=WorkspaceConsistency(db){true}
+            assertTrue(checker.compactMatches(request))
+            db.execute("UPDATE tasks SET title='Changed',editRevision=1 WHERE id='t'")
+            assertFalse(checker.compactMatches(request))
+            // A chooser rebind validates all held Expected rows, including the selected task.
+            assertFalse(checker.matches(baseline(),request(WorkspaceDetailKind.TASK,"t"),bounded=true,validateAllHeld=true))
+            assertEquals(0,db.textReads);assertEquals(0,db.blobReads)
+        }
+    }
+
 }

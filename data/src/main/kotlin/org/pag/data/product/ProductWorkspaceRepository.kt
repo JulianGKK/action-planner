@@ -21,6 +21,9 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
     constructor(app:Context,access:StorageAccess,inventory:ProductInventory,owner:()->SessionDbKeyOwner?,
         worker:Executor,main:Executor,blocked:()->Unit,mutations:WorkspaceMutationInvalidation):this(app,access,inventory,owner,worker,main,blocked,OutstandingCoreRead.product,null,mutations)
 
+    override fun page(original:WorkspaceAccess,request:WorkspacePageRequest,publish:(WorkspacePageResult)->Unit) =
+        OriginalCorePages(access,inventory,owner,worker,main,blocked,memory,mutations,database).read(original,request,publish)
+
     private val protocolOrder=Comparator<ProtocolTimelineItem>{a,b->
         val time=a.occurredAt.compareTo(b.occurredAt)
         if(time!=0)time else {val recorded=a.originalRecordedAt.compareTo(b.originalRecordedAt);if(recorded!=0)recorded else a.entryId.compareTo(b.entryId)}
@@ -37,6 +40,8 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
         val baseline=request.baseline
         if(baseline!=null && baseline.access!==scope){reject(WorkspaceFailure.STALE);return}
         val control=try{if(baseline==null)OriginalWorkspaceAccess.cost else WorkspaceConsistency.cost(baseline,request.kind)}catch(_:ArithmeticException){reject(WorkspaceFailure.BUDGET_REFUSED);return}
+        val compactControl=if(request.taskPage!=null || request.peoplePage!=null)ActiveWorkspaceBudget.Units(objects=512,arrays=64,arrayPayloadBytes=16384,references=1024) else ActiveWorkspaceBudget.Units()
+        if(!scope.entry.reserve(compactControl)){reject(WorkspaceFailure.BUDGET_REFUSED);return}
         if(!scope.entry.reserve(control)){reject(WorkspaceFailure.BUDGET_REFUSED);return}
         val c=access.acquire(AccessScope.READY) ?: return
         if(c.generation!=request.generation || !c.check(AccessPoint.OPERATION))return
@@ -73,8 +78,9 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                             WorkspaceDetailKind.EXPENSE_BOARD->FullviewPreflight.expense
                         }
                         // Validate held unrelated rows before the target DTO is materialized.
-                        if(baseline!=null && !WorkspaceConsistency(this,::current).matches(baseline,request))
+                        if(baseline!=null && !WorkspaceConsistency(this,::current).matches(baseline,request,scope.entry.parent!=null))
                             return@withReadTransaction WorkspaceDetailResult.Rejected(WorkspaceFailure.STALE)
+                        if(!WorkspaceConsistency(this,::current).compactMatches(request))return@withReadTransaction WorkspaceDetailResult.Rejected(WorkspaceFailure.STALE)
                         val allNames=if(baseline?.leadershipState!=null)names+setOf("leadership","sensitive_person_areas") else names
                         val reservation=FullviewPreflight(this,c,::current).prepare(request.actionId,allNames,detail=request,presentations=false)
                         if(!current())throw StorageAccessRevoked()
@@ -139,7 +145,29 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                                     is OperationsResult.Rejected->null
                                 }
                             }
-                            WorkspaceDetailKind.TASK->db.tasks().get(a,id)?.model()?.let{WorkspaceDetail(fresh,task=it)}
+                            WorkspaceDetailKind.TASK->db.tasks().get(a,id)?.model()?.let{task->
+                                if(scope.entry.parent==null)WorkspaceDetail(fresh,task=task) else {
+                                    val ids=listOfNotNull(task.assigneePersonId,task.affectedPersonId).distinct()
+                                    val names=setOf("actions","persons","person_role_plans","person_planned_roles","person_operational_states")
+                                    val sized=FullviewPreflight(this,c,::current).prepare(a,names,presentations=false,selectedIds=ids)
+                                    val roles=baseline?.operations?.roles.orEmpty()
+                                    val nameUnits=roles.sumOf{it.name.length.toLong()}*ids.size
+                                    val ops=CoreReadAdmission.add(OperationalPresentation.cost(ids.size.toLong(),roles.size.toLong(),nameUnits),ActiveFunctionContent.cost(ids.size.toLong(),roles.size.toLong(),nameUnits))
+                                    val extra=ActiveCoreReservation(CoreReadAdmission.add(sized.retained,ops),CoreReadAdmission.add(sized.transition,ops))
+                                    if(!current())throw StorageAccessRevoked()
+                                    if(!scope.entry.reserveReservation(extra))return@withReadTransaction WorkspaceDetailResult.Rejected(WorkspaceFailure.BUDGET_REFUSED)
+                                    if(!current())throw StorageAccessRevoked()
+                                    val people=ids.map{pid->
+                                        if(!current())throw StorageAccessRevoked()
+                                        val person=db.persons().get(a,pid)?.model()?:throw ProductStorageFailure()
+                                        val header=db.operations().personPlan(a,pid)?:throw ProductStorageFailure()
+                                        val planned=db.operations().personAssignments(a,pid).map{it.roleId}.toSet()
+                                        if(!OperationalRules.validPlan(planned,header.primaryRoleId) || header.editRevision<0)throw ProductStorageFailure()
+                                        OperationalPerson(person,PersonRolePlan(planned,header.primaryRoleId,header.editRevision),db.operations().state(a,pid)?.model())
+                                    }
+                                    WorkspaceDetail(fresh,task=task,linkedPersons=people)
+                                }
+                            }
                             WorkspaceDetailKind.ROLE->db.operations().role(a,id)?.model()?.let{WorkspaceDetail(fresh,role=it)}
                             WorkspaceDetailKind.MATERIAL->db.materials().get(a,id)?.model()?.let{WorkspaceDetail(fresh,material=it)}
                             WorkspaceDetailKind.EXPENSE->{
@@ -171,7 +199,7 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                                     val changed=buildList{for(v in old)if(key(v)!=id)add(v);if(fresh!=null)add(fresh)}
                                     return if(order==null)changed else changed.sortedWith(order)
                                 }
-                                val people=if(request.kind==WorkspaceDetailKind.PERSON && request.membership)
+                                val people=value.linkedPersons ?: if(request.kind==WorkspaceDetailKind.PERSON && request.membership)
                                     patch(b.operations.persons,value.operationalPerson,{it.person.id},compareBy<OperationalPerson>{it.person.createdAt}.thenBy{it.person.id})
                                 else if(request.kind==WorkspaceDetailKind.STATE)b.operations.persons.map{p->if(p.person.id==id)p.copy(state=value.operationalState) else p}
                                 else if(value.person!=null || value.plan!=null)b.operations.persons.map{p->
@@ -211,7 +239,9 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                                     access=fresh,leadershipState=protection,material=materialSummary,expenses=expenseSummary,
                                     protocol=protocol,memory=memorySummary,documents=documents,protocolTimeline=timeline,memoryHeaders=headers)
                             }
-                            WorkspaceDetailResult.Value(value.copy(workspace=updated))
+                            WorkspaceDetailResult.Value(value.copy(workspace=updated,
+                                taskCounts=if(request.taskPage!=null)CompactTaskStore(this,c,::current).counts(a,null) else null,
+                                peopleCounts=if(request.peoplePage!=null)CompactPeopleStore(this,c,::current).counts(a) else null))
                         }
                     }}}
                 }
