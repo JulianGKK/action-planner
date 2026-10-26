@@ -342,4 +342,58 @@ class WorkspaceBatchTest {
         model.tasks.save();assertEquals(1,tasks.creates);assertEquals(1,details)
     }
 
+    @Test fun p110InputScreenMetadataHasNoPerCompositionListOrReservation(){
+        val scope=BoundAccess();model.detail("a");complete(change={it.copy(access=scope)})
+        val before=scope.reservations;val key=model.inputScreenKey()!!
+        assertEquals(before+1,scope.reservations)
+        val aliases=List(32_768){model.inputScreenKey()}
+        for(alias in aliases)assertSame(key,alias)
+        assertEquals(before+1,scope.reservations)
+        val fields=ProductInputScreenKey::class.java.declaredFields
+        assertTrue(fields.none{java.util.Collection::class.java.isAssignableFrom(it.type) || it.type==WorkspaceSnapshot::class.java || it.type==TaskBoard::class.java || it.type==OperationalBoard::class.java})
+        model.tasks.add();val afterDraft=scope.reservations;val newKey=model.inputScreenKey()!!;assertNotSame(key,newKey)
+        assertSame(newKey,model.inputScreenKey());assertEquals(afterDraft+1,scope.reservations)
+        session.lock();assertNull(model.inputScreenKey())
+    }
+
+    @Test fun p110LazyIndexesKeepTheirOriginalFilterIdentityAndStillRequireOriginalAuthority(){
+        val first=Task("one","a","Synthetic filtered",TaskPriority.NORMAL,TaskStatus.OPEN,null,null,"p",null,null,0,0,null,0)
+        val second=first.copy(id="two",title="Synthetic unfiltered",affectedPersonId=null)
+        val scope=BoundAccess();model.detail("a")
+        complete(change={it.copy(access=scope,tasks=TaskBoard("a",listOf(first,second),emptyList(),false))})
+        val root=model.uiRoot()!!
+        model.tasks.showPerson("p")
+        assertSame(first,model.listTask(root,0,false,"p"))
+        model.tasks.showPerson(null)
+        assertSame(first,model.listTask(root,0,false,"p"))
+        assertNull(model.listTask(root,1,false,"p"))
+        assertSame(second,model.listTask(root,1,false,null))
+        session.lock();assertNull(model.listTask(root,0,false,"p"))
+    }
+
+    @Test fun p110DeferredUiRefusalAfterConfirmedFeedbackKeepsSavedAndViewOutcomesDistinct(){
+        val row=Task("one","a","Synthetic committed",TaskPriority.NORMAL,TaskStatus.OPEN,null,null,null,null,null,0,0,null,1)
+        val scope=BoundAccess();model.detail("a")
+        complete(change={it.copy(access=scope,tasks=TaskBoard("a",listOf(row),emptyList(),false))})
+        model.inputScreenKey()
+        model.javaClass.getDeclaredMethod("publishCommittedFeedback",String::class.java).let{it.isAccessible=true;it.invoke(model,"Aufgabe gespeichert")}
+        scope.budget=false
+        assertFalse(model.reserveListUi(model.uiRoot()!!))
+        assertEquals(OriginalFeedbackCredit.savedNotRefreshed,model.savedRefreshMessage)
+        assertEquals(WorkspaceFailure.BUDGET_REFUSED,model.workspaceRefusal)
+        assertEquals(0,tasks.creates)
+        session.lock();assertNull(model.savedRefreshMessage)
+    }
+
+    @Test fun p110OriginalInputAdmissionRefusalCannotBecomeAnUnbudgetedLegacyScope(){
+        val scope=BoundAccess();model.detail("a");complete(change={it.copy(access=scope)})
+        scope.budget=false
+        assertSame(DeniedProductInputScope,model.inputScreenKey())
+        assertTrue(model.workspaceError)
+        assertEquals(WorkspaceFailure.BUDGET_REFUSED,model.workspaceRefusal)
+        var used=0
+        assertNull(admitInputClick(DeniedProductInputScope,FormInput{}){used++})
+        assertEquals(0,used)
+    }
+
 }

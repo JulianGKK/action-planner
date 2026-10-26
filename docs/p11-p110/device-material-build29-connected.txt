@@ -1,0 +1,15 @@
+INSTRUMENTATION_STATUS: stream=P109,material,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=2571364, transition=16777216, localRetained=2571364, localTransition=5288584, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,FAILURE,java.lang.IllegalStateException: P109 timeout material list rendered before edit
+	at org.pag.prototype.P109FunctionalOwnerProbe.await(P109FunctionalOwnerProbe.kt:25)
+	at org.pag.prototype.P109FunctionalOwnerProbe.onStart(P109FunctionalOwnerProbe.kt:171)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P109 FAIL material
+INSTRUMENTATION_CODE: 0

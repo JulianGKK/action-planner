@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.prototype.product.TaskModelTest" tests="31" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:05.209Z" hostname="iuzjhtgvfc" time="0.025">
+<testsuite name="org.pag.prototype.product.TaskModelTest" tests="31" skipped="0" failures="0" errors="0" timestamp="2026-10-26T08:46:04.130Z" hostname="iuzjhtgvfc" time="0.034">
   <properties/>
   <testcase name="generationNavigationAndLockDiscardResultsAndDrafts" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
   <testcase name="disappearanceFromDisplayCannotTurnEditIntoCreate" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
-  <testcase name="historyFailureIsNotEmptyAndCanRestart" classname="org.pag.prototype.product.TaskModelTest" time="0.005"/>
-  <testcase name="boardFilterKeepsAffectedAndAssigneeSeparate" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
-  <testcase name="cancelCreateAndEditNeverMutate" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
-  <testcase name="synchronousRevokeRejectsEveryTaskPublicationAndWritePath" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
-  <testcase name="quickActionsCompleteAndReopen" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
+  <testcase name="historyFailureIsNotEmptyAndCanRestart" classname="org.pag.prototype.product.TaskModelTest" time="0.007"/>
+  <testcase name="boardFilterKeepsAffectedAndAssigneeSeparate" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
+  <testcase name="cancelCreateAndEditNeverMutate" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
+  <testcase name="synchronousRevokeRejectsEveryTaskPublicationAndWritePath" classname="org.pag.prototype.product.TaskModelTest" time="0.002"/>
+  <testcase name="quickActionsCompleteAndReopen" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
   <testcase name="lateDuplicateReloadCannotReplaceAnotherEditorOrItsDueDraft" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
   <testcase name="creationHasMinimalDefaultsAndAffectedCanBeRemoved" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
   <testcase name="activeDeleteAndCompletedWritesAreDenied" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
   <testcase name="workspaceRefreshKeepsOriginalEditorExpectedAndNewerPersistedTask" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
-  <testcase name="directHistoryPageReplacesPayloadAndUsesCorrectOrdinalWithoutRetainingPrefixes" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
-  <testcase name="refreshDoesNotCountAsInteraction" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
+  <testcase name="directHistoryPageReplacesPayloadAndUsesCorrectOrdinalWithoutRetainingPrefixes" classname="org.pag.prototype.product.TaskModelTest" time="0.002"/>
+  <testcase name="refreshDoesNotCountAsInteraction" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
   <testcase name="preparationDeleteAndExplicitTemplateSelection" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
-  <testcase name="committedDraftWaitsForDetailBindingAndRefusalNeverRepeatsWrite" classname="org.pag.prototype.product.TaskModelTest" time="0.002"/>
+  <testcase name="committedDraftWaitsForDetailBindingAndRefusalNeverRepeatsWrite" classname="org.pag.prototype.product.TaskModelTest" time="0.003"/>
   <testcase name="allLabelsAndStrictOptionalDueDate" classname="org.pag.prototype.product.TaskModelTest" time="0.002"/>
-  <testcase name="oldWriteCannotUseSessionThatReauthenticatesDuringInteraction" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
-  <testcase name="synchronousLockDuringOpenCannotRepublishTaskAfterObserverClears" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
-  <testcase name="failedReloadMissingOrForeignTaskPreservesDraftAndRevision" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
+  <testcase name="oldWriteCannotUseSessionThatReauthenticatesDuringInteraction" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
+  <testcase name="synchronousLockDuringOpenCannotRepublishTaskAfterObserverClears" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
+  <testcase name="failedReloadMissingOrForeignTaskPreservesDraftAndRevision" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
   <testcase name="readyAgainDuringInteractionStillRejectsOldGeneration" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
-  <testcase name="p108CopyGateRunsBeforeInputProducerAndPreservesDraftOnRefusal" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
-  <testcase name="limitRejectionKeepsDraftAndSelectionWithoutSuccessFeedbackInBothActionPhases" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
+  <testcase name="p108CopyGateRunsBeforeInputProducerAndPreservesDraftOnRefusal" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
+  <testcase name="limitRejectionKeepsDraftAndSelectionWithoutSuccessFeedbackInBothActionPhases" classname="org.pag.prototype.product.TaskModelTest" time="0.002"/>
   <testcase name="revokeDuringSensitiveCleanupAlsoPreventsPublication" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
-  <testcase name="committedSelectionOnlyChangesWhenFreshDetailArrives" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
-  <testcase name="readRefreshWhileWritePendingDoesNotRebindOrLoseCommitCallback" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
-  <testcase name="lockGenerationActionChangesRejectReloadAndWritePublication" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
+  <testcase name="committedSelectionOnlyChangesWhenFreshDetailArrives" classname="org.pag.prototype.product.TaskModelTest" time="0.003"/>
+  <testcase name="readRefreshWhileWritePendingDoesNotRebindOrLoseCommitCallback" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
+  <testcase name="lockGenerationActionChangesRejectReloadAndWritePublication" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
   <testcase name="historyIsExplicitBoundedReplacementAndNeverNeededForEditor" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
   <testcase name="suppliedWorkspaceReconciliationCannotReplaceEditorExpected" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
-  <testcase name="changedActionDuringInteractionRejectsOldTaskAndDraft" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
-  <testcase name="historyRejectsLateDuplicateRevokeActionAndEditorCallbacks" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
-  <testcase name="onlyExplicitReloadReplacesExpectedAllInputFieldsAndComposeIdentity" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
+  <testcase name="changedActionDuringInteractionRejectsOldTaskAndDraft" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
+  <testcase name="historyRejectsLateDuplicateRevokeActionAndEditorCallbacks" classname="org.pag.prototype.product.TaskModelTest" time="0.0"/>
+  <testcase name="onlyExplicitReloadReplacesExpectedAllInputFieldsAndComposeIdentity" classname="org.pag.prototype.product.TaskModelTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

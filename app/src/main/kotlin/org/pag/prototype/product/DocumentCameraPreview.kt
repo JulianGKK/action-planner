@@ -147,6 +147,8 @@ internal class DocumentCameraController(private val context: Context, private va
     }
 }
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable internal fun CameraCapturePane(documents: DocumentModel,
     observe: (CameraDeviceEvent) -> Unit = {}, controllerReady: (DocumentCameraController) -> Unit = {}) {
     val c=documents.camera
@@ -161,29 +163,29 @@ internal class DocumentCameraController(private val context: Context, private va
             val controller=remember(epoch,owner) {DocumentCameraController(context,owner,view,c,observe)}
             SideEffect {controllerReady(controller)}
             DisposableEffect(controller) {controller.start();onDispose {controller.close()}}
-            AndroidView(factory={view},modifier=Modifier.fillMaxWidth().height(240.dp).semantics {contentDescription="Live-Kameravorschau"})
-            FormButton(controller::take,enabled=c.ready && c.mode==CameraMode.PREVIEW) {
+            AndroidView(factory={view},modifier=Modifier.fillMaxWidth().height(240.dp).originalSemantics {contentDescription="Live-Kameravorschau"})
+            FormButton({controller.take()},enabled=c.ready && c.mode==CameraMode.PREVIEW) {
                 Text(if(c.mode==CameraMode.CAPTURING) "Aufnahme läuft …" else if(!c.ready) "Kamera wird vorbereitet …" else "Foto aufnehmen")
             }
-            FormOutlinedButton(documents::cancelCamera) {Text("Abbrechen")}
+            FormOutlinedButton({documents.cancelCamera()}) {Text("Abbrechen")}
         }
         CameraMode.REVIEW -> {
             PreparationHeading("Foto aufgenommen")
             Text("JPEG · ${c.size} Bytes · Aufnahme nur im Arbeitsspeicher. Noch nicht gespeichert.")
-            FormButton(c::accept) {Text("Aufnahme übernehmen")}
-            FormOutlinedButton(documents::retakeCamera) {Text("Erneut aufnehmen")}
-            FormOutlinedButton(documents::cancelCamera) {Text("Abbrechen")}
+            FormButton({c.accept()}) {Text("Aufnahme übernehmen")}
+            FormOutlinedButton({documents.retakeCamera()}) {Text("Erneut aufnehmen")}
+            FormOutlinedButton({documents.cancelCamera()}) {Text("Abbrechen")}
         }
         CameraMode.NAMING,CameraMode.SAVING -> Column(Modifier.imePadding()) {
             PreparationHeading("Kameraaufnahme speichern")
             FormTextField(documents.name,documents::changeName,label={Text("Dokumentname · 1–160 Zeichen")},
                 enabled=!documents.busy,modifier=Modifier.fillMaxWidth(),keyboardOptions=productKeyboard(ProductTextKind.DESCRIPTION))
             Text("Format: JPEG. Die Aufnahme wird ausschließlich als verschlüsselte PaG-Kopie gespeichert.")
-            FormButton(documents::saveCamera,enabled=!documents.busy && org.pag.domain.DocumentRules.validName(documents.name)) {
+            FormButton({documents.saveCamera()},enabled=!documents.busy && org.pag.domain.DocumentRules.validName(documents.name)) {
                 Text(if(documents.busy) "Import läuft …" else "Verschlüsselt speichern")
             }
-            FormOutlinedButton(documents::retakeCamera,enabled=!documents.busy) {Text("Erneut aufnehmen")}
-            FormOutlinedButton(documents::cancelCamera,enabled=!documents.busy) {Text("Abbrechen")}
+            FormOutlinedButton({documents.retakeCamera()},enabled=!documents.busy) {Text("Erneut aufnehmen")}
+            FormOutlinedButton({documents.cancelCamera()},enabled=!documents.busy) {Text("Abbrechen")}
         }
         CameraMode.CLOSED -> Unit
     }

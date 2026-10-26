@@ -1,4 +1,4 @@
-INSTRUMENTATION_STATUS: stream=P107,r-over,DATA_BOUNDARY,+1_byte=REFUSED,before_DTO=true,full_UI_claim=false,record=State(phase=DENIED, retained=0, transition=0, localRetained=8388609, localTransition=4779680, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=true, refusal=FULLVIEW_BUDGET_REFUSED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+INSTRUMENTATION_STATUS: stream=P107,r-over,DATA_BOUNDARY,+1_byte=REFUSED,before_DTO=true,full_UI_claim=false,record=State(phase=DENIED, retained=0, transition=0, localRetained=8388609, localTransition=4903432, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=true, refusal=FULLVIEW_BUDGET_REFUSED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
 
 INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: result=P107 PASS r-over

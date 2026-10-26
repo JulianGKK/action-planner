@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.data.product.ExpenseRulesTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:12.848Z" hostname="iuzjhtgvfc" time="0.001">
+<testsuite name="org.pag.data.product.ExpenseRulesTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-25T19:21:29.250Z" hostname="iuzjhtgvfc" time="0.008">
   <properties/>
-  <testcase name="overflowDoesNotWrap" classname="org.pag.data.product.ExpenseRulesTest" time="0.001"/>
-  <testcase name="positiveAmountsAndExactSum" classname="org.pag.data.product.ExpenseRulesTest" time="0.0"/>
+  <testcase name="overflowDoesNotWrap" classname="org.pag.data.product.ExpenseRulesTest" time="0.0"/>
+  <testcase name="positiveAmountsAndExactSum" classname="org.pag.data.product.ExpenseRulesTest" time="0.001"/>
   <testcase name="normalizationAndRequiredTitle" classname="org.pag.data.product.ExpenseRulesTest" time="0.0"/>
-  <testcase name="payerTrimRequiredAndBounded" classname="org.pag.data.product.ExpenseRulesTest" time="0.0"/>
+  <testcase name="payerTrimRequiredAndBounded" classname="org.pag.data.product.ExpenseRulesTest" time="0.002"/>
   <testcase name="paymentCountsAndDuplicates" classname="org.pag.data.product.ExpenseRulesTest" time="0.0"/>
-  <testcase name="unicodeCodepointsNotUtf16" classname="org.pag.data.product.ExpenseRulesTest" time="0.0"/>
-  <testcase name="lifecycleIsExpenseOnlyException" classname="org.pag.data.product.ExpenseRulesTest" time="0.0"/>
-  <testcase name="deterministicOrderAndPaymentInputOrder" classname="org.pag.data.product.ExpenseRulesTest" time="0.0"/>
+  <testcase name="unicodeCodepointsNotUtf16" classname="org.pag.data.product.ExpenseRulesTest" time="0.002"/>
+  <testcase name="lifecycleIsExpenseOnlyException" classname="org.pag.data.product.ExpenseRulesTest" time="0.001"/>
+  <testcase name="deterministicOrderAndPaymentInputOrder" classname="org.pag.data.product.ExpenseRulesTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

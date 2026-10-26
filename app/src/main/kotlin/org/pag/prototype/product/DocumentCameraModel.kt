@@ -4,6 +4,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
+// Immutable CODE enum groups; no action payload, authority or per-render Set.
+private val supportedCameraModeGroup1=setOf(CameraMode.PREVIEW,CameraMode.CAPTURING)
+private val supportedCameraModeGroup2=setOf(CameraMode.REVIEW,CameraMode.NAMING)
+
+
 interface CameraPermission {
     fun granted(): Boolean
     fun request()
@@ -20,7 +25,7 @@ internal class DocumentCameraModel(private val allowed: () -> Boolean, private v
     private var photo: CameraPhoto? = null
     private var release: (() -> Unit)? = null
     val size get() = photo?.size ?: 0
-    fun live(e: Long) = e == epoch && allowed() && mode in setOf(CameraMode.PREVIEW,CameraMode.CAPTURING)
+    fun live(e: Long) = e == epoch && allowed() && mode in supportedCameraModeGroup1
     fun currentEpoch() = epoch
     private fun act(work: () -> Unit) {
         if (!allowed()) return
@@ -64,7 +69,7 @@ internal class DocumentCameraModel(private val allowed: () -> Boolean, private v
         photo = value; mode = CameraMode.REVIEW
     }
     fun accept() = act { if (mode == CameraMode.REVIEW && photo != null) mode = CameraMode.NAMING }
-    fun retake() = act { if (mode in setOf(CameraMode.REVIEW,CameraMode.NAMING)) { clear(); mode = CameraMode.PREVIEW } }
+    fun retake() = act { if (mode in supportedCameraModeGroup2) { clear(); mode = CameraMode.PREVIEW } }
     fun cancel() = act { clear() }
     fun sourceForSave(): CameraPhoto? {
         if (!allowed() || mode != CameraMode.NAMING || photo == null) return null

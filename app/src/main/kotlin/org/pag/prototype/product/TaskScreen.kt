@@ -25,10 +25,12 @@ internal fun taskFailureMessage(reason:OperationsFailure):String = when(reason) 
     else->"Die Aufgabe oder Zuordnung ist in dieser Aktion nicht verfügbar."
 }
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable internal fun TaskSection(model:TaskModel,people:OperationalBoard) {
     val board=model.board?:return
     if (people.status == ActionStatus.ACTIVE) { ActiveTaskSection(model, people, board); return }
-    Text("Aufgaben",Modifier.semantics { heading() },style=MaterialTheme.typography.titleLarge)
+    Text("Aufgaben",Modifier.then(productHeadingSemantics),style=MaterialTheme.typography.titleLarge)
     model.error?.let{Text(taskFailureMessage(it))}
     if(model.form){TaskForm(model,people);return}
     val selected=model.selected
@@ -40,12 +42,12 @@ internal fun taskFailureMessage(reason:OperationsFailure):String = when(reason) 
                 FormButton({model.transition(TaskStatus.DONE)},enabled=!model.busy && !model.commitConfirmed){Text("Erledigt")}
                 FormOutlinedButton({model.transition(TaskStatus.CANCELLED)},enabled=!model.busy && !model.commitConfirmed){Text("Entfällt")}
             }else FormButton({model.transition(TaskStatus.OPEN)},enabled=!model.busy && !model.commitConfirmed){Text("Wieder öffnen")}
-            FormOutlinedButton(model::edit,enabled=!model.busy && !model.commitConfirmed){Text("Bearbeiten")}
-            if(model.deletable)FormOutlinedButton(model::delete,enabled=!model.busy && !model.commitConfirmed){Text("Aufgabe löschen")}
+            FormOutlinedButton({model.edit()},enabled=!model.busy && !model.commitConfirmed){Text("Bearbeiten")}
+            if(model.deletable)FormOutlinedButton({model.delete()},enabled=!model.busy && !model.commitConfirmed){Text("Aufgabe löschen")}
         }
         Text("Chronik",style=MaterialTheme.typography.titleMedium)
         TaskHistory(model)
-        FormOutlinedButton(model::cancel,enabled=!model.busy && !model.commitConfirmed){Text("Zurück zu Aufgaben")}
+        FormOutlinedButton({model.cancel()},enabled=!model.busy && !model.commitConfirmed){Text("Zurück zu Aufgaben")}
         return
     }
     if(model.writable)FormButton({model.add()},enabled=!model.busy && !model.commitConfirmed){Text("+ Aufgabe")}
@@ -53,20 +55,21 @@ internal fun taskFailureMessage(reason:OperationsFailure):String = when(reason) 
     val activeTasks=board.active
     val closedTasks=board.closed
     Text(board.presentation.all.preparationSummary)
-    model.filter?.let{id->Text("Betrifft: ${people.persons.find{it.person.id==id}?.person?.pseudonym.orEmpty()}");FormOutlinedButton({model.showPerson(null)}){Text("Alle Aufgaben")}}
+    model.filter?.let{id->val name=people.persons.findOriginal{it.person.id==id}?.person?.pseudonym.orEmpty();Text(originalText(name.length.toLong()){"Betrifft: $name"});FormOutlinedButton({model.showPerson(null)}){Text("Alle Aufgaben")}}
     val presentation=activeTaskContent(board,model.filter)
     val active=presentation.active
-    active.forEach{t->val row=model.uiRow(t)?:return@forEach;FormOutlinedButton(row.click,modifier=Modifier.fillMaxWidth(),enabled=!model.busy && !model.commitConfirmed){TaskSummary(row)}}
+    active.forOriginal{t->val row=model.uiRow(t)?:return@forOriginal;FormOutlinedButton(row.click,modifier=Modifier.fillMaxWidth(),enabled=!model.busy && !model.commitConfirmed){TaskSummary(row)}}
     if(active.isEmpty())Text(if(board.tasks.isEmpty() && people.status==ActionStatus.PREPARATION)"Noch keine Aufgaben." else "Keine offenen Aufgaben.")
     var closed by remember{mutableStateOf(false)}
-    FormTextButton({model.touch();closed=!closed}){Text("Erledigt / Entfällt (${closedTasks.size}) ${if(closed)"▴" else "▾"}")}
-    if(closed)presentation.closed.forEach{t->val row=model.uiRow(t)?:return@forEach;FormOutlinedButton(row.click,modifier=Modifier.fillMaxWidth()){TaskSummary(row)}}
+    FormTextButton({model.touch();closed=!closed}){Text(originalText{"Erledigt / Entfällt (${closedTasks.size}) ${if(closed)"▴" else "▾"}"})}
+    if(closed)presentation.closed.forOriginal{t->val row=model.uiRow(t)?:return@forOriginal;FormOutlinedButton(row.click,modifier=Modifier.fillMaxWidth()){TaskSummary(row)}}
     if(people.status==ActionStatus.PREPARATION){
         var templates by remember{mutableStateOf(false)}
         FormTextButton({model.touch();templates=!templates}){Text("Aufgaben aus Vorlagen")}
-        if(templates){Text("Organisatorische Vorschläge · Die Leitung entscheidet selbst.");TaskRules.templates.forEach{t->FormOutlinedButton({model.add(template=t)},enabled=!model.busy && !model.commitConfirmed){Text(t.title)}}}
+        if(templates){Text("Organisatorische Vorschläge · Die Leitung entscheidet selbst.");TaskRules.templates.forOriginal{t->FormOutlinedButton({model.add(template=t)},enabled=!model.busy && !model.commitConfirmed){Text(t.title)}}}
     }
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun TaskSummary(row:TaskUiRow) {
     if(!row.click.live())return
     LocalProductObservation.current?.let{observer->androidx.compose.runtime.SideEffect{observer("TASK_ROW")}}
@@ -78,35 +81,41 @@ internal fun taskFailureMessage(reason:OperationsFailure):String = when(reason) 
         row.preparationDue?.let{Text(it)}
     }
 }
-@Composable internal fun TaskForm(model:TaskModel,people:OperationalBoard) {
+@androidx.compose.runtime.NonRestartableComposable
+@Composable internal fun TaskForm(model:TaskModel,people:OperationalBoard?) {
     key(model.formRevision){TaskFormFields(model,people)}
 }
-@Composable private fun TaskFormFields(model:TaskModel,people:OperationalBoard) {
+@androidx.compose.runtime.NonRestartableComposable
+@Composable private fun TaskFormFields(model:TaskModel,people:OperationalBoard?) {
     val i=model.input
-    FormTextField(i.title,{model.changeTitle(it)},label={Text("Titel")},autoFocus=!model.editingExisting,keyboardOptions=productKeyboard(ProductTextKind.TASK_TITLE),singleLine=true,enabled=!model.busy && !model.commitConfirmed,modifier=Modifier.fillMaxWidth(),supportingText={Text("Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · maximal 120 Zeichen")})
+    FormTextField(i.title,{model.changeTitle(it)},label={Text("Titel")},autoFocus=!model.editingExisting,keyboardOptions=productKeyboard(ProductTextKind.TASK_TITLE),singleLine=true,enabled=!model.busy && !model.commitConfirmed,modifier=Modifier.fillMaxWidth(),supportingText=originalContent{Text("Kurzer Titel · keine sensiblen Identitäts- oder Kontaktdaten · maximal 120 Zeichen")})
     Text("Priorität")
-    TaskPriority.entries.forEach{p->FormOutlinedButton({model.priority(p)},enabled=!model.busy && !model.commitConfirmed){Text((if(i.priority==p)"✓ " else "")+priorityLabel(p))}}
+    TaskPriority.entries.forOriginal{p->FormOutlinedButton({model.priority(p)},enabled=!model.busy && !model.commitConfirmed){Text(originalText{(if(i.priority==p)"✓ " else "")+priorityLabel(p)})}}
+    if(people==null){Text("Zuordnungen werden nach dem bewussten Neuladen wieder verfügbar. Dein Entwurf bleibt erhalten.")}
+    else {
     var assignments by remember{mutableStateOf(false)}
     FormTextButton({model.touch();assignments=!assignments}){Text("Zuständigkeit wählen (optional)")}
     if(assignments){
         FormOutlinedButton({model.assigneePerson(null)},enabled=!model.busy && !model.commitConfirmed){Text(if(i.assigneePersonId==null && i.assigneeRoleId==null)"✓ Niemand" else "Niemand")}
-        people.roles.forEach{r->FormOutlinedButton({model.assigneeRole(r.id)},enabled=!model.busy && !model.commitConfirmed){Text((if(i.assigneeRoleId==r.id)"✓ " else "")+"Rolle: ${r.name}")}}
-        people.persons.forEach{p->FormOutlinedButton({model.assigneePerson(p.person.id)},enabled=!model.busy && !model.commitConfirmed){Text((if(i.assigneePersonId==p.person.id)"✓ " else "")+"Person: ${p.person.pseudonym}")}}
+        people.roles.forOriginal{r->val id=r.id;FormOutlinedButton({model.assigneeRole(id)},enabled=!model.busy && !model.commitConfirmed){Text(originalText(r.name.length.toLong()){(if(i.assigneeRoleId==r.id)"✓ " else "")+"Rolle: ${r.name}"})}}
+        people.persons.forOriginal{p->val id=p.person.id;FormOutlinedButton({model.assigneePerson(id)},enabled=!model.busy && !model.commitConfirmed){Text(originalText(p.person.pseudonym.length.toLong()){(if(i.assigneePersonId==p.person.id)"✓ " else "")+"Person: ${p.person.pseudonym}"})}}
     }
-    val assignment=i.assigneeRoleId?.let{id->people.roles.find{it.id==id}?.name}?:i.assigneePersonId?.let{id->people.persons.find{it.person.id==id}?.person?.pseudonym}?:"Niemand"
-    Text("Zuständig: $assignment")
+    val assignment=i.assigneeRoleId?.let{id->people.roles.findOriginal{it.id==id}?.name}?:i.assigneePersonId?.let{id->people.persons.findOriginal{it.person.id==id}?.person?.pseudonym}?:"Niemand"
+    Text(originalText(assignment.length.toLong()){"Zuständig: $assignment"})
     var affected by remember{mutableStateOf(false)}
     FormTextButton({model.touch();affected=!affected}){Text("Betroffene Person wählen (optional)")}
-    if(affected){FormOutlinedButton({model.affectedPerson(null)},enabled=!model.busy && !model.commitConfirmed){Text("Keine betroffene Person")};people.persons.forEach{p->FormOutlinedButton({model.affectedPerson(p.person.id)},enabled=!model.busy && !model.commitConfirmed){Text((if(i.affectedPersonId==p.person.id)"✓ " else "")+p.person.pseudonym)}}}
-    Text("Betrifft: "+(people.persons.find{it.person.id==i.affectedPersonId}?.person?.pseudonym?:"Niemand"))
+    if(affected){FormOutlinedButton({model.affectedPerson(null)},enabled=!model.busy && !model.commitConfirmed){Text("Keine betroffene Person")};people.persons.forOriginal{p->val id=p.person.id;FormOutlinedButton({model.affectedPerson(id)},enabled=!model.busy && !model.commitConfirmed){Text(originalText(p.person.pseudonym.length.toLong()){(if(i.affectedPersonId==id)"✓ " else "")+p.person.pseudonym})}}}
+    val affectedName=people.persons.findOriginal{it.person.id==i.affectedPersonId}?.person?.pseudonym?:"Niemand"
+    Text(originalText(affectedName.length.toLong()){"Betrifft: $affectedName"})
+    }
     val due=model.dueText
-    FormTextField(due,model::changeDue,label={Text("Fällig (optional): TT.MM.JJJJ HH:MM")},keyboardOptions=productKeyboard(ProductTextKind.DATE),singleLine=true,enabled=!model.busy && !model.commitConfirmed,supportingText={if(!model.dueValid)Text("Ungültiges Datum oder durch Zeitumstellung nicht eindeutige Uhrzeit. Bitte Datum oder Uhrzeit korrigieren.")})
+    FormTextField(due,model::changeDue,label={Text("Fällig (optional): TT.MM.JJJJ HH:MM")},keyboardOptions=productKeyboard(ProductTextKind.DATE),singleLine=true,enabled=!model.busy && !model.commitConfirmed,supportingText=originalContent{if(!model.dueValid)Text("Ungültiges Datum oder durch Zeitumstellung nicht eindeutige Uhrzeit. Bitte Datum oder Uhrzeit korrigieren.")})
     if(model.error==OperationsFailure.STALE && model.editingExisting){
         Text("Beim Neuladen wird dein bisheriger Entwurf einschließlich Fälligkeit und Zuordnungen ersetzt.")
-        FormOutlinedButton(model::reloadEditor,enabled=!model.busy && !model.commitConfirmed){Text("Entwurf verwerfen und Aufgabe neu laden")}
+        FormOutlinedButton({model.reloadEditor()},enabled=!model.busy && !model.commitConfirmed){Text("Entwurf verwerfen und Aufgabe neu laden")}
     }
-    FormButton(model::save,enabled=!model.busy && !model.commitConfirmed && TaskRules.valid(i) && model.dueValid){Text("Speichern")}
-    FormOutlinedButton(model::cancel,enabled=!model.busy && !model.commitConfirmed){Text("Abbrechen")}
+    FormButton({model.save()},enabled=!model.busy && !model.commitConfirmed && TaskRules.valid(i) && model.dueValid){Text("Speichern")}
+    FormOutlinedButton({model.cancel()},enabled=!model.busy && !model.commitConfirmed){Text("Abbrechen")}
 }
 internal fun parseTaskDue(value:String,zone:ZoneId=ZoneId.systemDefault()):Long?=try{selectedInstant(LocalDateTime.parse(value.trim(),DateTimeFormatter.ofPattern("dd.MM.uuuu HH:mm").withResolverStyle(java.time.format.ResolverStyle.STRICT)),zone)}catch(_:Exception){null}
 internal fun priorityLabel(p:TaskPriority)=when(p){TaskPriority.LOW->"Niedrig";TaskPriority.NORMAL->"Normal";TaskPriority.HIGH->"Hoch"}
@@ -115,6 +124,7 @@ internal fun eventLabel(t:TaskEventType)=when(t){TaskEventType.CREATED->"Erstell
 internal fun taskTime(time:Long)=Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))
 
 /** Only the current bounded page is composed; replacing it does not accumulate history. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun TaskHistory(model:TaskModel) {
     when {
         model.historyBusy->Text("Chronik wird geladen …")
@@ -134,10 +144,10 @@ internal fun taskTime(time:Long)=Instant.ofEpochMilli(time).atZone(ZoneId.system
             if(display.lastPage>1){
                 FormTextField(model.historyPageText,model::changeHistoryPageText,label={Text(display.pageLabel)},singleLine=true,
                     keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(keyboardType=androidx.compose.ui.text.input.KeyboardType.Number))
-                FormOutlinedButton(model::openHistoryPage,enabled=model.historyPageChoice!=null){Text("Seite öffnen")}
-                FormTextButton(model::lastHistoryPage){Text("Letzte Seite")}
+                FormOutlinedButton({model.openHistoryPage()},enabled=model.historyPageChoice!=null){Text("Seite öffnen")}
+                FormTextButton({model.lastHistoryPage()}){Text("Letzte Seite")}
             }
-            display.events.forEach{Text(it)}
+            display.events.forOriginal{Text(it)}
             if(page.next!=null)FormOutlinedButton({model.loadHistory()}){Text("Weitere Ereignisse")}
             FormTextButton({model.loadHistory(true)}){Text("Chronik von Anfang an")}
         }

@@ -1,35 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.prototype.product.WorkspaceBatchTest" tests="29" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:05.259Z" hostname="iuzjhtgvfc" time="0.05">
+<testsuite name="org.pag.prototype.product.WorkspaceBatchTest" tests="33" skipped="0" failures="0" errors="0" timestamp="2026-10-26T08:46:04.213Z" hostname="iuzjhtgvfc" time="0.206">
   <properties/>
-  <testcase name="selectedMemoryListIsOneBatchWithoutTaskBoardOrSecondRead" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.005"/>
-  <testcase name="preparationMaterialAndCostsAreExplicitSingleBatchesWithoutProtocolPrefetch" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
+  <testcase name="selectedMemoryListIsOneBatchWithoutTaskBoardOrSecondRead" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.009"/>
+  <testcase name="preparationMaterialAndCostsAreExplicitSingleBatchesWithoutProtocolPrefetch" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.003"/>
   <testcase name="p110BudgetRefusalDoesNotPublishUiRowsOrRunAnyProducer" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
   <testcase name="p108OriginalNavigationKeepsSameGraphAndOriginalReadTicket" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
   <testcase name="p108LateOriginalCallbackCannotRestoreAfterLock" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
-  <testcase name="navigationAndAnotherActionFenceOldBatch" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
-  <testcase name="selectedMaterialAndExpenseEditorRefreshesDoNotReplaceDraftWithBatchPayload" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
-  <testcase name="preparationStillWaitsForIndependentProtectionMetadata" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="navigationAndAnotherActionFenceOldBatch" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
+  <testcase name="selectedMaterialAndExpenseEditorRefreshesDoNotReplaceDraftWithBatchPayload" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="preparationStillWaitsForIndependentProtectionMetadata" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
   <testcase name="combinedInitialOpenCannotPublishOrAutoopenAfterGenerationChange" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
-  <testcase name="navigationKeySurvivesLoadCompletionAndContainsNoActionIdentifier" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
+  <testcase name="navigationKeySurvivesLoadCompletionAndContainsNoActionIdentifier" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
   <testcase name="staleInitialActionFallsBackWithoutAnotherInteractionOrOldPublication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
   <testcase name="staleOpeningStatusFallsBackToDraftWithoutAnotherWorkspaceRead" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
   <testcase name="lockAndLateCompletionNeverRestoreContentAfterReauthentication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
-  <testcase name="wrongMemoryHeaderNeverPublishesPartialSnapshot" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
+  <testcase name="wrongMemoryHeaderNeverPublishesPartialSnapshot" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
+  <testcase name="p110DeferredUiRefusalAfterConfirmedFeedbackKeepsSavedAndViewOutcomesDistinct" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.004"/>
+  <testcase name="p110InputScreenMetadataHasNoPerCompositionListOrReservation" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.119"/>
+  <testcase name="p110OriginalInputAdmissionRefusalCannotBecomeAnUnbudgetedLegacyScope" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
   <testcase name="areaPayloadsAreDiscardedOnRapidNavigationAndLockWithoutAutoopen" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
-  <testcase name="memoryBatchLockAndLateResultsCannotAutoopenAfterReauthentication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
-  <testcase name="memoryEditorRefreshDoesNotReenterListOrFetchHeaders" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
-  <testcase name="incorrectBindingsAndMissingRequiredPartFailWithoutPartialPublication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
-  <testcase name="rapidNavigationDiscardsPendingBatchAndReturnRequestsFreshSnapshot" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
+  <testcase name="p110LazyIndexesKeepTheirOriginalFilterIdentityAndStillRequireOriginalAuthority" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
+  <testcase name="memoryBatchLockAndLateResultsCannotAutoopenAfterReauthentication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
+  <testcase name="memoryEditorRefreshDoesNotReenterListOrFetchHeaders" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
+  <testcase name="incorrectBindingsAndMissingRequiredPartFailWithoutPartialPublication" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.003"/>
+  <testcase name="rapidNavigationDiscardsPendingBatchAndReturnRequestsFreshSnapshot" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
   <testcase name="refreshKeepsSameAuthorizedSnapshotUntilWholeBatchAndDropsOlderRequest" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
   <testcase name="explicitAreaPayloadsShareOneBatchWithoutIndependentReadsOrPrefetch" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
   <testcase name="p110RepositoryBindingAfterConstructionActivatesProjectionAndNeverRepeatsCommittedCreate" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
-  <testcase name="p108RefusedCopyDoesNotRunProducerOrReplaceOriginalGraph" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
+  <testcase name="p108RefusedCopyDoesNotRunProducerOrReplaceOriginalGraph" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
   <testcase name="initialActionOpenUsesFreshBoundWorkspaceWithoutSeparateDetailRead" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
   <testcase name="oneExplicitBatchReplacesLegacyReadsAndPublishesAtomically" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
   <testcase name="p110CallbackRechecksAfterInteractionAndCannotCrossOriginalRoot" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
-  <testcase name="p110HeldPresentationsBorrowRowsAndIdentityOnlyCallbacks" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.021"/>
-  <testcase name="malformedAreaBoardsCannotPublishPartialWorkspace" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
-  <testcase name="p108InvalidOriginalScopeNeverFallsBackToNewFullBoardRead" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.001"/>
+  <testcase name="p110HeldPresentationsBorrowRowsAndIdentityOnlyCallbacks" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.039"/>
+  <testcase name="malformedAreaBoardsCannotPublishPartialWorkspace" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.002"/>
+  <testcase name="p108InvalidOriginalScopeNeverFallsBackToNewFullBoardRead" classname="org.pag.prototype.product.WorkspaceBatchTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

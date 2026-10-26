@@ -109,7 +109,7 @@ internal class OutstandingCoreRead {
         fun supplement(part:WorkspacePart):FullviewSupplement?=synchronized(this@OutstandingCoreRead){
             additionalFailure=WorkspaceFailure.OWNER_UNCONFIRMED
             if(closed || current!=null || fullEntry!=null || fullviewObligation!==this || additional!=null || additionalUnconfirmed)return null
-            val bit=when(part){WorkspacePart.MATERIAL_BOARD->1;WorkspacePart.EXPENSE_BOARD->2;WorkspacePart.LEADERSHIP_STATE,WorkspacePart.TASKS->0;else->return null}
+            val bit=when(part){WorkspacePart.MATERIAL_BOARD->1;WorkspacePart.EXPENSE_BOARD->2;WorkspacePart.PROTOCOL_TIMELINE->4;WorkspacePart.MEMORY_HEADERS->8;WorkspacePart.LEADERSHIP_STATE,WorkspacePart.TASKS->0;else->return null}
             if(consumedParts and bit != 0)return null
             if(!reserve(ActiveWorkspaceBudget.Units(objects=16,references=64))){additionalFailure=WorkspaceFailure.BUDGET_REFUSED;return null}
             FullviewSupplement(bit).also{additional=it}

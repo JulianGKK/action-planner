@@ -5,6 +5,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import org.pag.domain.*
 
+// Immutable CODE enum groups; no action payload, authority or per-render Set.
+private val supportedDocumentFormatGroup1=setOf(DocumentFormat.JPEG,DocumentFormat.PNG)
+
+
 /** RAM-only metadata/forms. The exceptional picker source lives only in Activity RAM. */
 class DocumentModel(private val repository: () -> DocumentRepository?, private val picker: () -> DocumentPicker?,
     private val session: () -> SessionSnapshot, private val action: () -> Action?, private val interaction: () -> Unit,
@@ -114,7 +118,7 @@ class DocumentModel(private val repository: () -> DocumentRepository?, private v
     }
     internal fun closeImage() = act {clearImage();error=null}
     internal fun viewImage(item:DocumentAsset) = act {
-        if(!cameraAuthority() || item !in items.orEmpty() || item.format !in setOf(DocumentFormat.JPEG,DocumentFormat.PNG))return@act
+        if(!cameraAuthority() || item !in items.orEmpty() || item.format !in supportedDocumentFormatGroup1)return@act
         clearViewers();camera.clear();error=null
         viewed=item;imageLoading=true
         val started=System.nanoTime()

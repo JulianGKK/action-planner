@@ -1,7 +1,7 @@
 import subprocess,pathlib,json,sys
 root=pathlib.Path('docs/p11-p110')
 label=sys.argv[1]
-consumer=['person-create','task-create','task-delete','material-create','material-delete','expense-create','expense-delete','role-create','role-rename','role-delete','ui-r-exact','ui-r-over','ui-t-exact','ui-t-over','repeat-active','repeat-preparation','repeat-completed']
+consumer=['postcommit-ui-refusal','material-input','form-repeat','control-r-exact','control-r-over','control-t-exact','control-t-over','action-revoke','protocol-create','memory-create','state-edit','person-create','task-create','task-delete','material-create','material-delete','expense-create','expense-delete','role-create','role-rename','role-delete','ui-r-exact','ui-r-over','ui-t-exact','ui-t-over','repeat-active','repeat-preparation','repeat-completed']
 legacy=['person','active','plan','stale','material','expense','preparation','completed','large','lock-detail','lost-detail-main','duplicate-detail-main','unknown-detail']
 results=[]
 for mode,cases in [('run',['active']+[case for case in legacy if case!='active']),('consumer',consumer)]:

@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.data.product.P108WorkspaceAccessTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:20.767Z" hostname="iuzjhtgvfc" time="0.059">
+<testsuite name="org.pag.data.product.P108WorkspaceAccessTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-25T19:21:54.339Z" hostname="iuzjhtgvfc" time="0.236">
   <properties/>
-  <testcase name="leadershipCiphertextAndSingleTaskMetadataAreIncludedBeforePayloadReads" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.05"/>
-  <testcase name="falseAfterCallbackIsNotAReusableAuthorizationOrUndoPromise" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
-  <testcase name="p110CapabilityKeepsCancellationIdentityButNoOpeningActionPayload" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
-  <testcase name="supplementsShareOneQuotaPendingAndOldAcksNeverReleaseParentOrNewTransition" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
-  <testcase name="wrongBindingForeignThreadRevokeGenerationAndCancelledRequestCannotResolve" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
-  <testcase name="heldDraftCopiesRequireFreshSessionButNeverReviveReadOrGrantWriterAuthority" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
-  <testcase name="boundedNestedPublicationReturnsFalseBeyondTwoAndExceptionRestoresDepth" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
-  <testcase name="supplementaryBudgetRefusalIsBeforeProducerAndSingleAdmissionKeepsOldCharges" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.0"/>
-  <testcase name="pendingUnknownAndOldEpochAreTerminalForOriginalCapability" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.0"/>
-  <testcase name="lostMainOrUnconfirmedCleanupNeverAuthorizesAnotherSupplement" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
-  <testcase name="exactCumulativeRetainedAndTransitionPlusOnePreserveOldBookings" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.0"/>
+  <testcase name="leadershipCiphertextAndSingleTaskMetadataAreIncludedBeforePayloadReads" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.205"/>
+  <testcase name="falseAfterCallbackIsNotAReusableAuthorizationOrUndoPromise" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.002"/>
+  <testcase name="p110CapabilityKeepsCancellationIdentityButNoOpeningActionPayload" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.002"/>
+  <testcase name="supplementsShareOneQuotaPendingAndOldAcksNeverReleaseParentOrNewTransition" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.005"/>
+  <testcase name="wrongBindingForeignThreadRevokeGenerationAndCancelledRequestCannotResolve" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.005"/>
+  <testcase name="heldDraftCopiesRequireFreshSessionButNeverReviveReadOrGrantWriterAuthority" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.003"/>
+  <testcase name="boundedNestedPublicationReturnsFalseBeyondTwoAndExceptionRestoresDepth" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.003"/>
+  <testcase name="supplementaryBudgetRefusalIsBeforeProducerAndSingleAdmissionKeepsOldCharges" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.002"/>
+  <testcase name="pendingUnknownAndOldEpochAreTerminalForOriginalCapability" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
+  <testcase name="lostMainOrUnconfirmedCleanupNeverAuthorizesAnotherSupplement" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.003"/>
+  <testcase name="exactCumulativeRetainedAndTransitionPlusOnePreserveOldBookings" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
   <testcase name="sameOriginalReferencePublicationReacquiresAndCannotOpenAnotherFullRead" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

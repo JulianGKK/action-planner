@@ -1,0 +1,5 @@
+{
+  "target_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+  "identical_to_build33": true,
+  "test_change": "Frame-callback driver requests next root invalidation only after actual preceding composition; 1000 checks, no-refusal and actual visible person"
+}

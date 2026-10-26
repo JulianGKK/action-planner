@@ -18,9 +18,15 @@ if mode=='install':
  assert before==inventory();(root/'apk-install.json').write_text(json.dumps(receipt,indent=2))
 elif mode=='run':
  scenario=sys.argv[2];label=sys.argv[3]
- output=run([adb,'shell','am','instrument','-w','-r','-e','scenario',scenario,'org.pag.prototype.a.p77runtime.test/org.pag.prototype.P109FunctionalOwnerProbe'])
- (root/('device-'+scenario+'-'+label+'.txt')).write_text(output);print(output)
- assert 'P109 PASS '+scenario in output, 'Device assertions failed'
+ args=[adb,'shell','am','instrument','-w','-r','-e','scenario',scenario,'org.pag.prototype.a.p77runtime.test/org.pag.prototype.P109FunctionalOwnerProbe']
+ p=subprocess.Popen(args,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+ lines=[]
+ with (root/('device-'+scenario+'-'+label+'.txt')).open('w') as raw:
+  for line in p.stdout:
+   lines.append(line);raw.write(line);raw.flush();print(line,end='',flush=True)
+ assert p.wait()==0
+ output=''.join(lines)
+ assert 'P109 PASS '+scenario in output,'Device assertions failed'
 elif mode=='consumer':
  scenario=sys.argv[2];label=sys.argv[3]
  args=[adb,'shell','am','instrument','-w','-r','-e','scenario',scenario,'org.pag.prototype.a.p77runtime.test/org.pag.prototype.P110ConsumerProbe']

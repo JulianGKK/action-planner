@@ -26,7 +26,7 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
         sql.usePrepared("PRAGMA encoding"){s->
             if(!s.step() || s.getText(0)!="UTF-8" || s.step())throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
         }
-        var rows=0L;var fields=0L;var bytes=0L;var taskRows=0L;var personRows=0L;var roleRows=0L
+        var rows=0L;var fields=0L;var bytes=0L;var taskRows=0L;var personRows=0L;var roleRows=0L;var personNameBytes=0L;var roleNameBytes=0L;var decoderBytes=0L
         for(t in tables.filter{it.name in names}) {
             gate()
             val column=when(t.name) {
@@ -35,8 +35,25 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
                 "expense_payments"->"expenseId"
                 else->null
             }
-            val id=if(detail!=null && column!=null)detail.id else if(t.name=="tasks")taskId else null
-            val where=if(t.name=="actions")"id=?" else if(id!=null)"actionId=? AND ${column ?: "id"}=?" else "actionId=?"
+            val protocolTarget=detail?.kind==WorkspaceDetailKind.PROTOCOL
+            val memoryTarget=detail?.kind==WorkspaceDetailKind.MEMORY
+            val targetColumn=when {
+                detail?.kind==WorkspaceDetailKind.MATERIAL_BOARD || detail?.kind==WorkspaceDetailKind.EXPENSE_BOARD->null
+                protocolTarget && t.name=="persons"->null
+                protocolTarget && t.name=="protocol_entries"->"id"
+                protocolTarget && t.name=="protocol_revisions"->"entryId"
+                memoryTarget && t.name=="memory_reports"->"id"
+                memoryTarget && t.name in setOf("memory_answers","memory_addenda")->"reportId"
+                else->column
+            }
+            val referencedPerson=protocolTarget && t.name=="persons"
+            val relation=protocolTarget && t.name in setOf("protocol_affected_persons","protocol_official_identifiers","protocol_reported_by_persons")
+            val id=if(referencedPerson || relation || (detail!=null && targetColumn!=null))detail?.id else if(t.name=="tasks")taskId else null
+            val where=if(t.name=="actions")"id=?" else if(referencedPerson)
+                "actionId=?1 AND id IN (SELECT p.personId FROM protocol_affected_persons p JOIN protocol_revisions r ON r.actionId=p.actionId AND r.id=p.revisionId WHERE r.actionId=?1 AND r.entryId=?2 UNION SELECT p.personId FROM protocol_reported_by_persons p JOIN protocol_revisions r ON r.actionId=p.actionId AND r.id=p.revisionId WHERE r.actionId=?1 AND r.entryId=?2)"
+                else if(relation)
+                "actionId=? AND revisionId IN (SELECT id FROM protocol_revisions WHERE entryId=? AND actionId="+t.name+".actionId)"
+                else if(id!=null)"actionId=? AND $targetColumn=?" else "actionId=?"
             val n=scalar("SELECT COUNT(*) FROM ${t.name} WHERE $where",a,id)
             // Reject enormous counts BEFORE any SUM: each text SUM is then <= 2^39.
             if(n>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES/128)throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
@@ -45,19 +62,26 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
             if(t.name=="tasks")taskRows=n
             if(t.name=="persons")personRows=n
             if(t.name=="roles")roleRows=n
+            if(t.name=="memory_answers"){
+                if(scalar("SELECT COUNT(*) FROM memory_answers WHERE $where AND valueKind NOT IN ('TEXT','OPTION','MULTI','COUNT')",a,id)!=0L)
+                    throw BoundedActiveRejected(BoundedActiveStatus.INVALID_DATA)
+                decoderBytes=scalar("SELECT COALESCE(SUM(length(CAST(payload AS BLOB))),0) FROM memory_answers WHERE $where AND valueKind='MULTI'",a,id)
+            }
             rows=checked{Math.addExact(rows,n)}
             fields=checked{Math.addExact(fields,Math.multiplyExact(n,t.columns.toLong()))}
             for(f in t.text) {
                 val max=scalar("SELECT COALESCE(MAX(length(CAST($f AS BLOB))),0) FROM ${t.name} WHERE $where",a,id)
                 if(max>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
                 val total=scalar("SELECT COALESCE(SUM(length(CAST($f AS BLOB))),0) FROM ${t.name} WHERE $where",a,id)
+                if(t.name=="persons" && f=="pseudonym")personNameBytes=total
+                if(t.name=="roles" && f=="name")roleNameBytes=total
                 bytes=checked{Math.addExact(bytes,total)}
             }
         }
         gate()
-        // MemoryAnswerCodec may split payload tokens into additional objects. No zero-cost
-        // decoder assumption: one extra logical row allowance per byte (conservative).
-        val chargedRows=if("memory_answers" in names)checked{Math.addExact(rows,bytes)} else rows
+        // Only MULTI decoding splits payload tokens. TEXT/OPTION/COUNT and header/action
+        // bytes never construct token lists. Their complete DTO/string costs stay in base.
+        val chargedRows=if("memory_answers" in names)checked{Math.addExact(rows,decoderBytes)} else rows
         var base=reservation(chargedRows,fields,bytes)
         fun add(units:ActiveWorkspaceBudget.Units){base=ActiveCoreReservation(
             CoreReadAdmission.add(base.retained,units),CoreReadAdmission.add(base.transition,units))}
@@ -71,7 +95,10 @@ internal class FullviewPreflight(private val sql:PooledConnection,private val c:
         if(presentations && "roles" in names && "persons" in names && "person_planned_roles" in names){
             val joined=scalar("SELECT COALESCE(SUM(length(CAST(r.name AS BLOB))),0) FROM person_planned_roles p JOIN roles r ON r.actionId=p.actionId AND r.id=p.roleId WHERE p.actionId=?",a)
             add(checked{OperationalPresentation.cost(personRows,roleRows,joined)})
+            add(checked{ActiveFunctionContent.cost(personRows,roleRows,Math.addExact(personNameBytes,roleNameBytes))})
         }
+        if(detail?.kind==WorkspaceDetailKind.PERSON || detail?.kind==WorkspaceDetailKind.ROLE)
+            add(checked{ActiveFunctionContent.cost(personRows,roleRows,Math.addExact(personNameBytes,roleNameBytes))})
         if(detail?.kind==WorkspaceDetailKind.ROLE){
             val dependents=scalar("SELECT COUNT(*) FROM person_planned_roles WHERE actionId=? AND roleId=?",a,detail.id)
             if(dependents>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES/128)throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)

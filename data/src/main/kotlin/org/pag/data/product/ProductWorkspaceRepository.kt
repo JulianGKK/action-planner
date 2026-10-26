@@ -21,6 +21,10 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
     constructor(app:Context,access:StorageAccess,inventory:ProductInventory,owner:()->SessionDbKeyOwner?,
         worker:Executor,main:Executor,blocked:()->Unit,mutations:WorkspaceMutationInvalidation):this(app,access,inventory,owner,worker,main,blocked,OutstandingCoreRead.product,null,mutations)
 
+    private val protocolOrder=Comparator<ProtocolTimelineItem>{a,b->
+        val time=a.occurredAt.compareTo(b.occurredAt)
+        if(time!=0)time else {val recorded=a.originalRecordedAt.compareTo(b.originalRecordedAt);if(recorded!=0)recorded else a.entryId.compareTo(b.entryId)}
+    }
     override fun detail(original:WorkspaceAccess,request:WorkspaceDetailRequest,publish:(WorkspaceDetailResult)->Unit) {
         val scope=original as? OriginalWorkspaceAccess
         fun reject(reason:WorkspaceFailure){publish(WorkspaceDetailResult.Rejected(reason))}
@@ -32,7 +36,7 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
         }
         val baseline=request.baseline
         if(baseline!=null && baseline.access!==scope){reject(WorkspaceFailure.STALE);return}
-        val control=try{if(baseline==null)OriginalWorkspaceAccess.cost else WorkspaceConsistency.cost(baseline)}catch(_:ArithmeticException){reject(WorkspaceFailure.BUDGET_REFUSED);return}
+        val control=try{if(baseline==null)OriginalWorkspaceAccess.cost else WorkspaceConsistency.cost(baseline,request.kind)}catch(_:ArithmeticException){reject(WorkspaceFailure.BUDGET_REFUSED);return}
         if(!scope.entry.reserve(control)){reject(WorkspaceFailure.BUDGET_REFUSED);return}
         val c=access.acquire(AccessScope.READY) ?: return
         if(c.generation!=request.generation || !c.check(AccessPoint.OPERATION))return
@@ -59,7 +63,14 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                             WorkspaceDetailKind.PLAN->setOf("actions","persons","person_role_plans","person_planned_roles")
                             WorkspaceDetailKind.MATERIAL->FullviewPreflight.material
                             WorkspaceDetailKind.EXPENSE->FullviewPreflight.expense
+                            WorkspaceDetailKind.STATE->setOf("actions","person_operational_states")
                             WorkspaceDetailKind.ROLE->setOf("actions","roles")
+                            WorkspaceDetailKind.PROTOCOL->FullviewPreflight.protocol
+                            WorkspaceDetailKind.MEMORY->FullviewPreflight.memory
+                            WorkspaceDetailKind.PROTOCOL_TIMELINE->setOf("actions","protocol_entries","protocol_revisions")
+                            WorkspaceDetailKind.MEMORY_HEADERS->setOf("actions","memory_reports")
+                            WorkspaceDetailKind.MATERIAL_BOARD->FullviewPreflight.material
+                            WorkspaceDetailKind.EXPENSE_BOARD->FullviewPreflight.expense
                         }
                         // Validate held unrelated rows before the target DTO is materialized.
                         if(baseline!=null && !WorkspaceConsistency(this,::current).matches(baseline,request))
@@ -85,6 +96,49 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                                     WorkspaceDetail(fresh,person=person,operationalPerson=OperationalPerson(person,plan,db.operations().state(a,id)?.model()))
                                 }
                             }
+                            WorkspaceDetailKind.MATERIAL_BOARD->{
+                                val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
+                                when(val result=MaterialStore(db,guarded,System::currentTimeMillis).board(a)){
+                                    is OperationsResult.Value->WorkspaceDetail(fresh,materialBoard=result.value)
+                                    is OperationsResult.Rejected->null
+                                }
+                            }
+                            WorkspaceDetailKind.EXPENSE_BOARD->{
+                                val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
+                                when(val result=ExpenseStore(db,guarded,System::currentTimeMillis).board(a)){
+                                    is OperationsResult.Value->WorkspaceDetail(fresh,expenseBoard=result.value)
+                                    is OperationsResult.Rejected->null
+                                }
+                            }
+                            WorkspaceDetailKind.PROTOCOL_TIMELINE->{
+                                val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
+                                when(val result=ProtocolStore(db,guarded,System::currentTimeMillis).timeline(a)){
+                                    is ProtocolResult.Value->WorkspaceDetail(fresh,protocolTimeline=result.value)
+                                    is ProtocolResult.Rejected->null
+                                }
+                            }
+                            WorkspaceDetailKind.MEMORY_HEADERS->{
+                                val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
+                                when(val result=MemoryReportStore(db,guarded,System::currentTimeMillis).list(a)){
+                                    is OperationsResult.Value->WorkspaceDetail(fresh,memoryHeaders=result.value)
+                                    is OperationsResult.Rejected->null
+                                }
+                            }
+                            WorkspaceDetailKind.STATE->db.operations().state(a,id)?.model()?.let{WorkspaceDetail(fresh,operationalState=it)}
+                            WorkspaceDetailKind.PROTOCOL->{
+                                val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
+                                when(val result=ProtocolStore(db,guarded,System::currentTimeMillis).detail(a,id)){
+                                    is ProtocolResult.Value->WorkspaceDetail(fresh,protocolDetail=result.value)
+                                    is ProtocolResult.Rejected->null
+                                }
+                            }
+                            WorkspaceDetailKind.MEMORY->{
+                                val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
+                                when(val result=MemoryReportStore(db,guarded,System::currentTimeMillis).detail(a,id)){
+                                    is OperationsResult.Value->WorkspaceDetail(fresh,memoryDetail=result.value)
+                                    is OperationsResult.Rejected->null
+                                }
+                            }
                             WorkspaceDetailKind.TASK->db.tasks().get(a,id)?.model()?.let{WorkspaceDetail(fresh,task=it)}
                             WorkspaceDetailKind.ROLE->db.operations().role(a,id)?.model()?.let{WorkspaceDetail(fresh,role=it)}
                             WorkspaceDetailKind.MATERIAL->db.materials().get(a,id)?.model()?.let{WorkspaceDetail(fresh,material=it)}
@@ -107,7 +161,7 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                             }
                         }
                         if(!current())throw StorageAccessRevoked()
-                        val value=found ?: if(request.membership)WorkspaceDetail(fresh,removed=true) else null
+                        val value=found ?: if(request.membership && request.kind!=WorkspaceDetailKind.PROTOCOL && request.kind!=WorkspaceDetailKind.MEMORY && request.kind!=WorkspaceDetailKind.PROTOCOL_TIMELINE && request.kind!=WorkspaceDetailKind.MEMORY_HEADERS && request.kind!=WorkspaceDetailKind.MATERIAL_BOARD && request.kind!=WorkspaceDetailKind.EXPENSE_BOARD)WorkspaceDetail(fresh,removed=true) else null
                         if(value==null)WorkspaceDetailResult.Rejected(WorkspaceFailure.NOT_FOUND) else {
                             val updated=baseline?.let{b->
                                 // Explicit single-identity membership delta. Every unrelated row was
@@ -119,6 +173,7 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                                 }
                                 val people=if(request.kind==WorkspaceDetailKind.PERSON && request.membership)
                                     patch(b.operations.persons,value.operationalPerson,{it.person.id},compareBy<OperationalPerson>{it.person.createdAt}.thenBy{it.person.id})
+                                else if(request.kind==WorkspaceDetailKind.STATE)b.operations.persons.map{p->if(p.person.id==id)p.copy(state=value.operationalState) else p}
                                 else if(value.person!=null || value.plan!=null)b.operations.persons.map{p->
                                     if(p.person.id!=id)p else OperationalPerson(value.person?:p.person,value.plan?.plan?:p.plan,p.state)
                                 }else b.operations.persons
@@ -135,8 +190,8 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                                 }else b.operations.roles
                                 val operations=if(people===b.operations.persons && roles===b.operations.roles)b.operations else b.operations.copy(persons=people,roles=roles)
                                 val tasks=if(request.kind==WorkspaceDetailKind.TASK)b.tasks?.let{it.copy(tasks=patch(it.tasks,value.task,{t->t.id},null))} else b.tasks
-                                val materials=if(request.kind==WorkspaceDetailKind.MATERIAL)b.materialBoard?.let{it.copy(items=patch(it.items,value.material,{m->m.id},compareBy<MaterialItem>{m->m.createdAt}.thenBy{m->m.id}))} else b.materialBoard
-                                val expenses=if(request.kind==WorkspaceDetailKind.EXPENSE)b.expenseBoard?.let{it.copy(expenses=patch(it.expenses,value.expense,{e->e.id},compareBy<Expense>{e->e.createdAt}.thenBy{e->e.id}))} else b.expenseBoard
+                                val materials=if(request.kind==WorkspaceDetailKind.MATERIAL_BOARD)value.materialBoard else if(request.kind==WorkspaceDetailKind.MATERIAL)b.materialBoard?.let{it.copy(items=patch(it.items,value.material,{m->m.id},compareBy<MaterialItem>{m->m.createdAt}.thenBy{m->m.id}))} else b.materialBoard
+                                val expenses=if(request.kind==WorkspaceDetailKind.EXPENSE_BOARD)value.expenseBoard else if(request.kind==WorkspaceDetailKind.EXPENSE)b.expenseBoard?.let{it.copy(expenses=patch(it.expenses,value.expense,{e->e.id},compareBy<Expense>{e->e.createdAt}.thenBy{e->e.id}))} else b.expenseBoard
                                 val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
                                 val protection=if(b.leadershipState!=null)leadershipState?.invoke(db,guarded,a) else null
                                 val materialSummary=if(b.material!=null)when(val x=MaterialStore(db,guarded,System::currentTimeMillis).summary(a)){is OperationsResult.Value->x.value;else->throw ProductStorageFailure()} else null
@@ -144,9 +199,17 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                                 val protocol=if(b.protocol!=null)when(val x=ProtocolStore(db,guarded,System::currentTimeMillis).summary(a)){is ProtocolResult.Value->x.value;else->throw ProductStorageFailure()} else null
                                 val memorySummary=if(b.memory!=null)when(val x=MemoryReportStore(db,guarded,System::currentTimeMillis).summary(a)){is OperationsResult.Value->x.value;else->throw ProductStorageFailure()} else null
                                 val documents=if(b.documents!=null)DocumentSummary(db.documents().count(a)) else null
+                                val timeline=if(request.kind==WorkspaceDetailKind.PROTOCOL_TIMELINE)value.protocolTimeline else if(request.kind==WorkspaceDetailKind.PROTOCOL && b.protocolTimeline!=null){
+                                    val d=value.protocolDetail?:throw ProductStorageFailure()
+                                    val v=d.current.revision;val i=v.input
+                                    val row=ProtocolTimelineItem(d.entry.id,v.id,v.revisionNumber,v.revisionType,i.classification,i.templateKey,i.title,i.occurredAt,i.occurredAtApproximate,v.recordedAt,v.recordedAfterCompletion,d.entry.createdAfterCompletion,v.mistaken,d.revisions.first().revision.recordedAt)
+                                    patch(checkNotNull(b.protocolTimeline),row,{it.entryId},protocolOrder)
+                                }else b.protocolTimeline
+                                val headers=if(request.kind==WorkspaceDetailKind.MEMORY_HEADERS)value.memoryHeaders else if(request.kind==WorkspaceDetailKind.MEMORY && b.memoryHeaders!=null)
+                                    patch(checkNotNull(b.memoryHeaders),value.memoryDetail?.header,{it.id},MemoryReportRules.order) else b.memoryHeaders
                                 b.copy(operations=operations,tasks=tasks,materialBoard=materials,expenseBoard=expenses,
                                     access=fresh,leadershipState=protection,material=materialSummary,expenses=expenseSummary,
-                                    protocol=protocol,memory=memorySummary,documents=documents)
+                                    protocol=protocol,memory=memorySummary,documents=documents,protocolTimeline=timeline,memoryHeaders=headers)
                             }
                             WorkspaceDetailResult.Value(value.copy(workspace=updated))
                         }
@@ -167,7 +230,7 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
         val scope=access as? OriginalWorkspaceAccess ?: return
         if(scope.source!==this.access || !memory.ownsFullview(scope.entry) || request.parts.size!=1)return
         val part=request.parts.single()
-        if(part!=WorkspacePart.MATERIAL_BOARD && part!=WorkspacePart.EXPENSE_BOARD)return
+        if(part !in supplementParts)return
         var child:OutstandingCoreRead.FullviewEntry.FullviewSupplement?=null
         val accepted=scope.publish(request.actionId,request.status,request.generation){child=scope.entry.supplement(part)}
         if(!accepted)return
@@ -181,14 +244,25 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                 val result=DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()) {
                     if(!current())throw StorageAccessRevoked()
                     (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->db.withReadTransaction {
-                        val names=if(part==WorkspacePart.MATERIAL_BOARD)FullviewPreflight.material else FullviewPreflight.expense
+                        val names=when(part){
+                            WorkspacePart.PROTOCOL_TIMELINE->setOf("actions","protocol_entries","protocol_revisions")
+                            WorkspacePart.MEMORY_HEADERS->setOf("actions","memory_reports")
+                            WorkspacePart.MATERIAL_BOARD->FullviewPreflight.material
+                            else->FullviewPreflight.expense
+                        }
                         val reservation=FullviewPreflight(this,c,::current).prepare(request.actionId,names)
                         if(!current())throw StorageAccessRevoked()
                         if(!original.admit(reservation))return@withReadTransaction WorkspaceSupplementResult.Rejected(WorkspaceFailure.BUDGET_REFUSED)
                         if(!current())throw StorageAccessRevoked()
                         val guarded=object:StorageContext by c {override fun check(point:AccessPoint)=current() && c.check(point)}
                         supplementMaterializing?.invoke(part)
-                        val data=if(part==WorkspacePart.MATERIAL_BOARD)when(val r=MaterialStore(db,guarded,System::currentTimeMillis).board(request.actionId)){
+                        val data=if(part==WorkspacePart.PROTOCOL_TIMELINE)when(val r=ProtocolStore(db,guarded,System::currentTimeMillis).timeline(request.actionId)){
+                            is ProtocolResult.Value->WorkspaceSupplement(request.actionId,c.generation,protocolTimeline=r.value)
+                            is ProtocolResult.Rejected->return@withReadTransaction WorkspaceSupplementResult.Rejected(WorkspaceFailure.NOT_ALLOWED)
+                        }else if(part==WorkspacePart.MEMORY_HEADERS)when(val r=MemoryReportStore(db,guarded,System::currentTimeMillis).list(request.actionId)){
+                            is OperationsResult.Value->WorkspaceSupplement(request.actionId,c.generation,memoryHeaders=r.value)
+                            is OperationsResult.Rejected->return@withReadTransaction WorkspaceSupplementResult.Rejected(WorkspaceFailure.NOT_ALLOWED)
+                        }else if(part==WorkspacePart.MATERIAL_BOARD)when(val r=MaterialStore(db,guarded,System::currentTimeMillis).board(request.actionId)){
                             is OperationsResult.Value->WorkspaceSupplement(request.actionId,c.generation,material=r.value)
                             is OperationsResult.Rejected->return@withReadTransaction WorkspaceSupplementResult.Rejected(WorkspaceFailure.NOT_ALLOWED)
                         }else when(val r=ExpenseStore(db,guarded,System::currentTimeMillis).board(request.actionId)){
@@ -212,6 +286,7 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
         })
         try{worker.execute(task)}catch(_:java.util.concurrent.RejectedExecutionException){original.workerRejected()}
     }
+    private val supplementParts=setOf(WorkspacePart.MATERIAL_BOARD,WorkspacePart.EXPENSE_BOARD,WorkspacePart.PROTOCOL_TIMELINE,WorkspacePart.MEMORY_HEADERS)
     private val database=ActionDatabaseAccess(app.applicationContext)
     private class ReadCancelled:RuntimeException()
     override fun read(request:WorkspaceReadRequest,publish:(WorkspaceResult)->Unit) {

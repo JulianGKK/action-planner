@@ -1,0 +1,18 @@
+INSTRUMENTATION_STATUS: stream=P110,material-input,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=2571364, transition=16777216, localRetained=2571364, localTransition=5288584, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,material-input,MATERIAL_INPUT,updates=1,old_drafts_held=1,record=State(phase=RETAINED, retained=4891395, transition=16777216, localRetained=4891395, localTransition=8305275, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,material-input,MATERIAL_INPUT,updates=100,old_drafts_held=100,record=State(phase=RETAINED, retained=7749200, transition=16777216, localRetained=7749200, localTransition=11163080, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,material-input,FAILURE,java.lang.IllegalStateException: P110 timeout material committed and rebound
+	at org.pag.prototype.P110ConsumerProbe.await(P110ConsumerProbe.kt:23)
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:126)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL material-input
+INSTRUMENTATION_CODE: 0

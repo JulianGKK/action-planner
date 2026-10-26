@@ -9,6 +9,8 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     private val suppliedBoard: (() -> TaskBoard?)? = null,
     private val refreshWorkspace: (() -> Unit)? = null,
     private val feedback: (String) -> Unit = {}) {
+    private var feedbackFactory:WorkspaceFeedbackFactory?=null
+    internal fun bindFeedbackFactory(factory:WorkspaceFeedbackFactory){check(feedbackFactory==null);feedbackFactory=factory}
     private var uiRows:((Task)->TaskUiRow?)?=null
     internal fun bindUiRows(source:(Task)->TaskUiRow?){check(uiRows==null);uiRows=source}
     internal fun uiRow(task:Task):TaskUiRow?=uiRows?.invoke(task)
@@ -50,6 +52,7 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     var historyBusy by mutableStateOf(false);private set
     var historyError by mutableStateOf<BoundedActiveStatus?>(null);private set
     var historyOffset by mutableStateOf(0L);private set
+    internal val uiHistoryEpoch:Long get()=historyRequest
     private var historyRequest=0L
     private fun clearHistory(){historyRequest++;history=null;historyUi=null;historyPageText="";historyBusy=false;historyError=null;historyOffset=0}
     /** Replace one page; never accumulate a full chronicle in the model or Compose. */
@@ -234,6 +237,7 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
     private fun unit(r:OperationsResult<Task>):OperationsResult<Unit> = when(r){is OperationsResult.Value->OperationsResult.Value(Unit);is OperationsResult.Rejected->r}
     private fun write(membership:Boolean=false,message:String?=null,createdFocus:()->String?={null},work:((OperationsResult<Unit>)->Unit)->Unit)=guardedInteraction { _,_ ->
         if(repository!=null && writable && !busy && !commitConfirmed){
+            val emit=if(feedbackFactory==null)feedback else feedbackFactory!!.invoke()?:run{error=OperationsFailure.BUDGET_REFUSED;return@guardedInteraction}
             val revision=formRevision;val generation=session().generation;val actionId=action()?.id
             clearHistory();busy=true;error=null;var delivered=false
             work{r->if(!delivered && session().state==SessionState.READY && session().generation==generation &&
@@ -249,10 +253,10 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
                             if(session().state!=SessionState.READY || session().generation!=generation || action()?.id!=actionId || formRevision!=revision)return@loader
                             busy=false
                             when(refreshed){
-                                is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                                is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();emit("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
                                 is WorkspaceDetailResult.Value->{
                                     selected=refreshed.value.task;dropEditor();form=false;input=TaskInput("");commitConfirmed=false;error=null
-                                    if(message!=null)feedback(message)
+                                    if(message!=null)emit(message)
                                 }
                             }
                         }
@@ -261,7 +265,7 @@ class TaskModel(private val repository:TaskRepository?,private val session:()->S
                     dropEditor();form=false;input=TaskInput("")
                     val generation=session().generation;val actionId=action()?.id
                     refresh()
-                    if(session().state==SessionState.READY && session().generation==generation && action()?.id==actionId && message!=null)feedback(message)
+                    if(session().state==SessionState.READY && session().generation==generation && action()?.id==actionId && message!=null)emit(message)
                 };is OperationsResult.Rejected->error=r.reason}
             }}
         }

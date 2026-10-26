@@ -3,6 +3,11 @@ package org.pag.prototype.product
 import androidx.compose.runtime.*
 import org.pag.domain.*
 
+// Immutable CODE enum groups; no action payload, authority or per-render Set.
+private val supportedOperationsScreenGroup1=setOf(OperationsScreen.LIVE,OperationsScreen.FUNCTION)
+private val supportedOperationsScreenGroup2=setOf(OperationsScreen.PLAN,OperationsScreen.LIVE,OperationsScreen.FUNCTION)
+
+
 internal enum class OperationsScreen { OVERVIEW, ROLES, PLAN, LIVE, PERSON, FUNCTION, FUNCTION_DETAIL, NEW_FUNCTION }
 enum class RoleCreateSurface { ROLES, PREPARATION, INLINE, NEW_FUNCTION }
 internal data class FunctionFocus(val roleId: String?)
@@ -13,6 +18,17 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     private val refreshWorkspace: (() -> Unit)? = null,
     private val feedback: (String) -> Unit = {},
     private val onEditFinished: (String?) -> Unit = {}) {
+    internal val uiEditorEpoch:Long get()=roleEditorSerial
+    internal val uiCreateEpoch:Long get()=createSerial
+    internal val uiReadEpoch:Long get()=request
+    internal fun roleTemplateExists(template:String):Boolean {
+        val normalized=templateNormalizedNames[template]?:return false
+        val roles=board?.roles?:return false
+        var i=0;while(i<roles.size){if(roles[i++].normalizedName==normalized)return true}
+        return false
+    }
+    private var feedbackFactory:WorkspaceFeedbackFactory?=null
+    internal fun bindFeedbackFactory(factory:WorkspaceFeedbackFactory){check(feedbackFactory==null);feedbackFactory=factory}
     private var membershipLoader:WorkspaceDetailLoader?=null
     internal fun bindMembershipLoader(loader:WorkspaceDetailLoader){check(membershipLoader==null);membershipLoader=loader}
     private var detailLoader:WorkspaceDetailLoader?=null
@@ -52,7 +68,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     private fun createAllowed(surface:RoleCreateSurface)=editingRole==null && deletingRole==null && when(surface){
         RoleCreateSurface.ROLES->(planning || live) && screen==OperationsScreen.ROLES
         RoleCreateSurface.PREPARATION->planning && screen==OperationsScreen.OVERVIEW
-        RoleCreateSurface.INLINE->live && screen in setOf(OperationsScreen.LIVE,OperationsScreen.FUNCTION) && liveStatus==OperationalStatus.ON_SITE
+        RoleCreateSurface.INLINE->live && screen in supportedOperationsScreenGroup1 && liveStatus==OperationalStatus.ON_SITE
         RoleCreateSurface.NEW_FUNCTION->live && screen==OperationsScreen.NEW_FUNCTION
     }
     fun beginRoleCreate(surface:RoleCreateSurface){
@@ -183,11 +199,28 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         val old=expected?:return
         val generation=liveGeneration; val token=request; val route=screen
         if(!live || busy || session().generation!=generation || error!=OperationsFailure.STALE ||
-            route !in setOf(OperationsScreen.LIVE,OperationsScreen.FUNCTION) || action()?.id!=old.actionId)return
+            route !in supportedOperationsScreenGroup1 || action()?.id!=old.actionId)return
         interaction()
         if(!live || session().generation!=generation || request!=token || expected!==old)return
         busy=true
         var delivered=false
+        val loader=detailLoader
+        if(loader!=null){
+            loader(WorkspaceDetailKind.STATE,old.personId){result->
+                if(delivered)return@loader
+                delivered=true
+                if(request!=token || !live || session().generation!=generation || action()?.id!=old.actionId || screen!=route || expected!==old || personId!=old.personId)return@loader
+                busy=false
+                when(result){
+                    is WorkspaceDetailResult.Rejected->error=result.reason.operationFailure()
+                    is WorkspaceDetailResult.Value->{
+                        val fresh=result.value.operationalState
+                        if(fresh==null || fresh.personId!=old.personId || fresh.actionId!=old.actionId)error=OperationsFailure.NOT_FOUND
+                        else{expected=fresh;liveStatus=fresh.status;liveRoleId=fresh.currentRoleId;livePlace=fresh.currentPlaceLabel.orEmpty();error=null}
+                    }
+                }
+            };return
+        }
         repository?.board(old.actionId){result->
             if(delivered)return@board
             delivered=true
@@ -272,7 +305,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
     /** Discard the bound local edit for direct person navigation; no board read. */
     internal fun dismissEditForPersonDetail():String? {
         val before=session();val actionId=action()?.id?:return null;val token=request;val id=personId?:return null
-        if(before.state!=SessionState.READY || busy || screen !in setOf(OperationsScreen.LIVE, OperationsScreen.FUNCTION))return null
+        if(before.state!=SessionState.READY || busy || screen !in supportedOperationsScreenGroup1)return null
         interaction()
         if(session().state!=SessionState.READY || session().generation!=before.generation ||
             action()?.id!=actionId || personId!=id || request!=token || busy)return null
@@ -300,6 +333,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         val a=action()?.id?:return;val generation=session().generation
         val serial=createSerial;val roleSerial=roleEditorSerial;val targetScreen=screen;val targetPerson=personId
         if(session().state!=SessionState.READY || (!planning && !live) || busy || commitConfirmed || repository==null)return
+        val emit=if(feedbackFactory==null)feedback else feedbackFactory!!.invoke()?:run{error=OperationsFailure.BUDGET_REFUSED;return}
         fun current()=session().state==SessionState.READY && session().generation==generation && action()?.id==a &&
             createSerial==serial && roleEditorSerial==roleSerial && screen==targetScreen && personId==targetPerson &&
             (planning || live) && (owner==null || (createSurface==owner && createAllowed(owner)))
@@ -329,7 +363,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
                         createSerial==completedSerial && roleEditorSerial==completedRoleSerial && screen==completedScreen
                     if(membershipLoader==null)refresh()
                     if(completedCurrent() && owner==RoleCreateSurface.NEW_FUNCTION)onEditFinished(targetPerson)
-                    if(completedCurrent())feedback("${if(owner==RoleCreateSurface.NEW_FUNCTION) "Funktion" else "Rolle"} „${submitted.trim()}“ angelegt")
+                    if(completedCurrent())emit("${if(owner==RoleCreateSurface.NEW_FUNCTION) "Funktion" else "Rolle"} „${submitted.trim()}“ angelegt")
                     }
                     val projection=membershipLoader
                     if(projection==null)accepted() else {
@@ -338,7 +372,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
                             if(!current())return@projection
                             busy=false
                             when(fresh){
-                                is WorkspaceDetailResult.Rejected->{error=fresh.reason.operationFailure();createError=error;feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                                is WorkspaceDetailResult.Rejected->{error=fresh.reason.operationFailure();createError=error;emit("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
                                 is WorkspaceDetailResult.Value->{commitConfirmed=false;accepted()}
                             }
                         }
@@ -420,6 +454,7 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
         if(commitConfirmed || before.state!=SessionState.READY || repository==null || a==null)return
         interaction()
         if(token!=request || action()?.id!=a || session().state!=SessionState.READY || session().generation!=generation)return
+        val emit=if(feedbackFactory==null)feedback else feedbackFactory!!.invoke()?:run{error=OperationsFailure.BUDGET_REFUSED;return}
         busy=true;error=null
         work{result->
             if(token!=request || action()?.id!=a || session().state!=SessionState.READY || session().generation!=generation)return@work
@@ -427,17 +462,17 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
             when(result){is OperationsResult.Value->{
                 val finishedPerson=personId
                 val loader=detailLoader
-                if(loader!=null && finishedPerson!=null && screen==OperationsScreen.PLAN){
+                if(loader!=null && finishedPerson!=null && screen in supportedOperationsScreenGroup2){
                     commitConfirmed=true;busy=true
-                    loader(WorkspaceDetailKind.PLAN,finishedPerson){refreshed->
+                    loader(if(screen==OperationsScreen.PLAN)WorkspaceDetailKind.PLAN else WorkspaceDetailKind.STATE,finishedPerson){refreshed->
                         if(token!=request || action()?.id!=a || session().state!=SessionState.READY || session().generation!=generation)return@loader
                         busy=false
                         when(refreshed){
-                            is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                            is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();emit("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
                             is WorkspaceDetailResult.Value->{
                                 commitConfirmed=false;applied();if(close)finishForm()
                                 if(close)onEditFinished(finishedPerson)
-                                if(message!=null)feedback(message)
+                                if(message!=null)emit(message)
                             }
                         }
                     }
@@ -449,8 +484,8 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
                         if(token!=request || action()?.id!=a || session().state!=SessionState.READY || session().generation!=generation)return@invoke
                         busy=false
                         when(fresh){
-                            is WorkspaceDetailResult.Rejected->{error=fresh.reason.operationFailure();feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
-                            is WorkspaceDetailResult.Value->{commitConfirmed=false;applied();if(close)finishForm();if(message!=null)feedback(message)}
+                            is WorkspaceDetailResult.Rejected->{error=fresh.reason.operationFailure();emit("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                            is WorkspaceDetailResult.Value->{commitConfirmed=false;applied();if(close)finishForm();if(message!=null)emit(message)}
                         }
                     };return@work
                 }
@@ -458,8 +493,10 @@ class OperationsModel(private val repository:OperationsRepository?,private val s
                 if(close)finishForm();refresh()
                 if(close && session().state==SessionState.READY && session().generation==generation && action()?.id==a)
                     onEditFinished(finishedPerson)
-                if(session().state==SessionState.READY && session().generation==generation && action()?.id==a && message!=null)feedback(message)
+                if(session().state==SessionState.READY && session().generation==generation && action()?.id==a && message!=null)emit(message)
             };is OperationsResult.Rejected->error=result.reason}
         }
     }
 }
+
+private val templateNormalizedNames=OperationalRules.templates.associateWith(OperationalRules::normalizedName) // CODE only

@@ -1,0 +1,11 @@
+{
+  "compared": "all build33 fingerprint paths",
+  "changed_paths": [
+    "app/src/androidTest/kotlin/org/pag/prototype/P110ConsumerProbe.kt"
+  ],
+  "product_apk_identical": true,
+  "fixture_changes": [
+    "IDENTITY_CHECK permits place",
+    "explicit person focus after confirmed new state bind"
+  ]
+}

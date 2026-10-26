@@ -1,0 +1,140 @@
+{
+  "weights": {
+    "objects": 128,
+    "strings": 71,
+    "utf16Units": 4,
+    "arrays": 71,
+    "arrayPayloadBytes": 1,
+    "lists": 128,
+    "listCapacity": 8,
+    "maps": 128,
+    "mapCapacity": 128,
+    "references": 8
+  },
+  "costs": {
+    "incrementalPlanning": {
+      "units": {
+        "objects": 32,
+        "arrays": 4,
+        "arrayPayloadBytes": 1024,
+        "references": 128
+      },
+      "bytes": 6428
+    },
+    "formatPlanning": {
+      "units": {
+        "objects": 320,
+        "strings": 64,
+        "utf16Units": 4096,
+        "arrays": 40,
+        "arrayPayloadBytes": 6144,
+        "references": 256
+      },
+      "bytes": 72920
+    },
+    "row": {
+      "units": {
+        "objects": 16,
+        "maps": 1,
+        "mapCapacity": 4,
+        "lists": 1,
+        "listCapacity": 8,
+        "references": 64
+      },
+      "bytes": 3392
+    },
+    "hub": {
+      "units": {
+        "objects": 1024,
+        "strings": 256,
+        "utf16Units": 16384,
+        "arrays": 32,
+        "arrayPayloadBytes": 8192,
+        "lists": 64,
+        "listCapacity": 256,
+        "references": 512
+      },
+      "bytes": 239584
+    },
+    "semantics": {
+      "units": {
+        "objects": 32,
+        "arrays": 4,
+        "arrayPayloadBytes": 1024,
+        "lists": 2,
+        "listCapacity": 8,
+        "maps": 2,
+        "mapCapacity": 16,
+        "references": 128
+      },
+      "bytes": 9052
+    },
+    "click/content": {
+      "units": {
+        "objects": 8,
+        "references": 32
+      },
+      "bytes": 1280
+    },
+    "slot": {
+      "units": {
+        "objects": 4,
+        "references": 16
+      },
+      "bytes": 640
+    },
+    "sizing/geometry": {
+      "units": {
+        "objects": 2,
+        "references": 8
+      },
+      "bytes": 320
+    },
+    "field": {
+      "units": {
+        "objects": 128,
+        "references": 512
+      },
+      "bytes": 20480
+    },
+    "event": {
+      "units": {
+        "objects": 16,
+        "references": 64
+      },
+      "bytes": 2560
+    },
+    "screenKey": {
+      "units": {
+        "objects": 16,
+        "references": 256
+      },
+      "bytes": 4096
+    },
+    "feedback": {
+      "units": {
+        "objects": 16,
+        "strings": 4,
+        "utf16Units": 1024,
+        "references": 64
+      },
+      "bytes": 6940
+    },
+    "followPlanning": {
+      "units": {
+        "objects": 32,
+        "references": 128
+      },
+      "bytes": 5120
+    },
+    "datePicker": {
+      "units": {
+        "objects": 128,
+        "arrays": 8,
+        "arrayPayloadBytes": 2048,
+        "references": 256
+      },
+      "bytes": 21048
+    }
+  }
+}

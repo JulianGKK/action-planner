@@ -5,6 +5,7 @@ import java.util.Collections
 /** One immutable derived representation inside its admitted OperationalBoard. Lookups borrow
  * existing references; neither lookups nor UI disposal issue an allocation or end receipt. */
 class OperationalPresentation internal constructor(private val roles:List<Role>,persons:List<OperationalPerson>) {
+    val functions=ActiveFunctionContent(roles,persons)
     val identity=Any() // Opaque source identity; no payload getter/authority.
     val summary:List<String> = Collections.unmodifiableList(if(persons.isEmpty())listOf("Noch keine Personen") else buildList {
         add("${persons.size} insgesamt")

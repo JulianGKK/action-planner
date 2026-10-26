@@ -1,0 +1,5 @@
+{
+  "target_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+  "identical_to_build33": true,
+  "instrumentation_change": "State fixture IDENTITY_CHECK and explicit person-detail navigation after committed bind"
+}

@@ -1,0 +1,10 @@
+{
+  "failed_build": true,
+  "installed_test_apk_was_build38": true,
+  "positive_evidence": false,
+  "terminated_own_package": true,
+  "removed_synthetic_fixture_roots": [
+    "p11-fixture-69e17f9f-8233-4e73-b731-6eee698bd14d"
+  ],
+  "owner_end_or_physical_wipe_claim": false
+}

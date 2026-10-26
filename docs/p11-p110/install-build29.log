@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 10, in <module>
+    before=inventory();(root/'protected-before.json').write_text(json.dumps(before,indent=2))
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 7, in inventory
+    return {pkg:[x.strip() for x in run([adb,'shell','dumpsys','package',pkg]).splitlines() if any(k in x for k in ['versionCode=','versionName=','firstInstallTime=','lastUpdateTime=','signatures='])] for pkg in protected}
+                                    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 4, in run
+    p=subprocess.run(args,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT);assert p.returncode==0,p.stdout;return p.stdout
+                                                                                            ^^^^^^^^^^^^^^^
+AssertionError: adb: no devices/emulators found
+

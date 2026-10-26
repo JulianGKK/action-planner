@@ -1,0 +1,110 @@
+[
+  {
+    "mode": "consumer",
+    "case": "state-edit",
+    "passed": true,
+    "log": "run-state-edit-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "person-create",
+    "passed": true,
+    "log": "run-person-create-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "task-create",
+    "passed": true,
+    "log": "run-task-create-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "task-delete",
+    "passed": true,
+    "log": "run-task-delete-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "material-create",
+    "passed": true,
+    "log": "run-material-create-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "material-delete",
+    "passed": true,
+    "log": "run-material-delete-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "expense-create",
+    "passed": true,
+    "log": "run-expense-create-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "expense-delete",
+    "passed": true,
+    "log": "run-expense-delete-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "role-create",
+    "passed": true,
+    "log": "run-role-create-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "role-rename",
+    "passed": true,
+    "log": "run-role-rename-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "role-delete",
+    "passed": true,
+    "log": "run-role-delete-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "ui-r-exact",
+    "passed": true,
+    "log": "run-ui-r-exact-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "ui-r-over",
+    "passed": true,
+    "log": "run-ui-r-over-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "ui-t-exact",
+    "passed": true,
+    "log": "run-ui-t-exact-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "ui-t-over",
+    "passed": true,
+    "log": "run-ui-t-over-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "repeat-active",
+    "passed": true,
+    "log": "run-repeat-active-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "repeat-preparation",
+    "passed": true,
+    "log": "run-repeat-preparation-build35-tail.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "repeat-completed",
+    "passed": false,
+    "log": "run-repeat-completed-build35-tail.log"
+  }
+]

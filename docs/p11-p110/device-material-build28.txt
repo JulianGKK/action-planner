@@ -1,0 +1,21 @@
+INSTRUMENTATION_STATUS: stream=P109,material,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=2639764, transition=16777216, localRetained=2639764, localTransition=5356984, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,MODULE_UI_STATE,area=MATERIAL,form=false,expenseForm=false,error=false,refusal=null,screenLive=true,record=State(phase=RETAINED, retained=6709623, transition=16777216, localRetained=6709623, localTransition=10858851, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,MODULE_UI_TEXT,P77 ISOLIERTER TEST – synthetischer Schlüssel und synthetische Testdaten; keine Produktanmeldung | Sperren | Synthetic material 3 | Synthetic material 17 | Synthetic material 18 | Synthetic material 6 | Synthetic material 4 | Synthetic material 15 | Synthetic material 12 | Synthetic material 14 | Synthetic material 8 | Synthetic material 10 | Synthetic material 2 | Synthetic material 1
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,FAILURE,java.lang.IllegalStateException: P109 timeout updated module value visible
+	at org.pag.prototype.P109FunctionalOwnerProbe.await(P109FunctionalOwnerProbe.kt:25)
+	at org.pag.prototype.P109FunctionalOwnerProbe.onStart(P109FunctionalOwnerProbe.kt:190)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P109 FAIL material
+INSTRUMENTATION_CODE: 0

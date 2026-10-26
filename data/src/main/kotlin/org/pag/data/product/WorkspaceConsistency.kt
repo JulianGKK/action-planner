@@ -28,15 +28,21 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
 
     suspend fun matches(b:WorkspaceRead,r:WorkspaceDetailRequest):Boolean {
         if(b.actionId!=r.actionId || b.generation!=r.generation || b.status!=r.status ||
-            b.memoryHeaders!=null || b.protocolTimeline!=null || b.tasks?.events?.isNotEmpty()==true)return false
+            b.tasks?.events?.isNotEmpty()==true)return false
         // Ordinary details replace an existing member. Only the explicit membership
         // contract may insert/remove one identity in an already represented module.
         val represented=when(r.kind){
-            WorkspaceDetailKind.PERSON,WorkspaceDetailKind.PLAN->b.operations.persons.any{it.person.id==r.id}
+            WorkspaceDetailKind.PERSON,WorkspaceDetailKind.PLAN,WorkspaceDetailKind.STATE->b.operations.persons.any{it.person.id==r.id}
             WorkspaceDetailKind.TASK->b.tasks?.tasks?.any{it.id==r.id}==true
             WorkspaceDetailKind.MATERIAL->b.materialBoard?.items?.any{it.id==r.id}==true
             WorkspaceDetailKind.EXPENSE->b.expenseBoard?.expenses?.any{it.id==r.id}==true
             WorkspaceDetailKind.ROLE->b.operations.roles.any{it.id==r.id}
+            WorkspaceDetailKind.PROTOCOL->b.protocolTimeline?.any{it.entryId==r.id}==true
+            WorkspaceDetailKind.MEMORY->b.memoryHeaders?.any{it.id==r.id}==true
+            WorkspaceDetailKind.PROTOCOL_TIMELINE->b.protocolTimeline!=null
+            WorkspaceDetailKind.MEMORY_HEADERS->b.memoryHeaders!=null
+            WorkspaceDetailKind.MATERIAL_BOARD->b.materialBoard!=null
+            WorkspaceDetailKind.EXPENSE_BOARD->b.expenseBoard!=null
         }
         if(!represented && !r.membership)return false
         if(r.membership && when(r.kind){
@@ -44,6 +50,13 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
             WorkspaceDetailKind.TASK->b.tasks==null
             WorkspaceDetailKind.MATERIAL->b.materialBoard==null
             WorkspaceDetailKind.EXPENSE->b.expenseBoard==null
+            WorkspaceDetailKind.PROTOCOL->b.protocolTimeline==null
+            WorkspaceDetailKind.MEMORY->b.memoryHeaders==null
+            WorkspaceDetailKind.STATE->false
+            WorkspaceDetailKind.PROTOCOL_TIMELINE->b.protocolTimeline==null
+            WorkspaceDetailKind.MEMORY_HEADERS->b.memoryHeaders==null
+            WorkspaceDetailKind.MATERIAL_BOARD->b.materialBoard==null
+            WorkspaceDetailKind.EXPENSE_BOARD->b.expenseBoard==null
             WorkspaceDetailKind.PLAN->true
         })return false
         val a=r.actionId;val id=r.id;val k=r.kind
@@ -71,8 +84,9 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
             for(role in v.roleIds)if(!row("person_planned_roles","actionId=? AND personId=? AND roleId=?",a,p.person.id,role))return false
         }
         if(!count("person_planned_roles",a,assignments,if(planTarget)"personId" else null,id))return false
-        if(!count("person_operational_states",a,ops.persons.count{it.state!=null && (!personTarget || !r.membership || it.person.id!=id)}.toLong(),if(personTarget && r.membership)"personId" else null,id))return false
-        for(p in ops.persons){if(personTarget && r.membership && p.person.id==id)continue;val v=p.state?:continue
+        val stateTarget=(personTarget && r.membership) || k==WorkspaceDetailKind.STATE
+        if(!count("person_operational_states",a,ops.persons.count{it.state!=null && (!stateTarget || it.person.id!=id)}.toLong(),if(stateTarget)"personId" else null,id))return false
+        for(p in ops.persons){if(stateTarget && p.person.id==id)continue;val v=p.state?:continue
             if(!row("person_operational_states","actionId=? AND personId=? AND currentRoleId IS ? AND operationalStatus IS ? AND currentPlaceLabel IS ? AND updatedAt IS ? AND typeof(editRevision)='integer' AND editRevision IS ?",a,v.personId,v.currentRoleId,v.status.name,v.currentPlaceLabel,v.updatedAt,v.editRevision))return false
         }
         b.tasks?.let{board->
@@ -82,14 +96,14 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
                 if(!row("tasks","actionId=? AND id=? AND title IS ? AND priority IS ? AND status IS ? AND assigneePersonId IS ? AND assigneeRoleId IS ? AND affectedPersonId IS ? AND dueAt IS ? AND sourceTemplateKey IS ? AND createdAt IS ? AND updatedAt IS ? AND completedAt IS ? AND typeof(editRevision)='integer' AND editRevision IS ?",a,v.id,v.title,v.priority.name,v.status.name,v.assigneePersonId,v.assigneeRoleId,v.affectedPersonId,v.dueAt,v.sourceTemplateKey,v.createdAt,v.updatedAt,v.completedAt,v.editRevision))return false
             }
         }
-        b.materialBoard?.let{board->
+        b.materialBoard?.takeUnless{k==WorkspaceDetailKind.MATERIAL_BOARD}?.let{board->
             val target=k==WorkspaceDetailKind.MATERIAL
             if(!count("materials",a,board.items.count{!target || it.id!=id}.toLong(),if(target)"id" else null,id))return false
             for(v in board.items){if(target && v.id==id)continue
                 if(!row("materials","actionId=? AND id=? AND name IS ? AND quantityLabel IS ? AND placeLabel IS ? AND responsiblePersonId IS ? AND linkedTaskId IS ? AND sourceTemplateKey IS ? AND createdAt IS ?",a,v.id,v.name,v.quantityLabel,v.placeLabel,v.responsiblePersonId,v.linkedTaskId,v.sourceTemplateKey,v.createdAt))return false
             }
         }
-        b.expenseBoard?.let{board->
+        b.expenseBoard?.takeUnless{k==WorkspaceDetailKind.EXPENSE_BOARD}?.let{board->
             val target=k==WorkspaceDetailKind.EXPENSE
             if(!count("expenses",a,board.expenses.count{!target || it.id!=id}.toLong(),if(target)"id" else null,id))return false
             var payments=0L
@@ -100,9 +114,32 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
             }
             if(!count("expense_payments",a,payments,if(target)"expenseId" else null,id))return false
         }
+        b.memoryHeaders?.takeUnless{k==WorkspaceDetailKind.MEMORY_HEADERS}?.let{headers->
+            val target=k==WorkspaceDetailKind.MEMORY
+            if(scalar(if(target)MEMORY_EXCEPT else MEMORY_COUNT,a,*if(target)arrayOf(id) else emptyArray())!=headers.count{!target || it.id!=id}.toLong())return false
+            for(v in headers){if(target && v.id==id)continue
+                if(scalar(MEMORY_ROW,a,v.id,v.authorLabel,v.questionnaireVersion,v.status.name,v.revision,v.lastSavedSectionOrdinal,v.createdAt,v.updatedAt,v.completedAt)!=1L)return false
+            }
+        }
+        b.protocolTimeline?.takeUnless{k==WorkspaceDetailKind.PROTOCOL_TIMELINE}?.let{items->
+            val target=k==WorkspaceDetailKind.PROTOCOL
+            if(scalar(if(target)PROTOCOL_EXCEPT else PROTOCOL_COUNT,a,*if(target)arrayOf(id) else emptyArray())!=items.count{!target || it.entryId!=id}.toLong())return false
+            for(v in items){if(target && v.entryId==id)continue
+                // A revision is immutable; the held current revision must still be latest.
+                if(scalar(PROTOCOL_ROW,a,v.entryId,v.revisionId,v.revisionNumber,v.revisionType.name,v.classification.name,v.templateKey,v.title,v.occurredAt,
+                    if(v.occurredAtApproximate)1 else 0,v.recordedAt,if(v.recordedAfterCompletion)1 else 0,if(v.createdAfterCompletion)1 else 0,if(v.mistaken)1 else 0,v.originalRecordedAt)!=1L)return false
+            }
+        }
         gate();return true
     }
     companion object {
+        private const val MEMORY_COUNT="SELECT COUNT(*) FROM memory_reports WHERE actionId=?"
+        private const val MEMORY_EXCEPT="SELECT COUNT(*) FROM memory_reports WHERE actionId=? AND id!=?"
+        private const val MEMORY_ROW="SELECT COUNT(*) FROM memory_reports WHERE actionId=? AND id=? AND authorLabel IS ? AND questionnaireVersion IS ? AND status IS ? AND revision IS ? AND lastSavedSectionOrdinal IS ? AND createdAt IS ? AND updatedAt IS ? AND completedAt IS ?"
+        private const val PROTOCOL_COUNT="SELECT COUNT(*) FROM protocol_entries WHERE actionId=?"
+        private const val PROTOCOL_EXCEPT="SELECT COUNT(*) FROM protocol_entries WHERE actionId=? AND id!=?"
+        private const val PROTOCOL_ROW="SELECT COUNT(*) FROM protocol_revisions r JOIN protocol_entries e ON e.actionId=r.actionId AND e.id=r.entryId JOIN protocol_revisions o ON o.actionId=r.actionId AND o.entryId=r.entryId AND o.revisionNumber=1 WHERE r.actionId=? AND r.entryId=? AND r.id=? AND r.revisionNumber=? AND r.revisionType IS ? AND r.classification IS ? AND r.templateKey IS ? AND r.title IS ? AND r.occurredAt IS ? AND r.occurredAtApproximate IS ? AND r.recordedAt IS ? AND r.recordedAfterCompletion IS ? AND e.createdAfterCompletion IS ? AND r.mistaken IS ? AND o.recordedAt IS ? AND NOT EXISTS (SELECT 1 FROM protocol_revisions n WHERE n.actionId=r.actionId AND n.entryId=r.entryId AND n.revisionNumber>r.revisionNumber)"
+
         private class Query(val predicate:String,val row:String,val count:String,val except:Map<String,String>)
         // Fixed schema12 CODE descriptors only. No values/IDs are interpolated or cached.
         // Previously each scalar check constructed the same SQL String again for every row.
@@ -121,11 +158,12 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
 
         /** Includes query/bind/vararg/boxing scratch, list replacement and UI headers. No
          * payload strings are copied by validation. Checked sizing precedes construction. */
-        fun cost(b:WorkspaceRead):ActiveWorkspaceBudget.Units {
+        fun cost(b:WorkspaceRead,kind:WorkspaceDetailKind?=null):ActiveWorkspaceBudget.Units {
             var rows=32L
             fun add(n:Long){rows=Math.addExact(rows,n)}
             add(b.operations.roles.size.toLong());add(Math.multiplyExact(b.operations.persons.size.toLong(),4))
             for(p in b.operations.persons)add(p.plan.roleIds.size.toLong())
+            add(b.memoryHeaders?.size?.toLong()?:0);add(b.protocolTimeline?.size?.toLong()?:0)
             add(b.tasks?.tasks?.size?.toLong()?:0);add(b.materialBoard?.items?.size?.toLong()?:0)
             for(e in b.expenseBoard?.expenses.orEmpty()){add(1);add(e.payments.size.toLong())}
             val base=ActiveWorkspaceBudget.Units(objects=Math.addExact(64,Math.multiplyExact(rows,16)),
@@ -142,7 +180,16 @@ internal class WorkspaceConsistency(private val sql:PooledConnection,private val
             }
             val operations=OperationalPresentation.cost(Math.addExact(b.operations.persons.size.toLong(),1),b.operations.roles.size.toLong(),names)
             val tasks=TaskPresentation.cost(Math.addExact(b.tasks?.tasks?.size?.toLong()?:0,1),filters=Math.addExact(b.tasks?.presentation?.filterCount?.toLong()?:0,1))
-            return CoreReadAdmission.add(CoreReadAdmission.add(base,operations),tasks)
+            var result=base
+            if(kind==null || kind==WorkspaceDetailKind.PERSON || kind==WorkspaceDetailKind.PLAN || kind==WorkspaceDetailKind.ROLE || kind==WorkspaceDetailKind.STATE){
+                var functionNames=0L
+                for(p in b.operations.persons)functionNames=Math.addExact(functionNames,p.person.pseudonym.length.toLong())
+                for(r in b.operations.roles)functionNames=Math.addExact(functionNames,r.name.length.toLong())
+                result=CoreReadAdmission.add(result,operations)
+                result=CoreReadAdmission.add(result,ActiveFunctionContent.cost(Math.addExact(b.operations.persons.size.toLong(),1),Math.addExact(b.operations.roles.size.toLong(),1),functionNames))
+            }
+            if(kind==null || kind==WorkspaceDetailKind.TASK)result=CoreReadAdmission.add(result,tasks)
+            return result
         }
     }
 }

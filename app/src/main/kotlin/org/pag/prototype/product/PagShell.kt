@@ -30,7 +30,8 @@ data class WorkspaceSnapshot(val actionId: String, val generation: Long, val per
     val memoryReportSummary: org.pag.domain.MemoryReportSummary? = null,
     val documentSummary: org.pag.domain.DocumentSummary? = null,
     val access:org.pag.domain.WorkspaceAccess?=null,
-    val materialBoard:org.pag.domain.MaterialBoard?=null,val expenseBoard:org.pag.domain.ExpenseBoard?=null) {
+    val materialBoard:org.pag.domain.MaterialBoard?=null,val expenseBoard:org.pag.domain.ExpenseBoard?=null,
+    val protocolTimeline:List<org.pag.domain.ProtocolTimelineItem>?=null,val memoryHeaders:List<org.pag.domain.MemoryReportHeader>?=null) {
     internal var uiRows:WorkspaceUiRows?=null; private set
     internal fun bindRows(rows:WorkspaceUiRows){check(uiRows==null);uiRows=rows}
 }
@@ -48,19 +49,20 @@ internal fun countdownText(millis: Long): String {
     return "${seconds / 60}:${(seconds % 60).toString().padStart(2, '0')}"
 }
 
-@Composable internal fun PagPrimaryButton(label: String, onClick: () -> Unit, enabled: Boolean = true) {
+@Composable internal inline fun PagPrimaryButton(label: String, crossinline onClick: () -> Unit, enabled: Boolean = true) {
     FormButton(onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-        shape = RoundedCornerShape(4.dp)) { Text(label) }
+        shape = productFormShape) { Text(label) }
 }
-@Composable internal fun PagSecondaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+@Composable internal inline fun PagSecondaryButton(label: String, crossinline onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     FormOutlinedButton(onClick, modifier.heightIn(min = 48.dp), enabled,
-        shape = RoundedCornerShape(4.dp)) { Text(label) }
+        shape = productFormShape) { Text(label) }
 }
-@Composable internal fun PagTertiaryButton(label: String, onClick: () -> Unit) {
+@Composable internal inline fun PagTertiaryButton(label: String, crossinline onClick: () -> Unit) {
     FormTextButton(onClick, modifier = Modifier.heightIn(min = 48.dp)) { Text(label) }
 }
 
 /** Reserve the actual label geometry immediately; reveal changes pixels/semantics only. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PagReadStatus(loading:Boolean,label:String) {
     var visible by remember(loading,label){mutableStateOf(false)}
     LaunchedEffect(loading,label){if(loading){delay(200);visible=true}}
@@ -71,28 +73,33 @@ internal fun countdownText(millis: Long): String {
             })
     }
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PagLoadingState(label:String="Inhalt wird geladen …")=PagReadStatus(true,label)
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PagEmptyState(onCreate: () -> Unit) {
     Column(Modifier.fillMaxWidth().heightIn(min = 160.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Noch keine Aktionen", style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.semantics { heading() })
+            modifier = Modifier.then(productHeadingSemantics))
         Text("Plane deine erste Aktion und füge anschließend Personen, Rollen und Aufgaben hinzu.")
         PagPrimaryButton("Aktion planen", onCreate)
     }
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PagErrorState() {
     Column(Modifier.fillMaxWidth().heightIn(min = 160.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Geschützter Speicher nicht verfügbar", style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.semantics { heading() })
+            modifier = Modifier.then(productHeadingSemantics))
         Text("Der geschützte Speicher kann nicht sicher verwendet werden. Es wurden keine Daten ersetzt oder repariert.")
     }
 }
+
+@androidx.compose.runtime.NonRestartableComposable
 
 @Composable internal fun PagLockedScreen(bootstrap: ProductStorageState, unlock: () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
         Column(Modifier.fillMaxWidth().heightIn(min = maxHeight).verticalScrollForShell().padding(24.dp),
             verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("PaG", style = MaterialTheme.typography.headlineLarge, modifier = Modifier.semantics { heading() })
+            Text("PaG", style = MaterialTheme.typography.headlineLarge, modifier = Modifier.then(productHeadingSemantics))
             Text("Aktionsplaner", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(40.dp))
             if (bootstrap == ProductStorageState.PARTIAL_OR_INVALID) PagErrorState()
@@ -110,10 +117,13 @@ internal fun countdownText(millis: Long): String {
     }
 }
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable private fun Modifier.verticalScrollForShell(): Modifier =
     this.then(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()))
 
 /** No live region: the description is available on focus without announcing every tick. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PagSessionCountdown(millis: Long?) {
     if (millis == null) return
     val seconds = (millis.coerceAtLeast(0) / 1000).coerceAtLeast(1)
@@ -143,6 +153,7 @@ internal suspend fun expireFeedback(id: Long, duration: Long, dismiss: (Long) ->
 }
 
 /** Content and overlay are measured independently; feedback cannot reflow content. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PagWorkspace(feedback: StatusFeedback?, dismiss: (Long) -> Unit,
     modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
     Box(modifier) {
@@ -152,6 +163,7 @@ internal suspend fun expireFeedback(id: Long, duration: Long, dismiss: (Long) ->
 }
 
 /** Overlay host is a sibling of the scrolling content, never part of its layout. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun BoxScope.PagStatusBannerHost(feedback: StatusFeedback?, dismiss: (Long) -> Unit) {
     if (feedback != null) key(feedback.id) {
         Box(Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(horizontal=16.dp, vertical=8.dp)) {
@@ -161,15 +173,16 @@ internal suspend fun expireFeedback(id: Long, duration: Long, dismiss: (Long) ->
 }
 
 /** Ephemeral result feedback, one announcement and one expiry wakeup. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PagStatusBanner(feedback: StatusFeedback, dismiss: (Long) -> Unit) {
     val accessibility = LocalAccessibilityManager.current
     val duration = accessibility?.calculateRecommendedTimeoutMillis(FEEDBACK_MIN_DURATION_MILLIS,
         containsIcons = false, containsText = true, containsControls = false) ?: FEEDBACK_MIN_DURATION_MILLIS
     LaunchedEffect(feedback.id, duration) { expireFeedback(feedback.id, duration, dismiss) }
-    Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(4.dp), shadowElevation=2.dp) {
+    Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = productFormShape, shadowElevation=2.dp) {
         Column {
             Text("✓ ${feedback.text}", Modifier.fillMaxWidth().padding(horizontal=16.dp, vertical=12.dp)
-                .semantics { liveRegion = LiveRegionMode.Polite })
+                .originalSemantics { liveRegion = LiveRegionMode.Polite })
         }
     }
 }

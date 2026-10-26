@@ -15,12 +15,20 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import org.pag.domain.*
 
+// Immutable CODE enum groups; no action payload, authority or per-render Set.
+private val supportedOperationsScreenGroup1=setOf(OperationsScreen.LIVE,OperationsScreen.FUNCTION,OperationsScreen.PERSON)
+private val supportedOperationsScreenGroup2=setOf(OperationsScreen.ROLES,OperationsScreen.FUNCTION_DETAIL,OperationsScreen.NEW_FUNCTION)
+private val supportedOperationsScreenGroup3=setOf(OperationsScreen.LIVE,OperationsScreen.FUNCTION)
+private val supportedOperationsScreenGroup4=setOf(OperationsScreen.FUNCTION_DETAIL,OperationsScreen.NEW_FUNCTION)
+private val supportedWorkspaceFailureGroup5=setOf(WorkspaceFailure.OWNER_UNCONFIRMED,WorkspaceFailure.BUDGET_REFUSED)
+
+
 /** Navigation is ephemeral UI state, never session authority. */
 enum class ActiveArea(val label: String) { HUB("Lagebild"), PERSONS("Personen"), TASKS("Aufgaben"), FUNCTIONS("Funktionen"), PROTOCOL("Protokoll"), MATERIAL("Material"), COSTS("Kosten"), MEMORY_REPORTS("Gedächtnisprotokolle"), DETAILS("Aktionsdetails") }
 internal fun activeWorkspaceShownArea(model:ProductViewModel):ActiveArea = when {
     model.compactActiveMode -> model.activeArea
-    model.operations.screen in setOf(OperationsScreen.LIVE,OperationsScreen.FUNCTION,OperationsScreen.PERSON) || model.selectedPerson!=null -> ActiveArea.PERSONS
-    model.operations.screen in setOf(OperationsScreen.ROLES,OperationsScreen.FUNCTION_DETAIL,OperationsScreen.NEW_FUNCTION) -> ActiveArea.FUNCTIONS
+    model.operations.screen in supportedOperationsScreenGroup1 || model.selectedPerson!=null -> ActiveArea.PERSONS
+    model.operations.screen in supportedOperationsScreenGroup2 -> ActiveArea.FUNCTIONS
     model.protocol.nested -> ActiveArea.PROTOCOL
     model.material.form || model.material.confirmingDelete -> ActiveArea.MATERIAL
     model.expenses.form || model.expenses.confirmingDelete -> ActiveArea.COSTS
@@ -29,6 +37,7 @@ internal fun activeWorkspaceShownArea(model:ProductViewModel):ActiveArea = when 
 }
 internal data class HubCard(val area: ActiveArea, val summary: List<String>, val attention: String? = null, val documents: Boolean = false) {
     val label get() = if (documents) "Dokumente" else area.label
+    val openLabel = "${if(documents) "Dokumente" else area.label} öffnen"
 }
 internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: TaskBoard, protocol: ProtocolSummary? = null, material: MaterialSummary? = null, expenses: ExpenseSummary? = null, memory: MemoryReportSummary? = null, documents: DocumentSummary? = null): List<HubCard> {
     val missing = board.persons.count { it.state?.status == null || it.state?.status == OperationalStatus.NO_STATUS }
@@ -37,7 +46,7 @@ internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: Task
     val people = if (board.persons.isEmpty()) listOf("Noch keine Personen") else buildList {
         add("${board.persons.size} insgesamt")
         listOf(board.count(OperationalStatus.ON_SITE) to "vor Ort", custody to "in Gewahrsam",
-            unreachable to "nicht erreichbar", missing to "ohne Lage").forEach { (count, label) -> if (count > 0) add("$count $label") }
+            unreachable to "nicht erreichbar", missing to "ohne Lage").forOriginal { (count, label) -> if (count > 0) add("$count $label") }
     }
     val attention = when {
         custody > 0 -> "$custody " + (if (custody == 1) "Person" else "Personen") + " in Gewahrsam"
@@ -52,9 +61,11 @@ internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: Task
     val taskSummary = if (activeTasks.isEmpty()) listOf("Keine offenen Aufgaben") else buildList {
         add("$open offen"); if (progress > 0) add("$progress in Arbeit"); if (high > 0) add("$high hohe Priorität")
     }
-    val functions = board.roles.mapNotNull { role -> board.roleCount(role.id).takeIf { it > 0 }?.let { "$it ${role.name}" } }
-    val functionSummary = if (functions.isEmpty()) listOf("Noch keine aktuellen Funktionen") else
-        functions.take(3) + if (functions.size > 3) listOf("${functions.size - 3} weitere Funktionen") else emptyList()
+    val functions=board.presentation.functions.groups
+    val functionSummary=if(functions.isEmpty())listOf("Noch keine aktuellen Funktionen") else buildList {
+        var i=0;while(i<minOf(3,functions.size)){val g=functions[i++];add(g.hubLabel)}
+        if(functions.size>3)add("${functions.size-3} weitere Funktionen")
+    }
     return listOf(HubCard(ActiveArea.PERSONS, people, attention),
         HubCard(ActiveArea.TASKS, taskSummary, if (high > 0) "$high " + (if (high == 1) "Aufgabe" else "Aufgaben") + " mit hoher Priorität" else null),
         HubCard(ActiveArea.FUNCTIONS, functionSummary)) +
@@ -66,6 +77,8 @@ internal fun activeHubCards(action: Action, board: OperationalBoard, tasks: Task
             listOf("Beginn: ${formattedTime(action.startAt)}", "Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}", "Aktiv")))
 }
 internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >= 600f && fontScale <= 1.3f) 2 else 1
+
+@androidx.compose.runtime.NonRestartableComposable
 
 @Composable internal fun ActiveWorkspace(model: ProductViewModel, renderContent:Boolean=true, contentFrames:CompactContentFrameObserver?=null) {
     ActionWorkspaceHeader(model)
@@ -81,19 +94,18 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
                 model.protocol.nested -> model.protocol.back()
                 model.operations.screen == OperationsScreen.PERSON && (model.selectedPerson != null || model.personDetailLoading) -> model.backToPersons()
                 model.operations.screen == OperationsScreen.PERSON -> model.operations.backToList()
-                model.operations.screen in setOf(OperationsScreen.LIVE, OperationsScreen.FUNCTION) -> model.operations.cancel()
-                model.operations.screen in setOf(OperationsScreen.FUNCTION_DETAIL, OperationsScreen.NEW_FUNCTION) -> model.operations.backToFunctions()
+                model.operations.screen in supportedOperationsScreenGroup3 -> model.operations.cancel()
+                model.operations.screen in supportedOperationsScreenGroup4 -> model.operations.backToFunctions()
                 model.tasks.form -> model.tasks.cancel()
                 model.tasks.selected != null -> model.tasks.backToTasks()
                 else -> model.activeArea(shownArea)
             }
-        }, enabled = model.activeNavigationEnabled) { Text(if (model.protocol.nested) (if (model.protocol.historical != null || (model.protocol.form && model.protocol.expected != null)) "‹ Zum aktuellen Eintrag" else "‹ Protokoll") else if ((model.selectedPerson != null || model.personDetailLoading) && model.operations.screen == OperationsScreen.PERSON) "‹ Zur Person" else if (model.operations.screen in setOf(OperationsScreen.LIVE, OperationsScreen.FUNCTION) && model.operations.hasPersonFocus) "‹ Zur Person" else if (model.operations.screen == OperationsScreen.PERSON && model.operations.functionFocus != null) "‹ ${activeFunctionName(board = model.operations.board, roleId = model.operations.functionFocus!!.roleId)}" else if (model.tasks.form && model.tasks.selected != null) "‹ Zur Aufgabe" else "‹ ${shownArea.label}") }
+        }, enabled = model.activeNavigationEnabled) { Text(if (model.protocol.nested) (if (model.protocol.historical != null || (model.protocol.form && model.protocol.expected != null)) "‹ Zum aktuellen Eintrag" else "‹ Protokoll") else if ((model.selectedPerson != null || model.personDetailLoading) && model.operations.screen == OperationsScreen.PERSON) "‹ Zur Person" else if (model.operations.screen in supportedOperationsScreenGroup3 && model.operations.hasPersonFocus) "‹ Zur Person" else if (model.operations.screen == OperationsScreen.PERSON && model.operations.functionFocus != null) (model.operations.functionFocus?.roleId?.let{model.roleRow(it)?.backLabel}?:"‹ Ohne aktuelle Funktion") else if (model.tasks.form && model.tasks.selected != null) "‹ Zur Aufgabe" else "‹ ${shownArea.label}") }
     }
     if (model.activeArea == ActiveArea.DETAILS) {
         val action = model.selected ?: return
         Text(action.description)
-        Text("Beginn: ${formattedTime(action.startAt)}")
-        Text("Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}")
+        model.workspace?.uiRows?.header?.let{Text(it.start);Text(it.end)}
         return
     }
     if(!renderContent)return
@@ -123,14 +135,15 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             DisposableEffect(functions) { onDispose {functions.compositionDisposed()} }
             key(model.activeArea) { CompactActiveContent(functions,contentFrames) }
         }
-        FormOutlinedButton(model::useFullActiveView,enabled=model.activeNavigationEnabled) { Text("Alle anzeigen und bearbeiten") }
+        FormOutlinedButton({model.useFullActiveView()},enabled=model.activeNavigationEnabled) { Text("Alle anzeigen und bearbeiten") }
         if(model.activeArea==ActiveArea.HUB && model.documentsAvailable)
-            FormOutlinedButton(model::openDocuments,enabled=model.activeNavigationEnabled) { Text("Dokumente öffnen") }
+            FormOutlinedButton({model.openDocuments()},enabled=model.activeNavigationEnabled) { Text("Dokumente öffnen") }
         return
     }
     if (model.personDetailLoading) { PagLoadingState(); return }
+    if(model.workspace==null && HeldFormSection(model))return
     val content = model.workspace
-    if (content == null && model.workspaceRefusal in setOf(WorkspaceFailure.OWNER_UNCONFIRMED,WorkspaceFailure.BUDGET_REFUSED)) {
+    if (content == null && model.workspaceRefusal in supportedWorkspaceFailureGroup5) {
         return
     }
     if (content == null) { if (model.workspaceError) PagErrorState() else PagLoadingState(); return }
@@ -151,9 +164,9 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
                 model.changeError?.let { Text(changeErrorLabel(it)) }
                 if (model.confirming != null) {
                     Text("Aktion endgültig abschließen? Die Aktion bleibt abgeschlossen. Protokoll-Nachbereitung, Kostenverwaltung und Gedächtnisprotokolle bleiben möglich.")
-                    FormButton(model::confirmAdvance, enabled = !model.saving) { Text("Bestätigen") }
-                    FormOutlinedButton(model::cancelAdvance, enabled = !model.saving) { Text("Abbrechen") }
-                } else FormOutlinedButton(model::requestAdvance, enabled = model.activeNavigationEnabled) { Text("Aktion abschließen") }
+                    FormButton({model.confirmAdvance()}, enabled = !model.saving) { Text("Bestätigen") }
+                    FormOutlinedButton({model.cancelAdvance()}, enabled = !model.saving) { Text("Abbrechen") }
+                } else FormOutlinedButton({model.requestAdvance()}, enabled = model.activeNavigationEnabled) { Text("Aktion abschließen") }
             }
             ActiveArea.PERSONS -> OperationalPersons(model, board)
             ActiveArea.TASKS -> if (content.tasks == null) PagErrorState() else TaskSection(model.tasks, board)
@@ -171,6 +184,7 @@ internal fun compactPageLabel(shown:Int,total:Long,hasMore:Boolean):String =
     "$shown von $total angezeigt" + if(hasMore) " · weitere Einträge verfügbar" else ""
 
 /** Complete pre-admitted catalogue, index access only. No list/core loan or new paging. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun CompactActiveContent(functions:CompactFunctionsPresentation,observer:CompactContentFrameObserver?=null) {
     val size=functions.size() ?: return
     val onSite=functions.onSite() ?: return
@@ -191,6 +205,7 @@ internal fun compactHubSummary(index:Int,line:Int,value:Long):String=when(index)
 }
 
 /** Indexed layout: one original metadata card list, no chunked/copied card lists. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun CompactActiveContent(hub:CompactHubPresentation,enabled:Boolean,observer:CompactContentFrameObserver?=null) {
     Column(compactFrameModifier(ActiveArea.HUB,observer),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         PreparationHeading(ActiveArea.HUB.label)
@@ -228,6 +243,7 @@ internal fun compactHubSummary(index:Int,line:Int,value:Long):String=when(index)
 }
 
 /** PERSONS receives only an identity handle; no full core/page/list can enter this subtree. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun CompactActiveContent(persons:CompactPersonsPresentation,observer:CompactContentFrameObserver?=null) {
     val shown=persons.shown() ?: return
     val total=persons.total() ?: return
@@ -235,8 +251,8 @@ internal fun compactHubSummary(index:Int,line:Int,value:Long):String=when(index)
     Column(compactFrameModifier(ActiveArea.PERSONS,observer),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         PreparationHeading(ActiveArea.PERSONS.label)
         Text(compactPageLabel(shown,total,more))
-        OperationalStatus.entries.forEach { status ->
-            val count=persons.count(status) ?: return@forEach
+        OperationalStatus.entries.forOriginal { status ->
+            val count=persons.count(status) ?: return@forOriginal
             Text("${operationalLabel(status)}: $count")
         }
         repeat(shown) { index -> persons.pseudonym(index)?.let { Text(it) } }
@@ -244,6 +260,7 @@ internal fun compactHubSummary(index:Int,line:Int,value:Long):String=when(index)
 }
 
 /** TASKS exports only bounded scalar values through its original slot identity. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun CompactActiveContent(tasks:CompactTasksPresentation,observer:CompactContentFrameObserver?=null) {
     val shown=tasks.shown() ?: return
     val active=tasks.activeCount() ?: return
@@ -261,6 +278,8 @@ internal fun compactHubSummary(index:Int,line:Int,value:Long):String=when(index)
     }
 }
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable private fun compactFrameModifier(area:ActiveArea,observer:CompactContentFrameObserver?):Modifier {
     // Capture once for this area subtree. An old subtree cannot acquire a later navigation ID.
     val trace=remember(observer,area) { observer?.capture(area)?.also { it.composing(System.nanoTime()) } }
@@ -275,21 +294,24 @@ internal fun compactHubSummary(index:Int,line:Int,value:Long):String=when(index)
 }
 
 /** Shared stateless hub presentation; no session, repository or demo capability. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun ActiveHubGrid(cards: List<HubCard>, enabled: Boolean = true, onDocuments: () -> Unit = {}, onOpen: (ActiveArea) -> Unit) {
     val fontScale = LocalDensity.current.fontScale
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val columns = activeHubColumns(maxWidth.value, fontScale)
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            cards.chunked(columns).forEach { row ->
+            for(row in 0 until (cards.size+columns-1)/columns) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    row.forEach { card ->
-                        FormOutlinedButton({ if (card.documents) onDocuments() else onOpen(card.area) }, enabled = enabled,
+                    for(index in row*columns until minOf((row+1)*columns,cards.size)) {
+                        val card=cards[index]
+                        val documents=card.documents;val area=card.area
+                        FormOutlinedButton({ if (documents) onDocuments() else onOpen(area) }, enabled = enabled,
                             modifier = Modifier.weight(1f).heightIn(min = 96.dp)) {
                             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 PreparationHeading(card.label)
-                                card.summary.forEach { Text(it) }
+                                card.summary.forOriginal { Text(it) }
                                 card.attention?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-                                Text("${card.label} öffnen")
+                                Text(card.openLabel)
                             }
                         }
                     }

@@ -7,6 +7,15 @@ import org.pag.domain.*
 class MaterialModel(private val repository: MaterialRepository?, private val session: () -> SessionSnapshot,
     private val action: () -> Action?, private val interaction: () -> Unit, private val leaveSensitive: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit) {
+    internal val uiEditorEpoch:Long get()=readRequest
+    private var readGate:(()->Boolean)?=null
+    internal fun bindReadGate(gate:()->Boolean){check(readGate==null);readGate=gate}
+    private var taskLabelLookup:((String)->String?)?=null
+    internal fun bindTaskLabels(lookup:(String)->String?){check(taskLabelLookup==null);taskLabelLookup=lookup}
+    internal val originalTaskLabelsBound get()=taskLabelLookup!=null
+    internal fun taskChoiceLabel(id:String)=taskLabelLookup?.invoke(id)
+    private var feedbackFactory:WorkspaceFeedbackFactory?=null
+    internal fun bindFeedbackFactory(factory:WorkspaceFeedbackFactory){check(feedbackFactory==null);feedbackFactory=factory}
     private var membershipLoader:WorkspaceDetailLoader?=null
     internal fun bindMembershipLoader(loader:WorkspaceDetailLoader){check(membershipLoader==null);membershipLoader=loader}
     private var detailLoader:WorkspaceDetailLoader?=null
@@ -83,9 +92,19 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
     fun refresh() {
         val current = binding() ?: return; val request = ++readRequest; val id = boundAction!!
         loading = true
+        detailLoader?.let{loader->
+            loader(WorkspaceDetailKind.MATERIAL_BOARD,id){result->
+                if(!current() || request!=readRequest)return@loader
+                readRequest++;loading=false
+                when(result){
+                    is WorkspaceDetailResult.Rejected->error=result.reason.operationFailure()
+                    is WorkspaceDetailResult.Value->{val fresh=result.value.workspace?.materialBoard;if(fresh==null)error=OperationsFailure.NOT_FOUND else {board=fresh;error=null}}
+                }
+            };return
+        }
         repository?.board(id) { result ->
             if (!current() || request != readRequest) return@board
-            loading = false
+            readRequest++;loading = false
             when (result) {
                 is OperationsResult.Value -> if (result.value.actionId == id && result.value.items.all { it.actionId == id }) {
                     board = result.value; error = null
@@ -94,12 +113,40 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
             }
         }
     }
-    fun reload() = act { discard(); error = null; refresh() }
+    fun reload() = act { current ->
+        val id=committedId?:expected?.id
+        val loader=if(commitConfirmed)membershipLoader else detailLoader
+        if(loader!=null && id!=null){
+            val request=++readRequest;busy=true
+            var delivered=false
+            loader(WorkspaceDetailKind.MATERIAL,id){result->
+                if(delivered)return@loader
+                delivered=true
+                if(!current() || request!=readRequest)return@loader
+                busy=false
+                when(result){
+                    is WorkspaceDetailResult.Rejected->error=result.reason.operationFailure()
+                    is WorkspaceDetailResult.Value->{
+                        if(commitConfirmed){
+                            val freshBoard=result.value.workspace?.materialBoard
+                            if(freshBoard==null){error=OperationsFailure.NOT_FOUND;return@loader}
+                            board=freshBoard;discard();commitConfirmed=false;committedId=null;error=null;return@loader
+                        }
+                        val fresh=result.value.material
+                        if(fresh==null || fresh.id!=id || fresh.actionId!=boundAction){error=OperationsFailure.NOT_FOUND;return@loader}
+                        if(!copyData(ActiveWorkspaceBudget.Units(objects=4,references=32)){expected=fresh;selected=fresh;input=fresh.input()})return@loader
+                        commitConfirmed=false;committedId=null;error=null
+                    }
+                }
+            }
+        }else{discard();error=null;refresh()}
+    }
     fun create(template: MaterialTemplate? = null) = act { current ->
         if (!writable || commitConfirmed) return@act
         leaveSensitive()
         if (current()) { readRequest++; loading = false; discard(); copyData(ActiveWorkspaceBudget.Units(objects=1,references=10)){input = template?.input() ?: MaterialInput(""); error = null} }
     }
+    fun editId(id:String){if(readGate?.invoke()==false)return;board?.items?.findOriginal{it.id==id}?.let(::edit)}
     fun edit(item: MaterialItem) = act { current ->
         if (commitConfirmed || !writable || board?.items?.contains(item) != true) return@act
         leaveSensitive()
@@ -137,12 +184,14 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
         if (!confirmingDelete || !writable || !MaterialRules.mayDelete(action()!!.status) || error == OperationsFailure.STALE) return@act
         write(current, "Material entfernt") { repository?.delete(boundAction!!, old, it) }
     }
-    private fun draftClearAfterCommit() {input = null;expected=null;confirmingDelete=false}
+    private fun draftClearAfterCommit() {selected=null;input = null;expected=null;confirmingDelete=false}
     private fun unit(result: OperationsResult<MaterialItem>): OperationsResult<Unit> = when (result) {
         is OperationsResult.Value -> {committedId=result.value.id;OperationsResult.Value(Unit)}
         is OperationsResult.Rejected -> result
     }
     private fun write(current: () -> Boolean, message: String, work: ((OperationsResult<Unit>) -> Unit) -> Unit) {
+        val emit=if(feedbackFactory==null)feedback else feedbackFactory!!.invoke()?:run{error=OperationsFailure.BUDGET_REFUSED;return}
+
         val request = ++writeRequest; busy = true; error = null
         work { result ->
             if (!current() || request != writeRequest) return@work
@@ -158,11 +207,11 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
                             if(!current())return@loader
                             busy=false
                             when(refreshed){
-                                is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                                is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();emit("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
                                 is WorkspaceDetailResult.Value->{
                                     board=refreshed.value.workspace?.materialBoard ?: board
-                                    selected=refreshed.value.material;draftClearAfterCommit()
-                                    commitConfirmed=false;error=null;feedback(message)
+                                    draftClearAfterCommit()
+                                    commitConfirmed=false;error=null;emit(message)
                                 }
                             }
                         }
@@ -170,7 +219,7 @@ class MaterialModel(private val repository: MaterialRepository?, private val ses
                     }
                     discard(); refresh()
                     if (current()) refreshWorkspace()
-                    if (current()) feedback(message)
+                    if (current()) emit(message)
                 }
             }
         }

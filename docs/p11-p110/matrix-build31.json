@@ -1,0 +1,92 @@
+[
+  {
+    "mode": "run",
+    "case": "active",
+    "passed": true,
+    "log": "run-active-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "person",
+    "passed": true,
+    "log": "run-person-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "plan",
+    "passed": true,
+    "log": "run-plan-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "stale",
+    "passed": true,
+    "log": "run-stale-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "material",
+    "passed": true,
+    "log": "run-material-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "expense",
+    "passed": true,
+    "log": "run-expense-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "preparation",
+    "passed": true,
+    "log": "run-preparation-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "completed",
+    "passed": true,
+    "log": "run-completed-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "large",
+    "passed": true,
+    "log": "run-large-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "lock-detail",
+    "passed": true,
+    "log": "run-lock-detail-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "lost-detail-main",
+    "passed": true,
+    "log": "run-lost-detail-main-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "duplicate-detail-main",
+    "passed": true,
+    "log": "run-duplicate-detail-main-build31.log"
+  },
+  {
+    "mode": "run",
+    "case": "unknown-detail",
+    "passed": true,
+    "log": "run-unknown-detail-build31.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "postcommit-ui-refusal",
+    "passed": true,
+    "log": "run-postcommit-ui-refusal-build31.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "material-input",
+    "passed": false,
+    "log": "run-material-input-build31.log"
+  }
+]

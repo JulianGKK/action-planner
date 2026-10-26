@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.data.product.MaterialRulesTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:15.594Z" hostname="iuzjhtgvfc" time="0.001">
+<testsuite name="org.pag.data.product.MaterialRulesTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-10-25T19:21:43.816Z" hostname="iuzjhtgvfc" time="0.006">
   <properties/>
-  <testcase name="quantityIsOptionalBoundedTextWithNoNumericRule" classname="org.pag.data.product.MaterialRulesTest" time="0.0"/>
+  <testcase name="quantityIsOptionalBoundedTextWithNoNumericRule" classname="org.pag.data.product.MaterialRulesTest" time="0.001"/>
   <testcase name="deterministicCreationOrderNeverSortsByName" classname="org.pag.data.product.MaterialRulesTest" time="0.0"/>
   <testcase name="trimsNameAndOptionalBlanksWithoutTruncation" classname="org.pag.data.product.MaterialRulesTest" time="0.0"/>
-  <testcase name="exactReadWriteDeletePhases" classname="org.pag.data.product.MaterialRulesTest" time="0.001"/>
+  <testcase name="exactReadWriteDeletePhases" classname="org.pag.data.product.MaterialRulesTest" time="0.0"/>
   <testcase name="exactTwelveTemplatesOnlyCreateProvenanceInputs" classname="org.pag.data.product.MaterialRulesTest" time="0.0"/>
-  <testcase name="modelHasOnlyTheNineContractFieldsAndCountProjection" classname="org.pag.data.product.MaterialRulesTest" time="0.0"/>
-  <testcase name="placeUsesOptionalTrimmedEightyCodepoints" classname="org.pag.data.product.MaterialRulesTest" time="0.0"/>
-  <testcase name="nameBoundaryCountsSupplementaryCodepoints" classname="org.pag.data.product.MaterialRulesTest" time="0.0"/>
+  <testcase name="modelHasOnlyTheNineContractFieldsAndCountProjection" classname="org.pag.data.product.MaterialRulesTest" time="0.001"/>
+  <testcase name="placeUsesOptionalTrimmedEightyCodepoints" classname="org.pag.data.product.MaterialRulesTest" time="0.001"/>
+  <testcase name="nameBoundaryCountsSupplementaryCodepoints" classname="org.pag.data.product.MaterialRulesTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.data.product.EuroMoneyTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:12.844Z" hostname="iuzjhtgvfc" time="0.002">
+<testsuite name="org.pag.data.product.EuroMoneyTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-25T19:21:29.231Z" hostname="iuzjhtgvfc" time="0.01">
   <properties/>
   <testcase name="acceptedForms" classname="org.pag.data.product.EuroMoneyTest" time="0.001"/>
-  <testcase name="exactLongBoundaryAndOverflow" classname="org.pag.data.product.EuroMoneyTest" time="0.0"/>
-  <testcase name="formatterAndRoundtrip" classname="org.pag.data.product.EuroMoneyTest" time="0.001"/>
-  <testcase name="ambiguousIncompleteNonPositiveOrCurrencyRejected" classname="org.pag.data.product.EuroMoneyTest" time="0.0"/>
+  <testcase name="exactLongBoundaryAndOverflow" classname="org.pag.data.product.EuroMoneyTest" time="0.001"/>
+  <testcase name="formatterAndRoundtrip" classname="org.pag.data.product.EuroMoneyTest" time="0.007"/>
+  <testcase name="ambiguousIncompleteNonPositiveOrCurrencyRejected" classname="org.pag.data.product.EuroMoneyTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

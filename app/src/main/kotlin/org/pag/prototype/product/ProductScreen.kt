@@ -21,12 +21,13 @@ import java.util.Locale
 
 internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>{null}
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable fun ProductScreen(model: ProductViewModel, testAuthorityBanner: Boolean = false, contentFrames: CompactContentFrameObserver? = null) {
     val observation=LocalProductObservation.current
     SideEffect { observation?.invoke("COMPOSITION") }
     MaterialTheme {
-        val screen=listOf(model.snapshot.state,model.snapshot.generation,model.selected?.id,model.selectedPerson?.id,
-            model.actionListState::class,model.preparationArea,model.activeArea,model.personDetailLoading,model.creating,model.editing?.id,model.personForm,model.sensitiveSetup,model.sensitiveArea,model.sensitiveOpened?.grant,model.operations.screen,model.operations.personId,model.tasks.form,model.tasks.selected?.id,model.tasks.filter,model.protocol.mode,model.protocol.form,model.protocol.detail?.entry?.id,model.protocol.historical?.revision?.id,model.expenses.form,model.expenses.selected?.id,model.expenses.confirmingDelete,model.completedExpensesOpen,model.material.form,model.material.selected?.id,model.material.confirmingDelete,model.completedMaterialOpen,model.memoryReports.mode,model.memoryReports.sectionOrdinal,model.memoryReports.expected?.id,model.completedMemoryReportsOpen,model.documents.available,model.documents.importing,model.documents.confirmingDelete,model.documents.camera.mode,model.documents.viewed?.id,model.documents.textViewed?.id,model.documents.textPageIndex,model.documents.pdfViewed?.id,model.documents.pdfIndex)
+        val screen=model.inputScreenKey()
         ProductInputScope(screen) {
             LaunchedEffect(model.snapshot.state, model.snapshot.generation) {
                 if (model.snapshot.state == SessionState.READY) while (true) {
@@ -49,22 +50,25 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                                 itemVerticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                                 PagSessionCountdown(model.remainingMillis)
+                                CompositionLocalProvider(LocalFormScreen provides null){
                                 if (sessionRestartVisible(model.snapshot.state, model.remainingMillis)) {
                                     PagSecondaryButton("Sitzung neu starten", model::restartSession,
-                                        modifier = Modifier.semantics {
+                                        modifier = Modifier.originalSemantics {
                                             contentDescription = "Sitzung neu starten. Ungespeicherte Eingaben werden verworfen."
                                         })
                                 }
                                 PagSecondaryButton("Sperren", model::lock, modifier=Modifier)
+                                }
                             }
                         }
+                        if(model.snapshot.state==SessionState.READY)model.savedRefreshMessage?.let{Text(it)}
                         PagWorkspace(model.feedback.takeIf { model.snapshot.state == SessionState.READY },
                             model::dismissFeedback, Modifier.fillMaxWidth().weight(1f)) {
                         BoxWithConstraints(Modifier.fillMaxSize()) {
                         val viewport=loadingViewportMinimum(constraints.maxHeight,with(LocalDensity.current){48.dp.roundToPx()})
                         val listPositions=remember(model.snapshot.generation,model.selected?.id){ProductScrollPositions()}
                         key(model.selected?.id,model.selected?.status,model.activeArea,model.preparationArea,
-                            model.compactActiveMode,productEntityListRoute(model)) {
+                            model.compactActiveMode,productEntityListRoute(model),screen) {
                         if(model.snapshot.state==SessionState.READY && (model.leadershipRecovery!=null || model.leadershipRecoveryError)) {
                             Column(Modifier.padding(24.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(16.dp)) {
                                 LeadershipRecoverySection(model)
@@ -79,7 +83,6 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                                 SessionState.AUTHENTICATING -> Text("Bitte bestätige den Gerätesperrcode im Android-Dialog.")
                                 SessionState.MAINTENANCE -> PagLoadingState("Geschützter Speicher wird geprüft")
                                 SessionState.READY -> {
-                                    model.savedRefreshMessage?.let{Text(it)}
                                     if(model.workspaceRefusal==WorkspaceFailure.BUDGET_REFUSED)
                                         Text("Die Vollansicht überschreitet das zulässige Speicherbudget.")
                                     if(model.workspaceRefusal==WorkspaceFailure.OWNER_UNCONFIRMED)
@@ -104,19 +107,18 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                                             Text(statusLabel(action.status))
                                             var showActionFields by remember(action.id, action.status) { mutableStateOf(action.status != ActionStatus.ACTIVE) }
                                             if (action.status == ActionStatus.ACTIVE) FormTextButton({ model.interaction(); showActionFields = !showActionFields }) { Text("Aktionsdetails") }
-                                            if (showActionFields) {
+                                            if(showActionFields){
                                                 Text(action.description)
-                                                Text("Beginn: ${formattedTime(action.startAt)}")
-                                                Text("Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}")
-                                                action.completedAt?.let { Text("Abgeschlossen: ${formattedTime(it)}") }
+                                                val header=model.workspace?.uiRows?.header
+                                                header?.let{Text(it.start);Text(it.end);it.completed?.let{value->Text(value)}}
                                             }
                                             if (action.status == ActionStatus.COMPLETED) {
                                                 model.protocol.error?.let { Text(protocolFailure(it)) }
-                                                FormOutlinedButton(model::openCompletedProtocol) { Text("Protokoll ansehen / nachbereiten") }
-                                                if (model.documentsAvailable) FormOutlinedButton(model::openDocuments) { Text("Dokumente verwalten") }
-                                                if (model.expensesAvailable) FormOutlinedButton(model::openCompletedExpenses) { Text("Kosten verwalten") }
-                                                if (model.memoryReportsAvailable) FormOutlinedButton(model::openCompletedMemoryReports) { Text("Gedächtnisprotokolle") }
-                                                if (model.materialAvailable) FormOutlinedButton(model::openCompletedMaterial) { Text("Material ansehen") }
+                                                FormOutlinedButton({model.openCompletedProtocol()}) { Text("Protokoll ansehen / nachbereiten") }
+                                                if (model.documentsAvailable) FormOutlinedButton({model.openDocuments()}) { Text("Dokumente verwalten") }
+                                                if (model.expensesAvailable) FormOutlinedButton({model.openCompletedExpenses()}) { Text("Kosten verwalten") }
+                                                if (model.memoryReportsAvailable) FormOutlinedButton({model.openCompletedMemoryReports()}) { Text("Gedächtnisprotokolle") }
+                                                if (model.materialAvailable) FormOutlinedButton({model.openCompletedMaterial()}) { Text("Material ansehen") }
                                             }
                                             if (model.personsVisible && model.confirming == null) PersonsSection(model)
                                             model.changeError?.let { Text(changeErrorLabel(it)) }
@@ -124,17 +126,17 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                                                 Text(if (action.status == ActionStatus.ACTIVE)
                                                 "Aktion endgültig abschließen? Danach sind Bearbeitung und Wiedereröffnung ausgeschlossen."
                                                 else "${advanceLabel(action.status)}? Dieser Statusschritt kann nicht rückgängig gemacht werden.")
-                                                FormButton(onClick = model::confirmAdvance, enabled = !model.saving) { Text("Bestätigen") }
-                                                FormOutlinedButton(onClick = model::cancelAdvance, enabled = !model.saving) { Text("Abbrechen") }
+                                                FormButton(onClick = {model.confirmAdvance()}, enabled = !model.saving) { Text("Bestätigen") }
+                                                FormOutlinedButton(onClick = {model.cancelAdvance()}, enabled = !model.saving) { Text("Abbrechen") }
                                             } else if (!model.personForm && model.selectedPerson == null && !model.personSaving && model.operations.screen == OperationsScreen.OVERVIEW && !model.tasks.form && model.tasks.selected==null) {
                                                 if (ActionLifecycle.mayEdit(action.status)) {
-                                                    FormOutlinedButton(onClick = model::edit) { Text("Bearbeiten") }
+                                                    FormOutlinedButton(onClick = {model.edit()}) { Text("Bearbeiten") }
                                                 }
                                                 if (ActionLifecycle.next(action.status) != null) {
-                                                    FormButton(onClick = model::requestAdvance) { Text(advanceLabel(action.status)) }
+                                                    FormButton(onClick = {model.requestAdvance()}) { Text(advanceLabel(action.status)) }
                                                 }
                                             }
-                                            FormOutlinedButton(onClick = model::back, enabled = !model.saving && !model.personSaving) { Text("Zur Aktionsliste") }
+                                            FormOutlinedButton(onClick = {model.back()}, enabled = !model.saving && !model.personSaving) { Text("Zur Aktionsliste") }
                                         }
                                         else -> {
                                             if (model.actionListState != ActionListState.Loading) Text("Aktionsliste", style = MaterialTheme.typography.headlineMedium)
@@ -144,7 +146,7 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                                                 ActionListState.Error -> PagErrorState()
                                                 is ActionListState.Content -> {
                                                     SideEffect { observation?.invoke("LIST_COMMIT") }
-                                                    state.actions.forEachIndexed { index,action ->
+                                                    state.actions.forOriginalIndexed { index,action ->
                                                         PagSecondaryButton("${action.title} · ${statusLabel(action.status)}", { model.detail(action.id) }, modifier=Modifier.fillMaxWidth().then(if(index==0 && observation!=null)Modifier.onGloballyPositioned{observation("LIST_LAYOUT")} else Modifier))
                                                     }
                                                     PagPrimaryButton("Aktion planen", model::createScreen)
@@ -167,6 +169,9 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
 }
 
 
+@androidx.compose.runtime.NonRestartableComposable
+
+
 @Composable internal fun PersonsSection(model: ProductViewModel) {
     if (model.operations.screen != OperationsScreen.OVERVIEW && !(model.operations.screen == OperationsScreen.PERSON && model.selectedPerson != null)) { OperationsSection(model); return }
     if (model.selected?.status != ActionStatus.ACTIVE) Text("Personen", style = MaterialTheme.typography.titleLarge)
@@ -181,19 +186,19 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
             FormButton(onClick = { model.savePerson(pseudonym) }, enabled = !model.personSaving && !model.personCommitConfirmed) { Text("Speichern") }
             if (model.personError == PersonRejection.STALE && existing != null) {
                 Text("Beim Neuladen wird dein Entwurf durch den aktuellen Stand ersetzt.")
-                FormOutlinedButton(onClick = model::reloadPersonEditor, enabled = !model.personSaving && !model.personCommitConfirmed) { Text("Aktuellen Stand neu laden") }
+                FormOutlinedButton(onClick = {model.reloadPersonEditor()}, enabled = !model.personSaving && !model.personCommitConfirmed) { Text("Aktuellen Stand neu laden") }
             }
-            FormOutlinedButton(onClick = model::cancelPerson, enabled = !model.personSaving && !model.personCommitConfirmed) { Text("Abbrechen") }
+            FormOutlinedButton(onClick = {model.cancelPerson()}, enabled = !model.personSaving && !model.personCommitConfirmed) { Text("Abbrechen") }
         }
         model.selectedPerson != null -> {
             PreparationHeading(model.selectedPerson!!.pseudonym)
-            Text("Revision: ${model.selectedPerson!!.editRevision}")
+            Text(originalText{"Revision: ${model.selectedPerson!!.editRevision}"})
             if (model.selected?.status == ActionStatus.PREPARATION) model.workspace?.operations?.let { board ->
                 board.persons.find { it.person.id == model.selectedPerson!!.id }?.let { person ->
                     Text(model.formatPlannedRoles(person, board) ?: "Noch keine Rolle")
                 }
             }
-            if (model.personsEditable) FormOutlinedButton(onClick = model::editPerson) { Text("Bearbeiten") }
+            if (model.personsEditable) FormOutlinedButton(onClick = {model.editPerson()}) { Text("Bearbeiten") }
             if (model.personsEditable) FormOutlinedButton({ model.operations.plan(model.selectedPerson!!.id) }) { Text("Rollen planen") }
             if (model.selected?.status == ActionStatus.ACTIVE) model.workspace?.operations?.let { board ->
                 board.persons.find { it.person.id == model.selectedPerson!!.id }?.let { person ->
@@ -201,20 +206,20 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                 }
             }
             SensitiveSection(model)
-            if (model.selected?.status != ActionStatus.ACTIVE) FormOutlinedButton(onClick = model::backToPersons) { Text("Zur Personenliste") }
+            if (model.selected?.status != ActionStatus.ACTIVE) FormOutlinedButton(onClick = {model.backToPersons()}) { Text("Zur Personenliste") }
         }
         else -> {
             if (model.personsLoading) Text("Personen werden geladen …")
             else {
-                Text("Anzahl: ${model.persons.size}")
+                Text(originalText{"Anzahl: ${model.persons.size}"})
                 if (model.persons.isEmpty()) Text("Noch keine Personen erfasst.")
                 if (model.operations.board != null) OperationsSection(model)
-                else model.persons.forEach { person ->
-                    val row=model.personRow(person.id)?:return@forEach
+                else model.persons.forOriginal { person ->
+                    val row=model.personRow(person.id)?:return@forOriginal
                     LocalProductObservation.current?.let{observer->SideEffect{observer("PERSON_ROW")}}
                     FormOutlinedButton(onClick = row.detail, enabled = !model.saving) { Text(row.card.name) }
                 }
-                if (model.personsEditable && !model.tasks.form && model.tasks.selected==null) FormButton(onClick = model::addPerson, enabled = !model.saving) { Text("Person hinzufügen") }
+                if (model.personsEditable && !model.tasks.form && model.tasks.selected==null) FormButton(onClick = {model.addPerson()}, enabled = !model.saving) { Text("Person hinzufügen") }
             }
         }
     }
@@ -230,6 +235,7 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
     PersonRejection.INVALID_PSEUDONYM -> "Bitte ein Pseudonym eingeben."
     PersonRejection.DUPLICATE_PSEUDONYM -> "Dieses Pseudonym ist in dieser Aktion bereits vergeben."
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun ActionForm(model: ProductViewModel) {
     val existing = model.editing
     var title by remember(existing?.id) { mutableStateOf(existing?.title ?: "") }
@@ -241,7 +247,7 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
     FormOutlinedButton({ if (existing == null) model.back() else model.cancelEdit() }, enabled = !model.saving) {
         Text(if (existing == null) "‹ Aktionen" else "‹ Zur Aktion")
     }
-    Text(if (existing == null) "Aktion planen" else "Aktion bearbeiten", modifier = Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineMedium)
+    Text(if (existing == null) "Aktion planen" else "Aktion bearbeiten", modifier = Modifier.then(productHeadingSemantics), style = MaterialTheme.typography.headlineMedium)
     FormTextField(title, { model.interaction(); title = it }, label = { Text("Titel") }, autoFocus=existing==null, keyboardOptions=productKeyboard(ProductTextKind.ACTION_TITLE), imeAction = androidx.compose.ui.text.input.ImeAction.Next, modifier = Modifier.fillMaxWidth())
     FormTextField(description, { model.interaction(); description = it }, label = { Text("Beschreibung") }, keyboardOptions=productKeyboard(ProductTextKind.DESCRIPTION), modifier = Modifier.fillMaxWidth())
     Text("Zeitzone: ${zone.id}")
@@ -271,44 +277,57 @@ private fun personErrorLabel(reason: PersonRejection) = when (reason) {
 /** Compact inline Android/Material selectors retain foreground/focus and RAM-only drafts.
  * Date and time are explicitly selected; selecting only a date creates no instant.
  */
+private val pickerDayFormat=DateTimeFormatter.ofPattern("dd.MM.yyyy")
+private val pickerTimeFormat=DateTimeFormatter.ofPattern("HH:mm")
+private val pickerCost=ActiveWorkspaceBudget.Units(objects=128,arrays=8,arrayPayloadBytes=2048,references=256)
+private class DateSelection(value:LocalDateTime?) {
+    var part by mutableStateOf<String?>(null)
+    var day by mutableStateOf(value?.toLocalDate())
+    var time by mutableStateOf(value?.toLocalTime())
+}
 @OptIn(ExperimentalMaterial3Api::class)
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun DateTimeField(label: String, value: LocalDateTime?, zone: ZoneId,
     interaction: () -> Unit, chosen: (LocalDateTime) -> Unit) {
-    var part by remember { mutableStateOf<String?>(null) }
-    var day by remember { mutableStateOf(value?.toLocalDate()) }
-    var time by remember { mutableStateOf(value?.toLocalTime()) }
+    val screen=LocalFormScreen.current
+    val selection=if(screen==null)remember{DateSelection(value)} else
+        rememberOriginalValue(screen,0,cost={pickerCost}){DateSelection(value)}?:return
     PreparationHeading(label)
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        FormOutlinedButton({ interaction(); part = if (part == "date") null else "date" }) {
-            Text("Datum · ${day?.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) ?: "auswählen"}")
+        FormOutlinedButton({ interaction(); selection.part = if (selection.part == "date") null else "date" }) {
+            Text(originalText{"Datum · ${selection.day?.format(pickerDayFormat) ?: "auswählen"}"})
         }
-        FormOutlinedButton({ interaction(); part = if (part == "time") null else "time" }) {
-            Text("Uhrzeit · ${time?.format(DateTimeFormatter.ofPattern("HH:mm")) ?: "auswählen"}")
+        FormOutlinedButton({ interaction(); selection.part = if (selection.part == "time") null else "time" }) {
+            Text(originalText{"Uhrzeit · ${selection.time?.format(pickerTimeFormat) ?: "auswählen"}"})
         }
     }
-    key(part) {
-        if (part == "date") {
-            val date = remember { DatePickerState(Locale.getDefault(),
-                initialSelectedDateMillis = day?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli()) }
+    key(selection.part) {
+        if (selection.part == "date") {
+            val date=if(screen==null)remember{DatePickerState(Locale.getDefault(),initialSelectedDateMillis=selection.day?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli())} else
+                rememberOriginalValue(screen,0,cost={pickerCost}){DatePickerState(Locale.getDefault(),initialSelectedDateMillis=selection.day?.atStartOfDay(ZoneOffset.UTC)?.toInstant()?.toEpochMilli())}
+            if(date!=null){
             DatePicker(state = date, showModeToggle = false)
             FormOutlinedButton({
                 interaction()
                 date.selectedDateMillis?.let { millis ->
-                    day = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
-                    time?.let { chosen(day!!.atTime(it)) }
-                    part = null
+                    selection.day = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                    selection.time?.let { chosen(selection.day!!.atTime(it)) }
+                    selection.part = null
                 }
             }, enabled = date.selectedDateMillis != null) { Text("Datum übernehmen") }
-        } else if (part == "time") {
-            val initial = time ?: LocalTime.now(zone)
-            val clock = remember { TimePickerState(initial.hour, initial.minute, true) }
+            }
+        } else if (selection.part == "time") {
+            val clock=if(screen==null)remember{val initial=selection.time?:LocalTime.now(zone);TimePickerState(initial.hour,initial.minute,true)} else
+                rememberOriginalValue(screen,0,cost={pickerCost}){val initial=selection.time?:LocalTime.now(zone);TimePickerState(initial.hour,initial.minute,true)}
+            if(clock!=null){
             TimePicker(state = clock)
             FormOutlinedButton({
-                interaction(); time = LocalTime.of(clock.hour, clock.minute)
-                day?.let { chosen(it.atTime(time)) }; part = null
+                interaction(); selection.time = LocalTime.of(clock.hour, clock.minute)
+                selection.day?.let { chosen(it.atTime(selection.time)) }; selection.part = null
             }) { Text("Uhrzeit übernehmen") }
         }
-        if (part != null) FormOutlinedButton({ interaction(); part = null }) { Text("Abbrechen") }
+        }
+        if (selection.part != null) FormOutlinedButton({ interaction(); selection.part = null }) { Text("Abbrechen") }
     }
 }
 private fun localTimeFormat() = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
@@ -337,3 +356,6 @@ internal fun changeErrorLabel(reason: ActionChangeRejection) = when (reason) {
     ActionChangeRejection.INVALID_TRANSITION -> "Dieser Statusschritt ist nicht möglich."
     ActionChangeRejection.INVALID_FIELDS -> "Bitte die eingegebenen Felder prüfen."
 }
+
+private val statusUpperLabels=ActionStatus.entries.associateWith{statusLabel(it).uppercase()} // fixed CODE only
+internal fun statusUpperLabel(status:ActionStatus)=statusUpperLabels.getValue(status)

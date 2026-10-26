@@ -19,7 +19,7 @@ data class TaskBoard(val actionId:String,val tasks:List<Task>,val events:List<Ta
     val presentation=TaskPresentation(tasks)
     val active get()=presentation.all.active
     val closed get()=presentation.all.closed
-    fun affectedCount(personId:String)=tasks.count{TaskRules.active(it.status) && it.affectedPersonId==personId}
+    fun affectedCount(personId:String):Int { var count=0;var i=0;while(i<tasks.size){val t=tasks[i++];if(TaskRules.active(t.status) && t.affectedPersonId==personId)count++};return count }
 }
 object TaskRules {
     /** Stored CREATED/STARTED/COMPLETED/CANCELLED/REOPENED, across all tasks of one action.

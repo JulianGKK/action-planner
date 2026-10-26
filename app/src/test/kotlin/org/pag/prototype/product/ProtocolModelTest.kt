@@ -113,7 +113,10 @@ class ProtocolModelTest {
         port.writeCallback!!(ProtocolResult.Rejected(ProtocolFailure.STALE)); assertTrue(model.form); assertEquals("synthetic correction", model.input!!.title)
         assertNotNull(model.expected); assertEquals(1, port.writes); assertFalse(model.busy)
         model.save(); assertEquals(1, port.writes)
-        model.currentVersion(); assertFalse(model.form); assertEquals(2, port.detailReads)
+        val held=model.input
+        model.currentVersion();assertSame(held,model.input);assertTrue(model.detailLoading);assertEquals(2,port.detailReads)
+        model.save();assertEquals(1,port.writes)
+        port.detailCallback!!(ProtocolResult.Value(detail()));assertFalse(model.form);assertNull(model.expected)
     }
     @Test fun lockCleanupRejectsLateTimelineDetailAndSaveAndRemovesAllDisclosures() {
         model.refresh(); val timeline = port.timelineCallback!!; open(); val detail = port.detailCallback!!

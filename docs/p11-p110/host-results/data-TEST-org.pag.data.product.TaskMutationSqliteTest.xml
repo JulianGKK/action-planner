@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.data.product.TaskMutationSqliteTest" tests="19" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:21.211Z" hostname="iuzjhtgvfc" time="1.946">
+<testsuite name="org.pag.data.product.TaskMutationSqliteTest" tests="19" skipped="0" failures="0" errors="0" timestamp="2026-10-25T19:21:56.174Z" hostname="iuzjhtgvfc" time="6.503">
   <properties/>
-  <testcase name="revokeBeforeQueueBeforeCommitAfterCommitAndBeforePublicationDenySuccess" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.146"/>
-  <testcase name="successCallbackCannotInventCommitAndFreshGenerationNeverRestoresRamReuse" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.024"/>
-  <testcase name="queueRejectionNestedTransactionAndMainQueueLossStayFailClosed" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.071"/>
-  <testcase name="concurrentEditorsPendingAndLateDuplicateCallbacksCannotDuplicateWrites" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.027"/>
-  <testcase name="generationChangeAfterCommitButBeforeMainDropsLateSuccess" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.023"/>
-  <testcase name="overlappingQueueWritesCannotTakeTheLastSlotTwiceAndRetrySeesExactCount" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.037"/>
-  <testcase name="editAndTransitionRacesUseFullExpectedAndEventsExactlyOnce" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.026"/>
-  <testcase name="cleanupFailureAfterRealCommitNeverPublishesAndCannotBeRetried" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.051"/>
-  <testcase name="exact4999AllowsOneMoreBut5000And5001RejectCreateAndAllEventTransitions" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.098"/>
-  <testcase name="twoRealSqliteConnectionsSerializeCountAndDependentWritesAtTheLastSlot" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.842"/>
-  <testcase name="beforeQueuePendingCommitAndCleanupAreDistinctAndCallbackDoesNotCreateEvidence" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.025"/>
-  <testcase name="cleanupFailureAfterConfirmedRollbackAndDeletedTaskCascadesEvents" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.051"/>
-  <testcase name="sameMillisecondTaskAbaIsRejectedByPersistentRevision" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.028"/>
-  <testcase name="capacityCheckDoesNotBypassCasRevokeOrCommitAndCleanupFences" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.127"/>
-  <testcase name="definiteDomainRollbackHasNoRowsNoEventAndNoCorruptionSignal" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.025"/>
-  <testcase name="lastSlotEventFailureRollsBackDependentTaskAndNeverReportsSuccess" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.033"/>
-  <testcase name="createEditTransitionsAndConflictsPreserveAtomicSingleEvents" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.031"/>
-  <testcase name="eventlessEditAndLegacyHistoryRemainCompleteAndActionCountsAreIndependent" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.135"/>
-  <testcase name="taskAndEventBothRollbackOnFailureAndUnconfirmedOutcomeNeverSucceeds" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.146"/>
+  <testcase name="revokeBeforeQueueBeforeCommitAfterCommitAndBeforePublicationDenySuccess" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.716"/>
+  <testcase name="successCallbackCannotInventCommitAndFreshGenerationNeverRestoresRamReuse" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.104"/>
+  <testcase name="queueRejectionNestedTransactionAndMainQueueLossStayFailClosed" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.347"/>
+  <testcase name="concurrentEditorsPendingAndLateDuplicateCallbacksCannotDuplicateWrites" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.126"/>
+  <testcase name="generationChangeAfterCommitButBeforeMainDropsLateSuccess" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.126"/>
+  <testcase name="overlappingQueueWritesCannotTakeTheLastSlotTwiceAndRetrySeesExactCount" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.169"/>
+  <testcase name="editAndTransitionRacesUseFullExpectedAndEventsExactlyOnce" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.129"/>
+  <testcase name="cleanupFailureAfterRealCommitNeverPublishesAndCannotBeRetried" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.235"/>
+  <testcase name="exact4999AllowsOneMoreBut5000And5001RejectCreateAndAllEventTransitions" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.503"/>
+  <testcase name="twoRealSqliteConnectionsSerializeCountAndDependentWritesAtTheLastSlot" classname="org.pag.data.product.TaskMutationSqliteTest" time="1.129"/>
+  <testcase name="beforeQueuePendingCommitAndCleanupAreDistinctAndCallbackDoesNotCreateEvidence" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.122"/>
+  <testcase name="cleanupFailureAfterConfirmedRollbackAndDeletedTaskCascadesEvents" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.262"/>
+  <testcase name="sameMillisecondTaskAbaIsRejectedByPersistentRevision" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.145"/>
+  <testcase name="capacityCheckDoesNotBypassCasRevokeOrCommitAndCleanupFences" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.592"/>
+  <testcase name="definiteDomainRollbackHasNoRowsNoEventAndNoCorruptionSignal" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.115"/>
+  <testcase name="lastSlotEventFailureRollsBackDependentTaskAndNeverReportsSuccess" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.156"/>
+  <testcase name="createEditTransitionsAndConflictsPreserveAtomicSingleEvents" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.156"/>
+  <testcase name="eventlessEditAndLegacyHistoryRemainCompleteAndActionCountsAreIndependent" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.659"/>
+  <testcase name="taskAndEventBothRollbackOnFailureAndUnconfirmedOutcomeNeverSucceeds" classname="org.pag.data.product.TaskMutationSqliteTest" time="0.709"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

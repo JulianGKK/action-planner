@@ -2,11 +2,22 @@ package org.pag.prototype.product
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.referentialEqualityPolicy
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import org.pag.domain.*
 import java.util.concurrent.atomic.AtomicReference
+
+// Immutable CODE enum groups; no action payload, authority or per-render Set.
+private val supportedActiveAreaGroup1=setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS)
+private val supportedActiveAreaGroup2=setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.TASKS,ActiveArea.MATERIAL)
+private val supportedPreparationAreaGroup3=setOf(PreparationArea.OVERVIEW,PreparationArea.TASKS,PreparationArea.MATERIAL)
+private val supportedActiveAreaGroup4=setOf(ActiveArea.HUB,ActiveArea.PROTOCOL)
+private val supportedActiveAreaGroup5=setOf(ActiveArea.HUB,ActiveArea.MATERIAL)
+private val supportedActiveAreaGroup6=setOf(ActiveArea.HUB,ActiveArea.COSTS)
+private val supportedSessionStateGroup7=setOf(SessionState.LOCKED,SessionState.BLOCKED)
+
 
 /** Only domain ports; no DB, DAO, Cipher, key, saved state or retained unlock runtime. */
 class ProductViewModel(private val session: SessionPort, private val repository: ActionRepository,
@@ -80,7 +91,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     private fun clearActiveCore() { coreLoad=null;activeCorePort?.cancelPending();dropCoreAuthority();coreSignal++ }
     val compactActiveMode get() = activeCorePort!=null && !fullActiveView && selected?.status==ActionStatus.ACTIVE &&
-        activeArea in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS) &&
+        activeArea in supportedActiveAreaGroup1 &&
         selectedPerson==null && !personForm && !tasks.form && tasks.selected==null && operations.screen==OperationsScreen.OVERVIEW
     /** Internal original-slot validation only; never lends a payload to a caller. */
     private fun currentCoreSlot(slot:CoreSlot):Boolean {
@@ -241,6 +252,19 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         operations.bindDetailLoader(::projectDetail);operations.bindMembershipLoader(::projectMembership)
         material.bindDetailLoader(::projectDetail);material.bindMembershipLoader(::projectMembership)
         expenses.bindDetailLoader(::projectDetail);expenses.bindMembershipLoader(::projectMembership)
+        tasks.bindFeedbackFactory(::prepareWorkspaceFeedback)
+        operations.bindFeedbackFactory(::prepareWorkspaceFeedback)
+        material.bindFeedbackFactory(::prepareWorkspaceFeedback)
+        expenses.bindFeedbackFactory(::prepareWorkspaceFeedback)
+        protocol.bindFeedbackFactory(::prepareWorkspaceFeedback)
+        memoryReports.bindFeedbackFactory(::prepareWorkspaceFeedback)
+        protocol.bindDetailLoader(::projectMembership)
+        memoryReports.bindDetailLoader(::projectMembership)
+        material.bindTaskLabels(::workspaceTaskChoiceLabel)
+        material.bindReadGate(::workspaceReadAllowed)
+        expenses.bindReadGate(::workspaceReadAllowed)
+        expenses.bindPersonLookup(::workspacePersonLabel)
+        memoryReports.bindPersonLookup(::workspacePersonLabel)
     }
     val documentsAvailable get() = documentRepository != null
     /** Composition-time optional port, preserving all existing test/demo constructors. */
@@ -318,24 +342,30 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             if(Thread.currentThread()!==ownerThread)return null
             val held=workspaceValue?:return null
             val access=held.access ?: return held // Existing legacy/test ports; no new reference-navigation grant.
-            var allowed:WorkspaceSnapshot?=null
-            val accepted=access.publish(held.actionId,held.status,held.generation){
-                if(workspaceValue===held && snapshot.state==SessionState.READY && snapshot.generation==held.generation &&
-                    selected?.id==held.actionId && selected?.status==held.status)allowed=held
-            }
-            return if(accepted)allowed else null
+            // The checks use CODE-only callbacks. No per-hit Ref/closure may retain this
+            // snapshot; an immutable borrowed reference is returned only after both gates.
+            if(!access.publish(held.actionId,held.status,held.generation){})return null
+            if(workspaceValue!==held || snapshot.state!=SessionState.READY || snapshot.generation!=held.generation ||
+                selected?.id!=held.actionId || selected?.status!=held.status)return null
+            if(!access.publish(held.actionId,held.status,held.generation){})return null
+            return if(workspaceValue===held && snapshot.state==SessionState.READY && snapshot.generation==held.generation &&
+                selected?.id==held.actionId && selected?.status==held.status)held else null
         }
         private set(value){
-            if(value==null){workspaceValue=null;return}
+            if(value==null){workspaceValue=null;committedViewRoot=null;return}
             if(value.uiRows==null && value.operations!=null){
                 val access=value.access
                 if(access!=null && !access.publish(value.actionId,value.status,value.generation){}){
                     workspaceRefusal=WorkspaceFailure.NOT_ALLOWED;workspaceError=true;return
                 }
                 val previous=workspaceValue?.uiRows
-                val planning=try{WorkspaceUiRows.planningCost(value)}catch(_:ArithmeticException){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return}
+                val planning=try{WorkspaceUiRows.planningCost(value,previous)}catch(_:ArithmeticException){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return}
                 if(access!=null && !access.reserve(planning)){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return}
-                val formats=UiDateFormats(java.time.ZoneId.systemDefault())
+                val requestedZone=java.time.ZoneId.systemDefault()
+                val formats=if(previous!=null && previous.formats.zone==requestedZone && previous.formats.locale==java.util.Locale.getDefault())previous.formats else {
+                    if(previous!=null && access?.reserve(WorkspaceUiRows.formatPlanning)==false){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return}
+                    UiDateFormats(requestedZone)
+                }
                 val units=try{WorkspaceUiRows.cost(value,previous,formats,selected)}catch(_:ArithmeticException){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return}
                 // Legacy/test ports have no capability; production read grants always do.
                 val rows=if(access==null)WorkspaceUiRows(value,rowPort,previous,selected,formats) else
@@ -383,14 +413,43 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     internal fun personRow(id:String):PersonUiRow?=workspace?.uiRows?.persons?.get(id)
     internal fun roleRow(id:String):RoleUiRow?=workspace?.uiRows?.roles?.get(id)
+    // One fixed input identity in the existing original UI member, never a payload cache.
+    internal fun heldFormAllowed():Boolean {
+        val held=workspaceValue?:return false
+        return Thread.currentThread()===ownerThread && snapshot.state==SessionState.READY && snapshot.generation==held.generation &&
+            selected?.id==held.actionId && selected?.status==held.status && held.access?.heldAllowed()==true
+    }
+    internal fun inputScreenLive(key:ProductInputScreenKey):Boolean {
+        val held=workspaceValue?:return false
+        return Thread.currentThread()===ownerThread && held.uiRows?.inputScreen===key && key.matches(this) &&
+            snapshot.state==SessionState.READY && snapshot.generation==held.generation && selected?.id==held.actionId &&
+            (held.access?.heldAllowed() ?: (workspaceRepository==null))
+    }
+    internal fun reserveInput(key:ProductInputScreenKey,units:ActiveWorkspaceBudget.Units):Boolean {
+        if(!inputScreenLive(key))return false
+        val failure=applyWorkspaceCopy(units){}
+        if(failure!=null){workspaceRefusal=if(failure==OperationsFailure.BUDGET_REFUSED)WorkspaceFailure.BUDGET_REFUSED else WorkspaceFailure.NOT_ALLOWED;workspaceError=true;return false}
+        return inputScreenLive(key)
+    }
+    internal fun inputScreenKey(@Suppress("UNUSED_PARAMETER") revision:Long=uiPresentationRevision):Any? {
+        val rows=workspaceValue?.uiRows
+        val old=rows?.inputScreen
+        if(old?.matches(this)==true)return old
+        if(rows==null)return if(workspaceValue?.access!=null)DeniedProductInputScope else null // No legacy escape for a held original owner.
+        var key:ProductInputScreenKey?=null
+        val failure=applyWorkspaceCopy(ActiveWorkspaceBudget.Units(objects=16,references=256)){key=ProductInputScreenKey(this)}
+        if(failure!=null){workspaceRefusal=if(failure==OperationsFailure.BUDGET_REFUSED)WorkspaceFailure.BUDGET_REFUSED else WorkspaceFailure.NOT_ALLOWED;workspaceError=true;return old?:DeniedProductInputScope}
+        rows.inputScreen=key
+        return key
+    }
     internal fun uiRoot():Any?=workspace?.uiRows?.identity
     internal fun liveUi(root:Any):Boolean=workspaceValue?.let{rowPort.live(root,it.access)}?:false
     internal fun reserveListUi(root:Any):Boolean=workspaceValue?.let{rowPort.reserve(root,it.access,
-        ActiveWorkspaceBudget.Units(objects=64,strings=4,utf16Units=256,lists=4,listCapacity=32,references=256))}?:false
-    internal fun listTask(root:Any,index:Int,closed:Boolean):Task? {
+        listUiCost)}?:false
+    internal fun listTask(root:Any,index:Int,closed:Boolean,filter:String?=tasks.filter):Task? {
         if(!liveUi(root))return null
         val board=workspaceValue?.tasks?:return null
-        val content=activeTaskContent(board,tasks.filter)
+        val content=activeTaskContent(board,filter)
         return (if(closed)content.closed else content.active).getOrNull(index)
     }
     internal fun listPerson(root:Any,index:Int):OperationalPerson? {
@@ -447,11 +506,15 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if(error!=null)personError=if(error==OperationsFailure.BUDGET_REFUSED)PersonRejection.BUDGET_REFUSED else PersonRejection.NOT_ALLOWED
     }
     var personCommitConfirmed by mutableStateOf(false);private set
+    private var committedViewRoot by mutableStateOf<Any?>(null,referentialEqualityPolicy())
     val savedRefreshMessage:String? get() {
-        val committed=personCommitConfirmed || tasks.commitConfirmed || operations.commitConfirmed || material.commitConfirmed || expenses.commitConfirmed
+        if(workspaceError && committedViewRoot!=null && committedViewRoot===workspaceValue?.uiRows?.identity)
+            return OriginalFeedbackCredit.savedNotRefreshed
+        val committed=personCommitConfirmed || tasks.commitConfirmed || operations.commitConfirmed || material.commitConfirmed || expenses.commitConfirmed || protocol.commitConfirmed || memoryReports.commitConfirmed
         if(!committed)return null
         val pending=personCommitConfirmed && personSaving || tasks.commitConfirmed && tasks.busy || operations.commitConfirmed && operations.busy ||
-            material.commitConfirmed && material.busy || expenses.commitConfirmed && expenses.busy
+            material.commitConfirmed && material.busy || expenses.commitConfirmed && expenses.busy ||
+            protocol.commitConfirmed && (protocol.busy || protocol.detailLoading) || memoryReports.commitConfirmed && (memoryReports.busy || memoryReports.loading)
         return if(pending)"Gespeichert – Ansicht wird aktualisiert …" else "Gespeichert – Ansicht konnte noch nicht aktualisiert werden."
     }
     private fun personFailure(reason:WorkspaceFailure)=when(reason){
@@ -473,6 +536,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if(!original.consume(ActiveWorkspaceBudget.Units(objects=32,references=128)){}){done(WorkspaceDetailResult.Rejected(WorkspaceFailure.BUDGET_REFUSED));return}
         val baseline=WorkspaceRead(held.actionId,held.status,held.generation,emptySet(),ops,held.tasks,
             held.protocolSummary,held.materialSummary,held.expenseSummary,held.memoryReportSummary,held.documentSummary,
+            memoryHeaders=held.memoryHeaders,protocolTimeline=held.protocolTimeline,
             materialBoard=held.materialBoard,expenseBoard=held.expenseBoard,access=held.access,leadershipState=held.leadershipState)
         var delivered=false
         workspaceRepository?.detail(original,WorkspaceDetailRequest(action.id,action.status,generation,kind,id,ticket,baseline,action,membership)){result->
@@ -482,12 +546,12 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 is WorkspaceDetailResult.Value->{
                     val w=result.value.workspace
                     if(w!=null){
-                        val updated=WorkspaceSnapshot(w.actionId,w.generation,w.operations.persons.map{it.person},w.operations,w.tasks,w.status,
-                            w.leadershipState,w.protocol,w.material,w.expenses,w.memory,w.documents,w.access,w.materialBoard,w.expenseBoard)
+                        val updated=WorkspaceSnapshot(w.actionId,w.generation,if(w.operations===held.operations)held.persons else w.operations.persons.map{it.person},w.operations,w.tasks,w.status,
+                            w.leadershipState,w.protocol,w.material,w.expenses,w.memory,w.documents,w.access,w.materialBoard,w.expenseBoard,w.protocolTimeline,w.memoryHeaders)
                         workspace=updated
                         if(workspaceValue!==updated){done(WorkspaceDetailResult.Rejected(workspaceRefusal?:WorkspaceFailure.NOT_ALLOWED));return@detail}
                     }
-                    result.value.access.publish(action.id,action.status,generation){done(result)}
+                    if(result.value.access.publish(action.id,action.status,generation){})done(result)
                 }
                 is WorkspaceDetailResult.Rejected->done(result)
             }
@@ -499,7 +563,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val access=held.access?:return false
         val action=selected?:return true
         if(action.id!=held.actionId || snapshot.generation!=held.generation || action.status!=held.status)return true
-        if(active!=null)when(active){ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS,ActiveArea.MATERIAL,ActiveArea.COSTS,ActiveArea.DETAILS->Unit;else->return false}
+        if(active!=null)when(active){ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS,ActiveArea.MATERIAL,ActiveArea.COSTS,ActiveArea.DETAILS,ActiveArea.PROTOCOL,ActiveArea.MEMORY_REPORTS->Unit;else->return false}
         if(!access.publish(held.actionId,held.status,held.generation){}){workspaceRefusal=WorkspaceFailure.OWNER_UNCONFIRMED;workspaceError=true;return true}
         if(!access.reserve(ActiveWorkspaceBudget.Units(objects=16,references=64))){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return true}
         val accepted=access.publish(held.actionId,held.status,held.generation){
@@ -508,6 +572,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             if(preparation!=null)preparationArea=preparation
             if(active!=null)activeArea=active
             editing=null;confirming=null;changeError=null
+            if(active==ActiveArea.PROTOCOL)protocol.prepareWorkspaceTimeline()
+            if(active==ActiveArea.MEMORY_REPORTS)memoryReports.enter(deferList=true)
             if(preparation==PreparationArea.MATERIAL || active==ActiveArea.MATERIAL)material.enter(deferRead=true)
             if(preparation==PreparationArea.COSTS || active==ActiveArea.COSTS)expenses.enter(deferRead=true)
         }
@@ -515,15 +581,20 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         interaction()
         if(preparation==PreparationArea.MATERIAL || active==ActiveArea.MATERIAL)restoreOriginalModule(held,WorkspacePart.MATERIAL_BOARD)
         if(preparation==PreparationArea.COSTS || active==ActiveArea.COSTS)restoreOriginalModule(held,WorkspacePart.EXPENSE_BOARD)
+        if(active==ActiveArea.PROTOCOL)restoreOriginalModule(held,WorkspacePart.PROTOCOL_TIMELINE)
+        if(active==ActiveArea.MEMORY_REPORTS)restoreOriginalModule(held,WorkspacePart.MEMORY_HEADERS)
         return true
     }
     private fun restoreOriginalModule(held:WorkspaceSnapshot,part:WorkspacePart) {
         val access=held.access?:return
         fun accept(value:WorkspaceSnapshot){
             if(part==WorkspacePart.MATERIAL_BOARD)value.materialBoard?.let{material.acceptWorkspaceBoard(value.actionId,value.generation,it)}
-            else value.expenseBoard?.let{expenses.acceptWorkspaceBoard(value.actionId,value.generation,it)}
+            if(part==WorkspacePart.EXPENSE_BOARD)value.expenseBoard?.let{expenses.acceptWorkspaceBoard(value.actionId,value.generation,it)}
+            if(part==WorkspacePart.PROTOCOL_TIMELINE)value.protocolTimeline?.let{protocol.acceptWorkspaceTimeline(value.actionId,value.generation,it)}
+            if(part==WorkspacePart.MEMORY_HEADERS)value.memoryHeaders?.let{memoryReports.acceptWorkspaceHeaders(value.actionId,value.generation,it)}
         }
-        val present=if(part==WorkspacePart.MATERIAL_BOARD)held.materialBoard!=null else held.expenseBoard!=null
+        val present=when(part){WorkspacePart.MATERIAL_BOARD->held.materialBoard!=null;WorkspacePart.EXPENSE_BOARD->held.expenseBoard!=null
+            WorkspacePart.PROTOCOL_TIMELINE->held.protocolTimeline!=null;WorkspacePart.MEMORY_HEADERS->held.memoryHeaders!=null;else->false}
         if(present){access.publish(held.actionId,held.status,held.generation){accept(held)};return}
         val serial=workspaceRequest
         workspaceRefreshing=true
@@ -538,7 +609,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                         val v=result.value
                         if(v.actionId!=held.actionId || v.generation!=held.generation){workspaceRefusal=WorkspaceFailure.STALE;workspaceError=true;return@run}
                         // This header is included in the supplement's PRE-admitted finite builder/envelope costs.
-                        val updated=held.copy(materialBoard=v.material?:held.materialBoard,expenseBoard=v.expenses?:held.expenseBoard)
+                        val updated=held.copy(materialBoard=v.material?:held.materialBoard,expenseBoard=v.expenses?:held.expenseBoard,protocolTimeline=v.protocolTimeline?:held.protocolTimeline,memoryHeaders=v.memoryHeaders?:held.memoryHeaders)
                         workspace=updated;if(workspaceValue===updated)accept(updated)
                     }
                 }
@@ -579,7 +650,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (!activeNavigationEnabled || (area == ActiveArea.MATERIAL && !materialAvailable) || (area == ActiveArea.COSTS && !expensesAvailable) || (area == ActiveArea.MEMORY_REPORTS && !memoryReportsAvailable)) return
         if(navigateOriginal(active=area))return
         val hitNavigation=retained==null && activeCorePort?.reuseEnabled==true &&
-            area in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS)
+            area in supportedActiveAreaGroup1
         val candidate=if(hitNavigation)acquireCoreScope() else null
         try {
             fun currentNavigation() = activeNavigationEnabled && snapshot.generation==before.generation &&
@@ -714,8 +785,51 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (snapshot.state == SessionState.READY && snapshot.generation == generation && selected?.id == actionId)
             personDetail(id)
     }
-    private fun showFeedback(text: String) {
-        if (snapshot.state == SessionState.READY) feedback = StatusFeedback(++feedbackId, text)
+    private fun prepareWorkspaceFeedback():((String)->Unit)? {
+        val held=workspaceValue?:return null
+        val access=held.access?:return ::showFeedback
+        var value:OriginalFeedbackCredit?=null
+        if(!access.consume(OriginalFeedbackCredit.cost){
+            value=OriginalFeedbackCredit(access,held.actionId,held.generation,
+                {id,g->snapshot.state==SessionState.READY && snapshot.generation==g && selected?.id==id},::currentFeedbackPublication,::publishCommittedFeedback)
+        })return null
+        return value
+    }
+    private fun workspaceTaskChoiceLabel(id:String):String? {
+        val held=workspace?:return null
+        val label=held.uiRows?.taskChoiceLabel(id)
+        if(workspaceValue!==held || held.access?.publish(held.actionId,held.status,held.generation){}!=true)return null
+        return label
+    }
+    private fun workspaceReadAllowed():Boolean=workspace!=null
+    private fun workspacePersonLabel(id:String):String? {
+        val held=workspace?:return null
+        val label=held.persons.findOriginal{it.id==id}?.pseudonym
+        if(workspaceValue!==held || held.access?.publish(held.actionId,held.status,held.generation){}!=true)return null
+        return label
+    }
+    private fun currentFeedbackPublication(actionId:String,generation:Long):Boolean {
+        val held=workspaceValue?:return false
+        if(snapshot.state!=SessionState.READY || snapshot.generation!=generation || selected?.id!=actionId ||
+            held.actionId!=actionId || held.generation!=generation)return false
+        return held.access?.publish(actionId,held.status,generation){}==true
+    }
+    /** Root identity only, not a retained snapshot or a UI-/consumer-end receipt. The
+     * prepaid writer feedback quote includes this metadata handoff. Deferred UI refusal
+     * must still distinguish the confirmed write from an unavailable refreshed view. */
+    private fun publishCommittedFeedback(text:String){
+        committedViewRoot=workspaceValue?.uiRows?.identity
+        publishPrepaidFeedback(if(workspaceError)OriginalFeedbackCredit.savedNotRefreshed else text)
+    }
+    private fun publishPrepaidFeedback(text:String){
+        if(snapshot.state==SessionState.READY)feedback=StatusFeedback(++feedbackId,text)
+    }
+    private fun showFeedback(text:String){
+        if(snapshot.state!=SessionState.READY)return
+        if(workspaceValue?.access!=null){
+            val cost=ActiveWorkspaceBudget.Units(objects=8,references=32)
+            applyWorkspaceCopy(cost){publishPrepaidFeedback(text)}
+        }else publishPrepaidFeedback(text)
     }
     private fun clearPersons(preserveCore:Boolean=false,preserveWorkspace:Boolean=false) {
         if(!preserveCore && !preserveWorkspace)clearActiveCore()
@@ -752,14 +866,14 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         personsLoading = previous == null
         workspaceError = false;workspaceRefusal=null
         val needTasks = taskRepository != null && operations.screen == OperationsScreen.OVERVIEW &&
-            (!active || (activeSection != ActiveArea.FUNCTIONS && (workspaceRepository==null || activeSection in setOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.TASKS,ActiveArea.MATERIAL)))) &&
-            (!preparation || (selectedPerson == null && area in setOf(PreparationArea.OVERVIEW, PreparationArea.TASKS, PreparationArea.MATERIAL)))
+            (!active || (activeSection != ActiveArea.FUNCTIONS && (workspaceRepository==null || activeSection in supportedActiveAreaGroup2))) &&
+            (!preparation || (selectedPerson == null && area in supportedPreparationAreaGroup3))
         val needMetadata = preparation && area == PreparationArea.OVERVIEW && selectedPerson == null &&
             operations.screen == OperationsScreen.OVERVIEW && leadership != null
-        val needProtocol = active && activeSection in setOf(ActiveArea.HUB, ActiveArea.PROTOCOL) && protocolRepository != null
-        val needMaterial = materialRepository != null && ((active && activeSection in setOf(ActiveArea.HUB, ActiveArea.MATERIAL)) ||
+        val needProtocol = active && activeSection in supportedActiveAreaGroup4 && protocolRepository != null
+        val needMaterial = materialRepository != null && ((active && activeSection in supportedActiveAreaGroup5) ||
             (preparation && area == PreparationArea.OVERVIEW && selectedPerson == null))
-        val needExpenses = expenseRepository != null && ((active && activeSection in setOf(ActiveArea.HUB, ActiveArea.COSTS)) ||
+        val needExpenses = expenseRepository != null && ((active && activeSection in supportedActiveAreaGroup6) ||
             (preparation && area == PreparationArea.OVERVIEW && selectedPerson == null))
         val needDocuments = documentRepository != null && ((active && activeSection == ActiveArea.HUB) ||
             (preparation && area == PreparationArea.OVERVIEW && selectedPerson == null))
@@ -802,7 +916,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         fun publish() {
             if ((workspaceRepository!=null && published) || !current() || !peopleDone || !tasksDone || !metadataDone || !protocolDone || !materialDone || !expensesDone || !memoryDone || !documentsDone) return
             androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
-                val candidate=WorkspaceSnapshot(action.id,generation,people.orEmpty(),ops,taskBoard,action.status,metadata,protocolSummary,materialSummary,expenseSummary,memorySummary,documentSummary,workspaceAccess,loadedMaterial,loadedExpenses)
+                val candidate=WorkspaceSnapshot(action.id,generation,people.orEmpty(),ops,taskBoard,action.status,metadata,protocolSummary,materialSummary,expenseSummary,memorySummary,documentSummary,workspaceAccess,loadedMaterial,loadedExpenses,loadedTimeline,loadedMemoryHeaders)
                 workspace=candidate
                 if(workspaceValue!==candidate){failed();return@withMutableSnapshot}
                 // Dependent model presentations consume the SAME just-bound original grant.
@@ -1072,10 +1186,15 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (!PersonRules.valid(pseudonym)) { personError = PersonRejection.INVALID_PSEUDONYM; return }
         val request = personRequest
         val generation = snapshot.generation
+        val actionId=action.id
+        val emit=if(workspaceRepository!=null && workspaceValue?.access!=null)prepareWorkspaceFeedback()?:run{personError=PersonRejection.BUDGET_REFUSED;return} else ::showFeedback
+        var delivered=false
         personSaving = true
         feedback = null
-        val publish: (PersonResult<Person>) -> Unit = { result ->
-            if (request == personRequest && selected?.id == action.id && personsVisible) {
+        val publish: (PersonResult<Person>) -> Unit = publish@{ result ->
+            if(delivered)return@publish
+            delivered=true
+            if(request==personRequest && selected?.id==actionId && personsVisible && snapshot.state==SessionState.READY && snapshot.generation==generation){
                 personSaving = false
                 when (result) {
                     is PersonResult.Value -> {
@@ -1085,8 +1204,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                             projectSingle(WorkspaceDetailKind.PERSON,id,editingPerson==null){refreshed->
                                 personSaving=false
                                 when(refreshed){
-                                    is WorkspaceDetailResult.Value->{selectedPerson=refreshed.value.person;editingPerson=null;personForm=false;personError=null;personCommitConfirmed=false;showFeedback("Person gespeichert")}
-                                    is WorkspaceDetailResult.Rejected->{personError=personFailure(refreshed.reason);showFeedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                                    is WorkspaceDetailResult.Value->{selectedPerson=refreshed.value.person;editingPerson=null;personForm=false;personError=null;personCommitConfirmed=false;emit("Person gespeichert")}
+                                    is WorkspaceDetailResult.Rejected->{personError=personFailure(refreshed.reason);emit("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
                                 }
                             }
                         }else loadPersons()
@@ -1306,7 +1425,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                         recoveryAuthenticated=true
                     }else cancelLeadershipRecovery()
                 }
-                next.state in setOf(SessionState.LOCKED,SessionState.BLOCKED) && !recoveryStarting -> cancelLeadershipRecovery()
+                next.state in supportedSessionStateGroup7 && !recoveryStarting -> cancelLeadershipRecovery()
                 next.state!=SessionState.READY && leadershipRecoveryPhase!=LeadershipRecoveryPhase.AUTHENTICATING -> cancelLeadershipRecovery()
                 next.state==SessionState.READY && snapshot.generation!=next.generation && leadershipRecoveryPhase!=LeadershipRecoveryPhase.AUTHENTICATING -> cancelLeadershipRecovery()
             }
@@ -1356,7 +1475,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (session.snapshot().state == SessionState.LOCKED) unlock()
     }
     fun lock() { cancelLeadershipRecovery();documentPicker?.cancel(); session.lock() }
-    fun interaction() = session.userInteraction()
+    internal var uiPresentationRevision by mutableLongStateOf(0L);private set
+    fun interaction(){uiPresentationRevision=Math.incrementExact(uiPresentationRevision);session.userInteraction()}
     fun createScreen() { cancelLeadershipRecovery();interaction(); if (snapshot.state == SessionState.READY) { clearPersons();selected = null; creating = true } }
     fun back() { cancelLeadershipRecovery();documentPicker?.cancel(); if (memoryReports.available && memoryReports.dirty) { memoryReports.requestLeave { back() }; return }; interaction(); selected = null; creating = false; editing = null; confirming = null; changeError = null; clearPersons() }
     fun edit() {

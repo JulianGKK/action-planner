@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.data.product.P109WriterBudgetTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:21.043Z" hostname="iuzjhtgvfc" time="0.028">
+<testsuite name="org.pag.data.product.P109WriterBudgetTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-25T19:21:55.577Z" hostname="iuzjhtgvfc" time="0.142">
   <properties/>
-  <testcase name="submissionCopiesBookOriginalAndNeverReleaseOnWriterEnd" classname="org.pag.data.product.P109WriterBudgetTest" time="0.001"/>
-  <testcase name="wrongActionGenerationAndOverflowCannotConstructWriterCopies" classname="org.pag.data.product.P109WriterBudgetTest" time="0.0"/>
-  <testcase name="exposedCompactRecordCannotTakeUnchargedWriterFallback" classname="org.pag.data.product.P109WriterBudgetTest" time="0.001"/>
-  <testcase name="currentStoredTextIsPreflightedBeforeAnyWriterDto" classname="org.pag.data.product.P109WriterBudgetTest" time="0.026"/>
-  <testcase name="exactRetainedAndTransitionThenOneByteRefuseWithoutChangingOldCost" classname="org.pag.data.product.P109WriterBudgetTest" time="0.0"/>
+  <testcase name="submissionCopiesBookOriginalAndNeverReleaseOnWriterEnd" classname="org.pag.data.product.P109WriterBudgetTest" time="0.004"/>
+  <testcase name="wrongActionGenerationAndOverflowCannotConstructWriterCopies" classname="org.pag.data.product.P109WriterBudgetTest" time="0.001"/>
+  <testcase name="exposedCompactRecordCannotTakeUnchargedWriterFallback" classname="org.pag.data.product.P109WriterBudgetTest" time="0.002"/>
+  <testcase name="currentStoredTextIsPreflightedBeforeAnyWriterDto" classname="org.pag.data.product.P109WriterBudgetTest" time="0.133"/>
+  <testcase name="exactRetainedAndTransitionThenOneByteRefuseWithoutChangingOldCost" classname="org.pag.data.product.P109WriterBudgetTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

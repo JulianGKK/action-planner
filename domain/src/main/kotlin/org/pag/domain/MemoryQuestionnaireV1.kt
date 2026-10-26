@@ -132,5 +132,7 @@ object MemoryQuestionnaireV1 {
     ))
     private val byKey = questions.associateBy { it.key }
     fun question(key: String): MemoryQuestion? = byKey[key]
-    fun section(ordinal: Int) = questions.filter { it.sectionOrdinal == ordinal }
+    // Immutable questionnaire CODE only. Never cache action answers or user payload here.
+    private val sectionQuestions=sections.map{section->java.util.Collections.unmodifiableList(questions.filter{it.sectionOrdinal==section.ordinal})}
+    fun section(ordinal:Int)=sectionQuestions.getOrNull(ordinal)?:emptyList()
 }

@@ -1,0 +1,9 @@
+{
+  "compared": "all paths from build33-source-sha256.txt",
+  "changed_paths": [
+    "app/src/androidTest/kotlin/org/pag/prototype/P110ConsumerProbe.kt"
+  ],
+  "change": "state fixture ON_SITE -> IDENTITY_CHECK",
+  "product_apk_identical": true,
+  "host_log": "host-78.log"
+}

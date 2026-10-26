@@ -1,0 +1,16 @@
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=2747512, transition=16777216, localRetained=2747512, localTransition=6217324, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,REPEAT,frames=100,rows=404,same_list=true,same_row=true,record=State(phase=RETAINED, retained=3589044, transition=16777216, localRetained=3589044, localTransition=7058856, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,REPEAT,frames=1000,rows=4044,same_list=true,same_row=true,record=State(phase=RETAINED, retained=4652840, transition=16777216, localRetained=4652840, localTransition=8122652, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: shortMsg=Process crashed.
+INSTRUMENTATION_CODE: 0
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 34, in <module>
+    assert 'P110 PASS '+scenario in output,'Consumer device assertions failed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Consumer device assertions failed

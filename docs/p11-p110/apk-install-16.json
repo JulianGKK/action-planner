@@ -1,0 +1,14 @@
+[
+  {
+    "package": "org.pag.prototype.a.p77runtime",
+    "sha256": "75516fc6db23a581abf691c79d274a2a128d990bd47932a5ba05d66be6557045",
+    "signer": "Signer #1 certificate DN: CN=Android Debug, O=Android, C=US\nSigner #1 certificate SHA-256 digest: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134\nSigner #1 certificate SHA-1 digest: 136f3fdc01bc5af2b9b18a2c71d5c6725f9b757a\nSigner #1 certificate MD5 digest: 8946d1c7017adcee5138a9513982ce7a\n",
+    "install": "Performing Streamed Install\nSuccess\n"
+  },
+  {
+    "package": "org.pag.prototype.a.p77runtime.test",
+    "sha256": "98bd679ba7f39d497edd0e997a96cbc4eb053ec609a8283750255645d39ae6b2",
+    "signer": "Signer #1 certificate DN: CN=Android Debug, O=Android, C=US\nSigner #1 certificate SHA-256 digest: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134\nSigner #1 certificate SHA-1 digest: 136f3fdc01bc5af2b9b18a2c71d5c6725f9b757a\nSigner #1 certificate MD5 digest: 8946d1c7017adcee5138a9513982ce7a\n",
+    "install": "Performing Streamed Install\nSuccess\n"
+  }
+]

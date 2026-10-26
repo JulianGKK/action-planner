@@ -1,0 +1,31 @@
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=1661588, transition=16777216, localRetained=1661588, localTransition=3326600, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed,REPEAT,frames=100,rows=0,same_list=true,same_row=true,record=State(phase=RETAINED, retained=1664980, transition=16777216, localRetained=1664980, localTransition=3329992, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed,FAILURE,java.lang.IllegalStateException: iteration=537,workspace_same=false,selected=null,session=LOCKED,workspaceError=false,refusal=null
+	at org.pag.prototype.P110ConsumerProbe.onStart$lambda$150$0(P110ConsumerProbe.kt:369)
+	at org.pag.prototype.P110ConsumerProbe.$r8$lambda$yNWQcQWWbgBdylhNanII-HIZz1M(Unknown Source:0)
+	at org.pag.prototype.P110ConsumerProbe$$ExternalSyntheticLambda182.invoke(D8$$SyntheticClass:0)
+	at org.pag.prototype.P110ConsumerProbe.main$lambda$0(P110ConsumerProbe.kt:22)
+	at org.pag.prototype.P110ConsumerProbe$$ExternalSyntheticLambda186.run(D8$$SyntheticClass:0)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2353)
+	at android.os.Handler.handleCallback(Handler.java:942)
+	at android.os.Handler.dispatchMessage(Handler.java:99)
+	at android.os.Looper.loopOnce(Looper.java:226)
+	at android.os.Looper.loop(Looper.java:313)
+	at android.app.ActivityThread.main(ActivityThread.java:8762)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:604)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1067)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL repeat-completed
+INSTRUMENTATION_CODE: 0
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 40, in <module>
+    assert 'P110 PASS '+scenario in output,'Consumer device assertions failed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Consumer device assertions failed

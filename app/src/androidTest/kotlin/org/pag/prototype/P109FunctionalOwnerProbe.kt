@@ -35,15 +35,18 @@ class P109FunctionalOwnerProbe:Instrumentation(){
         }
         return try{root.packageName?.toString()==targetContext.packageName && walk(root)}finally{root.recycle()}
     }
+    private var revealForward=true
     private fun reveal(text:String):Boolean {
         if(visible(text,true))return true
         val root=uiAutomation.rootInActiveWindow?:return false
         fun scroll(n:android.view.accessibility.AccessibilityNodeInfo):Boolean {
-            if(n.isScrollable && n.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD))return true
+            val action=if(revealForward)android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD else android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
+            if(n.isScrollable && n.actionList.any{it.id==action} && n.performAction(action))return true
             for(i in 0 until n.childCount){val child=n.getChild(i)?:continue;try{if(scroll(child))return true}finally{child.recycle()}}
             return false
         }
-        try{if(root.packageName?.toString()==targetContext.packageName)scroll(root)}finally{root.recycle()}
+        try{if(root.packageName?.toString()==targetContext.packageName && !scroll(root)){revealForward=!revealForward;scroll(root)}}finally{root.recycle()}
+        runCatching{uiAutomation.waitForIdle(100,1000)}
         return visible(text,true)
     }
     private fun setText(value:String):Boolean {
@@ -168,13 +171,24 @@ class P109FunctionalOwnerProbe:Instrumentation(){
                 if(scenario=="material"){
                     await("material board"){main{model.material.board!=null && !model.workspaceRefreshing}}
                     val old=main{model.material.board!!.items.first()}
+                    await("material list rendered before edit"){reveal(old.name)}
                     main{model.material.edit(old);model.material.name(title);model.material.save()}
                     await("material postcommit bind"){main{!model.material.busy && !model.material.form && model.material.board?.items?.any{it.id==old.id && it.name==title}==true}}
                 }else{
                     await("expense board"){main{model.expenses.board!=null && !model.workspaceRefreshing}}
                     val old=main{model.expenses.board!!.expenses.first()}
+                    await("expense list rendered before edit"){reveal(old.title)}
                     main{model.expenses.edit(old);model.expenses.title(title);model.expenses.save()}
                     await("expense postcommit bind"){main{!model.expenses.busy && !model.expenses.form && model.expenses.board?.expenses?.any{it.id==old.id && it.title==title}==true}}
+                }
+                emit("MODULE_UI_STATE,"+main{"area=${model.preparationArea},form=${model.material.form},expenseForm=${model.expenses.form},error=${model.workspaceError},refusal=${model.workspaceRefusal},screenLive=${model.workspace?.uiRows?.inputScreen?.live()},record=${h.outstandingState()}"})
+                uiAutomation.rootInActiveWindow?.let{root->
+                    val texts=ArrayList<String>()
+                    fun walk(n:android.view.accessibility.AccessibilityNodeInfo){
+                        if(n.packageName?.toString()==targetContext.packageName)n.text?.toString()?.let{texts.add(it)}
+                        for(i in 0 until n.childCount){val c=n.getChild(i)?:continue;try{walk(c)}finally{c.recycle()}}
+                    }
+                    try{walk(root);emit("MODULE_UI_TEXT,"+texts.joinToString(" | "))}finally{root.recycle()}
                 }
                 await("updated module value visible"){reveal(title)}
                 emit("MODULE_COMMITTED,kind=$scenario,new_value_visible=true,full_graphs=1,record=${h.outstandingState()}")

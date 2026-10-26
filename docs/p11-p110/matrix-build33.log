@@ -1,0 +1,42 @@
+run active PASS
+run person PASS
+run plan PASS
+run stale PASS
+run material PASS
+run expense PASS
+run preparation PASS
+run completed PASS
+run large PASS
+run lock-detail PASS
+run lost-detail-main PASS
+run duplicate-detail-main PASS
+run unknown-detail PASS
+consumer postcommit-ui-refusal PASS
+consumer material-input PASS
+consumer form-repeat PASS
+consumer control-r-exact PASS
+consumer control-r-over PASS
+consumer control-t-exact PASS
+consumer control-t-over PASS
+consumer action-revoke PASS
+consumer protocol-create PASS
+consumer memory-create PASS
+consumer state-edit FAIL
+INSTRUMENTATION_STATUS: stream=P110,state-edit,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=2747512, transition=16777216, localRetained=2747512, localTransition=6217324, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,state-edit,FAILURE,java.lang.IllegalStateException: P110 timeout state committed and bound
+	at org.pag.prototype.P110ConsumerProbe.await(P110ConsumerProbe.kt:23)
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:213)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL state-edit
+INSTRUMENTATION_CODE: 0
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 40, in <module>
+    assert 'P110 PASS '+scenario in output,'Consumer device assertions failed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Consumer device assertions failed
+

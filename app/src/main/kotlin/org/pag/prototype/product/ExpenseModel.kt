@@ -7,6 +7,14 @@ import org.pag.domain.*
 class ExpenseModel(private val repository: ExpenseRepository?, private val session: () -> SessionSnapshot,
     private val action: () -> Action?, private val interaction: () -> Unit, private val leaveSensitive: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit) {
+    internal val uiEditorEpoch:Long get()=readRequest
+    private var personLookup:((String)->String?)?=null
+    internal fun bindPersonLookup(lookup:(String)->String?){check(personLookup==null);personLookup=lookup}
+    fun addPaymentPerson(id:String){val label=personLookup?.invoke(id)?:return;addPayment(label)}
+    private var readGate:(()->Boolean)?=null
+    internal fun bindReadGate(gate:()->Boolean){check(readGate==null);readGate=gate}
+    private var feedbackFactory:WorkspaceFeedbackFactory?=null
+    internal fun bindFeedbackFactory(factory:WorkspaceFeedbackFactory){check(feedbackFactory==null);feedbackFactory=factory}
     private var membershipLoader:WorkspaceDetailLoader?=null
     internal fun bindMembershipLoader(loader:WorkspaceDetailLoader){check(membershipLoader==null);membershipLoader=loader}
     private var detailLoader:WorkspaceDetailLoader?=null
@@ -30,18 +38,34 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
             lists=8,listCapacity=n*8,references=128+n*16)
     }
     fun totalCents():Long? {var sum=0L;for(e in board?.expenses.orEmpty()){sum=try{Math.addExact(sum,e.totalCents)}catch(_:ArithmeticException){return null}};return sum}
+    private var presentation:ExpensePresentation?=null
+    internal fun ui():ExpensePresentation? {
+        val value=board?:return null
+        if(!available || copyGate?.invoke(FollowPresentationCost.check){}!=null)return null
+        presentation?.let{if(it.source===value)return it}
+        if(!copyData(FollowPresentationCost.planning){})return null
+        var n=value.expenses.size.toLong();var chars=0L
+        for(v in value.expenses){chars=Math.addExact(chars,v.title.length.toLong());n=Math.addExact(n,v.payments.size.toLong());for(p in v.payments)chars=Math.addExact(chars,p.payerLabel.length.toLong())}
+        val cost=try{FollowPresentationCost.units(n,chars)}catch(_:ArithmeticException){error=OperationsFailure.BUDGET_REFUSED;return null}
+        var fresh:ExpensePresentation?=null
+        if(!copyData(cost){fresh=ExpensePresentation(value)})return null
+        presentation=fresh;return fresh
+    }
     fun moneyLabel(cents:Long,prefix:String=""):String {
-        var value="Betrag derzeit nicht verfügbar."
-        copyData(ActiveWorkspaceBudget.Units(objects=32,strings=16,utf16Units=512+prefix.length.toLong()*4,references=32)){
-            value=prefix+EuroMoney.format(cents)
+        val display=ui()
+        if(display!=null){
+            if(prefix=="Gesamt: " && display.total==cents)return display.summary
+            if(prefix.isEmpty())for(row in display.rows)if(row.source.totalCents==cents)return row.money
         }
+        var value="Betrag derzeit nicht verfügbar."
+        copyData(ActiveWorkspaceBudget.Units(objects=32,strings=16,utf16Units=512+prefix.length.toLong()*4,references=32)){value=prefix+EuroMoney.format(cents)}
         return value
     }
     fun paymentLabel(payment:ExpensePayment):String {
+        val display=ui()
+        if(display!=null)for(row in display.rows){var i=0;while(i<row.source.payments.size){if(row.source.payments[i]===payment)return row.payments[i];i++}}
         var value="Zahlung derzeit nicht verfügbar."
-        copyData(ActiveWorkspaceBudget.Units(objects=32,strings=16,utf16Units=512+payment.payerLabel.length.toLong()*4,references=32)){
-            value="${payment.payerLabel} · ${EuroMoney.format(payment.amountCents)}"
-        }
+        copyData(ActiveWorkspaceBudget.Units(objects=32,strings=16,utf16Units=512+payment.payerLabel.length.toLong()*4,references=32)){value="${payment.payerLabel} · ${EuroMoney.format(payment.amountCents)}"}
         return value
     }
     var board by mutableStateOf<ExpenseBoard?>(null); private set
@@ -68,7 +92,7 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
         commitConfirmed=false;committedId=null
         epoch++; readRequest++; writeRequest++; opened = false
         boundAction = null; boundStatus = null; boundGeneration = null
-        board = null; loading = false; discard(); busy = false; error = null
+        board = null;presentation=null; loading = false; discard(); busy = false; error = null
     }
     private fun discard() { selected = null; draft = null; expected = null; confirmingDelete = false }
     internal fun enter(deferRead:Boolean=false) {
@@ -108,9 +132,19 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
     fun refresh() {
         val current = binding() ?: return; val request = ++readRequest; val id = boundAction!!
         loading = true
+        detailLoader?.let{loader->
+            loader(WorkspaceDetailKind.EXPENSE_BOARD,id){result->
+                if(!current() || request!=readRequest)return@loader
+                readRequest++;loading=false
+                when(result){
+                    is WorkspaceDetailResult.Rejected->error=result.reason.operationFailure()
+                    is WorkspaceDetailResult.Value->{val fresh=result.value.workspace?.expenseBoard;if(fresh==null)error=OperationsFailure.NOT_FOUND else {board=fresh;error=null}}
+                }
+            };return
+        }
         repository?.board(id) { result ->
             if (!current() || request != readRequest) return@board
-            loading = false
+            readRequest++;loading = false
             when (result) {
                 is OperationsResult.Value -> if (result.value.actionId == id && result.value.expenses.all { it.actionId == id }) {
                     board = result.value; error = null
@@ -119,12 +153,43 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
             }
         }
     }
-    fun reload() = act { discard(); error = null; refresh() }
+    fun reload() = act { current ->
+        val id=committedId?:expected?.id
+        val loader=if(commitConfirmed)membershipLoader else detailLoader
+        if(loader!=null && id!=null){
+            val request=++readRequest;busy=true
+            var delivered=false
+            loader(WorkspaceDetailKind.EXPENSE,id){result->
+                if(delivered)return@loader
+                delivered=true
+                if(!current() || request!=readRequest)return@loader
+                busy=false
+                when(result){
+                    is WorkspaceDetailResult.Rejected->error=result.reason.operationFailure()
+                    is WorkspaceDetailResult.Value->{
+                        if(commitConfirmed){
+                            val freshBoard=result.value.workspace?.expenseBoard
+                            if(freshBoard==null){error=OperationsFailure.NOT_FOUND;return@loader}
+                            board=freshBoard;discard();commitConfirmed=false;committedId=null;error=null;return@loader
+                        }
+                        val fresh=result.value.expense
+                        if(fresh==null || fresh.id!=id || fresh.actionId!=boundAction){error=OperationsFailure.NOT_FOUND;return@loader}
+                        val n=fresh.payments.size.toLong();var chars=fresh.title.length.toLong()+64
+                        for(p in fresh.payments)chars=Math.addExact(chars,p.payerLabel.length.toLong()+64)
+                        val units=ActiveWorkspaceBudget.Units(objects=128+n*16,strings=64+n*8,utf16Units=4096+chars*8,lists=16,listCapacity=n*16,references=256+n*32)
+                        if(!copyData(units){expected=fresh;selected=fresh;draft=ExpenseDraft.from(fresh);derive()})return@loader
+                        commitConfirmed=false;committedId=null;error=null
+                    }
+                }
+            }
+        }else{discard();error=null;refresh()}
+    }
     fun create() = act { current ->
         if (!writable || commitConfirmed) return@act
         leaveSensitive()
         if (current()) { readRequest++; loading = false; discard(); copyData(ActiveWorkspaceBudget.Units(objects=128,references=256,strings=64,utf16Units=4096,lists=16,listCapacity=256)){draft = ExpenseDraft();derive(); error = null} }
     }
+    fun editId(id:String){if(readGate?.invoke()==false)return;board?.expenses?.findOriginal{it.id==id}?.let(::edit)}
     fun edit(item: Expense) = act { current ->
         if (commitConfirmed || !writable || board?.expenses?.contains(item) != true) return@act
         leaveSensitive()
@@ -145,8 +210,8 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
     fun total(value:String)=alter(value){it.copy(total=value)}
     fun payer(index:Int,value:String)=alter(value){d->d.copy(payments=d.payments.mapIndexed{n,p->if(n==index)p.copy(payerLabel=value) else p})}
     fun amount(index:Int,value:String)=alter(value){d->d.copy(payments=d.payments.mapIndexed{n,p->if(n==index)p.copy(amount=value) else p})}
-    fun addPayment(label:String="")=alter(label){it.add(label)}
-    fun removePayment(index:Int)=alter{it.remove(index)}
+    fun addPayment(label:String="")=alter(label){it.add(label).also{readRequest++}}
+    fun removePayment(index:Int)=alter{it.remove(index).also{readRequest++}}
     fun cancel() = act { val reload = error == OperationsFailure.STALE || board == null; discard(); error = null; if (reload) refresh() }
     fun requestDelete() = act { if (writable && expected != null && error != OperationsFailure.STALE) confirmingDelete = true }
     fun cancelDelete() = act { confirmingDelete = false }
@@ -169,12 +234,14 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
         if (!confirmingDelete || !writable || !ExpenseRules.mayDelete(action()!!.status) || error == OperationsFailure.STALE) return@act
         write(current, "Kostenposition entfernt") { repository?.delete(boundAction!!, old, it) }
     }
-    private fun draftClearAfterCommit() {draft = null;expected=null;confirmingDelete=false}
+    private fun draftClearAfterCommit() {selected=null;draft = null;expected=null;confirmingDelete=false}
     private fun unit(result: OperationsResult<Expense>): OperationsResult<Unit> = when (result) {
         is OperationsResult.Value -> {committedId=result.value.id;OperationsResult.Value(Unit)}
         is OperationsResult.Rejected -> result
     }
     private fun write(current: () -> Boolean, message: String, work: ((OperationsResult<Unit>) -> Unit) -> Unit) {
+        val emit=if(feedbackFactory==null)feedback else feedbackFactory!!.invoke()?:run{error=OperationsFailure.BUDGET_REFUSED;return}
+
         val request = ++writeRequest; busy = true; error = null
         work { result ->
             if (!current() || request != writeRequest) return@work
@@ -190,11 +257,11 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
                             if(!current())return@loader
                             busy=false
                             when(refreshed){
-                                is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();feedback("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                                is WorkspaceDetailResult.Rejected->{error=refreshed.reason.operationFailure();emit("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
                                 is WorkspaceDetailResult.Value->{
                                     board=refreshed.value.workspace?.expenseBoard ?: board
-                                    selected=refreshed.value.expense;draftClearAfterCommit()
-                                    commitConfirmed=false;error=null;feedback(message)
+                                    draftClearAfterCommit()
+                                    commitConfirmed=false;error=null;emit(message)
                                 }
                             }
                         }
@@ -202,7 +269,7 @@ class ExpenseModel(private val repository: ExpenseRepository?, private val sessi
                     }
                     discard(); refresh()
                     if (current()) refreshWorkspace()
-                    if (current()) feedback(message)
+                    if (current()) emit(message)
                 }
             }
         }

@@ -3,18 +3,53 @@ package org.pag.prototype.product
 import androidx.compose.runtime.*
 import org.pag.domain.*
 
+// Immutable CODE enum groups; no action payload, authority or per-render Set.
+private val supportedOperationsFailureGroup1=setOf(OperationsFailure.STALE,OperationsFailure.BUDGET_REFUSED,OperationsFailure.OWNER_UNCONFIRMED)
+
+
 enum class MemoryReportMode { LIST, SECTION, SUMMARY, DETAIL, ADDENDUM }
 /** UI navigation and uncommitted input only. Saved sections are exclusively repository content. */
 class MemoryReportModel(private val repository: MemoryReportRepository?, private val session: () -> SessionSnapshot,
     private val action: () -> Action?, private val interaction: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit) {
+    internal val uiEditorEpoch:Long get()=epoch
+    internal var formStructureEpoch:Long=0;private set
+    private var personLookup:((String)->String?)?=null
+    internal fun bindPersonLookup(lookup:(String)->String?){check(personLookup==null);personLookup=lookup}
+    fun changeAuthorPerson(id:String){val label=personLookup?.invoke(id)?:return;changeAuthor(label)}
+    private var feedbackFactory:WorkspaceFeedbackFactory?=null
+    internal fun bindFeedbackFactory(factory:WorkspaceFeedbackFactory){check(feedbackFactory==null);feedbackFactory=factory}
+    private var readPresentation:MemoryPresentation?=null
+    internal fun ui():MemoryPresentation? {
+        if(!available || copyGate?.invoke(FollowPresentationCost.check){}!=null)return null
+        readPresentation?.let{if(it.matches(headers,detail))return it}
+        val plan=copyGate?.invoke(FollowPresentationCost.planning){}
+        if(plan!=null){error=plan;return null}
+        var items=0L;var chars=0L
+        fun item(){items=Math.addExact(items,1)}
+        fun text(v:String?){chars=Math.addExact(chars,v?.length?.toLong()?:0)}
+        for(h in headers.orEmpty()){item();text(h.id);text(h.authorLabel)}
+        detail?.let{d->item();text(d.header.authorLabel)
+            for((k,v) in d.answers){item();text(k);val f=AppConsumerCopies.Footprint();f.answer(v);chars=Math.addExact(chars,f.chars);items=Math.addExact(items,f.items)}
+            for(v in d.addenda){item();text(v.content)}
+        }
+        val units=try{FollowPresentationCost.units(items,chars)}catch(_:ArithmeticException){error=OperationsFailure.BUDGET_REFUSED;return null}
+        var value:MemoryPresentation?=null
+        val failure=if(copyGate==null){value=MemoryPresentation(headers,detail);null}else copyGate!!.invoke(units){value=MemoryPresentation(headers,detail)}
+        if(failure!=null){error=failure;return null};readPresentation=value;return value
+    }
+    private var detailLoader:WorkspaceDetailLoader?=null
+    internal fun bindDetailLoader(loader:WorkspaceDetailLoader){check(detailLoader==null);detailLoader=loader}
+    var commitConfirmed by mutableStateOf(false);private set
+    private var committedId:String?=null
     private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
     internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
-    private fun copyData(extra:String?=null,producer:()->Unit):Boolean {
+    private fun copyData(extra:String?=null,additional:MemoryReportDetail?=null,producer:()->Unit):Boolean {
         val f=AppConsumerCopies.Footprint();f.text(authorLabel);f.text(addendum)
         for((key,value) in answers){f.text(key);f.answer(value)}
         for((key,value) in detail?.answers.orEmpty()){f.text(key);f.answer(value)}
         for(value in detail?.addenda.orEmpty())f.text(value.content)
+        additional?.let{d->f.text(d.header.authorLabel);for((key,value) in d.answers){f.text(key);f.answer(value)};for(a in d.addenda)f.text(a.content)}
         f.item(decisions.size.toLong())
         val failure=if(copyGate==null){producer();null}else copyGate!!.invoke(f.units(extra),producer)
         if(failure!=null){error=failure;return false};return true
@@ -86,7 +121,7 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
         presentation()?.valid?.values?.all{it}==true && unresolved.isEmpty()
     fun clear() {
         epoch++; request++; opened = false; boundAction = null; boundStatus = null; generation = null
-        headers = null; draftPresentation=null; resetEditor(); loading = false; busy = false; error = null
+        headers = null;readPresentation=null;commitConfirmed=false;committedId=null; draftPresentation=null; resetEditor(); loading = false; busy = false; error = null
     }
     private fun resetEditor() {
         mode = MemoryReportMode.LIST; detail = null; sectionOrdinal = 0; answers = emptyMap(); authorLabel = ""
@@ -117,8 +152,21 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
         val token = epoch; val current = { token == epoch && available }
         interaction(); if (current()) work(current)
     }
-    private fun readList() {
+    private fun readList(force:Boolean=false) {
         val token = epoch; val r = ++request; val a = boundAction ?: return; loading = true
+        detailLoader?.let{loader->
+            // Backnavigation borrows the current already-authorized module. Explicit
+            // reprojection is used only when no header list has yet been admitted.
+            if(headers!=null && !force){loading=false;return}
+            loader(WorkspaceDetailKind.MEMORY_HEADERS,a){result->
+                if(token!=epoch || !available || request!=r)return@loader
+                request++;loading=false
+                when(result){
+                    is WorkspaceDetailResult.Rejected->error=result.reason.operationFailure()
+                    is WorkspaceDetailResult.Value->{val rows=result.value.workspace?.memoryHeaders;if(rows==null)error=OperationsFailure.NOT_FOUND else {headers=rows;error=null}}
+                }
+            };return
+        }
         repository?.list(a) { result ->
             if (token != epoch || !available || request != r) return@list
             request++ // Consume once: a delayed duplicate must not replace newer UI input.
@@ -129,29 +177,54 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
             }
         }
     }
-    fun reload() = act { resetEditor(); error = null; readList() }
+    fun reload() = act {
+        val id=committedId?:detail?.header?.id
+        if(detailLoader!=null && id!=null)readDetail(id,false,sectionOrdinal)
+        else {resetEditor();error=null;readList(force=true)}
+    }
     fun create() = act { request++; loading = false; resetEditor(); mode = MemoryReportMode.SECTION; error = null }
     fun open(id: String) = act { readDetail(id, resume = true) }
-    private fun readDetail(id: String, resume: Boolean, target: Int? = null) {
+    private fun readDetail(id: String, resume: Boolean, target: Int? = null,projectionFeedback:((String)->Unit)?=null,completed:(()->Unit)?=null) {
         val token = epoch; val r = ++request; val a = boundAction ?: return; loading = true
-        repository?.detail(a, id) { result ->
-            if (token != epoch || !available || request != r) return@detail
+        fun accept(result:OperationsResult<MemoryReportDetail>) {
+            if (token != epoch || !available || request != r) return
             request++
             loading = false
             when (result) {
-                is OperationsResult.Rejected -> error = result.reason
+                is OperationsResult.Rejected -> {error=result.reason;if(commitConfirmed)projectionFeedback?.invoke("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
                 is OperationsResult.Value -> {
                     val d = result.value
-                    if (d.header.id != id || d.header.actionId != a || !MemoryReportRules.headerValid(d.header)) { error = OperationsFailure.NOT_FOUND; return@detail }
-                    detail = d; authorLabel = d.header.authorLabel; dirty = false; decisions = emptySet(); error = null; addendum = ""
-                    if (d.header.status == MemoryReportStatus.COMPLETED) mode = MemoryReportMode.DETAIL
-                    else if (target != null && target <= 16) showSection(target)
-                    else if (resume && d.header.lastSavedSectionOrdinal < 16) showSection(d.header.lastSavedSectionOrdinal + 1)
-                    else mode = MemoryReportMode.SUMMARY
+                    if (d.header.id != id || d.header.actionId != a || !MemoryReportRules.headerValid(d.header)) { error = OperationsFailure.NOT_FOUND; return }
+                    val nextSection=if(d.header.status==MemoryReportStatus.COMPLETED)null
+                        else if(target!=null && target<=16)target
+                        else if(resume && d.header.lastSavedSectionOrdinal<16)d.header.lastSavedSectionOrdinal+1 else null
+                    var nextAnswers:Map<String,MemoryAnswerValue> = emptyMap()
+                    if(nextSection!=null && !copyData(additional=d){nextAnswers=d.answers.filterKeys{MemoryQuestionnaireV1.question(it)?.sectionOrdinal==nextSection}}){
+                        if(commitConfirmed)projectionFeedback?.invoke("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")
+                        return
+                    }
+                    detail=d;authorLabel=d.header.authorLabel;dirty=false;decisions=emptySet();error=null;addendum="";confirmingComplete=false
+                    if(nextSection!=null){sectionOrdinal=nextSection;answers=nextAnswers;mode=MemoryReportMode.SECTION}
+                    else mode=if(d.header.status==MemoryReportStatus.COMPLETED)MemoryReportMode.DETAIL else MemoryReportMode.SUMMARY
+                    commitConfirmed=false;committedId=null;completed?.invoke()
+                }
+            }
+        }
+        val loader=detailLoader
+        if(loader==null)repository?.detail(a,id,::accept) else loader(WorkspaceDetailKind.MEMORY,id){result->
+            if(token!=epoch || !available || request!=r)return@loader
+            when(result){
+                is WorkspaceDetailResult.Rejected->accept(OperationsResult.Rejected(result.reason.memoryFailure()))
+                is WorkspaceDetailResult.Value->{
+                    val value=result.value.memoryDetail
+                    val rows=result.value.workspace?.memoryHeaders
+                    if(value==null || rows==null)accept(OperationsResult.Rejected(OperationsFailure.NOT_FOUND))
+                    else {headers=rows;accept(OperationsResult.Value(value))}
                 }
             }
         }
     }
+
     private fun showSection(ordinal: Int) {
         sectionOrdinal = ordinal; mode = MemoryReportMode.SECTION
         if(!copyData{answers = detail?.answers.orEmpty().filterKeys { MemoryQuestionnaireV1.question(it)?.sectionOrdinal == ordinal }})return
@@ -168,6 +241,8 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
     private fun applyAnswer(key:String,value:MemoryAnswerValue?){
         if(mode!=MemoryReportMode.SECTION || MemoryQuestionnaireV1.question(key)?.sectionOrdinal!=sectionOrdinal)return
         request++;loading=false
+        val type=MemoryQuestionnaireV1.question(key)?.type
+        if(type==MemoryAnswerType.BOOLEAN_UNCERTAIN || type==MemoryAnswerType.SINGLE_CHOICE || type==MemoryAnswerType.MULTI_CHOICE)formStructureEpoch++
         answers=if(value==null)answers-key else answers+(key to value)
         decisions=decisions.filterNot{it==key || MemoryQuestionnaireV1.question(it)?.dependency?.parentKey==key}.toSet()
         dirty=true;invalidCleared()
@@ -202,7 +277,7 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
         }
     }
     fun save() = act { current ->
-        if (error == OperationsFailure.STALE || !sectionValid) { if (error !in setOf(OperationsFailure.STALE,OperationsFailure.BUDGET_REFUSED,OperationsFailure.OWNER_UNCONFIRMED)) error = OperationsFailure.INVALID; return@act }
+        if (error == OperationsFailure.STALE || !sectionValid) { if (error !in supportedOperationsFailureGroup1) error = OperationsFailure.INVALID; return@act }
         val conflicting=conflicts
         if(!copyData{})return@act
         val section = MemorySectionSave(sectionOrdinal, answers, conflicting.intersect(decisions), authorLabel.takeIf { sectionOrdinal == 0 })
@@ -227,6 +302,8 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
         write(current, "Ergänzung gespeichert") { repository?.addAddendum(boundAction!!, h, addendum, it) }
     }
     private fun write(current: () -> Boolean, message: String, target: Int? = null, work: ((OperationsResult<MemoryReportHeader>) -> Unit) -> Unit) {
+        if(commitConfirmed)return
+        val emit=if(feedbackFactory==null)feedback else feedbackFactory!!.invoke()?:run{error=OperationsFailure.BUDGET_REFUSED;return}
         val r = ++request; loading = false; busy = true; error = null
         work { result ->
             if (!current() || request != r) return@work
@@ -235,12 +312,24 @@ class MemoryReportModel(private val repository: MemoryReportRepository?, private
                 is OperationsResult.Rejected -> error = result.reason
                 is OperationsResult.Value -> {
                     if (result.value.actionId != boundAction || !MemoryReportRules.headerValid(result.value)) { error = OperationsFailure.NOT_FOUND; return@work }
-                    dirty = false; confirmingComplete = false
-                    readDetail(result.value.id, false, target)
-                    if (current()) refreshWorkspace()
-                    if (current()) feedback(message)
+                    if(detailLoader==null){
+                        dirty=false;confirmingComplete=false
+                        readDetail(result.value.id,false,target)
+                        if(current())refreshWorkspace()
+                        if(current())emit(message)
+                    }else{
+                        commitConfirmed=true;committedId=result.value.id
+                        readDetail(result.value.id,false,target,projectionFeedback=emit){if(current())emit(message)}
+                    }
                 }
             }
         }
     }
+}
+
+private fun WorkspaceFailure.memoryFailure():OperationsFailure=when(this){
+    WorkspaceFailure.BUDGET_REFUSED->OperationsFailure.BUDGET_REFUSED
+    WorkspaceFailure.OWNER_UNCONFIRMED->OperationsFailure.OWNER_UNCONFIRMED
+    WorkspaceFailure.STALE->OperationsFailure.STALE
+    else->OperationsFailure.NOT_FOUND
 }

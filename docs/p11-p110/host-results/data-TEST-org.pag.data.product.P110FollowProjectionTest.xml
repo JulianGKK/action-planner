@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P110FollowProjectionTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-25T19:20:50.885Z" hostname="iuzjhtgvfc" time="1.743">
+  <properties/>
+  <testcase name="memoryTargetMetadataDoesNotReadOrChargeAnotherReportsPayload" classname="org.pag.data.product.P110FollowProjectionTest" time="0.613"/>
+  <testcase name="protocolNeighborPayloadAndLatestRevisionMustMatchHeldTimeline" classname="org.pag.data.product.P110FollowProjectionTest" time="0.3"/>
+  <testcase name="explicitHeaderRefreshSizesAllNewMembersWithoutMaterializingAnswerPayload" classname="org.pag.data.product.P110FollowProjectionTest" time="0.262"/>
+  <testcase name="memoryNeighborHeaderChangeRefusesBeforePayloadRead" classname="org.pag.data.product.P110FollowProjectionTest" time="0.159"/>
+  <testcase name="protocolRelationsAreSizedByTargetEntryInsideSameMetadataTransaction" classname="org.pag.data.product.P110FollowProjectionTest" time="0.395"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,10 @@
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=1263668, transition=16777216, localRetained=1263668, localTransition=2928680, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: shortMsg=Process crashed.
+INSTRUMENTATION_CODE: 0
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 40, in <module>
+    assert 'P110 PASS '+scenario in output,'Consumer device assertions failed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Consumer device assertions failed

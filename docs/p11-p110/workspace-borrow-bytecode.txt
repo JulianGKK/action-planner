@@ -1,0 +1,370 @@
+  public final org.pag.prototype.product.WorkspaceSnapshot getWorkspace();
+    Code:
+       0: invokestatic  #74                 // Method java/lang/Thread.currentThread:()Ljava/lang/Thread;
+       3: aload_0
+       4: getfield      #78                 // Field ownerThread:Ljava/lang/Thread;
+       7: if_acmpeq     12
+      10: aconst_null
+      11: areturn
+      12: aload_0
+      13: invokespecial #1854               // Method getWorkspaceValue:()Lorg/pag/prototype/product/WorkspaceSnapshot;
+      16: dup
+      17: ifnonnull     23
+      20: pop
+      21: aconst_null
+      22: areturn
+      23: astore_1
+      24: aload_1
+      25: invokevirtual #1857               // Method org/pag/prototype/product/WorkspaceSnapshot.getAccess:()Lorg/pag/domain/WorkspaceAccess;
+      28: dup
+      29: ifnonnull     35
+      32: pop
+      33: aload_1
+      34: areturn
+      35: astore_2
+      36: aload_2
+      37: aload_1
+      38: invokevirtual #1858               // Method org/pag/prototype/product/WorkspaceSnapshot.getActionId:()Ljava/lang/String;
+      41: aload_1
+      42: invokevirtual #1859               // Method org/pag/prototype/product/WorkspaceSnapshot.getStatus:()Lorg/pag/domain/ActionStatus;
+      45: aload_1
+      46: invokevirtual #1860               // Method org/pag/prototype/product/WorkspaceSnapshot.getGeneration:()J
+      49: invokedynamic #1867,  0           // InvokeDynamic #25:invoke:()Lkotlin/jvm/functions/Function0;
+      54: invokeinterface #1872,  6         // InterfaceMethod org/pag/domain/WorkspaceAccess.publish:(Ljava/lang/String;Lorg/pag/domain/ActionStatus;JLkotlin/jvm/functions/Function0;)Z
+      59: ifne          64
+      62: aconst_null
+      63: areturn
+      64: aload_0
+      65: invokespecial #1854               // Method getWorkspaceValue:()Lorg/pag/prototype/product/WorkspaceSnapshot;
+      68: aload_1
+      69: if_acmpne     149
+      72: aload_0
+      73: invokevirtual #889                // Method getSnapshot:()Lorg/pag/domain/SessionSnapshot;
+      76: invokevirtual #895                // Method org/pag/domain/SessionSnapshot.getState:()Lorg/pag/domain/SessionState;
+      79: getstatic     #901                // Field org/pag/domain/SessionState.READY:Lorg/pag/domain/SessionState;
+      82: if_acmpne     149
+      85: aload_0
+      86: invokevirtual #889                // Method getSnapshot:()Lorg/pag/domain/SessionSnapshot;
+      89: invokevirtual #916                // Method org/pag/domain/SessionSnapshot.getGeneration:()J
+      92: aload_1
+      93: invokevirtual #1860               // Method org/pag/prototype/product/WorkspaceSnapshot.getGeneration:()J
+      96: lcmp
+      97: ifne          149
+     100: aload_0
+     101: invokevirtual #826                // Method getSelected:()Lorg/pag/domain/Action;
+     104: dup
+     105: ifnull        114
+     108: invokevirtual #905                // Method org/pag/domain/Action.getId:()Ljava/lang/String;
+     111: goto          116
+     114: pop
+     115: aconst_null
+     116: aload_1
+     117: invokevirtual #1858               // Method org/pag/prototype/product/WorkspaceSnapshot.getActionId:()Ljava/lang/String;
+     120: invokestatic  #913                // Method kotlin/jvm/internal/Intrinsics.areEqual:(Ljava/lang/Object;Ljava/lang/Object;)Z
+     123: ifeq          149
+     126: aload_0
+     127: invokevirtual #826                // Method getSelected:()Lorg/pag/domain/Action;
+     130: dup
+     131: ifnull        140
+     134: invokevirtual #832                // Method org/pag/domain/Action.getStatus:()Lorg/pag/domain/ActionStatus;
+     137: goto          142
+     140: pop
+     141: aconst_null
+     142: aload_1
+     143: invokevirtual #1859               // Method org/pag/prototype/product/WorkspaceSnapshot.getStatus:()Lorg/pag/domain/ActionStatus;
+     146: if_acmpeq     151
+     149: aconst_null
+     150: areturn
+     151: aload_2
+     152: aload_1
+     153: invokevirtual #1858               // Method org/pag/prototype/product/WorkspaceSnapshot.getActionId:()Ljava/lang/String;
+     156: aload_1
+     157: invokevirtual #1859               // Method org/pag/prototype/product/WorkspaceSnapshot.getStatus:()Lorg/pag/domain/ActionStatus;
+     160: aload_1
+     161: invokevirtual #1860               // Method org/pag/prototype/product/WorkspaceSnapshot.getGeneration:()J
+     164: invokedynamic #1877,  0           // InvokeDynamic #26:invoke:()Lkotlin/jvm/functions/Function0;
+     169: invokeinterface #1872,  6         // InterfaceMethod org/pag/domain/WorkspaceAccess.publish:(Ljava/lang/String;Lorg/pag/domain/ActionStatus;JLkotlin/jvm/functions/Function0;)Z
+     174: ifne          179
+     177: aconst_null
+     178: areturn
+     179: aload_0
+     180: invokespecial #1854               // Method getWorkspaceValue:()Lorg/pag/prototype/product/WorkspaceSnapshot;
+     183: aload_1
+     184: if_acmpne     268
+     187: aload_0
+     188: invokevirtual #889                // Method getSnapshot:()Lorg/pag/domain/SessionSnapshot;
+     191: invokevirtual #895                // Method org/pag/domain/SessionSnapshot.getState:()Lorg/pag/domain/SessionState;
+     194: getstatic     #901                // Field org/pag/domain/SessionState.READY:Lorg/pag/domain/SessionState;
+     197: if_acmpne     268
+     200: aload_0
+     201: invokevirtual #889                // Method getSnapshot:()Lorg/pag/domain/SessionSnapshot;
+     204: invokevirtual #916                // Method org/pag/domain/SessionSnapshot.getGeneration:()J
+     207: aload_1
+     208: invokevirtual #1860               // Method org/pag/prototype/product/WorkspaceSnapshot.getGeneration:()J
+     211: lcmp
+     212: ifne          268
+     215: aload_0
+     216: invokevirtual #826                // Method getSelected:()Lorg/pag/domain/Action;
+     219: dup
+     220: ifnull        229
+     223: invokevirtual #905                // Method org/pag/domain/Action.getId:()Ljava/lang/String;
+     226: goto          231
+     229: pop
+     230: aconst_null
+     231: aload_1
+     232: invokevirtual #1858               // Method org/pag/prototype/product/WorkspaceSnapshot.getActionId:()Ljava/lang/String;
+     235: invokestatic  #913                // Method kotlin/jvm/internal/Intrinsics.areEqual:(Ljava/lang/Object;Ljava/lang/Object;)Z
+     238: ifeq          268
+     241: aload_0
+     242: invokevirtual #826                // Method getSelected:()Lorg/pag/domain/Action;
+     245: dup
+     246: ifnull        255
+     249: invokevirtual #832                // Method org/pag/domain/Action.getStatus:()Lorg/pag/domain/ActionStatus;
+     252: goto          257
+     255: pop
+     256: aconst_null
+     257: aload_1
+     258: invokevirtual #1859               // Method org/pag/prototype/product/WorkspaceSnapshot.getStatus:()Lorg/pag/domain/ActionStatus;
+     261: if_acmpne     268
+     264: aload_1
+     265: goto          269
+     268: aconst_null
+     269: areturn
+
+  private final void setWorkspace(org.pag.prototype.product.WorkspaceSnapshot);
+    Code:
+       0: aload_1
+       1: ifnonnull     15
+       4: aload_0
+       5: aconst_null
+       6: invokespecial #1884               // Method setWorkspaceValue:(Lorg/pag/prototype/product/WorkspaceSnapshot;)V
+       9: aload_0
+      10: aconst_null
+      11: invokespecial #1887               // Method setCommittedViewRoot:(Ljava/lang/Object;)V
+      14: return
+      15: aload_1
+      16: invokevirtual #1891               // Method org/pag/prototype/product/WorkspaceSnapshot.getUiRows$app:()Lorg/pag/prototype/product/WorkspaceUiRows;
+      19: ifnonnull     485
+      22: aload_1
+      23: invokevirtual #1894               // Method org/pag/prototype/product/WorkspaceSnapshot.getOperations:()Lorg/pag/domain/OperationalBoard;
+      26: ifnull        485
+      29: aload_1
+      30: invokevirtual #1857               // Method org/pag/prototype/product/WorkspaceSnapshot.getAccess:()Lorg/pag/domain/WorkspaceAccess;
+      33: astore_2
+      34: aload_2
+      35: ifnull        77
+      38: aload_2
+      39: aload_1
+      40: invokevirtual #1858               // Method org/pag/prototype/product/WorkspaceSnapshot.getActionId:()Ljava/lang/String;
+      43: aload_1
+      44: invokevirtual #1859               // Method org/pag/prototype/product/WorkspaceSnapshot.getStatus:()Lorg/pag/domain/ActionStatus;
+      47: aload_1
+      48: invokevirtual #1860               // Method org/pag/prototype/product/WorkspaceSnapshot.getGeneration:()J
+      51: invokedynamic #1899,  0           // InvokeDynamic #27:invoke:()Lkotlin/jvm/functions/Function0;
+      56: invokeinterface #1872,  6         // InterfaceMethod org/pag/domain/WorkspaceAccess.publish:(Ljava/lang/String;Lorg/pag/domain/ActionStatus;JLkotlin/jvm/functions/Function0;)Z
+      61: ifne          77
+      64: aload_0
+      65: getstatic     #1905               // Field org/pag/domain/WorkspaceFailure.NOT_ALLOWED:Lorg/pag/domain/WorkspaceFailure;
+      68: invokespecial #1909               // Method setWorkspaceRefusal:(Lorg/pag/domain/WorkspaceFailure;)V
+      71: aload_0
+      72: iconst_1
+      73: invokespecial #1432               // Method setWorkspaceError:(Z)V
+      76: return
+      77: aload_0
+      78: invokespecial #1854               // Method getWorkspaceValue:()Lorg/pag/prototype/product/WorkspaceSnapshot;
+      81: dup
+      82: ifnull        91
+      85: invokevirtual #1891               // Method org/pag/prototype/product/WorkspaceSnapshot.getUiRows$app:()Lorg/pag/prototype/product/WorkspaceUiRows;
+      88: goto          93
+      91: pop
+      92: aconst_null
+      93: astore_3
+      94: nop
+      95: getstatic     #1915               // Field org/pag/prototype/product/WorkspaceUiRows.Companion:Lorg/pag/prototype/product/WorkspaceUiRows$Companion;
+      98: aload_1
+      99: aload_3
+     100: invokevirtual #1921               // Method org/pag/prototype/product/WorkspaceUiRows$Companion.planningCost:(Lorg/pag/prototype/product/WorkspaceSnapshot;Lorg/pag/prototype/product/WorkspaceUiRows;)Lorg/pag/domain/ActiveWorkspaceBudget$Units;
+     103: astore        5
+     105: goto          123
+     108: astore        6
+     110: aload_0
+     111: getstatic     #1924               // Field org/pag/domain/WorkspaceFailure.BUDGET_REFUSED:Lorg/pag/domain/WorkspaceFailure;
+     114: invokespecial #1909               // Method setWorkspaceRefusal:(Lorg/pag/domain/WorkspaceFailure;)V
+     117: aload_0
+     118: iconst_1
+     119: invokespecial #1432               // Method setWorkspaceError:(Z)V
+     122: return
+     123: aload         5
+     125: astore        4
+     127: aload_2
+     128: ifnull        155
+     131: aload_2
+     132: aload         4
+     134: invokeinterface #1928,  2         // InterfaceMethod org/pag/domain/WorkspaceAccess.reserve:(Lorg/pag/domain/ActiveWorkspaceBudget$Units;)Z
+     139: ifne          155
+     142: aload_0
+     143: getstatic     #1924               // Field org/pag/domain/WorkspaceFailure.BUDGET_REFUSED:Lorg/pag/domain/WorkspaceFailure;
+     146: invokespecial #1909               // Method setWorkspaceRefusal:(Lorg/pag/domain/WorkspaceFailure;)V
+     149: aload_0
+     150: iconst_1
+     151: invokespecial #1432               // Method setWorkspaceError:(Z)V
+     154: return
+     155: invokestatic  #1934               // Method java/time/ZoneId.systemDefault:()Ljava/time/ZoneId;
+     158: astore        5
+     160: aload_3
+     161: ifnull        202
+     164: aload_3
+     165: invokevirtual #1938               // Method org/pag/prototype/product/WorkspaceUiRows.getFormats$app:()Lorg/pag/prototype/product/UiDateFormats;
+     168: invokevirtual #1943               // Method org/pag/prototype/product/UiDateFormats.getZone:()Ljava/time/ZoneId;
+     171: aload         5
+     173: invokestatic  #913                // Method kotlin/jvm/internal/Intrinsics.areEqual:(Ljava/lang/Object;Ljava/lang/Object;)Z
+     176: ifeq          202
+     179: aload_3
+     180: invokevirtual #1938               // Method org/pag/prototype/product/WorkspaceUiRows.getFormats$app:()Lorg/pag/prototype/product/UiDateFormats;
+     183: invokevirtual #1947               // Method org/pag/prototype/product/UiDateFormats.getLocale:()Ljava/util/Locale;
+     186: invokestatic  #1952               // Method java/util/Locale.getDefault:()Ljava/util/Locale;
+     189: invokestatic  #913                // Method kotlin/jvm/internal/Intrinsics.areEqual:(Ljava/lang/Object;Ljava/lang/Object;)Z
+     192: ifeq          202
+     195: aload_3
+     196: invokevirtual #1938               // Method org/pag/prototype/product/WorkspaceUiRows.getFormats$app:()Lorg/pag/prototype/product/UiDateFormats;
+     199: goto          265
+     202: aload_3
+     203: ifnull        251
+     206: aload_2
+     207: dup
+     208: ifnull        233
+     211: getstatic     #1915               // Field org/pag/prototype/product/WorkspaceUiRows.Companion:Lorg/pag/prototype/product/WorkspaceUiRows$Companion;
+     214: invokevirtual #1956               // Method org/pag/prototype/product/WorkspaceUiRows$Companion.getFormatPlanning:()Lorg/pag/domain/ActiveWorkspaceBudget$Units;
+     217: invokeinterface #1928,  2         // InterfaceMethod org/pag/domain/WorkspaceAccess.reserve:(Lorg/pag/domain/ActiveWorkspaceBudget$Units;)Z
+     222: ifne          229
+     225: iconst_1
+     226: goto          235
+     229: iconst_0
+     230: goto          235
+     233: pop
+     234: iconst_0
+     235: ifeq          251
+     238: aload_0
+     239: getstatic     #1924               // Field org/pag/domain/WorkspaceFailure.BUDGET_REFUSED:Lorg/pag/domain/WorkspaceFailure;
+     242: invokespecial #1909               // Method setWorkspaceRefusal:(Lorg/pag/domain/WorkspaceFailure;)V
+     245: aload_0
+     246: iconst_1
+     247: invokespecial #1432               // Method setWorkspaceError:(Z)V
+     250: return
+     251: new           #1940               // class org/pag/prototype/product/UiDateFormats
+     254: dup
+     255: aload         5
+     257: invokestatic  #1959               // Method kotlin/jvm/internal/Intrinsics.checkNotNull:(Ljava/lang/Object;)V
+     260: aload         5
+     262: invokespecial #1962               // Method org/pag/prototype/product/UiDateFormats."<init>":(Ljava/time/ZoneId;)V
+     265: astore        6
+     267: nop
+     268: getstatic     #1915               // Field org/pag/prototype/product/WorkspaceUiRows.Companion:Lorg/pag/prototype/product/WorkspaceUiRows$Companion;
+     271: aload_1
+     272: aload_3
+     273: aload         6
+     275: aload_0
+     276: invokevirtual #826                // Method getSelected:()Lorg/pag/domain/Action;
+     279: invokevirtual #1966               // Method org/pag/prototype/product/WorkspaceUiRows$Companion.cost:(Lorg/pag/prototype/product/WorkspaceSnapshot;Lorg/pag/prototype/product/WorkspaceUiRows;Lorg/pag/prototype/product/UiDateFormats;Lorg/pag/domain/Action;)Lorg/pag/domain/ActiveWorkspaceBudget$Units;
+     282: astore        8
+     284: goto          302
+     287: astore        9
+     289: aload_0
+     290: getstatic     #1924               // Field org/pag/domain/WorkspaceFailure.BUDGET_REFUSED:Lorg/pag/domain/WorkspaceFailure;
+     293: invokespecial #1909               // Method setWorkspaceRefusal:(Lorg/pag/domain/WorkspaceFailure;)V
+     296: aload_0
+     297: iconst_1
+     298: invokespecial #1432               // Method setWorkspaceError:(Z)V
+     301: return
+     302: aload         8
+     304: astore        7
+     306: aload_2
+     307: ifnonnull     335
+     310: new           #1911               // class org/pag/prototype/product/WorkspaceUiRows
+     313: dup
+     314: aload_1
+     315: aload_0
+     316: getfield      #288                // Field rowPort:Lorg/pag/prototype/product/ProductViewModel$rowPort$1;
+     319: checkcast     #1968               // class org/pag/prototype/product/RowActionPort
+     322: aload_3
+     323: aload_0
+     324: invokevirtual #826                // Method getSelected:()Lorg/pag/domain/Action;
+     327: aload         6
+     329: invokespecial #1971               // Method org/pag/prototype/product/WorkspaceUiRows."<init>":(Lorg/pag/prototype/product/WorkspaceSnapshot;Lorg/pag/prototype/product/RowActionPort;Lorg/pag/prototype/product/WorkspaceUiRows;Lorg/pag/domain/Action;Lorg/pag/prototype/product/UiDateFormats;)V
+     332: goto          459
+     335: aload_2
+     336: astore        9
+     338: aload_1
+     339: invokevirtual #1858               // Method org/pag/prototype/product/WorkspaceSnapshot.getActionId:()Ljava/lang/String;
+     342: astore        10
+     344: aload_1
+     345: invokevirtual #1859               // Method org/pag/prototype/product/WorkspaceSnapshot.getStatus:()Lorg/pag/domain/ActionStatus;
+     348: astore        11
+     350: aload_1
+     351: invokevirtual #1860               // Method org/pag/prototype/product/WorkspaceSnapshot.getGeneration:()J
+     354: lstore        12
+     356: aload         7
+     358: astore        14
+     360: iconst_0
+     361: istore        15
+     363: aload         9
+     365: aload         10
+     367: aload         11
+     369: lload         12
+     371: getstatic     #1976               // Field org/pag/prototype/product/WorkspaceUiRowsKt$admitOriginalUi$1.INSTANCE:Lorg/pag/prototype/product/WorkspaceUiRowsKt$admitOriginalUi$1;
+     374: checkcast     #177                // class kotlin/jvm/functions/Function0
+     377: invokeinterface #1872,  6         // InterfaceMethod org/pag/domain/WorkspaceAccess.publish:(Ljava/lang/String;Lorg/pag/domain/ActionStatus;JLkotlin/jvm/functions/Function0;)Z
+     382: ifeq          397
+     385: aload         9
+     387: aload         14
+     389: invokeinterface #1928,  2         // InterfaceMethod org/pag/domain/WorkspaceAccess.reserve:(Lorg/pag/domain/ActiveWorkspaceBudget$Units;)Z
+     394: ifne          401
+     397: aconst_null
+     398: goto          456
+     401: new           #1048               // class kotlin/jvm/internal/Ref$ObjectRef
+     404: dup
+     405: invokespecial #1049               // Method kotlin/jvm/internal/Ref$ObjectRef."<init>":()V
+     408: astore        16
+     410: aload         9
+     412: aload         10
+     414: aload         11
+     416: lload         12
+     418: new           #1978               // class org/pag/prototype/product/ProductViewModel$special$$inlined$admitOriginalUi$1
+     421: dup
+     422: aload         16
+     424: aload_1
+     425: aload_0
+     426: aload_3
+     427: aload         6
+     429: invokespecial #1981               // Method org/pag/prototype/product/ProductViewModel$special$$inlined$admitOriginalUi$1."<init>":(Lkotlin/jvm/internal/Ref$ObjectRef;Lorg/pag/prototype/product/WorkspaceSnapshot;Lorg/pag/prototype/product/ProductViewModel;Lorg/pag/prototype/product/WorkspaceUiRows;Lorg/pag/prototype/product/UiDateFormats;)V
+     432: checkcast     #177                // class kotlin/jvm/functions/Function0
+     435: invokeinterface #1872,  6         // InterfaceMethod org/pag/domain/WorkspaceAccess.publish:(Ljava/lang/String;Lorg/pag/domain/ActionStatus;JLkotlin/jvm/functions/Function0;)Z
+     440: istore        17
+     442: iload         17
+     444: ifeq          455
+     447: aload         16
+     449: getfield      #1060               // Field kotlin/jvm/internal/Ref$ObjectRef.element:Ljava/lang/Object;
+     452: goto          456
+     455: aconst_null
+     456: checkcast     #1911               // class org/pag/prototype/product/WorkspaceUiRows
+     459: astore        8
+     461: aload         8
+     463: ifnonnull     479
+     466: aload_0
+     467: getstatic     #1924               // Field org/pag/domain/WorkspaceFailure.BUDGET_REFUSED:Lorg/pag/domain/WorkspaceFailure;
+     470: invokespecial #1909               // Method setWorkspaceRefusal:(Lorg/pag/domain/WorkspaceFailure;)V
+     473: aload_0
+     474: iconst_1
+     475: invokespecial #1432               // Method setWorkspaceError:(Z)V
+     478: return
+     479: aload_1
+     480: aload         8
+     482: invokevirtual #1985               // Method org/pag/prototype/product/WorkspaceSnapshot.bindRows$app:(Lorg/pag/prototype/product/WorkspaceUiRows;)V
+     485: aload_0
+     486: aload_1
+     487: invokespecial #1884               // Method setWorkspaceValue:(Lorg/pag/prototype/product/WorkspaceSnapshot;)V
+     490: return
+    Exception table:
+       from    to  target type
+          94   105   108   Class java/lang/ArithmeticException
+         267   284   287   Class java/lang/ArithmeticException

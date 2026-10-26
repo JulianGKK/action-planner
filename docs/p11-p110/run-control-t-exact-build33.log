@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P110,control-t-exact,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=3051696, transition=16777216, localRetained=3051696, localTransition=6521508, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,control-t-exact,CONTROL_BOUNDARY,required=1280,over=0,constructed=true,old_snapshot_held=true,record=State(phase=RETAINED, retained=3056368, transition=16777216, localRetained=3056368, localTransition=16777216, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,control-t-exact,PASS,full_graphs=1,fixture_cleanup=true,no_physical_memory_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 PASS control-t-exact
+INSTRUMENTATION_CODE: -1

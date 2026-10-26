@@ -12,29 +12,15 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable internal fun OperationsSection(model:ProductViewModel) {
     val ops=model.operations;val board=ops.board?:return
     if(ops.editingRole==null && ops.deletingRole==null && ops.createError==null)ops.error?.let{Text(if(ops.screen==OperationsScreen.PLAN && it==OperationsFailure.STALE)
         "Die Rollenplanung wurde inzwischen geändert. Dein Entwurf bleibt erhalten." else operationsError(it))}
     when(ops.screen) {
         OperationsScreen.ROLES->RoleManagement(model,ops,board)
-        OperationsScreen.PLAN->{
-            Text("Rollen planen",style=MaterialTheme.typography.titleLarge)
-            Text("Revision: ${ops.planRevision}")
-            Text(ops.person?.person?.pseudonym.orEmpty(),style=MaterialTheme.typography.headlineMedium)
-            if(ops.planRoles.isEmpty())Text("Noch keine Rollen vorhanden. Rollen können in der Aktionsübersicht angelegt werden.")
-            ops.planRoles.forEach{role->
-                FormOutlinedButton({ops.toggleRole(role.id)},enabled=!ops.busy){Text((if(role.id in ops.roleIds)"✓ " else "")+role.name)}
-                if(role.id in ops.roleIds)FormOutlinedButton({ops.primary(role.id)},enabled=!ops.busy){Text(if(role.id==ops.primaryRoleId)"Hauptfunktion ✓" else "Als Hauptfunktion wählen")}
-            }
-            FormOutlinedButton({ops.primary(null)},enabled=!ops.busy){Text(if(ops.primaryRoleId==null)"Keine Hauptfunktion ✓" else "Ohne Hauptfunktion planen")}
-            if(ops.error==OperationsFailure.STALE) {
-                Text("Beim Neuladen wird dein bisheriger Entwurf ersetzt.")
-                FormOutlinedButton(ops::reloadPlan,enabled=!ops.busy){Text("Entwurf verwerfen und aktuellen Plan laden")}
-            }
-            FormButton(ops::savePlan,enabled=!ops.busy && !ops.commitConfirmed){Text("Speichern")}
-            FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Abbrechen")}
-        }
+        OperationsScreen.PLAN->PlanEditor(ops)
         OperationsScreen.LIVE, OperationsScreen.FUNCTION->LiveForm(model,ops,board)
         OperationsScreen.PERSON->ActivePersonWorkspace(model, board)
         OperationsScreen.FUNCTION_DETAIL->ActiveFunctionDetail(model, board)
@@ -45,55 +31,58 @@ import java.time.format.FormatStyle
             TaskSection(model.tasks,board)
             if(model.tasks.form || model.tasks.selected!=null)return
             if(board.status==ActionStatus.ACTIVE || board.status==ActionStatus.COMPLETED) {
-                Text("Gesamt: ${board.persons.size} Personen")
-                OperationalStatus.entries.chunked(2).forEach{pair->Row(horizontalArrangement=Arrangement.spacedBy(12.dp)){
-                    pair.forEach{s->Text("${operationalLabel(s)}: ${board.count(s)}",modifier=Modifier.weight(1f))}
+                Text(originalText{"Gesamt: ${board.persons.size} Personen"})
+                operationalStatusRows.forOriginal{pair->Row(horizontalArrangement=Arrangement.spacedBy(12.dp)){
+                    pair.forOriginal{s->Text(originalText{"${operationalLabel(s)}: ${board.count(s)}"},modifier=Modifier.weight(1f))}
                 }}
                 Text("Aktuelle Funktionen · Vor Ort",style=MaterialTheme.typography.titleMedium)
-                board.roles.forEach{Text("${it.name}: ${board.roleCount(it.id)}")}
-                Text("Unzugeordnet: ${board.roleCount(null)}")
+                board.roles.forOriginal{Text(originalText(it.name.length.toLong()){"${it.name}: ${board.roleCount(it.id)}"})}
+                Text(originalText{"Unzugeordnet: ${board.roleCount(null)}"})
             }else {
-                FormOutlinedButton(ops::roles){Text("Rollen")}
+                FormOutlinedButton({ops.roles()}){Text("Rollen")}
             }
             OperationalPersons(model, board)
-            if(board.status==ActionStatus.ACTIVE)FormOutlinedButton(ops::roles){Text("Neue Funktion")}
+            if(board.status==ActionStatus.ACTIVE)FormOutlinedButton({ops.roles()}){Text("Neue Funktion")}
         }
     }
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun OperationalPersons(model: ProductViewModel, board: OperationalBoard) {
     val ops = model.operations
     if (board.status == ActionStatus.ACTIVE) { ActivePeopleList(model, board); return }
-    board.persons.forEach{p->
+    board.persons.forOriginal{p->
         val planned=model.formatPlannedRoles(p,board)?:"Keine geplanten Rollen"
-        FormOutlinedButton(onClick={if(board.status==ActionStatus.ACTIVE)ops.update(p.person.id) else model.personDetail(p.person.id)},modifier=Modifier.fillMaxWidth(),enabled=!ops.busy){
+        val personId=p.person.id;val active=board.status==ActionStatus.ACTIVE
+        FormOutlinedButton(onClick={if(active)ops.update(personId) else model.personDetail(personId)},modifier=Modifier.fillMaxWidth(),enabled=!ops.busy){
             Column(Modifier.fillMaxWidth()){
                 Text(p.person.pseudonym,style=MaterialTheme.typography.titleLarge)
-                Text("Geplant: $planned")
-                p.plan.primaryRoleId?.let{id->Text("Hauptfunktion: ${board.roles.find{it.id==id}?.name.orEmpty()}")}
+                Text(originalText(planned.length.toLong()){"Geplant: $planned"})
+                p.plan.primaryRoleId?.let{id->val name=board.roles.findOriginal{it.id==id}?.name.orEmpty();Text(originalText(name.length.toLong()){"Hauptfunktion: $name"})}
                 p.state?.let{s->
                     Text(operationalLabel(s.status))
-                    s.currentRoleId?.let{id->Text("Aktuelle Funktion: ${board.roles.find{it.id==id}?.name.orEmpty()}")}
-                    s.currentPlaceLabel?.let{Text("Ort / Ziel: $it")}
-                    Text(updatedLabel(s.updatedAt))
+                    s.currentRoleId?.let{id->val name=board.roles.findOriginal{it.id==id}?.name.orEmpty();Text(originalText(name.length.toLong()){"Aktuelle Funktion: $name"})}
+                    s.currentPlaceLabel?.let{place->Text(originalText(place.length.toLong()){"Ort / Ziel: $place"})}
+                    Text(originalText{updatedLabel(s.updatedAt)})
                 }
                 val count=model.tasks.board?.affectedCount(p.person.id)?:0
-                if(count>0)Text("$count offene Aufgabe"+(if(count==1)"" else "n"))
+                if(count>0)Text(originalText{"$count offene Aufgabe"+(if(count==1)"" else "n")})
                 if(board.status==ActionStatus.ACTIVE)Text("Lage aktualisieren")
             }
         }
         if(board.status==ActionStatus.ACTIVE){
-            FormOutlinedButton({model.activePersonTasks(p.person.id, true)}){Text("Aufgabe hinzufügen · ${p.person.pseudonym}")}
+            FormOutlinedButton({model.activePersonTasks(p.person.id, true)}){Text(originalText(p.person.pseudonym.length.toLong()){"Aufgabe hinzufügen · ${p.person.pseudonym}"})}
             if((model.tasks.board?.affectedCount(p.person.id)?:0)>0)FormOutlinedButton({model.activePersonTasks(p.person.id, false)}){Text("Aufgaben ansehen")}
         }
     }
     if(board.persons.isEmpty())Text("Noch keine Personen erfasst.")
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun RoleManagement(model:ProductViewModel,ops:OperationsModel,board:OperationalBoard) {
     Text(if(ops.planning)"Rollen" else "Neue Funktion",style=MaterialTheme.typography.titleLarge)
     if(ops.planning){
         Text("Vorlagen · Auswahl legt eine Rolle für diese Aktion an")
         FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)){
-            OperationalRules.templates.forEach{template->FormOutlinedButton({ops.createRole(template)},enabled=!ops.busy && board.roles.none{OperationalRules.normalizedName(it.name)==OperationalRules.normalizedName(template)}){Text(template)}}
+            OperationalRules.templates.forOriginal{template->FormOutlinedButton({ops.createRole(template)},enabled=!ops.busy && !ops.roleTemplateExists(template)){Text(template)}}
         }
     }
     ops.templateCreateError?.let{Text(createRoleError(it))}
@@ -101,23 +90,24 @@ import java.time.format.FormatStyle
     if(ops.createSurface==RoleCreateSurface.ROLES)RoleCreateForm(ops,RoleCreateSurface.ROLES,
         if(ops.planning)"Rollenname" else "Funktionsname",if(ops.planning)"Eigene Rolle hinzufügen" else "Neue Funktion hinzufügen")
     else FormButton({ops.beginRoleCreate(RoleCreateSurface.ROLES)},enabled=!ops.busy){Text("Rolle oder Funktion anlegen")}
-    if(ops.planning)board.roles.forEach{r->
-        val row=model.roleRow(r.id)?:return@forEach
+    if(ops.planning)board.roles.forOriginal{r->
+        val row=model.roleRow(r.id)?:return@forOriginal
         Text(r.name)
         FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)){
             FormOutlinedButton(row.edit,enabled=!ops.busy){Text("Umbenennen")}
             FormOutlinedButton(row.delete,enabled=!ops.busy){Text("Löschen")}
         }
     }
-    FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Zurück")}
+    FormOutlinedButton({ops.cancel()},enabled=!ops.busy){Text("Zurück")}
 }
 /** Every text create surface delegates draft lifetime and completion to the same model contract. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun RoleCreateForm(ops:OperationsModel,surface:RoleCreateSurface,label:String,saveLabel:String) {
     if(ops.createSurface!=surface)return
     ops.createError?.let{Text(createRoleError(it))}
     FormTextField(ops.createName,ops::changeRoleCreateName,label={Text(label)},autoFocus=true,
         keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy,modifier=Modifier.fillMaxWidth())
-    FormButton(ops::saveRoleCreate,enabled=!ops.busy && OperationalRules.validName(ops.createName)){Text(saveLabel)}
+    FormButton({ops.saveRoleCreate()},enabled=!ops.busy && OperationalRules.validName(ops.createName)){Text(saveLabel)}
 }
 internal fun createRoleError(reason:OperationsFailure)=when(reason){
     OperationsFailure.INVALID->"Bitte einen Rollen- oder Funktionsnamen eingeben."
@@ -129,37 +119,39 @@ internal fun createRoleError(reason:OperationsFailure)=when(reason){
     else->operationsError(reason)
 }
 /** Both productive role surfaces use the same snapshot-bound editor/confirmation. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun RoleEditor(ops:OperationsModel) {
     val editing=ops.editingRole;val deleting=ops.deletingRole
     ops.error?.let{Text(if(it==OperationsFailure.STALE)
         "Die Rolle wurde inzwischen geändert. Dein Entwurf bzw. die Löschbestätigung bleibt erhalten." else operationsError(it))}
     if(editing!=null){
-        Text("Rolle umbenennen · ${editing.name}")
+        Text(originalText(editing.name.length.toLong()){"Rolle umbenennen · ${editing.name}"})
         FormTextField(ops.roleName,ops::changeRoleName,label={Text("Neuer Rollenname")},autoFocus=true,
             keyboardOptions=productKeyboard(ProductTextKind.ROLE),enabled=!ops.busy,modifier=Modifier.fillMaxWidth())
-        FormButton(ops::saveRoleRename,enabled=!ops.busy && OperationalRules.validName(ops.roleName)){Text("Speichern")}
+        FormButton({ops.saveRoleRename()},enabled=!ops.busy && OperationalRules.validName(ops.roleName)){Text("Speichern")}
     }else if(deleting!=null){
-        Text("Rolle „${deleting.name}“ löschen? Zugeordnete Rollen können nicht gelöscht werden.")
-        FormButton(ops::confirmRoleDelete,enabled=!ops.busy){Text("Löschen bestätigen")}
+        Text(originalText(deleting.name.length.toLong()){"Rolle „${deleting.name}“ löschen? Zugeordnete Rollen können nicht gelöscht werden."})
+        FormButton({ops.confirmRoleDelete()},enabled=!ops.busy){Text("Löschen bestätigen")}
     }
     if(ops.error==OperationsFailure.STALE){
         Text("Beim Neuladen wird der bisherige Entwurf bzw. die alte Löschbestätigung ersetzt. Danach erneut prüfen.")
-        FormOutlinedButton(ops::reloadRoleEditor,enabled=!ops.busy){Text("Alten Stand verwerfen und Rolle neu laden")}
+        FormOutlinedButton({ops.reloadRoleEditor()},enabled=!ops.busy){Text("Alten Stand verwerfen und Rolle neu laden")}
     }
-    FormOutlinedButton(ops::cancelRoleEditor,enabled=!ops.busy){Text(if(deleting!=null)"Löschung abbrechen" else "Bearbeitung verwerfen")}
+    FormOutlinedButton({ops.cancelRoleEditor()},enabled=!ops.busy){Text(if(deleting!=null)"Löschung abbrechen" else "Bearbeitung verwerfen")}
 }
-@Composable private fun LiveForm(model:ProductViewModel,ops:OperationsModel,board:OperationalBoard) {
+@androidx.compose.runtime.NonRestartableComposable
+@Composable private fun LiveForm(model:ProductViewModel,ops:OperationsModel,board:OperationalBoard?) {
     Text(ops.person?.person?.pseudonym.orEmpty(),style=MaterialTheme.typography.headlineLarge)
     val functionOnly = ops.screen == OperationsScreen.FUNCTION
     Text(if (functionOnly) "Funktion ändern" else "Lage aktualisieren",style=MaterialTheme.typography.titleLarge)
-    if (!functionOnly) OperationalStatus.entries.chunked(2).forEach{pair->Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
-        pair.forEach{status->FormOutlinedButton({ops.status(status)},modifier=Modifier.weight(1f).heightIn(min=56.dp),enabled=!ops.busy){Text((if(status==ops.liveStatus)"✓ " else "")+operationalLabel(status))}}
+    if (!functionOnly) operationalStatusRows.forOriginal{pair->Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
+        pair.forOriginal{status->FormOutlinedButton({ops.status(status)},modifier=Modifier.weight(1f).heightIn(min=56.dp),enabled=!ops.busy){Text(originalText{(if(status==ops.liveStatus)"✓ " else "")+operationalLabel(status)})}}
     }}
-    if(ops.liveStatus==OperationalStatus.ON_SITE){
+    if(ops.liveStatus==OperationalStatus.ON_SITE && board!=null){
         Text("Aktuelle Funktion",style=MaterialTheme.typography.titleMedium)
         FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)){
             FormOutlinedButton({ops.function(null)},enabled=!ops.busy){Text((if(ops.liveRoleId==null)"✓ " else "")+"Unzugeordnet")}
-            board.preferredRoles(ops.personId!!).forEach{r->FormOutlinedButton({ops.function(r.id)},enabled=!ops.busy){Text((if(ops.liveRoleId==r.id)"✓ " else "")+r.name)}}
+            board.preferredRoles(ops.personId!!).forOriginal{r->val id=r.id;FormOutlinedButton({ops.function(id)},enabled=!ops.busy){Text(originalText(r.name.length.toLong()){(if(ops.liveRoleId==id)"✓ " else "")+r.name})}}
         }
         FormOutlinedButton({if(ops.createSurface==RoleCreateSurface.INLINE)ops.cancelRoleCreate() else ops.beginRoleCreate(RoleCreateSurface.INLINE)},enabled=!ops.busy){Text(if(ops.createSurface==RoleCreateSurface.INLINE)"Neue Funktion abbrechen" else "Neue Funktion")}
         if(ops.createSurface==RoleCreateSurface.INLINE)RoleCreateForm(ops,RoleCreateSurface.INLINE,"Funktionsname","Hinzufügen")
@@ -167,18 +159,18 @@ internal fun createRoleError(reason:OperationsFailure)=when(reason){
     if(!functionOnly && OperationalRules.placeRelevant(ops.liveStatus)){
         Text("Ort / Ziel · kurze lokale Bezeichnung, keine Notizen")
         FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)){
-            board.placeSuggestions.forEach{place->FormOutlinedButton({ops.place(place)},enabled=!ops.busy){Text(place)}}
+            board?.placeSuggestions?.forOriginal{place->FormOutlinedButton({ops.place(place)},enabled=!ops.busy){Text(place)}}
         }
         FormTextField(ops.livePlace,ops::place,label={Text("Ort / Ziel")},keyboardOptions=productKeyboard(ProductTextKind.PLACE),enabled=!ops.busy,singleLine=true,
-            supportingText={Text("${Character.codePointCount(ops.livePlace,0,ops.livePlace.length)} / 80 Zeichen")},modifier=Modifier.fillMaxWidth())
+            supportingText=originalContent{Text(originalText{"${Character.codePointCount(ops.livePlace,0,ops.livePlace.length)} / 80 Zeichen"})},modifier=Modifier.fillMaxWidth())
     }
     if(ops.error==OperationsFailure.STALE){
         Text("Beim Neuladen wird dein bisheriger Entwurf ersetzt.")
-        FormOutlinedButton(ops::reloadLive,enabled=!ops.busy){Text("Entwurf verwerfen und Lage neu laden")}
+        FormOutlinedButton({ops.reloadLive()},enabled=!ops.busy){Text("Entwurf verwerfen und Lage neu laden")}
     }
-    FormButton(ops::saveLive,enabled=!ops.busy){Text("Übernehmen")}
-    FormOutlinedButton(ops::cancel,enabled=!ops.busy){Text("Abbrechen")}
-    FormOutlinedButton(model::operationalPersonDetail,enabled=!ops.busy){Text("Personendetails")}
+    FormButton({ops.saveLive()},enabled=!ops.busy){Text("Übernehmen")}
+    FormOutlinedButton({ops.cancel()},enabled=!ops.busy){Text("Abbrechen")}
+    FormOutlinedButton({model.operationalPersonDetail()},enabled=!ops.busy){Text("Personendetails")}
 }
 internal fun operationalLabel(status:OperationalStatus)=when(status){
     OperationalStatus.NO_STATUS->"Keine Lageangabe";OperationalStatus.ON_SITE->"Vor Ort"
@@ -198,4 +190,38 @@ internal fun operationsError(failure:OperationsFailure)=when(failure){
     OperationsFailure.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
     OperationsFailure.BUDGET_REFUSED->"Die Daten überschreiten das zulässige Speicherbudget."
     OperationsFailure.STALE ->"Die Lage wurde inzwischen geändert. Bitte neu öffnen."
+}
+
+private val operationalStatusRows=OperationalStatus.entries.chunked(2) // finite CODE only
+
+@androidx.compose.runtime.NonRestartableComposable
+
+@Composable private fun PlanEditor(ops:OperationsModel){
+
+            Text("Rollen planen",style=MaterialTheme.typography.titleLarge)
+            Text(originalText{"Revision: ${ops.planRevision}"})
+            Text(ops.person?.person?.pseudonym.orEmpty(),style=MaterialTheme.typography.headlineMedium)
+            if(ops.planRoles.isEmpty())Text("Noch keine Rollen vorhanden. Rollen können in der Aktionsübersicht angelegt werden.")
+            ops.planRoles.forOriginal{role->val id=role.id
+                FormOutlinedButton({ops.toggleRole(id)},enabled=!ops.busy){Text(originalText(role.name.length.toLong()){(if(id in ops.roleIds)"✓ " else "")+role.name})}
+                if(role.id in ops.roleIds)FormOutlinedButton({ops.primary(id)},enabled=!ops.busy){Text(if(role.id==ops.primaryRoleId)"Hauptfunktion ✓" else "Als Hauptfunktion wählen")}
+            }
+            FormOutlinedButton({ops.primary(null)},enabled=!ops.busy){Text(if(ops.primaryRoleId==null)"Keine Hauptfunktion ✓" else "Ohne Hauptfunktion planen")}
+            if(ops.error==OperationsFailure.STALE) {
+                Text("Beim Neuladen wird dein bisheriger Entwurf ersetzt.")
+                FormOutlinedButton({ops.reloadPlan()},enabled=!ops.busy){Text("Entwurf verwerfen und aktuellen Plan laden")}
+            }
+            FormButton({ops.savePlan()},enabled=!ops.busy && !ops.commitConfirmed){Text("Speichern")}
+            FormOutlinedButton({ops.cancel()},enabled=!ops.busy){Text("Abbrechen")}
+
+}
+@androidx.compose.runtime.NonRestartableComposable
+@Composable internal fun HeldOperationsEditor(model:ProductViewModel){
+    val ops=model.operations
+    ops.error?.let{Text(operationsError(it))}
+    when{
+        ops.editingRole!=null || ops.deletingRole!=null->RoleEditor(ops)
+        ops.screen==OperationsScreen.PLAN->PlanEditor(ops)
+        ops.screen==OperationsScreen.LIVE || ops.screen==OperationsScreen.FUNCTION->LiveForm(model,ops,null)
+    }
 }

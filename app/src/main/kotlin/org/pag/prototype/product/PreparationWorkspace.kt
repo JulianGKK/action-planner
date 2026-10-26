@@ -19,7 +19,8 @@ internal fun preparationAreaLabel(area:PreparationArea,selected:Boolean)=prepara
 enum class PreparationContentState { LOADING, CONTENT, EMPTY, ERROR }
 internal data class PreparationSummary(val persons: Int, val roles: Int?, val withoutPrimaryRole: Int?,
     val open: Int?, val inProgress: Int?, val high: Int?)
-internal fun preparationSummary(snapshot: WorkspaceSnapshot): PreparationSummary {
+internal fun preparationSummary(snapshot:WorkspaceSnapshot)=snapshot.uiRows?.header?.summary?:calculatePreparationSummary(snapshot)
+internal fun calculatePreparationSummary(snapshot: WorkspaceSnapshot): PreparationSummary {
     val activeTasks = snapshot.tasks?.active
     return PreparationSummary(
     snapshot.persons.size, snapshot.operations?.roles?.size,
@@ -38,16 +39,20 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     for(role in board.roles)if(role.id!=person.plan.primaryRoleId && role.id in person.plan.roleIds)append(role)
     return text.toString()
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PreparationHeading(text: String) {
-    Text(text, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleLarge)
+    Text(text, Modifier.then(productHeadingSemantics), style = MaterialTheme.typography.titleLarge)
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun ActionWorkspaceHeader(model: ProductViewModel) {
     val action = model.selected ?: return
     if(model.hasCasEditorDraft)Text("Ungespeicherter Entwurf: Beim Verlassen der Bearbeitung oder Bereichswechsel wird er verworfen.")
-    FormOutlinedButton(model::back, enabled = !model.saving && !model.personSaving && !model.sensitiveBusy && !model.operations.busy && !model.tasks.busy && !model.protocol.busy && !model.material.busy && !model.expenses.busy && !model.memoryReports.busy && !model.documents.busy) { Text(if(model.hasCasEditorDraft)"‹ Aktionen · Entwurf verwerfen" else "‹ Aktionen") }
-    Text(action.title, Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineMedium)
-    Text(statusLabel(action.status).uppercase(), style = MaterialTheme.typography.labelLarge)
+    FormChoiceButton(if(model.hasCasEditorDraft)"‹ Aktionen · Entwurf verwerfen" else "‹ Aktionen",false,
+        enabled = !model.saving && !model.personSaving && !model.sensitiveBusy && !model.operations.busy && !model.tasks.busy && !model.protocol.busy && !model.material.busy && !model.expenses.busy && !model.memoryReports.busy && !model.documents.busy,fillWidth=false,selection=false){model.back()}
+    Text(action.title, Modifier.then(productHeadingSemantics), style = MaterialTheme.typography.headlineMedium)
+    Text(statusUpperLabel(action.status), style = MaterialTheme.typography.labelLarge)
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun DraftWorkspace(model: ProductViewModel) {
     val action = model.selected ?: return
     ActionWorkspaceHeader(model)
@@ -55,28 +60,28 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     Text(action.description)
     Text("Beginn: ${formattedTime(action.startAt)}")
     Text("Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}")
-    FormOutlinedButton(model::edit) { Text("Aktionsdetails bearbeiten") }
+    FormOutlinedButton({model.edit()}) { Text("Aktionsdetails bearbeiten") }
     PreparationLifecycle(model)
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PreparationNavigation(model: ProductViewModel) {
     // Wrapping full controls instead of shrinking tabs or clipping large text.
-    FlowRow(Modifier.fillMaxWidth().semantics { selectableGroup() },
+    FlowRow(Modifier.fillMaxWidth().then(productSelectableGroupSemantics),
         horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (model.documentsAvailable) FormOutlinedButton(model::openDocuments, enabled=model.preparationNavigationEnabled) { Text("Dokumente") }
-        PreparationArea.entries.forEach { area ->
-            if((area==PreparationArea.MATERIAL && !model.materialAvailable) || (area==PreparationArea.COSTS && !model.expensesAvailable))return@forEach
+        if (model.documentsAvailable) FormChoiceButton("Dokumente",false,model.preparationNavigationEnabled,fillWidth=false,selection=false){model.openDocuments()}
+        PreparationArea.entries.forOriginal { area ->
+            if((area==PreparationArea.MATERIAL && !model.materialAvailable) || (area==PreparationArea.COSTS && !model.expensesAvailable))return@forOriginal
             val chosen = model.preparationArea == area
-            FormOutlinedButton({ model.preparationArea(area) }, enabled = model.preparationNavigationEnabled,
-                modifier = Modifier.heightIn(min = 48.dp).semantics { selected = chosen; role = androidx.compose.ui.semantics.Role.Tab }) {
-                Text(preparationAreaLabel(area,chosen))
-            }
+            FormChoiceButton(area.label,chosen,model.preparationNavigationEnabled,fillWidth=false,tab=true){model.preparationArea(area)}
         }
     }
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PreparationWorkspace(model: ProductViewModel, renderContent:Boolean=true) {
     ActionWorkspaceHeader(model)
     PreparationNavigation(model)
     if(!renderContent)return
+    if(model.workspace==null && HeldFormSection(model))return
     if (model.personDetailLoading) { PagLoadingState(); return }
     if(model.personForm) {
         PersonsSection(model);return
@@ -102,30 +107,32 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
         }
     }
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun PreparationOverview(model: ProductViewModel, content: WorkspaceSnapshot) {
     val action = model.selected ?: return
+    val header=content.uiRows?.header?:return
     content.documentSummary?.let { summary ->
-        FormOutlinedButton(model::openDocuments) { Text("Dokumente · ${summary.count} Dokumente") }
+        FormOutlinedButton({model.openDocuments()}) { header.documents?.let{Text(it)} }
     }
     val summary = preparationSummary(content)
     PreparationHeading("Vorbereitung im Überblick")
     Text(action.description, maxLines = 2, overflow = TextOverflow.Ellipsis)
-    Text("Beginn: ${formattedTime(action.startAt)}")
-    Text("Voraussichtliches Ende: ${formattedTime(action.expectedEndAt)}")
-    FormOutlinedButton(model::edit) { Text("Aktionsdetails bearbeiten") }
+    Text(header.start)
+    Text(header.end)
+    FormOutlinedButton({model.edit()}) { Text("Aktionsdetails bearbeiten") }
     PreparationHeading("Planung")
     FormOutlinedButton({ model.preparationArea(PreparationArea.PERSONS) }, modifier = Modifier.fillMaxWidth()) {
-        Text("Personen · ${summary.persons} insgesamt" + (summary.withoutPrimaryRole?.let { " · $it ohne geplante Hauptrolle" } ?: ""))
+        Text(header.persons)
     }
-    FormOutlinedButton({ model.preparationArea(PreparationArea.ROLES) }, modifier = Modifier.fillMaxWidth()) { Text(summary.roles?.let { "Rollen · $it angelegt" } ?: "Rollenstatus nicht verfügbar") }
+    FormOutlinedButton({ model.preparationArea(PreparationArea.ROLES) }, modifier = Modifier.fillMaxWidth()) { Text(header.roles) }
     FormOutlinedButton({ model.preparationArea(PreparationArea.TASKS) }, modifier = Modifier.fillMaxWidth()) {
-        Text(summary.open?.let { "Aufgaben · $it offen · ${summary.inProgress} in Arbeit · ${summary.high} hohe Priorität" } ?: "Aufgabenstatus nicht verfügbar")
+        Text(header.tasks)
     }
     content.expenseSummary?.let { summary ->
-        FormOutlinedButton({ model.preparationArea(PreparationArea.COSTS) }) { Text("Kosten · ${summary.count} Einträge · ${EuroMoney.format(summary.totalCents)}") }
+        FormOutlinedButton({ model.preparationArea(PreparationArea.COSTS) }) { header.costs?.let{Text(it)} }
     }
     content.materialSummary?.let { summary -> FormOutlinedButton({ model.preparationArea(PreparationArea.MATERIAL) }, modifier = Modifier.fillMaxWidth()) {
-        Text(if (summary.count == 0) "Material · Noch kein Material" else "Material · ${summary.count} Materialeinträge")
+        header.material?.let{Text(it)}
     } }
     PreparationHeading("Leitungsschutz")
     Text("Schützt sensible Identitäts- und Kontaktdaten dieser Aktion zusätzlich.")
@@ -133,7 +140,7 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
         is SensitiveResult.Value -> when (result.value) {
             SensitiveState.UNINITIALIZED -> {
                 Text("Leitungsschutz noch nicht eingerichtet")
-                FormOutlinedButton(model::requestActionProtectionSetup) { Text("Leitungsschutz einrichten") }
+                FormOutlinedButton({model.requestActionProtectionSetup()}) { Text("Leitungsschutz einrichten") }
             }
             SensitiveState.READY -> Text("Leitungsschutz eingerichtet")
             SensitiveState.INCOMPLETE_SETUP, SensitiveState.DELETE_PENDING -> LeadershipRecoveryOffer(model,result.value)
@@ -144,18 +151,19 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     PreparationHeading("Nächster Schritt")
     PreparationLifecycle(model)
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun PreparationPersons(model: ProductViewModel, content: WorkspaceSnapshot) {
     val summary = preparationSummary(content)
     PreparationHeading("Personen")
     Text("${summary.persons} insgesamt" + (summary.withoutPrimaryRole?.let { " · $it ohne geplante Hauptrolle" } ?: ""))
-    FormButton(model::addPerson) { Text("Person hinzufügen") }
+    FormButton({model.addPerson()}) { Text("Person hinzufügen") }
     if (content.persons.isEmpty()) Text("Noch keine Personen angelegt.")
-    content.persons.forEach { person ->
+    content.persons.forOriginal { person ->
         val board = content.operations
         val plan = board?.persons?.find { it.person.id == person.id }
         val name=person.pseudonym
         val planLabel=if(plan!=null && board!=null)model.formatPlannedRoles(plan,board)?:"Noch keine Rolle" else "Noch keine Rolle"
-        FormOutlinedButton(model.personRow(person.id)?.detail?:return@forEach, modifier = Modifier.fillMaxWidth()) {
+        FormOutlinedButton(model.personRow(person.id)?.detail?:return@forOriginal, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth()) {
                 Text(name, style = MaterialTheme.typography.titleLarge)
                 Text(planLabel)
@@ -164,6 +172,7 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     }
     model.personError?.let { Text("Die Person ist nicht verfügbar. Bitte erneut aus der Übersicht öffnen.") }
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun PreparationRoles(model: ProductViewModel, board: OperationalBoard) {
     val ops = model.operations
     var templates by remember { mutableStateOf(false) }
@@ -173,24 +182,24 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
     if(ops.createError==null)ops.error?.let { Text(operationsError(it)) }
     if(ops.createSurface==RoleCreateSurface.PREPARATION){
         RoleCreateForm(ops,RoleCreateSurface.PREPARATION,"Rollenname","Speichern")
-        FormOutlinedButton(ops::cancelRoleCreate,enabled=!ops.busy){Text("Abbrechen")}
+        FormOutlinedButton({ops.cancelRoleCreate()},enabled=!ops.busy){Text("Abbrechen")}
         return
     }
     FormButton({ops.beginRoleCreate(RoleCreateSurface.PREPARATION)},enabled=!ops.busy){Text("Rolle anlegen")}
     ops.templateCreateError?.let{Text(createRoleError(it))}
     FormOutlinedButton({ ops.textInteraction(); templates = !templates }, enabled = !ops.busy,
-        modifier = Modifier.semantics { stateDescription = if (templates) "Geöffnet" else "Geschlossen" }) { Text("Vorlagenrollen ${if (templates) "▴" else "▾"}") }
+        modifier = Modifier.originalSemantics { stateDescription = if (templates) "Geöffnet" else "Geschlossen" }) { Text(originalText{"Vorlagenrollen ${if (templates) "▴" else "▾"}"}) }
     if (templates) {
         Text("Vorschläge · Auswahl legt eine Rolle für diese Aktion an.")
-        OperationalRules.templates.forEach { template ->
+        OperationalRules.templates.forOriginal { template ->
             FormOutlinedButton({ ops.createRole(template) }, enabled = !ops.busy && board.roles.none {
                 OperationalRules.normalizedName(it.name) == OperationalRules.normalizedName(template)
             }) { Text(template) }
         }
     }
     if (board.roles.isEmpty()) Text("Noch keine Rollen angelegt.")
-    board.roles.forEach { role ->
-        val row=model.roleRow(role.id)?:return@forEach
+    board.roles.forOriginal { role ->
+        val row=model.roleRow(role.id)?:return@forOriginal
         Text(role.name, style = MaterialTheme.typography.titleMedium)
         val planned = board.persons.count { role.id in it.plan.roleIds }
         Text("$planned geplant · ${board.persons.count { it.plan.primaryRoleId == role.id }} als Hauptrolle")
@@ -200,12 +209,13 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
         }
     }
 }
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun PreparationLifecycle(model: ProductViewModel) {
     val action = model.selected ?: return
     model.changeError?.let { Text(changeErrorLabel(it)) }
     if (model.confirming != null) {
         Text("${advanceLabel(action.status)}? Dieser Statusschritt kann nicht rückgängig gemacht werden.")
-        FormButton(model::confirmAdvance, enabled = !model.saving) { Text("Bestätigen") }
-        FormOutlinedButton(model::cancelAdvance, enabled = !model.saving) { Text("Abbrechen") }
-    } else FormButton(model::requestAdvance, enabled = !model.saving) { Text(advanceLabel(action.status)) }
+        FormButton({model.confirmAdvance()}, enabled = !model.saving) { Text("Bestätigen") }
+        FormOutlinedButton({model.cancelAdvance()}, enabled = !model.saving) { Text("Abbrechen") }
+    } else FormButton({model.requestAdvance()}, enabled = !model.saving) { Text(advanceLabel(action.status)) }
 }

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.data.product.OperationsRulesTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:56:15.636Z" hostname="iuzjhtgvfc" time="0.002">
+<testsuite name="org.pag.data.product.OperationsRulesTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-10-25T19:21:44.084Z" hostname="iuzjhtgvfc" time="0.015">
   <properties/>
-  <testcase name="countsDoNotCountCustodyAsCurrentFunction" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
-  <testcase name="namesRequireNonblankTrim" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
-  <testcase name="preferredRolesFirst" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
-  <testcase name="operationalUpdatesOnlyActive" classname="org.pag.data.product.OperationsRulesTest" time="0.001"/>
-  <testcase name="normalizationDoesNotDependOnDefaultLocale" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
+  <testcase name="countsDoNotCountCustodyAsCurrentFunction" classname="org.pag.data.product.OperationsRulesTest" time="0.007"/>
+  <testcase name="namesRequireNonblankTrim" classname="org.pag.data.product.OperationsRulesTest" time="0.001"/>
+  <testcase name="preferredRolesFirst" classname="org.pag.data.product.OperationsRulesTest" time="0.002"/>
+  <testcase name="operationalUpdatesOnlyActive" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
+  <testcase name="normalizationDoesNotDependOnDefaultLocale" classname="org.pag.data.product.OperationsRulesTest" time="0.001"/>
   <testcase name="planningOnlyPreparation" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
-  <testcase name="placeOnlyForSupportRelatedStatuses" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
+  <testcase name="placeOnlyForSupportRelatedStatuses" classname="org.pag.data.product.OperationsRulesTest" time="0.001"/>
   <testcase name="mainFunctionMustBeAnAssignment" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
   <testcase name="creationAlsoActiveButNeverRenamePermission" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
-  <testcase name="placeBoundCountsUnicode" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
+  <testcase name="placeBoundCountsUnicode" classname="org.pag.data.product.OperationsRulesTest" time="0.001"/>
   <testcase name="draftAndDeletionHaveNoReadPath" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
   <testcase name="templatesAreOnlyNames" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>
   <testcase name="placeTrimsAndBlankMeansAbsent" classname="org.pag.data.product.OperationsRulesTest" time="0.0"/>

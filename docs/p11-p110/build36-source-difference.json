@@ -1,0 +1,12 @@
+{
+  "compared": "all build33 fingerprint paths",
+  "changed_paths": [
+    "app/src/androidTest/kotlin/org/pag/prototype/P110ConsumerProbe.kt"
+  ],
+  "product_apk_identical": true,
+  "instrumentation_changes": [
+    "State IDENTITY_CHECK and explicit detail navigation",
+    "COMPLETED explicit synthetic input replaces unlocated coordinate taps",
+    "Diagnostic assertion"
+  ]
+}

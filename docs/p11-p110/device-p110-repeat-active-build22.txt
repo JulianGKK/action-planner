@@ -1,0 +1,18 @@
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=3333240, transition=16777216, localRetained=3333240, localTransition=6803052, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,REPEAT,frames=100,rows=404,same_list=true,same_row=true,record=State(phase=RETAINED, retained=4093488, transition=16777216, localRetained=4093488, localTransition=7563300, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,REPEAT,frames=1000,rows=5524,same_list=true,same_row=true,record=State(phase=RETAINED, retained=8388140, transition=16777216, localRetained=8388140, localTransition=11857952, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-active,FAILURE,java.lang.IllegalStateException: P110 timeout person list
+	at org.pag.prototype.P110ConsumerProbe.await(P110ConsumerProbe.kt:22)
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:245)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL repeat-active
+INSTRUMENTATION_CODE: 0

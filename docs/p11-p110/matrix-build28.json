@@ -1,0 +1,32 @@
+[
+  {
+    "mode": "run",
+    "case": "active",
+    "passed": true,
+    "log": "run-active-build28.log"
+  },
+  {
+    "mode": "run",
+    "case": "person",
+    "passed": true,
+    "log": "run-person-build28.log"
+  },
+  {
+    "mode": "run",
+    "case": "plan",
+    "passed": true,
+    "log": "run-plan-build28.log"
+  },
+  {
+    "mode": "run",
+    "case": "stale",
+    "passed": true,
+    "log": "run-stale-build28.log"
+  },
+  {
+    "mode": "run",
+    "case": "material",
+    "passed": false,
+    "log": "run-material-build28.log"
+  }
+]

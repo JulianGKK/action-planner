@@ -1,0 +1,32 @@
+[
+  {
+    "mode": "run",
+    "case": "active",
+    "passed": true,
+    "log": "run-active-build29-connected.log"
+  },
+  {
+    "mode": "run",
+    "case": "person",
+    "passed": true,
+    "log": "run-person-build29-connected.log"
+  },
+  {
+    "mode": "run",
+    "case": "plan",
+    "passed": true,
+    "log": "run-plan-build29-connected.log"
+  },
+  {
+    "mode": "run",
+    "case": "stale",
+    "passed": true,
+    "log": "run-stale-build29-connected.log"
+  },
+  {
+    "mode": "run",
+    "case": "material",
+    "passed": false,
+    "log": "run-material-build29-connected.log"
+  }
+]

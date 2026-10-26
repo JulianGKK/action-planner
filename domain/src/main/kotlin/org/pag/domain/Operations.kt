@@ -3,7 +3,11 @@ package org.pag.domain
 import java.util.Locale
 
 /** Organisational roles grant no application permissions. All references are action-local. */
-data class Role(val id: String, val actionId: String, val name: String, val createdAt: Long, val editRevision: Long)
+data class Role(val id:String,val actionId:String,val name:String,val createdAt:Long,val editRevision:Long) {
+    // Read/write preflights already size the stored normalizedName plus raw name; immutable
+    // reuse here avoids repeating trim/lowercase allocations during template presentation.
+    val normalizedName=OperationalRules.normalizedName(name)
+}
 enum class OperationalStatus {
     NO_STATUS, ON_SITE, IDENTITY_CHECK, IN_CUSTODY, NOT_REACHABLE, RELEASED, LEFT, UNCLEAR
 }
@@ -20,7 +24,7 @@ data class PersonOperationalState(val actionId: String, val personId: String, va
 data class OperationalPerson(val person: Person, val plan: PersonRolePlan, val state: PersonOperationalState?)
 data class OperationalBoard(val actionId: String, val status: ActionStatus, val roles: List<Role>, val persons: List<OperationalPerson>) {
     fun count(status: OperationalStatus) = persons.count { it.state?.status == status }
-    fun roleCount(roleId: String?) = persons.count { it.state?.status == OperationalStatus.ON_SITE && it.state.currentRoleId == roleId }
+    fun roleCount(roleId:String?)=presentation.functions.people(roleId).size
     val presentation=OperationalPresentation(roles,persons)
     val placeSuggestions get()=presentation.places
     fun preferredRoles(personId:String):List<Role> = presentation.preferredRoles(personId)

@@ -1,0 +1,17 @@
+INSTRUMENTATION_STATUS: stream=P110,memory-create,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=3186340, transition=16777216, localRetained=3186340, localTransition=6656152, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,memory-create,FAILURE,java.lang.IllegalStateException: P110 timeout memory value visible
+	at org.pag.prototype.P110ConsumerProbe.await(P110ConsumerProbe.kt:22)
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:115)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL memory-create
+INSTRUMENTATION_CODE: 0
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 34, in <module>
+    assert 'P110 PASS '+scenario in output,'Consumer device assertions failed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Consumer device assertions failed

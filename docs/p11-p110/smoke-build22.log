@@ -1,0 +1,5 @@
+run active PASS
+run stale PASS
+consumer protocol-create PASS
+consumer memory-create PASS
+consumer repeat-active FAIL

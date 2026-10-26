@@ -15,6 +15,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable internal fun SensitiveSection(model:ProductViewModel) {
     Text("Sensible Personendaten",style=MaterialTheme.typography.titleMedium)
     model.sensitiveError?.let {
@@ -31,7 +33,7 @@ import java.util.Locale
             PassphraseField("Leitungs-Passphrase",password,!model.sensitiveBusy,setupCounter=true,imeAction=androidx.compose.ui.text.input.ImeAction.Next) { model.interaction();password=it }
             PassphraseField("Passphrase wiederholen",confirmation,!model.sensitiveBusy) { model.interaction();confirmation=it }
             FormButton(onClick={model.setupSensitive(password.toCharArray(),confirmation.toCharArray());password="";confirmation=""},enabled=!model.sensitiveBusy){Text("Bewusst einrichten")}
-            FormOutlinedButton(onClick=model::closeSensitive){Text("Abbrechen")}
+            FormOutlinedButton(onClick={model.closeSensitive()}){Text("Abbrechen")}
         }
         model.sensitiveOpened != null -> {
             NoSensitiveCapture()
@@ -39,7 +41,7 @@ import java.util.Locale
             if(opened.grant.valid()) key(opened.grant) {
                 Text("Kurzzeitig freigegeben: ${areaLabel(opened.grant.area)}. Spätestens nach 60 Sekunden erneut geschützt.")
                 SensitiveFields(model,opened.data)
-                FormOutlinedButton(onClick=model::closeSensitive){Text("Sensible Ansicht schließen")}
+                FormOutlinedButton(onClick={model.closeSensitive()}){Text("Sensible Ansicht schließen")}
             }
         }
         model.sensitiveArea != null -> {
@@ -48,10 +50,10 @@ import java.util.Locale
             var password by remember(model.sensitiveArea) { mutableStateOf("") }
             PassphraseField("Leitungs-Passphrase",password,!model.sensitiveBusy) {model.interaction();password=it}
             FormButton(onClick={model.openSensitive(password.toCharArray());password=""},enabled=!model.sensitiveBusy){Text("Bereich freigeben")}
-            FormOutlinedButton(onClick=model::closeSensitive){Text("Abbrechen")}
+            FormOutlinedButton(onClick={model.closeSensitive()}){Text("Abbrechen")}
         }
         else -> when(model.sensitiveInventory?.state) {
-            SensitiveState.UNINITIALIZED -> if(model.personsEditable) FormButton(onClick=model::requestSensitiveSetup){Text("Sensible Personendaten einrichten")}
+            SensitiveState.UNINITIALIZED -> if(model.personsEditable) FormButton(onClick={model.requestSensitiveSetup()}){Text("Sensible Personendaten einrichten")}
             SensitiveState.INCOMPLETE_SETUP, SensitiveState.DELETE_PENDING -> LeadershipRecoveryOffer(model,model.sensitiveInventory!!.state)
             SensitiveState.PARTIAL_OR_INVALID -> Text("Der sensible Speicher dieser Aktion ist nicht verfügbar. Pseudonyme bleiben nutzbar; es erfolgt keine Reparatur.")
             SensitiveState.READY -> SensitiveArea.entries.forEach { area ->
@@ -68,6 +70,7 @@ import java.util.Locale
     if(model.sensitiveBusy) Text("Geschützter Vorgang läuft …")
 }
 /** Window subtree opt-out, no persistent credentials/drafts or cloud Autofill request. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun NoSensitiveCapture() {
     val root=LocalView.current.rootView
     DisposableEffect(root) {
@@ -78,6 +81,7 @@ import java.util.Locale
     }
 }
 private fun areaLabel(area:SensitiveArea)=when(area){SensitiveArea.IDENTITY->"Identität";SensitiveArea.CONTACT->"Eigener Kontakt";SensitiveArea.EMERGENCY_CONTACT->"Notfallkontakt"}
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun SensitiveFields(model:ProductViewModel,initial:SensitiveData) {
     var first by remember {mutableStateOf(when(initial){is SensitiveData.Identity->initial.fullName;is SensitiveData.Contact->initial.phone;is SensitiveData.EmergencyContact->initial.name}?:"")}
     var second by remember {mutableStateOf((initial as? SensitiveData.EmergencyContact)?.phone?:"")}
@@ -85,6 +89,7 @@ private fun areaLabel(area:SensitiveArea)=when(area){SensitiveArea.IDENTITY->"Id
     var date by remember {mutableStateOf((initial as? SensitiveData.Identity)?.birthDate)}
     val editing=model.personsEditable
     fun optional(text:String)=text.takeIf{it.isNotEmpty()}
+    @androidx.compose.runtime.NonRestartableComposable
     @Composable fun field(label:String,value:String,ime:androidx.compose.ui.text.input.ImeAction=androidx.compose.ui.text.input.ImeAction.Done,change:(String)->Unit){
         if(editing) FormTextField(value,{model.interaction();change(it)},label={Text("$label (optional)")},enabled=!model.sensitiveBusy,
             keyboardOptions=productKeyboard(if(label=="Telefonnummer")ProductTextKind.PHONE else if(label=="Beziehung")ProductTextKind.DESCRIPTION else ProductTextKind.PERSON).copy(autoCorrectEnabled=false),imeAction=ime,modifier=Modifier.fillMaxWidth())
@@ -100,6 +105,7 @@ private fun areaLabel(area:SensitiveArea)=when(area){SensitiveArea.IDENTITY->"Id
     },enabled=!model.sensitiveBusy){Text("Speichern")}
 }
 @OptIn(ExperimentalMaterial3Api::class)
+@androidx.compose.runtime.NonRestartableComposable
 @Composable private fun BirthDate(value:LocalDate?,interaction:()->Unit,chosen:(LocalDate?)->Unit){
     var expanded by remember {mutableStateOf(false)}
     FormOutlinedButton(onClick={interaction();expanded=!expanded}){Text(value?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))?:"Geburtsdatum auswählen (optional)")}
@@ -113,6 +119,8 @@ private fun areaLabel(area:SensitiveArea)=when(area){SensitiveArea.IDENTITY->"Id
 }
 
 enum class LeadershipRecoveryPhase { CONFIRM_REAUTH, AUTHENTICATING, CONFIRM_RESET, WRITING }
+
+@androidx.compose.runtime.NonRestartableComposable
 
 @Composable internal fun LeadershipRecoveryOffer(model:ProductViewModel,state:SensitiveState) {
     Text(if(state==SensitiveState.INCOMPLETE_SETUP)
@@ -128,6 +136,7 @@ enum class LeadershipRecoveryPhase { CONFIRM_REAUTH, AUTHENTICATING, CONFIRM_RES
 
 /** Same Activity window: an additional Dialog window would violate the ORIGINAL strict
  * foreground gate. No special focus allowance or alternate session authorization. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun LeadershipRecoverySection(model:ProductViewModel) {
     val intent=model.leadershipRecovery
     val phase=model.leadershipRecoveryPhase
@@ -151,6 +160,6 @@ enum class LeadershipRecoveryPhase { CONFIRM_REAUTH, AUTHENTICATING, CONFIRM_RES
     if(model.leadershipRecoveryError && model.snapshot.state==SessionState.READY) {
         Text("Wiederherstellung nicht abgeschlossen",style=MaterialTheme.typography.titleMedium)
         Text("Der Zustand konnte nicht sicher bestätigt werden. Es wurde kein erfolgreicher Abschluss gemeldet.")
-        FormButton(model::dismissLeadershipRecoveryError){Text("Schließen")}
+        FormButton({model.dismissLeadershipRecoveryError()}){Text("Schließen")}
     }
 }

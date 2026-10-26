@@ -32,7 +32,8 @@ interface WorkspaceAccess {
     }
 }
 data class WorkspaceSupplement(val actionId:String,val generation:Long,
-    val material:MaterialBoard?=null,val expenses:ExpenseBoard?=null)
+    val material:MaterialBoard?=null,val expenses:ExpenseBoard?=null,
+    val protocolTimeline:List<ProtocolTimelineItem>?=null,val memoryHeaders:List<MemoryReportHeader>?=null)
 sealed interface WorkspaceSupplementResult {
     data class Value(val value:WorkspaceSupplement):WorkspaceSupplementResult
     data class Rejected(val reason:WorkspaceFailure):WorkspaceSupplementResult
@@ -42,14 +43,17 @@ sealed interface WorkspaceResult {
     data class Value(val value:WorkspaceRead):WorkspaceResult
     data class Rejected(val reason:WorkspaceFailure):WorkspaceResult
 }
-enum class WorkspaceDetailKind { PERSON, TASK, PLAN, MATERIAL, EXPENSE, ROLE }
+enum class WorkspaceDetailKind { PERSON, TASK, PLAN, MATERIAL, EXPENSE, ROLE, PROTOCOL, MEMORY, STATE, PROTOCOL_TIMELINE, MEMORY_HEADERS, MATERIAL_BOARD, EXPENSE_BOARD }
 data class WorkspaceDetailRequest(val actionId:String,val status:ActionStatus,val generation:Long,
     val kind:WorkspaceDetailKind,val id:String,val ticket:WorkspaceReadTicket,
     val baseline:WorkspaceRead?=null,val expectedAction:Action?=null,
     val membership:Boolean=false)
 data class WorkspaceDetail(val access:WorkspaceAccess,val person:Person?=null,val task:Task?=null,
     val plan:ExpectedPersonRolePlan?=null,val material:MaterialItem?=null,val expense:Expense?=null,
-    val workspace:WorkspaceRead?=null,val removed:Boolean=false,val operationalPerson:OperationalPerson?=null,val role:Role?=null)
+    val workspace:WorkspaceRead?=null,val removed:Boolean=false,val operationalPerson:OperationalPerson?=null,val role:Role?=null,
+    val protocolDetail:ProtocolEntryDetail?=null,val memoryDetail:MemoryReportDetail?=null,val operationalState:PersonOperationalState?=null,
+    val protocolTimeline:List<ProtocolTimelineItem>?=null,val memoryHeaders:List<MemoryReportHeader>?=null,
+    val materialBoard:MaterialBoard?=null,val expenseBoard:ExpenseBoard?=null)
 sealed interface WorkspaceDetailResult {
     data class Value(val value:WorkspaceDetail):WorkspaceDetailResult
     data class Rejected(val reason:WorkspaceFailure):WorkspaceDetailResult

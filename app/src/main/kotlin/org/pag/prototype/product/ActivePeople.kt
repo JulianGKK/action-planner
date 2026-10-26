@@ -45,29 +45,34 @@ internal fun activePersonCard(person: OperationalPerson, board: OperationalBoard
 }
 
 /** Display clock only. Composition disposal cancels the minute job; no model/port calls. */
+@androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun peopleDisplayTime(): Long {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(60_000); now = System.currentTimeMillis() } }
     return now
 }
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable internal fun ActivePeopleList(model: ProductViewModel, board: OperationalBoard) {
     val now = peopleDisplayTime()
     val zone = ZoneId.systemDefault()
-    activePeopleSummary(board).forEach { Text(it) }
-    board.persons.forEach { person -> ActivePersonListRow(model,board,person,now,zone) }
+    activePeopleSummary(board).forOriginal { Text(it) }
+    board.persons.forOriginal { person -> ActivePersonListRow(model,board,person,now,zone) }
 
 }
+
+@androidx.compose.runtime.NonRestartableComposable
 
 @Composable internal fun ActivePersonListRow(model:ProductViewModel,board:OperationalBoard,person:OperationalPerson,now:Long,zone:ZoneId) {
         val row=model.personRow(person)?:return
     LocalProductObservation.current?.let{observer->androidx.compose.runtime.SideEffect{observer("PERSON_ROW")}}
         val card=row.card
         val semanticsLabel=row.semantics
-        FormOutlinedButton(row.focus, enabled = model.activeNavigationEnabled,
-            modifier = Modifier.fillMaxWidth().semantics { onClick(label = semanticsLabel, action = null) }) {
+        FormOutlinedButton(row.focus, contentEpoch=now/60_000,enabled = model.activeNavigationEnabled,
+            modifier = Modifier.fillMaxWidth().originalSemantics { onClick(label = semanticsLabel, action = null) }) {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(card.name, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleLarge)
+                Text(card.name, Modifier.then(productHeadingSemantics), style = MaterialTheme.typography.titleLarge)
                 Text(card.situation)
                 Text(card.function)
                 row.updated(now)?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
@@ -76,21 +81,24 @@ internal fun activePersonCard(person: OperationalPerson, board: OperationalBoard
         }
 }
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable internal fun ActivePersonWorkspace(model: ProductViewModel, board: OperationalBoard) {
     val person = model.operations.person ?: return
     val row=model.personRow(person)?:return
     val card=row.card
+    val personId=card.id
     val now=peopleDisplayTime()
     PreparationHeading(card.name)
     Text(row.situation)
     Text(row.function)
     row.updated(now)?.let { Text(it) }
-    FormButton({ model.operations.update(card.id) }, enabled = model.activeNavigationEnabled) { Text("Lage ändern") }
-    FormButton(model.operations::changeFunction, enabled = model.activeNavigationEnabled && person.state?.status == OperationalStatus.ON_SITE) { Text("Funktion ändern") }
+    FormButton({ model.operations.update(personId) }, enabled = model.activeNavigationEnabled) { Text("Lage ändern") }
+    FormButton({model.operations.changeFunction()}, enabled = model.activeNavigationEnabled && person.state?.status == OperationalStatus.ON_SITE) { Text("Funktion ändern") }
     if (person.state?.status != OperationalStatus.ON_SITE) Text("Eine Funktion kann bei „Vor Ort“ zugeordnet werden.")
     FormOutlinedButton(row.detail, enabled = model.activeNavigationEnabled) { Text("Personendetails") }
     row.affected?.let { Text(it) }
-    if (model.tasks.board != null) FormOutlinedButton({ model.activePersonTasks(card.id, true) }, enabled = model.activeNavigationEnabled) { Text("Aufgabe hinzufügen") }
+    if (model.tasks.board != null) FormOutlinedButton({ model.activePersonTasks(personId, true) }, enabled = model.activeNavigationEnabled) { Text("Aufgabe hinzufügen") }
     if ((model.tasks.board?.affectedCount(card.id) ?: 0) > 0)
-        FormOutlinedButton({ model.activePersonTasks(card.id, false) }, enabled = model.activeNavigationEnabled) { Text("Aufgaben ansehen") }
+        FormOutlinedButton({ model.activePersonTasks(personId, false) }, enabled = model.activeNavigationEnabled) { Text("Aufgaben ansehen") }
 }

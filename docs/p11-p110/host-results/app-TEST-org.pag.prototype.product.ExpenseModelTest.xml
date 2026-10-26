@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.prototype.product.ExpenseModelTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:55:59.895Z" hostname="iuzjhtgvfc" time="0.015">
+<testsuite name="org.pag.prototype.product.ExpenseModelTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-10-26T08:45:58.302Z" hostname="iuzjhtgvfc" time="0.022">
   <properties/>
-  <testcase name="feedbackUsesSafeCentsWithoutCorrection" classname="org.pag.prototype.product.ExpenseModelTest" time="0.004"/>
+  <testcase name="feedbackUsesSafeCentsWithoutCorrection" classname="org.pag.prototype.product.ExpenseModelTest" time="0.005"/>
   <testcase name="loadingErrorRetryAndRefreshKeepOldBoard" classname="org.pag.prototype.product.ExpenseModelTest" time="0.003"/>
-  <testcase name="addRemoveAndThirtyTwoLimit" classname="org.pag.prototype.product.ExpenseModelTest" time="0.0"/>
-  <testcase name="staleRetainsFullDraftAndBlocksBlindRetry" classname="org.pag.prototype.product.ExpenseModelTest" time="0.002"/>
+  <testcase name="addRemoveAndThirtyTwoLimit" classname="org.pag.prototype.product.ExpenseModelTest" time="0.001"/>
+  <testcase name="staleRetainsFullDraftAndBlocksBlindRetry" classname="org.pag.prototype.product.ExpenseModelTest" time="0.004"/>
   <testcase name="freeDraftAndPseudonymCopyHaveNoIdOrWrite" classname="org.pag.prototype.product.ExpenseModelTest" time="0.001"/>
-  <testcase name="createEditDeleteAllThreePhases" classname="org.pag.prototype.product.ExpenseModelTest" time="0.002"/>
+  <testcase name="createEditDeleteAllThreePhases" classname="org.pag.prototype.product.ExpenseModelTest" time="0.003"/>
   <testcase name="pendingReadAndInvalidMoneyCannotClearStale" classname="org.pag.prototype.product.ExpenseModelTest" time="0.0"/>
   <testcase name="lockGenerationActionAndPhaseRejectLateResults" classname="org.pag.prototype.product.ExpenseModelTest" time="0.001"/>
   <testcase name="completedRequiresExplicitEntryAndForbiddenPhasesHaveNoPath" classname="org.pag.prototype.product.ExpenseModelTest" time="0.0"/>
-  <testcase name="partialMoneyAndMismatchNeverWrite" classname="org.pag.prototype.product.ExpenseModelTest" time="0.0"/>
+  <testcase name="partialMoneyAndMismatchNeverWrite" classname="org.pag.prototype.product.ExpenseModelTest" time="0.001"/>
   <testcase name="revokingInteractionCannotOpenCompleted" classname="org.pag.prototype.product.ExpenseModelTest" time="0.001"/>
   <testcase name="cancelAndDeleteRequireConfirmation" classname="org.pag.prototype.product.ExpenseModelTest" time="0.0"/>
   <testcase name="readsAndWritePublicationAreNotInteractionsAndDuplicateIsIgnored" classname="org.pag.prototype.product.ExpenseModelTest" time="0.001"/>

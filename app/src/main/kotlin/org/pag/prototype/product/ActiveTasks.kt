@@ -35,12 +35,15 @@ private val taskActions = TaskStatus.entries.associateWith { status ->
 } // Code-only finite enum table; no action data or source authority.
 internal fun activeTaskActions(status:TaskStatus):List<TaskStatus> = taskActions.getValue(status)
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable internal fun ActiveTaskSection(model: TaskModel, people: OperationalBoard, board: TaskBoard) {
     model.error?.let { Text(taskFailureMessage(it)) }
     val now = System.currentTimeMillis()
     val zone = ZoneId.systemDefault()
     model.filter?.let { id ->
-        Text("Filter · Betrifft: ${people.persons.find { it.person.id == id }?.person?.pseudonym ?: "Person nicht verfügbar"}")
+        val name=people.persons.findOriginal{it.person.id==id}?.person?.pseudonym?:"Person nicht verfügbar"
+        Text(originalText(name.length.toLong()){"Filter · Betrifft: $name"})
         FormOutlinedButton({ model.showPerson(null) }, enabled = !model.busy) { Text("Alle Aufgaben anzeigen") }
     }
     if (model.form) {
@@ -59,39 +62,41 @@ internal fun activeTaskActions(status:TaskStatus):List<TaskStatus> = taskActions
         row.affected?.let { Text(it) }
         row.due(now)?.let { Text(it) }
         if (model.writable) {
-            activeTaskActions(selected.status).forEach { status ->
+            activeTaskActions(selected.status).forOriginal { status ->
                 FormButton({ model.transition(status) }, enabled = !model.busy) {
                     Text(if (status == TaskStatus.OPEN) "Wieder öffnen" else taskStatusLabel(status))
                 }
             }
-            FormOutlinedButton(model::edit, enabled = !model.busy) { Text("Aufgabe bearbeiten") }
+            FormOutlinedButton({model.edit()}, enabled = !model.busy) { Text("Aufgabe bearbeiten") }
         }
         PreparationHeading("Chronik")
         TaskHistory(model)
         return
     }
     val content = activeTaskContent(board, model.filter)
-    content.summary.forEach { Text(it) }
+    content.summary.forOriginal { Text(it) }
     if (model.writable) FormButton({ model.add(model.filter) }, enabled = !model.busy) { Text("+ Aufgabe") }
-    content.active.forEach { task -> ActiveTaskListCard(task, people, now, zone, model) }
+    content.active.forOriginal { task -> ActiveTaskListCard(task, people, now, zone, model) }
     if (content.closed.isNotEmpty()) {
-        FormOutlinedButton(model::toggleClosed, enabled = !model.busy,
-            modifier = Modifier.fillMaxWidth().semantics { stateDescription = if (model.closedExpanded) "Ausgeklappt" else "Eingeklappt" }) {
-            Text("Erledigt / Entfallen (${content.closed.size}) ${if (model.closedExpanded) "▴" else "▾"}")
+        FormOutlinedButton({model.toggleClosed()}, enabled = !model.busy,
+            modifier = Modifier.fillMaxWidth().originalSemantics { stateDescription = if (model.closedExpanded) "Ausgeklappt" else "Eingeklappt" }) {
+            Text(if(model.closedExpanded)content.activeClosedExpanded else content.activeClosedCollapsed)
         }
-        if (model.closedExpanded) content.closed.forEach { task -> ActiveTaskListCard(task, people, now, zone, model) }
+        if (model.closedExpanded) content.closed.forOriginal { task -> ActiveTaskListCard(task, people, now, zone, model) }
     }
 }
+
+@androidx.compose.runtime.NonRestartableComposable
 
 @Composable internal fun ActiveTaskListCard(task: Task, people: OperationalBoard, now: Long, zone: ZoneId, model: TaskModel) {
     val row=model.uiRow(task)?:return
     LocalProductObservation.current?.let{observer->androidx.compose.runtime.SideEffect{observer("TASK_ROW")}}
     val card=row.card(now)
     val semanticsLabel=row.semantics
-    FormOutlinedButton(row.click, enabled = !model.busy,
-        modifier = Modifier.fillMaxWidth().semantics { onClick(label = semanticsLabel, action = null) }) {
+    FormOutlinedButton(row.click, contentEpoch=now/60_000,enabled = !model.busy,
+        modifier = Modifier.fillMaxWidth().originalSemantics { onClick(label = semanticsLabel, action = null) }) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(card.title, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleLarge)
+            Text(card.title, Modifier.then(productHeadingSemantics), style = MaterialTheme.typography.titleLarge)
             Text(card.status)
             Text(card.assignee)
             row.affected?.let { Text(it) }

@@ -1,0 +1,12 @@
+{
+  "compared": "all build33 fingerprint paths",
+  "changed_paths": [
+    "app/src/androidTest/kotlin/org/pag/prototype/P110ConsumerProbe.kt"
+  ],
+  "product_apk_identical": true,
+  "instrumentation_changes": [
+    "State fixture and explicit detail",
+    "COMPLETED 1000 actual sequential read-only detail compositions; same fixture and old aliases",
+    "No-refusal and visible-person assertions; synthetic central session input; production fristen unchanged"
+  ]
+}

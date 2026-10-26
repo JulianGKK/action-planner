@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.prototype.product.MaterialModelTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:55:59.927Z" hostname="iuzjhtgvfc" time="0.009">
+<testsuite name="org.pag.prototype.product.MaterialModelTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-10-26T08:45:58.352Z" hostname="iuzjhtgvfc" time="0.014">
   <properties/>
-  <testcase name="synchronousRefreshRevokeAfterSaveStopsFeedbackAndWorkspaceRead" classname="org.pag.prototype.product.MaterialModelTest" time="0.003"/>
+  <testcase name="synchronousRefreshRevokeAfterSaveStopsFeedbackAndWorkspaceRead" classname="org.pag.prototype.product.MaterialModelTest" time="0.006"/>
   <testcase name="completedRequiresExplicitEntryAndIsAlwaysReadOnly" classname="org.pag.prototype.product.MaterialModelTest" time="0.001"/>
   <testcase name="revokedInteractionAndSensitiveCleanupCannotRepopulateDraft" classname="org.pag.prototype.product.MaterialModelTest" time="0.001"/>
-  <testcase name="lockActionGenerationAndPhaseClearRejectAllLateReadsAndWrites" classname="org.pag.prototype.product.MaterialModelTest" time="0.0"/>
+  <testcase name="lockActionGenerationAndPhaseClearRejectAllLateReadsAndWrites" classname="org.pag.prototype.product.MaterialModelTest" time="0.001"/>
   <testcase name="initialLoadingErrorRetryEmptyAndRefreshRetainHonestStates" classname="org.pag.prototype.product.MaterialModelTest" time="0.0"/>
-  <testcase name="cancelAndDeleteConfirmationCancelNeverWrite" classname="org.pag.prototype.product.MaterialModelTest" time="0.0"/>
+  <testcase name="cancelAndDeleteConfirmationCancelNeverWrite" classname="org.pag.prototype.product.MaterialModelTest" time="0.001"/>
   <testcase name="invalidDraftRemainsAndValidRetryWritesFullInput" classname="org.pag.prototype.product.MaterialModelTest" time="0.001"/>
   <testcase name="editFreezesFullExpectedAndPreservesTemplateKey" classname="org.pag.prototype.product.MaterialModelTest" time="0.0"/>
   <testcase name="draftAndDeletionPendingHaveNoMaterialPath" classname="org.pag.prototype.product.MaterialModelTest" time="0.0"/>
@@ -15,8 +15,8 @@
   <testcase name="readRefreshAndWriteCallbacksNeverCountAsInteractionsAndDuplicateResultIsIgnored" classname="org.pag.prototype.product.MaterialModelTest" time="0.0"/>
   <testcase name="pendingReadCannotClearStaleAfterOpeningEditor" classname="org.pag.prototype.product.MaterialModelTest" time="0.0"/>
   <testcase name="personAndTaskLinksCanBeSelectedAndRemovedIndependently" classname="org.pag.prototype.product.MaterialModelTest" time="0.0"/>
-  <testcase name="templateOnlyOpensDraftAndFreeEntryHasNoKey" classname="org.pag.prototype.product.MaterialModelTest" time="0.001"/>
-  <testcase name="wrongActionBoardNeverEntersReachableState" classname="org.pag.prototype.product.MaterialModelTest" time="0.0"/>
+  <testcase name="templateOnlyOpensDraftAndFreeEntryHasNoKey" classname="org.pag.prototype.product.MaterialModelTest" time="0.0"/>
+  <testcase name="wrongActionBoardNeverEntersReachableState" classname="org.pag.prototype.product.MaterialModelTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

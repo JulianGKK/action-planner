@@ -56,6 +56,8 @@ internal val LocalScrollDiagnostic = staticCompositionLocalOf<((Int, Constraints
 internal fun loadingViewportMinimum(viewportHeightPx:Int, verticalPaddingPx:Int):Int =
     if(viewportHeightPx==Constraints.Infinity)0 else (viewportHeightPx-verticalPaddingPx).coerceAtLeast(0)
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable internal fun productScrollGeometry(model:ProductViewModel,scroll:ScrollState,viewportHeightPx:Int,positions:ProductScrollPositions):Modifier {
     val destination=productNavigationKey(model)
     val waiting=productReadPending(model)

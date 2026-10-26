@@ -8,6 +8,10 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 
+// Immutable CODE enum groups; no action payload, authority or per-render Set.
+private val supportedProtocolRevisionTypeGroup1=setOf(ProtocolRevisionType.CORRECTION,ProtocolRevisionType.ADDENDUM)
+
+
 enum class ProtocolFilter { ALL, KEY_EVENTS }
 enum class ProtocolUiMode { ACTIVE, COMPLETED_FOLLOW_UP }
 /** Explicit phase presentation. All drafts and request bindings expire with the workspace. */
@@ -15,6 +19,33 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
     private val action: () -> Action?, private val interaction: () -> Unit,
     private val refreshWorkspace: () -> Unit, private val feedback: (String) -> Unit,
     private val now: () -> Long = System::currentTimeMillis) {
+    internal val uiEditorEpoch:Long get()=epoch
+    private var feedbackFactory:WorkspaceFeedbackFactory?=null
+    internal fun bindFeedbackFactory(factory:WorkspaceFeedbackFactory){check(feedbackFactory==null);feedbackFactory=factory}
+    private var readPresentation:ProtocolPresentation?=null
+    internal fun ui():ProtocolPresentation? {
+        if(session().state!=SessionState.READY || action()?.status?.let(ProtocolRules::mayRead)!=true || copyGate?.invoke(FollowPresentationCost.check){}!=null)return null
+        readPresentation?.let{if(it.matches(timeline,detail))return it}
+        val plan=copyGate?.invoke(FollowPresentationCost.planning){}
+        if(plan!=null){error=if(plan==OperationsFailure.BUDGET_REFUSED)ProtocolFailure.BUDGET_REFUSED else ProtocolFailure.OWNER_UNCONFIRMED;return null}
+        var items=0L;var chars=0L
+        fun item(){items=Math.addExact(items,1)}
+        fun text(v:String?){chars=Math.addExact(chars,v?.length?.toLong()?:0)}
+        for(v in timeline.orEmpty()){item();text(v.title);text(v.entryId)}
+        for(v in detail?.revisions.orEmpty()){
+            item();val f=AppConsumerCopies.Footprint();f.protocol(v.revision.input);chars=Math.addExact(chars,f.chars);items=Math.addExact(items,f.items)
+            for(p in v.affectedPersons){item();text(p.pseudonym)};text(v.reportedBy?.pseudonym)
+        }
+        val units=try{FollowPresentationCost.units(items,chars)}catch(_:ArithmeticException){error=ProtocolFailure.BUDGET_REFUSED;return null}
+        var value:ProtocolPresentation?=null
+        val failure=if(copyGate==null){value=ProtocolPresentation(timeline,detail);null}else copyGate!!.invoke(units){value=ProtocolPresentation(timeline,detail)}
+        if(failure!=null){error=if(failure==OperationsFailure.BUDGET_REFUSED)ProtocolFailure.BUDGET_REFUSED else ProtocolFailure.OWNER_UNCONFIRMED;return null}
+        readPresentation=value;return value
+    }
+    private var detailLoader:WorkspaceDetailLoader?=null
+    internal var formStructureEpoch:Long=0;private set
+    internal fun bindDetailLoader(loader:WorkspaceDetailLoader){check(detailLoader==null);detailLoader=loader}
+    var commitConfirmed by mutableStateOf(false);private set
     private var copyGate:((ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?)?=null
     internal fun bindCopyGate(gate:(ActiveWorkspaceBudget.Units,()->Unit)->OperationsFailure?){check(copyGate==null);copyGate=gate}
     private fun copyData(extra:String?=null,additional:ProtocolInput?=null,producer:()->Unit):Boolean {
@@ -32,7 +63,7 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
     fun place(value:String)=alter(value){it.copy(placeLabel=value)}
     fun classification(value:ProtocolClassification)=alter{it.copy(classification=value)}
     fun approximate()=alter{it.copy(occurredAtApproximate=!it.occurredAtApproximate)}
-    fun source(value:ProtocolSourceType?)=alter{it.copy(sourceType=value)}
+    fun source(value:ProtocolSourceType?)=alter{old->old.copy(sourceType=value).also{if(old.sourceType!=value)formStructureEpoch++}}
     fun reportedBy(id:String?)=alter{it.copy(reportedByPersonId=id)}
     fun affected(id:String)=alter{it.copy(affectedPersonIds=if(id in it.affectedPersonIds)it.affectedPersonIds-id else it.affectedPersonIds+id)}
     fun removeAnnouncement()=alter{it.copy(announcementText=null,announcementKind=null)}
@@ -109,7 +140,7 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
     val filtered get() = if(filter==ProtocolFilter.ALL)timeline else keyEvents
     private fun moveContext() { epoch++; loading = false }
     fun clear() {
-        moveContext(); timelineRequest++; detailRequest++
+        moveContext(); timelineRequest++; detailRequest++;commitConfirmed=false;readPresentation=null
         mode = ProtocolUiMode.ACTIVE; followUpActionId = null; followUpGeneration = null
         timeline = null; keyEvents=null; loading = false; detail = null; entryId = null; detailLoading = false; filter = ProtocolFilter.ALL
         discardDraft(); busy = false; error = null; moreTemplates = false; history = false
@@ -142,9 +173,19 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
     fun refresh() {
         val current = binding() ?: return; val id = action()!!.id; val request = ++timelineRequest
         loading = true
+        detailLoader?.let{loader->
+            loader(WorkspaceDetailKind.PROTOCOL_TIMELINE,id){result->
+                if(!current() || request!=timelineRequest)return@loader
+                timelineRequest++;loading=false
+                when(result){
+                    is WorkspaceDetailResult.Rejected->reject(when(result.reason){WorkspaceFailure.BUDGET_REFUSED->ProtocolFailure.BUDGET_REFUSED;WorkspaceFailure.STALE->ProtocolFailure.STALE;else->ProtocolFailure.NOT_FOUND})
+                    is WorkspaceDetailResult.Value->{val rows=result.value.workspace?.protocolTimeline;if(rows==null)reject(ProtocolFailure.NOT_FOUND) else if(acceptTimeline(rows))error=null}
+                }
+            };return
+        }
         repository?.listTimeline(id) { result ->
             if (!current() || request != timelineRequest) return@listTimeline
-            loading = false
+            timelineRequest++;loading = false
             when (result) { is ProtocolResult.Value -> { if(acceptTimeline(result.value))error = null }
                 is ProtocolResult.Rejected -> reject(result.reason) }
         }
@@ -155,6 +196,7 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
     fun toggleTemplates() = act { moreTemplates = !moreTemplates }
     fun toggleFields() = act { moreFields = !moreFields }
     fun toggleHistory() = act { history = !history }
+    fun oldRevisionId(id:String)=act {detail?.revisions?.find{it.revision.id==id}?.let{historical=it}}
     fun oldRevision(value: ProtocolRevisionDetail?) = act {
         if (value == null || detail?.revisions?.any { it == value } == true) historical = value
     }
@@ -187,24 +229,45 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
         if (form && revisionType == ProtocolRevisionType.CORRECTION && expected?.revision?.mistaken == true) clearMistaken = !clearMistaken
     }
     fun addIdentifier() = act { val i = input ?: return@act
-        if (i.officialIdentifiers.size < 32) copyData { input = i.copy(officialIdentifiers = i.officialIdentifiers + ProtocolOfficialIdentifier(ProtocolOfficialIdentifierType.SERVICE_OR_ID_NUMBER, "")) } }
-    fun removeIdentifier(index:Int)=alter{it.copy(officialIdentifiers=it.officialIdentifiers.filterIndexed{n,_->n!=index})}
+        if (i.officialIdentifiers.size < 32) copyData { input = i.copy(officialIdentifiers = i.officialIdentifiers + ProtocolOfficialIdentifier(ProtocolOfficialIdentifierType.SERVICE_OR_ID_NUMBER, ""));formStructureEpoch++ } }
+    fun removeIdentifier(index:Int)=alter{it.copy(officialIdentifiers=it.officialIdentifiers.filterIndexed{n,_->n!=index}).also{formStructureEpoch++}}
     fun open(entryId: String) = act { moveContext(); discardDraft(); historical = null; history = false; confirmingMistaken = false; loadDetail(entryId) }
-    private fun loadDetail(entryId: String) {
+    private fun loadDetail(entryId: String,discardAfter:Boolean=false,projectionFeedback:((String)->Unit)?=null,completed:(()->Unit)?=null) {
         val current = binding() ?: return; val id = action()!!.id; val request = ++detailRequest
         this.entryId = entryId
         detailLoading = true; error = null
         if (detail?.entry?.id != entryId) detail = null
-        repository?.getEntry(id, entryId) { result ->
-            if (!current() || request != detailRequest) return@getEntry
-            detailLoading = false
-            when (result) { is ProtocolResult.Value -> if (result.value.entry.actionId == id && result.value.entry.id == entryId) detail = result.value
-                is ProtocolResult.Rejected -> reject(result.reason) }
+        var delivered=false
+        fun accept(result:ProtocolResult<ProtocolEntryDetail>){
+            if(delivered || !current() || request!=detailRequest)return
+            delivered=true;detailLoading=false
+            when(result){
+                is ProtocolResult.Value->if(result.value.entry.actionId==id && result.value.entry.id==entryId){
+                    if(discardAfter){discardDraft();historical=null;confirmingMistaken=false;commitConfirmed=false}
+                    detail=result.value;error=null;completed?.invoke()
+                }
+                is ProtocolResult.Rejected->{reject(result.reason);if(commitConfirmed)projectionFeedback?.invoke("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+            }
+        }
+        val loader=detailLoader
+        if(loader==null)repository?.getEntry(id,entryId,::accept) else loader(WorkspaceDetailKind.PROTOCOL,entryId){result->
+            if(delivered || !current() || request!=detailRequest)return@loader
+            when(result){
+                is WorkspaceDetailResult.Rejected->accept(ProtocolResult.Rejected(result.reason.protocolFailure()))
+                is WorkspaceDetailResult.Value->{
+                    val value=result.value.protocolDetail
+                    val rows=result.value.workspace?.protocolTimeline
+                    if(value==null || rows==null)accept(ProtocolResult.Rejected(ProtocolFailure.NOT_FOUND))
+                    else if(acceptTimeline(rows))accept(ProtocolResult.Value(value))
+                    else {delivered=true;detailLoading=false;if(commitConfirmed)projectionFeedback?.invoke("Gespeichert – Ansicht konnte noch nicht aktualisiert werden.")}
+                }
+            }
         }
     }
+
     fun revise(type: ProtocolRevisionType) = act {
         if (historical != null || detailLoading || error == ProtocolFailure.STALE) return@act
-        if (type !in setOf(ProtocolRevisionType.CORRECTION, ProtocolRevisionType.ADDENDUM)) return@act
+        if (type !in supportedProtocolRevisionTypeGroup1) return@act
         val d = detail ?: return@act
         if(!copyData(additional=d.current.revision.input) { expected = ProtocolExpectedRevision(d.entry, d.current.revision.copy(input = d.current.revision.input.copy(affectedPersonIds = d.current.revision.input.affectedPersonIds.toSet(), officialIdentifiers = d.current.revision.input.officialIdentifiers.toList()))) })return@act
         moveContext()
@@ -220,7 +283,7 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
         if (timeline == null) refresh()
     }
     fun currentVersion() = act { val id = expected?.entry?.id ?: detail?.entry?.id ?: entryId ?: return@act
-        moveContext(); discardDraft(); historical = null; confirmingMistaken = false; loadDetail(id) }
+        moveContext();loadDetail(id,discardAfter=true) }
     fun requestMistaken() = act { if (historical == null && !detailLoading && error != ProtocolFailure.STALE && detail?.current?.revision?.mistaken == false) confirmingMistaken = true }
     fun cancelMistaken() = act { confirmingMistaken = false }
     fun markMistaken() = act {
@@ -257,6 +320,8 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
             ProtocolRevisionType.ADDENDUM -> "Ergänzung gespeichert"
             ProtocolRevisionType.MARKED_MISTAKEN -> "Irrtumsmarkierung gespeichert"
         }
+        if(commitConfirmed || detailLoading)return
+        val emit=if(feedbackFactory==null)feedback else feedbackFactory!!.invoke()?:run{error=ProtocolFailure.BUDGET_REFUSED;return}
         busy = true; error = null
         operation { result ->
             if (!current()) return@operation
@@ -264,11 +329,19 @@ class ProtocolModel(private val repository: ProtocolRepository?, private val ses
             when (result) {
                 is ProtocolResult.Rejected -> reject(result.reason)
                 is ProtocolResult.Value -> {
-                    discardDraft(); confirmingMistaken = false; history = false; historical = null
-                    loadDetail(result.value.entryId)
-                    if (current()) refresh()
-                    if (current() && mode == ProtocolUiMode.ACTIVE) refreshWorkspace()
-                    if (current()) feedback(message)
+                    if(detailLoader==null){
+                        discardDraft();confirmingMistaken=false;history=false;historical=null
+                        loadDetail(result.value.entryId)
+                        if(current())refresh()
+                        if(current() && mode==ProtocolUiMode.ACTIVE)refreshWorkspace()
+                        if(current())emit(message)
+                    }else{
+                        commitConfirmed=true
+                        loadDetail(result.value.entryId,discardAfter=true,projectionFeedback=emit){
+                            commitConfirmed=false;history=false
+                            if(current())emit(message)
+                        }
+                    }
                 }
             }
         }
@@ -298,4 +371,11 @@ internal fun protocolFailure(reason: ProtocolFailure) = when (reason) {
     ProtocolFailure.OWNER_UNCONFIRMED -> "Die Ansicht kann nicht geladen werden: Ein vorheriger Datenzugriff ist noch nicht nachweislich beendet."
     ProtocolFailure.BUDGET_REFUSED->"Die Daten überschreiten das zulässige Speicherbudget."
     ProtocolFailure.STALE -> "Der Eintrag oder Aktionsstatus hat sich inzwischen geändert. Die Eingaben wurden nicht gespeichert."
+}
+
+private fun WorkspaceFailure.protocolFailure():ProtocolFailure=when(this){
+    WorkspaceFailure.BUDGET_REFUSED->ProtocolFailure.BUDGET_REFUSED
+    WorkspaceFailure.OWNER_UNCONFIRMED->ProtocolFailure.OWNER_UNCONFIRMED
+    WorkspaceFailure.STALE->ProtocolFailure.STALE
+    else->ProtocolFailure.NOT_FOUND
 }

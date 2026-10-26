@@ -1,0 +1,381 @@
+{
+  "status": "46_PASS",
+  "synthetic_authentication": true,
+  "physical_memory_claim": false,
+  "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+  "cases": [
+    {
+      "case": "active",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-active-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "person",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-person-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "plan",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-plan-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "stale",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-stale-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "material",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-material-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "expense",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-expense-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "preparation",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-preparation-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "completed",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-completed-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "large",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-large-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "lock-detail",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-lock-detail-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "lost-detail-main",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-lost-detail-main-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "duplicate-detail-main",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-duplicate-detail-main-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "unknown-detail",
+      "mode": "run",
+      "passed": true,
+      "raw": "device-unknown-detail-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "postcommit-ui-refusal",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-postcommit-ui-refusal-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "material-input",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-material-input-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "form-repeat",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-form-repeat-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "control-r-exact",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-control-r-exact-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "control-r-over",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-control-r-over-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "control-t-exact",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-control-t-exact-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "control-t-over",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-control-t-over-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "action-revoke",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-action-revoke-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "protocol-create",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-protocol-create-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "memory-create",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-memory-create-build33.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "60c0ad17dcdf913769bddf2a0b6fb5ecccffd57286368c17bf87a9f2d9fefa5b"
+    },
+    {
+      "case": "state-edit",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-state-edit-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "person-create",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-person-create-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "task-create",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-task-create-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "task-delete",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-task-delete-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "material-create",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-material-create-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "material-delete",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-material-delete-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "expense-create",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-expense-create-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "expense-delete",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-expense-delete-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "role-create",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-role-create-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "role-rename",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-role-rename-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "role-delete",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-role-delete-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "ui-r-exact",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-ui-r-exact-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "ui-r-over",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-ui-r-over-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "ui-t-exact",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-ui-t-exact-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "ui-t-over",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-ui-t-over-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "repeat-active",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-repeat-active-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "repeat-preparation",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-repeat-preparation-build35-tail.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "838073d5be58dae0bb8496f91f41b6699fe3be25a92de82d5ddec25789ab51a6"
+    },
+    {
+      "case": "repeat-completed",
+      "mode": "consumer",
+      "passed": true,
+      "raw": "device-p110-repeat-completed-build41.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "d1c9ccb3cb5cd8c555790c88aff8c875315689c060eeb21a97586a91ed8eea06"
+    },
+    {
+      "case": "exposed",
+      "mode": "P107",
+      "passed": true,
+      "raw": "device-p107-exposed.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "d1c9ccb3cb5cd8c555790c88aff8c875315689c060eeb21a97586a91ed8eea06"
+    },
+    {
+      "case": "r-exact",
+      "mode": "P107",
+      "passed": true,
+      "raw": "device-p107-r-exact.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "d1c9ccb3cb5cd8c555790c88aff8c875315689c060eeb21a97586a91ed8eea06"
+    },
+    {
+      "case": "r-over",
+      "mode": "P107",
+      "passed": true,
+      "raw": "device-p107-r-over.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "d1c9ccb3cb5cd8c555790c88aff8c875315689c060eeb21a97586a91ed8eea06"
+    },
+    {
+      "case": "t-exact",
+      "mode": "P107",
+      "passed": true,
+      "raw": "device-p107-t-exact.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "d1c9ccb3cb5cd8c555790c88aff8c875315689c060eeb21a97586a91ed8eea06"
+    },
+    {
+      "case": "t-over",
+      "mode": "P107",
+      "passed": true,
+      "raw": "device-p107-t-over.txt",
+      "product_apk_sha256": "b3bfcdb3fb19ff3b26e1d8b13776e1a86a5c8e6d2a57d640fddcf33448dde010",
+      "test_apk_sha256": "d1c9ccb3cb5cd8c555790c88aff8c875315689c060eeb21a97586a91ed8eea06"
+    }
+  ],
+  "cleanup": {
+    "protected_packages_unchanged": true,
+    "fixture_roots": [],
+    "physical_wipe_claim": false
+  }
+}

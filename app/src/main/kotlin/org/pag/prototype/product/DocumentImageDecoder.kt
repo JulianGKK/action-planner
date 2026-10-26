@@ -9,6 +9,10 @@ import org.pag.domain.*
 import java.io.ByteArrayInputStream
 import java.util.concurrent.atomic.AtomicReference
 
+// Immutable CODE enum groups; no action payload, authority or per-render Set.
+private val supportedDocumentFormatGroup1=setOf(DocumentFormat.JPEG,DocumentFormat.PNG)
+
+
 /** Recycle unrendered results promptly; a displayed bitmap must not race the render thread. */
 internal class BitmapDocumentImage(bitmap:Bitmap):DocumentImage {
     private val owned=AtomicReference<Bitmap?>(bitmap)
@@ -48,7 +52,7 @@ private inline fun <T> imagePhase(noinline timing:((ImageDecodePhase,Long)->Unit
 internal object AndroidDocumentImageDecoder:DocumentImageDecoder {
     override fun decode(bytes:ByteArray,format:DocumentFormat,check:()->Unit):DocumentImage = decodeTimed(bytes,format,check,null)
     internal fun decodeTimed(bytes:ByteArray,format:DocumentFormat,check:()->Unit,timing:((ImageDecodePhase,Long)->Unit)?):DocumentImage {
-        if(format !in setOf(DocumentFormat.JPEG,DocumentFormat.PNG))throw DocumentImageUnsupported()
+        if(format !in supportedDocumentFormatGroup1)throw DocumentImageUnsupported()
         var bitmap:Bitmap?=null
         try {
             check()

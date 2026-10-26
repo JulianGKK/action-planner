@@ -1,0 +1,27 @@
+run active PASS
+run person PASS
+run plan PASS
+run stale PASS
+run material FAIL
+INSTRUMENTATION_STATUS: stream=P109,material,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=2639764, transition=16777216, localRetained=2639764, localTransition=5356984, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,FAILURE,java.lang.IllegalStateException: P109 timeout updated module value visible
+	at org.pag.prototype.P109FunctionalOwnerProbe.await(P109FunctionalOwnerProbe.kt:25)
+	at org.pag.prototype.P109FunctionalOwnerProbe.onStart(P109FunctionalOwnerProbe.kt:179)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P109 FAIL material
+INSTRUMENTATION_CODE: 0
+
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p110/run-device.py", line 23, in <module>
+    assert 'P109 PASS '+scenario in output, 'Device assertions failed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Device assertions failed
+

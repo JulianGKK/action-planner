@@ -1,0 +1,17 @@
+INSTRUMENTATION_STATUS: stream=P110,form-repeat,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=3051696, transition=16777216, localRetained=3051696, localTransition=6521508, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,form-repeat,FORM_REPEAT,compositions=100,held_drafts=32,same_current_draft=true,record=State(phase=RETAINED, retained=5299044, transition=16777216, localRetained=5299044, localTransition=8768856, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,form-repeat,FORM_REPEAT,compositions=1000,held_drafts=32,same_current_draft=true,record=State(phase=RETAINED, retained=6395100, transition=16777216, localRetained=6395100, localTransition=9864912, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,form-repeat,FORM_COMMITTED,new_value_and_revision_visible=true,old_expected_and_32_drafts_held=true,record=State(phase=RETAINED, retained=7788028, transition=16777216, localRetained=7788028, localTransition=11403880, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,form-repeat,PASS,full_graphs=1,fixture_cleanup=true,no_physical_memory_claim=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 PASS form-repeat
+INSTRUMENTATION_CODE: -1

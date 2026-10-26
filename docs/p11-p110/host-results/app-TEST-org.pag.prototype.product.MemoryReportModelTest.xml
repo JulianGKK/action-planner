@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="org.pag.prototype.product.MemoryReportModelTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-10-25T13:55:59.946Z" hostname="iuzjhtgvfc" time="0.025">
+<testsuite name="org.pag.prototype.product.MemoryReportModelTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-10-26T08:45:58.381Z" hostname="iuzjhtgvfc" time="0.039">
   <properties/>
-  <testcase name="dependencyRequiresExplicitKeepOrRemove" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.013"/>
+  <testcase name="dependencyRequiresExplicitKeepOrRemove" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.02"/>
   <testcase name="callbacksAndDisplayAreNotInteractions" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.0"/>
-  <testcase name="boundariesInvalidInputAndExternalAuthorDoNotWrite" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.003"/>
-  <testcase name="reenterUsesNextUnsavedAndCompletedProgressUsesSummary" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.001"/>
+  <testcase name="boundariesInvalidInputAndExternalAuthorDoNotWrite" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.004"/>
+  <testcase name="reenterUsesNextUnsavedAndCompletedProgressUsesSummary" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.002"/>
   <testcase name="newDraftIsRamAndFirstSaveRevealsOnlyThenB" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.0"/>
-  <testcase name="deniedAnswerAuthorAndDerivedCopiesPreserveDraftAndNeverWrite" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.001"/>
+  <testcase name="deniedAnswerAuthorAndDerivedCopiesPreserveDraftAndNeverWrite" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.002"/>
   <testcase name="synchronousInteractionRevokeStopsSaveBeforeWrite" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.0"/>
-  <testcase name="completedReadOnlyAndAddendaNeverChangeAnswers" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.003"/>
+  <testcase name="completedReadOnlyAndAddendaNeverChangeAnswers" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.005"/>
   <testcase name="statusAndActionBindingRejectLateCallbacks" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.001"/>
   <testcase name="alreadyPublishedDetailCannotReplaceEditedEarlierSection" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.0"/>
-  <testcase name="staleRetainsDraftAndRequiresConsciousReload" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.0"/>
-  <testcase name="progressSurvivesEmptySectionsAndEarlierEdit" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.001"/>
+  <testcase name="staleRetainsDraftAndRequiresConsciousReload" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.001"/>
+  <testcase name="progressSurvivesEmptySectionsAndEarlierEdit" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.002"/>
   <testcase name="committedButNoPublicationNoSuccessAndExplicitReopenFindsSavedSection" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.0"/>
-  <testcase name="dirtyBackAsksAndCancelDoesNotWrite" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.0"/>
+  <testcase name="dirtyBackAsksAndCancelDoesNotWrite" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.001"/>
   <testcase name="lockBeforeFirstSaveLosesEverything" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.0"/>
   <testcase name="forbiddenPhasesHaveNoPath" classname="org.pag.prototype.product.MemoryReportModelTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>

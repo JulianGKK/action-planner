@@ -1,0 +1,23 @@
+INSTRUMENTATION_STATUS: stream=P109,material,INITIAL,synthetic_auth=true,visible=true,persons=20,full_graphs=1,record=State(phase=RETAINED, retained=2571364, transition=16777216, localRetained=2571364, localTransition=5288584, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,PERSON,same_row_identity=true,visible=true,no_second_full_graph=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,MODULE_UI_STATE,area=MATERIAL,form=false,expenseForm=false,error=false,refusal=null,screenLive=true,record=State(phase=RETAINED, retained=5903655, transition=16777216, localRetained=5903655, localTransition=10052883, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,MODULE_UI_TEXT,P77 ISOLIERTER TEST – synthetischer Schlüssel und synthetische Testdaten; keine Produktanmeldung | Sperren | Synthetic material 3 | Synthetic material 9 | Synthetic material 11 | Synthetic material 1 | Synthetic material 10 | Synthetic material 0 | Synthetic material 17 | Synthetic material 8 | Synthetic material 16 | Synthetic material 14 | Synthetic material 2 | Synthetic material 15
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,MODULE_COMMITTED,kind=material,new_value_visible=true,full_graphs=1,record=State(phase=RETAINED, retained=5903655, transition=16777216, localRetained=5903655, localTransition=10052883, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,NEGATIVE,held_TEST_snapshot=true,second_full_graph=REFUSED,lock_and_new_generation=REFUSED,record=State(phase=RETAINED, retained=5903655, transition=16777216, localRetained=5903655, localTransition=10052883, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P109,material,CASE,ANDROID_PASS,fixture_cleanup=true,reuse=false,ramReuse=false,closure=UNDER_TEST
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P109 PASS material
+INSTRUMENTATION_CODE: -1

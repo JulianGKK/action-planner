@@ -18,10 +18,16 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import org.pag.domain.*
 
+// Immutable CODE enum groups; no action payload, authority or per-render Set.
+private val supportedDocumentFormatGroup1=setOf(DocumentFormat.JPEG,DocumentFormat.PNG)
+
+
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable internal fun DocumentWorkspace(model: ProductViewModel) {
     val d=model.documents
     ActionWorkspaceHeader(model)
-    FormOutlinedButton(model::closeDocuments, enabled=!d.busy) {
+    FormOutlinedButton({model.closeDocuments()}, enabled=!d.busy) {
         Text(when(model.selected?.status) { ActionStatus.COMPLETED -> "‹ Zur abgeschlossenen Aktion"; ActionStatus.ACTIVE -> "‹ Zum Lagebild"; else -> "‹ Zur Übersicht" })
     }
     PreparationHeading("Dokumente")
@@ -32,7 +38,7 @@ import org.pag.domain.*
         d.textViewed!=null -> DocumentTextPane(d)
         d.viewed!=null -> {
             PreparationHeading(d.viewed!!.displayName)
-            FormOutlinedButton(d::closeImage) {Text("‹ Zur Dokumentenliste")}
+            FormOutlinedButton({d.closeImage()}) {Text("‹ Zur Dokumentenliste")}
             PagReadStatus(d.imageLoading,"Bild wird geladen …")
             Box(Modifier.fillMaxWidth().height(480.dp),contentAlignment=Alignment.Center) {
             (d.image as? BitmapDocumentImage)?.forDisplay()?.let {bitmap ->
@@ -45,8 +51,8 @@ import org.pag.domain.*
         expected!=null -> {
             Text(expected.displayName)
             Text("Die geschützte PaG-Kopie dieses Dokuments wird entfernt.\n\nDie ursprüngliche Datei außerhalb von PaG bleibt davon unberührt.")
-            FormButton(d::confirmDelete, enabled=!d.busy) { Text("Löschen bestätigen") }
-            FormOutlinedButton(d::cancelDelete, enabled=!d.busy) { Text("Abbrechen") }
+            FormButton({d.confirmDelete()}, enabled=!d.busy) { Text("Löschen bestätigen") }
+            FormOutlinedButton({d.cancelDelete()}, enabled=!d.busy) { Text("Abbrechen") }
         }
         d.importing -> {
             Text("PaG erstellt eine verschlüsselte Kopie. Die Originaldatei außerhalb von PaG bleibt bestehen.")
@@ -55,24 +61,24 @@ import org.pag.domain.*
             Text("Format bewusst auswählen. Die Dateibytes werden zusätzlich geprüft.")
             DocumentFormat.entries.forEach { format ->
                 val chosen=d.format==format
-                FormOutlinedButton({d.changeFormat(format)},enabled=!d.busy,modifier=Modifier.semantics { selected=chosen }) {
-                    Text((if(chosen) "✓ " else "")+documentFormat(format))
+                FormOutlinedButton({d.changeFormat(format)},enabled=!d.busy,modifier=Modifier.originalSemantics { selected=chosen }) {
+                    Text(originalText{(if(chosen) "✓ " else "")+documentFormat(format)})
                 }
             }
             Text("Maximal 25 MiB pro Dokument · 100 Dokumente / 250 MiB pro Aktion")
-            FormButton(d::save,enabled=d.canSave) { Text(if(d.busy) "Import läuft …" else "Import bestätigen") }
-            FormOutlinedButton(d::cancelImport,enabled=!d.busy) { Text("Abbrechen") }
+            FormButton({d.save()},enabled=d.canSave) { Text(if(d.busy) "Import läuft …" else "Import bestätigen") }
+            FormOutlinedButton({d.cancelImport()},enabled=!d.busy) { Text("Abbrechen") }
         }
         else -> {
             if(d.canContinueImport) {
                 Text("Datei ausgewählt – Import noch nicht abgeschlossen.")
-                FormButton(d::continueImport,enabled=!d.busy) { Text("Import fortsetzen") }
-                FormOutlinedButton(d::cancelImport,enabled=!d.busy) { Text("Dateiauswahl verwerfen") }
+                FormButton({d.continueImport()},enabled=!d.busy) { Text("Import fortsetzen") }
+                FormOutlinedButton({d.cancelImport()},enabled=!d.busy) { Text("Dateiauswahl verwerfen") }
             }
             if(d.selectionUnavailable) Text("Die Dateiauswahl ist nicht mehr verfügbar. Bitte die Datei erneut auswählen.")
             d.camera.error?.let { Text(cameraFailure(it)) }
-            if(d.cameraSupported) FormButton(d::takePhoto,enabled=!d.busy) { Text("Foto aufnehmen") }
-            FormButton(d::chooseFile,enabled=!d.busy) { Text("Dokument importieren") }
+            if(d.cameraSupported) FormButton({d.takePhoto()},enabled=!d.busy) { Text("Foto aufnehmen") }
+            FormButton({d.chooseFile()},enabled=!d.busy) { Text("Dokument importieren") }
             Text("PaG erstellt eine verschlüsselte Kopie. Die Originaldatei außerhalb von PaG bleibt bestehen.")
             PagReadStatus(d.loading,"Dokumente werden geladen …")
             if(d.items?.isEmpty()==true) Text("Noch keine Dokumente gespeichert.")
@@ -80,7 +86,7 @@ import org.pag.domain.*
                 PreparationHeading(item.displayName)
                 Text("${documentFormat(item.format)} · ${item.plaintextSize} Bytes")
                 Text("Importiert am: ${formattedTime(item.importedAt)}")
-                if(item.format in setOf(DocumentFormat.JPEG,DocumentFormat.PNG)) {
+                if(item.format in supportedDocumentFormatGroup1) {
                     FormOutlinedButton({d.viewImage(item)},enabled=!d.busy) {Text("Bild ansehen")}
                 } else if(item.format==DocumentFormat.TEXT) {
                     FormOutlinedButton({d.viewText(item)},enabled=!d.busy) {Text("Text ansehen")}
@@ -114,13 +120,16 @@ internal fun documentFailure(reason: DocumentFailure) = when(reason) {
     DocumentFailure.STALE -> "Der Dokumentbestand hat sich geändert. Bitte die Liste aktualisieren."
 }
 
+@androidx.compose.runtime.NonRestartableComposable
+
 @Composable internal fun DocumentTextPane(d:DocumentModel) {
     PreparationHeading(d.textViewed?.displayName.orEmpty())
-    FormOutlinedButton(d::closeText) {Text("‹ Zur Dokumentenliste")}
+    FormOutlinedButton({d.closeText()}) {Text("‹ Zur Dokumentenliste")}
     Text(if(d.textPageCount>0) "Seite ${d.textPageIndex+1} von ${d.textPageCount}" else "Seite ${d.textPageIndex+1}")
+    @androidx.compose.runtime.NonRestartableComposable
     @Composable fun navigation() {
-        FormOutlinedButton(d::previousTextPage,enabled=!d.textLoading && d.textPageIndex>0) {Text("‹ Seite zurück")}
-        FormOutlinedButton(d::nextTextPage,enabled=!d.textLoading && d.textPageIndex+1<d.textPageCount) {Text("Seite weiter ›")}
+        FormOutlinedButton({d.previousTextPage()},enabled=!d.textLoading && d.textPageIndex>0) {Text("‹ Seite zurück")}
+        FormOutlinedButton({d.nextTextPage()},enabled=!d.textLoading && d.textPageIndex+1<d.textPageCount) {Text("Seite weiter ›")}
     }
     navigation()
     PagReadStatus(d.textLoading,"Text wird geladen …")
@@ -138,15 +147,17 @@ internal fun documentFailure(reason: DocumentFailure) = when(reason) {
     }
     }
     navigation()
-    FormOutlinedButton(d::closeText) {Text("‹ Zur Dokumentenliste")}
+    FormOutlinedButton({d.closeText()}) {Text("‹ Zur Dokumentenliste")}
 }
+
+@androidx.compose.runtime.NonRestartableComposable
 
 @Composable internal fun DocumentPdfPane(d:DocumentModel){
     PreparationHeading(d.pdfViewed?.displayName.orEmpty())
-    FormOutlinedButton(d::closePdf){Text("‹ Zur Dokumentenliste")}
+    FormOutlinedButton({d.closePdf()}){Text("‹ Zur Dokumentenliste")}
     Text(if(d.pdfCount>0)"Seite ${d.pdfIndex+1} von ${d.pdfCount}" else "Seite ${d.pdfIndex+1}")
-    FormOutlinedButton(d::previousPdfPage,enabled=!d.pdfLoading && d.pdfIndex>0){Text("‹ Seite zurück")}
-    FormOutlinedButton(d::nextPdfPage,enabled=!d.pdfLoading && d.pdfIndex+1<d.pdfCount){Text("Seite weiter ›")}
+    FormOutlinedButton({d.previousPdfPage()},enabled=!d.pdfLoading && d.pdfIndex>0){Text("‹ Seite zurück")}
+    FormOutlinedButton({d.nextPdfPage()},enabled=!d.pdfLoading && d.pdfIndex+1<d.pdfCount){Text("Seite weiter ›")}
     PagReadStatus(d.pdfLoading,"PDF-Seite wird geladen …")
     Box(Modifier.fillMaxWidth().height(480.dp),contentAlignment=Alignment.Center) {
     (d.pdfPage?.image as? BitmapDocumentImage)?.forDisplay()?.let{bitmap ->
@@ -155,5 +166,5 @@ internal fun documentFailure(reason: DocumentFailure) = when(reason) {
             modifier=Modifier.fillMaxSize())
     }
     }
-    FormOutlinedButton(d::closePdf){Text("‹ Zur Dokumentenliste")}
+    FormOutlinedButton({d.closePdf()}){Text("‹ Zur Dokumentenliste")}
 }

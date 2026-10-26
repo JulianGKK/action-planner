@@ -1,0 +1,146 @@
+[
+  {
+    "mode": "run",
+    "case": "active",
+    "passed": true,
+    "log": "run-active-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "person",
+    "passed": true,
+    "log": "run-person-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "plan",
+    "passed": true,
+    "log": "run-plan-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "stale",
+    "passed": true,
+    "log": "run-stale-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "material",
+    "passed": true,
+    "log": "run-material-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "expense",
+    "passed": true,
+    "log": "run-expense-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "preparation",
+    "passed": true,
+    "log": "run-preparation-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "completed",
+    "passed": true,
+    "log": "run-completed-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "large",
+    "passed": true,
+    "log": "run-large-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "lock-detail",
+    "passed": true,
+    "log": "run-lock-detail-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "lost-detail-main",
+    "passed": true,
+    "log": "run-lost-detail-main-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "duplicate-detail-main",
+    "passed": true,
+    "log": "run-duplicate-detail-main-build33.log"
+  },
+  {
+    "mode": "run",
+    "case": "unknown-detail",
+    "passed": true,
+    "log": "run-unknown-detail-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "postcommit-ui-refusal",
+    "passed": true,
+    "log": "run-postcommit-ui-refusal-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "material-input",
+    "passed": true,
+    "log": "run-material-input-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "form-repeat",
+    "passed": true,
+    "log": "run-form-repeat-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "control-r-exact",
+    "passed": true,
+    "log": "run-control-r-exact-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "control-r-over",
+    "passed": true,
+    "log": "run-control-r-over-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "control-t-exact",
+    "passed": true,
+    "log": "run-control-t-exact-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "control-t-over",
+    "passed": true,
+    "log": "run-control-t-over-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "action-revoke",
+    "passed": true,
+    "log": "run-action-revoke-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "protocol-create",
+    "passed": true,
+    "log": "run-protocol-create-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "memory-create",
+    "passed": true,
+    "log": "run-memory-create-build33.log"
+  },
+  {
+    "mode": "consumer",
+    "case": "state-edit",
+    "passed": false,
+    "log": "run-state-edit-build33.log"
+  }
+]

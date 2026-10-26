@@ -1,0 +1,317 @@
+Compiled from "OriginalSemantics.kt"
+public final class org.pag.prototype.product.OriginalSemantics {
+  public static final org.pag.prototype.product.OriginalSemantics$Companion Companion;
+
+  private final org.pag.prototype.product.OriginalUiFence fence;
+
+  private final long epoch;
+
+  private final androidx.compose.ui.semantics.SemanticsPropertyKey<java.lang.Object>[] keys;
+
+  private final java.lang.Object[] values;
+
+  private int count;
+
+  private final kotlin.jvm.functions.Function1<androidx.compose.ui.semantics.SemanticsPropertyReceiver, kotlin.Unit> apply;
+
+  private final androidx.compose.ui.Modifier modifier;
+
+  public static final int $stable;
+
+  private static final org.pag.domain.ActiveWorkspaceBudget$Units cost;
+
+  public org.pag.prototype.product.OriginalSemantics(org.pag.prototype.product.OriginalUiFence, long, boolean, kotlin.jvm.functions.Function1<? super androidx.compose.ui.semantics.SemanticsPropertyReceiver, kotlin.Unit>);
+    Code:
+       0: aload         5
+       2: ldc           #11                 // String properties
+       4: invokestatic  #17                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       7: aload_0
+       8: invokespecial #20                 // Method java/lang/Object."<init>":()V
+      11: aload_0
+      12: aload_1
+      13: putfield      #24                 // Field fence:Lorg/pag/prototype/product/OriginalUiFence;
+      16: aload_0
+      17: lload_2
+      18: putfield      #28                 // Field epoch:J
+      21: aload_0
+      22: bipush        16
+      24: anewarray     #30                 // class androidx/compose/ui/semantics/SemanticsPropertyKey
+      27: putfield      #34                 // Field keys:[Landroidx/compose/ui/semantics/SemanticsPropertyKey;
+      30: aload_0
+      31: bipush        16
+      33: anewarray     #4                  // class java/lang/Object
+      36: putfield      #38                 // Field values:[Ljava/lang/Object;
+      39: nop
+      40: new           #40                 // class androidx/compose/ui/semantics/SemanticsConfiguration
+      43: dup
+      44: invokespecial #41                 // Method androidx/compose/ui/semantics/SemanticsConfiguration."<init>":()V
+      47: astore        6
+      49: aload         5
+      51: aload         6
+      53: invokeinterface #47,  2           // InterfaceMethod kotlin/jvm/functions/Function1.invoke:(Ljava/lang/Object;)Ljava/lang/Object;
+      58: pop
+      59: aload         6
+      61: invokevirtual #51                 // Method androidx/compose/ui/semantics/SemanticsConfiguration.iterator:()Ljava/util/Iterator;
+      64: astore        7
+      66: aload         7
+      68: invokeinterface #57,  1           // InterfaceMethod java/util/Iterator.hasNext:()Z
+      73: ifeq          177
+      76: aload         7
+      78: invokeinterface #61,  1           // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+      83: checkcast     #63                 // class java/util/Map$Entry
+      86: astore        8
+      88: aload_0
+      89: getfield      #67                 // Field count:I
+      92: bipush        16
+      94: if_icmpge     101
+      97: iconst_1
+      98: goto          102
+     101: iconst_0
+     102: ifne          115
+     105: new           #69                 // class java/lang/IllegalStateException
+     108: dup
+     109: ldc           #71                 // String Check failed.
+     111: invokespecial #74                 // Method java/lang/IllegalStateException."<init>":(Ljava/lang/String;)V
+     114: athrow
+     115: aload         8
+     117: invokeinterface #77,  1           // InterfaceMethod java/util/Map$Entry.getKey:()Ljava/lang/Object;
+     122: dup
+     123: ldc           #79                 // String null cannot be cast to non-null type androidx.compose.ui.semantics.SemanticsPropertyKey<kotlin.Any>
+     125: invokestatic  #82                 // Method kotlin/jvm/internal/Intrinsics.checkNotNull:(Ljava/lang/Object;Ljava/lang/String;)V
+     128: checkcast     #30                 // class androidx/compose/ui/semantics/SemanticsPropertyKey
+     131: astore        9
+     133: aload_0
+     134: getfield      #34                 // Field keys:[Landroidx/compose/ui/semantics/SemanticsPropertyKey;
+     137: aload_0
+     138: getfield      #67                 // Field count:I
+     141: aload         9
+     143: aastore
+     144: aload_0
+     145: getfield      #38                 // Field values:[Ljava/lang/Object;
+     148: aload_0
+     149: getfield      #67                 // Field count:I
+     152: aload         8
+     154: invokeinterface #85,  1           // InterfaceMethod java/util/Map$Entry.getValue:()Ljava/lang/Object;
+     159: aastore
+     160: aload_0
+     161: getfield      #67                 // Field count:I
+     164: istore        10
+     166: aload_0
+     167: iload         10
+     169: iconst_1
+     170: iadd
+     171: putfield      #67                 // Field count:I
+     174: goto          66
+     177: nop
+     178: aload_0
+     179: aload_0
+     180: invokedynamic #103,  0            // InvokeDynamic #0:invoke:(Lorg/pag/prototype/product/OriginalSemantics;)Lkotlin/jvm/functions/Function1;
+     185: putfield      #107                // Field apply:Lkotlin/jvm/functions/Function1;
+     188: aload_0
+     189: iload         4
+     191: ifeq          210
+     194: getstatic     #113                // Field androidx/compose/ui/Modifier.Companion:Landroidx/compose/ui/Modifier$Companion;
+     197: checkcast     #109                // class androidx/compose/ui/Modifier
+     200: aload_0
+     201: getfield      #107                // Field apply:Lkotlin/jvm/functions/Function1;
+     204: invokestatic  #119                // Method androidx/compose/ui/semantics/SemanticsModifierKt.clearAndSetSemantics:(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)Landroidx/compose/ui/Modifier;
+     207: goto          226
+     210: getstatic     #113                // Field androidx/compose/ui/Modifier.Companion:Landroidx/compose/ui/Modifier$Companion;
+     213: checkcast     #109                // class androidx/compose/ui/Modifier
+     216: iconst_0
+     217: aload_0
+     218: getfield      #107                // Field apply:Lkotlin/jvm/functions/Function1;
+     221: iconst_1
+     222: aconst_null
+     223: invokestatic  #123                // Method androidx/compose/ui/semantics/SemanticsModifierKt.semantics$default:(Landroidx/compose/ui/Modifier;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+     226: putfield      #127                // Field modifier:Landroidx/compose/ui/Modifier;
+     229: return
+
+  public org.pag.prototype.product.OriginalSemantics(org.pag.prototype.product.OriginalUiFence, long, boolean, kotlin.jvm.functions.Function1, int, kotlin.jvm.internal.DefaultConstructorMarker);
+    Code:
+       0: iload         6
+       2: iconst_4
+       3: iand
+       4: ifeq          10
+       7: iconst_0
+       8: istore        4
+      10: aload_0
+      11: aload_1
+      12: lload_2
+      13: iload         4
+      15: aload         5
+      17: invokespecial #142                // Method "<init>":(Lorg/pag/prototype/product/OriginalUiFence;JZLkotlin/jvm/functions/Function1;)V
+      20: return
+
+  public final void populate(androidx.compose.ui.semantics.SemanticsPropertyReceiver);
+    Code:
+       0: aload_1
+       1: ldc           #146                // String receiver
+       3: invokestatic  #17                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       6: getstatic     #151                // Field androidx/compose/runtime/snapshots/Snapshot.Companion:Landroidx/compose/runtime/snapshots/Snapshot$Companion;
+       9: astore_3
+      10: iconst_0
+      11: istore        4
+      13: aload_3
+      14: invokevirtual #157                // Method androidx/compose/runtime/snapshots/Snapshot$Companion.getCurrentThreadSnapshot:()Landroidx/compose/runtime/snapshots/Snapshot;
+      17: astore        5
+      19: aload         5
+      21: dup
+      22: ifnull        31
+      25: invokevirtual #161                // Method androidx/compose/runtime/snapshots/Snapshot.getReadObserver:()Lkotlin/jvm/functions/Function1;
+      28: goto          33
+      31: pop
+      32: aconst_null
+      33: astore        6
+      35: aload_3
+      36: aload         5
+      38: invokevirtual #165                // Method androidx/compose/runtime/snapshots/Snapshot$Companion.makeCurrentNonObservable:(Landroidx/compose/runtime/snapshots/Snapshot;)Landroidx/compose/runtime/snapshots/Snapshot;
+      41: astore        7
+      43: nop
+      44: iconst_0
+      45: istore        8
+      47: aload_0
+      48: getfield      #24                 // Field fence:Lorg/pag/prototype/product/OriginalUiFence;
+      51: dup
+      52: ifnull        71
+      55: invokeinterface #168,  1          // InterfaceMethod org/pag/prototype/product/OriginalUiFence.live:()Z
+      60: ifne          67
+      63: iconst_1
+      64: goto          73
+      67: iconst_0
+      68: goto          73
+      71: pop
+      72: iconst_0
+      73: ifne          108
+      76: aload_0
+      77: getfield      #24                 // Field fence:Lorg/pag/prototype/product/OriginalUiFence;
+      80: instanceof    #170                // class org/pag/prototype/product/ProductInputScreenKey
+      83: ifeq          104
+      86: aload_0
+      87: getfield      #24                 // Field fence:Lorg/pag/prototype/product/OriginalUiFence;
+      90: checkcast     #170                // class org/pag/prototype/product/ProductInputScreenKey
+      93: invokevirtual #174                // Method org/pag/prototype/product/ProductInputScreenKey.presentationRevision:()J
+      96: aload_0
+      97: getfield      #28                 // Field epoch:J
+     100: lcmp
+     101: ifne          108
+     104: iconst_1
+     105: goto          109
+     108: iconst_0
+     109: istore        8
+     111: aload_3
+     112: aload         5
+     114: aload         7
+     116: aload         6
+     118: invokevirtual #178                // Method androidx/compose/runtime/snapshots/Snapshot$Companion.restoreNonObservable:(Landroidx/compose/runtime/snapshots/Snapshot;Landroidx/compose/runtime/snapshots/Snapshot;Lkotlin/jvm/functions/Function1;)V
+     121: iload         8
+     123: goto          141
+     126: astore        9
+     128: aload_3
+     129: aload         5
+     131: aload         7
+     133: aload         6
+     135: invokevirtual #178                // Method androidx/compose/runtime/snapshots/Snapshot$Companion.restoreNonObservable:(Landroidx/compose/runtime/snapshots/Snapshot;Landroidx/compose/runtime/snapshots/Snapshot;Lkotlin/jvm/functions/Function1;)V
+     138: aload         9
+     140: athrow
+     141: istore_2
+     142: iload_2
+     143: ifne          147
+     146: return
+     147: iconst_0
+     148: istore_3
+     149: iload_3
+     150: aload_0
+     151: getfield      #67                 // Field count:I
+     154: if_icmpge     225
+     157: aload_1
+     158: aload_0
+     159: getfield      #34                 // Field keys:[Landroidx/compose/ui/semantics/SemanticsPropertyKey;
+     162: iload_3
+     163: aaload
+     164: dup
+     165: ifnonnull     186
+     168: pop
+     169: ldc           #180                // String Required value was null.
+     171: astore        5
+     173: new           #69                 // class java/lang/IllegalStateException
+     176: dup
+     177: aload         5
+     179: invokevirtual #184                // Method java/lang/Object.toString:()Ljava/lang/String;
+     182: invokespecial #74                 // Method java/lang/IllegalStateException."<init>":(Ljava/lang/String;)V
+     185: athrow
+     186: aload_0
+     187: getfield      #38                 // Field values:[Ljava/lang/Object;
+     190: iload_3
+     191: aaload
+     192: dup
+     193: ifnonnull     214
+     196: pop
+     197: ldc           #180                // String Required value was null.
+     199: astore        5
+     201: new           #69                 // class java/lang/IllegalStateException
+     204: dup
+     205: aload         5
+     207: invokevirtual #184                // Method java/lang/Object.toString:()Ljava/lang/String;
+     210: invokespecial #74                 // Method java/lang/IllegalStateException."<init>":(Ljava/lang/String;)V
+     213: athrow
+     214: invokeinterface #190,  3          // InterfaceMethod androidx/compose/ui/semantics/SemanticsPropertyReceiver.set:(Landroidx/compose/ui/semantics/SemanticsPropertyKey;Ljava/lang/Object;)V
+     219: iinc          3, 1
+     222: goto          149
+     225: return
+    Exception table:
+       from    to  target type
+          43   111   126   any
+         126   128   126   any
+
+  public final androidx.compose.ui.Modifier getModifier();
+    Code:
+       0: aload_0
+       1: getfield      #127                // Field modifier:Landroidx/compose/ui/Modifier;
+       4: areturn
+
+  private static final kotlin.Unit apply$lambda$0(org.pag.prototype.product.OriginalSemantics, androidx.compose.ui.semantics.SemanticsPropertyReceiver);
+    Code:
+       0: aload_1
+       1: ldc           #206                // String <this>
+       3: invokestatic  #17                 // Method kotlin/jvm/internal/Intrinsics.checkNotNullParameter:(Ljava/lang/Object;Ljava/lang/String;)V
+       6: aload_0
+       7: aload_1
+       8: invokevirtual #208                // Method populate:(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;)V
+      11: getstatic     #214                // Field kotlin/Unit.INSTANCE:Lkotlin/Unit;
+      14: areturn
+
+  public static final org.pag.domain.ActiveWorkspaceBudget$Units access$getCost$cp();
+    Code:
+       0: getstatic     #221                // Field cost:Lorg/pag/domain/ActiveWorkspaceBudget$Units;
+       3: areturn
+
+  static {};
+    Code:
+       0: new           #224                // class org/pag/prototype/product/OriginalSemantics$Companion
+       3: dup
+       4: aconst_null
+       5: invokespecial #227                // Method org/pag/prototype/product/OriginalSemantics$Companion."<init>":(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+       8: putstatic     #230                // Field Companion:Lorg/pag/prototype/product/OriginalSemantics$Companion;
+      11: bipush        8
+      13: putstatic     #233                // Field $stable:I
+      16: new           #235                // class org/pag/domain/ActiveWorkspaceBudget$Units
+      19: dup
+      20: ldc2_w        #236                // long 32l
+      23: lconst_0
+      24: lconst_0
+      25: ldc2_w        #238                // long 4l
+      28: ldc2_w        #240                // long 1024l
+      31: ldc2_w        #242                // long 2l
+      34: ldc2_w        #244                // long 8l
+      37: ldc2_w        #242                // long 2l
+      40: ldc2_w        #246                // long 16l
+      43: lconst_0
+      44: lconst_0
+      45: ldc2_w        #248                // long 128l
+      48: sipush        1542
+      51: aconst_null
+      52: invokespecial #252                // Method org/pag/domain/ActiveWorkspaceBudget$Units."<init>":(JJJJJJJJJJJJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+      55: putstatic     #221                // Field cost:Lorg/pag/domain/ActiveWorkspaceBudget$Units;
+      58: return
+}
