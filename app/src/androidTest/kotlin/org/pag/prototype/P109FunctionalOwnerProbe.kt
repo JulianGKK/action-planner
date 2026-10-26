@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger
 /** Real product preflight + original record, Room/SQLCipher; P77 auth is SYNTHETIC.
  * Read admission is not a global Fullview/Form owner-end or draft-allocation proof. */
 class P109FunctionalOwnerProbe:Instrumentation(){
+    private var p111:P111MemorySampler?=null
+    override fun finish(resultCode:Int,results:Bundle?){p111?.close();super.finish(resultCode,results)}
     private var scenario="exposed"
     private lateinit var h:P77ProductRuntimeHarness
     private lateinit var model:ProductViewModel
@@ -23,7 +25,7 @@ class P109FunctionalOwnerProbe:Instrumentation(){
         runOnMainSync{try{v.set(work())}catch(t:Throwable){e.set(t)}};e.get()?.let{throw it};return v.get()}
     private fun await(label:String,work:()->Boolean){val end=SystemClock.elapsedRealtime()+60_000
         while(SystemClock.elapsedRealtime()<end){if(work())return;Thread.sleep(30)};error("P109 timeout $label")}
-    private fun emit(s:String)=sendStatus(0,Bundle().apply{putString("stream","P109,$scenario,$s\n")})
+    private fun emit(s:String){p111?.mark(s);sendStatus(0,Bundle().apply{putString("stream","P109,$scenario,$s\n")})}
     private fun <T> call(work:((T)->Unit)->Unit):T{val v=AtomicReference<T>();val n=AtomicInteger()
         main{work{v.set(it);n.incrementAndGet()}};await("one callback"){n.get()==1};return v.get()}
     private fun visible(text:String,fragment:Boolean=false):Boolean{
@@ -58,13 +60,14 @@ class P109FunctionalOwnerProbe:Instrumentation(){
         }
         return try{root.packageName?.toString()==targetContext.packageName && visit(root)}finally{root.recycle()}
     }
-    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);scenario=arguments?.getString("scenario")?:scenario;check(scenario in setOf("preparation","completed","active","stale","large","person","plan","material","expense","lock-detail","lost-detail-main","duplicate-detail-main","unknown-detail"));start()}
+    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);p111=P111MemorySampler.start(this,arguments);scenario=arguments?.getString("scenario")?:scenario;check(scenario in setOf("preparation","completed","active","stale","large","person","plan","material","expense","lock-detail","lost-detail-main","duplicate-detail-main","unknown-detail"));start()}
     override fun onStart(){var activity:Activity?=null
         try{
             check(targetContext.packageName=="org.pag.prototype.a.p77runtime")
             val a=startActivitySync(Intent().setClassName(targetContext,"org.pag.prototype.P86FullWorkspaceActivity")
                 .putExtra("p83Fixture",when(scenario){"large"->"p86-stress32";"active"->"p87-4999";else->"p86-small"}).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));activity=a
             h=field(a,"p77Harness") as P77ProductRuntimeHarness;model=field(a,"model") as ProductViewModel
+            p111?.bind(h,a,model)
             await("focus"){main{a.hasWindowFocus()}};main{model.unlock()};await("READY"){main{model.snapshot.state==SessionState.READY && model.actions.isNotEmpty()}}
             val id=when(scenario){"stale","person","plan","material","expense","lock-detail","lost-detail-main","duplicate-detail-main","unknown-detail"->"p11-preparation";"large"->"p11-active";else->"p11-$scenario"}
             if(scenario=="plan")check(call<OperationsResult<Role>>{h.runtime.operations.createRole(id,"Synthetic P109 role",it)} is OperationsResult.Value)

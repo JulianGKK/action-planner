@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.DocumentReadKeyCancellationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-26T13:02:03.490Z" hostname="iuzjhtgvfc" time="0.004">
+  <properties/>
+  <testcase name="cancelledRequestCannotAcquireAKeyOrInvalidateOwner" classname="org.pag.data.product.DocumentReadKeyCancellationTest" time="0.002"/>
+  <testcase name="genuineSessionRevokeStillInvalidatesOwnerAndWipesLease" classname="org.pag.data.product.DocumentReadKeyCancellationTest" time="0.001"/>
+  <testcase name="closingViewerAfterDbStepDoesNotInvalidateLiveSessionOwner" classname="org.pag.data.product.DocumentReadKeyCancellationTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

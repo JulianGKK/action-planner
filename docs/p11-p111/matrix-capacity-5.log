@@ -1,0 +1,22 @@
+EXISTING small-core-r1
+EXISTING small-full-r1-retry1
+EXISTING medium-core-r1-retry1
+BEGIN medium-full-r1-retry2
+Traceback (most recent call last):
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p111/matrix.py", line 37, in <module>
+    if not run(case,family,args,expected):sys.exit(1)
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p111/measure.py", line 112, in run
+    protected_ok=inventory()==meta['protected_before'];assert protected_ok
+                 ~~~~~~~~~^^
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p111/measure.py", line 19, in inventory
+    return {pkg:[x.strip() for x in adb('shell','dumpsys','package',pkg).stdout.splitlines() if any(k in x for k in ('versionCode=','versionName=','firstInstallTime=','lastUpdateTime=','signatures='))] for pkg in PROTECTED}
+                                    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p111/measure.py", line 15, in adb
+    def adb(*args,**kw):return command([ADB,'-s',SERIAL,*args],**kw)
+                               ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/julian-tio-valenzuela/Projekte/action-planner/docs/p11-p111/measure.py", line 12, in command
+    if check and p.returncode:raise RuntimeError(str(args)+': '+p.stdout[-1500:])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: ['/home/julian-tio-valenzuela/Android/Sdk/platform-tools/adb', '-s', 'RFCT1186YRJ', 'shell', 'dumpsys', 'package', 'org.pag.prototype.a']: adb: device 'RFCT1186YRJ' not found
+

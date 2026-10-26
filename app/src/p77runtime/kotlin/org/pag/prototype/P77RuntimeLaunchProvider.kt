@@ -11,7 +11,7 @@ class P77RuntimeLaunchProvider : ProductRuntimeLaunchProvider {
         check(activity.packageName == "org.pag.prototype.a.p77runtime")
         check(BuildConfig.PAG_P77_RUNTIME_E2E && BuildConfig.APPLICATION_ID == activity.packageName)
         val harness = P77ProductRuntimeHarness.create(activity, worker, main, foreground,
-            reuseEnabled = activity !is P86FullWorkspaceActivity && !activity.intent.getBooleanExtra("p100Probe",false))
+            reuseEnabled = activity !is P86FullWorkspaceActivity && !activity.intent.getBooleanExtra("p100Probe",false) && !activity.intent.getBooleanExtra("p111Probe",false))
         return ProductRuntimeLaunch(harness.runtime, harness::close, testAuthorityBanner = true, testHandle = harness, contentFrames = P80ContentFrames())
     }
 }

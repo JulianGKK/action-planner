@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.ExpenseWriterIntegrationTest" tests="25" skipped="0" failures="0" errors="0" timestamp="2026-10-26T11:29:58.363Z" hostname="iuzjhtgvfc" time="3.197">
+  <properties/>
+  <testcase name="twoStaleEditorsAndOldDeleteKeepFirstCommittedPayments" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.037"/>
+  <testcase name="callerOwnedMutableListsReallyAliasWithoutFreezing" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.001"/>
+  <testcase name="explicitRejectionNeedsConfirmedRollbackAndFailedRollbackStaysUnknown" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.119"/>
+  <testcase name="integerPaymentPositionsMustNotWrapIntoAValidIntIndex" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.059"/>
+  <testcase name="allExpenseWritesSeparateSqlOutcomeCleanupAndPublicationAcrossRaces" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="1.354"/>
+  <testcase name="aliasMutationCannotConvertStaleExpectedIntoCurrentSnapshot" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.031"/>
+  <testcase name="draftDeletionPendingForeignMissingActionAndMissingExpenseAreIsolated" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.034"/>
+  <testcase name="fullExpectedCasIncludesParentAllPaymentsOrderAndCount" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.04"/>
+  <testcase name="everyParentChildWriteFailureRollsBackCompleteOldState" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.183"/>
+  <testcase name="createEditDeleteAndExactSummaryKeepAllPaymentsAtomicAcrossAllowedPhases" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.099"/>
+  <testcase name="actualSqlTriggerFailureAfterFirstPaymentRollsBackParentAndChildren" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.031"/>
+  <testcase name="parentSqlTypesCannotBeHiddenByNativeStyleGetLongCoercion" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.122"/>
+  <testcase name="invalidInputOverflowAndUnicodeLimitsRollbackWithoutChangingPayments" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.043"/>
+  <testcase name="valueWithoutConfirmedOuterCommitCannotPublishSuccess" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.028"/>
+  <testcase name="duplicateWorkerAndMainCannotDuplicateParentPaymentsOrCallback" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.03"/>
+  <testcase name="schema11ExpenseFullValueCasDoesNotDetectAba" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.033"/>
+  <testcase name="summaryRejectsCorruptTotalsAndExactSqlSumOverflow" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.146"/>
+  <testcase name="createFailureLeavesNeitherParentNorPayments" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.058"/>
+  <testcase name="queuedEditAndDeleteUseFrozenExpectedAndDraftLists" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.061"/>
+  <testcase name="failedWorkerDispatchIsNonexecutionWithoutSuccessOrFakeDbRollback" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.029"/>
+  <testcase name="paymentTypesPositionsAndFullMaterializationRemainStrict" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.42"/>
+  <testcase name="schema11CompositeFkAndCascadeDoNotLeaveForeignOrOrphanPayments" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.031"/>
+  <testcase name="lostOrFailedMainDispatchLeavesPendingWithoutRetry" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.058"/>
+  <testcase name="queuedCreateUsesFrozenSubmittedPayments" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.029"/>
+  <testcase name="allFourFamiliesSharePendingEpochAndCannotBypassExpenseOrEachOther" classname="org.pag.data.product.ExpenseWriterIntegrationTest" time="0.119"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

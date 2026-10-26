@@ -112,12 +112,14 @@ class P77ProductRuntimeHarness private constructor(
             }
             val base = File(parent, "p11-fixture-${UUID.randomUUID()}")
             val profile=activity.intent.getStringExtra("p83Fixture") ?: "default"
-            check(profile in setOf("default","small","medium","large","roles32","roles100","stress","p86-small","p86-stress32","p86-stress100","p87-4999","p87-5000","p87-5001"))
-            val people=when(profile){"small","p86-small","p87-4999","p87-5000","p87-5001"->20;"medium"->100;else->200}
-            val tasks=when(profile){"small","p86-small","p87-4999","p87-5000","p87-5001"->40;"medium"->250;else->1000}
+            val p111=P111FixtureSpec.find(profile)
+            check(p111!=null || profile in setOf("default","small","medium","large","roles32","roles100","stress","p86-small","p86-stress32","p86-stress100","p87-4999","p87-5000","p87-5001"))
+            val people=p111?.people ?: when(profile){"small","p86-small","p87-4999","p87-5000","p87-5001"->20;"medium"->100;else->200}
+            val tasks=p111?.tasks ?: when(profile){"small","p86-small","p87-4999","p87-5000","p87-5001"->40;"medium"->250;else->1000}
             val fixture = P11SyntheticFixture(activity, worker, main,
                 taskCountPerAction = tasks, personCountPerAction = people, baseDirectory = base)
-            if(profile!="default")fixture.seedMemoryAcceptance(profile,
+            if(p111!=null)fixture.seedP111(p111)
+            else if(profile!="default")fixture.seedMemoryAcceptance(profile,
                 budgetRefusal=activity.intent.getBooleanExtra("p100Probe",false) && activity.intent.getBooleanExtra("p100BudgetRefused",false))
             if(activity.intent.getBooleanExtra("p104Migration11",false))fixture.p104LegacyEleven()
             if(activity.intent.getBooleanExtra("p101Probe",false) && activity.intent.getBooleanExtra("p101Migration10",false))fixture.p101LegacyTen()

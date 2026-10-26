@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.DocumentFoundationTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-26T13:02:03.365Z" hostname="iuzjhtgvfc" time="0.054">
+  <properties/>
+  <testcase name="unknownImportSizeReservesTwentyFiveMiBAndOneSlot" classname="org.pag.data.product.DocumentFoundationTest" time="0.009"/>
+  <testcase name="countAndAggregateBoundariesIncludeHiddenAndPendingDeletes" classname="org.pag.data.product.DocumentFoundationTest" time="0.009"/>
+  <testcase name="generatedProjectionsAreKeyFreeAndReserveIsTransactional" classname="org.pag.data.product.DocumentFoundationTest" time="0.007"/>
+  <testcase name="reservationRejectsDisallowedActionAndFullBudgetWithoutInsert" classname="org.pag.data.product.DocumentFoundationTest" time="0.022"/>
+  <testcase name="nameTrimAndSupplementaryCodepointLimits" classname="org.pag.data.product.DocumentFoundationTest" time="0.001"/>
+  <testcase name="foreignActionBindingsFailClosed" classname="org.pag.data.product.DocumentFoundationTest" time="0.001"/>
+  <testcase name="allPhasesAndExactKeyShape" classname="org.pag.data.product.DocumentFoundationTest" time="0.0"/>
+  <testcase name="corruptOrDuplicateBindingsNeverCreateCapacity" classname="org.pag.data.product.DocumentFoundationTest" time="0.002"/>
+  <testcase name="reservationFreezesKeyBeforeSuspensionAndWipesReadCopiesOnFailure" classname="org.pag.data.product.DocumentFoundationTest" time="0.001"/>
+  <testcase name="formatsFieldsAndLifecycleAreExactlyTheContract" classname="org.pag.data.product.DocumentFoundationTest" time="0.0"/>
+  <testcase name="sizeAndDeterministicOrder" classname="org.pag.data.product.DocumentFoundationTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

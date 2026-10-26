@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ProtocolModelTest" tests="24" skipped="0" failures="0" errors="0" timestamp="2026-10-26T11:30:17.368Z" hostname="iuzjhtgvfc" time="0.02">
+  <properties/>
+  <testcase name="eachNestedContextClearsAllReferencesAndConfirmationOnLock" classname="org.pag.prototype.product.ProtocolModelTest" time="0.004"/>
+  <testcase name="identifierLimitRemovalAndValidation" classname="org.pag.prototype.product.ProtocolModelTest" time="0.002"/>
+  <testcase name="deniedScalarAndIdentifierProducersPreserveDraftAndNeverWrite" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="lockCleanupRejectsLateTimelineDetailAndSaveAndRemovesAllDisclosures" classname="org.pag.prototype.product.ProtocolModelTest" time="0.001"/>
+  <testcase name="reportedSourceAndAffectedPeopleAreIndependentAndSourceSwitchClearsReference" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="markNeedsConfirmationCancelDoesNotWriteAlreadyMistakenCannotMarkAgain" classname="org.pag.prototype.product.ProtocolModelTest" time="0.001"/>
+  <testcase name="templateOnlyCreatesDraftAndTimeIsCapturedOnce" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="oldRevisionIsReadOnlyAndBackUsesCurrentDetail" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="leavingPendingRefreshDoesNotLeavePermanentLoadingAndOldCallbackCannotReplaceIt" classname="org.pag.prototype.product.ProtocolModelTest" time="0.001"/>
+  <testcase name="mistakenCorrectionRequiresExplicitClearAddendumCannotClearOrChangeClassification" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="dstGapAndOverlapRejectWithoutLosingDraft" classname="org.pag.prototype.product.ProtocolModelTest" time="0.001"/>
+  <testcase name="hubTimestampUsesCalendarDateAndResponsiveLayoutRemains" classname="org.pag.prototype.product.ProtocolModelTest" time="0.006"/>
+  <testcase name="freeAndCustomHaveCorrectClassificationAndEmptyTitles" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="cancelCreateNeverWritesAndDiscardsAllDraftFields" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="initialLoadIsNotEmptyAndRefreshRetainsContent" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="createSuccessReadsFullDetailRefreshesTimelineAndWorkspaceWithoutInteraction" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="stalePreservesDraftAndExpectedWithoutAutomaticRetry" classname="org.pag.prototype.product.ProtocolModelTest" time="0.001"/>
+  <testcase name="allTemplatesHaveOnePlaceAndOnlySixAreQuick" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="announcementMustHaveBothKindAndTextAndInvalidDraftRemains" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="synchronouslyRevokingInteractionCannotCreateOrWrite" classname="org.pag.prototype.product.ProtocolModelTest" time="0.001"/>
+  <testcase name="filterIsLocalPreservesRepositoryOrderAndNeverPrefetchesDetails" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="correctionFreezesFullSnapshotAllowsClassificationButPreservesTemplate" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <testcase name="completedNeverOpensActiveProtocolOrSavesDraft" classname="org.pag.prototype.product.ProtocolModelTest" time="0.001"/>
+  <testcase name="actionAndGenerationChangesSuppressPublication" classname="org.pag.prototype.product.ProtocolModelTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

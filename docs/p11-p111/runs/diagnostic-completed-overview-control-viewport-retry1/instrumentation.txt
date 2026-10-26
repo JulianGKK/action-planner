@@ -1,0 +1,33 @@
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=1661588, transition=16777216, localRetained=1661588, localTransition=3326600, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,OVERVIEW_VIEWPORT,person_visible_before_reveal=false,same_original_snapshot=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,OVERVIEW_VIEWPORT,person_visible_after_reveal=true,normal_scroll_only=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,COMPOSE_PROGRESS,actual=100,elapsed_ns=31468337123,main_cpu_ms=17231,gc=7,gc_time_ms=102,blocking_gc_time_ms=0,overview=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,REPEAT,frames=100,rows=0,same_list=true,same_row=true,record=State(phase=RETAINED, retained=1664980, transition=16777216, localRetained=1664980, localTransition=3329992, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,COMPOSE_PROGRESS,actual=200,elapsed_ns=62012523049,main_cpu_ms=33600,gc=12,gc_time_ms=166,blocking_gc_time_ms=0,overview=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,COMPOSE_TIMEOUT,actual=298,elapsed_ns=91806073402,session=READY,remaining_absolute_ms=80565,gc=18,gc_time_ms=223,blocking_gc_time_ms=0
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,FAILURE,java.lang.IllegalStateException: P110 timeout completed 1000 actual compositions
+	at org.pag.prototype.P110ConsumerProbe.await(P110ConsumerProbe.kt:25)
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:423)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,COMPOSE_PROGRESS,actual=300,elapsed_ns=92415254339,main_cpu_ms=49816,gc=18,gc_time_ms=223,blocking_gc_time_ms=0,overview=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL repeat-completed-overview
+INSTRUMENTATION_CODE: 0

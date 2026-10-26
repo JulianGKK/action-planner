@@ -1,0 +1,68 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 1049984656 Realtime: 1525369325
+
+** MEMINFO in pid 15375 [com.samsung.android.honeyboard] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    31793    25484     6256    19487    34028    69680    37786    23671
+  Dalvik Heap    12160    11776      128      259    19668    16339    12255     4084
+ Dalvik Other     4981     4116       16      191     8028                           
+        Stack     1004      916       88      360     1016                           
+       Ashmem       11        0        0        0      480                           
+    Other dev     1753     1712       40        0     2076                           
+     .so mmap     4567      160     2208      185    26100                           
+    .jar mmap     1650        0      156        0    19196                           
+    .apk mmap     2006        0     1396        0     4036                           
+    .ttf mmap       42        0        0        0      152                           
+    .dex mmap    13301       24    13244        8    13872                           
+    .oat mmap      935        0       40        0     9680                           
+    .art mmap    16633    10032     6104     2783    31952                           
+   Other mmap      106        8       52        0      832                           
+    GL mtrack     1008     1008        0        0     1008                           
+      Unknown      754      572      172      646     1424                           
+        TOTAL   116623    55808    29900    23919   173548    86019    50041    27755
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    27912                          51620
+         Native Heap:    25484                          34028
+                Code:    17256                          74692
+               Stack:      916                           1016
+            Graphics:     1008                           1008
+       Private Other:    13132
+              System:    30915
+             Unknown:                                   11184
+ 
+           TOTAL PSS:   116623            TOTAL RSS:   173548       TOTAL SWAP PSS:    23919
+ 
+ Objects
+               Views:      498         ViewRootImpl:        1
+         AppContexts:        5           Activities:        0
+              Assets:       29        AssetManagers:        0
+       Local Binders:      120        Proxy Binders:       64
+       Parcel memory:       23         Parcel count:       80
+    Death Recipients:        3      OpenSSL Sockets:        0
+            WebViews:        0
+ 
+ SQL
+         MEMORY_USED:      845
+  PAGECACHE_OVERFLOW:      220          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b)          cache  Dbname
+         4       24             25         0/43/2  /data/user/0/com.samsung.android.honeyboard/databases/GifRecentList
+         4        8                         0/0/0    (attached) temp
+         4       24             32         1/22/1  /data/user/0/com.samsung.android.honeyboard/databases/GifRecentList (2)
+         4       28             56        11/62/5  /data/user/0/com.samsung.android.honeyboard/databases/ClipItem.db
+         4        8                         0/0/0    (attached) temp
+         4       28             75        20/23/2  /data/user/0/com.samsung.android.honeyboard/databases/ClipItem.db (2)
+         4       28             25         0/43/2  /data/user/0/com.samsung.android.honeyboard/databases/honeyboard.db
+         4        8                         0/0/0    (attached) temp
+         4       28             33      4259/25/2  /data/user/0/com.samsung.android.honeyboard/databases/honeyboard.db (2)
+         4       28             27      1909/24/2  /data/user/0/com.samsung.android.honeyboard/databases/honeyboard.db (3)
+         4       24             25         0/43/2  /data/user/0/com.samsung.android.honeyboard/databases/StickerRecentList
+         4        8                         0/0/0    (attached) temp
+         4       24             34         4/22/1  /data/user/0/com.samsung.android.honeyboard/databases/StickerRecentList (2)
+         4       24             34         2/22/1  /data/user/0/com.samsung.android.honeyboard/databases/StickerRecentList (3)

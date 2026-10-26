@@ -1,0 +1,55 @@
+{
+  "build": 9,
+  "serial": "RFCT1186YRJ",
+  "device": {
+    "ro.product.manufacturer": "samsung",
+    "ro.product.model": "SM-M526BR",
+    "ro.build.version.sdk": "33",
+    "ro.build.version.release": "13",
+    "ro.build.version.security_patch": "2025-05-01",
+    "ro.build.fingerprint": "samsung/m52xqeea/m52xq:13/TP1A.220624.014/M526BRXXS7CYE1:user/release-keys",
+    "dalvik.vm.heapgrowthlimit": "256m",
+    "dalvik.vm.heapsize": "512m"
+  },
+  "apks": [
+    {
+      "package": "org.pag.prototype.a.p77runtime",
+      "apk": "app/build/outputs/apk/p77runtime/app-p77runtime.apk",
+      "sha256": "985f8070a9d6536c71d6d5fff1c33ef2374ad958796ab5474f726915026a440b",
+      "signer": "Signer #1 certificate DN: CN=Android Debug, O=Android, C=US\nSigner #1 certificate SHA-256 digest: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134\nSigner #1 certificate SHA-1 digest: 136f3fdc01bc5af2b9b18a2c71d5c6725f9b757a\nSigner #1 certificate MD5 digest: 8946d1c7017adcee5138a9513982ce7a\n",
+      "install": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "package": "org.pag.prototype.a.p77runtime.test",
+      "apk": "app/build/outputs/apk/androidTest/p77runtime/app-p77runtime-androidTest.apk",
+      "sha256": "7a33288a187942653ed804afa621d39277312b01881af09f8edf6a0c84d3370d",
+      "signer": "Signer #1 certificate DN: CN=Android Debug, O=Android, C=US\nSigner #1 certificate SHA-256 digest: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134\nSigner #1 certificate SHA-1 digest: 136f3fdc01bc5af2b9b18a2c71d5c6725f9b757a\nSigner #1 certificate MD5 digest: 8946d1c7017adcee5138a9513982ce7a\n",
+      "install": "Performing Streamed Install\nSuccess\n"
+    }
+  ],
+  "protected_before": {
+    "org.pag.prototype.a": [
+      "versionCode=2 minSdk=30 targetSdk=37",
+      "versionName=0.1.0-alpha.2",
+      "lastUpdateTime=2026-10-21 10:39:49",
+      "signatures=PackageSignatures{3af64e version:2, signatures:[224d2aa7], past signatures:[]}",
+      "firstInstallTime=2026-10-09 10:47:25"
+    ],
+    "org.pag.prototype.a.p76demo": [
+      "versionCode=2 minSdk=30 targetSdk=37",
+      "versionName=0.1.0-alpha.2-p76demo",
+      "lastUpdateTime=2026-10-21 16:59:59",
+      "signatures=PackageSignatures{6f3a7ba version:2, signatures:[224d2aa7], past signatures:[]}",
+      "firstInstallTime=2026-10-21 16:58:40"
+    ],
+    "org.pag.perf.p11probe": [
+      "versionCode=2 minSdk=30 targetSdk=37",
+      "versionName=0.1.0-alpha.2",
+      "lastUpdateTime=2026-10-19 16:17:35",
+      "signatures=PackageSignatures{87071b6 version:2, signatures:[224d2aa7], past signatures:[]}",
+      "firstInstallTime=2026-10-19 16:17:35"
+    ]
+  },
+  "utc": "2026-10-26T13:00:20.861579+00:00",
+  "synthetic_authentication": true
+}

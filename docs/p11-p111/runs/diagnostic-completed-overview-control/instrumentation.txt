@@ -1,0 +1,17 @@
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,INITIAL,synthetic_auth=true,record=State(phase=RETAINED, retained=1263668, transition=16777216, localRetained=1263668, localTransition=2928680, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,COMPOSE_PROGRESS,actual=100,elapsed_ns=31421947488,main_cpu_ms=17296,gc=6,gc_time_ms=90,blocking_gc_time_ms=0,overview=true
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,REPEAT,frames=100,rows=0,same_list=true,same_row=true,record=State(phase=RETAINED, retained=1664980, transition=16777216, localRetained=1664980, localTransition=3329992, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED)
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P110,repeat-completed-overview,FAILURE,java.lang.IllegalStateException: Completed person disappeared at 100
+	at org.pag.prototype.P110ConsumerProbe.onStart(P110ConsumerProbe.kt:417)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)
+
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P110 FAIL repeat-completed-overview
+INSTRUMENTATION_CODE: 0

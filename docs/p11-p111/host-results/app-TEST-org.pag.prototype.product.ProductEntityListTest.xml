@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ProductEntityListTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-26T11:30:17.250Z" hostname="iuzjhtgvfc" time="0.074">
+  <properties/>
+  <testcase name="largeCountsMatchOriginalRulesWithoutSortingPerPerson" classname="org.pag.prototype.product.ProductEntityListTest" time="0.06"/>
+  <testcase name="statusChangesMoveRowsWithoutDuplicatingKeys" classname="org.pag.prototype.product.ProductEntityListTest" time="0.001"/>
+  <testcase name="scopedNumericAnchorsDoNotMixDestinations" classname="org.pag.prototype.product.ProductEntityListTest" time="0.001"/>
+  <testcase name="lazyRowsContainEveryTaskOnceAndKeepDomainOrder" classname="org.pag.prototype.product.ProductEntityListTest" time="0.012"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

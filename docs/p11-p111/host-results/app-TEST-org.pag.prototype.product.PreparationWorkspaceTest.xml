@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.PreparationWorkspaceTest" tests="30" skipped="0" failures="0" errors="0" timestamp="2026-10-26T11:30:17.204Z" hostname="iuzjhtgvfc" time="0.045">
+  <properties/>
+  <testcase name="metadataAndRefreshDoNotCountAsUserInteraction" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.009"/>
+  <testcase name="areaSwitchDiscardsPendingOverviewAndFormDrafts" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.003"/>
+  <testcase name="lockDropsAreaTaskDraftActionEditorAndPendingMetadata" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.003"/>
+  <testcase name="setupOnlyAfterExplicitTapOnUninitializedActionWithoutPerson" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.003"/>
+  <testcase name="synchronousRevokeDuringAreaTapCannotRestoreSelection" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.003"/>
+  <testcase name="generationChangeRejectsOldStateWithoutRestoringNavigation" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.0"/>
+  <testcase name="emptyAreasRequireSuccessfulLoads" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.004"/>
+  <testcase name="revokeDuringAreaCleanupCannotRestoreRequestedArea" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="refreshKeepsOldContentUntilAllReplacementDataArrive" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.0"/>
+  <testcase name="tasksAreaWaitsForTasksAndAssignmentLabelsWithoutMetadataRead" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="explicitStartUsesExistingLifecycleWithoutReadinessBlockers" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.002"/>
+  <testcase name="rejectedMetadataIsNotUninitializedAndEndsLoading" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="personsAreaReadsOnlyExistingOperationsProjection" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.0"/>
+  <testcase name="missingBoardsDoNotInventRolesTasksOrPlanningCounts" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.0"/>
+  <testcase name="refreshErrorRetainsValidContentWhileInitialErrorIsNotEmpty" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="overviewStagesAllThreeReadsBeforeOneReveal" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.0"/>
+  <testcase name="readyAndPartialDoNotPermitSetup" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="preparationAreasIncludeMaterialAndStartAtOverview" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="closedTasksRemainContentInsteadOfFalseEmpty" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="draftHasNoWorkspaceOrPreparationReads" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.0"/>
+  <testcase name="summaryUsesLoadedPlansAndOnlyActiveHighTasks" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="missingPlanningProducesOneShortCardLabelNotTechnicalSpam" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.0"/>
+  <testcase name="revokeDuringSetupCleanupCannotOpenPassphraseForm" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="overviewMetadataLastCannotRevealPartialCounts" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="unsupportedTaskProviderIsErrorNotBlankOrEmptySuccess" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="lateSetupResultAfterLockCannotRestoreOverviewOrSetup" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.0"/>
+  <testcase name="roleAreaDoesNotReadTasksOrActionMetadata" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <testcase name="actionStatesRemainDistinctAndNeverFetchPersonInventory" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.002"/>
+  <testcase name="draftBeginsPreparationOnlyAfterConfirmation" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.0"/>
+  <testcase name="staleMetadataFromOtherActionCannotOverwriteNewOverview" classname="org.pag.prototype.product.PreparationWorkspaceTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

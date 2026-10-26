@@ -1,0 +1,8 @@
+{
+  "case": "medium-full-r1-retry2",
+  "status": "TRANSPORT_INTERRUPTED",
+  "final_instrumentation_ack": false,
+  "capacity_failure_claim": false,
+  "raw_measurements_retained": true,
+  "notes": "USB transport lost; user checked cable/port and confirmed stable connection before retry3. No uncertain product write was retried; each capacity attempt uses a fresh synthetic read fixture."
+}

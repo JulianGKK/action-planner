@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActivePeopleTest" tests="25" skipped="0" failures="0" errors="0" timestamp="2026-10-26T11:30:11.567Z" hostname="iuzjhtgvfc" time="0.027">
+  <properties/>
+  <testcase name="cardFocusUsesCompleteExistingBoardWithoutInventoryOrRead" classname="org.pag.prototype.product.ActivePeopleTest" time="0.002"/>
+  <testcase name="cleanupOrInteractionLockCannotReopenFocus" classname="org.pag.prototype.product.ActivePeopleTest" time="0.001"/>
+  <testcase name="initialPeopleRevealWaitsForBothBoards" classname="org.pag.prototype.product.ActivePeopleTest" time="0.001"/>
+  <testcase name="underOneMinuteIsJustUpdated" classname="org.pag.prototype.product.ActivePeopleTest" time="0.0"/>
+  <testcase name="displayProjectionNeverReadsOrInteractsWithSession" classname="org.pag.prototype.product.ActivePeopleTest" time="0.001"/>
+  <testcase name="lockDropsFocusDraftAndLateRead" classname="org.pag.prototype.product.ActivePeopleTest" time="0.003"/>
+  <testcase name="previousDayUsesDate" classname="org.pag.prototype.product.ActivePeopleTest" time="0.0"/>
+  <testcase name="summaryCountsExistingStatusesAndOmitsZeros" classname="org.pag.prototype.product.ActivePeopleTest" time="0.001"/>
+  <testcase name="exactOneMinute" classname="org.pag.prototype.product.ActivePeopleTest" time="0.0"/>
+  <testcase name="cleanupLockDuringEditCannotRestoreDraftAfterClear" classname="org.pag.prototype.product.ActivePeopleTest" time="0.001"/>
+  <testcase name="everyP4StatusAndPlaceIsProjectedWithoutChangingRules" classname="org.pag.prototype.product.ActivePeopleTest" time="0.001"/>
+  <testcase name="detailUsesExistingPersonInventoryPathAndReturnsWithoutBoardReload" classname="org.pag.prototype.product.ActivePeopleTest" time="0.001"/>
+  <testcase name="cancelDiscardsDraftAndReturnsToFocus" classname="org.pag.prototype.product.ActivePeopleTest" time="0.002"/>
+  <testcase name="currentRoleIsNeverReplacedByPlannedRole" classname="org.pag.prototype.product.ActivePeopleTest" time="0.0"/>
+  <testcase name="noStatusAndUnknownOrFutureTimestampNeverClaimFreshObservation" classname="org.pag.prototype.product.ActivePeopleTest" time="0.001"/>
+  <testcase name="localCalendarBoundaryPrecedesRelativeAge" classname="org.pag.prototype.product.ActivePeopleTest" time="0.0"/>
+  <testcase name="unavailablePersonCannotOpenFunctionEditor" classname="org.pag.prototype.product.ActivePeopleTest" time="0.002"/>
+  <testcase name="sixtyMinutesSameDay" classname="org.pag.prototype.product.ActivePeopleTest" time="0.0"/>
+  <testcase name="fiftyNineMinutes" classname="org.pag.prototype.product.ActivePeopleTest" time="0.0"/>
+  <testcase name="stalePeopleRequestAndGenerationCannotPublish" classname="org.pag.prototype.product.ActivePeopleTest" time="0.002"/>
+  <testcase name="pendingDetailIsCancelledOnReturnToFocusedPerson" classname="org.pag.prototype.product.ActivePeopleTest" time="0.001"/>
+  <testcase name="locationSaveReturnsToFocusedPersonAndRefreshesOnce" classname="org.pag.prototype.product.ActivePeopleTest" time="0.002"/>
+  <testcase name="refreshRetainsOldSummaryAndListTogether" classname="org.pag.prototype.product.ActivePeopleTest" time="0.001"/>
+  <testcase name="functionEditorWritesCurrentRoleAndPreservesPlan" classname="org.pag.prototype.product.ActivePeopleTest" time="0.002"/>
+  <testcase name="emptySummaryIsHonest" classname="org.pag.prototype.product.ActivePeopleTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,52 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 1046193662 Realtime: 1521578331
+
+** MEMINFO in pid 32533 [org.pag.prototype.a.p77runtime] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap     7912     7860        0       31    10348    19892    10215     5446
+  Dalvik Heap     4498     4236       36       26    12360    11150     5006     6144
+ Dalvik Other     7323     5760      236        2    10944                           
+        Stack      692      692        0        0      704                           
+       Ashmem       13        0        0        0      472                           
+    Other dev      965      948       16        0     1292                           
+     .so mmap     2226      244      300        9    19824                           
+    .jar mmap     7329        0     3864        0    28056                           
+    .apk mmap    60731       48     1204        0   121224                           
+    .ttf mmap      519        0      432        0      656                           
+    .dex mmap        7        0        0        0      552                           
+    .oat mmap       43        0        0        0      724                           
+    .art mmap     7156     6272      520       21    19368                           
+   Other mmap       62        8       28        0      608                           
+    GL mtrack     4608     4608        0        0     4608                           
+      Unknown      504      492        4        3     1224                           
+        TOTAL   104680    31168     6640       92   232964    31042    15221    11590
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    11028                          31728
+         Native Heap:     7860                          10348
+                Code:     6192                         173676
+               Stack:      692                            704
+            Graphics:     4608                           4608
+       Private Other:     7428
+              System:    66872
+             Unknown:                                   11900
+ 
+           TOTAL PSS:   104680            TOTAL RSS:   232964       TOTAL SWAP PSS:       92
+ 
+ Objects
+               Views:        9         ViewRootImpl:        1
+         AppContexts:        6           Activities:        1
+              Assets:       27        AssetManagers:        0
+       Local Binders:       17        Proxy Binders:       48
+       Parcel memory:        7         Parcel count:       28
+    Death Recipients:        0      OpenSSL Sockets:        0
+            WebViews:        0
+ 
+ SQL
+         MEMORY_USED:        0
+  PAGECACHE_OVERFLOW:        0          MALLOC_SIZE:        0
+ 

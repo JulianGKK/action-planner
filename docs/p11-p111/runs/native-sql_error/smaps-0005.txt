@@ -1,0 +1,22 @@
+12c00000-7fc721e000 ---p 00000000 00:00 0                                [rollup]
+Rss:              226492 kB
+Pss:              100182 kB
+Pss_Anon:          28780 kB
+Pss_File:          70630 kB
+Pss_Shmem:           771 kB
+Shared_Clean:     162372 kB
+Shared_Dirty:      30268 kB
+Private_Clean:      6456 kB
+Private_Dirty:     27396 kB
+Referenced:       222984 kB
+Anonymous:         56100 kB
+LazyFree:              0 kB
+AnonHugePages:         0 kB
+ShmemPmdMapped:        0 kB
+FilePmdMapped:        0 kB
+Shared_Hugetlb:        0 kB
+Private_Hugetlb:       0 kB
+Swap:               8716 kB
+SwapPss:             176 kB
+Writeback:             0 kB
+Locked:               56 kB

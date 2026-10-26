@@ -60,4 +60,5 @@
     <instrumentation android:name="org.pag.prototype.P108FunctionalOwnerProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P109FunctionalOwnerProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P110ConsumerProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P111CapacityProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

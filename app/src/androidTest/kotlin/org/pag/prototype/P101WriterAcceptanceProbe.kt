@@ -14,6 +14,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 /** Real Runtime/common port/Room/SQLCipher/AndroidKeystore. Synthetic own-package data only. */
 class P101WriterAcceptanceProbe:Instrumentation() {
+    private var p111:P111MemorySampler?=null
+    override fun finish(resultCode:Int,results:Bundle?){p111?.close();super.finish(resultCode,results)}
     private var scenario="leadership"
     private lateinit var h:P77ProductRuntimeHarness
     private lateinit var model:ProductViewModel
@@ -26,7 +28,7 @@ class P101WriterAcceptanceProbe:Instrumentation() {
         runOnMainSync{try{v.set(work())}catch(t:Throwable){e.set(t)}}
         e.get()?.let{throw it};return v.get()
     }
-    private fun emit(s:String)=sendStatus(0,Bundle().apply{putString("stream","P101,$scenario,$s\n")})
+    private fun emit(s:String){p111?.mark(s);sendStatus(0,Bundle().apply{putString("stream","P101,$scenario,$s\n")})}
     private fun waitFor(label:String,test:()->Boolean) {
         val end=SystemClock.elapsedRealtime()+90_000
         while(SystemClock.elapsedRealtime()<end){if(test())return;Thread.sleep(25)}
@@ -47,7 +49,7 @@ class P101WriterAcceptanceProbe:Instrumentation() {
         check(main{h.mutations.mutationEpoch}==before)
         return (result as SensitiveResult.Value).value
     }
-    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);scenario=arguments?.getString("scenario")?:scenario;check(scenario in setOf("leadership","lost_main","partial_setup","partial_delete","documents","rollback","status_reject","commit_receipt","cleanup_receipt","migration","lost_main_recovery"));start()}
+    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);p111=P111MemorySampler.start(this,arguments);scenario=arguments?.getString("scenario")?:scenario;check(scenario in setOf("leadership","lost_main","partial_setup","partial_delete","documents","rollback","status_reject","commit_receipt","cleanup_receipt","migration","lost_main_recovery"));start()}
     override fun onStart() {
         var activity:Activity?=null
         try {
@@ -55,6 +57,7 @@ class P101WriterAcceptanceProbe:Instrumentation() {
             val a=startActivitySync(Intent().setClassName(targetContext,"org.pag.prototype.P86FullWorkspaceActivity")
                 .putExtra("p83Fixture","p86-small").putExtra("p101Probe",true).putExtra("p101Migration10",scenario=="migration").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));activity=a
             h=field(a,"p77Harness") as P77ProductRuntimeHarness;model=field(a,"model") as ProductViewModel
+            p111?.bind(h,a,model)
             waitFor("focus"){main{a.hasWindowFocus()}}
             if(scenario=="migration")check(h.p101SeededVersion()==10 && main{h.runtime.session.acquire(AccessScope.READY)}==null)
             unlock()

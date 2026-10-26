@@ -1,0 +1,22 @@
+{
+  "case": "smoke-small-core-b1",
+  "family": "capacity",
+  "passed": false,
+  "expected": "PASS",
+  "process_returncode": 1,
+  "apk_sha256": "6835d7790b59050ac4f8ea2575afc0c20ef1f2843e4d1aa8ddf6d1dd5809e2b5",
+  "test_apk_sha256": "0e3fe8ae9b67cfc2510a88d0a812f1bf61a9bde34f68e1b7db1cfbfb38738ee8",
+  "samples": 0,
+  "events": [],
+  "protected_packages_unchanged": true,
+  "fixture_roots_remaining": [],
+  "physical_upper_bound_claim": false,
+  "art_used_bytes_observed_min": null,
+  "art_used_bytes_observed_max": null,
+  "native_allocated_bytes_observed_min": null,
+  "native_allocated_bytes_observed_max": null,
+  "pss_kib_observed_min": null,
+  "pss_kib_observed_max": null,
+  "fd_count_observed_min": null,
+  "fd_count_observed_max": null
+}

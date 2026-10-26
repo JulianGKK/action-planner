@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P109WorkspaceConsistencyTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-10-26T11:30:07.715Z" hostname="iuzjhtgvfc" time="0.261">
+  <properties/>
+  <testcase name="validationAndReplacementScratchIsAdditionalAndNeverRetiresHeldGraph" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.002"/>
+  <testcase name="insertedUnrelatedRowAndUnchangedRevisionWithDifferentValueRefuse" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.034"/>
+  <testcase name="targetedPersonCanChangeButUnrelatedTaskMustRemainExactlyEqual" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.033"/>
+  <testcase name="p110ExplicitMembershipAdmitsOnlyOneKnownDeltaAndStillRejectsUnrelatedChange" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.031"/>
+  <testcase name="sameTransactionMetadataFiltersOnlyOneTargetPersonOrPlan" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.033"/>
+  <testcase name="revocationStopsScalarValidationWithoutDtoReads" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.029"/>
+  <testcase name="p110ExplicitPersonMembershipIncludesItsPlanAndStateAndNoUnrelatedMember" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.031"/>
+  <testcase name="unplannedMembershipDeltaCannotBePublishedAsACompleteUpdatedBoard" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.03"/>
+  <testcase name="p110OnlyActualBoardConstructionAddsBoardPresentationReceipt" classname="org.pag.data.product.P109WorkspaceConsistencyTest" time="0.038"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

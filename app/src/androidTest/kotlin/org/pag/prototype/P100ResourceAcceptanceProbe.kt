@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 /** Focused #32 acceptance, original Runtime/session/reader; no exposure-fence reset. */
 class P100ResourceAcceptanceProbe:Instrumentation() {
+    private var p111:P111MemorySampler?=null
+    override fun finish(resultCode:Int,results:Bundle?){p111?.close();super.finish(resultCode,results)}
     private var scenario="repeat_boundary"
     private fun field(o:Any,n:String)=o.javaClass.getDeclaredField(n).let{it.isAccessible=true;it.get(o)}
     private fun <T> main(work:()->T):T {
@@ -22,7 +24,7 @@ class P100ResourceAcceptanceProbe:Instrumentation() {
         runOnMainSync{try{result.set(work())}catch(t:Throwable){failure.set(t)}}
         failure.get()?.let{throw it};return result.get()
     }
-    private fun emit(s:String)=sendStatus(0,Bundle().apply{putString("stream","P100,$scenario,$s\n")})
+    private fun emit(s:String){p111?.mark(s);sendStatus(0,Bundle().apply{putString("stream","P100,$scenario,$s\n")})}
     private fun waitFor(label:String,test:()->Boolean) {
         val until=SystemClock.elapsedRealtime()+90_000
         while(SystemClock.elapsedRealtime()<until){if(test())return;Thread.sleep(20)}
@@ -36,7 +38,7 @@ class P100ResourceAcceptanceProbe:Instrumentation() {
         }catch(_:Exception){unresolved++}
         emit("SAMPLE,label=$label,art_used=${r.totalMemory()-r.freeMemory()},native_heap=${Debug.getNativeHeapAllocatedSize()},pss_kib=${memory.totalPss},fd=${files.size},known_fixture_fd=$fixture,unresolved_fd=$unresolved,gc=${Debug.getRuntimeStat("art.gc.gc-count")},upper_bound=UNKNOWN")
     }
-    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);scenario=arguments?.getString("scenario")?:scenario;check(scenario in setOf("repeat_boundary","lock","cancel","sql_error","cleanup_unknown","budget_refused"));start()}
+    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);p111=P111MemorySampler.start(this,arguments);scenario=arguments?.getString("scenario")?:scenario;check(scenario in setOf("repeat_boundary","lock","cancel","sql_error","cleanup_unknown","budget_refused"));start()}
     override fun onStart() {
         var activity:Activity?=null;var harness:P77ProductRuntimeHarness?=null
         try {
@@ -45,6 +47,7 @@ class P100ResourceAcceptanceProbe:Instrumentation() {
                 .putExtra("p100Probe",true).putExtra("p100BudgetRefused",scenario=="budget_refused").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));activity=a
             val h=field(a,"p77Harness") as P77ProductRuntimeHarness;harness=h
             val model=field(a,"model") as ProductViewModel;val d=h.p100
+            p111?.bind(h,a,model)
             d.emit={emit(it);if(it.startsWith("CORE_ROW"))sample("core_row_open")}
             waitFor("focus"){main{a.hasWindowFocus()}}
             main{model.unlock()};waitFor("READY/list cleanup"){main{model.snapshot.state==SessionState.READY && model.actions.isNotEmpty()}}

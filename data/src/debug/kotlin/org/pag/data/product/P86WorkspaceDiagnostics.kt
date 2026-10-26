@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong
 /** P77 observation only: decorate existing DB seams; no payload/key/connection registry.
  * Counts known handle-close returns, never physical allocator or presentation retirement.
  */
-class P86WorkspaceDiagnostics(app:Context, runtime:ProductRuntime) {
+class P86WorkspaceDiagnostics(app:Context, runtime:ProductRuntime,allProductRepositories:Boolean=false) {
     private val statements=AtomicLong();private val closed=AtomicLong();private val rows=AtomicLong()
     private val cursorChecks=AtomicLong();private val cursorFailures=AtomicLong()
     private val preflightClosed=AtomicLong();private val roomClosed=AtomicLong();private val driverClosed=AtomicLong()
@@ -16,7 +16,9 @@ class P86WorkspaceDiagnostics(app:Context, runtime:ProductRuntime) {
     init {
         check(app.packageName=="org.pag.prototype.a.p77runtime")
         check(app.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE!=0)
-        for(repo in listOf(runtime.workspace,runtime.actions,runtime.tasks,runtime.operations,runtime.persons)) {
+        val repositories=listOf(runtime.workspace,runtime.actions,runtime.tasks,runtime.operations,runtime.persons)+
+            if(allProductRepositories)listOf(runtime.material,runtime.expenses,runtime.protocol,runtime.memoryReports) else emptyList()
+        for(repo in repositories) {
             val hooks=ActionPreflightHooks(
                 timing={_,ns->dbNanos.addAndGet(ns)},
                 closed={if(it)preflightClosed.incrementAndGet() else closeFailures.incrementAndGet()},

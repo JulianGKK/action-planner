@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.P108WorkspaceAccessTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-10-26T11:30:07.650Z" hostname="iuzjhtgvfc" time="0.063">
+  <properties/>
+  <testcase name="leadershipCiphertextAndSingleTaskMetadataAreIncludedBeforePayloadReads" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.056"/>
+  <testcase name="falseAfterCallbackIsNotAReusableAuthorizationOrUndoPromise" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
+  <testcase name="p110CapabilityKeepsCancellationIdentityButNoOpeningActionPayload" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.0"/>
+  <testcase name="supplementsShareOneQuotaPendingAndOldAcksNeverReleaseParentOrNewTransition" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.002"/>
+  <testcase name="wrongBindingForeignThreadRevokeGenerationAndCancelledRequestCannotResolve" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
+  <testcase name="heldDraftCopiesRequireFreshSessionButNeverReviveReadOrGrantWriterAuthority" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
+  <testcase name="boundedNestedPublicationReturnsFalseBeyondTwoAndExceptionRestoresDepth" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.0"/>
+  <testcase name="supplementaryBudgetRefusalIsBeforeProducerAndSingleAdmissionKeepsOldCharges" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
+  <testcase name="pendingUnknownAndOldEpochAreTerminalForOriginalCapability" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.0"/>
+  <testcase name="lostMainOrUnconfirmedCleanupNeverAuthorizesAnotherSupplement" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.001"/>
+  <testcase name="exactCumulativeRetainedAndTransitionPlusOnePreserveOldBookings" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.0"/>
+  <testcase name="sameOriginalReferencePublicationReacquiresAndCannotOpenAnotherFullRead" classname="org.pag.data.product.P108WorkspaceAccessTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

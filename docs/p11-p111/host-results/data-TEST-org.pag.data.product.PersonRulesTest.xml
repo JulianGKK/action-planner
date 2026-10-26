@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.PersonRulesTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-26T11:30:08.220Z" hostname="iuzjhtgvfc" time="0.0">
+  <properties/>
+  <testcase name="validPseudonymDoesNotRequireRealName" classname="org.pag.data.product.PersonRulesTest" time="0.0"/>
+  <testcase name="normalizationDoesNotDependOnDeviceLocale" classname="org.pag.data.product.PersonRulesTest" time="0.0"/>
+  <testcase name="normalizationTrimsAndIgnoresCase" classname="org.pag.data.product.PersonRulesTest" time="0.0"/>
+  <testcase name="onlyPreparationAllowsManagement" classname="org.pag.data.product.PersonRulesTest" time="0.0"/>
+  <testcase name="draftAndDeletionPendingDoNotExposePersons" classname="org.pag.data.product.PersonRulesTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

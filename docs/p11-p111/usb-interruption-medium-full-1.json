@@ -1,0 +1,10 @@
+{
+  "case": "medium-full-r1-retry1",
+  "result": "INTERRUPTED_NOT_CAPACITY_EVIDENCE",
+  "reason": "ADB device RFCT1186YRJ not found before completion; reconnected as transport 5",
+  "last_observed_session": "MAINTENANCE",
+  "no_complete_instrumentation_result": true,
+  "protected_packages_verified_after_reconnect": true,
+  "original_scope_cleanup_unconfirmed": true,
+  "physical_wipe_claim": false
+}

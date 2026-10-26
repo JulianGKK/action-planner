@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicReference
 /** Original Runtime/Session/Room/SQLCipher/Keystore + actual product UI. Authentication
  * provider remains explicitly synthetic P77; NEVER claim a real DeviceCredential prompt. */
 class P102LeadershipRecoveryProbe:Instrumentation() {
+    private var p111:P111MemorySampler?=null
+    override fun finish(resultCode:Int,results:Bundle?){p111?.close();super.finish(resultCode,results)}
     private var scenario="present_ui"
     private var cleanupRoot:String?=null
     private var cleanupInode=0L
@@ -31,7 +33,7 @@ class P102LeadershipRecoveryProbe:Instrumentation() {
         runOnMainSync{try{v.set(work())}catch(t:Throwable){e.set(t)}}
         e.get()?.let{throw it};return v.get()
     }
-    private fun emit(s:String)=sendStatus(0,Bundle().apply{putString("stream","P102,$scenario,$s\n")})
+    private fun emit(s:String){p111?.mark(s);sendStatus(0,Bundle().apply{putString("stream","P102,$scenario,$s\n")})}
     private fun waitFor(label:String,work:()->Boolean) {
         val end=SystemClock.elapsedRealtime()+90_000
         while(SystemClock.elapsedRealtime()<end){if(work())return;Thread.sleep(40)}
@@ -116,7 +118,7 @@ class P102LeadershipRecoveryProbe:Instrumentation() {
         check(d.leadershipState()=="ABSENT" && !fault.aliasPresent() && main{uiActivity.hasWindowFocus()})
         emit("UI,same_activity_focus=true,offer_visible=true,two_explicit_clicks_and_reauth=true,fresh_READY=true,no_reset_on_reauth=true,confirmed_feedback=true,visible_feedback=true,synthetic_auth_provider=true")
     }
-    override fun onCreate(arguments:Bundle?) {super.onCreate(arguments);scenario=arguments?.getString("scenario")?:scenario
+    override fun onCreate(arguments:Bundle?) {super.onCreate(arguments);p111=P111MemorySampler.start(this,arguments);scenario=arguments?.getString("scenario")?:scenario
         cleanupRoot=arguments?.getString("cleanupRoot");cleanupInode=arguments?.getString("cleanupInode")?.toLongOrNull()?:0
         check(scenario=="cleanup_crash" || scenario in setOf("normal_ready","present_ui","absent_ui","unknown_alias","content_refusal","crash_retry","lock_before","lock_during","lock_after","status_change","delete_pending_ui","cleanup_receipt"));start()}
     override fun onStart() {
@@ -131,6 +133,7 @@ class P102LeadershipRecoveryProbe:Instrumentation() {
             val a=startActivitySync(Intent().setClassName(targetContext,"org.pag.prototype.P86FullWorkspaceActivity")
                 .putExtra("p83Fixture","p86-small").putExtra("p101Probe",true).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));activity=a;uiActivity=a
             h=field(a,"p77Harness") as P77ProductRuntimeHarness;model=field(a,"model") as ProductViewModel
+            p111?.bind(h,a,model)
             waitFor("focus"){main{a.hasWindowFocus()}};unlock()
             d=P101WriterDiagnostics(targetContext,h.runtime);fault=P102RecoveryDiagnostics(targetContext,h.runtime)
             val r=h.runtime.leadership

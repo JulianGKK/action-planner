@@ -1,0 +1,24 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 1049540331 Realtime: 1524925000
+                   Pss  Private  Private     Swap      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap        0        0        0        0        0        0        0        0
+  Dalvik Heap        0        0        0        0        0        0        0        0
+    GL mtrack     2416     2416        0        0     2416                           
+      Unknown        0        0        0        0        0                           
+        TOTAL     2416     2416        0        0     2416        0        0        0
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:        0                              0
+         Native Heap:        0                              0
+                Code:        0                              0
+               Stack:        0                              0
+            Graphics:     2416                           2416
+       Private Other:        0
+              System:        0
+             Unknown:                                       0
+ 
+           TOTAL PSS:     2416            TOTAL RSS:     2416      TOTAL SWAP (KB):        0

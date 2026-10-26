@@ -1,0 +1,181 @@
+{
+  "utc": "2026-10-26T14:30:39.525509+00:00",
+  "serial": "RFCT1186YRJ",
+  "build": 14,
+  "apks": [
+    {
+      "package": "org.pag.prototype.a.p77runtime",
+      "apk": "app/build/outputs/apk/p77runtime/app-p77runtime.apk",
+      "sha256": "1cf7f812542187208b6f527dc882b4064d8fc14ab64c08c243bc416f0761c4f4",
+      "signer": "Signer #1 certificate DN: CN=Android Debug, O=Android, C=US\nSigner #1 certificate SHA-256 digest: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134\nSigner #1 certificate SHA-1 digest: 136f3fdc01bc5af2b9b18a2c71d5c6725f9b757a\nSigner #1 certificate MD5 digest: 8946d1c7017adcee5138a9513982ce7a\n",
+      "install": "Performing Streamed Install\nSuccess\n"
+    },
+    {
+      "package": "org.pag.prototype.a.p77runtime.test",
+      "apk": "app/build/outputs/apk/androidTest/p77runtime/app-p77runtime-androidTest.apk",
+      "sha256": "2ca4a1d610b43b62d57cc6c96169af84f962a30f9e6ef299db102feb8632a760",
+      "signer": "Signer #1 certificate DN: CN=Android Debug, O=Android, C=US\nSigner #1 certificate SHA-256 digest: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134\nSigner #1 certificate SHA-1 digest: 136f3fdc01bc5af2b9b18a2c71d5c6725f9b757a\nSigner #1 certificate MD5 digest: 8946d1c7017adcee5138a9513982ce7a\n",
+      "install": "Performing Streamed Install\nSuccess\n"
+    }
+  ],
+  "source_hashes_match": true,
+  "production_main_domain_diff_empty": true,
+  "external_error_field_missing": [
+    "small-core-r1",
+    "small-full-r1",
+    "smoke-small-core-b1"
+  ],
+  "positive_cases": [
+    "admission-exposed",
+    "admission-r-exact",
+    "admission-r-over",
+    "admission-t-exact",
+    "admission-t-over",
+    "consumer-action-revoke",
+    "consumer-form-repeat-diagnostic-retry1",
+    "consumer-long-role-input",
+    "consumer-material-input",
+    "consumer-memory-create",
+    "consumer-postcommit-ui-refusal",
+    "consumer-protocol-create",
+    "consumer-repeat-active",
+    "consumer-repeat-completed",
+    "consumer-repeat-preparation",
+    "consumer-role-rename",
+    "function-active",
+    "function-completed",
+    "function-duplicate-detail-main",
+    "function-expense",
+    "function-lock-detail",
+    "function-lost-detail-main",
+    "function-material",
+    "function-person",
+    "function-plan",
+    "function-preparation",
+    "function-stale",
+    "function-unknown-detail",
+    "large100-128k-core-r1",
+    "large100-128k-core-r2",
+    "large100-128k-full-r1",
+    "large100-core-r1",
+    "large100-full-r1",
+    "large100-long5k-core-r1",
+    "large100-long5k-full-r1",
+    "large32-128k-core-r1",
+    "large32-128k-core-r2",
+    "large32-128k-full-r1",
+    "large32-core-r1",
+    "large32-full-r1",
+    "large32-long5k-core-r1",
+    "large32-long5k-full-r1",
+    "large6-128k-core-r1",
+    "large6-128k-core-r2",
+    "large6-128k-full-r1",
+    "large6-core-r1",
+    "large6-full-r1",
+    "large6-long5k-core-r1",
+    "large6-long5k-full-r1",
+    "medium-core-r1-retry1",
+    "medium-core-r2",
+    "medium-full-r1-retry3",
+    "native-budget_refused",
+    "native-cancel",
+    "native-cleanup_unknown",
+    "native-lock",
+    "native-repeat_boundary-schema12-retry1",
+    "native-sql_error",
+    "render-large100-functions",
+    "render-large32-functions",
+    "render-large32-people",
+    "render-large32-tasks",
+    "security-cas-native_revisions",
+    "security-security-content_refusal",
+    "security-security-normal_ready",
+    "security-writer-documents",
+    "security-writer-leadership",
+    "single-long-person-core-r1",
+    "single-long-person-full-r1",
+    "small-core-r1",
+    "small-core-r2",
+    "small-full-r1-retry1",
+    "small-full-r2",
+    "unicode-core-r1-retry1",
+    "unicode-full-r1"
+  ],
+  "positive_count": 75,
+  "positive_families": {
+    "admission": 5,
+    "consumer": 11,
+    "functional": 12,
+    "capacity": 36,
+    "resource": 6,
+    "cas": 1,
+    "security": 2,
+    "writer": 2
+  },
+  "diagnostics": [
+    {
+      "case": "diagnostic-completed-overview",
+      "product_pass": false,
+      "control": false
+    },
+    {
+      "case": "diagnostic-completed-overview-control",
+      "product_pass": false,
+      "control": true
+    },
+    {
+      "case": "diagnostic-completed-overview-control-viewport-retry1",
+      "product_pass": false,
+      "control": true
+    },
+    {
+      "case": "diagnostic-completed-overview-viewport-retry1",
+      "product_pass": false,
+      "control": false
+    }
+  ],
+  "failed_attempts": [
+    "consumer-form-repeat",
+    "medium-core-r1",
+    "medium-full-r1",
+    "native-repeat_boundary",
+    "security-cas-cas_aba",
+    "small-full-r1",
+    "smoke-small-core-b1",
+    "unicode-core-r1"
+  ],
+  "incomplete_attempts": [
+    "medium-full-r1-retry1",
+    "medium-full-r1-retry2"
+  ],
+  "protected_packages_unchanged": true,
+  "protected_inventory": {
+    "org.pag.prototype.a": [
+      "versionCode=2 minSdk=30 targetSdk=37",
+      "versionName=0.1.0-alpha.2",
+      "lastUpdateTime=2026-10-21 10:39:49",
+      "signatures=PackageSignatures{3af64e version:2, signatures:[224d2aa7], past signatures:[]}",
+      "firstInstallTime=2026-10-09 10:47:25"
+    ],
+    "org.pag.prototype.a.p76demo": [
+      "versionCode=2 minSdk=30 targetSdk=37",
+      "versionName=0.1.0-alpha.2-p76demo",
+      "lastUpdateTime=2026-10-21 16:59:59",
+      "signatures=PackageSignatures{6f3a7ba version:2, signatures:[224d2aa7], past signatures:[]}",
+      "firstInstallTime=2026-10-21 16:58:40"
+    ],
+    "org.pag.perf.p11probe": [
+      "versionCode=2 minSdk=30 targetSdk=37",
+      "versionName=0.1.0-alpha.2",
+      "lastUpdateTime=2026-10-19 16:17:35",
+      "signatures=PackageSignatures{87071b6 version:2, signatures:[224d2aa7], past signatures:[]}",
+      "firstInstallTime=2026-10-19 16:17:35"
+    ]
+  },
+  "fixture_roots_remaining": [],
+  "synthetic_authentication": true,
+  "forced_gc": false,
+  "physical_upper_bound_claim": false,
+  "closure_status": "BLOCKED"
+}

@@ -124,6 +124,67 @@ class P11SyntheticFixture(context:Context, worker:Executor=Executor{it.run()}, m
             }
         }}
     }
+    /** Schema-12 synthetic capacity fixture, constructed before Runtime/authentication.
+     * Historical excess events remain readable; no writer limit or product rule is changed. */
+    internal fun seedP111(spec:P111FixtureSpec) {
+        check(app.packageName=="org.pag.prototype.a.p77runtime")
+        val c=checkNotNull(access.acquire(AccessScope.READY))
+        ActionDatabaseAccess(wrapped).use(inventory.database,key,maintenance){db->db.withWriteTransaction {
+            suspend fun exec(sql:String,vararg args:String){usePrepared(sql){s->args.forEachIndexed{i,v->s.bindText(i+1,v)};s.step()}}
+            for(id in listOf(preparationId,activeId,completedId)){
+                val original=if(id==preparationId)ActionStatus.PREPARATION else if(id==completedId)ActionStatus.COMPLETED else ActionStatus.ACTIVE
+                exec("UPDATE actions SET status='ACTIVE',completedAt=NULL WHERE id=?",id)
+                if(original==ActionStatus.COMPLETED){
+                    repeat(spec.tasks){check(TaskStore(db,c){1}.create(id,TaskInput("Synthetic completed task $it")) is OperationsResult.Value)}
+                    repeat(20){
+                        check(MaterialStore(db,c){1}.create(id,MaterialInput("Synthetic completed material $it")) is OperationsResult.Value)
+                        check(ExpenseStore(db,c){1}.create(id,ExpenseInput("Synthetic completed expense $it",100,listOf(ExpensePaymentInput("Synthetic",100)))) is OperationsResult.Value)
+                    }
+                }
+                repeat(spec.roles){i->
+                    val name="Ä界🦋".repeat(spec.textFactor+i%5)+" role $i"
+                    exec("INSERT INTO roles(id,actionId,name,normalizedName,createdAt) VALUES(?,?,?,?,?)","$id-p111-r$i",id,name,OperationalRules.normalizedName(name),"1")
+                }
+                repeat(spec.people){i->
+                    val name="Ä界🦋".repeat(spec.textFactor+i%5)+" person $i"
+                    exec("UPDATE persons SET pseudonym=?,pseudonymNormalized=?,editRevision=7 WHERE id=?",name,PersonRules.normalized(name),"$id-person-$i")
+                    if(spec.filledPlans && i%2==0){
+                        repeat(2){r->exec("INSERT INTO person_planned_roles(actionId,personId,roleId) VALUES(?,?,?)",id,"$id-person-$i","$id-p111-r${(i+r)%spec.roles}")}
+                        exec("UPDATE person_role_plans SET primaryRoleId=?,editRevision=11 WHERE personId=?","$id-p111-r${i%spec.roles}","$id-person-$i")
+                    }
+                    if(original!=ActionStatus.PREPARATION)exec("UPDATE person_operational_states SET operationalStatus='ON_SITE',currentRoleId=?,editRevision=13 WHERE personId=?","$id-p111-r${i%spec.roles}","$id-person-$i")
+                }
+                if(spec.id=="p111-single-long-person"){
+                    val name="Ä界🦋".repeat(8192)+" single long person"
+                    exec("UPDATE persons SET pseudonym=?,pseudonymNormalized=? WHERE id=?",name,PersonRules.normalized(name),"$id-person-0")
+                }
+                usePrepared("SELECT id FROM tasks WHERE actionId=? ORDER BY id"){q->
+                    q.bindText(1,id);var i=0
+                    while(q.step()){
+                        val name="Ä界🦋".repeat(minOf(25,spec.textFactor+i%5))+" task $i"
+                        check(TaskRules.valid(TaskInput(name)))
+                        exec("UPDATE tasks SET title=?,editRevision=17,affectedPersonId=? WHERE id=?",name,"$id-person-${i%spec.people}",q.getText(0));i++
+                    };check(i==spec.tasks)
+                }
+                // All three statuses retain a complete historical chronology; no eager read.
+                val extra=spec.events-spec.tasks;check(extra>0 && extra%2==0)
+                exec("WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<$extra) INSERT INTO task_events SELECT ?||'-p111-event-'||x,?,(SELECT id FROM tasks WHERE actionId=? ORDER BY id LIMIT 1),CASE WHEN x%2=1 THEN 'CANCELLED' ELSE 'REOPENED' END,x+100 FROM n",id,id,id)
+                if(original!=ActionStatus.PREPARATION){
+                    repeat(3){i->
+                        val title="Ä界🦋".repeat(minOf(25,spec.textFactor+i))+" protocol $i"
+                        val description="Ä界🦋".repeat(minOf(650,50*spec.textFactor+i))
+                        check(ProtocolStore(db,c){1}.create(id,ActionStatus.ACTIVE,ProtocolInput(ProtocolClassification.RELEVANT,title,1,description=description)) is ProtocolResult.Value)
+                        check(MemoryReportStore(db,c){1}.create(id,"Synthetic memory $i",MemorySectionSave(0,mapOf("A_FREE_NARRATIVE" to MemoryAnswerValue.Text("Ä界🦋".repeat(minOf(2600,100*spec.textFactor+i)))))) is OperationsResult.Value)
+                    }
+                }
+                val completed=if(original==ActionStatus.COMPLETED)"3" else "NULL"
+                exec("UPDATE actions SET status=?,completedAt=$completed,description=? WHERE id=?",original.name,"Synthetic calibration "+"Ä界🦋".repeat(spec.textFactor),id)
+                usePrepared("SELECT (SELECT COUNT(*) FROM persons WHERE actionId=?),(SELECT COUNT(*) FROM tasks WHERE actionId=?),(SELECT COUNT(*) FROM roles WHERE actionId=?),(SELECT COUNT(*) FROM task_events WHERE actionId=?)"){q->
+                    repeat(4){q.bindText(it+1,id)};check(q.step() && q.getLong(0)==spec.people.toLong() && q.getLong(1)==spec.tasks.toLong() && q.getLong(2)==spec.roles.toLong() && q.getLong(3)==spec.events.toLong())
+                }
+            }
+        }}
+    }
     internal var p101SeededVersion=12;private set
     /** Exact synthetic legacy seed, before Runtime/Session construction; never product data. */
     internal fun p101LegacyTen() {

@@ -1,0 +1,27 @@
+{
+  "case": "medium-core-r1",
+  "family": "capacity",
+  "passed": false,
+  "expected": "PASS",
+  "process_returncode": 0,
+  "apk_sha256": "6835d7790b59050ac4f8ea2575afc0c20ef1f2843e4d1aa8ddf6d1dd5809e2b5",
+  "test_apk_sha256": "312e35d8f93e0f21917cd1db4dea4924eb27a873147d3d7f20dafff852a85305",
+  "samples": 6,
+  "events": [
+    "FIXTURE_BEGIN"
+  ],
+  "protected_packages_unchanged": true,
+  "fixture_roots_remaining": [
+    "p11-fixture-94459e11-8aa6-418e-9151-9c9fdc095328"
+  ],
+  "physical_upper_bound_claim": false,
+  "external_errors": [],
+  "art_used_bytes_observed_min": 2736704,
+  "art_used_bytes_observed_max": 8193096,
+  "native_allocated_bytes_observed_min": 5638384,
+  "native_allocated_bytes_observed_max": 9261264,
+  "pss_kib_observed_min": 90256,
+  "pss_kib_observed_max": 102440,
+  "fd_count_observed_min": 82,
+  "fd_count_observed_max": 96
+}

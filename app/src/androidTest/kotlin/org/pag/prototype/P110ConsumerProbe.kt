@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.AtomicReference
 /** Real isolated Compose/Room/SQLCipher. P77 authentication/data are SYNTHETIC.
  * Test aliases and invalidation diagnostics are NOT owner-end evidence. */
 class P110ConsumerProbe:Instrumentation(){
+    private var p111:P111MemorySampler?=null
+    override fun finish(resultCode:Int,results:Bundle?){p111?.close();super.finish(resultCode,results)}
     private var scenario="repeat-active"
     private val uiBoundaries=setOf("ui-r-exact","ui-r-over","ui-t-exact","ui-t-over")
     private val controlBoundaries=setOf("control-r-exact","control-r-over","control-t-exact","control-t-over")
@@ -21,7 +23,7 @@ class P110ConsumerProbe:Instrumentation(){
     private fun field(o:Any,n:String)=o.javaClass.getDeclaredField(n).let{it.isAccessible=true;it.get(o)}
     private fun <T> main(work:()->T):T{val value=AtomicReference<T>();val error=AtomicReference<Throwable?>();runOnMainSync{try{value.set(work())}catch(t:Throwable){error.set(t)}};error.get()?.let{throw it};return value.get()}
     private fun await(label:String,work:()->Boolean){val end=SystemClock.elapsedRealtime()+60_000;while(SystemClock.elapsedRealtime()<end){if(work())return;Thread.sleep(5)};error("P110 timeout $label")}
-    private fun emit(value:String)=sendStatus(0,Bundle().apply{putString("stream","P110,$scenario,$value\n")})
+    private fun emit(value:String){p111?.mark(value);sendStatus(0,Bundle().apply{putString("stream","P110,$scenario,$value\n")})}
     private fun visible(text:String):Boolean{
         val root=uiAutomation.rootInActiveWindow?:return false
         fun visit(n:android.view.accessibility.AccessibilityNodeInfo):Boolean{
@@ -70,7 +72,7 @@ class P110ConsumerProbe:Instrumentation(){
         return try{root.packageName?.toString()==targetContext.packageName && visit(root)}finally{root.recycle()}
     }
     override fun onException(obj:Any?,e:Throwable):Boolean { emit("ASYNC_FAILURE,"+e.stackTraceToString());return super.onException(obj,e) }
-    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);scenario=arguments?.getString("scenario")?:scenario;check(scenario=="postcommit-ui-refusal" || scenario=="material-input" || scenario=="form-repeat" || scenario=="action-revoke" || scenario in controlBoundaries || scenario in followCases || scenario in uiBoundaries || scenario in singleMembership || scenario in setOf("repeat-active","repeat-preparation","repeat-completed","membership"));start()}
+    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);p111=P111MemorySampler.start(this,arguments);scenario=arguments?.getString("scenario")?:scenario;check(scenario=="postcommit-ui-refusal" || scenario=="material-input" || scenario=="long-role-input" || scenario=="form-repeat" || scenario=="action-revoke" || scenario in controlBoundaries || scenario in followCases || scenario in uiBoundaries || scenario in singleMembership || scenario in setOf("repeat-active","repeat-preparation","repeat-completed","repeat-completed-overview","membership"));start()}
     override fun onStart(){var activity:P86FullWorkspaceActivity?=null;var harness:P77ProductRuntimeHarness?=null
         try{
             check(targetContext.packageName=="org.pag.prototype.a.p77runtime")
@@ -78,9 +80,10 @@ class P110ConsumerProbe:Instrumentation(){
             activity=a
             val h=field(a,"p77Harness") as P77ProductRuntimeHarness;harness=h
             val m=field(a,"model") as ProductViewModel
+            p111?.bind(h,a,m)
             await("focus"){main{a.hasWindowFocus()}};main{m.unlock()}
             await("READY"){main{m.snapshot.state==SessionState.READY && m.actions.isNotEmpty()}}
-            val status=if(scenario in uiBoundaries || scenario in controlBoundaries || scenario=="postcommit-ui-refusal" || scenario=="action-revoke" || scenario=="form-repeat" || scenario in followCases)"active" else if(scenario=="material-input" || scenario=="membership" || scenario in singleMembership)"preparation" else scenario.removePrefix("repeat-")
+            val status=if(scenario=="repeat-completed-overview")"completed" else if(scenario in uiBoundaries || scenario in controlBoundaries || scenario=="postcommit-ui-refusal" || scenario=="action-revoke" || scenario=="form-repeat" || scenario in followCases)"active" else if(scenario=="material-input" || scenario=="long-role-input" || scenario=="membership" || scenario in singleMembership)"preparation" else scenario.removePrefix("repeat-")
             if(scenario=="role-rename" || scenario=="role-delete"){
                 val seeded=AtomicReference<Role>()
                 main{h.runtime.operations.createRole("p11-preparation","Synthetic P110 existing role"){result->
@@ -127,6 +130,25 @@ class P110ConsumerProbe:Instrumentation(){
                 await("material committed value visible"){reveal(aliases.last().name)}
                 check(aliases.first().name=="Synthetic material input 1")
                 emit("MATERIAL_INPUT_COMMITTED,new_value_visible=true,old_expected_and_100_drafts_held=true,record=${h.outstandingState()}")
+            }else if(scenario=="long-role-input"){
+                check(p111!=null)
+                main{m.preparationArea(PreparationArea.ROLES);m.operations.roles();m.operations.beginRoleCreate(RoleCreateSurface.ROLES)}
+                await("role text field"){visible("Rollenname")}
+                val aliases=ArrayList<String>();var accepted=0;var refused=false
+                for(i in 1..100){
+                    val old=main{m.operations.createName}
+                    val value="Ä界🦋".repeat(i*32)+" synthetic role $i"
+                    await("long real SET_TEXT $i"){editVisibleText(value)}
+                    await("long draft or typed refusal $i"){main{m.operations.createName==value || m.operations.error==OperationsFailure.BUDGET_REFUSED || m.workspaceRefusal==WorkspaceFailure.BUDGET_REFUSED}}
+                    if(main{m.operations.createName!=value}){
+                        check(main{m.operations.createName===old && !m.operations.busy && !m.operations.commitConfirmed})
+                        refused=true;emit("LONG_FORM_REFUSED,input_attempt=$i,accepted=$accepted,utf16=${value.length},old_draft_preserved=true,no_write_attempted=true,record=${h.outstandingState()}");break
+                    }
+                    aliases.add(main{m.operations.createName});accepted++
+                    if(i==1 || i%10==0)emit("LONG_FORM_INPUT,accepted=$accepted,utf16=${value.length},held_old_app_strings=${aliases.size},record=${h.outstandingState()}")
+                }
+                check(accepted>0 && (accepted==100 || refused))
+                emit("LONG_FORM_DONE,accepted=$accepted,refused=$refused,held_original_strings=${aliases.size},old_snapshot_held=true,no_write_attempted=true")
             }else if(scenario=="form-repeat"){
                 val expected=held.tasks!!.tasks.first()
                 main{m.activeArea(ActiveArea.TASKS);m.tasks.open(expected);m.tasks.edit()}
@@ -150,7 +172,10 @@ for(i in 1..1000){
                     }
                     main{a.p110Invalidate()}
                     await("form composition $i"){main{a.p110Composed>=first+i}}
-                    check(main{m.tasks.input===aliases.last() && m.tasks.form})
+                    if(!main{m.tasks.input===aliases.last() && m.tasks.form}){
+                        emit("FORM_REPEAT_DIVERGENCE,i=$i,same_identity=${main{m.tasks.input===aliases.last()}},same_value=${main{m.tasks.input==aliases.last()}},same_title=${main{m.tasks.input.title==aliases.last().title}},form=${main{m.tasks.form}},busy=${main{m.tasks.busy}},session=${h.runtime.session.snapshot().state},remaining_absolute_ms=${h.runtime.session.remainingAbsoluteMillis()},workspace_error=${main{m.workspaceError}},record=${h.outstandingState()}")
+                        error("Form draft identity/form changed at composition $i")
+                    }
                     if(i==100 || i==1000)emit("FORM_REPEAT,compositions=$i,held_drafts=${aliases.size},same_current_draft=true,record=${h.outstandingState()}")
                 }
                 await("save through productive UI"){reveal("Speichern") && clickLabel("Speichern")}
@@ -352,12 +377,19 @@ for(i in 1..1000){
                 val row:Any=taskRow?:personRow
                 val oldClick=taskRow?.click?:personRow.detail
                 val before=main{a.p110RowRenders}
-                if(status=="completed"){
+                if(status=="completed" && scenario!="repeat-completed-overview"){
                     main{m.personDetail(personId)}
                     await("completed original person detail"){main{m.selectedPerson?.id==personId && !m.personDetailLoading} && reveal(held.persons.first().pseudonym)}
                     emit("COMPLETED_SCOPE,read_only_person_detail=true,fixture_unchanged=true,old_snapshot_and_32768_aliases_held=true")
                 }
+                if(scenario=="repeat-completed-overview"){
+                    emit("OVERVIEW_VIEWPORT,person_visible_before_reveal=${visible(held.persons.first().pseudonym)},same_original_snapshot=${main{m.workspace===held}}")
+                    await("completed overview initial person visible"){reveal(held.persons.first().pseudonym)}
+                    emit("OVERVIEW_VIEWPORT,person_visible_after_reveal=true,normal_scroll_only=true")
+                }
                 val firstPulse=main{a.p110Composed}
+                val composeBegin=SystemClock.elapsedRealtimeNanos()
+                val mainCpuBegin=main{SystemClock.currentThreadTimeMillis()}
                 if(status=="completed"){
                     val rendered=java.util.concurrent.atomic.AtomicInteger()
                     val failure=AtomicReference<Throwable?>()
@@ -371,6 +403,7 @@ for(i in 1..1000){
                                     if(pending && a.p110Composed>=requested){
                                         check(!m.workspaceError && m.workspace===held && m.personRow(personId)===row && m.snapshot.state==SessionState.READY){"completed composition=${rendered.get()},workspace_same=${m.workspace===held},session=${m.snapshot.state},refusal=${m.workspaceRefusal}"}
                                         val count=rendered.incrementAndGet();pending=false
+                                        if((p111!=null || scenario=="repeat-completed-overview") && count%100==0)emit("COMPOSE_PROGRESS,actual=$count,elapsed_ns=${SystemClock.elapsedRealtimeNanos()-composeBegin},main_cpu_ms=${SystemClock.currentThreadTimeMillis()-mainCpuBegin},gc=${android.os.Debug.getRuntimeStat("art.gc.gc-count")},gc_time_ms=${android.os.Debug.getRuntimeStat("art.gc.gc-time")},blocking_gc_time_ms=${android.os.Debug.getRuntimeStat("art.gc.blocking-gc-time")},overview=${scenario=="repeat-completed-overview"}")
                                         if(count==100 || count==1000)emit("REPEAT,frames=$count,rows=${a.p110RowRenders-before},same_list=true,same_row=true,record=${h.outstandingState()}")
                                         if(count==1000){finished.countDown();return}
                                     }
@@ -387,7 +420,8 @@ for(i in 1..1000){
                     await("completed 100 actual compositions"){failure.get()!=null || rendered.get()>=100}
                     failure.get()?.let{throw it}
                     check(visible(held.persons.first().pseudonym)){"Completed person disappeared at 100"}
-                    await("completed 1000 actual compositions"){finished.count==0L}
+                    try{await("completed 1000 actual compositions"){finished.count==0L}}
+                    catch(t:Throwable){emit("COMPOSE_TIMEOUT,actual=${rendered.get()},elapsed_ns=${SystemClock.elapsedRealtimeNanos()-composeBegin},session=${h.runtime.session.snapshot().state},remaining_absolute_ms=${h.runtime.session.remainingAbsoluteMillis()},gc=${android.os.Debug.getRuntimeStat("art.gc.gc-count")},gc_time_ms=${android.os.Debug.getRuntimeStat("art.gc.gc-time")},blocking_gc_time_ms=${android.os.Debug.getRuntimeStat("art.gc.blocking-gc-time")}");throw t}
                     failure.get()?.let{throw it}
                     check(rendered.get()==1000 && visible(held.persons.first().pseudonym))
                 }else for(i in 1..1000){

@@ -1,0 +1,1 @@
+{"fixture": "p111-medium", "people": 100, "tasks": 250, "roles": 6, "events": 5000, "text_factor": 1, "filled_and_empty_plans": true, "kind": "FIXTURE_BEGIN", "scenario_id": "medium-core-r1", "elapsed_ns": 1515555778415045, "utc_ms": 1793014722221, "apk_sha256": "6835d7790b59050ac4f8ea2575afc0c20ef1f2843e4d1aa8ddf6d1dd5809e2b5"}

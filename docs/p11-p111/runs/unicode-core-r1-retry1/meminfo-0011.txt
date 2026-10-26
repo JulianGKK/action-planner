@@ -1,0 +1,4 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 1047085410 Realtime: 1522470079
+
+** MEMINFO in pid 5641 [org.pag.prototype.a.p77runtime] **

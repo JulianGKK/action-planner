@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicReference
 
 /** Original productive repositories, confirmed transactions and SQLCipher. Schema12 persisted revisions; P77 auth is synthetic. */
 class P104EditorCasProbe:Instrumentation() {
+    private var p111:P111MemorySampler?=null
+    override fun finish(resultCode:Int,results:Bundle?){p111?.close();super.finish(resultCode,results)}
     private var scenario="cas_aba"
     private lateinit var h:P77ProductRuntimeHarness
     private var p101:P101WriterDiagnostics?=null
@@ -32,7 +34,7 @@ class P104EditorCasProbe:Instrumentation() {
         while(SystemClock.elapsedRealtime()<end){if(work())return;Thread.sleep(40)}
         error("P104 timeout $label")
     }
-    private fun emit(s:String)=sendStatus(0,Bundle().apply{putString("stream","P104,$scenario,$s\n")})
+    private fun emit(s:String){p111?.mark(s);sendStatus(0,Bundle().apply{putString("stream","P104,$scenario,$s\n")})}
     private fun <T> call(work:((T)->Unit)->Unit):T {
         val v=AtomicReference<T>();val n=AtomicInteger()
         main{h.runtime.session.userInteraction();work{v.set(it);n.incrementAndGet()}}
@@ -90,7 +92,7 @@ class P104EditorCasProbe:Instrumentation() {
                 try{check(uiAutomation.injectInputEvent(e,true))}finally{e.recycle()};Thread.sleep(35)}
         }
     }
-    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);scenario=arguments?.getString("scenario")?:scenario
+    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);p111=P111MemorySampler.start(this,arguments);scenario=arguments?.getString("scenario")?:scenario
         check(scenario in setOf("cas_aba","person_ui","publication","migration","native_revisions","migration_data","migration_abort","editors_ui"));start()}
     override fun onException(obj:Any?,e:Throwable):Boolean {
         emit("STARTUP_EXCEPTION,"+e.stackTraceToString());return false
@@ -102,6 +104,7 @@ class P104EditorCasProbe:Instrumentation() {
             val a=startActivitySync(Intent().setClassName(targetContext,"org.pag.prototype.P86FullWorkspaceActivity")
                 .putExtra("p83Fixture","p86-small").putExtra("p104Migration11",scenario=="migration").putExtra("p101Probe",scenario=="migration_data").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));activity=a
             h=field(a,"p77Harness") as P77ProductRuntimeHarness;model=field(a,"model") as ProductViewModel
+            p111?.bind(h,a,model)
             waitFor("focus"){main{a.hasWindowFocus()}};unlock()
             check(!h.runtime.activeCore.reuseEnabled && !h.mutations.ramReuseEnabled)
             when(scenario) {

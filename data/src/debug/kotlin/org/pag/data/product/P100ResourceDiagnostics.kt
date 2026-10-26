@@ -197,8 +197,8 @@ class P100ResourceDiagnostics {
                             fun current()=context.check(AccessPoint.STEP)
                             val people=CompactPeopleStore(this,context,::current).prepareCore(state)
                             val tasks=CompactTaskStore(this,context,::current).preparePage(state,CompactTaskQuery(),null)
-                            val base=CoreReadAdmission.add(ActiveCoreStore.envelope.retained,CoreReadAdmission.add(people.reservation.retained,tasks.reservation.retained))
-                            val trans=CoreReadAdmission.add(ActiveCoreStore.envelope.transition,CoreReadAdmission.add(people.reservation.transition,tasks.reservation.transition))
+                            val base=CoreReadAdmission.add(CoreReadAdmission.revisionScratch.retained,CoreReadAdmission.add(ActiveCoreStore.envelope.retained,CoreReadAdmission.add(people.reservation.retained,tasks.reservation.retained)))
+                            val trans=CoreReadAdmission.add(CoreReadAdmission.revisionScratch.transition,CoreReadAdmission.add(ActiveCoreStore.envelope.transition,CoreReadAdmission.add(people.reservation.transition,tasks.reservation.transition)))
                             val isR=mode.startsWith("R_");val plus=if(mode.endsWith("plus1"))1 else 0
                             val limit=if(isR)ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES else ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES
                             val cost=ActiveWorkspaceBudget.estimateUnits(if(isR)base else trans).second

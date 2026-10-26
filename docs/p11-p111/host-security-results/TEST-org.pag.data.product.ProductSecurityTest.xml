@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.ProductSecurityTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-26T13:02:03.672Z" hostname="iuzjhtgvfc" time="0.01">
+  <properties/>
+  <testcase name="cannotBindWithoutActualSessionContext" classname="org.pag.data.product.ProductSecurityTest" time="0.001"/>
+  <testcase name="revokedDuringConsumerDeniesResult" classname="org.pag.data.product.ProductSecurityTest" time="0.0"/>
+  <testcase name="revokedConsumerFailureStillWipesLeaseAndCannotReenter" classname="org.pag.data.product.ProductSecurityTest" time="0.001"/>
+  <testcase name="actionUsesSpecifiedValidationAndStatuses" classname="org.pag.data.product.ProductSecurityTest" time="0.0"/>
+  <testcase name="inventoryNeverRepairsPartialStates" classname="org.pag.data.product.ProductSecurityTest" time="0.003"/>
+  <testcase name="ownerAllowsMultipleConsumersButWipesControlledLeases" classname="org.pag.data.product.ProductSecurityTest" time="0.001"/>
+  <testcase name="consumerFailureKeepsOriginalExceptionAndWipesBorrowedLease" classname="org.pag.data.product.ProductSecurityTest" time="0.001"/>
+  <testcase name="completeInventoryAndUnknownEntry" classname="org.pag.data.product.ProductSecurityTest" time="0.001"/>
+  <testcase name="keyPresenceDoesNotOverrideGate" classname="org.pag.data.product.ProductSecurityTest" time="0.001"/>
+  <testcase name="oldOwnerCannotReactivateForNewGeneration" classname="org.pag.data.product.ProductSecurityTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

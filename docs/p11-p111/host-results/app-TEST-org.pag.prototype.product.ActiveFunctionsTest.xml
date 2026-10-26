@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveFunctionsTest" tests="27" skipped="0" failures="0" errors="0" timestamp="2026-10-26T11:30:11.333Z" hostname="iuzjhtgvfc" time="0.207">
+  <properties/>
+  <testcase name="onlyWithoutFunctionHasItsOwnGroup" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.079"/>
+  <testcase name="withoutFunctionFocusIsDistinctFromNoFocus" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.059"/>
+  <testcase name="nobodyOnSiteIsNeutralAndShowsOnlyOtherRoles" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.001"/>
+  <testcase name="statusChangeRemovesPersonFromDistributionWithoutCountingAsUnassigned" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.005"/>
+  <testcase name="completedCannotCreateOrChangeFunctionsAndStatus" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.001"/>
+  <testcase name="newActiveFunctionReturnsToOverviewWithoutAssignmentAndHasFeedback" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.005"/>
+  <testcase name="personDetailsReturnToPersonThenOriginalFunctionWithoutInventoryInGroup" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.006"/>
+  <testcase name="unusedRolesAreSecondaryWithoutWarnings" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="cancelNewFunctionDiscardsDraftWithoutWriteRead" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="initialFunctionsAppearOnlyWithCompleteOperationalBoardAndNoTasks" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="refreshRetainsWholeOldDistribution" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="activeRenameDeleteAndPlanningAreDenied" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="roleAndPersonOrderRemainRepositoryOrder" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="projectionAgreesWithExistingP4RoleCounts" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="oldRequestGenerationAndActionCannotRestoreFunctions" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.004"/>
+  <testcase name="lockClearsGroupPersonDisclosureAndDraft" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.004"/>
+  <testcase name="removingFunctionMovesPersonToWithoutGroup" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.003"/>
+  <testcase name="summaryUsesOnlyCurrentOnSiteDistribution" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="everyNonOnSiteStatusIsExcludedEvenWithSyntheticRole" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.0"/>
+  <testcase name="groupFocusDoesNotReadTasksInventoryOrBoards" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="plannedRolesNeverBecomeCurrentGroups" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="changeAToBUsesExistingSnapshotWriteAndKeepsEmptyAContext" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.012"/>
+  <testcase name="synchronousRevokeCannotRestoreFunctionNavigationOrDisclosure" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="failedCreationKeepsDraftAndDoesNotClaimSuccess" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.002"/>
+  <testcase name="lateCreationAfterLockCannotPublishFeedbackOrContext" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.001"/>
+  <testcase name="noStatusWithInitialRoleIsNotCurrentDistribution" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.001"/>
+  <testcase name="groupPersonOpensExistingUx3bAndReturnsToSameGroupWithoutRead" classname="org.pag.prototype.product.ActiveFunctionsTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
