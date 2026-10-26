@@ -1,6 +1,6 @@
 # §111 – Größenstrategie und reale Android-Speicherkalibrierung
 
-**BLOCKED – Entscheidung über großen produktiven Navigations-/Detailpfad ausstehend; keine #33-Abnahme, kein Merge/Release.** Basis `70ffdbaf1fe1678418ccb74af8f6b9ee6ba86029`, Branch `p11-performance-optimization`.
+**BLOCKED – Entscheidung zum produktiven Navigations-/Detailpfad großer Aktionen ausstehend; keine #33-Abnahme, kein Merge/Release.** Basis `70ffdbaf1fe1678418ccb74af8f6b9ee6ba86029`, Branch `p11-performance-optimization`.
 
 ## Gegenstand und unveränderte Regeln
 
@@ -161,4 +161,4 @@ Der [Nachlauf ohne Sampler](runs/diagnostic-completed-overview-control-viewport-
 
 **Entscheidung: BLOCKED.** Empirische Kapazität und Refusals sind dokumentiert; eine vollständige #33-Abnahme wird wegen des konkret fehlenden großen produktiven Navigations-/Detailpfads nicht erklärt. Die oben formulierte Entscheidungsvorlage ist der nächste fachlich/architektonisch abzugrenzende Schritt. Kein neues allgemeines Owneraudit, kein globales Endreceipt, kein stilles Option B. Framework-/Native-/Renderer-/IME-/Accessibility-Spitzen bleiben nach Option 2 separat zu bewerten; die Messreihe ist eine konkrete Gerätekalibrierung und keine Garantie für alle Androidzustände. #38-Stress und #39-Sicherheitsgesamtprüfung bleiben getrennte offene Freigabegrenzen.
 
-**STOPP zum unabhängigen Review. Kein Merge/Release.** Commit-/Push- und Issue-Rücklesebelege werden im Übergabeprotokoll ergänzt.
+**STOPP zum unabhängigen Review. Kein Merge/Release.** Commit-/Push- und Issue-Rücklesebelege stehen im [Übergabeprotokoll](handoff.md).
