@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P113 {"error":"java.lang.IllegalStateException: P113 timeout initial person card\n\tat org.pag.prototype.P113NavigationProbe.await(P113NavigationProbe.kt:24)\n\tat org.pag.prototype.P113NavigationProbe.onStart(P113NavigationProbe.kt:58)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","kind":"FAIL","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P113 FAIL small
+INSTRUMENTATION_CODE: 0

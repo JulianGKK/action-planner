@@ -1,0 +1,16 @@
+Basis: d252d16614c67ea4cfeeb4f0f52b657e946fe777
+
+Finaler Build/Hostauswahl:
+./gradlew -PpagTestBuildType=p77runtime :app:assembleP77runtime :app:assembleP77runtimeAndroidTest :app:testP77runtimeUnitTest --tests '*ActiveCoreOwnerTest.p114*' --tests '*ActiveCoreOwnerTest.p113*' --tests '*P113UiSlotTest' --tests '*P110InputCallbackTest' --tests '*P110UiTokenTest' --tests '*ProductInputsTest' --tests '*TaskModelTest.onlyExplicitReloadReplacesExpectedAllInputFieldsAndComposeIdentity' --tests '*TaskModelTest.lockGenerationActionChangesRejectReloadAndWritePublication' :data:testDebugUnitTest --tests '*OutstandingCoreReadTest.p113*' --tests '*P104ConcurrentCasTest'
+
+Finale P77-Fälle, sequenziell:
+python3 docs/p11-p114/device.py install
+python3 docs/p11-p114/device.py run large rows
+python3 docs/p11-p114/device.py run small rows
+python3 docs/p11-p114/device.py run negative rows
+python3 docs/p11-p114/device.py regression tasks rows
+python3 docs/p11-p114/device.py regression people rows
+python3 docs/p11-p114/device.py after
+
+P113NavigationProbe, P80ContentFrames und P86FullWorkspaceActivity unverändert gegen Basis; Hashes in ondraw-unchanged.sha256.
+P112PagesProbe verwendet zusätzlich -e p114Scroll true, um Personenseite Zeile15 nach Rückkehr ohne weiteren Test-Scroll zu prüfen.

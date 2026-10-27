@@ -22,9 +22,20 @@ internal class OriginalWorkspaceAccess(
     override fun readBindingLive():Boolean = Thread.currentThread()===thread && publishing<2 &&
         original.scope==AccessScope.READY && original.generation==ticket.generation && request.ticket?.active!=false &&
         entry.readable() && ticket.isLive() && mutations.isCurrentActiveRead(ticket)
+    private fun matches(state:CompactTaskState)=state.mutationEpoch==ticket.mutationEpoch &&
+        state.binding.actionId==request.actionId && state.binding.generation==request.generation
+    override fun projectionBindingLive(state:CompactTaskState)=matches(state) && readBindingLive()
     override fun publishCore(state:CompactTaskState,work:()->Unit):Boolean =
-        state.mutationEpoch==ticket.mutationEpoch && state.binding.actionId==request.actionId &&
-            state.binding.generation==request.generation && publish(request.actionId,status,request.generation,work)
+        matches(state) && publish(request.actionId,status,request.generation,work)
+    override fun consumeCore(state:CompactTaskState,units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
+        return matches(state) && consumeCurrent(units,producer)
+    }
+    override fun consumeCurrent(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
+        var booked=false
+        return publish(request.actionId,status,request.generation){
+            if(entry.reserve(units)){producer();booked=true}
+        } && booked
+    }
     override fun publish(actionId:String,status:ActionStatus,generation:Long,work:()->Unit):Boolean {
         if(Thread.currentThread()!==thread || publishing>=2 || actionId!=request.actionId || status!=request.status || generation!=request.generation)return false
         val fresh=source.acquire(AccessScope.READY)?:return false

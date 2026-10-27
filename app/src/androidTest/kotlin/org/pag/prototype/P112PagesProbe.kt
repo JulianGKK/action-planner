@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicReference
 /** Three bounded product journeys only. Real SQLCipher, synthetic P77 authentication/data. */
 class P112PagesProbe:Instrumentation(){
     private var scenario="tasks"
+    private var scrollProbe=false
     private fun field(o:Any,n:String)=o.javaClass.getDeclaredField(n).let{it.isAccessible=true;it.get(o)}
     private fun <T> main(work:()->T):T{val v=AtomicReference<T>();val e=AtomicReference<Throwable?>();runOnMainSync{try{v.set(work())}catch(t:Throwable){e.set(t)}};e.get()?.let{throw it};return v.get()}
     private fun await(label:String,work:()->Boolean){val until=SystemClock.elapsedRealtime()+60_000;while(SystemClock.elapsedRealtime()<until){if(work())return;Thread.sleep(30)};error("P112 timeout $label")}
@@ -33,6 +34,16 @@ class P112PagesProbe:Instrumentation(){
         }
         return try{if(root.packageName?.toString()!=targetContext.packageName)false else if(visible(root))true else {if(!scroll(root))forward=!forward;false}}finally{root.recycle()}
     }
+    private fun visibleNow(text:String):Boolean {
+        val root=uiAutomation.rootInActiveWindow?:return false
+        fun visit(n:android.view.accessibility.AccessibilityNodeInfo):Boolean{
+            if(!n.refresh())return false
+            if(n.isVisibleToUser && n.text?.toString()?.contains(text)==true)return true
+            for(i in 0 until n.childCount){val c=n.getChild(i)?:continue;try{if(visit(c))return true}finally{c.recycle()}}
+            return false
+        }
+        return try{visit(root)}finally{root.recycle()}
+    }
     private fun click(text:String):Boolean{
         val root=uiAutomation.rootInActiveWindow?:return false
         fun contains(n:android.view.accessibility.AccessibilityNodeInfo):Boolean {
@@ -47,7 +58,7 @@ class P112PagesProbe:Instrumentation(){
         }
         return try{root.packageName?.toString()==targetContext.packageName && visit(root)}finally{root.recycle()}
     }
-    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);scenario=arguments?.getString("scenario")?:scenario;check(scenario in setOf("tasks","people","tight"));start()}
+    override fun onCreate(arguments:Bundle?){super.onCreate(arguments);scenario=arguments?.getString("scenario")?:scenario;scrollProbe=arguments?.getString("p114Scroll")=="true";check(scenario in setOf("tasks","people","tight"));start()}
     override fun onStart(){var activity:Activity?=null;var harness:P77ProductRuntimeHarness?=null
         try{
             check(targetContext.packageName=="org.pag.prototype.a.p77runtime")
@@ -95,14 +106,18 @@ class P112PagesProbe:Instrumentation(){
                     await("returned new value visible"){reveal("Synthetic P112 committed task")}
                     emit("COMMITTED,new_title_and_revision_visible=true,back_to_page=true,ledger=${h.outstandingState()}")
                 }else{
-                    val card=second.people!!.items.first()
-                    val rowLabel=main{checkNotNull(m.boundedPageLabel(m.pageEpoch,0))}
+                    val rowIndex=if(scrollProbe)15 else 0
+                    val card=second.people!!.items[rowIndex]
+                    val rowLabel=main{checkNotNull(m.boundedPageLabel(m.pageEpoch,rowIndex))}
                     await("row visible"){reveal(rowLabel)};check(click(rowLabel))
                     await("person detail"){main{!m.personDetailLoading && m.selectedPerson?.id==card.id}}
                     await("person visible"){reveal(card.pseudonym)}
                     main{m.backToPersons()}
                     await("return page"){main{m.selectedPerson==null && m.pageNumber==2 && m.pageShown==32}}
-                    await("return visible"){reveal(card.pseudonym)}
+                    if(scrollProbe){
+                        await("restored visible row without scrolling"){visibleNow(card.pseudonym)}
+                        emit("SCROLL,restored_row=15,without_test_scroll=true")
+                    }else await("return visible"){reveal(card.pseudonym)}
                     emit("PERSON,detail_visible=true,back_to_second_page=true,ledger=${h.outstandingState()}")
                 }
             }

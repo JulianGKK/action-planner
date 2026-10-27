@@ -16,6 +16,7 @@ internal class CompactHubPresentation internal constructor(owner:ProductViewMode
     private val memory:()->Unit={open(ActiveArea.MEMORY_REPORTS)}
     private val details:()->Unit={open(ActiveArea.DETAILS)}
     internal fun invalidate(){owner=null}
+    fun displayRows():List<BoundedHubRow>?=owner?.compactHubRows(identity)
     fun size()=3
     fun card(index:Int):HubCard? {
         if(index !in 0..2 || owner?.compactHubCurrent(identity)!=true)return null

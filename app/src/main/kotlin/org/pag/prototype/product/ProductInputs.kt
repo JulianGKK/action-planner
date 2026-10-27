@@ -1,6 +1,9 @@
 package org.pag.prototype.product
 
 import android.view.ViewTreeObserver
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -21,6 +24,7 @@ import androidx.compose.ui.platform.*
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.state.ToggleableState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -49,7 +53,7 @@ internal class FormInput(val dismiss:(Boolean)->Unit) {
     }
 }
 internal val LocalFormScreen=staticCompositionLocalOf<OriginalUiFence?>{null}
-private val LocalFormInput=staticCompositionLocalOf<FormInput>{error("PRODUCT-FORM-SCOPE")}
+internal val LocalFormInput=staticCompositionLocalOf<FormInput>{error("PRODUCT-FORM-SCOPE")}
 
 /** Observes unconsumed taps in Final pass; never consumes input or interrupts scrolling. */
 @androidx.compose.runtime.NonRestartableComposable
@@ -111,12 +115,12 @@ internal val originalButtonControlCost=org.pag.domain.ActiveWorkspaceBudget.Unit
         ProvideTextStyle(formCenterStyle) { render() }
     }
 }
-@Composable internal inline fun FormTextButton(crossinline onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,crossinline content:@Composable RowScope.()->Unit) {
+@Composable internal inline fun FormTextButton(crossinline onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,interactionSource:MutableInteractionSource?=null,crossinline content:@Composable RowScope.()->Unit) {
     val input=LocalFormInput.current;val screen=LocalFormScreen.current
-    if(screen==null){TextButton(onClick={input.finish();onClick()},enabled=enabled,modifier=modifier.heightIn(min=48.dp)){content()};return}
+    if(screen==null){TextButton(onClick={input.finish();onClick()},enabled=enabled,modifier=modifier.heightIn(min=48.dp),interactionSource=interactionSource){content()};return}
     val control=originalButtonControl(screen,input,{onClick()}){content()}?:return
     val click=control.click;val render=control.render
-    if(screen?.live()!=false)TextButton(onClick=click,enabled=enabled,modifier=modifier.heightIn(min=48.dp),content=render)
+    if(screen?.live()!=false)TextButton(onClick=click,enabled=enabled,modifier=modifier.heightIn(min=48.dp),interactionSource=interactionSource,content=render)
 }
 internal class FinishedRowClick(private val input:FormInput,private val action:OriginalRowAction):()->Unit {
     override fun invoke(){if(action.live()){input.finish();action()}}
@@ -139,6 +143,27 @@ internal class FinishedRowClick(private val input:FormInput,private val action:O
         val value:@Composable RowScope.()->Unit={if(onClick.live())content()};value
     }?:return
     if(onClick.live())OutlinedButton(onClick=click,modifier=modifier.heightIn(min=48.dp),enabled=enabled,shape=shape,content=render)
+}
+/** Bounded scalar card: one layout node and the existing booked click/content pair.
+ * No Material button subtree/interaction container is rebuilt for each visible card. */
+@Composable internal inline fun FlatOriginalCard(enabled:Boolean,modifier:Modifier=Modifier,
+    crossinline onClick:()->Unit,minHeight:Dp=72.dp,padding:Dp=16.dp,admitted:OriginalButtonControl?=null,crossinline content:@Composable RowScope.()->Unit){
+    val screen=LocalFormScreen.current?:return
+    val input=LocalFormInput.current
+    val control=admitted?:originalButtonControl(screen,input,{onClick()}){content()}?:return
+    if(!screen.live())return
+    Row(modifier.fillMaxWidth().heightIn(min=minHeight)
+        .border(1.dp,MaterialTheme.colorScheme.outline,productFormShape)
+        .clickable(enabled=enabled,role=Role.Button,onClick=control.click).padding(padding),
+        verticalAlignment=androidx.compose.ui.Alignment.CenterVertically,content=control.render)
+}
+@Composable internal inline fun BoundedCard(label:String,enabled:Boolean,modifier:Modifier=Modifier,admitted:OriginalButtonControl?=null,crossinline onClick:()->Unit){
+    FlatOriginalCard(enabled,modifier,{onClick()},admitted=admitted){Text(label)}
+}
+@Composable internal inline fun BoundedPageButton(crossinline onClick:()->Unit,enabled:Boolean,crossinline content:@Composable RowScope.()->Unit){
+    FlatOriginalCard(enabled,onClick={onClick()},minHeight=48.dp,padding=12.dp){
+        ProvideTextStyle(MaterialTheme.typography.labelLarge){content()}
+    }
 }
 /** One accessible checkbox action with the same input cleanup as other form controls. */
 @Composable internal inline fun FormCheckboxButton(label:String,checked:Boolean,crossinline onClick:()->Unit,enabled:Boolean=true) {

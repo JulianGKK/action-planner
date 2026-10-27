@@ -1,0 +1,254 @@
+{
+  "small": {
+    "routes": [
+      {
+        "route": "HUB->PERSONS",
+        "n": 5,
+        "p50_ms": 100.063125,
+        "p95_ms": 133.148906,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "small"
+      },
+      {
+        "route": "PERSONS->FUNCTIONS",
+        "n": 5,
+        "p50_ms": 103.456249,
+        "p95_ms": 115.349167,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "small"
+      },
+      {
+        "route": "FUNCTIONS->TASKS",
+        "n": 5,
+        "p50_ms": 101.226407,
+        "p95_ms": 112.269115,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "small"
+      },
+      {
+        "route": "TASKS->HUB",
+        "n": 5,
+        "p50_ms": 120.504479,
+        "p95_ms": 135.94125,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "small"
+      },
+      {
+        "route": "HUB->TASKS",
+        "n": 5,
+        "p50_ms": 101.443802,
+        "p95_ms": 106.43026,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "small"
+      },
+      {
+        "route": "TASKS->FUNCTIONS",
+        "n": 5,
+        "p50_ms": 97.096042,
+        "p95_ms": 110.497291,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "small"
+      },
+      {
+        "route": "FUNCTIONS->PERSONS",
+        "n": 5,
+        "p50_ms": 100.622552,
+        "p95_ms": 113.94552,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "small"
+      },
+      {
+        "route": "PERSONS->HUB",
+        "n": 5,
+        "p50_ms": 115.74099,
+        "p95_ms": 132.841667,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "small"
+      }
+    ],
+    "completion": {
+      "performance_within_150ms": true,
+      "ledger": "State(phase=RETAINED, retained=5077861, transition=16777216, localRetained=5077861, localTransition=9945730, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)",
+      "core_reads": 1,
+      "full_workspaces": 0,
+      "kind": "CYCLE_COMPLETE",
+      "scenario": "small"
+    }
+  },
+  "large": {
+    "routes": [
+      {
+        "route": "HUB->PERSONS",
+        "n": 5,
+        "p50_ms": 104.345417,
+        "p95_ms": 131.397656,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "large"
+      },
+      {
+        "route": "PERSONS->FUNCTIONS",
+        "n": 5,
+        "p50_ms": 111.254531,
+        "p95_ms": 143.098802,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "large"
+      },
+      {
+        "route": "FUNCTIONS->TASKS",
+        "n": 5,
+        "p50_ms": 103.589011,
+        "p95_ms": 126.248125,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "large"
+      },
+      {
+        "route": "TASKS->HUB",
+        "n": 5,
+        "p50_ms": 120.063073,
+        "p95_ms": 134.816406,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "large"
+      },
+      {
+        "route": "HUB->TASKS",
+        "n": 5,
+        "p50_ms": 102.990782,
+        "p95_ms": 109.40698,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "large"
+      },
+      {
+        "route": "TASKS->FUNCTIONS",
+        "n": 5,
+        "p50_ms": 112.846198,
+        "p95_ms": 130.521615,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "large"
+      },
+      {
+        "route": "FUNCTIONS->PERSONS",
+        "n": 5,
+        "p50_ms": 106.716927,
+        "p95_ms": 110.921302,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "large"
+      },
+      {
+        "route": "PERSONS->HUB",
+        "n": 5,
+        "p50_ms": 123.208438,
+        "p95_ms": 129.241563,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "large"
+      }
+    ],
+    "completion": {
+      "performance_within_150ms": true,
+      "ledger": "State(phase=RETAINED, retained=5712037, transition=16777216, localRetained=5712037, localTransition=12072498, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)",
+      "core_reads": 1,
+      "full_workspaces": 0,
+      "kind": "CYCLE_COMPLETE",
+      "scenario": "large"
+    }
+  },
+  "negative": {
+    "routes": [
+      {
+        "route": "HUB->PERSONS",
+        "n": 1,
+        "p50_ms": 134.593177,
+        "p95_ms": 134.593177,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "negative"
+      },
+      {
+        "route": "PERSONS->FUNCTIONS",
+        "n": 1,
+        "p50_ms": 141.396823,
+        "p95_ms": 141.396823,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "negative"
+      },
+      {
+        "route": "FUNCTIONS->TASKS",
+        "n": 1,
+        "p50_ms": 123.324375,
+        "p95_ms": 123.324375,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "negative"
+      },
+      {
+        "route": "TASKS->HUB",
+        "n": 1,
+        "p50_ms": 132.765312,
+        "p95_ms": 132.765312,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "negative"
+      },
+      {
+        "route": "HUB->TASKS",
+        "n": 1,
+        "p50_ms": 102.075729,
+        "p95_ms": 102.075729,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "negative"
+      },
+      {
+        "route": "TASKS->FUNCTIONS",
+        "n": 1,
+        "p50_ms": 120.579011,
+        "p95_ms": 120.579011,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "negative"
+      },
+      {
+        "route": "FUNCTIONS->PERSONS",
+        "n": 1,
+        "p50_ms": 105.756354,
+        "p95_ms": 105.756354,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "negative"
+      },
+      {
+        "route": "PERSONS->HUB",
+        "n": 1,
+        "p50_ms": 119.008229,
+        "p95_ms": 119.008229,
+        "within_150ms": true,
+        "kind": "ROUTE",
+        "scenario": "negative"
+      }
+    ],
+    "completion": {
+      "performance_within_150ms": true,
+      "ledger": "State(phase=COMPOSE_TRANSITION, retained=3365797, transition=16777216, localRetained=3365797, localTransition=16777216, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)",
+      "core_reads": 1,
+      "full_workspaces": 0,
+      "kind": "CYCLE_COMPLETE",
+      "scenario": "negative"
+    }
+  }
+}

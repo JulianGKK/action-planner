@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.P110UiTokenTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-27T10:33:49.977Z" hostname="iuzjhtgvfc" time="0.097">
+  <properties/>
+  <testcase name="oldChoiceAndSemanticsCannotFollowLocalABAOrParentRevoke" classname="org.pag.prototype.product.P110UiTokenTest" time="0.097"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

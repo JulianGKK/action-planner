@@ -23,6 +23,15 @@ data class WorkspaceRead(val actionId:String,val status:ActionStatus,val generat
 interface WorkspaceAccess {
     /** Same original projection/epoch only; no cache admission or independent read authority. */
     fun publishCore(state:CompactTaskState,work:()->Unit):Boolean=false
+    /** Routing hint only; never an authorization for payload access/construction. */
+    fun projectionBindingLive(state:CompactTaskState):Boolean=publishCore(state){}
+    /** Original current read-ticket publication plus prior reservation. No new read owner. */
+    fun consumeCurrent(units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean=false
+    /** Same original publication gate plus prior reservation, in one synchronous context. */
+    fun consumeCore(state:CompactTaskState,units:ActiveWorkspaceBudget.Units,producer:()->Unit):Boolean {
+        var published=false
+        return consume(units){published=publishCore(state,producer)} && published
+    }
     /** Revocable binding hint for already delivered UI only. Never permission to read,
      * allocate or execute a data operation; those still require publish/consume. */
     fun readBindingLive():Boolean=false

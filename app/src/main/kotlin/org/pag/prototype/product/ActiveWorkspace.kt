@@ -82,16 +82,16 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
 @androidx.compose.runtime.NonRestartableComposable
 
 @Composable internal fun ActiveWorkspace(model: ProductViewModel, renderContent:Boolean=true, contentFrames:CompactContentFrameObserver?=null) {
-    ActionWorkspaceHeader(model)
-    if(model.boundedPage){
+    if(!LocalActiveChrome.current)ActionWorkspaceHeader(model)
+    if(model.boundedPage && !LocalActiveChrome.current){
         Row(Modifier.fillMaxWidth()){
             for(area in activeCoreNavigationAreas){
                 FormTextButton({model.activeArea(area)},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing && !model.detailLoading,modifier=Modifier.weight(1f)){Text(area.label)}
             }
         }
     }
-    if (model.activeArea != ActiveArea.HUB || model.operations.screen != OperationsScreen.OVERVIEW ||
-        model.selectedPerson != null || model.tasks.form || model.tasks.selected != null) {
+    if (!LocalActiveChrome.current && (model.activeArea != ActiveArea.HUB || model.operations.screen != OperationsScreen.OVERVIEW ||
+        model.selectedPerson != null || model.tasks.form || model.tasks.selected != null)) {
         FormOutlinedButton({ model.activeArea(ActiveArea.HUB) }, enabled = model.activeNavigationEnabled) { Text("‹ Zum Lagebild") }
     }
     val shownArea = activeWorkspaceShownArea(model)
@@ -118,9 +118,9 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
     }
     if(model.boundedListVisible) {
         Text("Seite ${model.pageNumber} · ${model.pageTotal} Einträge insgesamt")
-        if(model.activeArea==ActiveArea.TASKS)FormOutlinedButton({model.toggleBoundedTaskLane()},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing && !model.detailLoading){Text(if(model.pageLane==CompactTaskLane.ACTIVE)"Abgeschlossene Aufgaben anzeigen" else "Offene Aufgaben anzeigen")}
-        FormOutlinedButton({model.firstBoundedPage()},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing){Text("Erste Seite neu laden")}
-        FormOutlinedButton({model.nextBoundedPage()},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing && model.pageHasMore && !model.pageNeedsReload){Text("Nächste Seite (32)")}
+        if(model.activeArea==ActiveArea.TASKS)BoundedPageButton({model.toggleBoundedTaskLane()},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing && !model.detailLoading){Text(if(model.pageLane==CompactTaskLane.ACTIVE)"Abgeschlossene Aufgaben anzeigen" else "Offene Aufgaben anzeigen")}
+        BoundedPageButton({model.firstBoundedPage()},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing){Text("Erste Seite neu laden")}
+        BoundedPageButton({model.nextBoundedPage()},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing && model.pageHasMore && !model.pageNeedsReload){Text("Nächste Seite (32)")}
         if(model.pageNeedsReload)Text("Daten geändert. Für weitere Seiten bitte die erste Seite neu laden.")
     }
     if(model.boundedPage && model.workspaceRefusal!=null)Text(when(model.workspaceRefusal){
@@ -251,31 +251,37 @@ internal fun compactHubSummary(index:Int,line:Int,value:Long):String=when(index)
 /** Indexed layout: one original metadata card list, no chunked/copied card lists. */
 @androidx.compose.runtime.NonRestartableComposable
 @Composable private fun CompactActiveContent(hub:CompactHubPresentation,enabled:Boolean,observer:CompactContentFrameObserver?=null) {
+    val rows=hub.displayRows()
+    if(LocalActiveChrome.current && rows==null){PagErrorState();return}
     Column(compactFrameModifier(ActiveArea.HUB,observer),verticalArrangement=Arrangement.spacedBy(16.dp)) {
         PreparationHeading(ActiveArea.HUB.label)
-        val fontScale=LocalDensity.current.fontScale
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val columns=activeHubColumns(maxWidth.value,fontScale)
-            Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                for(row in 0 until (hub.size()+columns-1)/columns) {
-                    Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                        for(index in row*columns until minOf((row+1)*columns,hub.size())) {
-                            val card=hub.card(index) ?: continue
-                            val first=hub.value(index,0) ?: continue
-                            val second=hub.value(index,1) ?: continue
-                            val click=hub.navigation(card.area) ?: continue
-                            FormOutlinedButton(click,enabled=enabled,modifier=Modifier.weight(1f).heightIn(min=96.dp)) {
-                                Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                                    PreparationHeading(card.label)
-                                    Text(compactHubSummary(index,0,first));Text(compactHubSummary(index,1,second))
-                                    Text("${card.label} öffnen")
-                                }
-                            }
-                        }
+        val minimumWidth=300.dp*maxOf(1f,LocalDensity.current.fontScale/1.3f)
+        FlowRow(Modifier.fillMaxWidth(),maxItemsInEachRow=if(LocalDensity.current.fontScale<=1.3f)2 else 1,
+            horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+            if(rows!=null)for(row in rows){
+                FlatOriginalCard(enabled,Modifier.weight(1f).widthIn(min=minimumWidth).heightIn(min=96.dp),row.click){
+                    Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)){
+                        PreparationHeading(row.area.label)
+                        Text(row.first);Text(row.second)
+                        Text("${row.area.label} öffnen")
+                    }
+                }
+            }            else for(index in 0 until hub.size()){
+                val card=hub.card(index)?:continue
+                val first=hub.value(index,0)?:continue
+                val second=hub.value(index,1)?:continue
+                val click=hub.navigation(card.area)?:continue
+                FormOutlinedButton(click,enabled=enabled,modifier=Modifier.weight(1f).widthIn(min=minimumWidth).heightIn(min=96.dp)){
+                    Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)){
+                        PreparationHeading(card.label)
+                        Text(compactHubSummary(index,0,first));Text(compactHubSummary(index,1,second))
+                        Text("${card.label} öffnen")
                     }
                 }
             }
+
         }
+
         // Existing auxiliary routes; same original callbacks, no per-render owner capture.
         for(area in ActiveArea.entries) {
             if(area==ActiveArea.PROTOCOL || area==ActiveArea.MATERIAL || area==ActiveArea.COSTS || area==ActiveArea.MEMORY_REPORTS || area==ActiveArea.DETAILS) {

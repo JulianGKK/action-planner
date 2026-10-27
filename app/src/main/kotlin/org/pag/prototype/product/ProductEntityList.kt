@@ -33,13 +33,15 @@ internal val LocalProductListObservation=staticCompositionLocalOf<((String,LazyL
 
 internal fun entityRowKey(kind:String,id:String)="$kind:$id"
 internal val listUiCost=ActiveWorkspaceBudget.Units(objects=64,strings=4,utf16Units=256,lists=4,listCapacity=32,references=256)
+// Identical complete builder + holder/sizing cost; one original reservation, no refund.
+internal val boundedListBuilderCost=ActiveWorkspaceBudget.Units(objects=70,strings=4,utf16Units=256,lists=4,listCapacity=32,references=280)
 
 /** Lazy callbacks hold the VM service, original identity and scalar metadata only. Each
  * actual builder construction is admitted before construction; remember is an allocation
  * optimization, never an end receipt. Revoked builders cannot resolve another payload. */
 @androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun ProductEntityList(model:ProductViewModel,positions:ProductScrollPositions,frames:CompactContentFrameObserver?=null) {
-    if(model.boundedPage){BoundedEntityList(model,positions,frames);return}
+    if(model.boundedPage || LocalActiveChrome.current){BoundedEntityList(model,positions,frames);return}
     val active=model.selected?.status==ActionStatus.ACTIVE
     val persons=if(active)model.activeArea==ActiveArea.PERSONS else model.preparationArea==PreparationArea.PERSONS
     val source=model.workspace
@@ -188,21 +190,31 @@ private fun taskListError(f:OperationsFailure)=when(f){
     else->"Die Aufgabe oder Zuordnung ist in dieser Aktion nicht verfügbar."
 }
 
-/** Same original-owner card page; lazy builders carry identity/index metadata only. */
+/** Original-owner card page. Builders borrow its admitted immutable display strings;
+ * row callbacks retain only the VM endpoint, epoch and index, never a workspace. */
 @androidx.compose.runtime.NonRestartableComposable
 @Composable private fun BoundedEntityList(model:ProductViewModel,positions:ProductScrollPositions,frames:CompactContentFrameObserver?){
     val area=model.activeArea
     val epoch=model.pageEpoch
-    val fence=model.inputScreenKey() as? OriginalUiFence?:return
+    val fence=(model.inputScreenKey() as? OriginalUiFence)?:model.activeChromeFence()?:return
+    val hub=area==ActiveArea.HUB
     val destination=remember(fence,area){if(fence.reserve(listUiCost))"bounded-${area.name}" else null}?:return
     val anchor=positions.at(destination)
     val state=remember(destination){LazyListState(anchor.index,anchor.offset)}
     DisposableEffect(state){onDispose{anchor.index=state.firstVisibleItemIndex;anchor.offset=state.firstVisibleItemScrollOffset}}
     val functions=if(area==ActiveArea.FUNCTIONS)model.compactFunctionsPresentation else null
-    val count=if(area==ActiveArea.FUNCTIONS)functions?.size()?:return else model.pageShown
-    val builder=rememberOriginalValue(fence,epoch,cost={listUiCost}){
+    val lines=if(area==ActiveArea.FUNCTIONS)functions?.displayLines() else null
+    if(area==ActiveArea.FUNCTIONS && lines==null){
+        if(model.workspaceRefreshing || model.personsLoading)PagLoadingState() else PagErrorState()
+        return
+    }
+    val count=lines?.size?:model.pageShown
+    val builder=remember(fence,epoch){
+        if(!fence.reserve(boundedListBuilderCost))null else {
+        val labels=if(!hub && lines==null)model.boundedDisplayLabels(epoch) else null
         val content:LazyListScope.()->Unit={
-            item(key="header"){if(fence.live())Column(verticalArrangement=Arrangement.spacedBy(16.dp)){ActiveWorkspace(model,renderContent=false)}}
+            item(key="header"){if(fence.live())Column(verticalArrangement=Arrangement.spacedBy(16.dp)){ActiveWorkspace(model,renderContent=hub,contentFrames=frames)}}
+            if(!hub){
             if(functions!=null)item(key="function-summary"){
                 if(fence.live()){
                     val onSite=functions.onSite();val without=functions.withoutFunction()
@@ -216,14 +228,18 @@ private fun taskListError(f:OperationsFailure)=when(f){
             }else items(count,key={"$epoch-$it"}){index->
                 if(fence.live()){
                     val frame=compactFrameModifier(area,frames)
-                    if(functions!=null)functions.line(index)?.let{Text(it,modifier=frame)}
-                    else model.boundedPageLabel(epoch,index)?.let{label->
-                        FormOutlinedButton({model.openBoundedRow(epoch,index)},enabled=model.activeNavigationEnabled,modifier=Modifier.fillMaxWidth().then(frame)){Text(label)}
+                    if(lines!=null)Text(lines[index],modifier=frame)
+                    else labels?.getOrNull(index)?.let{label->
+                        BoundedCard(label,model.activeNavigationEnabled,frame,admitted=model.originalRowControl(index)){model.openBoundedRow(epoch,index)}
                     }
                 }
             }
+            }
         }
         content
+        }
     }?:return
-    LazyColumn(Modifier.fillMaxSize(),state=state,contentPadding=PaddingValues(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp),content=builder)
+    CompositionLocalProvider(LocalFormScreen provides fence){
+        LazyColumn(Modifier.fillMaxSize(),state=state,contentPadding=PaddingValues(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp),content=builder)
+    }
 }

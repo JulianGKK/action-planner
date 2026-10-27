@@ -8,6 +8,7 @@ internal class CompactFunctionsPresentation internal constructor(
 ) {
     @Volatile private var owner:ProductViewModel?=owner
     internal fun invalidate(){owner=null}
+    fun displayLines():List<String>?=owner?.compactFunctionLines(identity)
     fun size():Int?=owner?.compactFunctionsSize(identity)
     fun onSite():Long?=owner?.compactFunctionsOnSite(identity)
     fun withoutFunction():Long?=owner?.compactFunctionsWithout(identity)

@@ -1,0 +1,65 @@
+INSTRUMENTATION_STATUS: stream=P113 {"fixture":"p111-large32","ledger":"State(phase=RETAINED, retained=2619685, transition=16777216, localRetained=2619685, localTransition=8980146, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)","kind":"INITIAL","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"HUB->PERSONS","cycle":0,"sample_id":1,"event_uptime_ms":1108367382,"dispatch_ns":1108367400358591,"start_ns":1108367382358591,"up_event_uptime_ms":1108367431,"up_dispatch_ns":1108367433247184,"up_return_ns":1108367443156403,"composition_ns":1108367487977497,"commit_ns":1108367490305882,"layout_ns":1108367514776716,"draw_start_ns":1108367516659476,"draw_end_ns":1108367516951768,"touch_to_content_ms":134.593177,"kind":"FRAME","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"PERSONS->FUNCTIONS","cycle":0,"sample_id":2,"event_uptime_ms":1108367560,"dispatch_ns":1108367567120882,"start_ns":1108367560120882,"up_event_uptime_ms":1108367590,"up_dispatch_ns":1108367592337861,"up_return_ns":1108367602283747,"composition_ns":1108367652172757,"commit_ns":1108367653065518,"layout_ns":1108367700166351,"draw_start_ns":1108367701424111,"draw_end_ns":1108367701517705,"touch_to_content_ms":141.396823,"kind":"FRAME","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"FUNCTIONS->TASKS","cycle":0,"sample_id":3,"event_uptime_ms":1108367807,"dispatch_ns":1108367817476195,"start_ns":1108367807476195,"up_event_uptime_ms":1108367841,"up_dispatch_ns":1108367843032288,"up_return_ns":1108367852452913,"composition_ns":1108367907792080,"commit_ns":1108367909824111,"layout_ns":1108367927813278,"draw_start_ns":1108367930611038,"draw_end_ns":1108367930800570,"touch_to_content_ms":123.324375,"kind":"FRAME","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"TASKS->HUB","cycle":0,"sample_id":4,"event_uptime_ms":1108368021,"dispatch_ns":1108368025262080,"start_ns":1108368021262080,"up_event_uptime_ms":1108368047,"up_dispatch_ns":1108368050330570,"up_return_ns":1108368064785726,"composition_ns":1108368087155205,"commit_ns":1108368121992601,"layout_ns":1108368150038695,"draw_start_ns":1108368150994736,"draw_end_ns":1108368154027392,"touch_to_content_ms":132.765312,"kind":"FRAME","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"HUB->TASKS","cycle":0,"sample_id":5,"event_uptime_ms":1108368193,"dispatch_ns":1108368200981038,"start_ns":1108368193981038,"up_event_uptime_ms":1108368224,"up_dispatch_ns":1108368226237653,"up_return_ns":1108368234773642,"composition_ns":1108368276817184,"commit_ns":1108368278519997,"layout_ns":1108368294116194,"draw_start_ns":1108368295843694,"draw_end_ns":1108368296056767,"touch_to_content_ms":102.075729,"kind":"FRAME","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"TASKS->FUNCTIONS","cycle":0,"sample_id":6,"event_uptime_ms":1108368329,"dispatch_ns":1108368335532340,"start_ns":1108368329532340,"up_event_uptime_ms":1108368359,"up_dispatch_ns":1108368361888538,"up_return_ns":1108368369872184,"composition_ns":1108368409613590,"commit_ns":1108368410619684,"layout_ns":1108368448918538,"draw_start_ns":1108368450027288,"draw_end_ns":1108368450111351,"touch_to_content_ms":120.579011,"kind":"FRAME","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"FUNCTIONS->PERSONS","cycle":0,"sample_id":7,"event_uptime_ms":1108368481,"dispatch_ns":1108368484386715,"start_ns":1108368481386715,"up_event_uptime_ms":1108368508,"up_dispatch_ns":1108368510744424,"up_return_ns":1108368519177653,"composition_ns":1108368564214007,"commit_ns":1108368565801038,"layout_ns":1108368585283642,"draw_start_ns":1108368586967496,"draw_end_ns":1108368587143069,"touch_to_content_ms":105.756354,"kind":"FRAME","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"PERSONS->HUB","cycle":0,"sample_id":8,"event_uptime_ms":1108368614,"dispatch_ns":1108368617805361,"start_ns":1108368614805361,"up_event_uptime_ms":1108368640,"up_dispatch_ns":1108368642872705,"up_return_ns":1108368652365101,"composition_ns":1108368673805257,"commit_ns":1108368703467965,"layout_ns":1108368730041663,"draw_start_ns":1108368731026559,"draw_end_ns":1108368733813590,"touch_to_content_ms":119.008229,"kind":"FRAME","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"HUB->PERSONS","n":1,"p50_ms":134.593177,"p95_ms":134.593177,"within_150ms":true,"kind":"ROUTE","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"PERSONS->FUNCTIONS","n":1,"p50_ms":141.396823,"p95_ms":141.396823,"within_150ms":true,"kind":"ROUTE","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"FUNCTIONS->TASKS","n":1,"p50_ms":123.324375,"p95_ms":123.324375,"within_150ms":true,"kind":"ROUTE","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"TASKS->HUB","n":1,"p50_ms":132.765312,"p95_ms":132.765312,"within_150ms":true,"kind":"ROUTE","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"HUB->TASKS","n":1,"p50_ms":102.075729,"p95_ms":102.075729,"within_150ms":true,"kind":"ROUTE","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"TASKS->FUNCTIONS","n":1,"p50_ms":120.579011,"p95_ms":120.579011,"within_150ms":true,"kind":"ROUTE","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"FUNCTIONS->PERSONS","n":1,"p50_ms":105.756354,"p95_ms":105.756354,"within_150ms":true,"kind":"ROUTE","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"PERSONS->HUB","n":1,"p50_ms":119.008229,"p95_ms":119.008229,"within_150ms":true,"kind":"ROUTE","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"ledger":"State(phase=RETAINED, retained=3365797, transition=16777216, localRetained=3365797, localTransition=16777216, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)","injected_padding_metadata_only":true,"kind":"BUDGET_REFUSED","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"late_callback_denied":true,"retirement_confirmed":false,"kind":"LOCK_REFUSED","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"performance_within_150ms":true,"ledger":"State(phase=COMPOSE_TRANSITION, retained=3365797, transition=16777216, localRetained=3365797, localTransition=16777216, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)","core_reads":1,"full_workspaces":0,"kind":"CYCLE_COMPLETE","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"functional":true,"performance_within_150ms":true,"fixture_cleanup":true,"kind":"PASS","scenario":"negative"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P113 PASS negative
+INSTRUMENTATION_CODE: -1

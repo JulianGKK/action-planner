@@ -917,4 +917,67 @@ class ActiveCoreOwnerTest {
         h.session.lock();assertNull(old.size());assertFalse(root!!.active);assertEquals(1,h.port.reads)
     }
 
+    @Test fun p114ChromeIsStableAcrossRoutesAndOldEventsCannotRegainAuthority(){
+        for(reason in listOf("lock","action","writer","budget")){
+            val h=H();var root:WorkspaceReadTicket?=null;var writer=true;var budget=true;var bookings=0
+            val access=object:WorkspaceAccess{
+                override fun readBindingLive()=writer && root?.active==true && h.session.state.state==SessionState.READY
+                override fun publish(a:String,s:ActionStatus,g:Long,work:()->Unit):Boolean {
+                    if(!readBindingLive())return false;work();return readBindingLive()
+                }
+                override fun publishCore(s:CompactTaskState,work:()->Unit)=publish("a",ActionStatus.ACTIVE,1,work)
+                override fun reserve(u:ActiveWorkspaceBudget.Units):Boolean {
+                    if(!readBindingLive() || !budget)return false;bookings++;return true
+                }
+                override fun consumeCurrent(u:ActiveWorkspaceBudget.Units,p:()->Unit)=consume(u,p)
+                override fun consume(u:ActiveWorkspaceBudget.Units,p:()->Unit):Boolean {
+                    if(!reserve(u))return false;p();return readBindingLive()
+                }
+            }
+            val life=Lifetime().also{it.child={t->root=t;access}}
+            val base=core()
+            val item=CompactTaskItem("t","Synthetic",TaskPriority.NORMAL,TaskStatus.OPEN,null,null,null,null,0,0)
+            h.port.deliver(base.copy(core=base.core.copy(tasks=base.core.tasks.copy(items=listOf(item)))),life)
+            val chrome=checkNotNull(h.model.activeChromeFence())
+            val input=FormInput{};h.model.prepareOriginalRows(input)
+            val first=bookings
+            repeat(3){assertSame(chrome,h.model.activeChromeFence())};assertEquals(first,bookings)
+            var row:OriginalButtonControl?=null
+            repeat(2){for(area in listOf(ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS,ActiveArea.HUB)){
+                h.model.activeArea(area);assertSame(chrome,h.model.activeChromeFence())
+                val before=bookings;h.model.prepareOriginalRows(input);assertEquals(before,bookings)
+                if(area==ActiveArea.TASKS){
+                    val current=checkNotNull(h.model.originalRowControl(0))
+                    if(row!=null)assertSame(row,current) else row=current
+                }
+                if(area==ActiveArea.TASKS)assertEquals(listOf("Synthetic"),h.model.boundedDisplayLabels(h.model.pageEpoch))
+                if(area==ActiveArea.FUNCTIONS){
+                    val view=checkNotNull(h.model.compactFunctionsPresentation)
+                    val lines=checkNotNull(view.displayLines());val held=bookings
+                    assertSame(lines,view.displayLines());assertEquals(held,bookings)
+                }
+            }
+            }
+            val hub=checkNotNull(h.model.compactHubPresentation)
+            val rows=checkNotNull(hub.displayRows());val quoted=bookings
+            repeat(3){assertSame(rows,hub.displayRows())};assertEquals(quoted,bookings)
+            h.model.activeArea(ActiveArea.TASKS)
+            var calls=0;val late=OriginalInputClick(chrome,FormInput{},0){calls++}
+            late();assertEquals(1,calls)
+            when(reason){
+                "lock"->h.model.lock()
+                "action"->{h.repo.action=h.repo.action.copy(id="b");h.model.detail("b")}
+                "writer"->writer=false
+                else->budget=false
+            }
+            val held=bookings;row!!.click();assertFalse(h.model.detailLoading)
+            late();assertEquals(1,calls);assertEquals(held,bookings)
+            if(reason=="budget")assertEquals(WorkspaceFailure.BUDGET_REFUSED,h.model.workspaceRefusal)
+            if(reason=="writer"){
+                assertFalse(chrome.live());writer=true;late();row!!.click();assertFalse(h.model.detailLoading);assertNull(h.model.originalRowControl(0));assertEquals(1,calls);assertFalse(chrome.live())
+            }
+            assertEquals(if(reason=="action")2 else 1,h.port.reads)
+        }
+    }
+
 }

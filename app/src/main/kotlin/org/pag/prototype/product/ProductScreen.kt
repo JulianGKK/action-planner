@@ -45,21 +45,7 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                             style = MaterialTheme.typography.labelSmall
                         )
                         if (model.snapshot.state == SessionState.READY) {
-                            FlowRow(Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                itemVerticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                PagSessionCountdown(model.remainingMillis)
-                                CompositionLocalProvider(LocalFormScreen provides null){
-                                if (sessionRestartVisible(model.snapshot.state, model.remainingMillis)) {
-                                    PagSecondaryButton("Sitzung neu starten", model::restartSession,
-                                        modifier = Modifier.originalSemantics {
-                                            contentDescription = "Sitzung neu starten. Ungespeicherte Eingaben werden verworfen."
-                                        })
-                                }
-                                PagSecondaryButton("Sperren", model::lock, modifier=Modifier)
-                                }
-                            }
+                            ProductSessionBar(model)
                         }
                         if(model.snapshot.state==SessionState.READY)model.savedRefreshMessage?.let{Text(it)}
                         PagWorkspace(model.feedback.takeIf { model.snapshot.state == SessionState.READY },
@@ -67,7 +53,7 @@ internal val LocalProductObservation=staticCompositionLocalOf<((String)->Unit)?>
                         BoxWithConstraints(Modifier.fillMaxSize()) {
                         val viewport=loadingViewportMinimum(constraints.maxHeight,with(LocalDensity.current){48.dp.roundToPx()})
                         val listPositions=remember(model.snapshot.generation,model.selected?.id){ProductScrollPositions()}
-                        key(model.selected?.id,model.selected?.status,model.activeArea,model.preparationArea,
+                        if(model.stableActiveSurface) StableActiveWorkspace(model,listPositions,contentFrames) else key(model.selected?.id,model.selected?.status,model.activeArea,model.preparationArea,
                             model.compactActiveMode,productEntityListRoute(model),screen) {
                         if(model.snapshot.state==SessionState.READY && (model.leadershipRecovery!=null || model.leadershipRecoveryError)) {
                             Column(Modifier.padding(24.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(16.dp)) {
@@ -359,3 +345,22 @@ internal fun changeErrorLabel(reason: ActionChangeRejection) = when (reason) {
 
 private val statusUpperLabels=ActionStatus.entries.associateWith{statusLabel(it).uppercase()} // fixed CODE only
 internal fun statusUpperLabel(status:ActionStatus)=statusUpperLabels.getValue(status)
+
+/** Countdown state belongs to this restart scope, not to the action's data/layout tree. */
+@Composable private fun ProductSessionBar(model:ProductViewModel){
+                            FlowRow(Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                itemVerticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                PagSessionCountdown(model.remainingMillis)
+                                CompositionLocalProvider(LocalFormScreen provides null){
+                                if (sessionRestartVisible(model.snapshot.state, model.remainingMillis)) {
+                                    PagSecondaryButton("Sitzung neu starten", model::restartSession,
+                                        modifier = Modifier.originalSemantics {
+                                            contentDescription = "Sitzung neu starten. Ungespeicherte Eingaben werden verworfen."
+                                        })
+                                }
+                                PagSecondaryButton("Sperren", model::lock, modifier=Modifier)
+                                }
+                            }
+}

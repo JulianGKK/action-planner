@@ -1,0 +1,14 @@
+fc87127b490fb9b1d30372abecbf29207b7441ce3fa7797152007d598a3a5e81  app/src/androidTest/kotlin/org/pag/prototype/P112PagesProbe.kt
+b1c0c7f9918613d779ea2482718cbaf60b78d5ee6bf6d5a3053316cf6ef490b9  app/src/main/kotlin/org/pag/prototype/product/ActiveChrome.kt
+ec0af5446651a8cb183441b79b49f3b7cf2328d8d688c5e14a6c6634c7a3bf89  app/src/main/kotlin/org/pag/prototype/product/ActiveWorkspace.kt
+05aac60b5733731de30748beaf1c3af96fbb2a257d07529221565ef3ef3f645b  app/src/main/kotlin/org/pag/prototype/product/CompactFunctionsPresentation.kt
+a7314a740a5cbeeb2b698a71f3f182a0b00bd5063bb630e5464185e974f4ceba  app/src/main/kotlin/org/pag/prototype/product/CompactHubPresentation.kt
+fefb05d1fe92e1155379e93c9950a32785655384575c3f13b6244ecac4dac186  app/src/main/kotlin/org/pag/prototype/product/ProductEntityList.kt
+77a1c38eab3b6fdb9548813ed51a83bba92baeefd8a3623dfa4a0bc19bc84a33  app/src/main/kotlin/org/pag/prototype/product/ProductInputs.kt
+ce703e50cafbce9a9cb1eb8a81025373a8ad3cea2aa68ebc210c197b73281c28  app/src/main/kotlin/org/pag/prototype/product/ProductScreen.kt
+092d4269eb2858e949e08527658d3c9041a1d086b62d2c8b14b6ddaf282729f1  app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt
+ad6d7d592d6bf118b579f92bfbe14287e88a834fafc50100c419132f6707f907  app/src/test/kotlin/org/pag/prototype/product/ActiveCoreOwnerTest.kt
+76d36e3fcc4e03582471417f26254d72ce5d14341726a34229419053f59c9a0f  app/src/test/kotlin/org/pag/prototype/product/P113UiSlotTest.kt
+e61aa09c29c5b13de47fab7f68950a6142eccc24603f10e7ed03169badb1625b  data/src/main/kotlin/org/pag/data/product/OriginalWorkspaceAccess.kt
+6fa7d420a71983ced5fae9aeff8ef415d895be9e24d7b44ae102e8519cf0b1ca  data/src/test/kotlin/org/pag/data/product/OutstandingCoreReadTest.kt
+698779edcfb86fb61fdbd7cd55441a9fba9d3b59f3cbc2fb411feec1705d3cd1  domain/src/main/kotlin/org/pag/domain/Workspaces.kt

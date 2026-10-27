@@ -259,10 +259,15 @@ class OutstandingCoreReadTest {
         val scope=h.life!!.childAccess(root) as OriginalWorkspaceAccess
         val state=CompactTaskState(P3bFreeActiveCoreBinding("a",1),0)
         assertTrue(scope.readBindingLive());assertTrue(scope.publishCore(state){})
+        assertTrue(scope.projectionBindingLive(state))
+        assertTrue(scope.consumeCore(state,ActiveWorkspaceBudget.Units(objects=1)){})
+        assertFalse(scope.consumeCore(state,ActiveWorkspaceBudget.Units(objects=Long.MAX_VALUE)){fail("No unbooked producer")})
         assertFalse(scope.publishCore(state.copy(binding=P3bFreeActiveCoreBinding("b",1))) {})
         assertFalse(scope.publishCore(state.copy(binding=P3bFreeActiveCoreBinding("a",2))) {})
         val pending=h.mutations.beforeTaskQueue("a",1)!!
         assertFalse(scope.readBindingLive());assertFalse(scope.publishCore(state){})
+        assertFalse(scope.projectionBindingLive(state))
+        assertFalse(scope.consumeCore(state,ActiveWorkspaceBudget.Units(objects=1)){fail("No writer-racing producer")})
         assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)))
         val ticket=h.mutations.beforeActiveRead("a",1)!!
         val fresh=OriginalWorkspaceAccess(scope.entry,h.access,h.access.acquire(AccessScope.READY)!!,ticket,h.mutations,
@@ -273,6 +278,7 @@ class OutstandingCoreReadTest {
         h.ready=false
         assertFalse(fresh.publishCore(state.copy(mutationEpoch=1)){fail("No payload with denied storage")})
         assertFalse(fresh.consume(ActiveWorkspaceBudget.Units(objects=1)){fail("No producer with denied storage")})
+        assertFalse(fresh.consumeCore(state.copy(mutationEpoch=1),ActiveWorkspaceBudget.Units(objects=1)){fail("Hint is not authority")})
         h.ready=true
         root.cancel();assertFalse(fresh.readBindingLive());assertFalse(fresh.publishCore(state.copy(mutationEpoch=1)){})
         h.ready=false;assertFalse(fresh.publishCore(state.copy(mutationEpoch=1)){})
