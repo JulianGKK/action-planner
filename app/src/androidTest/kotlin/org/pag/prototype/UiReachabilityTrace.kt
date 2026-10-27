@@ -33,7 +33,7 @@ internal class UiReachabilityTrace(private val probe:Instrumentation,private val
     private val extent=AtomicReference("0x0")
     private val scroll=AtomicReference("none")
     fun start(){
-        check(probe.targetContext.packageName=="org.pag.perf.p11probe")
+        check(probe.targetContext.packageName in setOf("org.pag.perf.p11probe","org.pag.prototype.a.p77runtime"))
         if(!enabled)return
         val info=probe.uiAutomation.serviceInfo
         info.eventTypes=info.eventTypes or AccessibilityEvent.TYPE_VIEW_SCROLLED or AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED

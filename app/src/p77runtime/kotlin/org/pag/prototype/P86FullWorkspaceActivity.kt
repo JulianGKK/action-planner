@@ -217,7 +217,11 @@ class P86FullWorkspaceActivity : ComponentActivity() {
                 if(event=="TASK_ROW" || event=="PERSON_ROW")p110RowRenders++
             }}
             androidx.compose.runtime.CompositionLocalProvider(org.pag.prototype.product.LocalProductObservation provides observation){
-                ProductScreen(model, testAuthorityBanner = testAuthorityBanner, contentFrames = contentFrames)
+                val density=androidx.compose.ui.platform.LocalDensity.current
+                val font=intent.getFloatExtra("p116Font",density.fontScale)
+                androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(density.density,font)) {
+                    ProductScreen(model, testAuthorityBanner = testAuthorityBanner && !intent.getBooleanExtra("p116ProductGeometry",false), contentFrames = contentFrames)
+                }
             }
             androidx.compose.runtime.SideEffect { p86Committed = token }
         }
