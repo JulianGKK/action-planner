@@ -865,4 +865,56 @@ class ActiveCoreOwnerTest {
         assertFalse(h.model.boundedPage);assertNull(h.model.boundedPageLabel(h.model.pageEpoch,0));assertEquals(1,h.port.reads)
     }
 
+    @Test fun p113FourOriginalSurfacesAndDirtyFunctionChildKeepOneOwnerAndDraft(){
+        val h=H();val base=core();val state=base.core.state
+        var root:WorkspaceReadTicket?=null;var epoch=0L;var bookings=0
+        val access=object:WorkspaceAccess{
+            override fun publish(a:String,s:ActionStatus,g:Long,work:()->Unit):Boolean{
+                if(h.session.state.state!=SessionState.READY || a!="a" || g!=1L || root?.active!=true)return false
+                work();return true
+            }
+            override fun publishCore(s:CompactTaskState,work:()->Unit)=s.binding==state.binding && s.mutationEpoch==epoch && publish("a",ActionStatus.ACTIVE,1,work)
+            override fun reserve(units:ActiveWorkspaceBudget.Units):Boolean{bookings++;return true}
+            override fun heldAllowed()=h.session.state.state==SessionState.READY && root?.active==true
+        }
+        var child:WorkspacePageRequest?=null;var delivery:((WorkspacePageResult)->Unit)?=null
+        val task=Task("t0","a","Synthetic task",TaskPriority.NORMAL,TaskStatus.OPEN,null,null,null,null,null,0,0,null,0)
+        h.model.bindWorkspace(object:WorkspaceRepository{
+            override fun read(r:WorkspaceReadRequest,p:(WorkspaceResult)->Unit)=error("No second workspace")
+            override fun page(a:WorkspaceAccess,r:WorkspacePageRequest,p:(WorkspacePageResult)->Unit){assertSame(access,a);child=r;delivery=p}
+            override fun detail(a:WorkspaceAccess,r:WorkspaceDetailRequest,p:(WorkspaceDetailResult)->Unit){
+                val w=r.baseline!!.copy(tasks=TaskBoard("a",listOf(task),emptyList(),false))
+                p(WorkspaceDetailResult.Value(WorkspaceDetail(access,task=task,workspace=w)))
+            }
+        })
+        val functions=CompactFunctions((0 until 32).map{CompactFunction(Role("r$it","a","Synthetic role $it",0,0),if(it<8)7 else 6)},0,200,32)
+        val item=CompactTaskItem("t0",task.title,task.priority,task.status,null,null,null,null,0,0)
+        val life=Lifetime().also{it.child={t->root=t;access}}
+        h.port.deliver(base.copy(core=base.core.copy(functions=functions,tasks=base.core.tasks.copy(items=listOf(item)))),life)
+        repeat(2){
+            for(area in listOf(ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS,ActiveArea.HUB)){
+                h.model.activeArea(area);assertEquals(area,h.model.activeArea);assertFalse(h.model.workspaceError)
+                if(area==ActiveArea.FUNCTIONS)assertEquals(32,h.model.compactFunctionsPresentation!!.size())
+                if(area==ActiveArea.HUB)assertEquals(32L,h.model.compactHubPresentation!!.value(1,0))
+            }
+        }
+        assertEquals(1,h.port.reads);assertNull(child);assertEquals(8,bookings)
+        val revision=h.model.uiPresentationRevision
+        h.model.userActivity();assertEquals(revision,h.model.uiPresentationRevision)
+        h.model.interaction();assertEquals(revision+1,h.model.uiPresentationRevision)
+        h.model.activeArea(ActiveArea.FUNCTIONS);val old=h.model.compactFunctionsPresentation!!
+        epoch=1
+        h.model.activeArea(ActiveArea.FUNCTIONS)
+        assertTrue(child!!.functions);assertTrue(h.model.workspaceRefreshing)
+        delivery!!(WorkspacePageResult.Value(WorkspacePage(access,functions=functions,state=state.copy(mutationEpoch=1))))
+        assertEquals(32,h.model.compactFunctionsPresentation!!.size());assertNull(old.size())
+        h.model.activeArea(ActiveArea.TASKS)
+        delivery!!(WorkspacePageResult.Value(WorkspacePage(access,tasks=CompactTaskPage(state.copy(mutationEpoch=1),CompactTaskQuery(),base.core.tasks.overall,base.core.tasks.filtered,listOf(item),null))))
+        h.model.openBoundedRow(h.model.pageEpoch,0);h.model.tasks.edit();h.model.tasks.changeTitle("Synthetic retained draft")
+        assertTrue(h.model.tasks.form)
+        h.model.activeArea(ActiveArea.HUB)
+        assertEquals(ActiveArea.TASKS,h.model.activeArea);assertTrue(h.model.tasks.form);assertEquals("Synthetic retained draft",h.model.tasks.input.title)
+        h.session.lock();assertNull(old.size());assertFalse(root!!.active);assertEquals(1,h.port.reads)
+    }
+
 }

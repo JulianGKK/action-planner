@@ -1,0 +1,26 @@
+INSTRUMENTATION_STATUS: stream=P113 {"fixture":"p111-small","ledger":"State(phase=RETAINED, retained=1595155, transition=16777216, localRetained=1595155, localTransition=6463024, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)","kind":"INITIAL","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"HUB->PERSONS","cycle":0,"sample_id":1,"event_uptime_ms":1068105875,"dispatch_ns":1068105889417230,"start_ns":1068105875417230,"composition_ns":1068106289409366,"commit_ns":1068106321748949,"layout_ns":1068106523465564,"draw_start_ns":1068106528742178,"draw_end_ns":1068106529202282,"touch_to_content_ms":653.785052,"kind":"FRAME","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"PERSONS->FUNCTIONS","cycle":0,"sample_id":2,"event_uptime_ms":1068106641,"dispatch_ns":1068106652168428,"start_ns":1068106641168428,"composition_ns":1068107158105615,"commit_ns":1068107197267959,"layout_ns":1068107215417751,"draw_start_ns":1068107218568532,"draw_end_ns":1068107219131709,"touch_to_content_ms":577.963281,"kind":"FRAME","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"FUNCTIONS->TASKS","cycle":0,"sample_id":3,"event_uptime_ms":1068107341,"dispatch_ns":1068107354251397,"start_ns":1068107341251397,"composition_ns":1068107826467334,"commit_ns":1068107856850719,"layout_ns":1068108044796605,"draw_start_ns":1068108049908584,"draw_end_ns":1068108050203271,"touch_to_content_ms":708.951874,"kind":"FRAME","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"TASKS->HUB","cycle":0,"sample_id":4,"event_uptime_ms":1068108079,"dispatch_ns":1068108087345407,"start_ns":1068108079345407,"composition_ns":1068108580115823,"commit_ns":1068108732617177,"layout_ns":1068108880247229,"draw_start_ns":1068108882976031,"draw_end_ns":1068108886114469,"touch_to_content_ms":806.769062,"kind":"FRAME","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"HUB->TASKS","cycle":0,"sample_id":5,"event_uptime_ms":1068108910,"dispatch_ns":1068108921747386,"start_ns":1068108910747386,"composition_ns":1068109531603479,"commit_ns":1068109560655823,"layout_ns":1068109746454416,"draw_start_ns":1068109751859260,"draw_end_ns":1068109752205406,"touch_to_content_ms":841.45802,"kind":"FRAME","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"actual_area":"TASKS","ledger":"State(phase=RETAINED, retained=2439339, transition=16777216, localRetained=2439339, localTransition=7307208, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)","kind":"NO_DRAW","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"error":"java.lang.IllegalStateException: No correlated Compose draw: id=6 area=FUNCTIONS commit=0 layout=0 draw=0\n\tat org.pag.prototype.P80ContentFrames$Sample.await(P80ContentFrames.kt:44)\n\tat org.pag.prototype.P113NavigationProbe.onStart(P113NavigationProbe.kt:69)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","kind":"FAIL","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P113 FAIL small
+INSTRUMENTATION_CODE: 0

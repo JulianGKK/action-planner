@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P113 {"error":"java.lang.NoSuchMethodError: No virtual method clearCache()Z in class Landroid\/app\/UiAutomation; or its super classes (declaration of 'android.app.UiAutomation' appears in \/system\/framework\/framework.jar)\n\tat org.pag.prototype.P113NavigationProbe.rectangle(P113NavigationProbe.kt:27)\n\tat org.pag.prototype.P113NavigationProbe.onStart$lambda$5(P113NavigationProbe.kt:58)\n\tat org.pag.prototype.P113NavigationProbe$$ExternalSyntheticLambda28.invoke(D8$$SyntheticClass:0)\n\tat org.pag.prototype.P113NavigationProbe.await(P113NavigationProbe.kt:24)\n\tat org.pag.prototype.P113NavigationProbe.onStart(P113NavigationProbe.kt:58)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","kind":"FAIL","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P113 FAIL small
+INSTRUMENTATION_CODE: 0

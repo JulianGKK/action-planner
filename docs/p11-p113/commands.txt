@@ -1,0 +1,22 @@
+Basis: 11719a78697f4d9222ec23becedd627a466c5dcd
+
+Gezielte Data-Hostauswahl (data-host-build.log):
+./gradlew -PpagTestBuildType=p77runtime :data:testDebugUnitTest --tests '*OutstandingCoreReadTest.p113*' --tests '*P113FunctionsTest' --tests '*P104ConcurrentCasTest'
+
+Finale App-Hostauswahl und APK-Build (app-host-build.log):
+./gradlew -PpagTestBuildType=p77runtime :app:assembleP77runtime :app:assembleP77runtimeAndroidTest :app:testP77runtimeUnitTest --tests '*ActiveCoreOwnerTest.p113*' --tests '*P113UiSlotTest' --tests '*ProductInputsTest' --tests '*P110InputCallbackTest' --tests '*P110UiTokenTest' --tests '*TaskModelTest.onlyExplicitReloadReplacesExpectedAllInputFieldsAndComposeIdentity' --tests '*TaskModelTest.lockGenerationActionChangesRejectReloadAndWritePublication'
+
+Drei P77-Szenarien (jeweils sequenziell):
+python3 docs/p11-p113/device.py install
+python3 docs/p11-p113/device.py run small final
+python3 docs/p11-p113/device.py run large final
+python3 docs/p11-p113/device.py run negative final
+
+Navigation-Receipt vor reinem P112-Treiberupdate in navigation-install.json gesichert.
+Treiberupdate: ./gradlew -PpagTestBuildType=p77runtime :app:assembleP77runtime :app:assembleP77runtimeAndroidTest
+Danach erneut device.py install; neue Test-APK, Produkt-APK-SHA identisch.
+
+Gezielte Task-/Personregression, Rohstdout jeweils separat gesichert:
+adb -s RFCT1186YRJ shell am instrument -w -r -e scenario tasks org.pag.prototype.a.p77runtime.test/org.pag.prototype.P112PagesProbe
+adb -s RFCT1186YRJ shell am instrument -w -r -e scenario people org.pag.prototype.a.p77runtime.test/org.pag.prototype.P112PagesProbe
+python3 docs/p11-p113/device.py after

@@ -1,0 +1,26 @@
+INSTRUMENTATION_STATUS: stream=P113 {"fixture":"p111-small","ledger":"State(phase=RETAINED, retained=1595155, transition=16777216, localRetained=1595155, localTransition=6463024, pendingCandidates=0, compositionObserved=true, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)","kind":"INITIAL","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"HUB->PERSONS","cycle":0,"sample_id":1,"event_uptime_ms":1068205782,"dispatch_ns":1068205798145838,"start_ns":1068205782145838,"up_event_uptime_ms":1068205836,"up_dispatch_ns":1068205838416255,"up_return_ns":1068205859046671,"composition_ns":1068206194184119,"commit_ns":1068206226729432,"layout_ns":1068206429326775,"draw_start_ns":1068206434157400,"draw_end_ns":1068206434638963,"touch_to_content_ms":652.493125,"kind":"FRAME","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"PERSONS->FUNCTIONS","cycle":0,"sample_id":2,"event_uptime_ms":1068206527,"dispatch_ns":1068206534479275,"start_ns":1068206527479275,"up_event_uptime_ms":1068206559,"up_dispatch_ns":1068206561326411,"up_return_ns":1068206579512869,"composition_ns":1068206765007140,"commit_ns":1068206806664067,"layout_ns":1068206831906827,"draw_start_ns":1068206835848754,"draw_end_ns":1068206836630004,"touch_to_content_ms":309.150729,"kind":"FRAME","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"FUNCTIONS->TASKS","cycle":0,"sample_id":3,"event_uptime_ms":1068206941,"dispatch_ns":1068206953437713,"start_ns":1068206941437713,"up_event_uptime_ms":1068206980,"up_dispatch_ns":1068206982105577,"up_return_ns":1068206998709431,"composition_ns":1068207307988286,"commit_ns":1068207339756567,"layout_ns":1068207530402608,"draw_start_ns":1068207535762348,"draw_end_ns":1068207536169588,"touch_to_content_ms":594.731875,"kind":"FRAME","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"TASKS->HUB","cycle":0,"sample_id":4,"event_uptime_ms":1068207563,"dispatch_ns":1068207567553025,"start_ns":1068207563553025,"up_event_uptime_ms":1068207591,"up_dispatch_ns":1068207593490421,"up_return_ns":1068207610377296,"composition_ns":1068207750107765,"commit_ns":1068207910381046,"layout_ns":1068208060611514,"draw_start_ns":1068208063671462,"draw_end_ns":1068208067262035,"touch_to_content_ms":503.70901,"kind":"FRAME","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"route":"HUB->TASKS","cycle":0,"sample_id":5,"event_uptime_ms":1068208096,"dispatch_ns":1068208101986879,"start_ns":1068208096986879,"up_event_uptime_ms":1068208126,"up_dispatch_ns":1068208128957400,"up_return_ns":1068208152045369,"composition_ns":1068208446969118,"commit_ns":1068208477016410,"layout_ns":1068208659380108,"draw_start_ns":1068208665225889,"draw_end_ns":1068208665520993,"touch_to_content_ms":568.534114,"kind":"FRAME","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"actual_area":"TASKS","ledger":"State(phase=RETAINED, retained=2253739, transition=16777216, localRetained=2253739, localTransition=7121608, pendingCandidates=0, compositionObserved=true, compositionDisposed=true, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)","kind":"NO_DRAW","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P113 {"error":"java.lang.IllegalStateException: No correlated Compose draw: id=6 area=FUNCTIONS commit=0 layout=0 draw=0\n\tat org.pag.prototype.P80ContentFrames$Sample.await(P80ContentFrames.kt:44)\n\tat org.pag.prototype.P113NavigationProbe.onStart(P113NavigationProbe.kt:69)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","kind":"FAIL","scenario":"small"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P113 FAIL small
+INSTRUMENTATION_CODE: 0

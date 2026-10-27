@@ -46,7 +46,7 @@ internal fun plannedRoles(person: OperationalPerson, board: OperationalBoard): S
 @androidx.compose.runtime.NonRestartableComposable
 @Composable internal fun ActionWorkspaceHeader(model: ProductViewModel) {
     val action = model.selected ?: return
-    if(model.hasCasEditorDraft)Text("Ungespeicherter Entwurf: Beim Verlassen der Bearbeitung oder Bereichswechsel wird er verworfen.")
+    if(model.hasCasEditorDraft)Text(if(model.boundedPage)"Ungespeicherter Entwurf: Vor einem Bereichswechsel bitte speichern oder abbrechen. Beim Verlassen der Aktion wird er verworfen." else "Ungespeicherter Entwurf: Beim Verlassen der Bearbeitung oder Bereichswechsel wird er verworfen.")
     FormChoiceButton(if(model.hasCasEditorDraft)"‹ Aktionen · Entwurf verwerfen" else "‹ Aktionen",false,
         enabled = !model.saving && !model.personSaving && !model.sensitiveBusy && !model.operations.busy && !model.tasks.busy && !model.protocol.busy && !model.material.busy && !model.expenses.busy && !model.memoryReports.busy && !model.documents.busy,fillWidth=false,selection=false){model.back()}
     Text(action.title, Modifier.then(productHeadingSemantics), style = MaterialTheme.typography.headlineMedium)

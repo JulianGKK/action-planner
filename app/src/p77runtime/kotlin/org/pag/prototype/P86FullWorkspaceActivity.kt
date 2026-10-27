@@ -53,6 +53,30 @@ class P86FullWorkspaceActivity : ComponentActivity() {
         model.tasks.historyBusy, model.snapshot, model.activeArea, model.preparationArea,
         model.personsLoading, model.workspaceRefreshing, model.selected?.status,
         model.operations.moreFunctionsExpanded).joinToString(":")
+    // P77-only touch correlation. No dispatch/authority changes in product builds.
+    private var p113NextArea:org.pag.prototype.product.ActiveArea?=null
+    var p113TouchSample:P80ContentFrames.Sample?=null;private set
+    var p113EventUptime=0L;private set
+    var p113DispatchNanos=0L;private set
+    var p113UpEventUptime=0L;private set
+    var p113UpDispatchNanos=0L;private set
+    var p113UpReturnNanos=0L;private set
+    fun p113ArmTouch(area:org.pag.prototype.product.ActiveArea){check(p113TouchSample==null && p113NextArea==null);p113NextArea=area}
+    fun p113ConsumeTouch(){(contentFrames as P80ContentFrames).consume(checkNotNull(p113TouchSample));p113TouchSample=null}
+    override fun dispatchTouchEvent(event:android.view.MotionEvent):Boolean {
+        if(event.actionMasked==android.view.MotionEvent.ACTION_DOWN){
+            p113NextArea?.let{area->
+                p113NextArea=null;p113EventUptime=event.eventTime;p113DispatchNanos=System.nanoTime()
+                val start=p113DispatchNanos-(android.os.SystemClock.uptimeMillis()-event.eventTime)*1_000_000L
+                p113TouchSample=(contentFrames as P80ContentFrames).beginAt(area,start)
+            }
+        }
+        if(event.actionMasked==android.view.MotionEvent.ACTION_UP && p113TouchSample!=null){
+            p113UpEventUptime=event.eventTime;p113UpDispatchNanos=System.nanoTime()
+            return super.dispatchTouchEvent(event).also{p113UpReturnNanos=System.nanoTime()}
+        }
+        return super.dispatchTouchEvent(event)
+    }
     private val worker by lazy { Executors.newSingleThreadExecutor() }
     private val handler by lazy { Handler(Looper.getMainLooper()) }
     private var documentSession: org.pag.domain.Subscription? = null
@@ -231,7 +255,7 @@ class P86FullWorkspaceActivity : ComponentActivity() {
             runtime.authenticationForegroundAvailable()
         }
     }
-    override fun onUserInteraction() { super.onUserInteraction(); if (::model.isInitialized && resumed) model.interaction() }
+    override fun onUserInteraction() { super.onUserInteraction(); if (::model.isInitialized && resumed) model.userActivity() }
     override fun onDestroy() {
         documentSession?.cancel(); documentSession=null
         pendingDocument.clear()

@@ -20,6 +20,7 @@ private val supportedOperationsScreenGroup1=setOf(OperationsScreen.LIVE,Operatio
 private val supportedOperationsScreenGroup2=setOf(OperationsScreen.ROLES,OperationsScreen.FUNCTION_DETAIL,OperationsScreen.NEW_FUNCTION)
 private val supportedOperationsScreenGroup3=setOf(OperationsScreen.LIVE,OperationsScreen.FUNCTION)
 private val supportedOperationsScreenGroup4=setOf(OperationsScreen.FUNCTION_DETAIL,OperationsScreen.NEW_FUNCTION)
+private val activeCoreNavigationAreas=listOf(ActiveArea.HUB,ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS)
 private val supportedWorkspaceFailureGroup5=setOf(WorkspaceFailure.OWNER_UNCONFIRMED,WorkspaceFailure.BUDGET_REFUSED)
 
 
@@ -82,6 +83,13 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
 
 @Composable internal fun ActiveWorkspace(model: ProductViewModel, renderContent:Boolean=true, contentFrames:CompactContentFrameObserver?=null) {
     ActionWorkspaceHeader(model)
+    if(model.boundedPage){
+        Row(Modifier.fillMaxWidth()){
+            for(area in activeCoreNavigationAreas){
+                FormTextButton({model.activeArea(area)},enabled=model.activeNavigationEnabled && !model.workspaceRefreshing && !model.detailLoading,modifier=Modifier.weight(1f)){Text(area.label)}
+            }
+        }
+    }
     if (model.activeArea != ActiveArea.HUB || model.operations.screen != OperationsScreen.OVERVIEW ||
         model.selectedPerson != null || model.tasks.form || model.tasks.selected != null) {
         FormOutlinedButton({ model.activeArea(ActiveArea.HUB) }, enabled = model.activeNavigationEnabled) { Text("‹ Zum Lagebild") }
@@ -152,9 +160,18 @@ internal fun activeHubColumns(widthDp: Float, fontScale: Float) = if (widthDp >=
             FormOutlinedButton({model.openDocuments()},enabled=model.activeNavigationEnabled) { Text("Dokumente öffnen") }
         return
     }
-    if(model.boundedPage && model.activeArea==ActiveArea.HUB){
-        FormOutlinedButton({model.activeArea(ActiveArea.TASKS)},enabled=model.activeNavigationEnabled){Text("Aufgaben öffnen")}
-        FormOutlinedButton({model.activeArea(ActiveArea.PERSONS)},enabled=model.activeNavigationEnabled){Text("Personen öffnen")}
+    if(model.boundedSurfaceVisible && (model.activeArea==ActiveArea.HUB || model.activeArea==ActiveArea.FUNCTIONS)){
+        if(model.workspaceError){PagErrorState();return}
+        if(model.workspaceRefreshing){PagLoadingState();return}
+        if(model.activeArea==ActiveArea.HUB){
+            val hub=model.compactHubPresentation
+            if(hub==null){PagErrorState();return}
+            key(model.pageEpoch){CompactActiveContent(hub,model.activeNavigationEnabled,contentFrames)}
+        }else{
+            val functions=model.compactFunctionsPresentation
+            if(functions==null){PagErrorState();return}
+            key(model.pageEpoch){CompactActiveContent(functions,contentFrames)}
+        }
         return
     }
     if(model.boundedListVisible){
@@ -307,7 +324,7 @@ internal fun compactHubSummary(index:Int,line:Int,value:Long):String=when(index)
 
 @androidx.compose.runtime.NonRestartableComposable
 
-@Composable private fun compactFrameModifier(area:ActiveArea,observer:CompactContentFrameObserver?):Modifier {
+@Composable internal fun compactFrameModifier(area:ActiveArea,observer:CompactContentFrameObserver?):Modifier {
     // Capture once for this area subtree. An old subtree cannot acquire a later navigation ID.
     val trace=remember(observer,area) { observer?.capture(area)?.also { it.composing(System.nanoTime()) } }
     if(trace!=null) SideEffect { trace.committed(System.nanoTime()) }

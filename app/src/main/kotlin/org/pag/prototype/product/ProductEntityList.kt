@@ -22,10 +22,10 @@ internal class ProductScrollPositions {
     fun at(destination:String):Anchor=positions.getOrPut(destination){if(positions.size>=64)positions.clear();Anchor()}
 }
 internal fun productEntityListRoute(m:ProductViewModel):Boolean =
-    !m.boundedPage && m.snapshot.state==SessionState.READY && !m.documents.available && !m.creating && m.editing==null &&
+    m.snapshot.state==SessionState.READY && !m.documents.available && !m.creating && m.editing==null &&
     !m.detailLoading && !m.personDetailLoading && m.selectedPerson==null && !m.personForm && !m.sensitiveSetup &&
     m.operations.screen==OperationsScreen.OVERVIEW && !m.tasks.form && m.tasks.selected==null &&
-    ((m.selected?.status==ActionStatus.ACTIVE && !m.compactActiveMode && m.activeArea in supportedActiveAreaGroup1) ||
+    ((m.selected?.status==ActionStatus.ACTIVE && !m.compactActiveMode && (m.activeArea in supportedActiveAreaGroup1 || (m.boundedSurfaceVisible && m.activeArea==ActiveArea.FUNCTIONS))) ||
      (m.selected?.status==ActionStatus.PREPARATION && m.preparationArea in supportedPreparationAreaGroup2))
 
 /** Null outside isolated probes; observation carries UI scroll state only. */
@@ -38,7 +38,8 @@ internal val listUiCost=ActiveWorkspaceBudget.Units(objects=64,strings=4,utf16Un
  * actual builder construction is admitted before construction; remember is an allocation
  * optimization, never an end receipt. Revoked builders cannot resolve another payload. */
 @androidx.compose.runtime.NonRestartableComposable
-@Composable internal fun ProductEntityList(model:ProductViewModel,positions:ProductScrollPositions) {
+@Composable internal fun ProductEntityList(model:ProductViewModel,positions:ProductScrollPositions,frames:CompactContentFrameObserver?=null) {
+    if(model.boundedPage){BoundedEntityList(model,positions,frames);return}
     val active=model.selected?.status==ActionStatus.ACTIVE
     val persons=if(active)model.activeArea==ActiveArea.PERSONS else model.preparationArea==PreparationArea.PERSONS
     val source=model.workspace
@@ -185,4 +186,44 @@ private fun taskListError(f:OperationsFailure)=when(f){
     OperationsFailure.STALE ->"Die Aufgabe wurde inzwischen geändert. Bitte neu öffnen."
     OperationsFailure.NOT_ALLOWED->"Im aktuellen Aktionsstatus ist diese Änderung nicht möglich."
     else->"Die Aufgabe oder Zuordnung ist in dieser Aktion nicht verfügbar."
+}
+
+/** Same original-owner card page; lazy builders carry identity/index metadata only. */
+@androidx.compose.runtime.NonRestartableComposable
+@Composable private fun BoundedEntityList(model:ProductViewModel,positions:ProductScrollPositions,frames:CompactContentFrameObserver?){
+    val area=model.activeArea
+    val epoch=model.pageEpoch
+    val fence=model.inputScreenKey() as? OriginalUiFence?:return
+    val destination=remember(fence,area){if(fence.reserve(listUiCost))"bounded-${area.name}" else null}?:return
+    val anchor=positions.at(destination)
+    val state=remember(destination){LazyListState(anchor.index,anchor.offset)}
+    DisposableEffect(state){onDispose{anchor.index=state.firstVisibleItemIndex;anchor.offset=state.firstVisibleItemScrollOffset}}
+    val functions=if(area==ActiveArea.FUNCTIONS)model.compactFunctionsPresentation else null
+    val count=if(area==ActiveArea.FUNCTIONS)functions?.size()?:return else model.pageShown
+    val builder=rememberOriginalValue(fence,epoch,cost={listUiCost}){
+        val content:LazyListScope.()->Unit={
+            item(key="header"){if(fence.live())Column(verticalArrangement=Arrangement.spacedBy(16.dp)){ActiveWorkspace(model,renderContent=false)}}
+            if(functions!=null)item(key="function-summary"){
+                if(fence.live()){
+                    val onSite=functions.onSite();val without=functions.withoutFunction()
+                    if(onSite!=null && without!=null)Text("$onSite Personen vor Ort · $without ohne Funktion")
+                }
+            }
+            if(model.workspaceError)item(key="error"){PagErrorState()}
+            else if(model.workspaceRefreshing || model.personsLoading)item(key="loading"){PagLoadingState()}
+            else if(count==0)item(key="empty"){
+                Text("Keine weiteren Einträge auf dieser Seite.",modifier=compactFrameModifier(area,frames))
+            }else items(count,key={"$epoch-$it"}){index->
+                if(fence.live()){
+                    val frame=compactFrameModifier(area,frames)
+                    if(functions!=null)functions.line(index)?.let{Text(it,modifier=frame)}
+                    else model.boundedPageLabel(epoch,index)?.let{label->
+                        FormOutlinedButton({model.openBoundedRow(epoch,index)},enabled=model.activeNavigationEnabled,modifier=Modifier.fillMaxWidth().then(frame)){Text(label)}
+                    }
+                }
+            }
+        }
+        content
+    }?:return
+    LazyColumn(Modifier.fillMaxSize(),state=state,contentPadding=PaddingValues(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp),content=builder)
 }

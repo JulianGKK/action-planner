@@ -21,6 +21,11 @@ data class WorkspaceRead(val actionId:String,val status:ActionStatus,val generat
  * Reusing a reference requires this gate; new owner allocations require disjoint prior booking.
  */
 interface WorkspaceAccess {
+    /** Same original projection/epoch only; no cache admission or independent read authority. */
+    fun publishCore(state:CompactTaskState,work:()->Unit):Boolean=false
+    /** Revocable binding hint for already delivered UI only. Never permission to read,
+     * allocate or execute a data operation; those still require publish/consume. */
+    fun readBindingLive():Boolean=false
     fun publish(actionId:String,status:ActionStatus,generation:Long,work:()->Unit):Boolean
     fun reserve(units:ActiveWorkspaceBudget.Units):Boolean
     /** Existing held draft/callback copies only. Grants no DB read, fresh snapshot or write.
@@ -61,8 +66,12 @@ sealed interface WorkspaceDetailResult {
 data class WorkspacePageRequest(val actionId:String,val generation:Long,val people:Boolean,
     val ticket:WorkspaceReadTicket,val tasksAfter:CompactTaskCursor?=null,val peopleAfter:CompactPeopleCursor?=null,
     val baseline:WorkspaceRead?=null,val expectedAction:Action?=null,val lane:CompactTaskLane=CompactTaskLane.ACTIVE,
-    val taskPage:CompactTaskPage?=null,val peoplePage:CompactPeoplePage?=null)
-data class WorkspacePage(val access:WorkspaceAccess,val tasks:CompactTaskPage?=null,val people:CompactPeoplePage?=null,val taskCounts:CompactTaskCounts?=null)
+    val taskPage:CompactTaskPage?=null,val peoplePage:CompactPeoplePage?=null,
+    val overview:Boolean=false,val functions:Boolean=false)
+data class CompactHubCounts(val people:CompactPeopleCounts,val tasks:CompactTaskCounts,val roles:Long)
+data class WorkspacePage(val access:WorkspaceAccess,val tasks:CompactTaskPage?=null,val people:CompactPeoplePage?=null,val taskCounts:CompactTaskCounts?=null,
+    val functions:CompactFunctions?=null,val hub:CompactHubCounts?=null,
+    val state:CompactTaskState?=tasks?.state?:people?.state)
 sealed interface WorkspacePageResult {
     data class Value(val page:WorkspacePage):WorkspacePageResult
     data class Rejected(val reason:WorkspaceFailure):WorkspacePageResult

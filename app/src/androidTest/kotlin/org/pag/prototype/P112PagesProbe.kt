@@ -19,12 +19,15 @@ class P112PagesProbe:Instrumentation(){
     private fun emit(s:String)=sendStatus(0,Bundle().apply{putString("stream","P112,$scenario,$s\n")})
     private var forward=true
     private fun reveal(text:String):Boolean {
+        runCatching{uiAutomation.waitForIdle(50,1000)}
         val root=uiAutomation.rootInActiveWindow?:return false
         fun visible(n:android.view.accessibility.AccessibilityNodeInfo):Boolean {
+            if(!n.refresh())return false
             if(n.isVisibleToUser && n.text?.toString()?.contains(text)==true)return true
             for(i in 0 until n.childCount){val c=n.getChild(i)?:continue;try{if(visible(c))return true}finally{c.recycle()}};return false
         }
         fun scroll(n:android.view.accessibility.AccessibilityNodeInfo):Boolean{
+            if(!n.refresh())return false
             if(n.isScrollable && n.performAction(if(forward)android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD else android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD))return true
             for(i in 0 until n.childCount){val c=n.getChild(i)?:continue;try{if(scroll(c))return true}finally{c.recycle()}};return false
         }
@@ -33,10 +36,12 @@ class P112PagesProbe:Instrumentation(){
     private fun click(text:String):Boolean{
         val root=uiAutomation.rootInActiveWindow?:return false
         fun contains(n:android.view.accessibility.AccessibilityNodeInfo):Boolean {
+            if(!n.refresh())return false
             if(n.text?.toString()==text)return true
             for(i in 0 until n.childCount){val c=n.getChild(i)?:continue;try{if(contains(c))return true}finally{c.recycle()}};return false
         }
         fun visit(n:android.view.accessibility.AccessibilityNodeInfo):Boolean {
+            if(!n.refresh())return false
             if(n.isVisibleToUser && n.isClickable && contains(n))return n.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
             for(i in 0 until n.childCount){val c=n.getChild(i)?:continue;try{if(visit(c))return true}finally{c.recycle()}};return false
         }

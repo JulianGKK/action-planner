@@ -26,6 +26,13 @@ internal class OriginalUiToken(private val parent:OriginalUiFence,private val id
     override fun reserve(units:ActiveWorkspaceBudget.Units)=live() && parent.reserve(units) && live()
 }
 internal class OriginalUiSlot<T:Any> {
+    // Holder construction prepays exactly ONE sizing descriptor on the original record.
+    // This bit grants no authority and never refunds/replenishes an allocation.
+    private var sizingPrepaid=true
+    fun takeSizing(fence:OriginalUiFence):Boolean {
+        if(sizingPrepaid){sizingPrepaid=false;return true}
+        return fence.reserve(OriginalUiSlotCost.sizing)
+    }
     val identity=OriginalUiEpoch()
     var epoch:Long=Long.MIN_VALUE
     var extra:Any?=null
@@ -33,6 +40,7 @@ internal class OriginalUiSlot<T:Any> {
 }
 internal object OriginalUiSlotCost {
     val holder=ActiveWorkspaceBudget.Units(objects=4,references=16)
+    val holderAndFirstSizing=ActiveWorkspaceBudget.Units(objects=6,references=24)
     val sizing=ActiveWorkspaceBudget.Units(objects=2,references=8)
 }
 /** No Any?/vararg Long key boxing at every composition. The holder and each actual new
@@ -41,10 +49,10 @@ internal object OriginalUiSlotCost {
  */
 @Composable internal inline fun <T:Any> rememberOriginalValue(fence:OriginalUiFence,epoch:Long,extra:Any?=null,
     crossinline cost:()->ActiveWorkspaceBudget.Units,crossinline producer:()->T):T? {
-    val slot=remember(fence){if(!fence.reserve(OriginalUiSlotCost.holder))null else OriginalUiSlot<T>()}?:return null
+    val slot=remember(fence){if(!fence.reserve(OriginalUiSlotCost.holderAndFirstSizing))null else OriginalUiSlot<T>()}?:return null
     if(!fence.live())return null
     if(slot.epoch==epoch && slot.extra==extra)return slot.value
-    if(!fence.reserve(OriginalUiSlotCost.sizing))return null
+    if(!slot.takeSizing(fence))return null
     val units=cost()
     if(!fence.reserve(units))return null
     val value=producer()
@@ -61,12 +69,12 @@ internal inline fun admitInputClick(fence:OriginalUiFence?,input:FormInput,cross
  * payload: it holds only the primitive identity, never this slot or its changing value. */
 @Composable internal inline fun <T:Any> rememberOriginalPresentation(fence:OriginalUiFence,epoch:Long,extra:Any?,
     crossinline cost:()->ActiveWorkspaceBudget.Units,crossinline producer:(OriginalUiFence)->T):T? {
-    val slot=remember(fence){if(!fence.reserve(OriginalUiSlotCost.holder))null else OriginalUiSlot<T>()}?:return null
+    val slot=remember(fence){if(!fence.reserve(OriginalUiSlotCost.holderAndFirstSizing))null else OriginalUiSlot<T>()}?:return null
     if(!fence.live())return null
     if(slot.epoch==epoch && slot.extra==extra)return slot.value
     val version=slot.identity.advance()
     slot.epoch=Long.MIN_VALUE;slot.extra=null;slot.value=null // Unpublish only; never refund old aliases.
-    if(!fence.reserve(OriginalUiSlotCost.sizing))return null
+    if(!slot.takeSizing(fence))return null
     if(!fence.reserve(cost()))return null
     val token=OriginalUiToken(fence,slot.identity,version)
     val value=producer(token)

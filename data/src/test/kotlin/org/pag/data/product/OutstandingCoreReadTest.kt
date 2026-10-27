@@ -253,4 +253,30 @@ class OutstandingCoreReadTest {
         }
     }
 
+    @Test fun p113OriginalProjectionGateChecksEpochSessionActionAndGenerationWithoutReadmission(){
+        val h=H();h.pending();h.main.remove().run()
+        val root=WorkspaceReadTicket()
+        val scope=h.life!!.childAccess(root) as OriginalWorkspaceAccess
+        val state=CompactTaskState(P3bFreeActiveCoreBinding("a",1),0)
+        assertTrue(scope.readBindingLive());assertTrue(scope.publishCore(state){})
+        assertFalse(scope.publishCore(state.copy(binding=P3bFreeActiveCoreBinding("b",1))) {})
+        assertFalse(scope.publishCore(state.copy(binding=P3bFreeActiveCoreBinding("a",2))) {})
+        val pending=h.mutations.beforeTaskQueue("a",1)!!
+        assertFalse(scope.readBindingLive());assertFalse(scope.publishCore(state){})
+        assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.COMMITTED,WorkspaceWriteCleanup.COMPLETE)))
+        val ticket=h.mutations.beforeActiveRead("a",1)!!
+        val fresh=OriginalWorkspaceAccess(scope.entry,h.access,h.access.acquire(AccessScope.READY)!!,ticket,h.mutations,
+            WorkspaceReadRequest("a",ActionStatus.ACTIVE,1,emptySet(),ticket=root),Thread.currentThread())
+        assertFalse(fresh.publishCore(state){})
+        assertTrue(fresh.publishCore(state.copy(mutationEpoch=1)){})
+        // A metadata hint never substitutes for a fresh central gate.
+        h.ready=false
+        assertFalse(fresh.publishCore(state.copy(mutationEpoch=1)){fail("No payload with denied storage")})
+        assertFalse(fresh.consume(ActiveWorkspaceBudget.Units(objects=1)){fail("No producer with denied storage")})
+        h.ready=true
+        root.cancel();assertFalse(fresh.readBindingLive());assertFalse(fresh.publishCore(state.copy(mutationEpoch=1)){})
+        h.ready=false;assertFalse(fresh.publishCore(state.copy(mutationEpoch=1)){})
+        assertFalse(h.load());assertFalse(h.loader.outstandingState().retirementConfirmed)
+    }
+
 }

@@ -35,14 +35,15 @@ internal class HoldToReveal {
     fun end() { visible=false }
     fun move(inside:Boolean) { if(!inside) end() }
 }
-internal class FormInput(val dismiss:()->Unit) {
+internal class FormInput(val dismiss:(Boolean)->Unit) {
+    private var hadTextFocus=false
     var focused:Any?=null
     var bounds:Rect?=null
     fun focus(id:Any,rectangle:Rect?,active:Boolean) {
-        if(active){focused=id;bounds=rectangle}
+        if(active){hadTextFocus=true;focused=id;bounds=rectangle}
         else if(focused===id){focused=null;bounds=null}
     }
-    fun finish(){dismiss();focused=null;bounds=null}
+    fun finish(){dismiss(hadTextFocus);hadTextFocus=false;focused=null;bounds=null}
     fun backgroundTap(point:Offset,consumed:Boolean,dragged:Boolean){
         if(!consumed&&!dragged && focused!=null && bounds?.contains(point)!=true)finish()
     }
@@ -55,7 +56,7 @@ private val LocalFormInput=staticCompositionLocalOf<FormInput>{error("PRODUCT-FO
 @Composable internal fun ProductInputScope(screen:Any?,content:@Composable ()->Unit) {
     val focus=LocalFocusManager.current
     val keyboard=LocalSoftwareKeyboardController.current
-    val input=remember(focus,keyboard){FormInput{focus.clearFocus(force=true);keyboard?.hide()}}
+    val input=remember(focus,keyboard){FormInput{cleanup->if(cleanup){focus.clearFocus(force=true);keyboard?.hide()}}}
     val view=LocalView.current
     val lifecycle=LocalLifecycleOwner.current.lifecycle
     DisposableEffect(view,lifecycle,input) {
@@ -83,16 +84,28 @@ private val LocalFormInput=staticCompositionLocalOf<FormInput>{error("PRODUCT-FO
         }){content()}
     }
 }
+/** One fixed quote covers both callback and content, including their holder. Old
+ * controls remain charged; remember is not a release and invocation still admits an event. */
+internal class OriginalButtonControl(val click:OriginalInputClick,val render:@Composable RowScope.()->Unit)
+internal val originalButtonControlCost=org.pag.domain.ActiveWorkspaceBudget.Units(objects=32,references=128)
+@Composable internal inline fun originalButtonControl(screen:OriginalUiFence,input:FormInput,
+    crossinline onClick:()->Unit,crossinline content:@Composable RowScope.()->Unit):OriginalButtonControl? {
+    val revision=screen.presentationRevision()
+    return remember(screen,revision,input){
+        if(!screen.reserve(originalButtonControlCost))null else {
+            val click=OriginalInputClick(screen,input,revision){onClick()}
+            val render:@Composable RowScope.()->Unit={if(screen.live() && screen.presentationRevision()==revision)content()}
+            OriginalButtonControl(click,render)
+        }
+    }
+}
 /** Inline factories keep caller callback/content construction inside the admitted remember
  * branch. remember avoids reconstruction; it is never an owner-end receipt. */
 @Composable internal inline fun FormButton(crossinline onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,shape:androidx.compose.ui.graphics.Shape=productFormShape,crossinline content:@Composable RowScope.()->Unit) {
     val input=LocalFormInput.current;val screen=LocalFormScreen.current
     if(screen==null){Button(onClick={input.finish();onClick()},enabled=enabled,modifier=modifier.fillMaxWidth().heightIn(min=56.dp),shape=shape){ProvideTextStyle(formCenterStyle){content()}};return}
-    val revision=screen.presentationRevision()
-    val click=rememberOriginalValue(screen,revision,extra=input,cost={InputControlCost.click}){OriginalInputClick(screen,input,revision){onClick()}}?:return
-    val render=rememberOriginalValue(screen,revision,cost={InputControlCost.content}){
-        val value:@Composable RowScope.()->Unit={if(screen.live() && screen.presentationRevision()==revision)content()};value
-    }?:return
+    val control=originalButtonControl(screen,input,{onClick()}){content()}?:return
+    val click=control.click;val render=control.render
     if(screen?.live()==false)return
     Button(onClick=click,enabled=enabled,modifier=modifier.fillMaxWidth().heightIn(min=56.dp),shape=shape) {
         ProvideTextStyle(formCenterStyle) { render() }
@@ -101,11 +114,8 @@ private val LocalFormInput=staticCompositionLocalOf<FormInput>{error("PRODUCT-FO
 @Composable internal inline fun FormTextButton(crossinline onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,crossinline content:@Composable RowScope.()->Unit) {
     val input=LocalFormInput.current;val screen=LocalFormScreen.current
     if(screen==null){TextButton(onClick={input.finish();onClick()},enabled=enabled,modifier=modifier.heightIn(min=48.dp)){content()};return}
-    val revision=screen.presentationRevision()
-    val click=rememberOriginalValue(screen,revision,extra=input,cost={InputControlCost.click}){OriginalInputClick(screen,input,revision){onClick()}}?:return
-    val render=rememberOriginalValue(screen,revision,cost={InputControlCost.content}){
-        val value:@Composable RowScope.()->Unit={if(screen.live() && screen.presentationRevision()==revision)content()};value
-    }?:return
+    val control=originalButtonControl(screen,input,{onClick()}){content()}?:return
+    val click=control.click;val render=control.render
     if(screen?.live()!=false)TextButton(onClick=click,enabled=enabled,modifier=modifier.heightIn(min=48.dp),content=render)
 }
 internal class FinishedRowClick(private val input:FormInput,private val action:OriginalRowAction):()->Unit {
@@ -118,11 +128,8 @@ internal class FinishedRowClick(private val input:FormInput,private val action:O
 @Composable internal inline fun FormOutlinedButton(crossinline onClick:()->Unit,modifier:Modifier=Modifier,enabled:Boolean=true,shape:androidx.compose.ui.graphics.Shape=productFormShape,crossinline content:@Composable RowScope.()->Unit) {
     val input=LocalFormInput.current;val screen=LocalFormScreen.current
     if(screen==null){OutlinedButton(onClick={input.finish();onClick()},modifier=modifier.heightIn(min=48.dp),enabled=enabled,shape=shape){content()};return}
-    val revision=screen.presentationRevision()
-    val click=rememberOriginalValue(screen,revision,extra=input,cost={InputControlCost.click}){OriginalInputClick(screen,input,revision){onClick()}}?:return
-    val render=rememberOriginalValue(screen,revision,cost={InputControlCost.content}){
-        val value:@Composable RowScope.()->Unit={if(screen.live() && screen.presentationRevision()==revision)content()};value
-    }?:return
+    val control=originalButtonControl(screen,input,{onClick()}){content()}?:return
+    val click=control.click;val render=control.render
     if(screen?.live()!=false)OutlinedButton(onClick=click,modifier=modifier.heightIn(min=48.dp),enabled=enabled,shape=shape,content=render)
 }
 @Composable internal inline fun FormOutlinedButton(onClick:OriginalRowAction,modifier:Modifier=Modifier,enabled:Boolean=true,shape:androidx.compose.ui.graphics.Shape=productFormShape,contentEpoch:Long=0L,crossinline content:@Composable RowScope.()->Unit) {

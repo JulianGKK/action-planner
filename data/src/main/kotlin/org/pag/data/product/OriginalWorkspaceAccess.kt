@@ -19,12 +19,19 @@ internal class OriginalWorkspaceAccess(
     internal val mutationEpoch get()=ticket.mutationEpoch
     private var publishing=0
     internal fun liveOnWorker()=entry.readable() && ticket.isLive() && request.ticket?.active!=false && original.check(AccessPoint.STEP)
+    override fun readBindingLive():Boolean = Thread.currentThread()===thread && publishing<2 &&
+        original.scope==AccessScope.READY && original.generation==ticket.generation && request.ticket?.active!=false &&
+        entry.readable() && ticket.isLive() && mutations.isCurrentActiveRead(ticket)
+    override fun publishCore(state:CompactTaskState,work:()->Unit):Boolean =
+        state.mutationEpoch==ticket.mutationEpoch && state.binding.actionId==request.actionId &&
+            state.binding.generation==request.generation && publish(request.actionId,status,request.generation,work)
     override fun publish(actionId:String,status:ActionStatus,generation:Long,work:()->Unit):Boolean {
         if(Thread.currentThread()!==thread || publishing>=2 || actionId!=request.actionId || status!=request.status || generation!=request.generation)return false
         val fresh=source.acquire(AccessScope.READY)?:return false
         fun current()=fresh.scope==AccessScope.READY && fresh.generation==original.generation &&
             liveOnWorker() && mutations.isCurrentActiveRead(ticket) && fresh.check(AccessPoint.PUBLICATION)
-        if(!current())return false
+        // The fresh publication gate authorizes entry. Check the original binding inside
+        // that gate, then again after return; no speculative work before authorization.
         publishing++
         try {
             var ran=false
@@ -43,11 +50,10 @@ internal class OriginalWorkspaceAccess(
         val fresh=source.acquire(AccessScope.READY)?:return false
         fun current()=fresh.scope==AccessScope.READY && fresh.generation==original.generation &&
             entry.readable() && request.ticket?.active!=false && original.check(AccessPoint.STEP) && fresh.check(AccessPoint.PUBLICATION)
-        if(!current())return false
-        if(!entry.reserve(units))return false
         publishing++
         try{var ran=false
-            val accepted=fresh.publish{if(current()){producer();ran=true}}
+            // Reservation and construction share the fresh authorized publication context.
+            val accepted=fresh.publish{if(current() && entry.reserve(units)){producer();ran=true}}
             return accepted && ran && current()
         }finally{publishing--}
     }

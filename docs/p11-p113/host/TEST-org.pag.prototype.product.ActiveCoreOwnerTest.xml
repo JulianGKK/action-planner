@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ActiveCoreOwnerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-27T07:45:17.466Z" hostname="iuzjhtgvfc" time="0.595">
+  <properties/>
+  <testcase name="p113FourOriginalSurfacesAndDirtyFunctionChildKeepOneOwnerAndDraft" classname="org.pag.prototype.product.ActiveCoreOwnerTest" time="0.587"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

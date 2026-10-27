@@ -13,9 +13,10 @@ import java.util.concurrent.TimeUnit
 class P80ContentFrames : CompactNavigationFrames {
     private var nextId=0L
     private var pending: Sample?=null
-    override fun begin(area:ActiveArea):Sample {
+    override fun begin(area:ActiveArea):Sample=beginAt(area,System.nanoTime())
+    fun beginAt(area:ActiveArea,start:Long):Sample {
         check(pending==null) { "Previous navigation not consumed" }
-        return Sample(++nextId,area,System.nanoTime()).also {pending=it}
+        return Sample(++nextId,area,start).also {pending=it}
     }
     override fun consume(sample:CompactNavigationSample) {
         check(pending===sample && sample.drawEnd!=0L) { "Foreign or incomplete navigation" }

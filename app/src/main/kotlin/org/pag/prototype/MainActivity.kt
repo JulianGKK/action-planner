@@ -204,7 +204,7 @@ class MainActivity : ComponentActivity() {
             runtime.authenticationForegroundAvailable()
         }
     }
-    override fun onUserInteraction() { super.onUserInteraction(); if (::model.isInitialized && resumed) model.interaction() }
+    override fun onUserInteraction() { super.onUserInteraction(); if (::model.isInitialized && resumed) model.userActivity() }
     override fun onDestroy() {
         documentSession?.cancel(); documentSession=null
         pendingDocument.clear()

@@ -62,4 +62,5 @@
     <instrumentation android:name="org.pag.prototype.P110ConsumerProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P111CapacityProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P112PagesProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P113NavigationProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

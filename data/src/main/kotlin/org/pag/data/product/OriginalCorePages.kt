@@ -51,6 +51,22 @@ internal class OriginalCorePages(private val access:StorageAccess,private val in
                             bounded=true,validateAllHeld=true))return@withReadTransaction WorkspacePageResult.Rejected(WorkspaceFailure.STALE)
                         if(!WorkspaceConsistency(this,::current).compactMatches(WorkspaceDetailRequest(r.actionId,ActionStatus.ACTIVE,r.generation,
                             WorkspaceDetailKind.TASK,"",r.ticket,taskPage=r.taskPage,peoplePage=r.peoplePage)))return@withReadTransaction WorkspacePageResult.Rejected(WorkspaceFailure.STALE)
+                        if(r.overview){
+                            val fixed=ActiveWorkspaceBudget.Units(objects=128,arrays=16,arrayPayloadBytes=4096,references=512)
+                            if(!child.admit(ActiveCoreReservation(fixed,fixed)))return@withReadTransaction WorkspacePageResult.Rejected(WorkspaceFailure.BUDGET_REFUSED)
+                            gate()
+                            val people=CompactPeopleStore(this,c,::current)
+                            people.preflight(state)
+                            val hub=CompactHubCounts(people.counts(r.actionId),CompactTaskStore(this,c,::current).counts(r.actionId,null),people.roleCount(r.actionId))
+                            gate();return@withReadTransaction WorkspacePageResult.Value(WorkspacePage(fresh,hub=hub,state=state))
+                        }
+                        if(r.functions){
+                            val plan=CompactPeopleStore(this,c,::current).prepareFunctions(state)
+                            val admission=CoreReadAdmission.admit(listOf(plan))
+                            gate();if(!child.admit(admission.reservation))return@withReadTransaction WorkspacePageResult.Rejected(WorkspaceFailure.BUDGET_REFUSED)
+                            gate();val functions=plan.materialize(admission)
+                            return@withReadTransaction WorkspacePageResult.Value(WorkspacePage(fresh,functions=functions,state=state))
+                        }
                         // Cursors retain their original epoch. A write requires an explicit first-page reload.
                         val taskPlan=if(r.people)null else CompactTaskStore(this,c,::current).preparePage(state,CompactTaskQuery(r.lane),r.tasksAfter)
                         val peoplePlan=if(r.people)CompactPeopleStore(this,c,::current).preparePage(state,CompactPeopleQuery.All,r.peopleAfter) else null

@@ -39,7 +39,7 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
         } else if(Character.isLowSurrogate(c)) invalid() }
         if(id.toByteArray(Charsets.UTF_8).size>256) fail(BoundedActiveStatus.BUDGET_REFUSED)
     }
-    private suspend fun preflight(state: CompactTaskState) {
+    internal suspend fun preflight(state: CompactTaskState) {
         input(state.binding.actionId)
         // Reuse the legacy metadata/relational proof WITHOUT admitting or materializing its
         // full graph. Its fixed six headers are transient metadata, NOT retained readerresults.
@@ -188,6 +188,25 @@ internal class CompactPeopleStore(private val sql: PooledConnection, private val
             Core(a?:invalid(),page,summary)
         }
     }
+    suspend fun prepareFunctions(state:CompactTaskState):PreparedCoreRead<CompactFunctions> {
+        preflight(state)
+        val args=listOf(state.binding.actionId)
+        val roles=size("roles","actionId=?",args,listOf("id","actionId","name","normalizedName"),listOf("createdAt","(SELECT COUNT(*) FROM person_operational_states s WHERE s.actionId=roles.actionId AND s.currentRoleId=roles.id AND s.operationalStatus='ON_SITE')","editRevision"))
+        val people=counts(state.binding.actionId)
+        val without=scalar("SELECT COUNT(*) FROM person_operational_states WHERE actionId=? AND operationalStatus='ON_SITE' AND currentRoleId IS NULL",args)
+        val base=reserve(listOf(roles))
+        val quote=base.copy(transition=CoreReadAdmission.add(base.transition,CompactPresentationBudget.functionsFormatting(roles.rows,roles.bytes)))
+        return PreparedCoreRead(quote){
+            observe(Phase.ADMITTED);gate()
+            val items=ArrayList<Pair<CompactFunction,String>>()
+            fetch(roles){t,n->items.add(CompactFunction(RoleRow(t[0]?:invalid(),t[1]?:invalid(),t[2]?:invalid(),t[3]?:invalid(),n[0]?:invalid(),editRevision=n[2]?:invalid()).model(),n[1]?:invalid()) to (t[3]?:invalid()))}
+            items.sortWith(compareBy<Pair<CompactFunction,String>>{it.second}.thenBy{it.first.role.id})
+            val result=CompactFunctions(items.map{it.first},without,people.onSite,items.count{it.first.onSiteCount>0}.toLong())
+            if(result.items.sumOf{it.onSiteCount}+without!=people.onSite)invalid()
+            gate();result
+        }
+    }
+    suspend fun roleCount(action:String):Long=scalar("SELECT COUNT(*) FROM roles WHERE actionId=?",listOf(action))
     suspend fun page(state: CompactTaskState,filter: CompactPeopleQuery,after: CompactPeopleCursor?): CompactPeopleResult.Value {
         return finish(preparePage(state,filter,after))
     }

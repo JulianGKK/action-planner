@@ -17,4 +17,13 @@ class ProductInputsTest {
     @Test fun consumedButtonsHoldGesturesAndScrollingAreNotIntercepted(){var dismissed=0;val input=FormInput{dismissed++};input.focus(Any(),Rect(0f,0f,10f,10f),true);input.backgroundTap(Offset(20f,20f),true,false);input.backgroundTap(Offset(20f,20f),false,true);assertEquals(0,dismissed)}
     @Test fun fieldTransferDoesNotDismissKeyboard(){var dismissed=0;val input=FormInput{dismissed++};val first=Any();val next=Any();input.focus(first,Rect.Zero,true);input.focus(next,Rect.Zero,true);input.focus(first,Rect.Zero,false);assertSame(next,input.focused);assertEquals(0,dismissed)}
     @Test fun saveCancelNavigationAndImeCompletionDismissAndDropFocus(){var dismissed=0;val input=FormInput{dismissed++};repeat(4){input.focus(Any(),Rect.Zero,true);input.finish();assertNull(input.focused);assertNull(input.bounds)};assertEquals(4,dismissed)}
+    @Test fun idleNavigationNeedsNoImeCallButLosingAFieldStillRequiresCleanup(){
+        val requests=mutableListOf<Boolean>();val input=FormInput{requests.add(it)}
+        input.finish();input.finish()
+        val id=Any();input.focus(id,Rect.Zero,true);input.focus(id,Rect.Zero,false)
+        input.finish();input.finish()
+        assertEquals(listOf(false,false,true,false),requests)
+        assertNull(input.focused);assertNull(input.bounds)
+    }
+
 }

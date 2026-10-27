@@ -55,6 +55,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             if(!broken && !published && active==0L) "VM_SCOPES_QUIESCENT" else "NOT_QUIESCENT"
     }
     private class CoreSlot(val value:ActiveCoreResult.Value,val lifetime:ActiveCoreLifetime,val identity:Any, val persons:CompactPersonsPresentation, val tasks:CompactTasksPresentation, val hub:CompactHubPresentation, val functions:CompactFunctionsPresentation, val scopes:VmCoreScopes) {
+        @Volatile var childNavigation=false
         var subscription:Subscription?=null
         fun close() { persons.invalidate();tasks.invalidate();hub.invalidate();functions.invalidate();subscription?.cancel();lifetime.close() }
     }
@@ -107,11 +108,21 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     /** Pre-admitted metadata handles, never second page/payload roots. */
     internal val compactPersonsPresentation:CompactPersonsPresentation? get() = presentation(ActiveArea.PERSONS){it.persons}
     internal val compactTasksPresentation:CompactTasksPresentation? get() = presentation(ActiveArea.TASKS){it.tasks}
-    internal val compactHubPresentation:CompactHubPresentation? get() = presentation(ActiveArea.HUB){it.hub}
-    internal val compactFunctionsPresentation:CompactFunctionsPresentation? get() = presentation(ActiveArea.FUNCTIONS){it.functions}
+    internal val compactHubPresentation:CompactHubPresentation? get() {
+        val child=hubChild
+        if(boundedSurfaceVisible && activeArea==ActiveArea.HUB && child!=null && pageAccess?.publishCore(child.state){}==true)return child.presentation
+        return presentation(ActiveArea.HUB){it.hub}
+    }
+    internal val compactFunctionsPresentation:CompactFunctionsPresentation? get() {
+        val child=functionsChild
+        if(boundedSurfaceVisible && activeArea==ActiveArea.FUNCTIONS && child!=null && pageAccess?.publishCore(child.state){}==true)return child.presentation
+        return presentation(ActiveArea.FUNCTIONS){it.functions}
+    }
     private inline fun <T> presentation(area:ActiveArea,read:(CoreSlot)->T):T? {
         coreSignal
-        if(Thread.currentThread() !== ownerThread || activeArea!=area || !compactActiveMode)return null
+        if(Thread.currentThread() !== ownerThread || activeArea!=area)return null
+        if(boundedSurfaceVisible)return withCoreScope{slot->if(originalProjectionCurrent(slot))read(slot) else null}
+        if(!compactActiveMode)return null
         return withCoreScope { slot->
             if(!compactPresentationCurrent(slot,area)) {dropCompactPresentation(slot);null} else read(slot)
         }
@@ -128,7 +139,14 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             selected?.id==core.state.binding.actionId && selected?.status==ActionStatus.ACTIVE && slot.lifetime.isCurrent()
     }
     private inline fun <T> resolveCompactPresentation(identity:Any,area:ActiveArea,crossinline read:(ActiveCorePayload)->T):T? {
-        if(Thread.currentThread() !== ownerThread || boundedPage)return null
+        if(Thread.currentThread() !== ownerThread)return null
+        if(boundedPage)return withCoreScope(identity){slot->
+            if(!boundedSurfaceVisible || snapshot.state!=SessionState.READY || selected?.status!=ActionStatus.ACTIVE || activeArea!=area || coreSlot.get()!==slot ||
+                selected?.id!=slot.value.core.state.binding.actionId || snapshot.generation!=slot.value.core.state.binding.generation)return@withCoreScope null
+            var value:T?=null
+            val accepted=pageAccess?.publishCore(slot.value.core.state){if(activeArea==area && coreSlot.get()===slot)value=read(slot.value.core)}==true
+            if(accepted)value else null
+        }
         return withCoreScope(identity) { slot->
             if(!compactPresentationCurrent(slot,area) || !slot.lifetime.authorizeHit(slot.value.core.state.binding.actionId)) {
                 dropCompactPresentation(slot);return null
@@ -160,8 +178,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if(index !in 0 until 32)return null
         return resolveCompactPresentation(identity,ActiveArea.TASKS){it.tasks.items.getOrNull(index)?.title}
     }
-    internal fun compactHubCurrent(identity:Any):Boolean? = resolveCompactPresentation(identity,ActiveArea.HUB){true}
-    internal fun compactHubValue(identity:Any,index:Int,line:Int):Long? = resolveCompactPresentation(identity,ActiveArea.HUB){
+    internal fun compactHubCurrent(identity:Any):Boolean? = hubValue(identity){true} ?: resolveCompactPresentation(identity,ActiveArea.HUB){true}
+    internal fun compactHubValue(identity:Any,index:Int,line:Int):Long? = hubValue(identity){
+        when(index){0->if(line==0)it.people.total else it.people.onSite;1->if(line==0)it.roles else it.people.onSite;else->if(line==0)it.tasks.open else it.tasks.inProgress}
+    } ?: resolveCompactPresentation(identity,ActiveArea.HUB){
         when(index) {
             0->if(line==0)it.people.overall.total else it.people.overall.onSite
             1->if(line==0)it.functions.items.size.toLong() else it.functions.onSiteCount
@@ -172,18 +192,108 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         // Authorization returns before navigation; no repository work inside publication.
         if(compactHubCurrent(identity)==true)activeArea(area)
     }
-    internal fun compactFunctionsSize(identity:Any):Int?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){it.functions.items.size}
-    internal fun compactFunctionsOnSite(identity:Any):Long?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){it.functions.onSiteCount}
-    internal fun compactFunctionsWithout(identity:Any):Long?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){it.functions.withoutFunction}
-    internal fun compactFunctionName(identity:Any,index:Int):String?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){it.functions.items.getOrNull(index)?.role?.name}
-    internal fun compactFunctionCount(identity:Any,index:Int):Long?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){it.functions.items.getOrNull(index)?.onSiteCount}
-    internal fun compactFunctionLine(identity:Any,index:Int):String?=resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){
-        it.functions.items.getOrNull(index)?.let{function->"${function.role.name}: ${function.onSiteCount} vor Ort"}
+    internal fun compactFunctionsSize(identity:Any):Int?=functionValue(identity){it.items.size}
+    internal fun compactFunctionsOnSite(identity:Any):Long?=functionValue(identity){it.onSiteCount}
+    internal fun compactFunctionsWithout(identity:Any):Long?=functionValue(identity){it.withoutFunction}
+    internal fun compactFunctionName(identity:Any,index:Int):String?=functionValue(identity){it.items.getOrNull(index)?.role?.name}
+    internal fun compactFunctionCount(identity:Any,index:Int):Long?=functionValue(identity){it.items.getOrNull(index)?.onSiteCount}
+    internal fun compactFunctionLine(identity:Any,index:Int):String?=functionValue(identity){
+        it.items.getOrNull(index)?.let{function->"${function.role.name}: ${function.onSiteCount} vor Ort"}
     }
     internal fun compactPresentationComposition(identity:Any,observed:Boolean) {
         if(Thread.currentThread() !== ownerThread)return
         withCoreScope(identity) { slot->
             if(observed)slot.lifetime.compositionObserved() else slot.lifetime.compositionDisposed()
+        }
+    }
+    private class FunctionsChild(val state:CompactTaskState,val data:CompactFunctions,val identity:Any,val presentation:CompactFunctionsPresentation)
+    private class HubChild(val state:CompactTaskState,val data:CompactHubCounts,val identity:Any,val presentation:CompactHubPresentation)
+    private var functionsChild by mutableStateOf<FunctionsChild?>(null)
+    private var hubChild by mutableStateOf<HubChild?>(null)
+    internal val boundedSurfaceVisible get()=boundedPage && activeArea in supportedActiveAreaGroup1 &&
+        tasks.selected==null && !tasks.form && selectedPerson==null && !personForm && operations.screen==OperationsScreen.OVERVIEW
+    private fun originalProjectionCurrent(slot:CoreSlot):Boolean =
+        coreSlot.get()===slot && boundedPage && snapshot.state==SessionState.READY && selected?.id==slot.value.core.action.id &&
+            selected?.status==ActionStatus.ACTIVE && snapshot.generation==slot.value.core.state.binding.generation &&
+            pageAccess?.publishCore(slot.value.core.state){}==true
+    private inline fun <T> functionValue(identity:Any,crossinline read:(CompactFunctions)->T):T? {
+        val child=functionsChild
+        if(child==null || child.identity!==identity)return resolveCompactPresentation(identity,ActiveArea.FUNCTIONS){read(it.functions)}
+        if(Thread.currentThread()!==ownerThread || !boundedSurfaceVisible || activeArea!=ActiveArea.FUNCTIONS)return null
+        var value:T?=null
+        return if(pageAccess?.publishCore(child.state){if(functionsChild===child)value=read(child.data)}==true)value else null
+    }
+    private inline fun <T> hubValue(identity:Any,crossinline read:(CompactHubCounts)->T):T? {
+        val child=hubChild?:return null
+        if(child.identity!==identity || Thread.currentThread()!==ownerThread || !boundedSurfaceVisible || activeArea!=ActiveArea.HUB)return null
+        var value:T?=null
+        return if(pageAccess?.publishCore(child.state){if(hubChild===child)value=read(child.data)}==true)value else null
+    }
+    /** One route's extra wrappers/callbacks/formatting, booked on the original entry. */
+    private fun showOriginalProjection(area:ActiveArea):Boolean? {
+        val source=pageAccess?:return null
+        val slot=acquireCoreScope()?:return null
+        try{
+            if(!originalProjectionCurrent(slot))return null
+            val core=slot.value.core
+            var quote=ActiveWorkspaceBudget.Units(objects=64,lists=4,listCapacity=64,references=512,strings=16,utf16Units=2048)
+            if(area==ActiveArea.FUNCTIONS)quote=addPageUnits(quote,CompactPresentationBudget.functionsFormatting(core.functions.items.size.toLong(),core.functions.items.sumOf{it.role.name.length.toLong()*3}))
+            var installed=false
+            if(!source.consume(quote){source.publishCore(core.state){
+                clearPersons(preserveWorkspace=true);fullActiveView=true;boundedPage=true;activeArea=area;workspace=null
+                val t=core.tasks;val p=core.people;val query=CompactTaskQuery()
+                tasksNext=t.items.lastOrNull()?.takeIf{t.hasMore}?.let{CompactTaskCursor(core.state,query,it.id,it.priority,it.dueAt,it.createdAt,it.updatedAt)}
+                peopleNext=p.items.lastOrNull()?.takeIf{p.hasMore}?.let{CompactPeopleCursor(core.state,CompactPeopleQuery.All,it.createdAt,it.id)}
+                pageRows=when(area){
+                    ActiveArea.PERSONS->WorkspacePage(source,people=CompactPeoplePage(core.state,CompactPeopleQuery.All,p.overall,p.filteredCount,p.items,peopleNext))
+                    ActiveArea.TASKS->WorkspacePage(source,tasks=CompactTaskPage(core.state,query,t.overall,t.filtered,t.items,tasksNext))
+                    else->null
+                }
+                pageNumber=1;pageLane=CompactTaskLane.ACTIVE;pageNeedsReload=false
+                pageTotal=if(area==ActiveArea.PERSONS)p.overall.total else t.overall.open+t.overall.inProgress
+                pageEpoch++;installed=true
+            }}){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return false}
+            return installed
+        }finally{slot.scopes.end()}
+    }
+    private fun showChildOverview(area:ActiveArea):Boolean? {
+        val source=pageAccess?:return null
+        val functions=if(area==ActiveArea.FUNCTIONS)functionsChild else null
+        val hub=if(area==ActiveArea.HUB)hubChild else null
+        val state=functions?.state?:hub?.state?:return null
+        if(!source.publishCore(state){})return null
+        var quote=ActiveWorkspaceBudget.Units(objects=64,lists=4,listCapacity=64,references=512,strings=16,utf16Units=2048)
+        if(functions!=null)quote=addPageUnits(quote,CompactPresentationBudget.functionsFormatting(functions.data.items.size.toLong(),functions.data.items.sumOf{it.role.name.length.toLong()*3}))
+        var installed=false
+        if(!source.consume(quote){source.publishCore(state){
+            clearPersons(preserveWorkspace=true);fullActiveView=true;activeArea=area;workspace=null;pageRows=null;pageEpoch++;installed=true
+        }}){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return false}
+        return installed
+    }
+    private fun loadOverview(area:ActiveArea){
+        val source=pageAccess?:return
+        val action=selected?:return
+        val ticket=workspaceTicket?:return
+        val generation=snapshot.generation
+        val serial=++workspaceRequest
+        tasks.clear();operations.clear();selectedPerson=null;workspace=null
+        activeArea=area;fullActiveView=true;workspaceRefreshing=true;personsLoading=true;workspaceError=false;workspaceRefusal=null;pageEpoch++
+        workspaceRepository?.page(source,WorkspacePageRequest(action.id,generation,false,ticket,overview=area==ActiveArea.HUB,functions=area==ActiveArea.FUNCTIONS)){result->
+            if(serial!=workspaceRequest || !ticket.active || selected?.id!=action.id || snapshot.state!=SessionState.READY || snapshot.generation!=generation)return@page
+            personsLoading=false;workspaceRefreshing=false
+            when(result){
+                is WorkspacePageResult.Rejected->{workspaceRefusal=result.reason;workspaceError=true}
+                is WorkspacePageResult.Value->{
+                    val page=result.page;val state=page.state?:return@page
+                    pageAccess=page.access
+                    val cost=ActiveWorkspaceBudget.Units(objects=64,lists=4,listCapacity=16,references=256)
+                    if(!page.access.consume(cost){
+                        if(page.functions!=null){val id=Any();val data=checkNotNull(page.functions);functionsChild?.presentation?.invalidate();functionsChild=FunctionsChild(state,data,id,CompactFunctionsPresentation(this,id,data.items.size));pageRoles=data.items.map{it.role}}
+                        if(page.hub!=null){val id=Any();hubChild?.presentation?.invalidate();hubChild=HubChild(state,checkNotNull(page.hub),id,CompactHubPresentation(this,id))}
+                        pageEpoch++
+                    }){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true}
+                }
+            }
         }
     }
     private var pageAccess:WorkspaceAccess?=null
@@ -333,7 +443,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     fun nextBoundedPage(){if(pageHasMore && !pageNeedsReload && activeNavigationEnabled && !detailLoading && !workspaceRefreshing)loadBoundedPage(activeArea,true)}
     fun firstBoundedPage(){if(activeNavigationEnabled && !detailLoading && !workspaceRefreshing)loadBoundedPage(activeArea,false)}
     private fun loadBoundedPage(area:ActiveArea,next:Boolean):Boolean {
-        if(area!=ActiveArea.TASKS && area!=ActiveArea.PERSONS)return false
+        if(area !in supportedActiveAreaGroup1)return false
         val action=selected?:return false
         val initial=if(!boundedPage)acquireCoreScope() else null
         val ticket=workspaceTicket ?: WorkspaceReadTicket().also{workspaceTicket=it}
@@ -355,10 +465,15 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                     else WorkspacePage(source,tasks=CompactTaskPage(core.state,q,t.overall,t.filtered,t.items,tc))
                 tasksNext=tc;peopleNext=pc;pageAccess=source;pageNumber=1;pageEpoch++;pageNeedsReload=false
                 pageTotal=if(area==ActiveArea.PERSONS)p.overall.total else t.overall.open+t.overall.inProgress
-                boundedPage=true;fullActiveView=true;activeArea=area;pageLane=CompactTaskLane.ACTIVE;personsLoading=false;installed=true
+                boundedPage=true;fullActiveView=true;activeArea=area;pageLane=CompactTaskLane.ACTIVE;personsLoading=false;initial.childNavigation=true;installed=true
             } && installed){interaction();return true}
             workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return true
         }finally{initial.scopes.end()}
+        if(!next){
+            val shown=showChildOverview(area)?:showOriginalProjection(area)
+            if(shown!=null)return true
+            if(area==ActiveArea.HUB || area==ActiveArea.FUNCTIONS){loadOverview(area);interaction();return true}
+        }
         val afterTasks=if(next)tasksNext else null
         val afterPeople=if(next)peopleNext else null
         val number=if(next)pageNumber+1 else 1
@@ -418,6 +533,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity),CompactTasksPresentation(this,slotIdentity),CompactHubPresentation(this,slotIdentity),CompactFunctionsPresentation(this,slotIdentity,core.functions.items.size),scopes)
                 slot.subscription=lifetime.onInvalidated {
                     withCoreScope(slotIdentity,revoking=true) { held->
+                        if(held.childNavigation){runCatching{ownerDispatch{coreSignal++}};return@withCoreScope}
                         if(detachCoreSlot(held)) {
                             held.persons.invalidate();held.tasks.invalidate();held.hub.invalidate();held.functions.invalidate()
                             // No Compose mutation on a session worker; authority/reference already gone.
@@ -614,25 +730,28 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         return Thread.currentThread()===ownerThread && snapshot.state==SessionState.READY && snapshot.generation==held.generation &&
             selected?.id==held.actionId && selected?.status==held.status && held.access?.heldAllowed()==true
     }
+    private fun boundedInputMetadata(key:ProductInputScreenKey)=Thread.currentThread()===ownerThread && pageInput===key && key.matches(this) && snapshot.state==SessionState.READY
     internal fun inputScreenLive(key:ProductInputScreenKey):Boolean {
-        if(boundedListVisible)return Thread.currentThread()===ownerThread && pageInput===key && key.matches(this) && snapshot.state==SessionState.READY && pageAccess?.heldAllowed()==true
+        if(boundedSurfaceVisible)return boundedInputMetadata(key) && pageAccess?.readBindingLive()==true
         val held=workspaceValue?:return false
         return Thread.currentThread()===ownerThread && held.uiRows?.inputScreen===key && key.matches(this) &&
             snapshot.state==SessionState.READY && snapshot.generation==held.generation && selected?.id==held.actionId &&
             (held.access?.heldAllowed() ?: (workspaceRepository==null))
     }
     internal fun reserveInput(key:ProductInputScreenKey,units:ActiveWorkspaceBudget.Units):Boolean {
-        if(!inputScreenLive(key))return false
-        if(boundedListVisible){
+        if(boundedSurfaceVisible){
+            if(!boundedInputMetadata(key))return false
+            // consume already reacquires READY and checks the original context on both sides.
             if(pageAccess?.consume(units){}!=true){workspaceRefusal=WorkspaceFailure.BUDGET_REFUSED;workspaceError=true;return false}
-            return inputScreenLive(key)
+            return boundedInputMetadata(key)
         }
+        if(!inputScreenLive(key))return false
         val failure=applyWorkspaceCopy(units){}
         if(failure!=null){workspaceRefusal=if(failure==OperationsFailure.BUDGET_REFUSED)WorkspaceFailure.BUDGET_REFUSED else WorkspaceFailure.NOT_ALLOWED;workspaceError=true;return false}
         return inputScreenLive(key)
     }
     internal fun inputScreenKey(@Suppress("UNUSED_PARAMETER") revision:Long=uiPresentationRevision):Any? {
-        if(boundedListVisible){
+        if(boundedSurfaceVisible){
             pageInput?.takeIf{it.matches(this)}?.let{return it}
             var key:ProductInputScreenKey?=null
             if(pageAccess?.consume(ActiveWorkspaceBudget.Units(objects=16,references=256)){key=ProductInputScreenKey(this)}!=true)return DeniedProductInputScope
@@ -858,7 +977,11 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val before = snapshot
         val action = selected ?: return
         if (!activeNavigationEnabled || (area == ActiveArea.MATERIAL && !materialAvailable) || (area == ActiveArea.COSTS && !expensesAvailable) || (area == ActiveArea.MEMORY_REPORTS && !memoryReportsAvailable)) return
-        if((boundedPage || coreSlot.get()!=null) && (area==ActiveArea.TASKS || area==ActiveArea.PERSONS) && loadBoundedPage(area,false))return
+        if((boundedPage || coreSlot.get()!=null) && area in supportedActiveAreaGroup1){
+            if(tasks.form || personForm || operations.editingRole!=null || operations.deletingRole!=null || operations.screen==OperationsScreen.PLAN || operations.screen==OperationsScreen.LIVE || operations.screen==OperationsScreen.FUNCTION || operations.screen==OperationsScreen.NEW_FUNCTION){showFeedback("Bitte den Entwurf zuerst speichern oder abbrechen.");return}
+            if(detailLoading || workspaceRefreshing)return
+            if(loadBoundedPage(area,false)){interaction();return}
+        }
         if(boundedPage){
             // A selected detail is not a complete workspace or a global hub projection.
             clearPersons(preserveWorkspace=true);fullActiveView=true;activeArea=area;workspace=null
@@ -1050,7 +1173,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     private fun clearPersons(preserveCore:Boolean=false,preserveWorkspace:Boolean=false) {
         if(!preserveCore && !preserveWorkspace)clearActiveCore()
-        if(!preserveWorkspace){pageAccess=null;pageRows=null;pageRoles=emptyList();pageInput=null;choiceRows=null;choiceLoading=false;choiceFailure=null;choiceEpoch++;boundedPage=false;pageEpoch++;tasksNext=null;peopleNext=null}
+        if(!preserveWorkspace){functionsChild?.presentation?.invalidate();hubChild?.presentation?.invalidate();functionsChild=null;hubChild=null;pageAccess=null;pageRows=null;pageRoles=emptyList();pageInput=null;choiceRows=null;choiceLoading=false;choiceFailure=null;choiceEpoch++;boundedPage=false;pageEpoch++;tasksNext=null;peopleNext=null}
         fullActiveView=preserveWorkspace && workspaceValue?.status==ActionStatus.ACTIVE
         if(!preserveWorkspace){workspaceTicket?.cancel();workspaceTicket=null}
         preparationArea = PreparationArea.OVERVIEW; activeArea = ActiveArea.HUB; workspaceRefreshing = false
@@ -1694,6 +1817,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
     }
     fun lock() { cancelLeadershipRecovery();documentPicker?.cancel(); session.lock() }
     internal var uiPresentationRevision by mutableLongStateOf(0L);private set
+    /** Physical DOWN renews only the existing READY idle deadline; it changes no callback data. */
+    fun userActivity(){session.userInteraction()}
     fun interaction(){uiPresentationRevision=Math.incrementExact(uiPresentationRevision);session.userInteraction()}
     fun createScreen() { cancelLeadershipRecovery();interaction(); if (snapshot.state == SessionState.READY) { clearPersons();selected = null; creating = true } }
     fun back() { cancelLeadershipRecovery();documentPicker?.cancel(); if (memoryReports.available && memoryReports.dirty) { memoryReports.requestLeave { back() }; return }; interaction(); selected = null; creating = false; editing = null; confirming = null; changeError = null; clearPersons() }
