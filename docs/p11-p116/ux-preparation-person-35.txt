@@ -1,0 +1,14 @@
+INSTRUMENTATION_STATUS: stream=P116 {"synthetic_authentication":true,"profile":"p111-small","kind":"READY","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[{"class":"android.view.View","bounds":"[63,332][645,558]","visible":true,"scroll":false,"enabled":true},{"text":"Sperren","class":"android.widget.TextView","bounds":"[126,353][582,537]","visible":true,"scroll":false,"enabled":true},{"class":"android.widget.ScrollView","bounds":"[63,621][1017,2211]","visible":true,"scroll":true,"enabled":true},{"class":"android.view.View","bounds":"[63,621][783,847]","visible":true,"scroll":false,"enabled":true},{"text":"‹ Aktionen","class":"android.widget.TextView","bounds":"[126,642][720,826]","visible":true,"scroll":false,"enabled":true},{"text":"Synthetic action","class":"android.widget.TextView","bounds":"[63,889][1017,1551]","visible":true,"scroll":false,"enabled":true},{"text":"VORBEREITUNG","class":"android.widget.TextView","bounds":"[63,1593][1007,1777]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1819][858,2045]","visible":true,"scroll":false,"enabled":true},{"text":"Dokumente","class":"android.widget.TextView","bounds":"[126,1840][795,2024]","visible":true,"scroll":false,"enabled":true},{"text":"✓ Übersicht","class":"android.widget.TextView","bounds":"[126,2087][826,2211]","visible":true,"scroll":false,"enabled":true}],"kind":"GEOMETRY","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[{"class":"android.view.View","bounds":"[63,332][645,558]","visible":true,"scroll":false,"enabled":true},{"text":"Sperren","class":"android.widget.TextView","bounds":"[126,353][582,537]","visible":true,"scroll":false,"enabled":true},{"class":"android.widget.ScrollView","bounds":"[63,621][1017,2211]","visible":true,"scroll":true,"enabled":true},{"text":"Ungespeicherter Entwurf: Beim Verlassen der Bearbeitung oder Bereichswechsel wird er verworfen.","class":"android.widget.TextView","bounds":"[63,621][1017,2211]","visible":true,"scroll":false,"enabled":true}],"kind":"GEOMETRY","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"error":"java.lang.IllegalStateException: timeout input\n\tat org.pag.prototype.P116UxProbe.await(P116UxProbe.kt:20)\n\tat org.pag.prototype.P116UxProbe.onStart(P116UxProbe.kt:95)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","kind":"FAIL","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P116 FAIL
+INSTRUMENTATION_CODE: 0

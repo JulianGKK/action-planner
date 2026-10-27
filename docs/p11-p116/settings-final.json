@@ -1,0 +1,19 @@
+{
+  "before": {
+    "secure:enabled_accessibility_services": "",
+    "secure:accessibility_enabled": "0",
+    "secure:high_text_contrast_enabled": "null",
+    "system:accelerometer_rotation": "1",
+    "system:user_rotation": "0",
+    "system:font_scale": "0.9"
+  },
+  "after": {
+    "secure:enabled_accessibility_services": "",
+    "secure:accessibility_enabled": "0",
+    "secure:high_text_contrast_enabled": "null",
+    "system:accelerometer_rotation": "1",
+    "system:user_rotation": "0",
+    "system:font_scale": "0.9"
+  },
+  "match": true
+}

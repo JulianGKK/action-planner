@@ -1,0 +1,83 @@
+[
+  {
+    "label": "verified-small-1",
+    "settings": {
+      "font": "1.0",
+      "rotation": "0",
+      "contrast": "0"
+    },
+    "driver_exit": 0
+  },
+  {
+    "label": "verified-small-2",
+    "settings": {
+      "font": "2.0",
+      "rotation": "0",
+      "contrast": "0"
+    },
+    "driver_exit": 0
+  },
+  {
+    "label": "verified-small-35",
+    "settings": {
+      "font": "3.5",
+      "rotation": "0",
+      "contrast": "0"
+    },
+    "driver_exit": 0
+  },
+  {
+    "label": "verified-large-1",
+    "settings": {
+      "font": "1.0",
+      "rotation": "0",
+      "contrast": "0"
+    },
+    "driver_exit": 0
+  },
+  {
+    "label": "verified-large-35",
+    "settings": {
+      "font": "3.5",
+      "rotation": "0",
+      "contrast": "0"
+    },
+    "driver_exit": 0
+  },
+  {
+    "label": "landscape-1",
+    "settings": {
+      "font": "1.0",
+      "rotation": "1",
+      "contrast": "0"
+    },
+    "driver_exit": 0
+  },
+  {
+    "label": "landscape-35",
+    "settings": {
+      "font": "3.5",
+      "rotation": "1",
+      "contrast": "0"
+    },
+    "driver_exit": 0
+  },
+  {
+    "label": "highcontrast-2",
+    "settings": {
+      "font": "2.0",
+      "rotation": "0",
+      "contrast": "1"
+    },
+    "driver_exit": 0
+  },
+  {
+    "label": "preparation-person-35",
+    "settings": {
+      "font": "3.5",
+      "rotation": "0",
+      "contrast": "0"
+    },
+    "driver_exit": 2
+  }
+]

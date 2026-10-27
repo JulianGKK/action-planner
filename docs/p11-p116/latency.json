@@ -1,0 +1,162 @@
+[
+  {
+    "fixture": "small",
+    "route": "HUB->PERSONS",
+    "n": 5,
+    "p50_ms": 96.599739,
+    "p95_ms": 127.323541,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "small"
+  },
+  {
+    "fixture": "small",
+    "route": "PERSONS->FUNCTIONS",
+    "n": 5,
+    "p50_ms": 97.848854,
+    "p95_ms": 111.608541,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "small"
+  },
+  {
+    "fixture": "small",
+    "route": "FUNCTIONS->TASKS",
+    "n": 5,
+    "p50_ms": 98.567395,
+    "p95_ms": 116.419218,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "small"
+  },
+  {
+    "fixture": "small",
+    "route": "TASKS->HUB",
+    "n": 5,
+    "p50_ms": 121.801562,
+    "p95_ms": 135.519688,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "small"
+  },
+  {
+    "fixture": "small",
+    "route": "HUB->TASKS",
+    "n": 5,
+    "p50_ms": 94.109062,
+    "p95_ms": 110.316198,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "small"
+  },
+  {
+    "fixture": "small",
+    "route": "TASKS->FUNCTIONS",
+    "n": 5,
+    "p50_ms": 101.385052,
+    "p95_ms": 105.784531,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "small"
+  },
+  {
+    "fixture": "small",
+    "route": "FUNCTIONS->PERSONS",
+    "n": 5,
+    "p50_ms": 103.46401,
+    "p95_ms": 108.298854,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "small"
+  },
+  {
+    "fixture": "small",
+    "route": "PERSONS->HUB",
+    "n": 5,
+    "p50_ms": 116.055886,
+    "p95_ms": 131.386823,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "small"
+  },
+  {
+    "fixture": "large",
+    "route": "HUB->PERSONS",
+    "n": 5,
+    "p50_ms": 95.550469,
+    "p95_ms": 117.52375,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "large"
+  },
+  {
+    "fixture": "large",
+    "route": "PERSONS->FUNCTIONS",
+    "n": 5,
+    "p50_ms": 105.910209,
+    "p95_ms": 138.218958,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "large"
+  },
+  {
+    "fixture": "large",
+    "route": "FUNCTIONS->TASKS",
+    "n": 5,
+    "p50_ms": 103.30099,
+    "p95_ms": 111.351302,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "large"
+  },
+  {
+    "fixture": "large",
+    "route": "TASKS->HUB",
+    "n": 5,
+    "p50_ms": 115.325938,
+    "p95_ms": 123.764115,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "large"
+  },
+  {
+    "fixture": "large",
+    "route": "HUB->TASKS",
+    "n": 5,
+    "p50_ms": 91.405313,
+    "p95_ms": 109.212604,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "large"
+  },
+  {
+    "fixture": "large",
+    "route": "TASKS->FUNCTIONS",
+    "n": 5,
+    "p50_ms": 113.250885,
+    "p95_ms": 121.620729,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "large"
+  },
+  {
+    "fixture": "large",
+    "route": "FUNCTIONS->PERSONS",
+    "n": 5,
+    "p50_ms": 94.363698,
+    "p95_ms": 103.528021,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "large"
+  },
+  {
+    "fixture": "large",
+    "route": "PERSONS->HUB",
+    "n": 5,
+    "p50_ms": 114.745156,
+    "p95_ms": 123.953594,
+    "within_150ms": true,
+    "kind": "ROUTE",
+    "scenario": "large"
+  }
+]

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.CompletedProtocolWorkspaceTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-27T15:14:07.853Z" hostname="iuzjhtgvfc" time="0.418">
+  <properties/>
+  <testcase name="completedP6WorksButOtherModelsAndActionRemainReadOnly" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.287"/>
+  <testcase name="activeDraftIsClearedByActualLifecycleAndFollowUpRequiresFreshTap" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.019"/>
+  <testcase name="p116CompletedChildKeepsOriginalTicketAndPublishesWithoutSecondWorkspace" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.063"/>
+  <testcase name="completedPageHasNoProtocolReadsUntilExplicitTapAndKeepsValidPeopleSnapshot" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.003"/>
+  <testcase name="p116FirstCompletedChildBudgetRefusalStopsLoadingBeforeRead" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.004"/>
+  <testcase name="p116ReadOnlyDocumentBackKeepsSameOriginalWorkspace" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.011"/>
+  <testcase name="p116PreservedCompletedTicketStillDiesAtLockAndLateResultCannotFollowReauth" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.006"/>
+  <testcase name="openingRejectsSynchronousInteractionAndCleanupRevoke" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.009"/>
+  <testcase name="p116RevokedOriginalPublicationRejectsChildWithoutPublishingPayload" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.003"/>
+  <testcase name="lockReauthAndActionChangeRemoveFollowUpAndLatePublication" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.009"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

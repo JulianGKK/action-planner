@@ -1,0 +1,153 @@
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=0;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=WAIT;afterDecisionAccepted=notAttempted
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=1;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=WAIT;afterDecisionAccepted=notAttempted
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=2;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=WAIT;afterDecisionAccepted=notAttempted
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=3;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=WAIT;afterDecisionAccepted=notAttempted
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=4;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=WAIT;afterDecisionAccepted=notAttempted
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=5;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=6;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=7;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=8;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=9;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=10;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=11;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=12;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=13;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=14;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=15;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=16;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=17;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=18;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=19;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=20;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=21;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=22;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=23;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=24;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=25;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=26;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=27;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=28;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=29;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=30;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=31;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=32;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=33;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=34;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=35;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=36;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=37;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=38;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=39;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=40;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=41;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=42;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=43;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=44;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=45;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=46;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=47;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=48;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=VISIBLE_EXHAUSTED;attempt=49;phase=change-function;rootOwned=true;target=false;targetPositive=false;intersectsScroll=false;targetBounds=absent;scroll=true;scrollBounds=63:293:1017:2211;back=true;forward=false;beforeDecision=FORWARD;afterDecisionAccepted=false
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=UX3d probe failed; font=2.0; phase=change-function; category=UNREACHABLE; lines=[97, 62, 174]; ; no input data logged
+
+INSTRUMENTATION_CODE: 0

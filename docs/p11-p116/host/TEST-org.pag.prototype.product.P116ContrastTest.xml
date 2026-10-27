@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.P116ContrastTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-27T15:14:09.392Z" hostname="iuzjhtgvfc" time="0.057">
+  <properties/>
+  <testcase name="enabledProductTextTokensMeetNormalTextContrast" classname="org.pag.prototype.product.P116ContrastTest" time="0.057"/>
+  <system-out><![CDATA[P116_CONTRAST surface 16.231337
+P116_CONTRAST primary 6.441234
+P116_CONTRAST error 6.536488
+P116_CONTRAST secondaryContainer 13.2404375
+P116_CONTRAST surfaceVariant 7.239898
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

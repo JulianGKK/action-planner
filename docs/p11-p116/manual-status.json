@@ -1,0 +1,6 @@
+{
+  "status": "NOT_TESTED",
+  "reason": "User explicitly requested: TalkBack Testungen \u00fcberspringen",
+  "driver_receipt": "ux-manual-talkback-1.txt",
+  "driver_PASS_is_not_manual_acceptance": true
+}

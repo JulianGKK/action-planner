@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[],"kind":"GEOMETRY","mode":"completed","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"ledger":"State(phase=RETIRED, retained=0, transition=0, localRetained=0, localTransition=0, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=true, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)","kind":"FAIL_LEDGER","mode":"completed","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"error":"java.lang.IllegalStateException: timeout focus\n\tat org.pag.prototype.P116UxProbe.await(P116UxProbe.kt:20)\n\tat org.pag.prototype.P116UxProbe.onStart(P116UxProbe.kt:55)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","kind":"FAIL","mode":"completed","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P116 FAIL
+INSTRUMENTATION_CODE: 0

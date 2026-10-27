@@ -1,0 +1,592 @@
+[
+  {
+    "file": "ux-action-switch.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "REOPEN_RESULT",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-active-1-final.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-active-1-retry.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-active-1.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-active-2-final.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-active-35-before.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-active-35-final.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-active-35-fixed.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-active-35-geometry.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-active-35-product-before.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-active-35-wrap.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-completed-documents-final.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "COMPLETED_BACK_VISIBLE",
+      "OWNER_COUNTERS",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-completed-documents-fixed.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-documents-reviewed.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-documents-supplement.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-documents-unlocked.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "COMPLETED_BACK_VISIBLE",
+      "OWNER_COUNTERS",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-completed-documents.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-expense-fixed.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-expense-supplement.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "COMPLETED_BACK_VISIBLE",
+      "OWNER_COUNTERS",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-completed-expense.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-material-fixed.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-material-supplement.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "COMPLETED_BACK_VISIBLE",
+      "OWNER_COUNTERS",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-completed-material.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-memory-fixed.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-memory-supplement.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "COMPLETED_BACK_VISIBLE",
+      "OWNER_COUNTERS",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-completed-memory.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-protocol-fixed.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed-protocol-supplement.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "COMPLETED_BACK_VISIBLE",
+      "OWNER_COUNTERS",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-completed-protocol.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-completed.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "DETAIL_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-documents.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "DOCUMENT_LIST_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-expense-budget.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "UI_SAVE_RESULT",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-expense-model-value.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "UI_SAVE_RESULT",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-frozen-documents.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "COMPLETED_BACK_VISIBLE",
+      "OWNER_COUNTERS",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-frozen-protocol.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "COMPLETED_CHILD_VISIBLE",
+      "COMPLETED_BACK_VISIBLE",
+      "OWNER_COUNTERS",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-fullview.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-highcontrast-2.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-journey-before.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "ACTION_FORM_VISIBLE",
+      "DRAFT_VISIBLE",
+      "PREPARATION",
+      "ACTIVE",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-journey-current-root.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "ACTION_FORM_VISIBLE",
+      "DRAFT_VISIBLE",
+      "PREPARATION",
+      "ACTIVE",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-journey-final.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "ACTION_FORM_VISIBLE",
+      "DRAFT_VISIBLE",
+      "PREPARATION",
+      "ACTIVE",
+      "FAIL_LEDGER",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-landscape-1.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-landscape-35.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-manual-talkback-1.txt",
+    "raw_result": "NOT_TESTED (manual skipped; driver result is not acceptance)",
+    "kinds": [
+      "READY",
+      "MANUAL_READY",
+      "MANUAL_END",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-preparation-expense-complete.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-preparation-expense.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-preparation-material.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "UI_CREATE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-preparation-person-35-scrolled.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "UI_SAVE_RESULT",
+      "UI_CREATE_VISIBLE",
+      "OWNER_COUNTERS",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-preparation-person-35.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-preparation-person.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "UI_CREATE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-preparation-role.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "UI_CREATE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-preparation-task-positive.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "UI_CREATE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-preparation-task.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-reauth.txt",
+    "raw_result": "FAIL",
+    "kinds": [
+      "READY",
+      "REOPEN_RESULT",
+      "FAIL"
+    ]
+  },
+  {
+    "file": "ux-verified-large-1.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-verified-large-35.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-verified-small-1.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-verified-small-2.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  },
+  {
+    "file": "ux-verified-small-35.txt",
+    "raw_result": "PASS",
+    "kinds": [
+      "READY",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "ROUTE_VISIBLE",
+      "PASS"
+    ]
+  }
+]

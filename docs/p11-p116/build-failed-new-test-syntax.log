@@ -1,0 +1,437 @@
+> Task :verifyArchitecture
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:mergeP77runtimeNativeDebugMetadata NO-SOURCE
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeRFile UP-TO-DATE
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:kspDebugKotlin UP-TO-DATE
+> Task :data:compileDebugKotlin UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:compileDebugJavaWithJavac NO-SOURCE
+> Task :data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:javaPreCompileP77runtime UP-TO-DATE
+> Task :app:generateP77runtimeAssets UP-TO-DATE
+> Task :data:generateDebugAssets UP-TO-DATE
+> Task :data:mergeDebugAssets UP-TO-DATE
+> Task :security:generateDebugAssets UP-TO-DATE
+> Task :security:mergeDebugAssets UP-TO-DATE
+> Task :app:mergeP77runtimeAssets UP-TO-DATE
+> Task :app:compressP77runtimeAssets UP-TO-DATE
+> Task :app:generateP77runtimeGlobalSynthetics UP-TO-DATE
+> Task :app:checkP77runtimeDuplicateClasses UP-TO-DATE
+> Task :app:desugarP77runtimeFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexP77runtime UP-TO-DATE
+> Task :data:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :security:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :app:mergeLibDexP77runtime UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :security:writeDebugAarMetadata UP-TO-DATE
+> Task :app:checkP77runtimeAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeResources UP-TO-DATE
+> Task :app:createP77runtimeCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksP77runtime UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :security:extractDeepLinksDebug UP-TO-DATE
+> Task :security:processDebugManifest UP-TO-DATE
+> Task :app:processP77runtimeMainManifest UP-TO-DATE
+> Task :app:processP77runtimeManifest UP-TO-DATE
+> Task :app:processP77runtimeManifestForPackage UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :security:compileDebugLibraryResources UP-TO-DATE
+> Task :app:processP77runtimeResources UP-TO-DATE
+> Task :app:mergeP77runtimeJniLibFolders UP-TO-DATE
+> Task :data:configureNdkBuildDebug[arm64-v8a]
+> Task :data:buildNdkBuildDebug[arm64-v8a]
+> Task :data:configureNdkBuildDebug[armeabi-v7a]
+> Task :data:buildNdkBuildDebug[armeabi-v7a]
+> Task :data:configureNdkBuildDebug[x86]
+> Task :data:buildNdkBuildDebug[x86]
+> Task :data:configureNdkBuildDebug[x86_64]
+> Task :data:buildNdkBuildDebug[x86_64]
+> Task :data:mergeDebugJniLibFolders UP-TO-DATE
+> Task :data:mergeDebugNativeLibs UP-TO-DATE
+> Task :data:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :security:mergeDebugJniLibFolders UP-TO-DATE
+> Task :security:mergeDebugNativeLibs NO-SOURCE
+> Task :security:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeP77runtimeNativeLibs UP-TO-DATE
+> Task :app:stripP77runtimeDebugSymbols UP-TO-DATE
+> Task :app:preparePrototypeDebugKeystore UP-TO-DATE
+> Task :app:validateSigningP77runtime UP-TO-DATE
+> Task :app:writeP77runtimeAppMetadata UP-TO-DATE
+> Task :app:writeP77runtimeSigningConfigVersions UP-TO-DATE
+> Task :app:preP77runtimeAndroidTestBuild SKIPPED
+> Task :app:mergeP77runtimeAndroidTestManifest UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestManifest UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:packageP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeAndroidTestLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestRFile UP-TO-DATE
+> Task :app:javaPreCompileP77runtimeAndroidTest UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:compressP77runtimeAndroidTestAssets UP-TO-DATE
+> Task :app:generateP77runtimeAndroidTestGlobalSynthetics UP-TO-DATE
+> Task :app:checkP77runtimeAndroidTestDuplicateClasses UP-TO-DATE
+> Task :app:desugarP77runtimeAndroidTestFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexP77runtimeAndroidTest UP-TO-DATE
+> Task :app:mergeLibDexP77runtimeAndroidTest UP-TO-DATE
+> Task :app:checkP77runtimeAndroidTestAarMetadata UP-TO-DATE
+> Task :app:mapP77runtimeAndroidTestSourceSetPaths UP-TO-DATE
+> Task :app:compileP77runtimeAndroidTestNavigationResources UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestResources UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestJniLibFolders UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestNativeLibs NO-SOURCE
+> Task :app:stripP77runtimeAndroidTestDebugSymbols NO-SOURCE
+> Task :app:validateSigningP77runtimeAndroidTest UP-TO-DATE
+> Task :app:writeP77runtimeAndroidTestSigningConfigVersions UP-TO-DATE
+> Task :app:preP77runtimeUnitTestBuild
+> Task :app:javaPreCompileP77runtimeUnitTest UP-TO-DATE
+> Task :data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+
+> Task :app:compileP77runtimeKotlin
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:836:27 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CompactFunctions'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:836:59 Unnecessary non-null assertion (!!) on a non-null receiver of type 'CompactFunctions'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:1107:218 'when' is exhaustive so 'else' is redundant here.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:1269:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:1287:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:1305:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:1323:110 Unnecessary safe call on a non-null receiver of type 'WorkspaceSnapshot'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:1546:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:1549:98 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+w: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt:1557:120 Unnecessary non-null assertion (!!) on a non-null receiver of type 'LeadershipRepository'.
+
+> Task :app:compileP77runtimeJavaWithJavac UP-TO-DATE
+> Task :app:processP77runtimeJavaRes UP-TO-DATE
+> Task :app:mergeP77runtimeJavaResource UP-TO-DATE
+> Task :app:dexBuilderP77runtime
+> Task :app:bundleP77runtimeClassesToRuntimeJar
+> Task :app:bundleP77runtimeClassesToCompileJar
+> Task :app:compileP77runtimeAndroidTestKotlin
+> Task :app:compileP77runtimeAndroidTestJavaWithJavac UP-TO-DATE
+> Task :app:processP77runtimeAndroidTestJavaRes UP-TO-DATE
+> Task :app:mergeP77runtimeAndroidTestJavaResource UP-TO-DATE
+> Task :app:dexBuilderP77runtimeAndroidTest UP-TO-DATE
+> Task :app:mergeProjectDexP77runtimeAndroidTest UP-TO-DATE
+> Task :app:packageP77runtimeAndroidTest UP-TO-DATE
+> Task :app:createP77runtimeAndroidTestApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleP77runtimeAndroidTest UP-TO-DATE
+> Task :app:mergeProjectDexP77runtime
+> Task :app:packageP77runtime
+> Task :app:createP77runtimeApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleP77runtime
+
+> Task :app:compileP77runtimeUnitTestKotlin
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:75:17 Conflicting declarations:
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:80:26 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:80:32 Unresolved reference 'detail'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:83:13 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:83:19 Unresolved reference 'activeArea'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:87:42 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:87:48 Unresolved reference 'workspace'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:89:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:89:15 Unresolved reference 'openCompletedProtocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:89:51 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:89:57 Unresolved reference 'completedProtocolOpen'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:89:100 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:89:106 Unresolved reference 'workspace'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:91:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:91:15 Unresolved reference 'closeCompletedProtocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:91:53 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:91:59 Unresolved reference 'completedProtocolOpen'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:91:94 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:91:100 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:94:29 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:94:35 Unresolved reference 'openCompletedProtocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:94:60 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:94:66 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:94:101 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:94:107 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:96:21 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:96:27 Unresolved reference 'tasks'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:96:56 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:96:62 Unresolved reference 'operations'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:96:92 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:96:98 Unresolved reference 'operations'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:97:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:97:15 Unresolved reference 'tasks'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:97:28 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:97:34 Unresolved reference 'tasks'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:97:52 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:97:58 Unresolved reference 'tasks'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:97:72 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:97:78 Unresolved reference 'tasks'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:97:113 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:97:119 Unresolved reference 'tasks'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:98:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:98:15 Unresolved reference 'operations'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:98:51 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:98:57 Unresolved reference 'operations'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:98:79 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:98:85 Unresolved reference 'operations'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:98:109 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:98:115 Unresolved reference 'operations'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:98:138 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:98:144 Unresolved reference 'operations'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:99:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:99:15 Unresolved reference 'edit'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:99:23 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:99:29 Unresolved reference 'requestAdvance'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:99:47 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:99:53 Unresolved reference 'confirmAdvance'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:100:20 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:100:26 Unresolved reference 'editing'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:100:47 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:100:53 Unresolved reference 'confirming'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:101:46 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:101:52 Unresolved reference 'selected'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:101:63 Unresolved reference 'status'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:105:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:105:15 Unresolved reference 'activeArea'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:105:60 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:105:66 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:106:20 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:106:26 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:106:42 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:106:48 Unresolved reference 'requestAdvance'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:106:66 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:106:72 Unresolved reference 'confirmAdvance'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:107:46 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:107:52 Unresolved reference 'selected'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:107:63 Unresolved reference 'status'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:107:84 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:107:90 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:108:20 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:108:26 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:108:58 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:108:64 Unresolved reference 'completedProtocolOpen'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:109:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:109:15 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:110:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:110:15 Unresolved reference 'openCompletedProtocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:110:51 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:110:57 Unresolved reference 'completedProtocolOpen'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:110:92 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:110:98 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:113:29 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:113:35 Unresolved reference 'openCompletedProtocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:114:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:114:15 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:115:21 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:115:27 Unresolved reference 'completedProtocolOpen'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:115:62 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:115:68 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:115:96 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:115:102 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:116:78 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:116:84 Unresolved reference 'completedProtocolOpen'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:117:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:117:15 Unresolved reference 'openCompletedProtocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:118:9 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:118:15 Unresolved reference 'detail'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:119:21 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:119:27 Unresolved reference 'completedProtocolOpen'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:119:62 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:119:68 Unresolved reference 'protocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:122:73 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:122:79 Unresolved reference 'openCompletedProtocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:123:21 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:123:27 Unresolved reference 'completedProtocolOpen'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:125:51 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:125:57 Unresolved reference 'openCompletedProtocol'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:126:21 Overload resolution ambiguity between candidates:
+val model: ProductViewModel
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:126:27 Unresolved reference 'completedProtocolOpen'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:156:13 Conflicting declarations:
+val model: ProductViewModel
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:158:30 Unresolved reference 'workspace'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:162:15 Unresolved reference 'OriginalCompleted'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:164:27 Unresolved reference 'active'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:165:9 No value passed for parameter 'value'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:165:9 Cannot infer type for type parameter 'T'. Specify it explicitly.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:165:9 Cannot infer type for type parameter 'R'. Specify it explicitly.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:168:48 Unresolved reference 'access'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:169:60 Unresolved reference 'active'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:172:15 Unresolved reference 'OriginalCompleted'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:173:49 Unresolved reference 'active'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:174:46 Unresolved reference 'late'.
+e: file:///home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt:180:1 Syntax error: Expecting a top level declaration.
+
+> Task :app:compileP77runtimeUnitTestKotlin FAILED
+
+[Incubating] Problems report is available at: file:///home/julian-tio-valenzuela/Projekte/action-planner/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileP77runtimeUnitTestKotlin' (registered by plugin 'com.android.internal.application').
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
+   > Kotlin compiler: REDECLARATION
+       Kotlin compiler error
+         Conflicting declarations:
+         val model: ProductViewModel
+         Location: /home/julian-tio-valenzuela/Projekte/action-planner/app/src/test/kotlin/org/pag/prototype/product/CompletedProtocolWorkspaceTest.kt line 75
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 18s
+126 actionable tasks: 17 executed, 109 up-to-date

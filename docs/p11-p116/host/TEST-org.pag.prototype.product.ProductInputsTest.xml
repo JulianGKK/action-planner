@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ProductInputsTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-27T15:14:09.656Z" hostname="iuzjhtgvfc" time="0.059">
+  <properties/>
+  <testcase name="idleNavigationNeedsNoImeCallButLosingAFieldStillRequiresCleanup" classname="org.pag.prototype.product.ProductInputsTest" time="0.003"/>
+  <testcase name="consumedButtonsHoldGesturesAndScrollingAreNotIntercepted" classname="org.pag.prototype.product.ProductInputsTest" time="0.003"/>
+  <testcase name="saveCancelNavigationAndImeCompletionDismissAndDropFocus" classname="org.pag.prototype.product.ProductInputsTest" time="0.001"/>
+  <testcase name="cancellationFocusNavigationAndLifecycleResetAreIrreversibleUntilNewPress" classname="org.pag.prototype.product.ProductInputsTest" time="0.001"/>
+  <testcase name="counterAndValidatorShareUnicodeCodepoints" classname="org.pag.prototype.product.ProductInputsTest" time="0.047"/>
+  <testcase name="leavingIconDoesNotRevealAgainOnReentry" classname="org.pag.prototype.product.ProductInputsTest" time="0.0"/>
+  <testcase name="fieldTransferDoesNotDismissKeyboard" classname="org.pag.prototype.product.ProductInputsTest" time="0.001"/>
+  <testcase name="counterDescribesTechnicalBoundsWithoutStrengthPromise" classname="org.pag.prototype.product.ProductInputsTest" time="0.001"/>
+  <testcase name="backgroundTapDismissesButTextFieldTapDoesNot" classname="org.pag.prototype.product.ProductInputsTest" time="0.001"/>
+  <testcase name="revealRequiresHeldPressAndReleaseMasks" classname="org.pag.prototype.product.ProductInputsTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

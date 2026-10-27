@@ -1,0 +1,35 @@
+INSTRUMENTATION_STATUS: stream=P116 {"synthetic_authentication":true,"profile":"p111-small","kind":"READY","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[{"class":"android.view.View","bounds":"[762,174][1017,300]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,300][356,426]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,607][301,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[301,607][539,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[539,607][778,755]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[778,607][1017,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[0,755][1080,2274]","visible":true,"scroll":true,"enabled":true},{"class":"android.view.View","bounds":"[63,1050][1017,1460]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1492][1017,1902]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1934][1017,2274]","visible":true,"scroll":false,"enabled":true}],"kind":"GEOMETRY","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[{"class":"android.view.View","bounds":"[762,174][1017,300]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,300][356,426]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,607][301,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[301,607][539,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[539,607][778,755]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[778,607][1017,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[0,755][1080,2274]","visible":true,"scroll":true,"enabled":true},{"class":"android.view.View","bounds":"[63,1039][1017,1165]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1207][1017,1333]","visible":true,"scroll":false,"enabled":false},{"class":"android.view.View","bounds":"[63,1375][1017,1564]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1606][1017,1795]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1837][1017,2026]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,2068][1017,2257]","visible":true,"scroll":false,"enabled":true}],"kind":"GEOMETRY","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"area":"PERSONS","kind":"ROUTE_VISIBLE","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[{"class":"android.view.View","bounds":"[762,174][1017,300]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,300][356,426]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,607][301,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[301,607][539,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[539,607][778,755]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[778,607][1017,733]","visible":true,"scroll":false,"enabled":true}],"kind":"GEOMETRY","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"area":"FUNCTIONS","kind":"ROUTE_VISIBLE","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[{"class":"android.view.View","bounds":"[762,174][1017,300]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,300][356,426]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,607][301,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[301,607][539,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[539,607][778,755]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[778,607][1017,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[0,755][1080,2274]","visible":true,"scroll":true,"enabled":true},{"class":"android.view.View","bounds":"[63,1039][1017,1165]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1207][1017,1333]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1375][1017,1501]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1543][1017,1732]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1774][1017,1963]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,2005][1017,2194]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,2236][1017,2274]","visible":true,"scroll":false,"enabled":true}],"kind":"GEOMETRY","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"area":"TASKS","kind":"ROUTE_VISIBLE","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[{"class":"android.view.View","bounds":"[762,174][1017,300]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,300][356,426]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,607][301,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[301,607][539,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[539,607][778,755]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[778,607][1017,733]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[0,755][1080,2274]","visible":true,"scroll":true,"enabled":true},{"class":"android.view.View","bounds":"[63,1050][1017,1460]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1492][1017,1902]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1934][1017,2274]","visible":true,"scroll":false,"enabled":true}],"kind":"GEOMETRY","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"area":"HUB","kind":"ROUTE_VISIBLE","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"kind":"PASS","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P116 PASS
+INSTRUMENTATION_CODE: -1

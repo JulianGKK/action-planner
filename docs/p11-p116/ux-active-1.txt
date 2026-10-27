@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P116 {"synthetic_authentication":true,"profile":"p111-small","kind":"READY","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[],"kind":"GEOMETRY","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"error":"java.lang.IllegalStateException: UNREACHABLE navigation Personen\n\tat org.pag.prototype.P116UxProbe.onStart(P116UxProbe.kt:51)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","kind":"FAIL","mode":"active","font":1}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P116 FAIL
+INSTRUMENTATION_CODE: 0

@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P115_AUTHORITY {"error":"java.lang.IllegalStateException: P115 authority timeout focus\n\tat org.pag.prototype.P115AuthorityProbe.await(P115AuthorityProbe.kt:19)\n\tat org.pag.prototype.P115AuthorityProbe.onStart(P115AuthorityProbe.kt:28)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","kind":"FAIL"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P115 AUTHORITY FAIL
+INSTRUMENTATION_CODE: 0

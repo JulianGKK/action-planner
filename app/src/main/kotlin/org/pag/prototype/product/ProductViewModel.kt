@@ -616,13 +616,16 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (memoryReports.available && memoryReports.dirty) { memoryReports.requestLeave { openDocuments() }; return }
         interaction()
         if (snapshot.state!=SessionState.READY || snapshot.generation!=before.generation || selected!=a) return
-        clearPersons()
+        clearPersons(preserveWorkspace = !boundedPage && workspace?.access != null)
         documents.enter()
     }
     fun closeDocuments() {
         if (!documents.available || documents.busy) return
         interaction()
-        documentPicker?.cancel(); documents.clear(); loadWorkspace()
+        documentPicker?.cancel(); documents.clear()
+        // A read-only document visit can return to the still-authorized original graph.
+        // A writer/revoke makes this getter fail closed; it cannot revive that graph.
+        if(workspace==null)loadWorkspace()
     }
     var bootstrap by mutableStateOf(initialBootstrap); private set
     fun updateBootstrap(state: ProductStorageState) { bootstrap = state }
@@ -1053,6 +1056,28 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             held.protocolSummary,held.materialSummary,held.expenseSummary,held.memoryReportSummary,held.documentSummary,
             memoryHeaders=held.memoryHeaders,protocolTimeline=held.protocolTimeline,
             materialBoard=held.materialBoard,expenseBoard=held.expenseBoard,access=held.access,leadershipState=held.leadershipState)
+        // The first module read is a supplemental child, not a membership change
+        // to a list which has never been admitted. Reuse the existing original-owner
+        // supplement path; all envelopes below are covered by the control quote above.
+        val firstPart=when {
+            kind==WorkspaceDetailKind.PROTOCOL_TIMELINE && held.protocolTimeline==null->WorkspacePart.PROTOCOL_TIMELINE
+            kind==WorkspaceDetailKind.MEMORY_HEADERS && held.memoryHeaders==null->WorkspacePart.MEMORY_HEADERS
+            kind==WorkspaceDetailKind.MATERIAL_BOARD && held.materialBoard==null->WorkspacePart.MATERIAL_BOARD
+            kind==WorkspaceDetailKind.EXPENSE_BOARD && held.expenseBoard==null->WorkspacePart.EXPENSE_BOARD
+            else->null
+        }
+        if(firstPart!=null){
+            restoreOriginalModule(held,firstPart){updated,failure->
+                if(serial!=workspaceRequest || selected?.id!=action.id || snapshot.state!=SessionState.READY || snapshot.generation!=generation)return@restoreOriginalModule
+                if(failure!=null)done(WorkspaceDetailResult.Rejected(failure))
+                else if(updated!=null && original.publish(action.id,action.status,generation){}){
+                    val value=baseline.copy(materialBoard=updated.materialBoard,expenseBoard=updated.expenseBoard,
+                        protocolTimeline=updated.protocolTimeline,memoryHeaders=updated.memoryHeaders)
+                    done(WorkspaceDetailResult.Value(WorkspaceDetail(original,workspace=value)))
+                }
+            }
+            return
+        }
         var delivered=false
         workspaceRepository?.detail(original,WorkspaceDetailRequest(action.id,action.status,generation,kind,id,ticket,baseline,action,membership,taskPage=if(boundedPage)pageRows?.tasks else null,peoplePage=if(boundedPage)pageRows?.people else null)){result->
             if(delivered || serial!=workspaceRequest || selected?.id!=action.id || snapshot.state!=SessionState.READY || snapshot.generation!=generation)return@detail
@@ -1104,9 +1129,10 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if(active==ActiveArea.MEMORY_REPORTS)restoreOriginalModule(held,WorkspacePart.MEMORY_HEADERS)
         return true
     }
-    private fun restoreOriginalModule(held:WorkspaceSnapshot,part:WorkspacePart) {
+    private fun restoreOriginalModule(held:WorkspaceSnapshot,part:WorkspacePart,loaded:((WorkspaceSnapshot?,WorkspaceFailure?)->Unit)?=null) {
         val access=held.access?:return
         fun accept(value:WorkspaceSnapshot){
+            if(loaded!=null){loaded(value,null);return}
             if(part==WorkspacePart.MATERIAL_BOARD)value.materialBoard?.let{material.acceptWorkspaceBoard(value.actionId,value.generation,it)}
             if(part==WorkspacePart.EXPENSE_BOARD)value.expenseBoard?.let{expenses.acceptWorkspaceBoard(value.actionId,value.generation,it)}
             if(part==WorkspacePart.PROTOCOL_TIMELINE)value.protocolTimeline?.let{protocol.acceptWorkspaceTimeline(value.actionId,value.generation,it)}
@@ -1119,14 +1145,17 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         workspaceRefreshing=true
         workspaceRepository?.supplement(access,WorkspaceReadRequest(held.actionId,held.status,held.generation,setOf(part),ticket=workspaceTicket)){result->
             if(serial!=workspaceRequest || workspaceValue!==held)return@supplement
-            if(!access.publish(held.actionId,held.status,held.generation){})return@supplement
+            if(!access.publish(held.actionId,held.status,held.generation){}){
+                if(loaded!=null){workspaceRefreshing=false;workspaceRefusal=WorkspaceFailure.OWNER_UNCONFIRMED;workspaceError=true;loaded(null,WorkspaceFailure.OWNER_UNCONFIRMED)}
+                return@supplement
+            }
             run {
                 workspaceRefreshing=false
                 when(result){
-                    is WorkspaceSupplementResult.Rejected->{workspaceRefusal=result.reason;workspaceError=true}
+                    is WorkspaceSupplementResult.Rejected->{workspaceRefusal=result.reason;workspaceError=true;loaded?.invoke(null,result.reason)}
                     is WorkspaceSupplementResult.Value->{
                         val v=result.value
-                        if(v.actionId!=held.actionId || v.generation!=held.generation){workspaceRefusal=WorkspaceFailure.STALE;workspaceError=true;return@run}
+                        if(v.actionId!=held.actionId || v.generation!=held.generation){workspaceRefusal=WorkspaceFailure.STALE;workspaceError=true;loaded?.invoke(null,WorkspaceFailure.STALE);return@run}
                         // This header is included in the supplement's PRE-admitted finite builder/envelope costs.
                         val updated=held.copy(materialBoard=v.material?:held.materialBoard,expenseBoard=v.expenses?:held.expenseBoard,protocolTimeline=v.protocolTimeline?:held.protocolTimeline,memoryHeaders=v.memoryHeaders?:held.memoryHeaders)
                         workspace=updated;if(workspaceValue===updated)accept(updated)
@@ -1240,7 +1269,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (selected?.status != ActionStatus.COMPLETED || protocolRepository == null || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || material.busy || expenses.busy || memoryReports.busy) return
         val retained = workspace
         protocol.openCompletedFollowUp {
-            clearPersons()
+            // Local navigation borrows the same original record and live read ticket.
+            // Cancelling it here would revoke the only admitted child/detail path.
+            clearPersons(preserveWorkspace = retained?.access != null)
             if (retained?.actionId == selected?.id && retained?.generation == snapshot.generation && retained?.status == ActionStatus.COMPLETED) workspace = retained
             else loadWorkspace()
         }
@@ -1256,7 +1287,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (selected?.status != ActionStatus.COMPLETED || !materialAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy || expenses.busy || memoryReports.busy) return
         val retained = workspace
         material.openCompleted {
-            clearPersons()
+            // Local navigation borrows the same original record and live read ticket.
+            // Cancelling it here would revoke the only admitted child/detail path.
+            clearPersons(preserveWorkspace = retained?.access != null)
             if (retained?.actionId == selected?.id && retained?.generation == snapshot.generation && retained?.status == ActionStatus.COMPLETED) workspace = retained
             else loadWorkspace()
         }
@@ -1272,7 +1305,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (selected?.status != ActionStatus.COMPLETED || !expensesAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy || material.busy || memoryReports.busy) return
         val retained = workspace
         expenses.openCompleted {
-            clearPersons()
+            // Local navigation borrows the same original record and live read ticket.
+            // Cancelling it here would revoke the only admitted child/detail path.
+            clearPersons(preserveWorkspace = retained?.access != null)
             if (retained?.actionId == selected?.id && retained?.generation == snapshot.generation && retained?.status == ActionStatus.COMPLETED) workspace = retained
             else loadWorkspace()
         }
@@ -1288,7 +1323,9 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if (selected?.status != ActionStatus.COMPLETED || !memoryReportsAvailable || saving || personSaving || sensitiveBusy || tasks.busy || operations.busy || protocol.busy || expenses.busy || material.busy || memoryReports.busy) return
         val retained = workspace
         memoryReports.openCompleted {
-            clearPersons()
+            // Local navigation borrows the same original record and live read ticket.
+            // Cancelling it here would revoke the only admitted child/detail path.
+            clearPersons(preserveWorkspace = retained?.access != null)
             if (retained?.actionId == selected?.id && retained?.generation == snapshot.generation && retained?.status == ActionStatus.COMPLETED) workspace = retained
             else loadWorkspace()
         }

@@ -1,0 +1,23 @@
+INSTRUMENTATION_STATUS: stream=P116 {"synthetic_authentication":true,"profile":"p111-small","kind":"READY","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[{"class":"android.view.View","bounds":"[63,332][645,558]","visible":true,"scroll":false,"enabled":true},{"text":"Sperren","class":"android.widget.TextView","bounds":"[126,353][582,537]","visible":true,"scroll":false,"enabled":true},{"class":"android.widget.ScrollView","bounds":"[63,621][1017,2211]","visible":true,"scroll":true,"enabled":true},{"class":"android.view.View","bounds":"[63,621][783,847]","visible":true,"scroll":false,"enabled":true},{"text":"‹ Aktionen","class":"android.widget.TextView","bounds":"[126,642][720,826]","visible":true,"scroll":false,"enabled":true},{"text":"Synthetic action","class":"android.widget.TextView","bounds":"[63,889][1017,1551]","visible":true,"scroll":false,"enabled":true},{"text":"VORBEREITUNG","class":"android.widget.TextView","bounds":"[63,1593][1007,1777]","visible":true,"scroll":false,"enabled":true},{"class":"android.view.View","bounds":"[63,1819][858,2045]","visible":true,"scroll":false,"enabled":true},{"text":"Dokumente","class":"android.widget.TextView","bounds":"[126,1840][795,2024]","visible":true,"scroll":false,"enabled":true},{"text":"✓ Übersicht","class":"android.widget.TextView","bounds":"[126,2087][826,2211]","visible":true,"scroll":false,"enabled":true}],"kind":"GEOMETRY","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"flow":"person","ledger":"State(phase=RETAINED, retained=5288023, transition=16777216, localRetained=5288023, localTransition=9056683, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=FULL_VIEW_UNCONFIRMED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=109684, lastChildTransitionRequested=198352)","commit":false,"kind":"UI_SAVE_RESULT","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"flow":"person","kind":"UI_CREATE_VISIBLE","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"nodes":[{"class":"android.view.View","bounds":"[63,332][645,558]","visible":true,"scroll":false,"enabled":true},{"text":"Sperren","class":"android.widget.TextView","bounds":"[126,353][582,537]","visible":true,"scroll":false,"enabled":true},{"class":"android.widget.ScrollView","bounds":"[63,1085][1017,2211]","visible":true,"scroll":true,"enabled":true},{"text":"Synthetic P116 person","class":"android.widget.TextView","bounds":"[63,1085][1017,1463]","visible":true,"scroll":false,"enabled":true},{"text":"Revision: 0","class":"android.widget.TextView","bounds":"[63,1505][822,1726]","visible":true,"scroll":false,"enabled":true},{"text":"Noch keine Rolle","class":"android.widget.TextView","bounds":"[63,1768][1017,2210]","visible":true,"scroll":false,"enabled":true},{"text":"✓ Person gespeichert","class":"android.widget.TextView","bounds":"[84,611][996,1053]","visible":true,"scroll":false,"enabled":true}],"kind":"GEOMETRY","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"core_reads":0,"full_workspaces":1,"ledger":"State(phase=RETAINED, retained=5288023, transition=16777216, localRetained=5288023, localTransition=9056683, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=FULL_VIEW_UNCONFIRMED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=109684, lastChildTransitionRequested=198352)","kind":"OWNER_COUNTERS","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"kind":"PASS","mode":"preparation","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P116 PASS
+INSTRUMENTATION_CODE: -1

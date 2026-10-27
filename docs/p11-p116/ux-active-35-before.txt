@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P116 {"synthetic_authentication":true,"profile":"p111-small","kind":"READY","mode":"active","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P116 {"error":"java.lang.IllegalStateException: timeout drawn initial surface\n\tat org.pag.prototype.P116UxProbe.await(P116UxProbe.kt:20)\n\tat org.pag.prototype.P116UxProbe.onStart(P116UxProbe.kt:48)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","kind":"FAIL","mode":"active","font":3.5}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P116 FAIL
+INSTRUMENTATION_CODE: 0

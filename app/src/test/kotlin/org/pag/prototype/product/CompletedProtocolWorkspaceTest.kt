@@ -126,4 +126,90 @@ class CompletedProtocolWorkspaceTest {
         assertFalse(model.completedProtocolOpen); assertEquals(0, protocolDelegate.timelineReads)
     }
 
+    /** Unlike the legacy fake ports, this grant is tied to the actual ViewModel read ticket. */
+    private class OriginalCompleted {
+        val session=Session()
+        var ticket:WorkspaceReadTicket?=null
+        var reads=0;var details=0;var budget=true;var publication=true
+        var complete:(()->Unit)?=null
+        val grant=object:WorkspaceAccess {
+            override fun publish(actionId:String,status:ActionStatus,generation:Long,work:()->Unit):Boolean {
+                if(!publication || actionId!="a" || status!=ActionStatus.COMPLETED || generation!=1L ||
+                    session.value.state!=SessionState.READY || session.value.generation!=generation || ticket?.active!=true)return false
+                work();return true
+            }
+            override fun reserve(units:ActiveWorkspaceBudget.Units)=budget && publish("a",ActionStatus.COMPLETED,1){}
+        }
+        val workspace=object:WorkspaceRepository {
+            override fun read(request:WorkspaceReadRequest,publish:(WorkspaceResult)->Unit){
+                check(++reads==1){"No second full workspace admission"};ticket=request.ticket
+                publish(WorkspaceResult.Value(WorkspaceRead("a",ActionStatus.COMPLETED,1,request.parts,
+                    OperationalBoard("a",ActionStatus.COMPLETED,emptyList(),emptyList()),TaskBoard("a",emptyList(),emptyList()),access=grant)))
+            }
+            override fun supplement(original:WorkspaceAccess,request:WorkspaceReadRequest,publish:(WorkspaceSupplementResult)->Unit){
+                assertSame(grant,original);assertSame(ticket,request.ticket);assertTrue(request.ticket!!.active)
+                assertEquals(setOf(WorkspacePart.PROTOCOL_TIMELINE),request.parts);details++
+                complete={publish(WorkspaceSupplementResult.Value(WorkspaceSupplement("a",1,protocolTimeline=emptyList())))}
+            }
+        }
+        val model=ProductViewModel(session,Actions(),ProductStorageState.READY_TO_OPEN,People(),
+            operationsRepository=Ops(),taskRepository=Tasks(),protocolRepository=ProtocolFake()){}.also{
+            it.bindWorkspace(workspace);it.detail("a")
+        }
+    }
+    @Test fun p116CompletedChildKeepsOriginalTicketAndPublishesWithoutSecondWorkspace(){
+        val f=OriginalCompleted();val ticket=f.ticket!!
+        f.model.openCompletedProtocol()
+        assertTrue(ticket.active);assertEquals(1,f.reads);assertEquals(1,f.details)
+        f.complete!!()
+        assertTrue(f.model.completedProtocolOpen);assertFalse(f.model.protocol.loading)
+        assertEquals(emptyList<ProtocolTimelineItem>(),f.model.protocol.timeline)
+        assertSame(f.grant,f.model.workspace!!.access)
+        f.model.closeCompletedProtocol();assertTrue(ticket.active);assertEquals(1,f.reads)
+    }
+    @Test fun p116PreservedCompletedTicketStillDiesAtLockAndLateResultCannotFollowReauth(){
+        val f=OriginalCompleted();f.model.openCompletedProtocol();val late=f.complete!!
+        f.session.lock();assertFalse(f.ticket!!.active)
+        f.session.emit(SessionState.READY,3);late()
+        assertNull(f.model.workspace);assertNull(f.model.protocol.timeline);assertFalse(f.model.completedProtocolOpen)
+        assertFalse(f.grant.publish("a",ActionStatus.COMPLETED,1){fail("Old authority revived")})
+        assertEquals(1,f.reads)
+    }
+
+    @Test fun p116FirstCompletedChildBudgetRefusalStopsLoadingBeforeRead(){
+        val f=OriginalCompleted();f.budget=false
+        f.model.openCompletedProtocol()
+        assertEquals(1,f.reads);assertEquals(0,f.details)
+        assertFalse(f.model.protocol.loading);assertNull(f.model.protocol.timeline)
+        assertEquals(ProtocolFailure.BUDGET_REFUSED,f.model.protocol.error)
+    }
+
+    @Test fun p116ReadOnlyDocumentBackKeepsSameOriginalWorkspace(){
+        val f=OriginalCompleted();val held=f.model.workspace
+        val documents=object:DocumentRepository {
+            override fun summary(actionId:String,publish:(DocumentResult<DocumentSummary>)->Unit)=error("No implicit summary")
+            override fun list(actionId:String,publish:(DocumentResult<List<DocumentAsset>>)->Unit)=publish(DocumentResult.Value(emptyList()))
+            override fun importDocument(actionId:String,name:String,format:DocumentFormat,source:DocumentSource,publish:(DocumentResult<Unit>)->Unit)=error("No import")
+            override fun deleteDocument(actionId:String,expected:DocumentAsset,publish:(DocumentResult<Unit>)->Unit)=error("No delete")
+        }
+        f.model.bindDocuments(documents,object:DocumentPicker {
+            override fun launch(actionId:String,generation:Long)=error("No picker")
+            override fun available(actionId:String,generation:Long)=false
+            override fun consume(actionId:String,generation:Long):DocumentSource?=null
+            override fun cancel(){}
+        })
+        f.model.openDocuments();assertTrue(f.model.documents.available)
+        assertSame(held,f.model.workspace);assertTrue(f.ticket!!.active)
+        f.model.closeDocuments();assertFalse(f.model.documents.available)
+        assertSame(held,f.model.workspace);assertEquals(1,f.reads);assertTrue(f.ticket!!.active)
+    }
+
+    @Test fun p116RevokedOriginalPublicationRejectsChildWithoutPublishingPayload(){
+        val f=OriginalCompleted();f.model.openCompletedProtocol()
+        f.publication=false;f.complete!!()
+        assertNull(f.model.protocol.timeline);assertFalse(f.model.protocol.loading)
+        assertEquals(WorkspaceFailure.OWNER_UNCONFIRMED,f.model.workspaceRefusal)
+        assertEquals(1,f.reads)
+    }
+
 }

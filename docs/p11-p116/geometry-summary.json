@@ -1,0 +1,16 @@
+{
+  "before_scroll_regions": [],
+  "after_scroll_regions": [
+    {
+      "class": "android.widget.ScrollView",
+      "bounds": "[0,558][1080,1416]",
+      "scroll": true
+    },
+    {
+      "class": "android.view.View",
+      "bounds": "[0,1416][1080,2274]",
+      "scroll": true
+    }
+  ],
+  "before_driver_only_checked_navigation_labels": true
+}

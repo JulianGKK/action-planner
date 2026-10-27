@@ -101,7 +101,7 @@ class P116UxProbe:Instrumentation(){
     }
     check(reveal("Speichern") && click("Speichern")){"UNREACHABLE save $flow"}
     await("save $flow"){main{when(flow){"person"->!m.personSaving && !m.personForm;"role"->!m.operations.busy && m.operations.createSurface==null;"task"->!m.tasks.busy && !m.tasks.form;"material"->!m.material.busy && !m.material.form;else->!m.expenses.busy && !m.expenses.form}}}
-    emit("UI_SAVE_RESULT",JSONObject().put("flow",flow).put("ledger",harness.outstandingState()).put("commit",main{when(flow){"person"->m.personCommitConfirmed;"role"->m.operations.commitConfirmed;"task"->m.tasks.commitConfirmed;"material"->m.material.commitConfirmed;else->m.expenses.commitConfirmed}}).put("refusal",main{m.workspaceRefusal?.name}))
+    emit("UI_SAVE_RESULT",JSONObject().put("flow",flow).put("model_contains_title",main{if(flow=="expense")m.expenses.board?.expenses?.any{it.title==title} else null}).put("expense_error",main{m.expenses.error?.name}).put("ledger",harness.outstandingState()).put("commit",main{when(flow){"person"->m.personCommitConfirmed;"role"->m.operations.commitConfirmed;"task"->m.tasks.commitConfirmed;"material"->m.material.commitConfirmed;else->m.expenses.commitConfirmed}}).put("refusal",main{m.workspaceRefusal?.name}))
     check(reveal(title)){"Committed $flow value not reachable"};emit("UI_CREATE_VISIBLE",JSONObject().put("flow",flow));geometry()
    }else if(mode=="active"){
     for(area in listOf(ActiveArea.PERSONS,ActiveArea.FUNCTIONS,ActiveArea.TASKS,ActiveArea.HUB)){
@@ -114,7 +114,9 @@ class P116UxProbe:Instrumentation(){
     check(reveal(entry) && click(entry)){"UNREACHABLE completed $flow entry"}
     val expected=when(flow){"protocol"->"Protokoll nachbereiten";"memory"->"Gedächtnisprotokolle";"material"->"Material";"expense"->"Kosten";else->"Dokumente"}
     await("completed child load"){main{!m.workspaceRefreshing && !m.personsLoading && !m.protocol.loading && !m.memoryReports.loading && !m.material.loading && !m.expenses.loading && !m.documents.loading}}
-    check(main{!m.workspaceError}){"Completed child refused ${main{m.workspaceRefusal}}"};check(reveal(expected));geometry();emit("COMPLETED_CHILD_VISIBLE",JSONObject().put("flow",flow))
+    check(main{!m.workspaceError}){"Completed child refused ${main{m.workspaceRefusal}}"}
+    check(main{when(flow){"protocol"->m.protocol.timeline!=null && m.protocol.error==null;"memory"->m.memoryReports.headers!=null && m.memoryReports.error==null;"material"->m.material.board!=null && m.material.error==null;"expense"->m.expenses.board!=null && m.expenses.error==null;else->m.documents.items!=null && m.documents.error==null}}){"Completed child has no usable data"}
+    check(reveal(expected));geometry();emit("COMPLETED_CHILD_VISIBLE",JSONObject().put("flow",flow))
     check(reveal("‹ Zur abgeschlossenen Aktion") && click("‹ Zur abgeschlossenen Aktion")){"UNREACHABLE completed back $flow"};await("completed back"){visible("Protokoll ansehen / nachbereiten")};emit("COMPLETED_BACK_VISIBLE")
    }else{check(main{!m.workspaceError});emit("DETAIL_VISIBLE")}
   }

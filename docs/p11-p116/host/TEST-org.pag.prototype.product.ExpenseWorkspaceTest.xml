@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.ExpenseWorkspaceTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-27T15:14:08.637Z" hostname="iuzjhtgvfc" time="0.187">
+  <properties/>
+  <testcase name="summaryRefreshErrorRetainsOldSnapshotAndNeverInventsZero" classname="org.pag.prototype.product.ExpenseWorkspaceTest" time="0.014"/>
+  <testcase name="normalCompletedZeroReadsAndExplicitCostExceptionDoesNotOpenOtherWrites" classname="org.pag.prototype.product.ExpenseWorkspaceTest" time="0.028"/>
+  <testcase name="actionAndDeletionPendingClearAndForbiddenNoPath" classname="org.pag.prototype.product.ExpenseWorkspaceTest" time="0.008"/>
+  <testcase name="hubWaitsAtomicallyForExpenseSummaryAndNeverBoard" classname="org.pag.prototype.product.ExpenseWorkspaceTest" time="0.014"/>
+  <testcase name="lockMatrixAndReauthNeverRestoreCosts" classname="org.pag.prototype.product.ExpenseWorkspaceTest" time="0.068"/>
+  <testcase name="completedAreasAreMutuallyExclusive" classname="org.pag.prototype.product.ExpenseWorkspaceTest" time="0.009"/>
+  <testcase name="preparationCountsOnlyThenConsciouslyLoadsBoard" classname="org.pag.prototype.product.ExpenseWorkspaceTest" time="0.003"/>
+  <testcase name="successRefreshesServerSummaryAndNoForeignMutationsOrCallbackInteractions" classname="org.pag.prototype.product.ExpenseWorkspaceTest" time="0.008"/>
+  <testcase name="areaSwitchesClearEveryContextAndDropLateCallbacks" classname="org.pag.prototype.product.ExpenseWorkspaceTest" time="0.027"/>
+  <testcase name="activeDraftDiscardedOnCompletionWithoutAutomaticFollowup" classname="org.pag.prototype.product.ExpenseWorkspaceTest" time="0.007"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

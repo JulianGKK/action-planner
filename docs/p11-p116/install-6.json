@@ -1,0 +1,43 @@
+{
+  "utc": "2026-10-27T14:02:04.403062+00:00",
+  "serial": "RFCT1186YRJ",
+  "apks": [
+    {
+      "file": "app/build/outputs/apk/p77runtime/app-p77runtime.apk",
+      "package": "org.pag.prototype.a.p77runtime",
+      "sha256": "c9ac29044fbb1f204a9c0cb64e3d293296d46361a77ae1a063d8560a8cb66941",
+      "signer": "Signer #1 certificate DN: CN=Android Debug, O=Android, C=US\nSigner #1 certificate SHA-256 digest: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134\nSigner #1 certificate SHA-1 digest: 136f3fdc01bc5af2b9b18a2c71d5c6725f9b757a\nSigner #1 certificate MD5 digest: 8946d1c7017adcee5138a9513982ce7a\n",
+      "install": "app/build/outputs/apk/p77runtime/app-p77runtime.apk: 1 file pushed, 0 skipped. 71.2 MB/s (74847444 bytes in 1.003s)\nPerforming Push Install\nSuccess\n"
+    },
+    {
+      "file": "app/build/outputs/apk/androidTest/p77runtime/app-p77runtime-androidTest.apk",
+      "package": "org.pag.prototype.a.p77runtime.test",
+      "sha256": "93a1513483fa028096e0404cdf3054ad99db70eaef3d1cc1b69bbe745954c0dc",
+      "signer": "Signer #1 certificate DN: CN=Android Debug, O=Android, C=US\nSigner #1 certificate SHA-256 digest: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134\nSigner #1 certificate SHA-1 digest: 136f3fdc01bc5af2b9b18a2c71d5c6725f9b757a\nSigner #1 certificate MD5 digest: 8946d1c7017adcee5138a9513982ce7a\n",
+      "install": "app/build/outputs/apk/androidTest/p77runtime/app-p77runtime-androidTest.apk: 1 file pushed, 0 skipped. 87.5 MB/s (3844402 bytes in 0.042s)\nPerforming Push Install\nSuccess\n"
+    }
+  ],
+  "protected_before": {
+    "org.pag.prototype.a": [
+      "versionCode=2 minSdk=30 targetSdk=37",
+      "versionName=0.1.0-alpha.2",
+      "lastUpdateTime=2026-10-21 10:39:49",
+      "signatures=PackageSignatures{3af64e version:2, signatures:[224d2aa7], past signatures:[]}",
+      "firstInstallTime=2026-10-09 10:47:25"
+    ],
+    "org.pag.prototype.a.p76demo": [
+      "versionCode=2 minSdk=30 targetSdk=37",
+      "versionName=0.1.0-alpha.2-p76demo",
+      "lastUpdateTime=2026-10-21 16:59:59",
+      "signatures=PackageSignatures{6f3a7ba version:2, signatures:[224d2aa7], past signatures:[]}",
+      "firstInstallTime=2026-10-21 16:58:40"
+    ],
+    "org.pag.perf.p11probe": [
+      "versionCode=2 minSdk=30 targetSdk=37",
+      "versionName=0.1.0-alpha.2",
+      "lastUpdateTime=2026-10-19 16:17:35",
+      "signatures=PackageSignatures{87071b6 version:2, signatures:[224d2aa7], past signatures:[]}",
+      "firstInstallTime=2026-10-19 16:17:35"
+    ]
+  }
+}
