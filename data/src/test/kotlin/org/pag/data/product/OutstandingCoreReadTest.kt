@@ -285,4 +285,50 @@ class OutstandingCoreReadTest {
         assertFalse(h.load());assertFalse(h.loader.outstandingState().retirementConfirmed)
     }
 
+    /** F04 counterexamples: passing these safety assertions is NOT a positive continuation. */
+    @Test fun p117FreshActionAuthorityStillCannotReadAfterAnExposedOriginal(){
+        val h=H();h.pending();h.main.remove().run()
+        val old=h.life!!;val child=old.childAccess(WorkspaceReadTicket())!!
+        val before=h.loader.outstandingState();old.close()
+        assertNotNull(h.access.acquire(AccessScope.READY))
+        assertNotNull(h.mutations.beforeActiveRead("b",h.generation))
+        var publications=0
+        assertFalse(h.loader.loadOwned("b"){_,_->publications++})
+        assertEquals(0,publications);assertEquals(1,h.reads)
+        assertFalse(old.authorizeHit("a"));assertFalse(child.publish("a",ActionStatus.ACTIVE,1){fail("Old child")})
+        val after=h.loader.outstandingState()
+        assertEquals(before.localRetained,after.localRetained);assertEquals(before.localTransition,after.localTransition)
+        assertTrue(after.localRetained<ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
+        assertFalse(after.retirementConfirmed);assertFalse(h.loader.reuseEnabled);assertFalse(h.mutations.ramReuseEnabled)
+    }
+    @Test fun p117ReauthHasFreshContextButCannotReplaceTheOriginalBudgetBinding(){
+        val h=H();h.pending();h.main.remove().run()
+        val oldContext=h.access.acquire(AccessScope.READY)!!
+        val oldLife=h.life!!;val oldAccess=oldLife.childAccess(WorkspaceReadTicket())!!
+        val originalCharge=h.loader.outstandingState().localRetained
+        oldLife.close();h.ready=false;h.generation=3;h.ready=true
+        val fresh=h.access.acquire(AccessScope.READY)!!
+        assertTrue(fresh.check(AccessPoint.PUBLICATION));assertFalse(oldContext.check(AccessPoint.PUBLICATION))
+        assertFalse(oldAccess.publish("a",ActionStatus.ACTIVE,1){fail("Old publication")})
+        assertFalse(h.load());assertEquals(1,h.reads)
+        assertFalse(h.loader.outstandingState().retirementConfirmed)
+        assertEquals(originalCharge,h.loader.outstandingState().localRetained)
+    }
+    @Test fun p117PreparationRecordBlocksActiveRootEvenWithCapacityForBoundedChild(){
+        val owner=OutstandingCoreRead();val entry=owner.beginFullview("phase",1)!!
+        val units=ActiveWorkspaceBudget.Units(objects=100);val reservation=ActiveCoreReservation(units,units)
+        assertTrue(owner.enterFullview(entry,"phase",1));assertTrue(entry.admit(reservation));assertTrue(entry.materialize())
+        entry.worker(Runnable{}).run()
+        val before=owner.state()
+        assertTrue(before.localRetained+12800<ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES)
+        assertTrue(before.localTransition+12800<ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)
+        assertNull(owner.begin());assertNull(owner.beginFullview("phase",1))
+        assertEquals(before.localRetained,owner.state().localRetained)
+        // Same original child accounting is allowed; another generation has no binding.
+        assertEquals(true,owner.reserveHeld("phase",1,reservation))
+        assertEquals(false,owner.reserveHeld("phase",3,reservation))
+        assertEquals(false,owner.reserveHeld("other",1,reservation))
+        assertFalse(owner.state().retirementConfirmed)
+    }
+
 }

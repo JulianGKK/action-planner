@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.CompletedProtocolWorkspaceTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-27T20:07:09.797Z" hostname="iuzjhtgvfc" time="0.618">
+  <properties/>
+  <testcase name="p116CompletedChildKeepsOriginalTicketAndPublishesWithoutSecondWorkspace" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.568"/>
+  <testcase name="p116FirstCompletedChildBudgetRefusalStopsLoadingBeforeRead" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.01"/>
+  <testcase name="p116ReadOnlyDocumentBackKeepsSameOriginalWorkspace" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.014"/>
+  <testcase name="p116PreservedCompletedTicketStillDiesAtLockAndLateResultCannotFollowReauth" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.01"/>
+  <testcase name="p116RevokedOriginalPublicationRejectsChildWithoutPublishingPayload" classname="org.pag.prototype.product.CompletedProtocolWorkspaceTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,45 @@
+{
+  "suites": [
+    {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "name": "org.pag.data.product.ActiveReadSessionThreadTest",
+      "module": "data"
+    },
+    {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "name": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+      "module": "data"
+    },
+    {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "name": "org.pag.data.product.OutstandingCoreReadTest",
+      "module": "data"
+    },
+    {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "name": "org.pag.prototype.product.CompletedProtocolWorkspaceTest",
+      "module": "app"
+    },
+    {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "name": "org.pag.prototype.product.P110InputCallbackTest",
+      "module": "app"
+    }
+  ],
+  "total": 27
+}
