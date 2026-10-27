@@ -1,0 +1,41 @@
+INSTRUMENTATION_STATUS: stream=P115 {"authentication":"org.pag.security.ProductCredentialAuthentication","inventory":"READY_TO_OPEN","kind":"REAL_AUTH_ROOT","phase":"absolute","elapsed_ms":1607546050}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"previous_generation":0,"kind":"MANUAL_CREDENTIAL_NOW","phase":"absolute","elapsed_ms":1607546052}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"generation":1,"remaining_absolute_ms":177369,"kind":"REAL_READY","phase":"absolute","elapsed_ms":1607554902}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"generation":1,"test_interaction_every_ms":10000,"kind":"ABSOLUTE_BEGIN","phase":"absolute","elapsed_ms":1607554904}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"since_ready_ms":25017,"kind":"ABSOLUTE_PROGRESS","phase":"absolute","elapsed_ms":1607579921}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"since_ready_ms":50043,"kind":"ABSOLUTE_PROGRESS","phase":"absolute","elapsed_ms":1607604948}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"since_ready_ms":75014,"kind":"ABSOLUTE_PROGRESS","phase":"absolute","elapsed_ms":1607629918}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"since_ready_ms":100032,"kind":"ABSOLUTE_PROGRESS","phase":"absolute","elapsed_ms":1607654938}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"since_ready_ms":125005,"kind":"ABSOLUTE_PROGRESS","phase":"absolute","elapsed_ms":1607679909}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"since_ready_ms":150048,"kind":"ABSOLUTE_PROGRESS","phase":"absolute","elapsed_ms":1607704955}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"since_ready_ms":175000,"kind":"ABSOLUTE_PROGRESS","phase":"absolute","elapsed_ms":1607729905}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"since_ready_ms":177390,"remaining_at_start_ms":177367,"auth_to_deadline_ms":180000,"kind":"ABSOLUTE_LOCK_PASS","phase":"absolute","elapsed_ms":1607732297}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P115 {"real_device_credential":true,"lifecycle":"1607545597:SESSION:LOCKED:0|1607545668:onResume|1607546047:FOCUS:true|1607546063:SESSION:AUTHENTICATING:1|1607546143:FOCUS:false|1607552316:FOCUS:true|1607552317:SESSION:MAINTENANCE:1|1607554859:SESSION:READY:1|1607732292:SESSION:LOCKED:2|1607732300:SESSION:LOCKED:3","kind":"PASS","phase":"absolute","elapsed_ms":1607732336}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P115 PASS absolute
+INSTRUMENTATION_CODE: -1

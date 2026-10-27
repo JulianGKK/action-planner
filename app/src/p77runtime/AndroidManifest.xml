@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <application android:label="PaG P77 Runtime E2E – synthetische Testautorität" tools:replace="android:label">
+        <activity android:name=".P115CredentialActivity" android:exported="false" android:label="PaG P115 – echte Geräteauthentisierung" />
         <activity android:name=".P86FullWorkspaceActivity" android:exported="false" />
     </application>
 </manifest>

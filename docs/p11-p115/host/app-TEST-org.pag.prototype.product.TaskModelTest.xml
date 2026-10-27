@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.prototype.product.TaskModelTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-27T13:12:03.008Z" hostname="iuzjhtgvfc" time="0.093">
+  <properties/>
+  <testcase name="lockGenerationActionChangesRejectReloadAndWritePublication" classname="org.pag.prototype.product.TaskModelTest" time="0.093"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
