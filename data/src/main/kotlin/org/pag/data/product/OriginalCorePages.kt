@@ -44,7 +44,7 @@ internal class OriginalCorePages(private val access:StorageAccess,private val in
                 val result=DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()) {
                     gate()
                     if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
-                    (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->db.withReadTransaction {
+                    (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c,cleanupConfirmed={if(!it)child.unconfirmed()}){db->db.withReadTransaction {
                         gate()
                         if(baseline!=null && !WorkspaceConsistency(this,::current).matches(baseline,
                             WorkspaceDetailRequest(r.actionId,ActionStatus.ACTIVE,r.generation,WorkspaceDetailKind.TASK,"",r.ticket,expectedAction=r.expectedAction),

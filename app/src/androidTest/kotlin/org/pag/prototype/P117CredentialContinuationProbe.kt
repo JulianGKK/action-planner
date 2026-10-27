@@ -15,12 +15,13 @@ import java.util.concurrent.atomic.AtomicReference
 /** Normal ProductRuntime/DeviceCredential; manual PIN only, no credential UI inspection.
  * The positive F04 assertion must stay red until continuation actually works. */
 class P117CredentialContinuationProbe:Instrumentation(){
+ private var verifyFreshWriter=false
  private fun field(o:Any,n:String)=o.javaClass.getDeclaredField(n).let{it.isAccessible=true;it.get(o)}
  private fun <T> main(work:()->T):T{val r=AtomicReference<T>();val e=AtomicReference<Throwable?>();runOnMainSync{try{r.set(work())}catch(t:Throwable){e.set(t)}};e.get()?.let{throw it};return r.get()}
  private fun await(label:String,work:()->Boolean){val end=SystemClock.elapsedRealtime()+90_000;while(SystemClock.elapsedRealtime()<end){if(work())return;Thread.sleep(50)};error("P117 timeout $label")}
  private fun <T> receive(label:String,work:((T)->Unit)->Unit):T{val r=AtomicReference<T>();main{work{r.set(it)}};await(label){r.get()!=null};return r.get()}
  private fun emit(kind:String,d:JSONObject=JSONObject())=sendStatus(0,Bundle().apply{putString("stream","P117 "+d.put("kind",kind)+"\n")})
- override fun onCreate(arguments:Bundle?){super.onCreate(arguments);start()}
+ override fun onCreate(arguments:Bundle?){super.onCreate(arguments);verifyFreshWriter=arguments?.getString("p118VerifyWriter")=="true";start()}
  override fun onStart(){var activity:P115CredentialActivity?=null
   try{
    check(targetContext.packageName=="org.pag.prototype.a.p77runtime")
@@ -64,6 +65,16 @@ class P117CredentialContinuationProbe:Instrumentation(){
    val usable=main{!model.workspaceError && model.compactHubPresentation!=null}
    emit("CONTINUATION_RESULT",JSONObject().put("usable",usable).put("before",before).put("after",after).put("real_device_credential",true))
    check(usable){"F04: fresh real READY cannot reopen original action"}
+   if(verifyFreshWriter){
+    main{model.activeArea(ActiveArea.TASKS)}
+    var freshRow:OriginalButtonControl?=null;await("fresh row"){main{freshRow=model.originalRowControl(0);freshRow!=null}}
+    main{freshRow!!.click()};await("fresh detail"){main{model.tasks.selected!=null && !model.detailLoading}}
+    val previous=main{model.tasks.selected!!}
+    main{model.tasks.edit();model.tasks.changeTitle("Synthetic P118 fresh writer");model.tasks.save()}
+    await("fresh COMMITTED revision"){main{!model.tasks.busy && !model.tasks.form && model.tasks.selected?.editRevision==previous.editRevision+1}}
+    check(main{model.tasks.selected?.title=="Synthetic P118 fresh writer"})
+    emit("FRESH_WRITER_PASS",JSONObject().put("revision",main{model.tasks.selected!!.editRevision}).put("real_device_credential",true))
+   }
    main{model.lock();a.finish()};activity=null
    finish(Activity.RESULT_OK,Bundle().apply{putString("result","P117 CONTINUATION PASS")})
   }catch(t:Throwable){emit("FAIL",JSONObject().put("error",t.stackTraceToString()).put("lifecycle",activity?.p115Events?.joinToString("|")));runCatching{main{activity?.finish()}};finish(Activity.RESULT_CANCELED,Bundle().apply{putString("result","P117 CONTINUATION FAIL")})}

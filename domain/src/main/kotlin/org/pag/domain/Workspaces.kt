@@ -10,7 +10,7 @@ class WorkspaceReadTicket {
     fun cancel(){cancelled.set(true)}
 }
 data class WorkspaceReadRequest(val actionId:String,val status:ActionStatus,val generation:Long,val parts:Set<WorkspacePart>,val expectedAction:Action?=null,
-    val ticket:WorkspaceReadTicket?=null)
+    val ticket:WorkspaceReadTicket?=null,val explicitOpening:Boolean=false)
 data class WorkspaceRead(val actionId:String,val status:ActionStatus,val generation:Long,val parts:Set<WorkspacePart>,
     val operations:OperationalBoard,val tasks:TaskBoard?=null,val protocol:ProtocolSummary?=null,
     val material:MaterialSummary?=null,val expenses:ExpenseSummary?=null,val memory:MemoryReportSummary?=null,

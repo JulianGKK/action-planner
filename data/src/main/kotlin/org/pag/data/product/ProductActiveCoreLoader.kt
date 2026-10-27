@@ -25,6 +25,7 @@ class ProductActiveCoreLoader internal constructor(
     internal constructor(access:StorageAccess,mutations:WorkspaceMutationInvalidation,worker:Executor,main:Executor,
         readCandidate:(StorageContext,WorkspaceMutationInvalidation.ActiveReadTicket,Long,OutstandingCoreRead.Read)->ActiveCoreResult):
         this(access,mutations,worker,main,readCandidate,OutstandingCoreRead())
+    override var openingFailure:WorkspaceFailure?=null;private set
     private var reuseForIsolatedTest=false
     private var observation:ActiveCoreLoadObservation?=null
     override val reuseEnabled get()=reuseForIsolatedTest
@@ -53,16 +54,21 @@ class ProductActiveCoreLoader internal constructor(
     fun load(actionId:String,callback:(ActiveCoreResult)->Unit):Boolean =
         loadOwned(actionId){result,life->try{callback(result)}finally{life?.close()}}
 
-    override fun loadOwned(actionId:String,callback:(ActiveCoreResult,ActiveCoreLifetime?)->Unit):Boolean {
+    override fun loadOwned(actionId:String,callback:(ActiveCoreResult,ActiveCoreLifetime?)->Unit):Boolean = submit(actionId,false,callback)
+    override fun openOwned(actionId:String,callback:(ActiveCoreResult,ActiveCoreLifetime?)->Unit):Boolean = submit(actionId,true,callback)
+    private fun submit(actionId:String,explicit:Boolean,callback:(ActiveCoreResult,ActiveCoreLifetime?)->Unit):Boolean {
         check(Thread.currentThread()===ownerThread){"ACTIVE core admission is owner-thread-only"}
+        openingFailure=null
         if(loaderClosed || actionId.isBlank())return false
         // Backpressure BEFORE READY/ticket/namespace/key/worker admission. It cannot cancel
         // another read, change an epoch or mint fallback authority just because it is busy.
-        val memory=outstanding.begin() ?: return false
+        val child=explicit && outstanding.hasResource()
+        val root=if(child)null else outstanding.begin() ?: return false
         val context=access.acquire(AccessScope.READY)
         if(context==null || context.scope!=AccessScope.READY || context.generation<0 || !context.check(AccessPoint.OPERATION)) {
-            memory.noWorker();return false
+            root?.noWorker();return false
         }
+        val memory=root ?: outstanding.continueRead(actionId,context.generation) ?: run{openingFailure=outstanding.continuationFailure;return false}
         val ticket=mutations.beforeActiveRead(actionId,context.generation)
         if(ticket==null){memory.noWorker();return false}
         observation?.ticketIssued(ticket)

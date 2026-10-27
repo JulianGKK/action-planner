@@ -66,5 +66,6 @@
     <instrumentation android:name="org.pag.prototype.P115CredentialProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P115AuthorityProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P116UxProbe" android:targetPackage="${pagTestTargetPackage}" />
+    <instrumentation android:name="org.pag.prototype.P118ContinuationProbe" android:targetPackage="${pagTestTargetPackage}" />
     <instrumentation android:name="org.pag.prototype.P117CredentialContinuationProbe" android:targetPackage="${pagTestTargetPackage}" />
 </manifest>

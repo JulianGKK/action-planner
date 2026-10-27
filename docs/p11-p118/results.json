@@ -1,0 +1,106 @@
+{
+  "A": {
+    "status": "PASS",
+    "file": "continuation-phase-final.txt",
+    "sha256": "331af8ba1e3aa21261d582969cc276960c37b1dd9c3f2a4a025b54c6aeaac612"
+  },
+  "B_and_ABA": {
+    "status": "PASS",
+    "file": "continuation-action-final-guard.txt",
+    "sha256": "2f9ab36381169f54c72c0752546d565d106a322ff4a38b19f33c2d609061a311",
+    "scope": "B positive; device ABA safely budget-refused, old references remain denied; host ABA positive with sufficient budget"
+  },
+  "C_real_credential_and_fresh_CAS": {
+    "status": "PASS",
+    "file": "credential-real-session-retry.txt",
+    "sha256": "554dffcbadbaa8b51385b83ae6793a84ee09ca6b4c31fe493b69beb9feb2ca3e",
+    "manual_authentication": true,
+    "generation": [
+      1,
+      3
+    ],
+    "fresh_revision": 1
+  },
+  "remaining_300_bytes": {
+    "status": "PASS",
+    "file": "continuation-budget-final.txt",
+    "sha256": "e4b1a8cb37d70715bcf677f51d32702bda40afa6d0858876266a8424a409362b",
+    "synthetic_ledger_padding": true
+  },
+  "writer_action_UNKNOWN": {
+    "status": "PASS",
+    "file": "authority-negative-final.txt",
+    "sha256": "6336ec68f88a4af726324fbc1252fefa4d1e55509376ccb721277f22c9f7eee1",
+    "UNKNOWN": "injected completion, no SQL write"
+  },
+  "interrupted_C_attempt": {
+    "status": "UNCONFIRMED",
+    "file": "credential-real-session.txt",
+    "reason": "host server restarted; no terminal result captured"
+  },
+  "talkback": {
+    "status": "NOT TESTED",
+    "reason": "explicit user instruction"
+  },
+  "host": {
+    "suites": [
+      {
+        "module": "data",
+        "name": "org.pag.data.product.ActiveReadSessionThreadTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "data",
+        "name": "org.pag.data.product.OwnerContinuationBudgetTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "data",
+        "name": "org.pag.data.product.OutstandingCoreReadTest",
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "data",
+        "name": "org.pag.data.product.ProductActiveCoreLoaderTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "data",
+        "name": "org.pag.data.product.LeadershipSessionConcurrencyTest",
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "app",
+        "name": "org.pag.prototype.product.CompletedProtocolWorkspaceTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "app",
+        "name": "org.pag.prototype.product.P110InputCallbackTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "total": 68
+  }
+}

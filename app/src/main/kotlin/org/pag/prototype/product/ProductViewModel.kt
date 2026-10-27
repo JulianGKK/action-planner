@@ -520,7 +520,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         if(!activeNavigationEnabled)return
         clearActiveCore();activeCorePort?.fullViewStarting();fullActiveView=true;readWorkspace()
     }
-    private fun loadActiveCore() {
+    private fun loadActiveCore(explicit:Boolean=false) {
         val port=activeCorePort ?: return
         val action=selected ?: return
         if(action.status!=ActionStatus.ACTIVE || snapshot.state!=SessionState.READY)return
@@ -528,15 +528,17 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         workspace=null;tasks.clear();operations.clear()
         val identity=Any();coreLoad=identity
         val generation=snapshot.generation
-        personsLoading=true;detailLoading=false;workspaceError=false
+        personsLoading=true;detailLoading=false;workspaceError=false;workspaceRefusal=null
         var consumed=false
-        val queued=port.loadOwned(action.id) { result,lifetime ->
-            if(consumed) {if(withCoreScope {it.lifetime === lifetime}!=true)lifetime?.close();return@loadOwned}
+        val callback:(ActiveCoreResult,ActiveCoreLifetime?)->Unit= callback@{ result,lifetime ->
+            if(consumed) {if(withCoreScope {it.lifetime === lifetime}!=true)lifetime?.close();return@callback}
             consumed=true
             if(coreLoad !== identity || snapshot.state!=SessionState.READY || snapshot.generation!=generation ||
-                selected?.id!=action.id || selected?.status!=ActionStatus.ACTIVE || !compactActiveMode) { lifetime?.close();return@loadOwned }
+                selected?.id!=action.id || selected?.status!=ActionStatus.ACTIVE || !compactActiveMode) { lifetime?.close();return@callback }
             if(result !is ActiveCoreResult.Value || lifetime==null) {
-                lifetime?.close();personsLoading=false;workspaceError=true;return@loadOwned
+                lifetime?.close();personsLoading=false;workspaceError=true
+                workspaceRefusal=if((result as? ActiveCoreResult.Rejected)?.reason==BoundedActiveStatus.BUDGET_REFUSED)WorkspaceFailure.BUDGET_REFUSED else WorkspaceFailure.OWNER_UNCONFIRMED
+                return@callback
             }
             val slotIdentity=Any()
             val scopes=VmCoreScopes()
@@ -548,7 +550,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                     ActiveWorkspaceBudget.estimateUnits(result.reservation.retained).let { it.first!=ActiveWorkspaceBudget.Decision.ADMITTED || it.second!=result.retainedCharge } ||
                     ActiveWorkspaceBudget.estimateUnits(result.reservation.transition).let { it.first!=ActiveWorkspaceBudget.Decision.ADMITTED || it.second!=result.transitionCharge } ||
                     result.retainedCharge !in 0..ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || result.transitionCharge !in 0..ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES) {
-                    lifetime.close();personsLoading=false;workspaceError=true;return@loadOwned
+                    lifetime.close();personsLoading=false;workspaceError=true;return@callback
                 }
                 val slot=CoreSlot(result,lifetime,slotIdentity,CompactPersonsPresentation(this,slotIdentity),CompactTasksPresentation(this,slotIdentity),CompactHubPresentation(this,slotIdentity),CompactFunctionsPresentation(this,slotIdentity,core.functions.items.size),scopes)
                 slot.subscription=lifetime.onInvalidated {
@@ -572,7 +574,8 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 personsLoading=false;workspaceRefreshing=false;coreSignal++
             } finally { scopes.end() }
         }
-        if(!queued) {clearActiveCore();personsLoading=false;workspaceError=true}
+        val queued=if(explicit)port.openOwned(action.id,callback) else port.loadOwned(action.id,callback)
+        if(!queued) {clearActiveCore();personsLoading=false;workspaceError=true;workspaceRefusal=port.openingFailure ?: WorkspaceFailure.OWNER_UNCONFIRMED}
     }
     fun bindWorkspace(repository:WorkspaceRepository) {
         check(workspaceRepository==null)
@@ -1182,7 +1185,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
             PreparationArea.COSTS->expenses.enter(deferRead=true)
             else->Unit
         }
-        loadWorkspace()
+        readWorkspace(explicit=true)
         if (area == PreparationArea.MATERIAL && workspaceRepository==null) material.enter()
         if (area == PreparationArea.COSTS && workspaceRepository==null) expenses.enter()
     }
@@ -1408,19 +1411,19 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         tasks.clear(); operations.clear(); protocol.clear(); material.clear(); expenses.clear(); memoryReports.clear(); documents.clear(); clearSensitive(); personRequest++; personsLoading = false; selectedPerson = null
         personForm = false; editingPerson = null; personError = null; personSaving = false;personCommitConfirmed=false
     }
-    private fun loadPersons() {
+    private fun loadPersons(explicit:Boolean=false) {
         clearSensitive(); personRequest++
         selectedPerson = null; personForm = false; editingPerson = null; personError = null; personSaving = false
         if (workspace?.status != selected?.status) {
             workspace = null; tasks.clear(); operations.clear(); protocol.clear(); material.clear(); expenses.clear(); memoryReports.clear(); documents.clear()
         }
-        loadWorkspace()
+        readWorkspace(explicit=explicit)
     }
     /** Stage short gated reads locally. Only a complete current snapshot enters Compose state. */
     internal fun loadWorkspace()=readWorkspace()
-    private fun readWorkspace(expectedAction:Action?=null,onOpeningRejected:(()->Unit)?=null) {
+    private fun readWorkspace(expectedAction:Action?=null,explicit:Boolean=false) {
         val action = selected?.takeIf { personsVisible } ?: return
-        if(compactActiveMode) {loadActiveCore();return}
+        if(compactActiveMode) {loadActiveCore(explicit);return}
         if(activeCorePort!=null){clearActiveCore();activeCorePort?.fullViewStarting()}
         val generation = snapshot.generation
         val request = ++workspaceRequest
@@ -1517,13 +1520,12 @@ class ProductViewModel(private val session: SessionPort, private val repository:
                 if(needExpenseBoard)add(WorkspacePart.EXPENSE_BOARD)
                 if(needMetadata)add(WorkspacePart.LEADERSHIP_STATE)
             }
-            combined.read(WorkspaceReadRequest(action.id,action.status,generation,parts,expectedAction,ticket)) { result ->
+            combined.read(WorkspaceReadRequest(action.id,action.status,generation,parts,expectedAction,ticket,explicitOpening=explicit)) { result ->
                 if(!current() || published)return@read
                 when(result) {
                     is WorkspaceResult.Rejected->{
                         workspaceRefusal=result.reason
-                        if(expectedAction!=null && onOpeningRejected!=null){workspaceRequest++;onOpeningRejected()}
-                        else failed()
+                        failed()
                     }
                     is WorkspaceResult.Value->{
                         val loaded=result.value
@@ -2075,7 +2077,7 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         when (result) {
             is ActionChangeResult.Applied -> {
                 editing = null; changeError = null; selected = result.action
-                loadPersons()
+                loadPersons(explicit=true)
                 loadActions()
             }
             is ActionChangeResult.Rejected -> changeError = result.reason
@@ -2094,15 +2096,13 @@ class ProductViewModel(private val session: SessionPort, private val repository:
         val candidate=actions.singleOrNull{it.id==id}
         if(allowCombined && workspaceRepository!=null && candidate!=null && PersonRules.mayRead(candidate.status)) {
             selected=candidate
-            readWorkspace(candidate){
-                if(snapshot.state==SessionState.READY && snapshot.generation==generation && personRequest==request)openAction(id,false)
-            }
+            readWorkspace(candidate,explicit=true)
             return
         }
         repository.getAction(id) {
             if (snapshot.state != SessionState.READY || snapshot.generation != generation || request != personRequest) return@getAction
             selected = it; detailLoading = false; creating = false; editing = null; confirming = null; changeError = null
-            loadPersons()
+            loadPersons(explicit=true)
         }
     }
 

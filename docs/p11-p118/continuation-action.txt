@@ -1,0 +1,8 @@
+INSTRUMENTATION_STATUS: stream=P118 {"people":20,"tasks":40,"ledger":"State(phase=COMPOSE_TRANSITION, retained=6624411, transition=16777216, localRetained=6624411, localTransition=14165736, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=FULL_VIEW_UNCONFIRMED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=80580, lastChildTransitionRequested=153744)","old_writer_calls":0,"kind":"B_PASS","scenario":"action"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P118 {"error":"java.lang.IllegalStateException: Open refused BUDGET_REFUSED\n\tat org.pag.prototype.P118ContinuationProbe.onStart$open(P118ContinuationProbe.kt:40)\n\tat org.pag.prototype.P118ContinuationProbe.onStart(P118ContinuationProbe.kt:86)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","ledger":"State(phase=COMPOSE_TRANSITION, retained=6724411, transition=16777216, localRetained=6724411, localTransition=14265736, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=FULL_VIEW_UNCONFIRMED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=80580, lastChildTransitionRequested=153744)","kind":"FAIL","scenario":"action"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P118 CONTINUATION FAIL
+INSTRUMENTATION_CODE: 0

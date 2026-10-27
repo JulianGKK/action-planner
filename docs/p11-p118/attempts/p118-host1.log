@@ -1,0 +1,136 @@
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:compileKotlin UP-TO-DATE
+> Task :domain:compileJava NO-SOURCE
+> Task :domain:processResources NO-SOURCE
+> Task :domain:classes UP-TO-DATE
+> Task :domain:jar UP-TO-DATE
+> Task :verifyArchitecture
+> Task :data:preBuild
+> Task :data:preDebugBuild
+> Task :data:generateDebugResources UP-TO-DATE
+> Task :data:packageDebugResources UP-TO-DATE
+> Task :data:processDebugNavigationResources UP-TO-DATE
+> Task :data:parseDebugLocalResources UP-TO-DATE
+> Task :data:generateDebugRFile UP-TO-DATE
+> Task :security:preBuild
+> Task :security:preDebugBuild
+> Task :security:generateDebugResources UP-TO-DATE
+> Task :security:packageDebugResources UP-TO-DATE
+> Task :security:processDebugNavigationResources UP-TO-DATE
+> Task :security:parseDebugLocalResources UP-TO-DATE
+> Task :security:generateDebugRFile UP-TO-DATE
+> Task :security:compileDebugKotlin UP-TO-DATE
+> Task :security:javaPreCompileDebug UP-TO-DATE
+> Task :security:compileDebugJavaWithJavac NO-SOURCE
+> Task :security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :data:javaPreCompileDebug UP-TO-DATE
+> Task :data:preDebugUnitTestBuild
+> Task :data:generateDebugUnitTestStubRFile UP-TO-DATE
+> Task :data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :security:processDebugJavaRes UP-TO-DATE
+> Task :app:preBuild
+> Task :app:preP77runtimeBuild
+> Task :app:generateP77runtimeBuildConfig UP-TO-DATE
+> Task :app:generateP77runtimeResources UP-TO-DATE
+> Task :app:packageP77runtimeResources UP-TO-DATE
+> Task :app:processP77runtimeNavigationResources UP-TO-DATE
+> Task :app:parseP77runtimeLocalResources UP-TO-DATE
+> Task :app:generateP77runtimeRFile UP-TO-DATE
+
+> Task :data:kspDebugKotlin FAILED
+ERROR: Storage corrupted /home/julian-tio-valenzuela/Projekte/action-planner/data/build/kspCaches/debug/symbolLookups/lookups.tab_i
+ksp.com.intellij.util.io.CorruptedException: Storage corrupted /home/julian-tio-valenzuela/Projekte/action-planner/data/build/kspCaches/debug/symbolLookups/lookups.tab_i
+	at ksp.com.intellij.util.io.IntToIntBtree$BtreeIndexNodeView.locate(IntToIntBtree.java:912)
+	at ksp.com.intellij.util.io.IntToIntBtree$BtreeIndexNodeView.access$100(IntToIntBtree.java:309)
+	at ksp.com.intellij.util.io.IntToIntBtree.get(IntToIntBtree.java:179)
+	at ksp.com.intellij.util.io.PersistentBTreeEnumerator.enumerateImpl(PersistentBTreeEnumerator.java:592)
+	at ksp.com.intellij.util.io.PersistentEnumeratorBase.lambda$doEnumerate$0(PersistentEnumeratorBase.java:268)
+	at ksp.com.intellij.util.io.PersistentEnumeratorBase.catchCorruption(PersistentEnumeratorBase.java:673)
+	at ksp.com.intellij.util.io.PersistentEnumeratorBase.doEnumerate(PersistentEnumeratorBase.java:267)
+	at ksp.com.intellij.util.io.PersistentEnumeratorBase.enumerate(PersistentEnumeratorBase.java:280)
+	at ksp.com.intellij.util.io.PersistentMapImpl.enumerate(PersistentMapImpl.java:493)
+	at ksp.com.intellij.util.io.PersistentMapImpl.access$300(PersistentMapImpl.java:58)
+	at ksp.com.intellij.util.io.PersistentMapImpl$2.onDropFromCache(PersistentMapImpl.java:287)
+	at ksp.com.intellij.util.io.PersistentMapImpl$2.onDropFromCache(PersistentMapImpl.java:270)
+	at ksp.com.intellij.util.containers.SLRUMap.clear(SLRUMap.java:137)
+	at ksp.com.intellij.util.io.PersistentMapImpl.flushAppendCache(PersistentMapImpl.java:1003)
+	at ksp.com.intellij.util.io.PersistentMapImpl.clearAppenderCaches(PersistentMapImpl.java:823)
+	at ksp.com.intellij.util.io.PersistentMapImpl.doForce(PersistentMapImpl.java:810)
+	at ksp.com.intellij.util.io.PersistentMapImpl.force(PersistentMapImpl.java:799)
+	at ksp.com.intellij.util.io.PersistentHashMap.force(PersistentHashMap.java:212)
+	at ksp.org.jetbrains.kotlin.incremental.storage.LazyStorage.flush(LazyStorage.kt:90)
+	at ksp.org.jetbrains.kotlin.incremental.storage.AppendableSetBasicMap.flush(BasicMap.kt:152)
+	at ksp.org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$flush$1.invoke(BasicMapsOwner.kt:41)
+	at ksp.org.jetbrains.kotlin.incremental.storage.BasicMapsOwner$flush$1.invoke(BasicMapsOwner.kt:41)
+	at ksp.org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.forEachMapSafe(BasicMapsOwner.kt:87)
+	at ksp.org.jetbrains.kotlin.incremental.storage.BasicMapsOwner.flush(BasicMapsOwner.kt:41)
+	at com.google.devtools.ksp.impl.LookupStorageWrapperImpl.flush(IncrementalContextAA.kt:518)
+	at ksp.com.google.devtools.ksp.common.IncrementalContextBase.updateLookupCache(IncrementalContextBase.kt:150)
+	at ksp.com.google.devtools.ksp.common.IncrementalContextBase.updateCaches(IncrementalContextBase.kt:381)
+	at ksp.com.google.devtools.ksp.common.IncrementalContextBase.updateCachesAndOutputs$lambda$0(IncrementalContextBase.kt:495)
+	at ksp.com.google.devtools.ksp.common.IncrementalContextBase.closeFilesOnException(IncrementalContextBase.kt:424)
+	at ksp.com.google.devtools.ksp.common.IncrementalContextBase.updateCachesAndOutputs(IncrementalContextBase.kt:446)
+	at com.google.devtools.ksp.impl.KotlinSymbolProcessing.execute(KotlinSymbolProcessing.kt:663)
+	at com.google.devtools.ksp.impl.KSPLoader$Companion.loadAndRunKSP(KSPLoader.kt:37)
+	at com.google.devtools.ksp.impl.KSPLoader.loadAndRunKSP(KSPLoader.kt)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at com.google.devtools.ksp.gradle.KspAAWorkerAction.execute(KspAATask.kt:852)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:68)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:64)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:61)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:102)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:61)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:58)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:191)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$500(DefaultConditionalExecutionQueue.java:112)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:168)
+	at org.gradle.internal.Factories$1.create(Factories.java:30)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$runAndReleaseLocks$0(DefaultWorkerLeaseService.java:300)
+	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:43)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAndReleaseLocks(DefaultWorkerLeaseService.java:298)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:294)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:286)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:130)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:135)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:163)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:125)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+e: [ksp] java.lang.AssertionError: Storage corrupted /home/julian-tio-valenzuela/Projekte/action-planner/data/build/kspCaches/debug/symbolLookups/lookups.tab_i
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':data:kspDebugKotlin' (registered by plugin 'com.android.internal.library').
+> A failure occurred while executing com.google.devtools.ksp.gradle.KspAAWorkerAction
+   > Storage corrupted /home/julian-tio-valenzuela/Projekte/action-planner/data/build/kspCaches/debug/symbolLookups/lookups.tab_i
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 32s
+28 actionable tasks: 2 executed, 26 up-to-date

@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P118 {"error":"java.lang.IllegalStateException: Check failed.\n\tat org.pag.prototype.P118ContinuationProbe.onStart(P118ContinuationProbe.kt:46)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","ledger":"State(phase=RETAINED, retained=2143699, transition=16777216, localRetained=2143699, localTransition=6862240, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=false, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)","kind":"FAIL","scenario":"budget"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P118 CONTINUATION FAIL
+INSTRUMENTATION_CODE: 0

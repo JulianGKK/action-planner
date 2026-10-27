@@ -1,0 +1,11 @@
+INSTRUMENTATION_STATUS: stream=P118 {"people":20,"tasks":40,"ledger":"State(phase=COMPOSE_TRANSITION, retained=6673063, transition=16777216, localRetained=6673063, localTransition=14214448, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=80580, lastChildTransitionRequested=153744)","old_writer_calls":0,"kind":"B_PASS","scenario":"action"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P118 {"ledger":"State(phase=COMPOSE_TRANSITION, retained=6773063, transition=16777216, localRetained=6773063, localTransition=14314448, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=80580, lastChildTransitionRequested=153744)","reader_calls":2,"kind":"ABA_BUDGET_SAFE","scenario":"action"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: stream=P118 {"synthetic_authentication":true,"full_workspaces":0,"ledger":"State(phase=COMPOSE_TRANSITION, retained=6773063, transition=16777216, localRetained=6773063, localTransition=14314448, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=none, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=80580, lastChildTransitionRequested=153744)","kind":"PASS","scenario":"action"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P118 CONTINUATION PASS
+INSTRUMENTATION_CODE: -1

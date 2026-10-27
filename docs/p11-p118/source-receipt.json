@@ -1,0 +1,21 @@
+{
+  "base": "e82b6727f7023380f90d4a958970b3c0c0a6ea77",
+  "sources": {
+    "app/src/androidTest/AndroidManifest.xml": "61646f61b594e10d4e3c068583a53d22fd6b034172c7e05610698d7b3ee34ef5",
+    "app/src/androidTest/kotlin/org/pag/prototype/P117CredentialContinuationProbe.kt": "014e2fddd18505ed22c61d9080049ed989274d2a8efe3d3b94182281edb8d0bc",
+    "app/src/androidTest/kotlin/org/pag/prototype/P118ContinuationProbe.kt": "a405fd42e955e065925d7917707a220bc81a98261d416a245ab7739776f6f869",
+    "app/src/main/kotlin/org/pag/prototype/product/ProductViewModel.kt": "7fd56442cc87da3417b1cbdf323ca41f71ebc3a680fbf1ebbcccb188dd6fe1cc",
+    "data/src/main/kotlin/org/pag/data/product/FullviewReadExclusion.kt": "8f7a0fa9ccd38ece47a43cffc5283ceaf0e2b9159baa5e594c1ecdbdb80a750e",
+    "data/src/main/kotlin/org/pag/data/product/OriginalCorePages.kt": "ef5e78ffa4c08bdc4c7b7353de6e42b53b72059cc3888611aa9247144a25af2f",
+    "data/src/main/kotlin/org/pag/data/product/OriginalWorkspaceAccess.kt": "774bcfbdd357f7fb48d39578d4aed524b8104cb36979f9db07569e6c27138c4a",
+    "data/src/main/kotlin/org/pag/data/product/OutstandingCoreRead.kt": "e5462c6f8e10be23674b6dc447c9298daba660db547da8b0b19db4ff58c0249c",
+    "data/src/main/kotlin/org/pag/data/product/PreparationEntryStore.kt": "41cb8a2d7e0b05f6a26487029bc0669b536e60af1b986abe16c623f944c4d02e",
+    "data/src/main/kotlin/org/pag/data/product/ProductActiveCoreLoader.kt": "8b2d0dad76c1ee3c44b3f585347a8998dbc87debe35aae519f5b7530e604b933",
+    "data/src/main/kotlin/org/pag/data/product/ProductTaskRepository.kt": "61607f59eec584cb3e1859d892f9487156d58fca08605a238e02e2264e91dda2",
+    "data/src/main/kotlin/org/pag/data/product/ProductWorkspaceRepository.kt": "ad56ab9bc4273159340c0e128262d072a086780f10f5f747488e522d068a2c27",
+    "data/src/test/kotlin/org/pag/data/product/OutstandingCoreReadTest.kt": "28f7ce7ee22ec18db1561946c9a351b000c8c7a356870e9cc9fe749f72da0f3e",
+    "data/src/test/kotlin/org/pag/data/product/OwnerContinuationBudgetTest.kt": "e994c4d0496d033ee31ab8528138fb057f1223319c3d39b0e5a68644175629d0",
+    "domain/src/main/kotlin/org/pag/domain/ActiveCoreRead.kt": "daddfbaa8f5584c444623b7ff60b992ea01d0a1df642c6af9cddd6698108dbe9",
+    "domain/src/main/kotlin/org/pag/domain/Workspaces.kt": "83086383985511c1bac561b4a894bb57704d5e0ac70184cac5c99fb47da26193"
+  }
+}

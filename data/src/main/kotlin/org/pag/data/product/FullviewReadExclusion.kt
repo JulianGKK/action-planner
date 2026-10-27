@@ -33,21 +33,21 @@ internal class FullviewReadExclusion(app:Context,private val access:StorageAcces
                 requireOperations(c,AccessPoint.OPERATION)
                 if(!memory.enterFullview(entry,actionId,c.generation))return@Runnable
                 if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
-                val value=(owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->db.withReadTransaction {
+                val value=(owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c,cleanupConfirmed={if(!it)entry.poison()}){db->db.withReadTransaction {
                     val reservation=FullviewPreflight(this,bounded,::current).prepare(actionId,projection)
                     if(!admitCurrentFullview(entry,reservation,::current))return@withReadTransaction refused(true)
                     work(db,bounded)
                 }}}
                 val delivery=entry.main(Runnable{c.publish{if(mutations.isCurrentActiveRead(original))publish(value)}})
                 try{main.execute(delivery)}catch(_:RejectedExecutionException){entry.mainRejected()}
-            }catch(_:StorageAccessRevoked){}
+            }catch(f:StorageAccessRevoked){if(f.suppressed.isNotEmpty())entry.poison()}
              catch(f:BoundedActiveRejected){
                 if(f.status==BoundedActiveStatus.BUDGET_REFUSED){
                     val delivery=entry.main(Runnable{c.publish{if(mutations.isCurrentActiveRead(original))publish(refused(true))}})
                     try{main.execute(delivery)}catch(_:RejectedExecutionException){entry.mainRejected()}
                 }else if(f.status!=BoundedActiveStatus.ACCESS_REVOKED)main.execute{if(c.check(AccessPoint.STEP))blocked()}
              }
-             catch(_:Exception){main.execute{if(c.check(AccessPoint.STEP))blocked()}}
+             catch(_:Exception){entry.poison();main.execute{if(c.check(AccessPoint.STEP))blocked()}}
         })
         try{worker.execute(task)}catch(_:RejectedExecutionException){entry.workerRejected();main.execute{c.publish{publish(refused(false))}}}
     }

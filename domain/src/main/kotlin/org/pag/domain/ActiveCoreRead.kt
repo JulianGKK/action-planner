@@ -54,11 +54,15 @@ interface ActiveCoreLifetime {
 }
 
 interface ActiveCoreLoadPort {
+    /** Last explicit opening refusal only; no authority or admission receipt. */
+    val openingFailure:WorkspaceFailure? get()=null
     /** Runtime default is false. A UI switch cannot grant reuse. */
     val reuseEnabled: Boolean get() = false
     /** Cancels only the pending handoff, never frees a published Compose graph by assumption. */
     fun cancelPending() {}
     /** Unknown full-projection costs fence later compact reads; full functionality stays separate. */
     fun fullViewStarting() {}
+    /** Explicit user opening. May mint a fresh booked child, never retry a refused root. */
+    fun openOwned(actionId:String,callback:(ActiveCoreResult,ActiveCoreLifetime?)->Unit):Boolean=loadOwned(actionId,callback)
     fun loadOwned(actionId: String, callback: (ActiveCoreResult, ActiveCoreLifetime?) -> Unit): Boolean
 }

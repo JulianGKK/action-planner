@@ -9,28 +9,31 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * Reserve the ENTIRE 16 MiB app-controlled transition envelope until the known ownership chain ends.
  * The unused part of a local reader receipt is held, not granted again to another reader.
- * Scope changes grant no retirement or reload permission for exposed app-controlled values.
+ * Scope changes alone grant no retirement or reload permission. Explicit authorized children
+ * keep all exposed costs on this record and mint a separate, irrevocably distinct read binding.
  * Native/frame calibration remains unconfirmed: this is an exclusion fence, not certification.
  */
 internal class OutstandingCoreRead {
     companion object {
         /** The SAME original memory record survives Runtime/Activity reconstruction.
          * No second payload registry and no session/key authority. Never reset on reauth. */
+        private val bindingUnits=ActiveWorkspaceBudget.Units(objects=96,strings=64,utf16Units=16384,
+            arrays=32,arrayPayloadBytes=8192,lists=16,listCapacity=128,references=512)
         internal val product = OutstandingCoreRead()
     }
     /** Refusal only: false is NOT a fullview budget admission or owner-end receipt. */
     @Synchronized internal fun fullviewOverlapUnconfirmed():Boolean = closed || current!=null || fullviewObligation!=null
 
-    @Synchronized internal fun ownsFullview(entry:FullviewEntry)=!closed && (fullviewObligation===entry && current==null || current?.childOwner===entry)
+    @Synchronized internal fun ownsFullview(entry:FullviewEntry)=!closed && entry.belongsTo(this) && entry.readable()
 
     /** Accounting only. Caller must separately acquire current storage/writer authority.
      * null means no controlled fullview exists (legacy bootstrap, no new budget grant).
      * An exposed compact record never falls back to an uncharged fullview writer. */
     @Synchronized internal fun reserveHeld(actionId:String,generation:Long,reservation:ActiveCoreReservation):Boolean? {
-        val held=fullviewObligation ?: current?.childOwner
+        val held=activeEntry ?: resource()
         if(held==null)return if(closed || current!=null || fullEntry!=null || fullView)false else null
         if(held.actionId!=actionId || held.generation!=generation)return false
-        return held.reserveReservation(reservation)
+        return held.readable() && held.reserveReservation(reservation)
     }
     enum class Phase { READER_ADMITTED, WORKER_MATERIALIZING, CANDIDATE_COMPLETE, MAIN_PENDING,
         MAIN_DELIVERED, RETAINED, COMPOSE_TRANSITION, RETIRED, DENIED, REVOKED, FAILED_OR_UNCONFIRMED }
@@ -40,6 +43,38 @@ internal class OutstandingCoreRead {
         val fullViewUnconfirmed:Boolean, val nativeFrameCalibration:String="UNCONFIRMED",
         val lastChildRetainedRequested:Long=0,val lastChildTransitionRequested:Long=0)
     private var current: Read?=null
+    // The first record remains the resource owner. These are identities, never payload caches.
+    private var continuation: Read?=null
+    private var activeEntry: FullviewEntry?=null
+    private fun resource():FullviewEntry? = fullviewObligation ?: current?.childOwner
+    private fun quiescent():Boolean = !closed && fullEntry==null &&
+        (continuation ?: current)?.settled()!=false && resource()?.idle()!=false
+
+    /** Explicit UI opening only. Root admission is deliberately a separate API. All costs,
+     * including revoked bindings, remain on the first resource record. */
+    @Synchronized internal fun continueRead(actionId:String,generation:Long):Read? {
+        continuationFailure=WorkspaceFailure.OWNER_UNCONFIRMED
+        val root=resource() ?: current?.resourceForContinuation(actionId,generation) ?: return null
+        if(!quiescent())return null
+        if(!root.reserveReservation(bindingCost)){continuationFailure=WorkspaceFailure.BUDGET_REFUSED;refusal="CHILD_BUDGET_REFUSED";return null}
+        refusal="none"
+        activeEntry?.revokeBinding();root.revokeBinding()
+        activeEntry=null
+        return Read(root,actionId,generation).also{continuation=it}
+    }
+    @Synchronized internal fun continueSection(actionId:String,generation:Long):FullviewEntry? {
+        continuationFailure=WorkspaceFailure.OWNER_UNCONFIRMED
+        val root=resource() ?: current?.resourceForContinuation(actionId,generation) ?: return null
+        if(!quiescent())return null
+        if(!root.reserveReservation(bindingCost)){continuationFailure=WorkspaceFailure.BUDGET_REFUSED;refusal="CHILD_BUDGET_REFUSED";return null}
+        refusal="none"
+        activeEntry?.revokeBinding();root.revokeBinding()
+        return FullviewEntry(actionId,generation,resource=root).also{fullEntry=it;activeEntry=it}
+    }
+    @Synchronized internal fun hasResource()=current!=null || fullviewObligation!=null
+    internal var continuationFailure=WorkspaceFailure.OWNER_UNCONFIRMED;private set
+    // Fresh ticket, binding, queue shells, capability, request-set and bounded SQL scratch.
+    internal val bindingCost=ActiveCoreReservation(bindingUnits,bindingUnits)
     private var fullEntry:FullviewEntry?=null
     private var fullviewObligation:FullviewEntry?=null
     // Last scalar estimate only, NOT a reservation/payload or a retirement assertion.
@@ -55,22 +90,39 @@ internal class OutstandingCoreRead {
     internal fun enterFullview(entry:FullviewEntry,request:WorkspaceReadRequest):Boolean =
         request.ticket?.active!=false && enterFullview(entry,request.actionId,request.generation)
     @Synchronized internal fun enterFullview(entry:FullviewEntry,actionId:String,generation:Long):Boolean {
-        if(closed || current!=null || fullEntry!==entry || entry.started ||
+        if(closed || (current!=null && entry.resource==null) || fullEntry!==entry || entry.started ||
             entry.actionId!=actionId || entry.generation!=generation)return false
         entry.started=true;fullView=true
         return true
     }
-    internal inner class FullviewEntry(val actionId:String,val generation:Long, internal val parent:Read?=null) {
-        private fun owned() = if(parent==null) current==null && fullviewObligation===this else current===parent && parent.childOwner===this
-        private fun syncParent(){parent?.let{it.retained=retainedCharge;it.transition=transitionCharge}}
-        internal fun bindParent(){check(parent!=null);consumed=true;started=true;retainedCharge=parent.retained;transitionCharge=parent.transition}
+    internal inner class FullviewEntry(val actionId:String,val generation:Long, internal val parent:Read?=null, internal val resource:FullviewEntry?=null) {
+        private fun owned() = if(resource!=null) activeEntry===this else if(parent==null) current==null && fullviewObligation===this && (activeEntry==null || activeEntry===this) else current===parent && parent.childOwner===this && (activeEntry==null || activeEntry===this)
+        internal fun belongsTo(record:OutstandingCoreRead)=this@OutstandingCoreRead===record
+        private var bindingRevoked=false
+        internal fun revokeBinding(){bindingRevoked=true}
+        private fun root():FullviewEntry=resource?.root() ?: this
+        internal fun idle()=synchronized(this@OutstandingCoreRead){root().additional==null && !root().additionalUnconfirmed}
+        internal fun poison()=synchronized(this@OutstandingCoreRead){root().additionalUnconfirmed=true}
+        private fun syncParent(){if(resource!=null)resource.syncParent() else parent?.let{it.retained=retainedCharge;it.transition=transitionCharge}}
+        internal fun bindParent(){check(parent!=null);consumed=true;started=true;if(resource==null){retainedCharge=parent.retained;transitionCharge=parent.transition}}
         internal var started=false
         private var receipt:ActiveCoreReservation?=null
-        internal var retainedCharge=0L;private set
-        internal var transitionCharge=0L;private set
+        private var retainedBytes=0L
+        private var transitionBytes=0L
+        internal var retainedCharge:Long
+            get()=resource?.retainedCharge ?: retainedBytes
+            private set(value){if(resource!=null)resource.retainedCharge=value else retainedBytes=value}
+        internal var transitionCharge:Long
+            get()=resource?.transitionCharge ?: transitionBytes
+            private set(value){if(resource!=null)resource.transitionCharge=value else transitionBytes=value}
         private var consumed=false
         /** Original-record booking, not a new ledger. No payload exists at this point. */
         fun admit(reservation:ActiveCoreReservation):Boolean=synchronized(this@OutstandingCoreRead){
+            if(resource!=null){
+                if(fullEntry!==this || !started || receipt!=null || consumed || closed)return false
+                if(!root().reserveReservation(reservation))return false
+                receipt=reservation;return true
+            }
             if(fullEntry!==this || !started || receipt!=null || consumed || closed || current!=null || fullviewObligation!=null)return false
             val r=ActiveWorkspaceBudget.estimateUnits(reservation.retained)
             val t=ActiveWorkspaceBudget.estimateUnits(reservation.transition)
@@ -83,13 +135,17 @@ internal class OutstandingCoreRead {
         }
         /** Conservatively bind BEFORE the first DTO. Neither failure nor Main ACK retires it. */
         fun materialize():Boolean=synchronized(this@OutstandingCoreRead){
+            if(resource!=null){
+                if(fullEntry!==this || !started || receipt==null || consumed || closed)return false
+                consumed=true;return true
+            }
             if(fullEntry!==this || !started || receipt==null || consumed || closed || current!=null || fullviewObligation!=null)return false
             consumed=true;fullviewObligation=this;true
         }
         /** Additional allocations belong to THIS held graph, not a new allowance. Never refunded
          * merely because a form/frame/callback disappeared. Rejection leaves old charges intact. */
         fun reserve(units:ActiveWorkspaceBudget.Units):Boolean=synchronized(this@OutstandingCoreRead){
-            if(closed || !owned() || !consumed || additionalUnconfirmed)return false
+            if(closed || bindingRevoked || !owned() || !consumed || root().additionalUnconfirmed)return false
             val cost=ActiveWorkspaceBudget.estimateUnits(units)
             if(cost.first!=ActiveWorkspaceBudget.Decision.ADMITTED)return false
             val r=try{Math.addExact(retainedCharge,cost.second)}catch(_:ArithmeticException){return false}
@@ -97,8 +153,10 @@ internal class OutstandingCoreRead {
             if(r>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || t>ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)return false
             retainedCharge=r;transitionCharge=t;syncParent();true
         }
+        /** Resource bookkeeping only, including revoked ancestors. Not a read/write grant.
+         * Public consumers enter through a fresh binding; writer callers also check readable(). */
         internal fun reserveReservation(reservation:ActiveCoreReservation):Boolean=synchronized(this@OutstandingCoreRead){
-            if(!readable())return false
+            if(closed || !root().consumed || root().additionalUnconfirmed)return false
             val r=ActiveWorkspaceBudget.estimateUnits(reservation.retained)
             val t=ActiveWorkspaceBudget.estimateUnits(reservation.transition)
             if(r.first!=ActiveWorkspaceBudget.Decision.ADMITTED || t.first!=ActiveWorkspaceBudget.Decision.ADMITTED)return false
@@ -107,14 +165,20 @@ internal class OutstandingCoreRead {
             if(nextR>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES || nextT>ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES)return false
             retainedCharge=nextR;transitionCharge=nextT;syncParent();true
         }
-        private var additional:FullviewSupplement?=null
-        private var additionalUnconfirmed=false
-        fun readable():Boolean=synchronized(this@OutstandingCoreRead){!closed && owned() && !additionalUnconfirmed}
+        private var additionalValue:FullviewSupplement?=null
+        private var additional:FullviewSupplement?
+            get()=resource?.additional ?: additionalValue
+            set(value){if(resource!=null)resource.additional=value else additionalValue=value}
+        private var additionalUnconfirmedValue=false
+        private var additionalUnconfirmed:Boolean
+            get()=resource?.additionalUnconfirmed ?: additionalUnconfirmedValue
+            set(value){if(resource!=null)resource.additionalUnconfirmed=value else additionalUnconfirmedValue=value}
+        fun readable():Boolean=synchronized(this@OutstandingCoreRead){!closed && !bindingRevoked && owned() && !root().additionalUnconfirmed}
         internal var additionalFailure=WorkspaceFailure.OWNER_UNCONFIRMED;private set
         private var consumedParts=0 // Metadata, no board cache. Each supplemental family once.
         fun supplement(part:WorkspacePart):FullviewSupplement?=synchronized(this@OutstandingCoreRead){
             additionalFailure=WorkspaceFailure.OWNER_UNCONFIRMED
-            if(closed || !owned() || fullEntry!=null || additional!=null || additionalUnconfirmed)return null
+            if(!readable() || fullEntry!=null || additional!=null || additionalUnconfirmed)return null
             val bit=when(part){WorkspacePart.MATERIAL_BOARD->1;WorkspacePart.EXPENSE_BOARD->2;WorkspacePart.PROTOCOL_TIMELINE->4;WorkspacePart.MEMORY_HEADERS->8;WorkspacePart.LEADERSHIP_STATE,WorkspacePart.TASKS->0;else->return null}
             if(consumedParts and bit != 0)return null
             if(!reserve(ActiveWorkspaceBudget.Units(objects=16,references=64))){additionalFailure=WorkspaceFailure.BUDGET_REFUSED;return null}
@@ -198,10 +262,10 @@ internal class OutstandingCoreRead {
     @Synchronized fun fullViewStarting(){fullView=true;refusal="FULL_VIEW_UNCONFIRMED"}
     @Synchronized fun close(){closed=true}
     @Synchronized fun state():State {
-        val r=current
-        val f=fullviewObligation ?: fullEntry
-        return State(r?.phase ?: if(fullviewObligation!=null)Phase.RETAINED else if(fullEntry!=null)Phase.READER_ADMITTED else last,if(r!=null && (r.retainedReserved || r.childOwner!=null))r.retained else f?.retainedCharge ?: 0,
-            if(r!=null || f!=null)ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES else 0,r?.retained ?: f?.retainedCharge ?: lastFullviewRetained,r?.transition ?: f?.transitionCharge ?: lastFullviewTransition,
+        val r=continuation ?: current
+        val f=resource() ?: fullEntry
+        return State(r?.phase ?: if(fullviewObligation!=null)Phase.RETAINED else if(fullEntry!=null)Phase.READER_ADMITTED else last,if(r!=null && (r.retainedReserved || r.childOwner!=null))f?.retainedCharge ?: r.retained else f?.retainedCharge ?: 0,
+            if(r!=null || f!=null)ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES else 0,f?.retainedCharge ?: r?.retained ?: lastFullviewRetained,f?.transitionCharge ?: r?.transition ?: lastFullviewTransition,
             if(r?.payload?.get() is ActiveCoreResult.Value || (r?.deliveringValue==true && !r.published))1 else 0,r?.observed==true,r?.disposed==true,
             r==null && fullviewObligation==null && fullEntry==null,refusal,fullView,
             lastChildRetainedRequested=lastChildRetainedRequested,lastChildTransitionRequested=lastChildTransitionRequested)
@@ -221,13 +285,24 @@ internal class OutstandingCoreRead {
             original.dispatchMain()
         }
     }
-    inner class Read internal constructor() {
+    inner class Read internal constructor(private val resource:FullviewEntry?=null,private val actionId:String?=null,private val generation:Long?=null) {
+        private fun owned()=current===this || continuation===this
+        internal fun settled()=workerEnded && (!mainQueued || mainAcknowledged) && !delivering && storageClosed && keyClosed && !cleanupFailed
+        internal fun resourceForContinuation(actionId:String,generation:Long):FullviewEntry? {
+            if(!exposed || !settled())return null
+            childOwner?.let{return it}
+            val r=ActiveWorkspaceBudget.estimateUnits(bindingCost.retained).second
+            val t=ActiveWorkspaceBudget.estimateUnits(bindingCost.transition).second
+            if(retained>ActiveWorkspaceBudget.RETAINED_LIMIT_BYTES-r || transition>ActiveWorkspaceBudget.TRANSITION_LIMIT_BYTES-t){continuationFailure=WorkspaceFailure.BUDGET_REFUSED;refusal="CHILD_BUDGET_REFUSED";return null}
+            retained+=r;transition+=t // PRE-book the resource metadata before constructing it.
+            return FullviewEntry(actionId,generation,this).also{it.bindParent();childOwner=it}
+        }
         internal var childOwner:FullviewEntry?=null; private set
         fun children(actionId:String,generation:Long):FullviewEntry?=synchronized(this@OutstandingCoreRead){
-            if(closed || current!==this || !exposed || revoked || !admitted || !storageClosed || !keyClosed)return null
+            if(closed || !owned() || !exposed || revoked || !admitted || !storageClosed || !keyClosed)return null
             childOwner?.let{return if(it.actionId==actionId && it.generation==generation && it.reserve(OriginalWorkspaceAccess.cost))it else null}
-            val entry=FullviewEntry(actionId,generation,this)
-            entry.bindParent();childOwner=entry
+            val entry=FullviewEntry(actionId,generation,this,resource)
+            entry.bindParent();childOwner=entry;activeEntry=entry
             if(!entry.reserve(OriginalWorkspaceAccess.cost)){childOwner=null;return null}
             entry
         }
@@ -260,7 +335,7 @@ internal class OutstandingCoreRead {
         private var callbackOwned=false
         private var exposed=false
         fun queueWorker(work:Runnable):Runnable?=synchronized(this@OutstandingCoreRead) {
-            if(current!==this || revoked)return@synchronized null
+            if(!owned() || revoked)return@synchronized null
             check(!workerQueued);workerQueued=true;workerWork.set(work);WorkerHandoff(this)
         }
         internal fun dispatchWorker() {
@@ -269,12 +344,12 @@ internal class OutstandingCoreRead {
             finally{workerFinished()}
         }
         fun startWorker():Boolean=synchronized(this@OutstandingCoreRead) {
-            if(current!==this || revoked || worker)return@synchronized false
+            if(!owned() || revoked || worker)return@synchronized false
             worker=true;true
         }
         /** Called by the real store AFTER local joint admission, BEFORE either materializer. */
         fun admit(reservation:ActiveCoreReservation,retained:Long,transition:Long)=synchronized(this@OutstandingCoreRead) {
-            if(current!==this || revoked || admitted)throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)
+            if(!owned() || revoked || admitted)throw BoundedActiveRejected(BoundedActiveStatus.ACCESS_REVOKED)
             val r=ActiveWorkspaceBudget.estimateUnits(reservation.retained)
             val t=ActiveWorkspaceBudget.estimateUnits(reservation.transition)
             if(r.first!=ActiveWorkspaceBudget.Decision.ADMITTED || t.first!=ActiveWorkspaceBudget.Decision.ADMITTED ||
@@ -283,6 +358,7 @@ internal class OutstandingCoreRead {
             }
             // There cannot be another retained/transition obligation: begin() kept the sole
             // reservation exclusive, including old Compose and unconfirmed native cleanup.
+            if(resource!=null && !resource.reserveReservation(reservation))throw BoundedActiveRejected(BoundedActiveStatus.BUDGET_REFUSED)
             this.retained=retained;this.transition=transition;admitted=true;retainedReserved=true;phase=Phase.WORKER_MATERIALIZING
         }
         fun storageStarting()=synchronized(this@OutstandingCoreRead){storageOpened=true;storageClosed=false}
@@ -316,6 +392,10 @@ internal class OutstandingCoreRead {
         }
         fun callbackOwnsValue():Boolean=synchronized(this@OutstandingCoreRead){
             if(revoked)return@synchronized false
+            if(resource!=null && childOwner==null){
+                val entry=FullviewEntry(actionId!!,generation!!,this,resource)
+                entry.bindParent();childOwner=entry;activeEntry=entry // Included in bindingCost, never a new ledger.
+            }
             callbackOwned=true;published=true;exposed=true;phase=Phase.RETAINED;true
         }
         fun mainFinished()=synchronized(this@OutstandingCoreRead){delivering=false;deliveringValue=false;deliveryEnded=true;retireIfEnded()}
@@ -332,7 +412,7 @@ internal class OutstandingCoreRead {
             if(!storageClosed || !keyClosed){phase=Phase.FAILED_OR_UNCONFIRMED;return}
             if(exposed){phase=Phase.COMPOSE_TRANSITION;return} // No trustworthy frame-retirement producer yet.
             payload.set(null);phase=Phase.RETIRED;last=phase
-            if(current===this)current=null // Identity-scoped; old cleanup cannot retire a newer read.
+            if(continuation===this)continuation=null else if(current===this)current=null // Identity-scoped; old cleanup cannot retire a newer read.
         }
     }
 }

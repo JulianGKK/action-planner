@@ -1,0 +1,53 @@
+{
+  "utc": "2026-10-27T21:14:55.957640+00:00",
+  "kind": "continuation",
+  "label": "phase",
+  "extras": [
+    "-e",
+    "scenario",
+    "phase"
+  ],
+  "install": {
+    "utc": "2026-10-27T21:14:55.829011+00:00",
+    "serial": "RFCT1186YRJ",
+    "apks": [
+      {
+        "file": "app/build/outputs/apk/p77runtime/app-p77runtime.apk",
+        "package": "org.pag.prototype.a.p77runtime",
+        "sha256": "34db838ccdb232dd02cff5f6292f912dd197edd652aac07e21624898812aff18",
+        "signer": "Signer #1 certificate DN: CN=Android Debug, O=Android, C=US\nSigner #1 certificate SHA-256 digest: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134\nSigner #1 certificate SHA-1 digest: 136f3fdc01bc5af2b9b18a2c71d5c6725f9b757a\nSigner #1 certificate MD5 digest: 8946d1c7017adcee5138a9513982ce7a\n",
+        "install": "app/build/outputs/apk/p77runtime/app-p77runtime.apk: 1 file pushed, 0 skipped. 64.3 MB/s (70211452 bytes in 1.041s)\nPerforming Push Install\nSuccess\n"
+      },
+      {
+        "file": "app/build/outputs/apk/androidTest/p77runtime/app-p77runtime-androidTest.apk",
+        "package": "org.pag.prototype.a.p77runtime.test",
+        "sha256": "6818935bdd7990af60d19e2d059e526cd4d48d590485f51199f1d7065e54a55e",
+        "signer": "Signer #1 certificate DN: CN=Android Debug, O=Android, C=US\nSigner #1 certificate SHA-256 digest: 9ffc3a0e025c6fbf53d67d164669a5cc9cdc1481f322d858299f5db1e4982134\nSigner #1 certificate SHA-1 digest: 136f3fdc01bc5af2b9b18a2c71d5c6725f9b757a\nSigner #1 certificate MD5 digest: 8946d1c7017adcee5138a9513982ce7a\n",
+        "install": "app/build/outputs/apk/androidTest/p77runtime/app-p77runtime-androidTest.apk: 1 file pushed, 0 skipped. 92.5 MB/s (3942778 bytes in 0.041s)\nPerforming Push Install\nSuccess\n"
+      }
+    ],
+    "protected_before": {
+      "org.pag.prototype.a": [
+        "versionCode=2 minSdk=30 targetSdk=37",
+        "versionName=0.1.0-alpha.2",
+        "lastUpdateTime=2026-10-21 10:39:49",
+        "signatures=PackageSignatures{3af64e version:2, signatures:[224d2aa7], past signatures:[]}",
+        "firstInstallTime=2026-10-09 10:47:25"
+      ],
+      "org.pag.prototype.a.p76demo": [
+        "versionCode=2 minSdk=30 targetSdk=37",
+        "versionName=0.1.0-alpha.2-p76demo",
+        "lastUpdateTime=2026-10-21 16:59:59",
+        "signatures=PackageSignatures{6f3a7ba version:2, signatures:[224d2aa7], past signatures:[]}",
+        "firstInstallTime=2026-10-21 16:58:40"
+      ],
+      "org.pag.perf.p11probe": [
+        "versionCode=2 minSdk=30 targetSdk=37",
+        "versionName=0.1.0-alpha.2",
+        "lastUpdateTime=2026-10-19 16:17:35",
+        "signatures=PackageSignatures{87071b6 version:2, signatures:[224d2aa7], past signatures:[]}",
+        "firstInstallTime=2026-10-19 16:17:35"
+      ]
+    }
+  }
+}

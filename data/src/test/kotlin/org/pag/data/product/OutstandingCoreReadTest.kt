@@ -46,6 +46,45 @@ class OutstandingCoreReadTest {
         fun load()=loader.loadOwned("a"){_,l->callbacks++;life=l}
         fun pending(){assertTrue(load());worker.remove().run();assertEquals(1,loader.outstandingState().pendingCandidates)}
     }
+    @Test fun p118ExplicitChildKeepsOriginalChargesAndNeverReactivatesAba() {
+        val h=H();h.pending();h.main.remove().run()
+        val old=h.life!!;val oldAccess=old.childAccess()!!
+        val before=h.loader.outstandingState().localRetained
+        old.close()
+        assertFalse(h.load()) // ordinary root load remains forbidden
+        fun open(id:String){
+            assertTrue(h.loader.openOwned(id){_,l->h.callbacks++;h.life=l})
+            h.worker.remove().run();h.main.remove().run()
+            assertTrue(h.life!!.authorizeHit(id))
+            assertNotNull(h.life!!.childAccess())
+        }
+        open("b");val middle=h.life!!
+        assertFalse(old.isCurrent());assertFalse(oldAccess.publish("a",ActionStatus.ACTIVE,1){fail("old publication")})
+        middle.close();open("a")
+        assertFalse(old.authorizeHit("a"));assertFalse(middle.authorizeHit("b"))
+        assertTrue(h.loader.outstandingState().localRetained>before+25600)
+        assertFalse(h.loader.outstandingState().retirementConfirmed)
+        assertEquals(3,h.reads)
+    }
+    @Test fun p118FreshGenerationUsesSameLedgerButOldContextRemainsDead() {
+        val h=H();h.pending();h.main.remove().run();val old=h.life!!
+        val before=h.loader.outstandingState().localTransition
+        old.close();h.generation++
+        assertTrue(h.loader.openOwned("a"){_,l->h.life=l})
+        h.worker.remove().run();h.main.remove().run()
+        assertTrue(h.life!!.isCurrent());assertFalse(old.isCurrent())
+        assertTrue(h.loader.outstandingState().localTransition>before)
+    }
+    @Test fun p118LostHandoffAndUnknownRemainClosedToExplicitChildren() {
+        val h=H();h.pending();h.loader.cancelPending()
+        assertFalse(h.loader.openOwned("a"){_,_->fail("lost handoff")})
+        h.main.remove().run();assertTrue(h.load());h.worker.remove().run();h.main.remove().run()
+        h.life!!.close()
+        val pending=h.mutations.beforeTaskQueue("a",1)!!
+        assertTrue(pending.finish(WorkspaceWriteCompletion(WorkspaceWriteOutcome.UNKNOWN,WorkspaceWriteCleanup.FAILED_OR_UNCONFIRMED)))
+        assertFalse(h.loader.openOwned("a"){_,_->fail("UNKNOWN")})
+        assertEquals(2,h.reads)
+    }
     @Test fun aPendingCandidateBlocksSecondAndThirdBeforeTicketsAndSqlWithoutReplacingAuthority() {
         val h=H();h.pending();val ticket=h.ticket!!
         repeat(2){assertFalse(h.load())}

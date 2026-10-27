@@ -2,7 +2,8 @@ package org.pag.data.product
 
 import org.pag.domain.*
 
-/** Only the original session/read ticket and original graph's booking. No payload references,
+/** One immutable session/read binding on the original resource record. Fresh continuations
+ * receive a different instance/ticket; existing bindings are never rebound. No payload references,
  * keys, replacement Session or independent allowance. Main-only synchronous publication.
  */
 internal class OriginalWorkspaceAccess(

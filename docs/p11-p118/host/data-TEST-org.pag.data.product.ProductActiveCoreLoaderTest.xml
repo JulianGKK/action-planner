@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.ProductActiveCoreLoaderTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-10-27T21:22:45.572Z" hostname="iuzjhtgvfc" time="0.077">
+  <properties/>
+  <testcase name="ownedOriginalLifetimeSynchronouslyDropsSlotBeforeCoreOrDocumentQueue" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.013"/>
+  <testcase name="executorRejectionAndDuplicateWorkerDoNotStartSecondRead" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.005"/>
+  <testcase name="ownedLifetimeDropsOnRealWorkerExpiryAndDoesNotReviveAfterReauthentication" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.005"/>
+  <testcase name="budgetRefusalRetiresOriginalTicketWithoutEpochChangeOrRetry" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.002"/>
+  <testcase name="noReadyOrCoreOrDocumentPendingOrUnknownMeansNoWorker" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.007"/>
+  <testcase name="foreignMainRunnableIsDeniedAndMainExecutorRejectionRevokesTicket" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.005"/>
+  <testcase name="readyTicketUsesTypedActionGenerationAndCommonEpochThenPublishesOnceOnOwner" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.002"/>
+  <testcase name="writerAfterDbCleanupBeforeMainBlocksPublicationAndWrongCoreBindingIsRejected" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.006"/>
+  <testcase name="lockOrBlockedBeforeMainCannotPublishAndBudgetOrCleanupRejectionIsWholeResult" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.005"/>
+  <testcase name="writerStartingDuringReaderWorkInvalidatesOriginalTicketBeforeMain" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.004"/>
+  <testcase name="workerSessionExpiryRevokesTicketAndFalseAfterCentralCallbackPublishesNothing" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.007"/>
+  <testcase name="retentionPublishCallbackThenFalseOrRevokeNeverAuthorizesSlot" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.005"/>
+  <testcase name="lostMainRunnableNeverPublishesOrCreatesRamReuse" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.003"/>
+  <testcase name="lostMainAndNewReadyGenerationNeverRestoreTheOldTicket" classname="org.pag.data.product.ProductActiveCoreLoaderTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

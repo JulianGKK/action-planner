@@ -82,6 +82,7 @@ class ProductTaskRepository(app:Context,private val access:StorageAccess,
                 if(f.suppressed.isNotEmpty())failedScope.set(true)
                 CompactTaskResult.Rejected(if(failedScope.get())BoundedActiveStatus.STORAGE_FAILURE else f.status)
             } catch(_:Exception){failedScope.set(true);CompactTaskResult.Rejected(BoundedActiveStatus.STORAGE_FAILURE)}
+            if(failedScope.get())entry.poison()
             try { val delivery=entry.main(Runnable historyMain@{
                 if(!delivered.compareAndSet(false,true))return@historyMain
                 try {

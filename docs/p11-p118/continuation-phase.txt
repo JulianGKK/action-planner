@@ -1,0 +1,5 @@
+INSTRUMENTATION_STATUS: stream=P118 {"error":"java.lang.IllegalStateException: P118 timeout visible ACTIVE HUB\n\tat org.pag.prototype.P118ContinuationProbe.await(P118ContinuationProbe.kt:19)\n\tat org.pag.prototype.P118ContinuationProbe.onStart(P118ContinuationProbe.kt:65)\n\tat android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2335)\n","ledger":"State(phase=RETAINED, retained=2022627, transition=16777216, localRetained=2022627, localTransition=4690248, pendingCandidates=0, compositionObserved=false, compositionDisposed=false, retirementConfirmed=false, refusal=FULL_VIEW_UNCONFIRMED, fullViewUnconfirmed=true, nativeFrameCalibration=UNCONFIRMED, lastChildRetainedRequested=0, lastChildTransitionRequested=0)","kind":"FAIL","scenario":"phase"}
+
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: result=P118 CONTINUATION FAIL
+INSTRUMENTATION_CODE: 0

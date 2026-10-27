@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.pag.data.product.LeadershipSessionConcurrencyTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-10-27T21:22:44.992Z" hostname="iuzjhtgvfc" time="0.127">
+  <properties/>
+  <testcase name="revokeDuringConsumerWorkRejectsResultAndWipesLease" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.024"/>
+  <testcase name="lockWhileGrantExpires" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.065"/>
+  <testcase name="grantAdmissionReadsCoordinatorOnlyWhenAlreadyOwned" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.003"/>
+  <testcase name="lockWhileRealGrantChecksRealGeneration" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.002"/>
+  <testcase name="grantCancelHeldDuringCoordinatorCleanupTerminates" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.008"/>
+  <testcase name="backgroundLockWhileGrantChecks" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.002"/>
+  <testcase name="synchronousCleanupBeforeRestartAuthentication" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.002"/>
+  <testcase name="revokeBetweenContextCheckAndLocalKeyCopyDeniesConsumer" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.008"/>
+  <testcase name="lockWhileSensitiveAreaCloses" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.003"/>
+  <testcase name="lockWhileConsumerAcquiresLease" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.003"/>
+  <testcase name="generationChangeDuringGrantAccess" classname="org.pag.data.product.LeadershipSessionConcurrencyTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

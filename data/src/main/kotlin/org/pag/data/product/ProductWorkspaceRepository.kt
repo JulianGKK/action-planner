@@ -61,7 +61,7 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
             try {
                 val result=DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()) {
                     if(!current())throw StorageAccessRevoked()
-                    (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->db.withReadTransaction {
+                    (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c,cleanupConfirmed={if(!it)child.unconfirmed()}){db->db.withReadTransaction {
                         val names=when(request.kind){
                             WorkspaceDetailKind.PERSON->if(request.membership)setOf("actions","persons","person_role_plans","person_planned_roles","person_operational_states") else setOf("actions","persons")
                             WorkspaceDetailKind.TASK->FullviewPreflight.task
@@ -273,7 +273,7 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
             try {
                 val result=DocumentNamespaceLane.exclusive(DocumentNamespaceLane.ticket()) {
                     if(!current())throw StorageAccessRevoked()
-                    (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c){db->db.withReadTransaction {
+                    (owner()?:throw ProductStorageFailure()).withDbKey(c){key->database.use(inventory.database,key,c,cleanupConfirmed={if(!it)original.unconfirmed()}){db->db.withReadTransaction {
                         val names=when(part){
                             WorkspacePart.PROTOCOL_TIMELINE->setOf("actions","protocol_entries","protocol_revisions")
                             WorkspacePart.MEMORY_HEADERS->setOf("actions","memory_reports")
@@ -321,14 +321,15 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
     private class ReadCancelled:RuntimeException()
     override fun read(request:WorkspaceReadRequest,publish:(WorkspaceResult)->Unit) {
         val c=access.acquire(AccessScope.READY) ?: return
-        if(request.generation!=c.generation)return
-        fun refuse(){main.execute{c.publish{if(request.ticket?.active!=false)publish(WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED))}}}
-        if(memory.fullviewOverlapUnconfirmed()) {
+        if(request.generation!=c.generation || c.scope!=AccessScope.READY || !c.check(AccessPoint.OPERATION))return
+        fun refuse(reason:WorkspaceFailure=WorkspaceFailure.OWNER_UNCONFIRMED){main.execute{c.publish{if(request.ticket?.active!=false)publish(WorkspaceResult.Rejected(reason))}}}
+        val continuation=request.explicitOpening && request.status==ActionStatus.PREPARATION && memory.hasResource()
+        if(!continuation && memory.fullviewOverlapUnconfirmed()) {
             refuse()
             return
         }
-        val entry=memory.beginFullview(request.actionId,request.generation) ?: run {
-            refuse()
+        val entry=(if(continuation)memory.continueSection(request.actionId,request.generation) else memory.beginFullview(request.actionId,request.generation)) ?: run {
+            refuse(if(continuation)memory.continuationFailure else WorkspaceFailure.OWNER_UNCONFIRMED)
             return
         }
         val original=mutations?.beforeActiveRead(request.actionId,c.generation)
@@ -346,8 +347,12 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                     if(inventory.state()!=ProductStorageState.READY_TO_OPEN)throw ProductStorageFailure()
                     requireRequest()
                     (owner() ?: throw ProductStorageFailure()).withDbKey(c){key->
-                        database.use(inventory.database,key,c){db->db.withReadTransaction {
-                            WorkspaceStore(db,object:StorageContext by c { override fun check(point:AccessPoint)=original.isLive() && frozen.ticket?.active!=false && c.check(point) },memory,materializing,this,{original.isLive()},testReservation,leadershipState).read(frozen,entry)
+                        database.use(inventory.database,key,c,cleanupConfirmed={if(!it)entry.poison()}){db->db.withReadTransaction {
+                            val bound=object:StorageContext by c { override fun check(point:AccessPoint)=original.isLive() && frozen.ticket?.active!=false && c.check(point) }
+                            if(continuation){
+                                if(!memory.enterFullview(entry,frozen))WorkspaceResult.Rejected(WorkspaceFailure.OWNER_UNCONFIRMED)
+                                else PreparationEntryStore(this,db,bound,{original.isLive() && frozen.ticket?.active!=false},leadershipState).read(frozen,entry)
+                            }else WorkspaceStore(db,bound,memory,materializing,this,{original.isLive()},testReservation,leadershipState).read(frozen,entry)
                         }}
                     }.also{requireOperations(c)}
                 }
@@ -359,8 +364,14 @@ class ProductWorkspaceRepository internal constructor(app:Context,private val ac
                 try{main.execute(delivery)}catch(_:java.util.concurrent.RejectedExecutionException){entry.mainRejected()}
 
             }catch(_:ReadCancelled){/* Superseded before key/DB admission or after full cleanup. */}
-             catch(_:StorageAccessRevoked){/* No stale publication. */}
-             catch(_:Exception){main.execute{if(c.check(AccessPoint.STEP))blocked()}}
+             catch(f:StorageAccessRevoked){if(f.suppressed.isNotEmpty())entry.poison()}
+             catch(f:BoundedActiveRejected){
+                if(f.suppressed.isEmpty() && f.status==BoundedActiveStatus.BUDGET_REFUSED){
+                    val delivery=entry.main(Runnable{c.publish{if(frozen.ticket?.active!=false && mutations?.isCurrentActiveRead(original)==true)publish(WorkspaceResult.Rejected(WorkspaceFailure.BUDGET_REFUSED))}})
+                    try{main.execute(delivery)}catch(_:java.util.concurrent.RejectedExecutionException){entry.mainRejected()}
+                }else {entry.poison();main.execute{if(c.check(AccessPoint.STEP))blocked()}}
+             }
+             catch(_:Exception){entry.poison();main.execute{if(c.check(AccessPoint.STEP))blocked()}}
         })
         try{worker.execute(work)}catch(_:java.util.concurrent.RejectedExecutionException){entry.workerRejected()}
         // Uncertain queue acceptance deliberately retains the exclusion until actual dispatch.
